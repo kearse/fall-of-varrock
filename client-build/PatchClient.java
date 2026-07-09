@@ -73,6 +73,12 @@ public final class PatchClient {
             boolean r = blankConstant(zip, ".runescape.com");
             System.out.println("[hostcheck] .jagex.com " + (j ? "blanked" : "absent") + ", .runescape.com " + (r ? "blanked" : "absent"));
             System.out.println("[title] " + (setRuneliteTitle(zip, "Fall of Varrock") ? "set to 'Fall of Varrock'" : "properties not found"));
+            // Use our own config dir (~/.fov-home) instead of ~/.runelite, so the client
+            // never reads the user's real RuneLite/Jagex account session (the "Play Now /
+            // <account>" screen). Same trick RSProx uses (.runelite -> .rlcustom). Must be
+            // <= 9 chars to fit the ".runelite" constant slot; ".fov-home" is exactly 9.
+            int renamed = replaceConstant(zip, ".runelite", ".fov-home");
+            System.out.println("[configdir] .runelite -> .fov-home (" + renamed + " constant(s))");
         } else {
             throw new IllegalArgumentException("unknown mode: " + mode);
         }
@@ -96,6 +102,26 @@ public final class PatchClient {
             return old[0];
         }
         return null;
+    }
+
+    /**
+     * Replace a whole constant-pool string equal to `from` with `to` (to.length <= from.length),
+     * validated by the u2 length prefix so we never hit a substring of a longer constant.
+     * Returns how many constants were replaced.
+     */
+    private static int replaceConstant(Map<String, byte[]> zip, String from, String to) {
+        byte[] needle = from.getBytes(StandardCharsets.UTF_8);
+        int len = needle.length, count = 0;
+        for (Map.Entry<String, byte[]> e : zip.entrySet()) {
+            byte[] bytes = e.getValue();
+            int at = 0, idx;
+            while ((idx = indexOf(bytes, needle, at)) != -1) {
+                boolean whole = idx >= 2 && (((bytes[idx - 2] & 0xFF) << 8) | (bytes[idx - 1] & 0xFF)) == len;
+                if (whole) { bytes = setString(bytes, idx, to); e.setValue(bytes); count++; at = idx; }
+                else at = idx + 1;
+            }
+        }
+        return count;
     }
 
     /** Rewrite the runelite.title line in runelite.properties (a plain-text resource). */
