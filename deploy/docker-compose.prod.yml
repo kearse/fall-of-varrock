@@ -1,0 +1,125 @@
+# Kingdom of Lumbridge — PRODUCTION stack.
+#
+# Lives on the VPS at /opt/kol/docker-compose.prod.yml (deployed by GitHub Actions).
+# Reads /opt/kol/.env for secrets + DOMAIN; IMAGE_TAG is injected per-deploy.
+# Server runtime files (cache, rsa, xteas, game.yml, saves) live in /opt/kol/runtime/.
+#
+# Differences from the local docker-compose.yml, on purpose:
+#   - images are pulled from GHCR (built by CI), never built on the box
+#   - mongo has NO published port — reachable only from the compose network
+#   - Caddy terminates TLS for the site + forum; web/forum ports are internal
+#   - bounded log sizes, bounded mongo cache, graceful game shutdown window
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "20m"
+    max-file: "5"
+
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    command: ["--wiredTigerCacheSizeGB", "1.5"]
+    volumes:
+      - mongo-data:/data/db
+    logging: *default-logging
+
+  game:
+    image: ghcr.io/${GHCR_OWNER:-kearse}/kol-game:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    depends_on:
+      - mongo
+    ports:
+      - "43594:43594"
+    stop_grace_period: 90s
+    volumes:
+      - /opt/kol/runtime/cache:/app/data/cache:ro
+      - /opt/kol/runtime/rsa:/app/data/rsa:ro
+      - /opt/kol/runtime/xteas.json:/app/data/xteas.json:ro
+      - /opt/kol/runtime/saves:/app/data/saves
+      - /opt/kol/runtime/game.yml:/app/game.yml:ro
+      - /opt/kol/runtime/dev-settings.yml:/app/dev-settings.yml:ro
+    environment:
+      MONGODB_URI: mongodb://mongo:27017
+      MONGODB_DB: lumbridge
+    logging: *default-logging
+
+  web:
+    image: ghcr.io/${GHCR_OWNER:-kearse}/kol-web:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    depends_on:
+      - mongo
+    environment:
+      MONGODB_URI: mongodb://mongo:27017
+      MONGODB_DB: lumbridge
+      AUTH_SECRET: ${AUTH_SECRET:?set AUTH_SECRET in .env}
+      FORUM_URL: https://forum.${DOMAIN}
+      AUTH_COOKIE_DOMAIN: .${DOMAIN}
+      NEXT_PUBLIC_SITE_NAME: Kingdom of Lumbridge
+      NEXT_PUBLIC_SITE_URL: https://${DOMAIN}
+      NEXT_PUBLIC_GAME_WORLD_HOST: ${GAME_WORLD_HOST:-${DOMAIN}}
+      DISCORD_WEBHOOK_URL: ${DISCORD_WEBHOOK_URL:-}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY:-}
+      PAYPAL_CLIENT_ID: ${PAYPAL_CLIENT_ID:-}
+      PAYPAL_CLIENT_SECRET: ${PAYPAL_CLIENT_SECRET:-}
+      PAYPAL_ENV: ${PAYPAL_ENV:-live}
+      COINBASE_COMMERCE_API_KEY: ${COINBASE_COMMERCE_API_KEY:-}
+      COINBASE_COMMERCE_WEBHOOK_SECRET: ${COINBASE_COMMERCE_WEBHOOK_SECRET:-}
+    logging: *default-logging
+
+  discord-bot:
+    image: ghcr.io/${GHCR_OWNER:-kearse}/kol-bot:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    depends_on:
+      - mongo
+    environment:
+      MONGODB_URI: mongodb://mongo:27017
+      MONGODB_DB: lumbridge
+      SITE_URL: https://${DOMAIN}
+      DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN:-}
+      DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID:-}
+      DISCORD_GUILD_ID: ${DISCORD_GUILD_ID:-}
+      DISCORD_NEWS_CHANNEL_ID: ${DISCORD_NEWS_CHANNEL_ID:-}
+      DISCORD_FEED_STATUS_ID: ${DISCORD_FEED_STATUS_ID:-}
+      DISCORD_FEED_ACHIEVEMENTS_ID: ${DISCORD_FEED_ACHIEVEMENTS_ID:-}
+      DISCORD_FEED_DROPS_ID: ${DISCORD_FEED_DROPS_ID:-}
+      DISCORD_FEED_PK_ID: ${DISCORD_FEED_PK_ID:-}
+      DISCORD_FEED_BOSS_ID: ${DISCORD_FEED_BOSS_ID:-}
+      DISCORD_FEED_MODLOG_ID: ${DISCORD_FEED_MODLOG_ID:-}
+    logging: *default-logging
+
+  forum:
+    image: ghcr.io/nodebb/nodebb:latest
+    restart: unless-stopped
+    depends_on:
+      - mongo
+    volumes:
+      - nodebb-config:/usr/src/app/config
+      - nodebb-uploads:/usr/src/app/public/uploads
+      - nodebb-build:/usr/src/app/build
+    logging: *default-logging
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN:?set DOMAIN in .env}
+    volumes:
+      - /opt/kol/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    logging: *default-logging
+
+volumes:
+  mongo-data:
+  nodebb-config:
+  nodebb-uploads:
+  nodebb-build:
+  caddy-data:
+  caddy-config:

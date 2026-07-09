@@ -1,0 +1,29 @@
+# Keep the game-image build context small: only the installDist output,
+# data/ (minus heavy/secret parts), and the example configs are needed.
+.gradle
+.kotlin
+.idea
+.run
+**/build
+!game-server/build/install/**
+web
+forum
+discord-bot
+minimap-sprites
+docs
+data/cache
+data/cache_backup_minimap
+data/cache-backup-pre-hud
+data/cache-backups
+data/mapdump
+data/shortcutscan
+data/saves
+data/rsa
+data/xteas.json
+data/xteas.json.backup
+.env
+game.yml
+dev-settings.yml
+*.log
+*.txt
+node_modules
