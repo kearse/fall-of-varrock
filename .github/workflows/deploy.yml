@@ -64,6 +64,9 @@ jobs:
     needs: [build]
     if: ${{ always() && needs.build.result != 'failure' && needs.build.result != 'cancelled' }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
     steps:
       - uses: actions/checkout@v4
 
@@ -90,6 +93,7 @@ jobs:
           ssh -i deploy_key -o StrictHostKeyChecking=accept-new \
             "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
             "set -e; cd /opt/kol; chmod +x backup.sh; \
+             echo '${{ secrets.GITHUB_TOKEN }}' | docker login ghcr.io -u '${{ github.actor }}' --password-stdin; \
              export IMAGE_TAG='${{ steps.tag.outputs.tag }}'; \
              docker compose -f docker-compose.prod.yml pull; \
              docker compose -f docker-compose.prod.yml up -d --remove-orphans; \
