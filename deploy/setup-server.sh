@@ -32,6 +32,13 @@ systemctl enable --now fail2ban
 echo "== Directory layout =="
 mkdir -p /opt/kol/runtime/cache /opt/kol/runtime/rsa /opt/kol/runtime/saves /opt/kol/backups
 
+# The deploy user (OVH images: "ubuntu") owns /opt/kol and can drive docker.
+DEPLOY_USER="${SUDO_USER:-ubuntu}"
+if id "$DEPLOY_USER" >/dev/null 2>&1; then
+  usermod -aG docker "$DEPLOY_USER"
+  chown -R "$DEPLOY_USER":"$DEPLOY_USER" /opt/kol
+fi
+
 echo "== Backup cron (nightly 07:10 UTC) =="
 cat > /etc/cron.d/kol-backup <<'CRON'
 10 7 * * * root /opt/kol/backup.sh >> /var/log/kol-backup.log 2>&1
