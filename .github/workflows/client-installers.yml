@@ -53,10 +53,24 @@ jobs:
           curl -fSL https://fallofvarrock.com/client/fov-client.jar -o input/fov-client.jar
           ls -l input
 
-      - name: Package
+      - name: Prepare runtime image
         shell: bash
         env:
           JDK11: ${{ steps.jdk11.outputs.path }}
+        run: |
+          # Linux jpackage app-image fails copying a raw JDK as the runtime
+          # (NoSuchFileException .../lib/runtime), so jlink a clean full runtime
+          # there. Windows/macOS package fine directly from the JDK.
+          if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
+            "$JDK11/bin/jlink" --add-modules ALL-MODULE-PATH --module-path "$JDK11/jmods" \
+              --output runtime --no-header-files --no-man-pages --strip-debug
+            echo "RUNTIME_IMAGE=runtime" >> "$GITHUB_ENV"
+          else
+            echo "RUNTIME_IMAGE=$JDK11" >> "$GITHUB_ENV"
+          fi
+
+      - name: Package
+        shell: bash
         run: |
           # JDK 21's jpackage is on PATH from the last setup-java; call it explicitly.
           JPACKAGE="$JAVA_HOME_21_X64/bin/jpackage"
@@ -69,7 +83,7 @@ jobs:
             --input input \
             --main-jar fov-client.jar \
             --main-class net.runelite.client.RuneLite \
-            --runtime-image "$JDK11" \
+            --runtime-image "$RUNTIME_IMAGE" \
             --java-options "-Xmx512m" \
             --java-options "-XX:+DisableAttachMechanism" \
             --java-options "-Drunelite.launcher.version=2.7.4-SNAPSHOT" \
