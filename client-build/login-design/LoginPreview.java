@@ -39,14 +39,13 @@ public class LoginPreview {
         paintVertical(g, 0, H - 170, W, 170, new Color(8,5,6,0), new Color(8,5,6,230));
         paintRadialRed(g);
 
-        // --- title ---
-        g.setFont(new Font("Serif", Font.BOLD, 46));
-        drawCentered(g, "FALL OF VARROCK", W / 2, 92, GOLD, RED);
-        g.setFont(new Font("SansSerif", Font.BOLD, 12));
-        drawCentered(g, "OSRS · REVISION 228 · THE WAR SERVER", W / 2, 116, new Color(0xB9,0xA8,0x86), null);
+        // --- logo (the homepage hero mark) ---
+        BufferedImage logo = ImageIO.read(new File("C:/Program Files (x86)/Kearse RSPS/client-build/assets/logo-full-trim.png"));
+        int lw = 244, lh = (int) (logo.getHeight() * (lw / (double) logo.getWidth()));
+        g.drawImage(logo, (W - lw) / 2, 2, lw, lh, null);
 
         // --- login panel ---
-        int pw = 340, ph = 208, px = (W - pw) / 2, py = 150;
+        int pw = 340, ph = 208, px = (W - pw) / 2, py = 182;
         panel(g, px, py, pw, ph);
 
         int fx = px + 28, fw = pw - 56;

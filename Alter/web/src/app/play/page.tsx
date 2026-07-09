@@ -1,8 +1,6 @@
 import Link from "next/link";
 import { Collections } from "@/lib/collections";
 
-const WORLD = process.env.NEXT_PUBLIC_GAME_WORLD_HOST ?? "play.fallofvarrock.com";
-
 export const metadata = { title: "Play · Fall of Varrock" };
 
 // Download targets are env-driven so the buttons go live the moment a client
@@ -141,25 +139,6 @@ export default async function PlayPage() {
           {PLATFORMS.map((p) => (
             <DownloadCard key={p.key} p={p} />
           ))}
-        </div>
-
-        {/* Login details */}
-        <div className="card mt-6">
-          <h3 className="mb-3 font-semibold text-lumbridge-gold">Connection details</h3>
-          <dl className="grid gap-3 text-sm sm:grid-cols-2">
-            <div className="flex items-center justify-between rounded-lg bg-black/30 px-4 py-2.5">
-              <dt className="text-lumbridge-parchment/60">World / login server</dt>
-              <dd className="font-mono text-lumbridge-goldlight">{WORLD}</dd>
-            </div>
-            <div className="flex items-center justify-between rounded-lg bg-black/30 px-4 py-2.5">
-              <dt className="text-lumbridge-parchment/60">Game revision</dt>
-              <dd className="font-mono text-lumbridge-goldlight">OSRS 228</dd>
-            </div>
-          </dl>
-          <p className="mt-3 text-xs text-lumbridge-parchment/45">
-            Using a manual RuneLite/RSProx setup? Point your proxy target at the world above. The native client is
-            already configured for it.
-          </p>
         </div>
       </section>
 
