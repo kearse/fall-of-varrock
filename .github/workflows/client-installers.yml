@@ -46,12 +46,36 @@ jobs:
           distribution: temurin
           java-version: "11"
 
+      - name: Checkout (for the app icon)
+        uses: actions/checkout@v4
+
       - name: Download the patched client jar
         shell: bash
         run: |
           mkdir -p input
           curl -fSL https://fallofvarrock.com/client/fov-client.jar -o input/fov-client.jar
           ls -l input
+
+      - name: Generate app icon
+        shell: bash
+        run: |
+          SRC=client-build/assets/logo-icon.png
+          case "${{ matrix.os }}" in
+            windows-latest)
+              magick "$SRC" -define icon:auto-resize=256,128,64,48,32,16 icon.ico
+              echo "ICON=icon.ico" >> "$GITHUB_ENV" ;;
+            macos-latest)
+              mkdir icon.iconset
+              for s in 16 32 64 128 256 512; do
+                sips -z $s $s      "$SRC" --out "icon.iconset/icon_${s}x${s}.png" >/dev/null
+                sips -z $((s*2)) $((s*2)) "$SRC" --out "icon.iconset/icon_${s}x${s}@2x.png" >/dev/null
+              done
+              iconutil -c icns icon.iconset -o icon.icns
+              echo "ICON=icon.icns" >> "$GITHUB_ENV" ;;
+            ubuntu-latest)
+              cp "$SRC" icon.png
+              echo "ICON=icon.png" >> "$GITHUB_ENV" ;;
+          esac
 
       - name: Prepare runtime image
         shell: bash
@@ -76,10 +100,20 @@ jobs:
           JPACKAGE="$JAVA_HOME_21_X64/bin/jpackage"
           [ -x "$JPACKAGE" ] || JPACKAGE="$(command -v jpackage)"
           mkdir -p out
+          # Per-OS install options. On Windows the missing bit before was shortcuts:
+          # without --win-shortcut/--win-menu the setup installs silently with nothing
+          # to launch. --win-per-user-install avoids the admin/UAC prompt.
+          # (space-free flags only — EXTRA is intentionally unquoted below)
+          EXTRA=""
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            EXTRA="--win-shortcut --win-menu --win-menu-group FallOfVarrock --win-per-user-install --win-help-url https://fallofvarrock.com"
+          fi
           "$JPACKAGE" \
             --type ${{ matrix.type }} \
             --name "Fall of Varrock" \
             --app-version 1.0.0 \
+            --vendor "Fall of Varrock" \
+            --icon "$ICON" \
             --input input \
             --main-jar fov-client.jar \
             --main-class net.runelite.client.RuneLite \
@@ -88,6 +122,7 @@ jobs:
             --java-options "-XX:+DisableAttachMechanism" \
             --java-options "-Drunelite.launcher.version=2.7.4-SNAPSHOT" \
             --arguments "--jav_config=https://fallofvarrock.com/client/jav_config_standalone.ws" \
+            $EXTRA \
             --dest out
           ls -lR out
 

@@ -72,6 +72,7 @@ public final class PatchClient {
             boolean j = blankConstant(zip, ".jagex.com");
             boolean r = blankConstant(zip, ".runescape.com");
             System.out.println("[hostcheck] .jagex.com " + (j ? "blanked" : "absent") + ", .runescape.com " + (r ? "blanked" : "absent"));
+            System.out.println("[title] " + (setRuneliteTitle(zip, "Fall of Varrock") ? "set to 'Fall of Varrock'" : "properties not found"));
         } else {
             throw new IllegalArgumentException("unknown mode: " + mode);
         }
@@ -95,6 +96,17 @@ public final class PatchClient {
             return old[0];
         }
         return null;
+    }
+
+    /** Rewrite the runelite.title line in runelite.properties (a plain-text resource). */
+    private static boolean setRuneliteTitle(Map<String, byte[]> zip, String title) {
+        String name = "net/runelite/client/runelite.properties";
+        byte[] props = zip.get(name);
+        if (props == null) return false;
+        String text = new String(props, StandardCharsets.ISO_8859_1);
+        text = text.replaceAll("(?m)^runelite\\.title=.*$", "runelite.title=" + title);
+        zip.put(name, text.getBytes(StandardCharsets.ISO_8859_1));
+        return true;
     }
 
     /**
