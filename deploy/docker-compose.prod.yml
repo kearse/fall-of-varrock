@@ -112,6 +112,7 @@ services:
       DOMAIN: ${DOMAIN:?set DOMAIN in .env}
     volumes:
       - /opt/kol/Caddyfile:/etc/caddy/Caddyfile:ro
+      - /opt/kol/client:/srv/client:ro
       - caddy-data:/data
       - caddy-config:/config
     logging: *default-logging

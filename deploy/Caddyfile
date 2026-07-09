@@ -3,6 +3,14 @@
 
 {$DOMAIN} {
 	encode gzip
+
+	# Client distribution: bootstrap.json + client jar + jav_config.ws
+	# (files live in /opt/kol/client on the host, mounted read-only)
+	handle_path /client/* {
+		root * /srv/client
+		file_server
+	}
+
 	reverse_proxy web:3000
 }
 
