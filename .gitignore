@@ -4,3 +4,7 @@ config.properties
 
 client-build/*.class
 
+client-build/**/out/
+client-build/login-design/*.class
+Alter/web/tsconfig.tsbuildinfo
+
