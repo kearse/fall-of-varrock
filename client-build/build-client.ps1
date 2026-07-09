@@ -14,7 +14,7 @@ $ErrorActionPreference = 'Stop'
 
 $JDK17   = 'C:\Program Files\Eclipse Adoptium\jdk-17.0.19.10-hotspot'
 $MVN     = 'C:\Users\zakea\rsps-client\apache-maven-3.9.16\bin\mvn.cmd'
-$FORK    = 'C:\Users\zakea\rsps-client\runelite-1.10.51'
+$FORK    = 'C:\Program Files (x86)\Kearse RSPS\client'  # vendored into the monorepo
 $SHADED  = "$FORK\runelite-client\target\client-1.10.51-shaded.jar"
 $CB      = 'C:\Program Files (x86)\Kearse RSPS\client-build'
 $STAGE   = Join-Path $env:TEMP 'fov-client'

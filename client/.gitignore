@@ -1,0 +1,17 @@
+target
+**/target/
+build/
+*.class
+.kotlin/
+nbactions.xml
+nb-configuration.xml
+/nbproject/
+project.properties
+*.iml
+.idea/
+.project
+.settings/
+.classpath
+.vscode
+.factorypath
+.DS_Store
