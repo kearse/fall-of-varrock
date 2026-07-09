@@ -1,10 +1,26 @@
-# Connecting to the production server (dev team)
+# Connecting to the production server
 
 The game world runs at **play.fallofvarrock.com:43594** (OVHcloud VPS, Virginia).
 Website: **https://fallofvarrock.com** · Forum: **https://forum.fallofvarrock.com**
 
-The client stack is RSProx + our patched RuneLite client, pulled automatically from
-the production bootstrap. You do NOT need the game repo to play — only to develop.
+## Players: just download the client
+
+Native installers (bundled Java runtime, no setup) are on **https://fallofvarrock.com/play**:
+- Windows: `/client/download/FallOfVarrock-Setup.exe`
+- macOS: `/client/download/FallOfVarrock.dmg`
+- Linux: `/client/download/FallOfVarrock-linux-x86_64.tar.gz`
+
+Install, launch, create an account at the login screen, play. No RSProx, no config.
+The installer is built by the **Client Installers** GitHub Action (jpackage) from the
+pre-patched `fov-client.jar`; see `client-build/` for how that jar is made + patched.
+
+> Never use your real Jagex/OSRS password on this (or any) private server — always a
+> fresh one. The client cannot touch your real OSRS account.
+
+## Developers: RSProx (for packet inspection / client dev)
+
+The dev path still uses RSProx + our patched RuneLite client, pulled from the production
+bootstrap. You do NOT need the game repo to play — only to develop.
 
 ## One-time setup
 
