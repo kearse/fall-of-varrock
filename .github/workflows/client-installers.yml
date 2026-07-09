@@ -1,0 +1,102 @@
+name: Client Installers
+
+# Builds native Fall of Varrock client installers for Windows, macOS, and Linux
+# with jpackage. Each runner packages the pre-patched client jar (hosted at
+# fallofvarrock.com/client/fov-client.jar — built + patched by client-build/) plus
+# a bundled Java 11 runtime, so players install one file and need nothing else.
+#
+# Manual trigger (Actions -> Client Installers -> Run workflow). Uploads each
+# installer as a build artifact; also attaches them to a GitHub Release when run
+# with a tag input.
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Optional release tag to attach installers to (e.g. client-v1). Empty = artifacts only."
+        required: false
+        default: ""
+
+jobs:
+  package:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            type: exe
+            out: "Fall of Varrock-1.0.0.exe"
+          - os: macos-latest
+            type: dmg
+            out: "Fall of Varrock-1.0.0.dmg"
+          - os: ubuntu-latest
+            type: app-image
+            out: "linux-app-image"
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Install JDK 21 (runs jpackage)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Install JDK 11 (bundled client runtime)
+        uses: actions/setup-java@v4
+        id: jdk11
+        with:
+          distribution: temurin
+          java-version: "11"
+
+      - name: Download the patched client jar
+        shell: bash
+        run: |
+          mkdir -p input
+          curl -fSL https://fallofvarrock.com/client/fov-client.jar -o input/fov-client.jar
+          ls -l input
+
+      - name: Package
+        shell: bash
+        env:
+          JDK11: ${{ steps.jdk11.outputs.path }}
+        run: |
+          # JDK 21's jpackage is on PATH from the last setup-java; call it explicitly.
+          JPACKAGE="$JAVA_HOME_21_X64/bin/jpackage"
+          [ -x "$JPACKAGE" ] || JPACKAGE="$(command -v jpackage)"
+          mkdir -p out
+          "$JPACKAGE" \
+            --type ${{ matrix.type }} \
+            --name "Fall of Varrock" \
+            --app-version 1.0.0 \
+            --input input \
+            --main-jar fov-client.jar \
+            --main-class net.runelite.client.RuneLite \
+            --runtime-image "$JDK11" \
+            --java-options "-Xmx512m" \
+            --java-options "-XX:+DisableAttachMechanism" \
+            --java-options "-Drunelite.launcher.version=2.7.4-SNAPSHOT" \
+            --arguments "--jav_config=https://fallofvarrock.com/client/jav_config_standalone.ws" \
+            --dest out
+          ls -lR out
+
+      - name: Package Linux app-image into a tarball
+        if: matrix.os == 'ubuntu-latest'
+        shell: bash
+        run: tar -C out -czf "out/FallOfVarrock-linux-x86_64.tar.gz" "Fall of Varrock"
+
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: fov-client-${{ matrix.os }}
+          path: |
+            out/*.exe
+            out/*.dmg
+            out/*.tar.gz
+
+      - name: Attach to release
+        if: ${{ inputs.release_tag != '' }}
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.release_tag }}
+          files: |
+            out/*.exe
+            out/*.dmg
+            out/*.tar.gz
