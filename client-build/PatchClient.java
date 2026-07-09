@@ -34,33 +34,55 @@ public final class PatchClient {
 
     public static void main(String[] args) throws Exception {
         if (args.length < 3) {
-            System.err.println("usage: java PatchClient <in.jar> <out.jar> <modulusHex>");
+            System.err.println("usage: java PatchClient <injected|wrapper> <in.jar> <out.jar> [modulusHex]");
+            System.err.println("  injected : bake our RSA modulus + blank localhost (injected-client jar)");
+            System.err.println("  wrapper  : blank .jagex.com/.runescape.com host checks (client wrapper jar)");
             System.exit(2);
         }
-        Path in = Paths.get(args[0]);
-        Path out = Paths.get(args[1]);
-        String modulus = args[2].trim();
-
-        // A 1024-bit modulus is 256 hex chars; the slot we overwrite is that wide.
-        if (!modulus.matches("[0-9a-fA-F]+")) throw new IllegalArgumentException("modulus must be hex");
-
+        String mode = args[0];
+        Path in = Paths.get(args[1]);
+        Path out = Paths.get(args[2]);
         Map<String, byte[]> zip = readZip(in);
 
-        String oldModulus = overwriteModulus(zip, modulus);
-        System.out.println("[modulus] replaced");
-        System.out.println("  old: " + oldModulus.substring(0, 32) + "…");
-        System.out.println("  new: " + modulus.substring(0, 32) + "…");
-
-        boolean host = overwriteLocalHost(zip);
-        System.out.println("[localhost] " + (host ? "blanked" : "not present (ok)"));
+        // Each transform mirrors exactly what RSProx does to that specific jar, so we
+        // don't touch host constants in the injected-client (they can be load-bearing).
+        if (mode.equals("injected")) {
+            if (args.length < 4) throw new IllegalArgumentException("injected mode needs <modulusHex>");
+            String modulus = args[3].trim();
+            if (!modulus.matches("[0-9a-fA-F]+")) throw new IllegalArgumentException("modulus must be hex");
+            String old = overwriteModulus(zip, modulus);
+            if (old == null) throw new IllegalStateException("Modulus not found — is this the injected-client jar?");
+            System.out.println("[modulus] " + old.substring(0, 24) + "… -> " + modulus.substring(0, 24) + "…");
+            System.out.println("[localhost] " + (overwriteLocalHost(zip) ? "blanked" : "not present (ok)"));
+        } else if (mode.equals("wrapper")) {
+            boolean j = blankConstant(zip, ".jagex.com");
+            boolean r = blankConstant(zip, ".runescape.com");
+            System.out.println("[hostcheck] .jagex.com " + (j ? "blanked" : "absent") + ", .runescape.com " + (r ? "blanked" : "absent"));
+            if (!j && !r) throw new IllegalStateException("No host check found — is this the client wrapper jar?");
+        } else if (mode.equals("shaded")) {
+            // One fat jar carrying both the injected-client (modulus/localhost) and the
+            // ClientLoader wrapper (host checks). Apply everything in a single pass.
+            if (args.length < 4) throw new IllegalArgumentException("shaded mode needs <modulusHex>");
+            String modulus = args[3].trim();
+            if (!modulus.matches("[0-9a-fA-F]+")) throw new IllegalArgumentException("modulus must be hex");
+            String old = overwriteModulus(zip, modulus);
+            if (old == null) throw new IllegalStateException("Modulus not found in shaded jar");
+            System.out.println("[modulus] " + old.substring(0, 24) + "… -> " + modulus.substring(0, 24) + "…");
+            System.out.println("[localhost] " + (overwriteLocalHost(zip) ? "blanked" : "not present (ok)"));
+            boolean j = blankConstant(zip, ".jagex.com");
+            boolean r = blankConstant(zip, ".runescape.com");
+            System.out.println("[hostcheck] .jagex.com " + (j ? "blanked" : "absent") + ", .runescape.com " + (r ? "blanked" : "absent"));
+        } else {
+            throw new IllegalArgumentException("unknown mode: " + mode);
+        }
 
         writeZip(zip, out);
-        System.out.println("[done] wrote " + out);
+        System.out.println("[done] -> " + out);
     }
 
     // --- modulus -----------------------------------------------------------
 
-    /** Find the entry containing the RSA exponent "10001", patch its modulus. */
+    /** Find the entry containing the RSA exponent "10001", patch its modulus. Returns null if absent. */
     private static String overwriteModulus(Map<String, byte[]> zip, String rsa) {
         byte[] needle = "10001".getBytes(StandardCharsets.UTF_8);
         for (Map.Entry<String, byte[]> e : zip.entrySet()) {
@@ -72,7 +94,36 @@ public final class PatchClient {
             e.setValue(patched);
             return old[0];
         }
-        throw new IllegalStateException("Unable to find modulus (no class carried a 256-hex constant next to exponent 10001)");
+        return null;
+    }
+
+    /**
+     * Blank a constant-pool string EXACTLY equal to `literal` (a whole UTF-8 constant,
+     * not a substring of a longer one like a full URL). We confirm it's a real constant
+     * by checking the preceding u2 length prefix == literal.length() — the byte-level
+     * equivalent of RSProx's ASM "LdcInsnNode.cst equals" match.
+     */
+    private static boolean blankConstant(Map<String, byte[]> zip, String literal) {
+        byte[] needle = literal.getBytes(StandardCharsets.UTF_8);
+        int len = needle.length;
+        boolean any = false;
+        for (Map.Entry<String, byte[]> e : zip.entrySet()) {
+            byte[] bytes = e.getValue();
+            int from = 0, idx;
+            while ((idx = indexOf(bytes, needle, from)) != -1) {
+                boolean isWholeConstant = idx >= 2
+                        && (((bytes[idx - 2] & 0xFF) << 8) | (bytes[idx - 1] & 0xFF)) == len;
+                if (isWholeConstant) {
+                    bytes = setString(bytes, idx, "");
+                    e.setValue(bytes);
+                    any = true;
+                    from = idx; // array shrank; keep scanning from here
+                } else {
+                    from = idx + 1; // substring hit — skip past it
+                }
+            }
+        }
+        return any;
     }
 
     /** Locate the first run of >=256 hex chars (the modulus constant) and swap it. */
