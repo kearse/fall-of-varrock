@@ -51,14 +51,16 @@ jobs:
 
       - name: Assemble launcher + seed client
         shell: bash
+        env:
+          JDK11: ${{ steps.jdk11.outputs.path }}
         run: |
           mkdir -p input
           # Seed copy of the client (first launch is instant; the launcher only
           # downloads later when fov-client.jar changes on the server).
           curl -fSL https://fallofvarrock.com/client/fov-client.jar -o input/fov-client.jar
           # Compile the self-updating launcher (targets Java 11 = the bundled runtime).
-          "$JAVA_HOME_11_X64/bin/javac" --release 11 -d lc client-build/launcher/FovLauncher.java
-          "$JAVA_HOME_11_X64/bin/jar" cfe input/fov-launcher.jar FovLauncher -C lc .
+          "$JDK11/bin/javac" --release 11 -d lc client-build/launcher/FovLauncher.java
+          "$JDK11/bin/jar" cfe input/fov-launcher.jar FovLauncher -C lc .
           ls -l input
 
       - name: Generate app icon
