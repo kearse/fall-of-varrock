@@ -1,4 +1,4 @@
-# Kingdom of Lumbridge — game server runtime image.
+# Fall of Varrock — game server runtime image.
 #
 # The distribution must be built BEFORE this image (CI does this; locally):
 #   ./gradlew game-server:installDist

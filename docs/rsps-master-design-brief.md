@@ -1,4 +1,4 @@
-# Kingdom of Lumbridge — Master Design Brief
+# Fall of Varrock — Master Design Brief
 ### War-led identity: First 10 Minutes → War Effort loop → Feudal endgame → Monetization
 
 **What this is.** An architecture/design spec authored as the "mastermind" brief. A separate

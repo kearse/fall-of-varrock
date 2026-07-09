@@ -1,8 +1,8 @@
 {
-  "name": "kingdom-of-lumbridge-discord-bot",
+  "name": "fall-of-varrock-discord-bot",
   "version": "0.1.0",
   "private": true,
-  "description": "Discord gateway worker for Kingdom of Lumbridge — account linking, store role sync, in-game event feed, hiscores commands, and /setup server builder.",
+  "description": "Discord gateway worker for Fall of Varrock — account linking, store role sync, in-game event feed, hiscores commands, and /setup server builder.",
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",

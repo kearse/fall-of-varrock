@@ -1,4 +1,4 @@
-# Kingdom of Lumbridge — Long-Term Vision
+# Fall of Varrock — Long-Term Vision
 
 > A living, dystopian RuneScape. The cities are the only safe ground; everywhere
 > else is hostile. You don't progress by grinding XP in a vacuum — you climb a

@@ -1,8 +1,8 @@
 {
-  "name": "kingdom-of-lumbridge-web",
+  "name": "fall-of-varrock-web",
   "version": "0.1.0",
   "private": true,
-  "description": "Community web platform for Kingdom of Lumbridge RSPS — site, hiscores, forum, store, Discord integration.",
+  "description": "Community web platform for Fall of Varrock RSPS — site, hiscores, forum, store, Discord integration.",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

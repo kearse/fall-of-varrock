@@ -354,7 +354,7 @@ commit than the `runelite-parent-1.10.51` tag.
 - First milestone = get *any* self-built RuneLite to log into our rsprot 228 server (via
   the RSProx proxy / jav_config). Only after that do we add the scam-check mixin.
 
-## 5c. First custom plugin — "Kingdom of Lumbridge Alerts" (server-driven banner + notification)
+## 5c. First custom plugin — "Fall of Varrock Alerts" (server-driven banner + notification)
 
 Proves the full plugin → overlay → notifier → server-state loop. Pattern is reusable for
 any server-driven client UI.
@@ -388,7 +388,7 @@ cache authoring.
   (~3s) it packs the war state into ONE varp **4601** (only sends on change):
   `bits0-1 phase | bits2-3 tier(0Probe/1Raid/2Siege/3unknown) | bits4-15 goblins | bits16-27 roster`.
   `::warhud` (admin) now just reports the state.
-- **Client** (`net.runelite.client.plugins.warhud`, "Kingdom of Lumbridge War HUD", on by default): overlay
+- **Client** (`net.runelite.client.plugins.warhud`, "Fall of Varrock War HUD", on by default): overlay
   reads varp 4601 via `client.getVarpValue(4601)` each frame, unpacks, draws the BOTTOM_LEFT
   bar — green "AT PEACE" / orange "LUMBRIDGE: <TIER> — N goblins" + drain bar / red "FALLEN".
 - **Why packed into one varp:** minimizes varp-collision risk (only 4600 alert + 4601 hud

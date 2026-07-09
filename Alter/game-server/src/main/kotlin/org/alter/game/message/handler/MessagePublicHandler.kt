@@ -31,7 +31,7 @@ class MessagePublicHandler : MessageHandler<MessagePublic> {
             return
         }
 
-        // The "Kingdom of Lumbridge Companions" RuneLite panel drives orders via the chat-send script, which posts
+        // The "Fall of Varrock Companions" RuneLite panel drives orders via the chat-send script, which posts
         // the text as PUBLIC CHAT (not a routed command). Catch the companion command here, run it,
         // and suppress the chat so it doesn't show. Extend the allow-list as the panel grows.
         val text = message.message.trim()

@@ -53,7 +53,7 @@ async function main() {
 
   console.log("Posting community starter threads...");
   await ensureThread("General Discussion", "👋 Welcome — introduce yourself here!",
-`New to **Kingdom of Lumbridge**? Drop a reply and tell us:
+`New to **Fall of Varrock**? Drop a reply and tell us:
 
 - Your in-game name
 - How you found the server

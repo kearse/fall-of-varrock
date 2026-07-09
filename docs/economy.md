@@ -1,4 +1,4 @@
-# Kingdom of Lumbridge — Economy Ledger (faucet ↔ sink)
+# Fall of Varrock — Economy Ledger (faucet ↔ sink)
 
 > **Rule:** every gp/item **faucet** (source) must be paired with a **sink** (drain), and
 > overall **sinks ≥ faucets**. Uncontrolled inflation + dupes are the #1 cause of RSPS

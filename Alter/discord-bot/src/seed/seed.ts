@@ -52,7 +52,7 @@ export async function seedContent(guild: Guild): Promise<SeedResult> {
       .setColor(entry.color)
       .setTitle(entry.title)
       .setDescription(entry.body)
-      .setFooter({ text: "Kingdom of Lumbridge" });
+      .setFooter({ text: "Fall of Varrock" });
     await channel
       .send({ embeds: [embed], components: buildComponents(entry) })
       .then(() => result.posted.push(entry.channel))

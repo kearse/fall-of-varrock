@@ -35,7 +35,7 @@ object CompanionRegistry {
     const val MAX = 3
     private const val SAVE_EVERY = 30 // brain ticks between blob refreshes (~36s)
     /** Varps the server writes each tick with the owner's companion world-indices (+1; 0 = empty),
-     *  so the "Kingdom of Lumbridge Companions" RuneLite plugin can find exactly THIS player's companions by index
+     *  so the "Fall of Varrock Companions" RuneLite plugin can find exactly THIS player's companions by index
      *  (name-independent). One varp per slot: 4610, 4611, 4612. */
     private const val COMP_VARP_BASE = 4610
     /** Status varps (4613, 4614, 4615) — a packed snapshot per companion so the panel shows them

@@ -1,5 +1,5 @@
 ---
-# Kingdom of Lumbridge — custom launch items.
+# Fall of Varrock — custom launch items.
 # Reward TICKETS. Boss/Vote are now a TRADEABLE, STACKABLE item-currency (DECISIONS.md §8) — coins-
 # like money earned from content and spent directly in the reward shop via ItemCurrency. They MUST
 # use stackable cache ids (verified via :game-server:itemCheck): Boss=4067 (Castle wars ticket

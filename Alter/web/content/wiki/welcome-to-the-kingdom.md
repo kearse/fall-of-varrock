@@ -6,7 +6,7 @@ order: 1
 updated: 2026-07-04
 ---
 
-**Kingdom of Lumbridge** is an OSRS-based server (revision 228) built around one big idea: the world is at war, and *everything you do feeds it*. Lumbridge is the last free city — your home, your market, and the seat of the crown. Every other city is held by the enemy, and taking them back is the endgame.
+**Fall of Varrock** is an OSRS-based server (revision 228) built around one big idea: the world is at war, and *everything you do feeds it*. Lumbridge is the last free city — your home, your market, and the seat of the crown. Every other city is held by the enemy, and taking them back is the endgame.
 
 ## The three pillars
 

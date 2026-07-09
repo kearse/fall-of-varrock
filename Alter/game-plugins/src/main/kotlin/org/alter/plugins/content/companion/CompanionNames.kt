@@ -21,6 +21,6 @@ object CompanionNames {
         POOL.shuffled().firstOrNull { it !in taken } ?: POOL.random()
 
     /** Pool index of [name] (so it can be pushed to the client as a small int instead of a string).
-     *  The "Kingdom of Lumbridge Companions" RuneLite plugin holds a copy of this same POOL, keyed by this index. */
+     *  The "Fall of Varrock Companions" RuneLite plugin holds a copy of this same POOL, keyed by this index. */
     fun indexOf(name: String): Int = POOL.indexOf(name)
 }

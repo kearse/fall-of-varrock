@@ -1,4 +1,4 @@
-# Kingdom of Lumbridge — Community Platform
+# Fall of Varrock — Community Platform
 
 Website + forum + store + Discord, all sharing one MongoDB with the game server so
 **players use a single account everywhere**.

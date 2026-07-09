@@ -30,7 +30,7 @@ export async function welcomeMember(member: GuildMember): Promise<void> {
         new EmbedBuilder()
           .setColor(0xd4af37)
           .setDescription(
-            `Welcome to **Kingdom of Lumbridge**! Link your game account with \`/link\` (see #${CH.linkAccount}), ` +
+            `Welcome to **Fall of Varrock**! Link your game account with \`/link\` (see #${CH.linkAccount}), ` +
               `grab your notification roles in #${CH.roles}, and check #${CH.howToPlay} to get started.`,
           ),
       ],

@@ -7,7 +7,7 @@ import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
 
 /**
- * Test/trigger command for the client-side "Kingdom of Lumbridge Alerts" plugin.
+ * Test/trigger command for the client-side "Fall of Varrock Alerts" plugin.
  *
  * Toggles [ALERT_VARP]; the custom RuneLite client watches this varp and
  * shows an on-screen banner + notification when it becomes non-zero. The

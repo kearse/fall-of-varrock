@@ -1,4 +1,4 @@
-# Kingdom of Lumbridge — full local stack.
+# Fall of Varrock — full local stack.
 #   mongo        shared database (accounts/details/news/forum/orders/entitlements…)
 #   web          Next.js site + API (port 3000)
 #   discord-bot  Discord integration worker (feeds, linking, role sync)
@@ -32,7 +32,7 @@ services:
       # login cookie be shared with the forum subdomain in production.
       FORUM_URL: ${FORUM_URL:-http://localhost:4567}
       AUTH_COOKIE_DOMAIN: ${AUTH_COOKIE_DOMAIN:-}
-      NEXT_PUBLIC_SITE_NAME: Kingdom of Lumbridge
+      NEXT_PUBLIC_SITE_NAME: Fall of Varrock
       NEXT_PUBLIC_SITE_URL: ${SITE_URL:-http://localhost:3000}
       NEXT_PUBLIC_GAME_WORLD_HOST: ${GAME_WORLD_HOST:-localhost}
       DISCORD_WEBHOOK_URL: ${DISCORD_WEBHOOK_URL:-}

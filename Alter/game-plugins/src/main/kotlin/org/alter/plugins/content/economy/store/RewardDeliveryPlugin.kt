@@ -92,7 +92,7 @@ class RewardDeliveryPlugin(
         }
 
         if (delivered > 0) {
-            player.message("<col=801700>Thank you for supporting Kingdom of Lumbridge!</col> Your purchase has been delivered.")
+            player.message("<col=801700>Thank you for supporting Fall of Varrock!</col> Your purchase has been delivered.")
         }
     }
 

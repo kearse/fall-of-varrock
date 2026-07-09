@@ -5,11 +5,11 @@ db.objects.updateOne(
   { _key: "config" },
   {
     $set: {
-      title: "Kingdom of Lumbridge",
-      browserTitle: "Kingdom of Lumbridge",
+      title: "Fall of Varrock",
+      browserTitle: "Fall of Varrock",
       "title:url": "http://localhost:3000",
       showSiteTitle: 1,
     },
   }
 );
-print("updated title -> Kingdom of Lumbridge");
+print("updated title -> Fall of Varrock");

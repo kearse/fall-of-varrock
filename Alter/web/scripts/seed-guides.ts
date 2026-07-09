@@ -9,7 +9,7 @@
  */
 import { createGuide } from "../src/lib/guides";
 
-const AUTHOR = "Kingdom of Lumbridge";
+const AUTHOR = "Fall of Varrock";
 
 interface Seed {
   title: string;
@@ -25,7 +25,7 @@ const GUIDES: Seed[] = [
     summary: "Your first hour: enlist, find your way around Lumbridge, and earn your first rank.",
     body: `# Getting Started
 
-Welcome to **Kingdom of Lumbridge** — a war server. You begin a lowly **Peasant** and rise through a feudal ladder of *earned* power. This guide gets you on your feet.
+Welcome to **Fall of Varrock** — a war server. You begin a lowly **Peasant** and rise through a feudal ladder of *earned* power. This guide gets you on your feet.
 
 ## 1. Log in
 Register on the website or just type a new username and password at the in-game login — it's the same account. Your stats are shared with the website hiscores in real time.
@@ -64,7 +64,7 @@ When you've saved up, talk to **Duke Horacio** in the castle to buy your way up 
     summary: "Raids, campaigns, and conquests — commanding troops and splitting the spoils.",
     body: `# The War and Campaigns
 
-The endgame of Kingdom of Lumbridge is **war**. High-ranking players command allied troops against enemy cities; the loot the enemy drops is **pooled** and split among everyone who fought. There are three scales of operation, each unlocked by your feudal rank.
+The endgame of Fall of Varrock is **war**. High-ranking players command allied troops against enemy cities; the loot the enemy drops is **pooled** and split among everyone who fought. There are three scales of operation, each unlocked by your feudal rank.
 
 ## The three operations
 

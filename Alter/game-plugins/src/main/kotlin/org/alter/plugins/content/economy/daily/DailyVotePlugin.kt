@@ -63,7 +63,7 @@ class DailyVotePlugin(
     }
 
     private fun voteInfo(player: Player) {
-        player.message("--- Vote for Kingdom of Lumbridge ---")
+        player.message("--- Vote for Fall of Varrock ---")
         player.message("Voting is a local stub on this server. Use <col=801700>::claimvote</col> once a day to claim your reward.")
     }
 

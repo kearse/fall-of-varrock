@@ -1,4 +1,4 @@
-# Kingdom of Lumbridge — web app (Next.js) production image
+# Fall of Varrock — web app (Next.js) production image
 FROM node:20-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./

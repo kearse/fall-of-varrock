@@ -46,7 +46,7 @@ export async function pollNews(client: Client): Promise<void> {
         .setURL(`${config.siteUrl}/news/${post.slug}`)
         .setDescription(excerpt(post.body))
         .setAuthor({ name: post.authorName })
-        .setFooter({ text: `Kingdom of Lumbridge • ${post.category}` })
+        .setFooter({ text: `Fall of Varrock • ${post.category}` })
         .setTimestamp(post.publishedAt ? new Date(post.publishedAt) : new Date());
 
       await (channel as TextChannel).send({ embeds: [embed] }).catch((e) =>

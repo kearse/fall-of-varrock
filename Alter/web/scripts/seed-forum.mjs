@@ -78,14 +78,14 @@ async function main() {
 
   console.log("Creating category structure...");
   // Sections (top-level) + boards (children)
-  const secOfficial = await ensureCategory("Kingdom of Lumbridge", "Official news, rules and links.");
+  const secOfficial = await ensureCategory("Fall of Varrock", "Official news, rules and links.");
   await ensureCategory("Announcements", "Official server announcements and patch notes.", secOfficial);
   await ensureCategory("Rules", "In-game and forum rules. Read before posting.", secOfficial);
   await ensureCategory("Donate", "Support the realm.", secOfficial, { link: `${process.env.SITE_URL || "http://localhost:3000"}/store` });
-  await ensureCategory("Vote", "Vote for Kingdom of Lumbridge.", secOfficial, { link: `${process.env.SITE_URL || "http://localhost:3000"}/vote` });
+  await ensureCategory("Vote", "Vote for Fall of Varrock.", secOfficial, { link: `${process.env.SITE_URL || "http://localhost:3000"}/vote` });
 
   const secGeneral = await ensureCategory("General", "Talk, trade and learn.");
-  await ensureCategory("General Discussion", "Talk about anything Kingdom of Lumbridge.", secGeneral);
+  await ensureCategory("General Discussion", "Talk about anything Fall of Varrock.", secGeneral);
   const guidesCid = await ensureCategory("Guides", "Player guides, money-makers and walkthroughs.", secGeneral);
   await ensureCategory("Marketplace", "Buy, sell and trade in-game goods.", secGeneral);
   await ensureCategory("Suggestions", "Ideas to improve the game and forum.", secGeneral);
@@ -113,7 +113,7 @@ async function main() {
   const rulesCid = (await listCategories()).find((c) => c.name === "Rules")?.cid;
 
   console.log("Posting starter content...");
-  if (annCid) await postGuide(annCid, "Welcome to the Kingdom of Lumbridge forums", WELCOME, true);
+  if (annCid) await postGuide(annCid, "Welcome to the Fall of Varrock forums", WELCOME, true);
   if (rulesCid) await postGuide(rulesCid, "Server & Forum Rules", RULES, true);
 
   console.log("Posting guides...");
@@ -125,7 +125,7 @@ async function main() {
 // ============================ CONTENT ============================
 const WELCOME = `# Welcome, adventurer!
 
-This is the official community forum for **Kingdom of Lumbridge** — a free-to-play RuneScape private server built around **siege warfare, deep skilling and real progression**, with its home at Lumbridge.
+This is the official community forum for **Fall of Varrock** — a free-to-play RuneScape private server built around **siege warfare, deep skilling and real progression**, with its home at Lumbridge.
 
 **New here? Start with these:**
 - 📜 *Your First Hour — The Recruit Trials*
@@ -198,7 +198,7 @@ Your **previous teleports** are remembered per character, and there's a server-w
 
   // -------------------- The War --------------------
   { title: "The War Explained", pin: true, body:
-`Kingdom of Lumbridge is **player-offense**: you don't just defend — you raise troops and march on hostile cities for their loot. There are three tiers, unlocked by your feudal rank:
+`Fall of Varrock is **player-offense**: you don't just defend — you raise troops and march on hostile cities for their loot. There are three tiers, unlocked by your feudal rank:
 
 - **RAID** (Lord+) — summon a boss to your city and bring an escort squad.
 - **CAMPAIGN** (Minister+) — field a column of allied troops that breaks a city's frontier garrison and seizes a cut of its loot.

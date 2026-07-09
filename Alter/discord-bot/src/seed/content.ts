@@ -7,7 +7,7 @@ import { CH } from "../guild.js";
  * Edit freely — re-running /seed updates nothing already posted (matched by the
  * embed title), so to refresh a channel delete the old message then /seed.
  *
- * Every claim here is accurate to the game (Kingdom of Lumbridge: a war server —
+ * Every claim here is accurate to the game (Fall of Varrock: a war server —
  * feudal ranks bought from Duke Horacio, war commands, Wilderness PKing). Full
  * how-to guides live on the website; #guides links to them.
  *
@@ -29,7 +29,7 @@ export interface SeedEntry {
 export const SEED: SeedEntry[] = [
   {
     channel: CH.welcome,
-    title: "⚔️ Welcome to the Kingdom of Lumbridge",
+    title: "⚔️ Welcome to the Fall of Varrock",
     color: 0xd4af37,
     body:
       "**The realm is at war.** Lumbridge stands, but the frontier is contested — and every recruit " +
@@ -65,7 +65,7 @@ export const SEED: SeedEntry[] = [
     title: "📥 Download the Client",
     color: 0x2ecc71,
     body:
-      "Grab the official Kingdom of Lumbridge client for your platform, then log in (new username + " +
+      "Grab the official Fall of Varrock client for your platform, then log in (new username + " +
       "password at the login screen creates your account). Trouble loading? Open a support ticket.\n\n" +
       "The website has every download link and the current login world host.",
     links: [
@@ -80,7 +80,7 @@ export const SEED: SeedEntry[] = [
     title: "🧭 How to Play — the War Loop",
     color: 0x3498db,
     body:
-      "Kingdom of Lumbridge is a **war server**. You start a Peasant and rise through a feudal ladder " +
+      "Fall of Varrock is a **war server**. You start a Peasant and rise through a feudal ladder " +
       "of *earned* power. The loop:\n\n" +
       "**1. Enlist.** You spawn in Lumbridge. The Recruiting Sergeant at the castle gate starts your " +
       "**Recruit Trials** — run `::trials` to see your next objective.\n" +
@@ -126,7 +126,7 @@ export const SEED: SeedEntry[] = [
     title: "🔗 Link Your Account",
     color: 0x2ecc71,
     body:
-      "Linking connects your Discord to your Kingdom of Lumbridge game account. It unlocks the game " +
+      "Linking connects your Discord to your Fall of Varrock game account. It unlocks the game " +
       "channels, your rank/donor roles, and lookup commands.\n\n" +
       "**How to link:**\n" +
       "**1.** Log in on the website and open **Account → Link Discord**.\n" +

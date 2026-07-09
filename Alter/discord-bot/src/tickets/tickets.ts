@@ -36,7 +36,7 @@ function panel() {
       "Need help with your account, a purchase, or a bug? Click **Open a ticket** below " +
         "to start a private conversation with the staff team.\n\nPlease don't open duplicate tickets.",
     )
-    .setFooter({ text: "Kingdom of Lumbridge" });
+    .setFooter({ text: "Fall of Varrock" });
   const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder().setCustomId(TICKET_OPEN_ID).setLabel("Open a ticket").setEmoji("🎫").setStyle(ButtonStyle.Primary),
   );

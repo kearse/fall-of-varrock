@@ -22,7 +22,7 @@ export interface SetupResult {
 }
 
 /**
- * Idempotently builds the Kingdom of Lumbridge server layout. Safe to re-run:
+ * Idempotently builds the Fall of Varrock server layout. Safe to re-run:
  * roles/categories/channels are matched by name and reused, never duplicated.
  */
 export async function runSetup(guild: Guild): Promise<SetupResult> {

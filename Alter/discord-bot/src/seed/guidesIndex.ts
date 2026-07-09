@@ -9,7 +9,7 @@ import { config } from "../config.js";
  * web/scripts/seed-guides.ts.
  */
 
-const HEADER_TITLE = "📖 Guides — Kingdom of Lumbridge";
+const HEADER_TITLE = "📖 Guides — Fall of Varrock";
 
 interface GuideLink {
   title: string;

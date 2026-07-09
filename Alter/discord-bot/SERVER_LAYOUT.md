@@ -1,7 +1,7 @@
-# Kingdom of Lumbridge — Discord Server Template
+# Fall of Varrock — Discord Server Template
 
 This is the **server layout blueprint** — the categories, channels, roles and
-permissions for the official Kingdom of Lumbridge Discord. It is the equivalent
+permissions for the official Fall of Varrock Discord. It is the equivalent
 of the "template" you linked on discordextremelist; the difference is that a
 Discord template is a *static layout snapshot* with **no integration logic**, so
 the live integration is done by the bot in this folder.

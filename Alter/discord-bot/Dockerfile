@@ -1,4 +1,4 @@
-# Kingdom of Lumbridge — Discord bot worker
+# Fall of Varrock — Discord bot worker
 FROM node:20-alpine
 WORKDIR /app
 COPY package.json package-lock.json ./

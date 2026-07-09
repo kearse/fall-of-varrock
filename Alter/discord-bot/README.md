@@ -1,6 +1,6 @@
-# Kingdom of Lumbridge — Discord bot
+# Fall of Varrock — Discord bot
 
-The Discord gateway worker for Kingdom of Lumbridge. It is the **integration**
+The Discord gateway worker for Fall of Varrock. It is the **integration**
 half of the Discord setup; the server **layout** lives in
 [`SERVER_LAYOUT.md`](./SERVER_LAYOUT.md).
 

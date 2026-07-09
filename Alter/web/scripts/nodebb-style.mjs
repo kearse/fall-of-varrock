@@ -25,7 +25,7 @@ async function topicTitles(cid) {
 // name -> [FontAwesome icon, bgColor]
 const STYLE = {
   // sections
-  "Kingdom of Lumbridge": ["fa-crown", "#3a2f10"],
+  "Fall of Varrock": ["fa-crown", "#3a2f10"],
   "General": ["fa-comments", "#1f2937"],
   "The War": ["fa-khanda", "#3a1414"],
   "Media": ["fa-photo-film", "#1e293b"],
@@ -105,7 +105,7 @@ async function main() {
 
 const PATCH_1_0 = `# Patch 1.0 — The Realm Goes Live
 
-Welcome to the official launch of **Kingdom of Lumbridge**! Here's what's in at launch:
+Welcome to the official launch of **Fall of Varrock**! Here's what's in at launch:
 
 ## ⚔️ The War
 - Player-offense war system: **RAID** (Lord+), **CAMPAIGN** (Minister+) and **CONQUEST** (King).
@@ -127,6 +127,6 @@ Welcome to the official launch of **Kingdom of Lumbridge**! Here's what's in at 
 
 Jump into the **Guides** board to learn the ropes, and we'll see you on the battlefield. ⚔️
 
-*— The Kingdom of Lumbridge team*`;
+*— The Fall of Varrock team*`;
 
 main().catch((e) => { console.error(e); process.exit(1); });

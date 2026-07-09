@@ -50,7 +50,7 @@ function endedEmbed(g: GiveawayDoc): EmbedBuilder {
     .setColor(0x95a5a6)
     .setTitle(`🎉 Giveaway Ended: ${g.prize}`)
     .setDescription(`Winners: ${winners}\nEntries: **${g.entrants.length}**`)
-    .setFooter({ text: "Kingdom of Lumbridge" });
+    .setFooter({ text: "Fall of Varrock" });
 }
 
 function enterRow(id: string): ActionRowBuilder<ButtonBuilder> {
@@ -163,7 +163,7 @@ async function finalize(client: Client, g: GiveawayDoc, winners: string[]): Prom
           .setColor(0x2ecc71)
           .setTitle(`🎉 Winner${winners.length === 1 ? "" : "s"}: ${ended.prize}`)
           .setDescription(`${mention}\n\nFrom **${ended.entrants.length}** entr${ended.entrants.length === 1 ? "y" : "ies"}. Winners: open a ticket to claim if not paid automatically.`)
-          .setFooter({ text: "Kingdom of Lumbridge" }),
+          .setFooter({ text: "Fall of Varrock" }),
       ],
     })
     .catch(() => {});

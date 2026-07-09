@@ -45,7 +45,7 @@ function buildEmbed(ev: DiscordEventDoc): EmbedBuilder {
   if (ev.description) embed.setDescription(ev.description);
   if (ev.player) embed.setAuthor({ name: ev.player });
   if (ev.fields?.length) embed.addFields(ev.fields.slice(0, 25));
-  embed.setFooter({ text: "Kingdom of Lumbridge" });
+  embed.setFooter({ text: "Fall of Varrock" });
   return embed;
 }
 

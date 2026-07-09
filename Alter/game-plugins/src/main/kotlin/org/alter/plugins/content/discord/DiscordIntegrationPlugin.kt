@@ -48,7 +48,7 @@ class DiscordIntegrationPlugin(
 
         onWorldInit {
             DiscordBridge.clearOnline()
-            DiscordBridge.event(kind = "boot", title = "The Kingdom of Lumbridge is now online!")
+            DiscordBridge.event(kind = "boot", title = "The Fall of Varrock is now online!")
         }
 
         onLogin {

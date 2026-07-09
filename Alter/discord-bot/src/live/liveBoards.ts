@@ -61,7 +61,7 @@ async function statusEmbed(): Promise<EmbedBuilder> {
       { name: "World", value: up ? "🟢 Online" : "🔴 Offline", inline: true },
       { name: "Players online", value: up ? String(online) : "—", inline: true },
     )
-    .setFooter({ text: "Kingdom of Lumbridge • updates every minute" })
+    .setFooter({ text: "Fall of Varrock • updates every minute" })
     .setTimestamp(new Date());
 }
 
@@ -77,7 +77,7 @@ async function hiscoresEmbed(): Promise<EmbedBuilder> {
         ? rows.map((r, n) => `${medal(n)} ${r.displayName} — **${r.totalLevel.toLocaleString()}** (cb ${r.combat})`).join("\n")
         : "No ranked players yet.",
     )
-    .setFooter({ text: "Kingdom of Lumbridge • updates every minute" })
+    .setFooter({ text: "Fall of Varrock • updates every minute" })
     .setTimestamp(new Date());
 }
 

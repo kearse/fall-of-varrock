@@ -15,7 +15,7 @@ the production bootstrap. You do NOT need the game repo to play — only to deve
    ```yaml
    config:
      - id: 1
-       name: Kingdom of Lumbridge (prod)
+       name: Fall of Varrock (prod)
        jav_config_url: https://fallofvarrock.com/client/jav_config.ws
        varp_count: 15000
        revision: 228.2

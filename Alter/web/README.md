@@ -1,6 +1,6 @@
-# Kingdom of Lumbridge — Web Platform
+# Fall of Varrock — Web Platform
 
-Community site for the Kingdom of Lumbridge RSPS: public site, **shared logins with the
+Community site for the Fall of Varrock RSPS: public site, **shared logins with the
 game**, hiscores, forum/guides, donor & membership store, and Discord integration.
 
 Built with Next.js (App Router, TypeScript) + Tailwind, talking to the **same MongoDB**

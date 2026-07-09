@@ -1,4 +1,4 @@
-# Kingdom of Lumbridge — Forum (NodeBB)
+# Fall of Varrock — Forum (NodeBB)
 
 The community forum runs on **NodeBB** — a modern, real-time forum engine. It shares the
 **same MongoDB server** as the game and website (in its own `nodebb` database) and uses

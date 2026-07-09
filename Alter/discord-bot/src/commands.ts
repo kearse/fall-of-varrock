@@ -23,7 +23,7 @@ import { ChannelType, TextChannel } from "discord.js";
 export const COMMANDS = [
   new SlashCommandBuilder()
     .setName("link")
-    .setDescription("Link your Discord to your Kingdom of Lumbridge account")
+    .setDescription("Link your Discord to your Fall of Varrock account")
     .addStringOption((o) => o.setName("code").setDescription("The link code from the website").setRequired(true)),
   new SlashCommandBuilder().setName("unlink").setDescription("Unlink your game account from Discord"),
   new SlashCommandBuilder().setName("whoami").setDescription("Show which game account you're linked to"),
@@ -189,7 +189,7 @@ async function cmdPlayer(i: ChatInputCommandInteraction) {
       value: top.map((s) => `**${s.name}** ${s.level}`).join("  •  "),
     });
   }
-  embed.setFooter({ text: "Kingdom of Lumbridge" });
+  embed.setFooter({ text: "Fall of Varrock" });
   await i.editReply({ embeds: [embed] });
 }
 
@@ -207,7 +207,7 @@ async function cmdHiscores(i: ChatInputCommandInteraction) {
     .setDescription(
       rows.map((r, n) => `${medal(n)} ${r.displayName} — **${r.totalLevel.toLocaleString()}** (cb ${r.combat})`).join("\n"),
     )
-    .setFooter({ text: "Kingdom of Lumbridge" });
+    .setFooter({ text: "Fall of Varrock" });
   await i.editReply({ embeds: [embed] });
 }
 
@@ -219,7 +219,7 @@ async function cmdOnline(i: ChatInputCommandInteraction) {
     .setColor(players.length ? 0x2ecc71 : 0x95a5a6)
     .setTitle(`🟢 ${players.length} online`)
     .setDescription(players.length ? players.map((p) => `• ${p.displayName}`).join("\n") : "Nobody's online right now.")
-    .setFooter({ text: "Kingdom of Lumbridge" });
+    .setFooter({ text: "Fall of Varrock" });
   await i.editReply({ embeds: [embed] });
 }
 

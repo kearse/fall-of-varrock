@@ -1,4 +1,4 @@
-# Kingdom of Lumbridge (Kearse RSPS)
+# Fall of Varrock (Kearse RSPS)
 
 OSRS revision-228 private server built on a heavily customized [Alter](Alter/) fork, plus the
 community website, forum integration, and Discord bot.

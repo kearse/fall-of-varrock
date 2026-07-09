@@ -25,7 +25,7 @@ class CompanionPlugin(
         onLogin { CompanionRegistry.spawnFor(world, player) }
         onLogout { CompanionRegistry.storeAndDespawn(world, player) }
 
-        // NOTE: gear management is handled by the "Kingdom of Lumbridge Companions" RuneLite plugin (panel), NOT
+        // NOTE: gear management is handled by the "Fall of Varrock Companions" RuneLite plugin (panel), NOT
         // right-click player-options — those `sendOption`s are global and leaked onto every player
         // and bot. The panel will drive gear via a per-companion channel instead.
 

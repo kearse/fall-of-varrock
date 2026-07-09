@@ -1,6 +1,6 @@
 # Production deploy runbook
 
-How Kingdom of Lumbridge runs in production and how to operate it.
+How Fall of Varrock runs in production and how to operate it.
 
 ## Architecture
 
