@@ -1,2 +1,4 @@
 .claude/
 *.log
+config.properties
+
