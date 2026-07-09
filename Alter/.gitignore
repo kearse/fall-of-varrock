@@ -1,0 +1,47 @@
+/.gradle/
+build/
+g=out/
+gen/
+
+/data/saves/
+/data/rsa/
+/data/xteas.json
+/data/xteas.json.backup
+/cfg/
+
+error.log
+modulus
+
+first-launch
+first-launch-example
+/game.yml
+/dev-settings.yml
+dump.hprof
+/.kotlin/
+
+# Secrets — real values live only on each machine; commit the .example files instead
+.env
+
+# Game cache: 164MB dat2 exceeds GitHub's 100MB file limit; distributed separately (see root README)
+/data/cache/
+/data/cache_backup_minimap/
+/data/cache-backup-pre-hud/
+/data/cache-backups/
+/data/mapdump/
+/data/shortcutscan/
+
+# Local logs and diagnostic dumps
+*.log
+server-*.txt
+build-out.txt
+install-log.txt
+lootcompile.txt
+rangecompile.txt
+panel-*.txt
+insp_*.txt
+
+# IDE / tooling
+.idea/
+.run/
+node_modules/
+.next/

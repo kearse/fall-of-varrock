@@ -1,0 +1,55 @@
+# Game values
+# You want to edit these to fit your game.
+name: "Alter"
+game-port: 43594
+revision: 228
+
+# The coordinates for the home location.
+home-x: 3218
+home-z: 3218
+
+# Privileges
+# Any privilege you want to be represented in-game you define here.
+privileges:
+  - id: 0
+    icon: 0
+    name: "player"
+    powers: []
+  - id: 1
+    icon: 1
+    name: "moderator"
+    powers: ["mod"]
+  - id: 2
+    icon: 2
+    name: "administrator"
+    powers: ["mod", "admin"]
+  - id: 3
+    icon: 2
+    name: "owner"
+    powers: ["mod", "dev", "admin", "owner"]
+
+# Game services
+# You can pick and choose which services you want to run.
+services:
+
+  - class: org.alter.game.service.xtea.XteaKeyService
+
+  - class: org.alter.game.service.game.ItemMetadataService
+
+  - class: org.alter.game.service.game.NpcMetadataService
+
+  - class: org.alter.game.service.game.ObjectMetadataService
+
+  - class: org.alter.service.DumpEntityIdService
+    cache-path: "../data/cache/"
+    output-path: "../game-api/src/main/kotlin/org/alter/api/cfg/"
+    dump: false # Should keep in mind that this can fail. (Aka. On crash fuck up any of the dumping into files
+
+  - class: org.alter.game.service.rsa.RsaService
+
+  - class: org.alter.game.service.GameService
+
+  - class: org.alter.game.service.login.LoginService
+
+#  - class: org.alter.plugins.service.worldlist.WorldListService
+#    port: 4842

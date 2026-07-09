@@ -1,0 +1,168 @@
+package org.alter.plugins.content.companion
+
+import org.alter.api.ext.getCommandArgs
+import org.alter.api.ext.message
+import org.alter.api.ext.player
+import org.alter.game.Server
+import org.alter.game.model.World
+import org.alter.game.model.priv.Privilege
+import org.alter.game.model.timer.TimerKey
+import org.alter.game.plugin.KotlinPlugin
+import org.alter.game.plugin.PluginRepository
+
+/**
+ * Host plugin for the **companion** system: spawns a player's roster on login, stores + despawns it
+ * on logout, ticks the companion brains, and (for now) exposes test commands. The polished recruit
+ * flow lives at General Zo and the management UI is Phase 2 (custom client).
+ */
+class CompanionPlugin(
+    r: PluginRepository,
+    world: World,
+    server: Server,
+) : KotlinPlugin(r, world, server) {
+
+    init {
+        onLogin { CompanionRegistry.spawnFor(world, player) }
+        onLogout { CompanionRegistry.storeAndDespawn(world, player) }
+
+        // NOTE: gear management is handled by the "Kingdom of Lumbridge Companions" RuneLite plugin (panel), NOT
+        // right-click player-options — those `sendOption`s are global and leaked onto every player
+        // and bot. The panel will drive gear via a per-companion channel instead.
+
+        val timer = TimerKey()
+        onWorldInit { world.timers[timer] = TICK }
+        onTimer(timer) {
+            CompanionRegistry.tick(world)
+            world.timers[timer] = TICK
+        }
+
+        // ::recruit <melee|range|mage> — TEST recruit (the General Zo dialogue comes in a later step).
+        onCommand("recruit", Privilege.ADMIN_POWER, description = "Recruit a companion (test): ::recruit <melee|range|mage>") {
+            val archetype = when (player.getCommandArgs().getOrNull(0)?.lowercase()) {
+                "melee", null -> CompanionStyle.MELEE
+                "range", "ranged" -> CompanionStyle.RANGE
+                "mage", "magic" -> CompanionStyle.MAGE
+                else -> { player.message("Usage: ::recruit <melee|range|mage>"); return@onCommand }
+            }
+            val cap = CompanionRegistry.companionCap(player)
+            if (CompanionRegistry.count(player) >= cap) {
+                player.message("Your rank allows $cap companion(s) — you already command ${CompanionRegistry.count(player)}."); return@onCommand
+            }
+            val comp = CompanionRegistry.recruit(world, player, archetype)
+            if (comp == null) player.message("<col=801700>Could not recruit a companion.</col>")
+            else player.message("<col=4f9b4f>Recruited a ${archetype.display} companion (${CompanionRegistry.count(player)}/$cap).</col>")
+        }
+
+        // ::companion <train|attack|follow|deploy|return> [slot] — order all your companions, or just
+        // the companion in [slot] (1-based). The RuneLite panel sends the slot form for per-companion control.
+        onCommand("companion", description = "Order companions: ::companion <train|attack|follow|deploy|return> [slot]") {
+            val list = CompanionRegistry.ofOwner(player)
+            if (list.isEmpty()) { player.message("You have no companions."); return@onCommand }
+            val args = player.getCommandArgs()
+
+            // Gear management (panel-driven; gear from/to the owner's BANK):
+            //   ::companion equip   <compSlot> <itemId>     — add a bank item onto a companion
+            //   ::companion unequip <compSlot> <equipSlot>  — return a worn item to the bank
+            when (args.getOrNull(0)?.lowercase()) {
+                "equip" -> {
+                    val comp = list.getOrNull((args.getOrNull(1)?.toIntOrNull() ?: 0) - 1)
+                    val itemId = args.getOrNull(2)?.toIntOrNull()
+                    if (comp == null || itemId == null) { player.message("Usage: ::companion equip <slot> <itemId>"); return@onCommand }
+                    CompanionGear.equipFromBank(player, comp, itemId)
+                    CompanionRegistry.persist(player); CompanionRegistry.forcePush(player)
+                    return@onCommand
+                }
+                "unequip" -> {
+                    val comp = list.getOrNull((args.getOrNull(1)?.toIntOrNull() ?: 0) - 1)
+                    val equipSlot = args.getOrNull(2)?.toIntOrNull()
+                    if (comp == null || equipSlot == null) { player.message("Usage: ::companion unequip <slot> <equipSlot>"); return@onCommand }
+                    CompanionGear.unequipToBank(player, comp, equipSlot)
+                    CompanionRegistry.persist(player); CompanionRegistry.forcePush(player)
+                    return@onCommand
+                }
+                // ::companion style <slot> <0-3> — set the companion's attack style (panel buttons).
+                "style" -> {
+                    val slot = (args.getOrNull(1)?.toIntOrNull() ?: 0) - 1
+                    val style = args.getOrNull(2)?.toIntOrNull()
+                    if (slot < 0 || style == null) { player.message("Usage: ::companion style <slot> <0-3>"); return@onCommand }
+                    CompanionRegistry.setStyle(player, slot, style)
+                    return@onCommand
+                }
+                // ::companion spell <slot> <SPELL_NAME|auto> — set/clear a mage's autocast (panel selector).
+                "spell" -> {
+                    val slot = (args.getOrNull(1)?.toIntOrNull() ?: 0) - 1
+                    val name = args.getOrNull(2)
+                    if (slot < 0 || name == null) { player.message("Usage: ::companion spell <slot> <spell|auto>"); return@onCommand }
+                    CompanionRegistry.setSpell(player, slot, if (name.equals("auto", true)) null else name.uppercase())
+                    return@onCommand
+                }
+                // ::companion retaliate <slot> — toggle auto-retaliate (panel toggle).
+                "retaliate" -> {
+                    val slot = (args.getOrNull(1)?.toIntOrNull() ?: 0) - 1
+                    if (slot < 0) { player.message("Usage: ::companion retaliate <slot>"); return@onCommand }
+                    CompanionRegistry.toggleRetaliate(player, slot)
+                    return@onCommand
+                }
+                // ::companion rename <slot> <name> — rename a companion (panel dialog).
+                "rename" -> {
+                    val slot = (args.getOrNull(1)?.toIntOrNull() ?: 0) - 1
+                    val name = args.drop(2).joinToString(" ")
+                    if (slot < 0 || name.isBlank()) { player.message("Usage: ::companion rename <slot> <name>"); return@onCommand }
+                    CompanionRegistry.rename(player, slot, name)
+                    return@onCommand
+                }
+                // ::companion gear <slot> <equipSlot> — request the bank items that fit a slot (panel picker).
+                "gear" -> {
+                    val slot = (args.getOrNull(1)?.toIntOrNull() ?: 0) - 1
+                    val equipSlot = args.getOrNull(2)?.toIntOrNull()
+                    if (slot < 0 || equipSlot == null) { player.message("Usage: ::companion gear <slot> <equipSlot>"); return@onCommand }
+                    CompanionRegistry.pushGearList(player, slot, equipSlot)
+                    return@onCommand
+                }
+                // ::companion loot [slot] — toggle the donor auto-loot-to-bank perk (all, or one slot).
+                "loot" -> {
+                    val slot = args.getOrNull(1)?.toIntOrNull()
+                    val targets = if (slot != null) listOfNotNull(list.getOrNull(slot - 1)) else list
+                    if (targets.isEmpty()) { player.message("<col=801700>No such companion.</col>"); return@onCommand }
+                    val on = !targets.first().autoLoot // mirror the first target's new state across the selection
+                    targets.forEach { it.autoLoot = on }
+                    CompanionRegistry.persist(player); CompanionRegistry.forcePush(player)
+                    val who = if (slot != null) "Sir ${targets.first().username}" else "Your companions"
+                    player.message("<col=4f9b4f>$who will ${if (on) "now auto-bank loot" else "no longer auto-bank loot"}.</col>")
+                    return@onCommand
+                }
+            }
+
+            val order = when (args.getOrNull(0)?.lowercase()) {
+                "train" -> CompanionOrders.TRAIN
+                "attack", "hunt" -> CompanionOrders.ATTACK
+                "follow" -> CompanionOrders.FOLLOW
+                "deploy" -> CompanionOrders.DEPLOY
+                "return" -> CompanionOrders.RETURN
+                else -> { player.message("Usage: ::companion <train|attack|follow|deploy|return> [slot]"); return@onCommand }
+            }
+            val slot = args.getOrNull(1)?.toIntOrNull()
+            if (slot != null) {
+                val comp = list.getOrNull(slot - 1)
+                if (comp == null) { player.message("<col=801700>No companion in slot $slot.</col>"); return@onCommand }
+                comp.orders = order
+                player.message("<col=4f9b4f>Sir ${comp.username}: ${order.name.lowercase()}.</col>")
+            } else {
+                list.forEach { it.orders = order }
+                player.message("<col=4f9b4f>All companions: ${order.name.lowercase()}.</col>")
+            }
+        }
+
+        // ::companions — list your roster.
+        onCommand("companions", description = "List your companions") {
+            val list = CompanionRegistry.ofOwner(player)
+            if (list.isEmpty()) { player.message("You have no companions. Recruit one from General Zo."); return@onCommand }
+            player.message("Your companions (${list.size}/${CompanionRegistry.MAX}):")
+            list.forEach { player.message(" - Sir ${it.username} (${it.archetype.display}), combat ${it.combatLevel} [${it.orders.name.lowercase()}]") }
+        }
+    }
+
+    private companion object {
+        const val TICK = 2 // ~1.2s brain cadence
+    }
+}

@@ -1,0 +1,73 @@
+---
+# Warlord's Regalia - prestige COSMETIC set (Sanguine Torva recolor already in cache).
+# Stat-less by design: the `equipment` block zeroes all combat bonuses. We deliberately
+# omit `equipSlot`/`weaponType`/`renderAnimations` so the cache's existing equip slot and
+# model/animations are preserved (ItemMetadataService only overrides the slot when
+# equipSlot is provided) - giving a pure cosmetic with no risk of mis-slotting.
+# Bound (tradeable: false) so it reads as an earned prestige skin, not tradable BiS.
+# NOTE: keep the very first line of this file as `---` (a leading comment block before
+# the first `---` is parsed as an empty document and throws MismatchedInputException).
+id: 28254
+name: "Warlord's warhelm"
+examine: "The crowned helm of a siege warlord. Pure prestige."
+tradeable: false
+weight: 1.0
+equipment:
+  attackStab: 0
+  attackSlash: 0
+  attackCrush: 0
+  attackMagic: 0
+  attackRanged: 0
+  defenceStab: 0
+  defenceSlash: 0
+  defenceCrush: 0
+  defenceMagic: 0
+  defenceRanged: 0
+  meleeStrength: 0
+  rangedStrength: 0
+  magicDamage: 0
+  prayer: 0
+
+---
+id: 28256
+name: "Warlord's warplate"
+examine: "The blood-forged cuirass of a siege warlord. Pure prestige."
+tradeable: false
+weight: 1.0
+equipment:
+  attackStab: 0
+  attackSlash: 0
+  attackCrush: 0
+  attackMagic: 0
+  attackRanged: 0
+  defenceStab: 0
+  defenceSlash: 0
+  defenceCrush: 0
+  defenceMagic: 0
+  defenceRanged: 0
+  meleeStrength: 0
+  rangedStrength: 0
+  magicDamage: 0
+  prayer: 0
+
+---
+id: 28258
+name: "Warlord's wargreaves"
+examine: "The crimson greaves of a siege warlord. Pure prestige."
+tradeable: false
+weight: 1.0
+equipment:
+  attackStab: 0
+  attackSlash: 0
+  attackCrush: 0
+  attackMagic: 0
+  attackRanged: 0
+  defenceStab: 0
+  defenceSlash: 0
+  defenceCrush: 0
+  defenceMagic: 0
+  defenceRanged: 0
+  meleeStrength: 0
+  rangedStrength: 0
+  magicDamage: 0
+  prayer: 0

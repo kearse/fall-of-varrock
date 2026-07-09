@@ -1,0 +1,63 @@
+package org.alter.game.message.handler
+
+import net.rsprot.protocol.game.incoming.messaging.MessagePublic
+import org.alter.game.message.MessageHandler
+import org.alter.game.model.entity.Client
+import org.alter.game.service.log.LoggerService
+
+/**
+ * @author Tom <rspsmods@gmail.com>
+ */
+class MessagePublicHandler : MessageHandler<MessagePublic> {
+
+    private companion object {
+        /**
+         * The vanilla OSRS client refuses to forward "scam-bait" :: commands (::bank, etc.)
+         * and instead makes the player PUBLIC-CHAT this fixed line. We can't stop that
+         * client-side (it happens in the gamepack before any RuneLite hook), so we catch it
+         * here: suppress the embarrassing broadcast and run the intended command. The line is
+         * generic across scam words, so we assume the overwhelmingly-common one — ::bank.
+         */
+        const val SCAM_BAIT_MESSAGE = "Hey, everyone, I just tried to do something very silly!"
+    }
+
+    override fun consume(
+        client: Client,
+        message: MessagePublic,
+    ) {
+        if (message.message == SCAM_BAIT_MESSAGE) {
+            // Don't broadcast the troll; open the bank as if "::bank" had worked.
+            client.world.plugins.executeCommand(client, "pbank")
+            return
+        }
+
+        // The "Kingdom of Lumbridge Companions" RuneLite panel drives orders via the chat-send script, which posts
+        // the text as PUBLIC CHAT (not a routed command). Catch the companion command here, run it,
+        // and suppress the chat so it doesn't show. Extend the allow-list as the panel grows.
+        val text = message.message.trim()
+        if (text.startsWith("::")) {
+            val parts = text.removePrefix("::").trim().split(Regex("\\s+"))
+            when (parts.firstOrNull()?.lowercase()) {
+                "companion" -> {
+                    client.world.plugins.executeCommand(client, "companion", parts.drop(1).toTypedArray())
+                    return
+                }
+                // Teleport portal overlay (lofteleports): "::tp <cat> <row>" → teleport, suppress chat.
+                "tp" -> {
+                    client.world.plugins.executeCommand(client, "tpclick", parts.drop(1).toTypedArray())
+                    return
+                }
+            }
+        }
+
+        client.avatar.extendedInfo.setChat(
+            message.colour,
+            message.effect,
+            client.privilege.icon,
+            message.type == 1,
+            message.message,
+            pattern = message.pattern?.asByteArray(),
+        )
+        client.world.getService(LoggerService::class.java, searchSubclasses = true)?.logPublicChat(client, message.message)
+    }
+}

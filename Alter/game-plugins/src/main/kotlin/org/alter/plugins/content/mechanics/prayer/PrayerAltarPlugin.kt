@@ -1,0 +1,118 @@
+package org.alter.plugins.content.mechanics.prayer
+
+import io.github.oshai.kotlinlogging.KotlinLogging
+import org.alter.api.Skills
+import org.alter.api.ext.*
+import org.alter.game.Server
+import org.alter.game.model.World
+import org.alter.game.model.entity.Player
+import org.alter.game.plugin.KotlinPlugin
+import org.alter.game.plugin.PluginRepository
+import org.alter.rscm.RSCM.getRSCM
+
+private val logger = KotlinLogging.logger {}
+
+/**
+ * **Prayer altar + bone burying.** Closes the prayer-recharge gap: the drain logic already
+ * tells players to "recharge at an altar" ([Prayers]), but nothing handled the altar object
+ * or the bones' "Bury" option. This binds the classic prayer altar (object 409, "Pray-at")
+ * to restore prayer to the player's base level, and the common bones to grant Prayer xp.
+ *
+ * Object/item ids resolved from the cache via RSCM; each binding is guarded so a missing
+ * cache verb surfaces in the boot failure report without dropping the rest of the plugin.
+ */
+class PrayerAltarPlugin(
+    r: PluginRepository,
+    world: World,
+    server: Server,
+) : KotlinPlugin(r, world, server) {
+
+    private data class Bone(val key: String, val xp: Double)
+
+    // OSRS prayer xp per bone. Only bones whose RSCM key resolves are bound.
+    private val bones = listOf(
+        Bone("item.bones", 4.5),
+        Bone("item.bat_bones", 5.3),
+        Bone("item.big_bones", 15.0),
+        Bone("item.babydragon_bones", 30.0),
+        Bone("item.wolf_bones", 4.5),
+        Bone("item.jogre_bones", 15.0),
+        Bone("item.dragon_bones", 72.0),
+    )
+
+    // Classic OSRS prayer altars. "altar_409" is the standard Pray-at altar.
+    private val altars = listOf("object.altar_409")
+
+    // Offering bones ON the altar (the church-altar rite) is far faster than burying — the gilded-altar
+    // rate of 3.5x. This is what the War-Prep Magic quest sends recruits to the Lumbridge church altar
+    // for (train Prayer to 37 → Protect from Magic). TUNABLE.
+    private val altarMultiplier = 3.5
+
+    // No courtyard altar: the church's map-baked altar (3243,3207) is right next to the home hub,
+    // so we don't spawn a convenience prayer altar in the market courtyard. The "Pray-at" and
+    // bone-offering bindings below are keyed by object type (altar_409), so they cover the church
+    // altar (and any other altar_409) automatically. The Altar of the Occult on the old fountain
+    // tile (SpellbookSwapPlugin) is unrelated and stays.
+
+    init {
+        altars.forEach { altar ->
+            // Try both common verbs; some altar variants use "Pray" rather than "Pray-at".
+            var bound = false
+            listOf("Pray-at", "Pray").forEach { verb ->
+                try {
+                    onObjOption(obj = altar, option = verb) { recharge(player) }
+                    bound = true
+                } catch (e: Exception) { /* this altar lacks this verb in the cache */ }
+            }
+            if (!bound) {
+                logger.warn { "prayer: altar '$altar' has neither 'Pray-at' nor 'Pray' in the cache — recharge will be unclickable." }
+            }
+        }
+
+        bones.forEach { b ->
+            try {
+                onItemOption(b.key, option = "Bury") { bury(player, b) }
+            } catch (e: Exception) {
+                logger.info { "prayer: bone '${b.key}' has no Bury option in cache; skipped." }
+            }
+        }
+
+        // Offering bones on any altar → boosted Prayer xp (the church-altar rite).
+        altars.forEach { altar ->
+            bones.forEach { b ->
+                try {
+                    onItemOnObj(obj = altar, item = b.key) { offer(player, b) }
+                } catch (e: Exception) { /* this altar/bone pairing isn't in the cache */ }
+            }
+        }
+    }
+
+    private fun offer(player: Player, bone: Bone) {
+        if (player.inventory.remove(item = getRSCM(bone.key), amount = 1).hasSucceeded()) {
+            player.animate(3705) // kneel-and-offer at the altar
+            player.addXp(Skills.PRAYER, bone.xp * altarMultiplier)
+            player.message("You offer the bones on the altar. The gods are pleased.")
+        }
+    }
+
+    private fun recharge(player: Player) {
+        val skills = player.getSkills()
+        val base = skills.getBaseLevel(Skills.PRAYER)
+        if (skills.getCurrentLevel(Skills.PRAYER) >= base) {
+            player.message("You already have full prayer points.")
+            return
+        }
+        skills.setCurrentLevel(Skills.PRAYER, base)
+        player.animate(645)
+        player.message("You recharge your prayer points.")
+    }
+
+    private fun bury(player: Player, bone: Bone) {
+        val slot = player.getInteractingSlot()
+        if (player.inventory.remove(item = getRSCM(bone.key), amount = 1, beginSlot = slot).hasSucceeded()) {
+            player.animate(827)
+            player.addXp(Skills.PRAYER, bone.xp)
+            player.message("You dig a hole in the ground and bury the bones.")
+        }
+    }
+}

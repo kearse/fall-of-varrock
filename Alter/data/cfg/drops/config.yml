@@ -1,0 +1,19 @@
+# Generic NPC drop system (real OSRS drop tables + rates).
+# Data lives in npc_drops.json (generated from the osrsbox monster dataset).
+# See content/drops/NpcDropPlugin.kt.
+
+# Master switch for the generic drop handler.
+enabled: true
+
+# Economy faucet dial. Every coin (item 995) stack rolled off a real OSRS table is
+# multiplied by this before it hits the ground. 1.0 = fully authentic OSRS gp.
+# Lower it (e.g. 0.5) to tighten the gp faucet without touching the drop data.
+coinMultiplier: 1.0
+
+# Optional dial for non-coin stackable quantities (runes, ammo, etc.). 1.0 = authentic.
+quantityMultiplier: 1.0
+
+# NPC ids the generic handler must never drop for, on top of the automatic exclusion
+# of any NPC that already has its own death/loot plugin (bosses). Add ids here if a
+# monster's real table is undesirable (e.g. an arena/minigame reskin).
+excludeIds: []

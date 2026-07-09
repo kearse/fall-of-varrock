@@ -1,0 +1,105 @@
+# Kingdom of Lumbridge — full local stack.
+#   mongo        shared database (accounts/details/news/forum/orders/entitlements…)
+#   web          Next.js site + API (port 3000)
+#   discord-bot  Discord integration worker (feeds, linking, role sync)
+#   game         the RSPS game server (port 43594)
+#
+# Copy .env.example -> .env and fill in the secrets, then: docker compose up -d
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+  web:
+    build: ./web
+    restart: unless-stopped
+    depends_on:
+      - mongo
+    ports:
+      - "3000:3000"
+    environment:
+      MONGODB_URI: mongodb://mongo:27017
+      MONGODB_DB: lumbridge
+      AUTH_SECRET: ${AUTH_SECRET:?set AUTH_SECRET in .env}
+      # Local stack is served over plain HTTP — allow the session cookie without Secure.
+      AUTH_COOKIE_INSECURE: "1"
+      STORE_DEV_CHECKOUT: ${STORE_DEV_CHECKOUT:-0}
+      # NodeBB forum: the "Forum" nav/links point here. SSO cookie domain lets the
+      # login cookie be shared with the forum subdomain in production.
+      FORUM_URL: ${FORUM_URL:-http://localhost:4567}
+      AUTH_COOKIE_DOMAIN: ${AUTH_COOKIE_DOMAIN:-}
+      NEXT_PUBLIC_SITE_NAME: Kingdom of Lumbridge
+      NEXT_PUBLIC_SITE_URL: ${SITE_URL:-http://localhost:3000}
+      NEXT_PUBLIC_GAME_WORLD_HOST: ${GAME_WORLD_HOST:-localhost}
+      DISCORD_WEBHOOK_URL: ${DISCORD_WEBHOOK_URL:-}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY:-}
+      PAYPAL_CLIENT_ID: ${PAYPAL_CLIENT_ID:-}
+      PAYPAL_CLIENT_SECRET: ${PAYPAL_CLIENT_SECRET:-}
+      PAYPAL_ENV: ${PAYPAL_ENV:-sandbox}
+      COINBASE_COMMERCE_API_KEY: ${COINBASE_COMMERCE_API_KEY:-}
+      COINBASE_COMMERCE_WEBHOOK_SECRET: ${COINBASE_COMMERCE_WEBHOOK_SECRET:-}
+
+  # HOSTING: comes up with the stack. After the FIRST deploy you must run /setup
+  # once in Discord, then paste the feed channel IDs it prints into .env and
+  # redeploy this service. Needs DISCORD_BOT_TOKEN/CLIENT_ID/GUILD_ID + the
+  # Server Members intent. Full checklist: discord-bot/README.md#hosting-checklist
+  discord-bot:
+    build: ./discord-bot
+    restart: unless-stopped
+    depends_on:
+      - mongo
+    environment:
+      MONGODB_URI: mongodb://mongo:27017
+      MONGODB_DB: lumbridge
+      SITE_URL: ${SITE_URL:-http://localhost:3000}
+      DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN:-}
+      DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID:-}
+      DISCORD_GUILD_ID: ${DISCORD_GUILD_ID:-}
+      DISCORD_NEWS_CHANNEL_ID: ${DISCORD_NEWS_CHANNEL_ID:-}
+      DISCORD_FEED_STATUS_ID: ${DISCORD_FEED_STATUS_ID:-}
+      DISCORD_FEED_ACHIEVEMENTS_ID: ${DISCORD_FEED_ACHIEVEMENTS_ID:-}
+      DISCORD_FEED_DROPS_ID: ${DISCORD_FEED_DROPS_ID:-}
+      DISCORD_FEED_PK_ID: ${DISCORD_FEED_PK_ID:-}
+      DISCORD_FEED_BOSS_ID: ${DISCORD_FEED_BOSS_ID:-}
+      DISCORD_FEED_MODLOG_ID: ${DISCORD_FEED_MODLOG_ID:-}
+
+  # Community forum (NodeBB) — modern forum engine, shares the same Mongo server
+  # (separate `nodebb` database). First boot runs a setup wizard; SSO with game
+  # accounts is configured once via nodebb-plugin-session-sharing. See forum/README.md.
+  forum:
+    image: ghcr.io/nodebb/nodebb:latest
+    restart: unless-stopped
+    depends_on:
+      - mongo
+    ports:
+      - "4567:4567"
+    volumes:
+      - nodebb-config:/usr/src/app/config
+      - nodebb-uploads:/usr/src/app/public/uploads
+      - nodebb-build:/usr/src/app/build
+
+  game:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      - mongo
+    ports:
+      - "43594:43594"
+    volumes:
+      - ./data/saves:/app/bin/data/saves
+    environment:
+      # Used only when game.yml sets `saveFormat: MONGO` (shared accounts with the site).
+      MONGODB_URI: mongodb://mongo:27017
+      MONGODB_DB: lumbridge
+
+volumes:
+  mongo-data:
+  nodebb-config:
+  nodebb-uploads:
+  nodebb-build:

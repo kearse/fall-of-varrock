@@ -1,0 +1,24 @@
+{
+  "name": "kingdom-of-lumbridge-discord-bot",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Discord gateway worker for Kingdom of Lumbridge — account linking, store role sync, in-game event feed, hiscores commands, and /setup server builder.",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "register": "tsx src/registerCommands.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "discord.js": "^14.16.3",
+    "dotenv": "^16.4.7",
+    "mongodb": "^6.12.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.10",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}

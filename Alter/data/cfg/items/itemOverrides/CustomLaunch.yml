@@ -1,0 +1,215 @@
+---
+# Kingdom of Lumbridge — custom launch items.
+# Reward TICKETS. Boss/Vote are now a TRADEABLE, STACKABLE item-currency (DECISIONS.md §8) — coins-
+# like money earned from content and spent directly in the reward shop via ItemCurrency. They MUST
+# use stackable cache ids (verified via :game-server:itemCheck): Boss=4067 (Castle wars ticket
+# sprite), Vote=8851 (Warrior guild token sprite). The old 619/621 ids were NON-stackable — do not
+# reuse them for currency. Slayer/War/Prestige below stay dormant untradeable tokens for now (they'll
+# need stackable ids too when their shops go live). NO equipment block (it would wipe stats — these
+# are tokens, not gear). File MUST start with '---'.
+id: 4067
+name: "Boss Ticket"
+examine: "Currency won from Lumbridge's great foes. Spend it at the Reward Exchange, or trade it."
+tradeable: true
+weight: 0.0
+tradeable_on_ge: true
+cost: 0
+lowalch: 0
+highalch: 0
+buy_limit: null
+---
+id: 8851
+name: "Vote Ticket"
+examine: "Currency earned rallying support for the realm. Spend it at the Reward Exchange, or trade it."
+tradeable: true
+weight: 0.0
+tradeable_on_ge: true
+cost: 0
+lowalch: 0
+highalch: 0
+buy_limit: null
+---
+id: 1464
+name: "Slayer Ticket"
+examine: "Earned culling the realm's marked beasts. A trophy of your deeds, kept or shown with pride."
+tradeable: false
+weight: 0.0
+tradeable_on_ge: false
+cost: 0
+lowalch: 0
+highalch: 0
+buy_limit: null
+---
+id: 620
+name: "War Ticket"
+examine: "A token of service to the war effort. A trophy of your deeds, kept or shown with pride."
+tradeable: false
+weight: 0.0
+tradeable_on_ge: false
+cost: 0
+lowalch: 0
+highalch: 0
+buy_limit: null
+---
+id: 622
+name: "Prestige Ticket"
+examine: "A mark of a veteran of Lumbridge. A trophy of your deeds, kept or shown with pride."
+tradeable: false
+weight: 0.0
+tradeable_on_ge: false
+cost: 0
+lowalch: 0
+highalch: 0
+buy_limit: null
+---
+# BONDS (bond-system-spec.md). The tradeable premium currency: bought for cash on the website,
+# tradeable player-to-player, claimed (-> untradeable) then redeemed for membership/donor points.
+# Reuses the REAL OSRS bond defs (13190 tradeable w/ native "Redeem" option; 13192 untradeable
+# w/ "Redeem"/"Convert"). CACHE COST IS 2,000,000 on 13190 and CANNOT be overridden (schema
+# ignores cost) — every NPC gp-conversion path must deny bonds: alch (AlchemyPlugin guard),
+# Trading Post 85% buy (TradingPostCurrency deny), general store 60% buy (GeneralStoreCurrency
+# cost>5k deny). The 2m cost is otherwise GOOD: trade-window/value sorts treat it as valuable.
+id: 13190
+name: "Bond"
+examine: "Tradeable premium currency. Trade it to other players, or claim it to redeem for membership or Donor Points."
+tradeable: true
+weight: 0.0
+tradeable_on_ge: true
+cost: 0
+lowalch: 0
+highalch: 0
+buy_limit: null
+---
+id: 13192
+name: "Bond (untradeable)"
+examine: "A claimed bond — yours alone. Redeem it with the Bond Merchant for membership or Donor Points."
+tradeable: false
+weight: 0.0
+tradeable_on_ge: false
+cost: 0
+lowalch: 0
+highalch: 0
+buy_limit: null
+---
+# COSMETICS (custom-items.md §C). Statless: the equipment block sets the slot with all
+# bonuses defaulting to 0 (wipes the base item's stats) so these are pure cosmetic — no power,
+# honouring the monetization pledge. Reuse unused cosmetic cache models (req-free).
+id: 1052
+name: "Founder's Cape"
+examine: "Worn by those who answered Lumbridge's call before the first dawn."
+tradeable: false
+weight: 0.0
+tradeable_on_ge: false
+cost: 0
+lowalch: 0
+highalch: 0
+buy_limit: null
+equipment:
+  equip_slot: "cape"
+---
+id: 11862
+name: "Founder's Crown"
+examine: "A crown for the realm's founding hundred. Never to be earned again."
+tradeable: false
+weight: 0.0
+tradeable_on_ge: false
+cost: 0
+lowalch: 0
+highalch: 0
+buy_limit: null
+equipment:
+  equip_slot: "hat"
+---
+id: 21913
+name: "Champion's Cape"
+examine: "Awarded for triumph over Lumbridge's mightiest foes."
+tradeable: false
+weight: 0.0
+tradeable_on_ge: false
+cost: 0
+lowalch: 0
+highalch: 0
+buy_limit: null
+equipment:
+  equip_slot: "cape"
+---
+id: 12637
+name: "Divine Halo"
+examine: "A radiant halo — a mark of true devotion to the realm."
+tradeable: false
+weight: 0.0
+tradeable_on_ge: false
+cost: 0
+lowalch: 0
+highalch: 0
+buy_limit: null
+equipment:
+  equip_slot: "hat"
+---
+id: 1046
+name: "Royal Partyhat"
+examine: "A regal hat for Lumbridge's most civic-minded citizens."
+tradeable: false
+weight: 0.0
+tradeable_on_ge: false
+cost: 0
+lowalch: 0
+highalch: 0
+buy_limit: null
+equipment:
+  equip_slot: "hat"
+---
+# DYED Champion's Cape variants (cosmetic dye sink — CosmeticDyePlugin). Reuse coloured cape
+# models, statless + untradeable. A dye on a Champion's Cape (base or any colour) mints one of
+# these and DESTROYS the old cape (item sink); the dye is consumed; the gp to buy it is the gp sink.
+id: 1007
+name: "Champion's Cape (Red)"
+examine: "A Champion's Cape, dyed deep red."
+tradeable: false
+weight: 0.0
+tradeable_on_ge: false
+cost: 0
+lowalch: 0
+highalch: 0
+buy_limit: null
+equipment:
+  equip_slot: "cape"
+---
+id: 1021
+name: "Champion's Cape (Blue)"
+examine: "A Champion's Cape, dyed royal blue."
+tradeable: false
+weight: 0.0
+tradeable_on_ge: false
+cost: 0
+lowalch: 0
+highalch: 0
+buy_limit: null
+equipment:
+  equip_slot: "cape"
+---
+id: 1027
+name: "Champion's Cape (Green)"
+examine: "A Champion's Cape, dyed forest green."
+tradeable: false
+weight: 0.0
+tradeable_on_ge: false
+cost: 0
+lowalch: 0
+highalch: 0
+buy_limit: null
+equipment:
+  equip_slot: "cape"
+---
+id: 1029
+name: "Champion's Cape (Purple)"
+examine: "A Champion's Cape, dyed royal purple."
+tradeable: false
+weight: 0.0
+tradeable_on_ge: false
+cost: 0
+lowalch: 0
+highalch: 0
+buy_limit: null
+equipment:
+  equip_slot: "cape"

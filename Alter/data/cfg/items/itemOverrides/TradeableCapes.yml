@@ -1,0 +1,19 @@
+---
+# Kingdom of Lumbridge — the Fire cape is TRADEABLE here (deliberate economy decision, 2026-07-06):
+# skilled players farm Fight Cave clears and sell capes to PKers; the Inferno's one-time entry
+# sacrifice + wilderness death drops give the market permanent demand. The Fight Cave awards a
+# cape EVERY clear to supply this market (FightCavePlugin). cost/alch MUST stay 0 — the Trading
+# Post and general stores buy any tradeable at cost-derived prices, so a nonzero cost would turn
+# Jad farming into a minted-gold faucet. Player-to-player value only.
+# The INFERNAL cape stays untradeable (prestige tier) — do NOT add it here.
+# NO equipment block (it would wipe the cape's combat stats). File MUST start with '---'.
+id: 6570
+name: "Fire cape"
+examine: "A cape of fire, earned in the Fight Cave. Sought by warriors across the kingdom."
+tradeable: true
+weight: 4.0
+tradeable_on_ge: true
+cost: 0
+lowalch: 0
+highalch: 0
+buy_limit: null

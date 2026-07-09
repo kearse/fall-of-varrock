@@ -1,0 +1,10 @@
+# Normalize line endings; keep platform-specific launchers correct
+* text=auto
+*.bat text eol=crlf
+gradlew text eol=lf
+
+# Binary assets
+*.png binary
+*.jar binary
+*.dat2 binary
+*.idx* binary

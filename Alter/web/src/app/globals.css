@@ -1,0 +1,369 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap");
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  @apply overflow-x-hidden bg-lumbridge-stone text-lumbridge-parchment font-body antialiased;
+  background-color: #080506;
+  min-height: 100vh;
+  position: relative;
+}
+
+/* Fallen-city ambience: a crimson ember-glow bleeding from the top, over a
+   warm-black ruin gradient. Calm and atmospheric, not a rainbow. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(1000px 520px at 50% -200px, rgba(220, 38, 38, 0.16), transparent 70%),
+    radial-gradient(700px 400px at 85% 8%, rgba(245, 158, 11, 0.06), transparent 72%),
+    linear-gradient(180deg, #120a09 0%, #0a0607 55%, #080506 100%);
+  pointer-events: none;
+}
+
+h1, h2, h3, .font-display {
+  font-family: "Space Grotesk", Inter, sans-serif;
+  letter-spacing: -0.01em;
+}
+
+/* ===================================================================
+   Wiki theme - OSRS-wiki-style parchment MediaWiki look, scoped to
+   .wiki-root so the rest of the site keeps the dark theme.
+   =================================================================== */
+.wiki-root {
+  /* Full-bleed out of the site's max-w container (body is overflow-x-hidden). */
+  width: 100vw;
+  position: relative;
+  left: 50%;
+  margin-left: -50vw;
+  margin-top: -2.5rem;   /* cancel main's py-10 */
+  margin-bottom: -2.5rem;
+  background: #e2dbc8;
+  color: #262019;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.wiki-root h1, .wiki-root h2, .wiki-root h3 {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  letter-spacing: 0;
+  color: #1a1611;
+}
+.wiki-shell {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 13.5rem minmax(0, 1fr);
+}
+@media (max-width: 1023px) {
+  .wiki-shell { grid-template-columns: minmax(0, 1fr); }
+  .wiki-sidebar { display: none; }
+}
+
+/* ---- Sidebar (MediaWiki portlets) ---- */
+.wiki-sidebar {
+  padding: 1.1rem 0.9rem 2rem 1.1rem;
+}
+.wiki-sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #3e3529;
+  padding-bottom: 0.75rem;
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid #cbc0a6;
+}
+.wiki-portlet { margin-bottom: 1.1rem; }
+.wiki-portlet-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #7d6f58;
+  border-bottom: 1px solid #cbc0a6;
+  padding-bottom: 0.2rem;
+  margin-bottom: 0.35rem;
+}
+.wiki-portlet ul { list-style: none; margin: 0; padding: 0; }
+.wiki-portlet li { padding: 0.12rem 0; font-size: 0.82rem; }
+.wiki-sidebar a { color: #936039; text-decoration: none; }
+.wiki-sidebar a:hover { text-decoration: underline; }
+.wiki-sidebar a.wiki-active { color: #262019; font-weight: 700; }
+
+/* ---- Content well ---- */
+.wiki-page {
+  background: #fdfbf5;
+  border-left: 1px solid #cbc0a6;
+  padding: 1.4rem 2rem 2.5rem;
+  min-height: 70vh;
+}
+@media (max-width: 1023px) { .wiki-page { border-left: none; padding: 1.2rem 1rem 2rem; } }
+.wiki-page a { color: #936039; }
+.wiki-page a:hover { text-decoration: underline; color: #7a4d2b; }
+
+.wiki-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  border-bottom: 1px solid #cbc0a6;
+  padding-bottom: 0.35rem;
+  margin-bottom: 0.15rem;
+}
+.wiki-tagline {
+  font-size: 0.76rem;
+  color: #8a7c64;
+  margin-bottom: 1rem;
+}
+
+/* ---- Article body ---- */
+.wiki-content { font-size: 0.875rem; }
+.wiki-content p { margin: 0.5rem 0 0.9rem; }
+.wiki-content h2 {
+  font-size: 1.35rem;
+  font-weight: 600;
+  border-bottom: 1px solid #cbc0a6;
+  padding-bottom: 0.25rem;
+  margin: 1.5rem 0 0.6rem;
+}
+.wiki-content h3 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 1.2rem 0 0.4rem;
+}
+.wiki-content ul {
+  list-style: disc;
+  margin: 0.4rem 0 0.9rem;
+  padding-left: 1.6rem;
+}
+.wiki-content li { margin: 0.2rem 0; }
+.wiki-content code {
+  background: #f1ead7;
+  border: 1px solid #ddd3ba;
+  border-radius: 2px;
+  padding: 0 0.25rem;
+  font-size: 0.82rem;
+  color: #5b4a2f;
+}
+.wiki-content strong { color: #1a1611; }
+
+/* ---- Wikitable ---- */
+.wiki-table-scroll { overflow-x: auto; margin: 0.6rem 0 1rem; }
+table.wikitable {
+  border-collapse: collapse;
+  background: #f8f4ea;
+  border: 1px solid #b5a682;
+  font-size: 0.82rem;
+  min-width: 50%;
+}
+table.wikitable th, table.wikitable td {
+  border: 1px solid #b5a682;
+  padding: 0.3rem 0.6rem;
+  text-align: left;
+  vertical-align: top;
+}
+table.wikitable th {
+  background: #e2dbc8;
+  font-weight: 700;
+}
+table.wikitable tr:nth-child(even) td { background: #f3eddd; }
+
+/* ---- TOC box ---- */
+.wiki-toc {
+  display: inline-block;
+  background: #f6f1e3;
+  border: 1px solid #cbc0a6;
+  padding: 0.6rem 1.1rem 0.7rem 0.9rem;
+  margin: 0.4rem 0 1rem;
+  font-size: 0.82rem;
+}
+.wiki-toc-title { font-weight: 700; text-align: center; margin-bottom: 0.3rem; }
+.wiki-toc ol { list-style: none; margin: 0; padding: 0; }
+.wiki-toc li { padding: 0.08rem 0; }
+.wiki-toc li.wiki-toc-sub { padding-left: 1.4rem; }
+.wiki-toc .wiki-toc-num { color: #936039; margin-right: 0.45rem; }
+.wiki-toc a { color: #936039; text-decoration: none; }
+.wiki-toc a:hover { text-decoration: underline; }
+
+/* ---- Infobox ---- */
+.wiki-infobox {
+  float: right;
+  clear: right;
+  width: 17rem;
+  max-width: 45%;
+  background: #f6f1e3;
+  border: 1px solid #b5a682;
+  margin: 0 0 0.9rem 1.2rem;
+  font-size: 0.8rem;
+}
+@media (max-width: 640px) {
+  .wiki-infobox { float: none; width: 100%; max-width: none; margin: 0 0 1rem; }
+}
+.wiki-infobox-title {
+  background: #d8ccb4;
+  border-bottom: 1px solid #b5a682;
+  font-weight: 700;
+  text-align: center;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.9rem;
+}
+.wiki-infobox table { width: 100%; border-collapse: collapse; }
+.wiki-infobox th, .wiki-infobox td {
+  padding: 0.28rem 0.55rem;
+  border-top: 1px solid #ddd3ba;
+  vertical-align: top;
+  text-align: left;
+}
+.wiki-infobox th { width: 38%; font-weight: 700; color: #4a3f2d; }
+.wiki-infobox tr:first-child th, .wiki-infobox tr:first-child td { border-top: none; }
+
+/* ---- Category footer bar ---- */
+.wiki-catbar {
+  clear: both;
+  border: 1px solid #cbc0a6;
+  background: #f6f1e3;
+  padding: 0.35rem 0.7rem;
+  margin-top: 2rem;
+  font-size: 0.78rem;
+}
+.wiki-lastedit {
+  font-size: 0.74rem;
+  color: #8a7c64;
+  margin-top: 0.6rem;
+}
+
+/* ---- Main page boxes ---- */
+.wiki-mainbox {
+  border: 1px solid #b5a682;
+  background: #fdfbf5;
+  margin-bottom: 1rem;
+}
+.wiki-mainbox-header {
+  background: #d8ccb4;
+  border-bottom: 1px solid #b5a682;
+  font-weight: 700;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.95rem;
+  color: #3e3529;
+}
+.wiki-mainbox-body { padding: 0.7rem 0.9rem; }
+.wiki-mainbox-body ul { list-style: none; margin: 0; padding: 0; }
+.wiki-mainbox-body li { padding: 0.18rem 0; font-size: 0.85rem; }
+.wiki-mainbox-body .wiki-item-summary { color: #6d604a; font-size: 0.78rem; }
+
+/* ---- Mobile search bar (sidebar is hidden below lg) ---- */
+.wiki-mobilebar { display: none; }
+@media (max-width: 1023px) {
+  .wiki-mobilebar { display: block; margin-bottom: 0.75rem; }
+}
+
+/* ---- Search ---- */
+.wiki-search { position: relative; margin-bottom: 1rem; }
+.wiki-search input {
+  width: 100%;
+  background: #fdfbf5;
+  border: 1px solid #b5a682;
+  border-radius: 2px;
+  padding: 0.32rem 0.55rem;
+  font-size: 0.82rem;
+  color: #262019;
+  outline: none;
+}
+.wiki-search input::placeholder { color: #a5977c; }
+.wiki-search input:focus { border-color: #936039; }
+.wiki-search-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  background: #fdfbf5;
+  border: 1px solid #b5a682;
+  border-top: none;
+  max-height: 18rem;
+  overflow-y: auto;
+}
+.wiki-search-results a {
+  display: block;
+  padding: 0.35rem 0.6rem;
+  font-size: 0.82rem;
+  color: #262019 !important;
+  text-decoration: none !important;
+}
+.wiki-search-results a:hover, .wiki-search-results a.wiki-sel { background: #f1ead7; }
+.wiki-search-results .wiki-search-cat { color: #8a7c64; font-size: 0.72rem; }
+
+@layer components {
+  /* ---- Buttons ---- */
+  .btn-play, .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-gold-gradient px-6 py-3
+           font-semibold text-white shadow-[0_6px_24px_-6px_rgba(220,38,38,0.7)] transition-all duration-200
+           hover:-translate-y-0.5 hover:brightness-110 active:translate-y-0;
+  }
+  .btn-gold {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-gold-gradient px-5 py-2.5
+           font-semibold text-white shadow-[0_4px_22px_-4px_rgba(220,38,38,0.7)]
+           transition-all duration-200 hover:-translate-y-0.5 hover:brightness-110
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-white/15
+           bg-white/5 px-5 py-2.5 font-semibold text-lumbridge-parchment backdrop-blur
+           transition-all duration-200 hover:border-lumbridge-gold/60 hover:bg-white/10 hover:text-white;
+  }
+  /* ---- Glass surfaces ---- */
+  .card {
+    @apply rounded-2xl border border-white/10 bg-white/[0.035] p-6 shadow-glass backdrop-blur-xl;
+  }
+  .card-hover {
+    @apply transition-all duration-300 hover:-translate-y-1 hover:border-lumbridge-gold/35
+           hover:bg-white/[0.06] hover:shadow-glow;
+  }
+  .widget {
+    @apply overflow-hidden rounded-2xl border border-white/10 bg-white/[0.035] shadow-glass backdrop-blur-xl;
+  }
+  .widget-head {
+    @apply flex items-center gap-2 border-b border-white/10 bg-white/[0.04] px-4 py-3
+           font-display text-sm font-bold uppercase tracking-wide text-lumbridge-parchment;
+  }
+  .input {
+    @apply w-full rounded-xl border border-white/10 bg-white/5 px-3.5 py-2.5 text-lumbridge-parchment
+           outline-none transition-all placeholder:text-lumbridge-parchment/30
+           focus:border-lumbridge-gold/60 focus:bg-white/[0.07] focus:ring-2 focus:ring-lumbridge-gold/30;
+  }
+  .label {
+    @apply mb-1.5 block text-sm font-medium text-lumbridge-parchment/75;
+  }
+  .eyebrow {
+    @apply mb-2 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5
+           px-3 py-1 text-xs font-semibold uppercase tracking-wider text-lumbridge-parchmentdark;
+  }
+  .rule-gold { @apply h-px w-full bg-gradient-to-r from-transparent via-white/15 to-transparent; }
+  .link-cyan, .link-gold {
+    @apply font-medium text-lumbridge-gold transition-colors hover:text-lumbridge-goldlight;
+  }
+  /* Accent word in a headline - crimson -> ember gradient. */
+  .text-gradient {
+    @apply bg-brand-gradient bg-clip-text text-transparent;
+  }
+  .text-gradient-gold {
+    @apply bg-brand-gradient bg-clip-text text-transparent;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2.5 py-0.5 text-xs font-medium;
+  }
+}
+
+/* Modern thin scrollbar. */
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-thumb { background: rgba(220, 38, 38, 0.35); border-radius: 9999px; border: 2px solid transparent; background-clip: padding-box; }
+*::-webkit-scrollbar-thumb:hover { background: rgba(220, 38, 38, 0.6); background-clip: padding-box; }
+*::-webkit-scrollbar-track { background: transparent; }
