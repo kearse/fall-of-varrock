@@ -213,10 +213,12 @@ public class LofLoginRenderer implements MouseListener, KeyListener
 		g.fillRect(0, 0, cw, ch);
 		vgrad(g, 0, 0, cw, 150, new Color(8, 5, 6, 190), new Color(8, 5, 6, 0));
 		vgrad(g, 0, ch - 180, cw, 180, new Color(8, 5, 6, 0), new Color(8, 5, 6, 235));
-		g.setPaint(new RadialGradientPaint(new Point(cw / 2, 40), Math.max(360, cw / 2),
+		// Radius must reach the bottom of the canvas so the glow fades out
+		// smoothly instead of ending in a hard edge partway down.
+		g.setPaint(new RadialGradientPaint(new Point(cw / 2, 40), Math.max(360, Math.max(cw / 2, ch)),
 			new float[]{0f, 1f},
 			new Color[]{new Color(0xDC, 0x26, 0x26, 70), new Color(0xDC, 0x26, 0x26, 0)}));
-		g.fillRect(0, 0, cw, Math.min(ch, 240));
+		g.fillRect(0, 0, cw, ch);
 
 		final Layout l = layout();
 
