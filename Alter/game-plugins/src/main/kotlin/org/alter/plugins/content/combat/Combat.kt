@@ -374,7 +374,10 @@ object Combat {
             CombatClass.MAGIC -> MagicCombatStrategy
         }
 
-    private fun areOverlapping(
+    /**
+     * Checks to see if two AABB overlap (share at least one tile).
+     */
+    fun areOverlapping(
         x1: Int,
         z1: Int,
         width1: Int,
