@@ -212,12 +212,14 @@ class SlayerPlugin(
         chatNpc(p, "The grimoire won't fetch itself, ${p.address}. Follow the marker to the <col=801700>Void Knight</col> at the Wizard Tower bridge — he'll send you in. Clear it floor by floor and take it from the Archmage.")
     }
 
-    /** RETURN step: back from the tower with the grimoire — Vannaka's debrief closes the quest. */
+    /** RETURN step: back from the tower with the grimoire — Vannaka's debrief pays the rank purse
+     *  and sends the recruit to Duke Horacio to buy the next rank (the chain's final beat). */
     private suspend fun QueueTask.warPrepDebrief(p: Player) {
         chatNpc(p, "Back — and I can smell the scorched robes from here. The grimoire's power is yours, ${p.address}: every spellbook the realm knows, at your call.")
         chatNpc(p, "Keep the tower in mind, too. The Void Knight will send you back in whenever you like, and those mages bleed <col=801700>runes</col> — there's no finer place to farm them.")
-        chatNpc(p, "That's Magic dealt with. You've stood in front of spellfire and walked out — the war's <col=801700>raids</col> are opening to you.")
-        WarPrepChain.onReportedToVannaka(p) // RETURN → DONE
+        chatNpc(p, "And the realm pays for a tower taken. Here — <col=801700>${"%,d".format(WarPrepChain.RANK_REWARD_COINS)} coins</col>, a purse fit for your next <col=801700>rank</col>.")
+        WarPrepChain.onReportedToVannaka(p) // RETURN → RANK: pays the purse + arrows to the Duke
+        chatNpc(p, "Take it to <col=801700>Duke Horacio</col> and have him raise you — a higher rank means <col=801700>heavier armour</col> on your back. Follow the marker; you've earned this one.")
     }
 
     /** Intro-quest: the recruit reports back to Vannaka after the rats — Vannaka rewards the combat

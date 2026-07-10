@@ -7,6 +7,7 @@ import org.alter.game.model.attr.DUKE_INTRO_DONE_ATTR
 import org.alter.game.model.attr.PLAYER_TITLE_ATTR
 import org.alter.game.model.entity.Player
 import org.alter.plugins.content.war.recruit.RecruitTrials
+import org.alter.plugins.content.war.warprep.WarPrepChain
 import org.alter.game.model.queue.QueueTask
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
@@ -47,6 +48,22 @@ class DukeHoracioPlugin(
                     buy(player, next)
                     if (player.title == next) {
                         chatNpc(player, "Well met, ${next.display}. The war needs slayers now — seek out Vannaka, south of the market, and take a contract.")
+                    }
+                }
+                2 -> chatPlayer(player, "Not just yet.")
+            }
+            return
+        }
+
+        // War-Prep finale (the Wizard Tower quest): Vannaka's payout covers the next rank, so flow
+        // straight into claiming it — same shape as the intro-quest path above.
+        if (WarPrepChain.step(player) == WarPrepChain.Step.RANK && next != null) {
+            chatNpc(player, "Word from Vannaka — the Wizards' Tower taken, and by you, ${player.title.display}. Deeds like that are what rank is FOR, and his purse covers the next rung. Shall I raise you to ${next.display}? It costs ${fmt(next.cost)} coins.")
+            when (options(player, "Yes — make me a ${next.display}.", "Not just yet.")) {
+                1 -> {
+                    buy(player, next)
+                    if (player.title == next) {
+                        chatNpc(player, "Wear your new ${next.maxTier.display} armour with pride, ${next.display} — the war's raids will ask everything of it.")
                     }
                 }
                 2 -> chatPlayer(player, "Not just yet.")
@@ -97,6 +114,7 @@ class DukeHoracioPlugin(
             chatNpc(player, "Your new station also entitles you to ${next.companions} soldier companion${if (next.companions > 1) "s" else ""} — General Zo in the castle courtyard will muster them.")
         }
         RecruitTrials.onBuyRank(player) // advances the intro quest's RANK step, if active
+        WarPrepChain.onRankBought(player) // closes the War-Prep chain's RANK step, if active
     }
 
     private suspend fun QueueTask.ranksInfo(player: Player) {
