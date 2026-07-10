@@ -146,8 +146,10 @@ object RecruitTrials {
         s == Step.REPORT || s == Step.RANK || s == Step.SLAY || s == Step.MINE_BRIEF ||
             s == Step.SUPPLY || s == Step.SMELT || s == Step.SMITH || s == Step.DELIVER || s == Step.RETURN
 
-    /** Point the guidance hint arrow at the current objective (or clear it when there's no fixed spot). */
+    /** Point the guidance hint arrow at the current objective (or clear it when there's no fixed spot).
+     *  Muted guidance (free play) skips the arrow entirely — the mute toggle cleared it already. */
     fun updateHintArrow(p: Player) {
+        if (org.alter.plugins.content.quests.QuestJournal.muted(p)) return
         when (step(p)) {
             Step.TALK -> pointAtNpc(p, SERGEANT_NPC, SERGEANT_TILE)
             Step.FIGHT -> p.setTileHintArrow(FIGHT_TILE.first, FIGHT_TILE.second, ARROW_HEIGHT)

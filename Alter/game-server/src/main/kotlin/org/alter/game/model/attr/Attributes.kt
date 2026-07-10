@@ -174,6 +174,14 @@ val WARPREP_STEP_ATTR = AttributeKey<Int>("warprep_step")
 val WARPREP_BONE_TOPUPS_ATTR = AttributeKey<Int>("warprep_bone_topups")
 
 /**
+ * Whether the player has muted quest guidance ("free play" mode): while true, the quest chains
+ * (Recruit Trials, War-Prep) stop drawing their hint arrows so the player can roam untracked.
+ * Progress still advances silently — muting pauses the nagging, not the quest. Toggled by
+ * `::questguide` (which the custom client's Quest Journal panel sends). Persistent.
+ */
+val QUEST_GUIDE_MUTED_ATTR = AttributeKey<Boolean>("quest_guide_muted")
+
+/**
  * One-time "we've met" flags so key NPCs give a full first-meeting introduction (who they are +
  * how their system works) the first time, then fall through to their concise everyday dialogue.
  * Part of the intro-quest polish (master design brief §1). Persistent.
