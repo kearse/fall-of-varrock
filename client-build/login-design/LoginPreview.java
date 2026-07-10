@@ -173,11 +173,13 @@ public class LoginPreview {
     }
 
     static void paintRadialRed(Graphics2D g) {
+        // Radius must reach the bottom so the glow fades out smoothly
+        // instead of ending in a hard edge partway down.
         RadialGradientPaint rp = new RadialGradientPaint(
-            new Point(W / 2, 30), 380,
+            new Point(W / 2, 30), Math.max(380, Math.max(W / 2, H)),
             new float[]{0f, 1f},
             new Color[]{new Color(0xDC, 0x26, 0x26, 70), new Color(0xDC, 0x26, 0x26, 0)});
         g.setPaint(rp);
-        g.fillRect(0, 0, W, 220);
+        g.fillRect(0, 0, W, H);
     }
 }
