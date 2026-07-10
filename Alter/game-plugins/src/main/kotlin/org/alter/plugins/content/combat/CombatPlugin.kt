@@ -79,6 +79,14 @@ class CombatPlugin(
             srcSize = pawn.getSize(),
             locShape = -2
         )
+        // You can never attack a target you're standing on top of (OSRS: no combat while
+        // under a pawn — you must step to an adjacent tile first). reachStrategy already
+        // reports "not reached" for overlapping boxes, so we path out from under the target
+        // below, and the distance shortcut further down must not cancel that movement.
+        val overlapping = Combat.areOverlapping(
+            pawn.tile.x, pawn.tile.z, pawn.getSize(), pawn.getSize(),
+            target.tile.x, target.tile.z, target.getSize(), target.getSize(),
+        )
         if (!reached) {
             when (routeLogic) {
                 1 -> {
@@ -96,34 +104,46 @@ class CombatPlugin(
                 }
                 0 -> {
                     val route = LinkedList<Tile>()
-                    val destination = world.dumbRouteFinder.naiveDestination(
-                        sourceX = pawn.tile.x,
-                        sourceZ = pawn.tile.z,
-                        sourceWidth = pawn.getSize(),
-                        sourceLength = pawn.getSize(),
-                        targetX = target.tile.x,
-                        targetZ = target.tile.z,
-                        targetWidth = target.getSize(),
-                        targetLength = target.getSize()
-                    )
-                    val dx = destination.x - pawn.tile.x
-                    val dz = destination.z - pawn.tile.z
-                    // Try diagonal move (both x and z)
-                    val diagonalMove = Tile(pawn.tile.x + dx.coerceIn(-1, 1), pawn.tile.z + dz.coerceIn(-1, 1))
-                    if (!world.canTraverse(pawn.tile, Direction.between(pawn.tile, diagonalMove), pawn, pawn.getSize())) {
-                        // If diagonal blocked, try horizontal (east/west)
-                        val horizontalMove = Tile(pawn.tile.x + dx.coerceIn(-1, 1), pawn.tile.z)
-                        if (!world.canTraverse(pawn.tile, Direction.between(pawn.tile, horizontalMove), pawn, pawn.getSize())) {
-                            // If horizontal blocked, try vertical (north/south)
-                            val verticalMove = Tile(pawn.tile.x, pawn.tile.z + dz.coerceIn(-1, 1))
-                            if (world.canTraverse(pawn.tile, Direction.between(pawn.tile, verticalMove), pawn, pawn.getSize())) {
-                                route.add(verticalMove)
+                    if (overlapping) {
+                        // Standing on top of the target gives naiveDestination a zero delta
+                        // (the "step" would be our own tile), so step off to any free
+                        // adjacent tile instead.
+                        for (dir in Direction.RS_ORDER) {
+                            if (world.canTraverse(pawn.tile, dir, pawn, pawn.getSize())) {
+                                route.add(pawn.tile.step(dir))
+                                break
                             }
-                        } else {
-                            route.add(horizontalMove)
                         }
                     } else {
-                        route.add(diagonalMove)
+                        val destination = world.dumbRouteFinder.naiveDestination(
+                            sourceX = pawn.tile.x,
+                            sourceZ = pawn.tile.z,
+                            sourceWidth = pawn.getSize(),
+                            sourceLength = pawn.getSize(),
+                            targetX = target.tile.x,
+                            targetZ = target.tile.z,
+                            targetWidth = target.getSize(),
+                            targetLength = target.getSize()
+                        )
+                        val dx = destination.x - pawn.tile.x
+                        val dz = destination.z - pawn.tile.z
+                        // Try diagonal move (both x and z)
+                        val diagonalMove = Tile(pawn.tile.x + dx.coerceIn(-1, 1), pawn.tile.z + dz.coerceIn(-1, 1))
+                        if (!world.canTraverse(pawn.tile, Direction.between(pawn.tile, diagonalMove), pawn, pawn.getSize())) {
+                            // If diagonal blocked, try horizontal (east/west)
+                            val horizontalMove = Tile(pawn.tile.x + dx.coerceIn(-1, 1), pawn.tile.z)
+                            if (!world.canTraverse(pawn.tile, Direction.between(pawn.tile, horizontalMove), pawn, pawn.getSize())) {
+                                // If horizontal blocked, try vertical (north/south)
+                                val verticalMove = Tile(pawn.tile.x, pawn.tile.z + dz.coerceIn(-1, 1))
+                                if (world.canTraverse(pawn.tile, Direction.between(pawn.tile, verticalMove), pawn, pawn.getSize())) {
+                                    route.add(verticalMove)
+                                }
+                            } else {
+                                route.add(horizontalMove)
+                            }
+                        } else {
+                            route.add(diagonalMove)
+                        }
                     }
                     if (route.isEmpty()) {
                         return true // no traversable step this tick — keep trying next tick
@@ -132,7 +152,7 @@ class CombatPlugin(
                 }
             }
         }
-        if (pawn.tile.getDistance(target.tile) <= attackRange + target.getSize()) {
+        if (!overlapping && pawn.tile.getDistance(target.tile) <= attackRange + target.getSize()) {
             // Distance alone isn't enough for ranged/magic: a projectile must also have line of
             // sight, or attackers (players, companions, bots, ranged npcs) shoot straight through
             // walls. Melee (short range) keeps relying on reachStrategy's adjacency check above.
