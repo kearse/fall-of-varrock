@@ -438,6 +438,23 @@ open the bank. Net: `::bank` opens the bank, no troll. Bonus: works on ANY clien
 and shields real scam-victims. Caveat: the troll line is generic across scam words, so we
 assume the common one (`::bank`); other scam-bait words would also open the bank.
 
+## 5g. Brand theme (LofTheme) + war-supply dial
+
+- **`net.runelite.client.plugins.loftheme.LofTheme`** — shared brand palette (ember red +
+  antique gold on warm near-black, matching the login screen), the 48px shield logo (jar
+  resource `plugins/loftheme/logo.png`), and panel/pill/underline/shadow-text helpers.
+  All panelled lof* overlays draw from it (teleports, warbar, alerts, lms, supplies); the
+  text-only tickers (announcements, pkstats, cwtimer) intentionally stay transparent.
+- **War-supply dial** (`lofsupplies`) — circular gauge (TOP_RIGHT, movable) keeping the
+  realm war-supply meter front of mind. Server `WarSupplyHudPlugin` publishes varp **4609**
+  (continuous-state pattern, ~3s refresh + onLogin):
+  bits 0-11 meter | 12-23 max | 24 campaign affordable | 25 conquest affordable.
+  Ember arc while stocking; gold + pulsing glow when a campaign can march ("go tell a
+  Minister"), lava glow when a conquest can. Hidden until the varp is first published.
+- **Varp allocations so far:** 4600 alert · 4601 war progress · 4602-4605 pk stats ·
+  4606 wild level · 4607 teleport open · 4608 LMS · **4609 supplies** · 4610-4612
+  companions · 4620-4623 Castle Wars.
+
 - **Cache-revision sync:** every time we move the cache revision, the client must keep
   pace. Quantify how painful this is before committing.
 - **Legal framing:** project is **local-only, non-monetized** (Jagex IP/ToS). A custom
