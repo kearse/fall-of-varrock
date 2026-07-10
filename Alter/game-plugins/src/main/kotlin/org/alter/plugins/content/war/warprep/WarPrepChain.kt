@@ -41,9 +41,10 @@ object WarPrepChain {
     /** Protect from Magic unlocks at Prayer 37 — the Prayer step's target. */
     const val PRAYER_TARGET = 37
 
-    // The church altar is 3.5x (see PrayerAltarPlugin) → dragon bones give 252 xp each; ~110 reach
-    // level 37 from scratch (27,473 xp). We gift a buffer against misclicks/accidental buries. TUNABLE.
-    const val PRAYER_BONES = 120
+    // The church altar is 3.5x (see PrayerAltarPlugin) → dragon bones give 252 xp each. One full
+    // inventory (28) proved enough to clear level 37 in testing; anyone who still falls short is
+    // covered by the bounded top-up/drill below, so no soft-lock. TUNABLE.
+    const val PRAYER_BONES = 28
     private const val DRAGON_BONES = "item.dragon_bones"
 
     // Magic-quest gear: an elemental staff (free element rune) + mystic robes + a stack of runes —

@@ -6,6 +6,7 @@ import org.alter.api.ext.*
 import org.alter.game.Server
 import org.alter.game.model.World
 import org.alter.game.model.entity.Player
+import org.alter.game.model.queue.QueueTask
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
 import org.alter.rscm.RSCM.getRSCM
@@ -48,6 +49,9 @@ class PrayerAltarPlugin(
     // for (train Prayer to 37 → Protect from Magic). TUNABLE.
     private val altarMultiplier = 3.5
 
+    // Ticks between each bone when auto-offering a full inventory on the altar. TUNABLE.
+    private val offerDelayTicks = 3
+
     // No courtyard altar: the church's map-baked altar (3243,3207) is right next to the home hub,
     // so we don't spawn a convenience prayer altar in the market courtyard. The "Pray-at" and
     // bone-offering bindings below are keyed by object type (altar_409), so they cover the church
@@ -78,20 +82,26 @@ class PrayerAltarPlugin(
         }
 
         // Offering bones on any altar → boosted Prayer xp (the church-altar rite).
+        // One use-on-altar offers the whole inventory: the queue keeps offering that bone
+        // type until none remain, and breaks if the player walks off or does something else.
         altars.forEach { altar ->
             bones.forEach { b ->
                 try {
-                    onItemOnObj(obj = altar, item = b.key) { offer(player, b) }
+                    onItemOnObj(obj = altar, item = b.key) { player.queue { offer(this, player, b) } }
                 } catch (e: Exception) { /* this altar/bone pairing isn't in the cache */ }
             }
         }
     }
 
-    private fun offer(player: Player, bone: Bone) {
-        if (player.inventory.remove(item = getRSCM(bone.key), amount = 1).hasSucceeded()) {
+    private suspend fun offer(task: QueueTask, player: Player, bone: Bone) {
+        while (player.inventory.remove(item = getRSCM(bone.key), amount = 1).hasSucceeded()) {
             player.animate(3705) // kneel-and-offer at the altar
             player.addXp(Skills.PRAYER, bone.xp * altarMultiplier)
             player.message("You offer the bones on the altar. The gods are pleased.")
+            if (!player.inventory.contains(getRSCM(bone.key))) {
+                break
+            }
+            task.wait(offerDelayTicks)
         }
     }
 
