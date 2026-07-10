@@ -111,10 +111,15 @@ class SlayerPlugin(
             assignTask(p)
             return
         }
-        // War-Prep Magic quest: Vannaka MUST act on GEAR (arm them for the tower); PRAYER/TOWER just
-        // get a one-line nudge before the normal contract menu still opens.
+        // War-Prep Magic quest: Vannaka MUST act on GEAR (arm them for the tower) and RETURN (the
+        // post-tower debrief that closes the quest); PRAYER/TOWER just get a one-line nudge before
+        // the normal contract menu still opens.
         if (WarPrepChain.step(p) == WarPrepChain.Step.GEAR) {
             warPrepArm(p)
+            return
+        }
+        if (WarPrepChain.step(p) == WarPrepChain.Step.RETURN) {
+            warPrepDebrief(p)
             return
         }
         if (WarPrepChain.step(p) == WarPrepChain.Step.PRAYER) warPrepPrayerNudge(p)
@@ -191,18 +196,28 @@ class SlayerPlugin(
         }
     }
 
-    /** GEAR step: Prayer's ready — arm the recruit for the Wizard Tower and send them in. */
+    /** GEAR step: Prayer's ready — arm the recruit for the Wizard Tower and send them to the
+     *  Void Knight who runs the assaults. */
     private suspend fun QueueTask.warPrepArm(p: Player) {
         chatNpc(p, "Prayer trained and Protect from Magic ready — good. You'll not walk into a tower of mages unarmed, though.")
-        WarPrepChain.armForTower(p) // staff + robes + runes
-        chatNpc(p, "Take this staff, these robes and a stock of runes. Keep <col=801700>Protect from Magic</col> up and their spells will wash off you.")
-        chatNpc(p, "The <col=801700>Wizard Tower</col> stands south-west, across the river. Fight up it floor by floor — clear every mage before you climb — and take the <col=801700>grimoire</col> from the Archmage at the top. Follow the marker.")
+        WarPrepChain.armForTower(p) // staff + robes + runes + noted prayer potions
+        chatNpc(p, "Take this staff, these robes, and a proper stock of runes — <col=801700>air, water, earth and fire</col> by the hundreds, plus the combat runes. And a crate of <col=801700>prayer potions</col>, noted — sip them and <col=801700>Protect from Magic</col> never drops.")
+        chatNpc(p, "The <col=801700>Wizard Tower</col> stands south-west, across the river. A <col=801700>Void Knight</col> holds the bridge to it — speak to him and he'll send you in. Fight up floor by floor and take the <col=801700>grimoire</col> from the Archmage at the top.")
+        chatNpc(p, "Follow the marker to the Void Knight — and come back to me once the grimoire's power is yours.")
         WarPrepChain.onArmedForTower(p) // advance to TOWER
     }
 
     /** TOWER step nudge. */
     private suspend fun QueueTask.warPrepTowerNudge(p: Player) {
-        chatNpc(p, "The grimoire won't fetch itself, ${p.address}. Get to the Wizard Tower, clear it floor by floor, and take it from the Archmage. Follow the marker.")
+        chatNpc(p, "The grimoire won't fetch itself, ${p.address}. Follow the marker to the <col=801700>Void Knight</col> at the Wizard Tower bridge — he'll send you in. Clear it floor by floor and take it from the Archmage.")
+    }
+
+    /** RETURN step: back from the tower with the grimoire — Vannaka's debrief closes the quest. */
+    private suspend fun QueueTask.warPrepDebrief(p: Player) {
+        chatNpc(p, "Back — and I can smell the scorched robes from here. The grimoire's power is yours, ${p.address}: every spellbook the realm knows, at your call.")
+        chatNpc(p, "Keep the tower in mind, too. The Void Knight will send you back in whenever you like, and those mages bleed <col=801700>runes</col> — there's no finer place to farm them.")
+        chatNpc(p, "That's Magic dealt with. You've stood in front of spellfire and walked out — the war's <col=801700>raids</col> are opening to you.")
+        WarPrepChain.onReportedToVannaka(p) // RETURN → DONE
     }
 
     /** Intro-quest: the recruit reports back to Vannaka after the rats — Vannaka rewards the combat

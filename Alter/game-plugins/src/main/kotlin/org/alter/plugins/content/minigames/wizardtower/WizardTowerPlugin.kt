@@ -13,6 +13,7 @@ import org.alter.game.model.Tile
 import org.alter.game.model.World
 import org.alter.game.model.attr.KILLER_ATTR
 import org.alter.game.model.attr.NO_LOOT_ATTR
+import org.alter.game.model.attr.VOID_KNIGHT_INTRO_DONE_ATTR
 import org.alter.game.model.collision.isClipped
 import org.alter.game.model.combat.CombatClass
 import org.alter.game.model.entity.DynamicObject
@@ -377,8 +378,7 @@ object WizardTower {
             // chain additionally advances if the player is on its TOWER step.
             if (WarPrepChain.step(p) == WarPrepChain.Step.TOWER) {
                 p.message("<col=8f00ff>You lift the grimoire from the Archmage's remains.</col>")
-                WarPrepChain.onGrimoireTaken(p) // → unlockMageBooks + War-Prep DONE
-                p.message("Use <col=8f00ff>::spellbook</col> to switch between your spellbooks.")
+                WarPrepChain.onGrimoireTaken(p) // → unlockMageBooks + arrow back to Vannaka (RETURN)
             } else if (p.unlockMageBooks()) {
                 p.message("<col=8f00ff>The grimoire's secrets are yours — the Ancient, Lunar and Arceuus spellbooks are unlocked!</col>")
                 p.message("Use <col=8f00ff>::spellbook</col> to switch between your spellbooks.")
@@ -676,9 +676,16 @@ class WizardTowerPlugin(
 
     private suspend fun QueueTask.knightDialog(p: Player) {
         val id = runCatching { getRSCM(knight) }.getOrDefault(-1)
-        chatNpc(p, "The Wizards' Tower has fallen to rogue mages — and Archmage Sedridor's grimoire with it. We knights hold this bridge, and we pay in runes for every head.", npc = id, title = "Void Knight")
-        chatNpc(p, "Fight up the tower a floor at a time and fell the Archmage at the top. Go in alone, or open your assault to others — up to ${WizardTower.MAX_PLAYERS} may storm it together.", npc = id, title = "Void Knight")
-        chatNpc(p, "Their spells bite — pray against magic before you cross. The mages rise again as fast as you cut them down, so farm their runes as long as you dare. The portal at the top brings you home.", npc = id, title = "Void Knight")
+        if (p.attr[VOID_KNIGHT_INTRO_DONE_ATTR] != true) {
+            p.attr[VOID_KNIGHT_INTRO_DONE_ATTR] = true
+            chatNpc(p, "Hold, traveller. The Wizards' Tower behind me has fallen to rogue mages — and Archmage Sedridor's grimoire with it. We knights hold this bridge, and we pay in runes for every head.", npc = id, title = "Void Knight")
+            chatNpc(p, "Here's how the assault works: fight up the tower a floor at a time — a floor's staircase stays sealed until every mage on it is dead — and fell the Archmage at the top.", npc = id, title = "Void Knight")
+            chatNpc(p, "Take the tower once and the grimoire's secrets are yours forever: <col=8f00ff>every spellbook the realm knows</col> — the Ancient, Lunar and Arceuus books — unlocked, for good.", npc = id, title = "Void Knight")
+            chatNpc(p, "And the mages themselves? They bleed <col=8f00ff>runes</col> — chaos, nature, law, death, blood and worse — and they rise again as fast as you cut them down. There's no finer rune-farm in the realm; come back as often as your pouch demands.", npc = id, title = "Void Knight")
+            chatNpc(p, "Their spells bite, so pray against magic before you cross. Go in alone, or open your assault to others — up to ${WizardTower.MAX_PLAYERS} may storm it together. The portal at the top brings you home.", npc = id, title = "Void Knight")
+        } else {
+            chatNpc(p, "Back for the tower? Clear each floor, fell the Archmage, and farm the mages' runes as long as you dare. Pray against magic — and the portal at the top brings you home.", npc = id, title = "Void Knight")
+        }
         when (options(p, "Enter alone. (solo)", "Open assault. (up to ${WizardTower.MAX_PLAYERS} players)", "Not now.")) {
             1 -> WizardTower.enter(p, multi = false)
             2 -> WizardTower.enter(p, multi = true)

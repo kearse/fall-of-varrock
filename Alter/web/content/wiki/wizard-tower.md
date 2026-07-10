@@ -16,7 +16,7 @@ The **Wizard Tower** is a repeatable, instanced combat minigame in the Wizards' 
   - **Solo game** — a private tower, just you (and your companions).
   - **Multi game** — an *open* assault: up to **5 players** share one tower. If an open game is running with a free slot you drop straight into it; otherwise you start one. Muster at the bridge spawn until your band is assembled, then push in together.
 - You spawn **on the bridge** inside the instance. Cross onto the island and head through the tower's (permanently open) door.
-- The War-Prep quest chain routes you here after the Recruit Trials — Vannaka trains you to **Prayer 37** and hands you a mystic fire staff, robes and runes first. See [Recruit Trials](/wiki/recruit-trials).
+- The War-Prep quest chain routes you here after the Recruit Trials — Vannaka trains you to **Prayer 37**, hands you a mystic fire staff, robes, a full rune stock and 100 noted prayer potions, then a marker guides you all the way to the **Void Knight** at the bridge. After your first clear the marker leads you back to Vannaka to finish the quest. See [Recruit Trials](/wiki/recruit-trials).
 - Deaths in the instance are safe.
 
 ## The assault

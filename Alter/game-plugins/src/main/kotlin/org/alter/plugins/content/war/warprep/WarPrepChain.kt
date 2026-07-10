@@ -22,8 +22,9 @@ import org.alter.rscm.RSCM.getRSCM
  * **Quest 1 — Magic** (built): the only way to wield Ancient/Lunar/Arceuus magic is to clear the
  * Wizard Tower. Vannaka first drills the recruit's **Prayer to 37** (unlocking Protect from Magic,
  * which they'll need against the tower's mages) at the Lumbridge church altar, arms them with a
- * staff/robes/runes, then sends them into the tower minigame to take the **grimoire** — which
- * permanently unlocks the special spellbooks ([Player.unlockMageBooks]).
+ * staff/robes/runes/prayer potions, then sends them to the **Void Knight** at the tower bridge to
+ * enter the minigame and take the **grimoire** — which permanently unlocks the special spellbooks
+ * ([Player.unlockMageBooks]) — and finally back to Vannaka for the debrief that closes the quest.
  *
  * Quests 2-5 (Ranged, survivability, a graduation war-game, …) are scaffolded: append [Step]s and
  * their hooks, and the raid gate ([complete]) moves to the real end of the chain.
@@ -45,18 +46,27 @@ object WarPrepChain {
     const val PRAYER_BONES = 120
     private const val DRAGON_BONES = "item.dragon_bones"
 
-    // Magic-quest gear: an elemental staff (free element rune) + mystic robes + a stack of the other
-    // runes, so a fresh recruit can actually cast in the tower. All TUNABLE / defensive on missing keys.
+    // Magic-quest gear: an elemental staff (free element rune) + mystic robes + a stack of runes —
+    // a few hundred of each BASIC element so a fresh recruit is never dry on casts, plus the
+    // combat-spell ammo — and a crate of noted prayer potions to keep Protect from Magic up for the
+    // whole tower. All TUNABLE / defensive on missing keys.
     private const val MAGIC_STAFF = "item.mystic_fire_staff"
     private val MAGIC_ROBES = arrayOf("item.mystic_hat", "item.mystic_robe_top", "item.mystic_robe_bottom")
-    private val MAGIC_RUNES = arrayOf("item.mind_rune" to 500, "item.chaos_rune" to 300, "item.death_rune" to 150)
+    private val MAGIC_RUNES = arrayOf(
+        "item.air_rune" to 500, "item.water_rune" to 300, "item.earth_rune" to 300, "item.fire_rune" to 300,
+        "item.mind_rune" to 500, "item.chaos_rune" to 300, "item.death_rune" to 150,
+    )
+    private const val PRAYER_POTIONS = "item.prayer_potion4_noted"
+    private const val PRAYER_POTION_COUNT = 100
 
     // Guidance anchors. Vannaka runs the briefings; the church altar is the Prayer objective; the
-    // Wizard Tower entrance is the Magic objective. (x, z, plane) — plane drives floor-aware routing.
+    // Void Knight (the Wizard Tower game-master, mainland end of the bridge) is the Magic
+    // objective. (x, z, plane) — plane drives floor-aware routing.
     private const val VANNAKA_NPC = "npc.vannaka"
     private val VANNAKA_TILE = Triple(3219, 3215, 0)
     private val CHURCH_ALTAR_TILE = Triple(3242, 3207, 0) // Lumbridge church altar (PrayerAltarPlugin's home altar)
-    private val TOWER_ENTRANCE_TILE = Triple(3110, 3168, 0) // Wizard Tower door — pinned precisely in Phase 2
+    private const val KNIGHT_NPC = "npc.void_knight"
+    private val KNIGHT_TILE = Triple(3113, 3208, 0) // WizardTowerPlugin's knight spawn
 
     private const val ARROW_HEIGHT = 130
     private const val NEAR_TILES = 14
@@ -65,7 +75,8 @@ object WarPrepChain {
         NONE("(not started)"),
         PRAYER("Train Prayer to $PRAYER_TARGET at the Lumbridge church altar — use the dragon bones on it."),
         GEAR("Return to Vannaka to be armed for the Wizard Tower."),
-        TOWER("Enter the Wizard Tower, clear the mages floor by floor, and take the grimoire from the Archmage."),
+        TOWER("Speak to the Void Knight at the Wizard Tower bridge — clear the tower and take the grimoire from the Archmage."),
+        RETURN("Return to Vannaka with word of the grimoire."),
         DONE("War-Prep — Magic mastered: the Ancient, Lunar and Arceuus spellbooks are unlocked."),
     }
 
@@ -93,14 +104,16 @@ object WarPrepChain {
     }
 
     /** Steps the poll runs on — those with a live objective (progress watched and/or arrow refreshed). */
-    private fun isTracked(s: Step): Boolean = s == Step.PRAYER || s == Step.GEAR || s == Step.TOWER
+    private fun isTracked(s: Step): Boolean = s == Step.PRAYER || s == Step.GEAR || s == Step.TOWER || s == Step.RETURN
 
-    /** Point the guidance arrow at the current objective. */
+    /** Point the guidance arrow at the current objective. NPC anchors ([pointAtNpc]) show a TILE
+     *  arrow from any distance — all the way from Lumbridge — and snap to the npc itself up close. */
     fun updateHintArrow(p: Player) {
         when (step(p)) {
             Step.PRAYER -> p.setTileHintArrow(CHURCH_ALTAR_TILE.first, CHURCH_ALTAR_TILE.second, ARROW_HEIGHT)
             Step.GEAR -> pointAtNpc(p, VANNAKA_NPC, VANNAKA_TILE)
-            Step.TOWER -> p.setTileHintArrow(TOWER_ENTRANCE_TILE.first, TOWER_ENTRANCE_TILE.second, ARROW_HEIGHT)
+            Step.TOWER -> pointAtNpc(p, KNIGHT_NPC, KNIGHT_TILE)
+            Step.RETURN -> pointAtNpc(p, VANNAKA_NPC, VANNAKA_TILE)
             Step.NONE -> {}
             Step.DONE -> p.clearHintArrow()
         }
@@ -114,9 +127,17 @@ object WarPrepChain {
         advanceTo(p, Step.TOWER)
     }
 
-    /** TOWER: the Wizard Tower minigame calls this when the recruit takes the grimoire on their first clear. */
+    /** TOWER: the Wizard Tower minigame calls this when the recruit takes the grimoire on their
+     *  first clear. The spellbooks unlock on the spot; the arrow then routes back to Vannaka
+     *  ([Step.RETURN]) for the debrief that closes the quest. */
     fun onGrimoireTaken(p: Player) {
         if (step(p) != Step.TOWER) return
+        advanceTo(p, Step.RETURN)
+    }
+
+    /** RETURN: `SlayerPlugin` (Vannaka) calls this on the post-tower debrief — closes the quest. */
+    fun onReportedToVannaka(p: Player) {
+        if (step(p) != Step.RETURN) return
         advanceTo(p, Step.DONE)
     }
 
@@ -142,6 +163,7 @@ object WarPrepChain {
         p.attr[WARPREP_STEP_ATTR] = next.ordinal
         when (next) {
             Step.PRAYER -> giveItem(p, DRAGON_BONES, PRAYER_BONES) // bones for the church-altar training
+            Step.RETURN -> grantGrimoire(p) // the spellbook unlock lands the moment the grimoire is taken
             Step.DONE -> grantCompletion(p)
             else -> {}
         }
@@ -152,11 +174,13 @@ object WarPrepChain {
         updateHintArrow(p)
     }
 
-    /** GEAR briefing payload: hand the recruit the staff, robes and runes to fight with magic. */
+    /** GEAR briefing payload: hand the recruit the staff, robes, runes and noted prayer potions
+     *  to fight (and keep praying) through the tower. */
     fun armForTower(p: Player) {
         giveItem(p, MAGIC_STAFF, 1)
         for (robe in MAGIC_ROBES) giveItem(p, robe, 1)
         for ((rune, amount) in MAGIC_RUNES) giveItem(p, rune, amount)
+        giveItem(p, PRAYER_POTIONS, PRAYER_POTION_COUNT)
     }
 
     /** Outcome of a PRAYER-step top-up request — drives Vannaka's line. */
@@ -191,10 +215,15 @@ object WarPrepChain {
         return TopUp.DRILLED
     }
 
-    private fun grantCompletion(p: Player) {
+    /** RETURN entry: the grimoire's reward is immediate — the books unlock as it's lifted. */
+    private fun grantGrimoire(p: Player) {
         p.unlockMageBooks() // permanently unlock Ancient/Lunar/Arceuus
-        p.message("<col=801700>War-Prep — Magic complete!</col> The grimoire's power is yours: the <col=801700>Ancient, Lunar and Arceuus</col> spellbooks are unlocked. Swap books with <col=801700>::spellbook</col>.")
-        p.message("You've proven you can survive the front's magic. The war's raids are opening to you.")
+        p.message("<col=801700>The grimoire's power is yours:</col> the <col=801700>Ancient, Lunar and Arceuus</col> spellbooks are unlocked. Swap books with <col=801700>::spellbook</col>.")
+    }
+
+    private fun grantCompletion(p: Player) {
+        p.unlockMageBooks() // idempotent — already unlocked on the RETURN step
+        p.message("<col=801700>War-Prep — Magic complete!</col> You've proven you can survive the front's magic. The war's raids are opening to you.")
     }
 
     // --- guidance helpers (mirrors RecruitTrials) ---------------------------------------

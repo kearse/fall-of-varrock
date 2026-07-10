@@ -12,8 +12,9 @@ The **Standard spellbook is always available**. The three special books — **An
 
 1. Finish the [Recruit Trials](/wiki/recruit-trials) (your automatic starter quest).
 2. The **War-Prep chain** continues from there: Vannaka drills you to **Prayer 37** at the Lumbridge church altar — he supplies 120 dragon bones for it — so you have Protect from Magic.
-3. Vannaka then hands you a mage kit: mystic fire staff, mystic robes, and 500 mind / 300 chaos / 150 death runes.
-4. Enter the **[Wizard Tower](/wiki/wizard-tower)** (`::wizardtower`), fight up all three floors, kill **Archmage Sedridor**, and take his **grimoire**.
+3. Vannaka then hands you a mage kit: mystic fire staff, mystic robes, a full rune stock (500 air / 300 water / 300 earth / 300 fire elemental runes plus 500 mind / 300 chaos / 150 death), and **100 noted prayer potions** to keep Protect from Magic up.
+4. Follow the marker to the **Void Knight** at the [Wizard Tower](/wiki/wizard-tower) bridge (`::wizardtower`), enter the tower, fight up all three floors, kill **Archmage Sedridor**, and take his **grimoire**.
+5. Return to Vannaka — the marker leads you back — for the debrief that completes the quest.
 
 Taking the grimoire on your first clear **permanently unlocks all three special books** on your account.
 
