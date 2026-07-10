@@ -128,8 +128,10 @@ object WarPrepChain {
         s == Step.PRAYER || s == Step.GEAR || s == Step.TOWER || s == Step.RETURN || s == Step.RANK
 
     /** Point the guidance arrow at the current objective. NPC anchors ([pointAtNpc]) show a TILE
-     *  arrow from any distance — all the way from Lumbridge — and snap to the npc itself up close. */
+     *  arrow from any distance — all the way from Lumbridge — and snap to the npc itself up close.
+     *  Muted guidance (free play) skips the arrow entirely — the mute toggle cleared it already. */
     fun updateHintArrow(p: Player) {
+        if (org.alter.plugins.content.quests.QuestJournal.muted(p)) return
         when (step(p)) {
             Step.PRAYER -> p.setTileHintArrow(CHURCH_ALTAR_TILE.first, CHURCH_ALTAR_TILE.second, ARROW_HEIGHT)
             Step.GEAR -> pointAtNpc(p, VANNAKA_NPC, VANNAKA_TILE)
