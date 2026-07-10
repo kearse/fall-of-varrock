@@ -6,9 +6,8 @@
  * Each destination is a "card" (icon + name + price + danger); the list scrolls. Geometry lives
  * here so the mouse listener + wheel + renderer all agree.
  *
- * Styling is a modern dark theme (translucent slate panel, rounded corners, gold accent,
- * pill danger tags) rather than the classic OSRS stone look — we own the client, so the
- * window can look however we want.
+ * Styled with the Fall of Varrock brand theme (LofTheme): shield logo in the header, ember
+ * accents, antique-gold headings on a warm near-black panel — matching the login screen.
  */
 package net.runelite.client.plugins.lofteleports;
 
@@ -16,7 +15,6 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FontMetrics;
-import java.awt.GradientPaint;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Rectangle;
@@ -29,6 +27,7 @@ import javax.inject.Inject;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
 import net.runelite.client.game.ItemManager;
+import net.runelite.client.plugins.loftheme.LofTheme;
 import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.overlay.Overlay;
 import net.runelite.client.ui.overlay.OverlayLayer;
@@ -46,7 +45,7 @@ class LofTeleportsOverlay extends Overlay
 	private static final int WIN_W = 560;
 	private static final int WIN_H = 400;
 	private static final int WIN_ARC = 14;
-	private static final int TITLE_H = 34;
+	private static final int TITLE_H = 38;
 	private static final int TAB_X = 10;
 	private static final int TAB_W = 122;
 	private static final int TAB_Y0 = TITLE_H + 14;
@@ -55,30 +54,15 @@ class LofTeleportsOverlay extends Overlay
 	private static final int LIST_X = 144;
 	private static final int LIST_W = WIN_W - LIST_X - 10;     // 406
 	private static final int SCROLLBAR_W = 5;
-	private static final int VP_TOP = TITLE_H + 32;            // 66, below the column headers
+	private static final int VP_TOP = TITLE_H + 32;            // 70, below the column headers
 	private static final int VP_BOTTOM = WIN_H - 12;
-	private static final int VP_H = VP_BOTTOM - VP_TOP;        // 322
+	private static final int VP_H = VP_BOTTOM - VP_TOP;        // 318
 	private static final int CARD_X = LIST_X + 2;
 	private static final int CARD_W = LIST_W - SCROLLBAR_W - 8;
 	private static final int CARD_H = 26;
 	private static final int STEP = 30;
 
-	// modern dark palette, gold accent
-	private static final Color SHADOW = new Color(0, 0, 0, 110);
-	private static final Color PANEL = new Color(18, 19, 23, 238);
-	private static final Color PANEL_BORDER = new Color(255, 255, 255, 34);
-	private static final Color HEADER_BG = new Color(28, 29, 35, 255);
-	private static final Color RAIL_BG = new Color(255, 255, 255, 8);
-	private static final Color ACCENT = new Color(255, 165, 48);
-	private static final Color GOLD = new Color(255, 190, 92);
-	private static final Color TAB_SEL_BG = new Color(255, 165, 48, 34);
-	private static final Color TAB_HOVER_BG = new Color(255, 255, 255, 16);
-	private static final Color CARD_BG = new Color(255, 255, 255, 10);
-	private static final Color CARD_HOVER = new Color(255, 255, 255, 26);
-	private static final Color GREY = new Color(150, 152, 160);
-	private static final Color GREY_DIM = new Color(112, 114, 122);
-	private static final Color WHITE = new Color(238, 238, 242);
-	private static final Color CLOSE_HOVER = new Color(196, 62, 52);
+	private static final Color CLOSE_HOVER = LofTheme.EMBER;
 	private static final Color FREE_GREEN = new Color(110, 205, 110);
 
 	private final Client client;
@@ -153,7 +137,7 @@ class LofTeleportsOverlay extends Overlay
 		return INSIDE;
 	}
 
-	private Rectangle closeRect(int ox, int oy) { return new Rectangle(ox + WIN_W - 30, oy + 7, 20, 20); }
+	private Rectangle closeRect(int ox, int oy) { return new Rectangle(ox + WIN_W - 30, oy + 9, 20, 20); }
 	private Rectangle tabRect(int ox, int oy, int t) { return new Rectangle(ox + TAB_X, oy + TAB_Y0 + t * TAB_GAP, TAB_W, TAB_H); }
 
 	@Override
@@ -170,36 +154,37 @@ class LofTeleportsOverlay extends Overlay
 		final int ox = originX(), oy = originY();
 		final Point mouse = mousePoint();
 
-		// drop shadow + panel
-		g.setColor(SHADOW);
-		g.fillRoundRect(ox + 4, oy + 6, WIN_W, WIN_H, WIN_ARC + 4, WIN_ARC + 4);
-		g.setColor(PANEL);
-		g.fillRoundRect(ox, oy, WIN_W, WIN_H, WIN_ARC, WIN_ARC);
-		g.setColor(PANEL_BORDER);
-		g.drawRoundRect(ox, oy, WIN_W - 1, WIN_H - 1, WIN_ARC, WIN_ARC);
+		LofTheme.panel(g, ox, oy, WIN_W, WIN_H, WIN_ARC);
 
-		// header bar with gold accent underline
+		// header bar with ember accent underline
 		final Shape headerClip = g.getClip();
 		g.setClip(ox, oy, WIN_W, TITLE_H);
-		g.setColor(HEADER_BG);
+		g.setColor(LofTheme.HEADER);
 		g.fillRoundRect(ox, oy, WIN_W, TITLE_H + WIN_ARC, WIN_ARC, WIN_ARC);
 		g.setClip(headerClip);
-		g.setPaint(new GradientPaint(ox + 12, 0, ACCENT, ox + WIN_W - 12, 0, new Color(ACCENT.getRed(), ACCENT.getGreen(), ACCENT.getBlue(), 0)));
-		g.fillRect(ox + 1, oy + TITLE_H - 2, WIN_W - 2, 2);
+		LofTheme.emberUnderline(g, ox + 1, oy + TITLE_H - 2, WIN_W - 2);
 
+		// shield logo + title
+		final BufferedImage logo = LofTheme.logo();
+		int titleX = ox + 14;
+		if (logo != null)
+		{
+			g.drawImage(logo, ox + 12, oy + 5, 28, 28, null);
+			titleX = ox + 46;
+		}
 		g.setFont(FontManager.getRunescapeBoldFont());
-		shadow(g, "Teleport Portal", ox + 16, oy + 23, GOLD);
+		LofTheme.shadowText(g, "Teleport Portal", titleX, oy + 25, LofTheme.GOLD);
 		g.setFont(FontManager.getRunescapeSmallFont());
 		final List<LofTeleportsData.Category> cats = LofTeleportsData.CATEGORIES;
 		final String sub = cats.get(activeTab).name + "  •  " + rowCount() + " destinations";
-		shadow(g, sub, ox + WIN_W - 44 - g.getFontMetrics().stringWidth(sub), oy + 22, GREY);
+		LofTheme.shadowText(g, sub, ox + WIN_W - 44 - g.getFontMetrics().stringWidth(sub), oy + 24, LofTheme.TEXT_DIM);
 
 		// close button
 		final Rectangle cr = closeRect(ox, oy);
 		final boolean closeHov = cr.contains(mouse);
 		g.setColor(closeHov ? CLOSE_HOVER : new Color(255, 255, 255, 18));
 		g.fillRoundRect(cr.x, cr.y, cr.width, cr.height, 6, 6);
-		g.setColor(closeHov ? WHITE : GREY);
+		g.setColor(closeHov ? LofTheme.TEXT : LofTheme.TEXT_DIM);
 		final Stroke oldStroke = g.getStroke();
 		g.setStroke(new BasicStroke(1.6f));
 		g.drawLine(cr.x + 6, cr.y + 6, cr.x + cr.width - 7, cr.y + cr.height - 7);
@@ -207,7 +192,7 @@ class LofTeleportsOverlay extends Overlay
 		g.setStroke(oldStroke);
 
 		// tab rail
-		g.setColor(RAIL_BG);
+		g.setColor(LofTheme.ROW);
 		g.fillRoundRect(ox + TAB_X - 4, oy + TITLE_H + 8, TAB_W + 8, WIN_H - TITLE_H - 20, 10, 10);
 		g.setFont(FontManager.getRunescapeFont());
 		for (int t = 0; t < cats.size(); t++)
@@ -217,23 +202,23 @@ class LofTeleportsOverlay extends Overlay
 			final boolean hov = tr.contains(mouse);
 			if (sel)
 			{
-				g.setColor(TAB_SEL_BG);
+				g.setColor(LofTheme.alpha(LofTheme.EMBER, 44));
 				g.fillRoundRect(tr.x, tr.y, tr.width, tr.height, 8, 8);
-				g.setColor(ACCENT);
+				g.setColor(LofTheme.EMBER);
 				g.fillRoundRect(tr.x, tr.y + 6, 3, tr.height - 12, 2, 2);
 			}
 			else if (hov)
 			{
-				g.setColor(TAB_HOVER_BG);
+				g.setColor(LofTheme.ROW_HOVER);
 				g.fillRoundRect(tr.x, tr.y, tr.width, tr.height, 8, 8);
 			}
-			shadow(g, cats.get(t).name, tr.x + 12, tr.y + 20, sel ? GOLD : (hov ? WHITE : GREY));
+			LofTheme.shadowText(g, cats.get(t).name, tr.x + 12, tr.y + 20, sel ? LofTheme.GOLD : (hov ? LofTheme.TEXT : LofTheme.TEXT_DIM));
 		}
 
 		// column headers
 		g.setFont(FontManager.getRunescapeSmallFont());
-		shadow(g, "DESTINATION", ox + CARD_X + 30, oy + TITLE_H + 22, GREY_DIM);
-		shadow(g, "DANGER", ox + CARD_X + CARD_W - 12 - g.getFontMetrics().stringWidth("DANGER"), oy + TITLE_H + 22, GREY_DIM);
+		LofTheme.shadowText(g, "DESTINATION", ox + CARD_X + 30, oy + TITLE_H + 22, LofTheme.GOLD_DIM);
+		LofTheme.shadowText(g, "DANGER", ox + CARD_X + CARD_W - 12 - g.getFontMetrics().stringWidth("DANGER"), oy + TITLE_H + 22, LofTheme.GOLD_DIM);
 
 		// cards (clipped to viewport)
 		final Shape oldClip = g.getClip();
@@ -251,11 +236,11 @@ class LofTeleportsOverlay extends Overlay
 				&& mouse.y >= oy + VP_TOP && mouse.y <= oy + VP_BOTTOM;
 
 			// card body
-			g.setColor(hov ? CARD_HOVER : CARD_BG);
+			g.setColor(hov ? LofTheme.ROW_HOVER : LofTheme.ROW);
 			g.fillRoundRect(cx, cy, CARD_W, CARD_H, 8, 8);
 			if (hov)
 			{
-				g.setColor(new Color(ACCENT.getRed(), ACCENT.getGreen(), ACCENT.getBlue(), 120));
+				g.setColor(LofTheme.alpha(LofTheme.EMBER, 150));
 				g.drawRoundRect(cx, cy, CARD_W, CARD_H, 8, 8);
 			}
 
@@ -263,12 +248,12 @@ class LofTeleportsOverlay extends Overlay
 			drawIcon(g, cx + 6, cy + 4, d.icon);
 
 			final int ty = cy + CARD_H / 2 + 4;
-			shadow(g, d.name, cx + 32, ty, d.built ? WHITE : GREY_DIM);
+			LofTheme.shadowText(g, d.name, cx + 32, ty, d.built ? LofTheme.TEXT : LofTheme.TEXT_DIM);
 			if (d.built)
 			{
-				shadow(g, "FREE", cx + CARD_W - 190, ty, FREE_GREEN);
+				LofTheme.shadowText(g, "FREE", cx + CARD_W - 190, ty, FREE_GREEN);
 			}
-			pill(g, fm, d.danger, cx + CARD_W - 10, ty, d.built ? d.colour : GREY_DIM);
+			LofTheme.pill(g, fm, d.danger, cx + CARD_W - 10, ty, d.built ? d.colour : LofTheme.TEXT_DIM);
 		}
 		g.setClip(oldClip);
 
@@ -282,27 +267,12 @@ class LofTeleportsOverlay extends Overlay
 			final int content = rowCount() * STEP;
 			final int thumbH = Math.max(24, VP_H * VP_H / content);
 			final int thumbY = oy + VP_TOP + (VP_H - thumbH) * scroll / ms;
-			g.setColor(new Color(ACCENT.getRed(), ACCENT.getGreen(), ACCENT.getBlue(), 170));
+			g.setColor(LofTheme.alpha(LofTheme.EMBER, 190));
 			g.fillRoundRect(sbX, thumbY, SCROLLBAR_W, thumbH, SCROLLBAR_W, SCROLLBAR_W);
 		}
 
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, oldAA == null ? RenderingHints.VALUE_ANTIALIAS_DEFAULT : oldAA);
 		return new Dimension(WIN_W, WIN_H);
-	}
-
-	/** Right-aligned rounded tag: coloured text on a translucent fill of the same hue. */
-	private static void pill(Graphics2D g, FontMetrics fm, String text, int rightX, int textBaselineY, Color col)
-	{
-		final int tw = fm.stringWidth(text);
-		final int px = rightX - tw - 16;
-		final int py = textBaselineY - fm.getAscent() - 2;
-		final int ph = fm.getHeight() + 4;
-		g.setColor(new Color(col.getRed(), col.getGreen(), col.getBlue(), 38));
-		g.fillRoundRect(px, py, tw + 16, ph, ph, ph);
-		g.setColor(new Color(col.getRed(), col.getGreen(), col.getBlue(), 90));
-		g.drawRoundRect(px, py, tw + 16, ph, ph, ph);
-		g.setColor(col);
-		g.drawString(text, px + 8, textBaselineY);
 	}
 
 	private void drawIcon(Graphics2D g, int x, int y, int itemId)
@@ -324,12 +294,4 @@ class LofTeleportsOverlay extends Overlay
 	}
 
 	private static int clamp(int v, int lo, int hi) { return Math.max(lo, Math.min(hi, v)); }
-
-	private static void shadow(Graphics2D g, String text, int x, int y, Color col)
-	{
-		g.setColor(Color.BLACK);
-		g.drawString(text, x + 1, y + 1);
-		g.setColor(col);
-		g.drawString(text, x, y);
-	}
 }

@@ -12,6 +12,7 @@ import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import javax.inject.Inject;
 import net.runelite.api.Client;
+import net.runelite.client.plugins.loftheme.LofTheme;
 import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.overlay.Overlay;
 import net.runelite.client.ui.overlay.OverlayLayer;
@@ -24,10 +25,10 @@ class LofWarBarOverlay extends Overlay
 	private static final int W = 200;
 	private static final int H = 19;
 
-	private static final Color TRACK = new Color(0, 0, 0, 205);
-	private static final Color BOSS_FILL = new Color(196, 54, 40);     // red — boss HP depleted
-	private static final Color CAMPAIGN_FILL = new Color(70, 132, 214); // blue — campaign cleared
-	private static final Color BORDER = new Color(255, 255, 255, 55);
+	private static final Color TRACK = LofTheme.alpha(LofTheme.PANEL_OPAQUE, 225);
+	private static final Color BOSS_FILL = LofTheme.EMBER;            // ember — boss HP depleted
+	private static final Color CAMPAIGN_FILL = LofTheme.GOLD_DIM;     // gold — campaign cleared
+	private static final Color BORDER = LofTheme.alpha(LofTheme.EMBER_DARK, 210);
 
 	private final Client client;
 	private final LofWarBarConfig config;
