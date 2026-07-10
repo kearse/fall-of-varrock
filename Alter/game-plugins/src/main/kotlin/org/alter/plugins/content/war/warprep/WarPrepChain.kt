@@ -11,6 +11,8 @@ import org.alter.game.model.entity.Player
 import org.alter.game.model.timer.TimerKey
 import kotlin.math.abs
 import org.alter.plugins.content.magic.spellbook.unlockMageBooks
+import org.alter.plugins.content.war.Title
+import org.alter.plugins.content.war.title
 import org.alter.rscm.RSCM.getRSCM
 
 /**
@@ -24,7 +26,10 @@ import org.alter.rscm.RSCM.getRSCM
  * which they'll need against the tower's mages) at the Lumbridge church altar, arms them with a
  * staff/robes/runes/prayer potions, then sends them to the **Void Knight** at the tower bridge to
  * enter the minigame and take the **grimoire** — which permanently unlocks the special spellbooks
- * ([Player.unlockMageBooks]) — and finally back to Vannaka for the debrief that closes the quest.
+ * ([Player.unlockMageBooks]) — then back to Vannaka for the debrief. Vannaka pays out a purse
+ * that covers the recruit's **next feudal rank** ([RANK_REWARD_COINS]), and the final step walks
+ * them to **Duke Horacio** to buy it — so the tower flows straight into a rank-up and the heavier
+ * armour it unlocks (the progression loop the whole server runs on).
  *
  * Quests 2-5 (Ranged, survivability, a graduation war-game, …) are scaffolded: append [Step]s and
  * their hooks, and the raid gate ([complete]) moves to the real end of the chain.
@@ -60,6 +65,14 @@ object WarPrepChain {
     private const val PRAYER_POTIONS = "item.prayer_potion4_noted"
     private const val PRAYER_POTION_COUNT = 100
 
+    /**
+     * Vannaka's payout for taking the tower: a purse that covers the recruit's NEXT rank. The chain
+     * follows the Recruit Trials (which end with the Commoner rank bought), so the next rung is
+     * [Title.SQUIRE] — read from the ladder so the purse never drifts out of sync with the price.
+     */
+    val RANK_REWARD_COINS = Title.SQUIRE.cost
+    private const val COINS = "item.coins_995"
+
     // Guidance anchors. Vannaka runs the briefings; the church altar is the Prayer objective; the
     // Void Knight (the Wizard Tower game-master, mainland end of the bridge) is the Magic
     // objective. (x, z, plane) — plane drives floor-aware routing.
@@ -68,16 +81,22 @@ object WarPrepChain {
     private val CHURCH_ALTAR_TILE = Triple(3242, 3207, 0) // Lumbridge church altar (PrayerAltarPlugin's home altar)
     private const val KNIGHT_NPC = "npc.void_knight"
     private val KNIGHT_TILE = Triple(3113, 3208, 0) // WizardTowerPlugin's knight spawn
+    private const val DUKE_NPC = "npc.duke_horacio"
+    private val DUKE_TILE = Triple(3222, 3218, 0) // RecruitTrials' Duke anchor (ground floor, by the market)
 
     private const val ARROW_HEIGHT = 130
     private const val NEAR_TILES = 14
 
+    // Persisted BY ORDINAL: RANK's insertion shifted DONE (5→6), so a character saved on the old
+    // DONE reads RANK once — harmless: the poll's title check flips Squire+ straight back to DONE,
+    // and anyone below just gets the (legitimate) pointer to the Duke for their next rank.
     enum class Step(val objective: String) {
         NONE("(not started)"),
         PRAYER("Train Prayer to $PRAYER_TARGET at the Lumbridge church altar — use the dragon bones on it."),
         GEAR("Return to Vannaka to be armed for the Wizard Tower."),
         TOWER("Speak to the Void Knight at the Wizard Tower bridge — clear the tower and take the grimoire from the Archmage."),
         RETURN("Return to Vannaka with word of the grimoire."),
+        RANK("Take your purse to Duke Horacio and buy your next rank — it unlocks heavier armour."),
         DONE("War-Prep — Magic mastered: the Ancient, Lunar and Arceuus spellbooks are unlocked."),
     }
 
@@ -105,7 +124,8 @@ object WarPrepChain {
     }
 
     /** Steps the poll runs on — those with a live objective (progress watched and/or arrow refreshed). */
-    private fun isTracked(s: Step): Boolean = s == Step.PRAYER || s == Step.GEAR || s == Step.TOWER || s == Step.RETURN
+    private fun isTracked(s: Step): Boolean =
+        s == Step.PRAYER || s == Step.GEAR || s == Step.TOWER || s == Step.RETURN || s == Step.RANK
 
     /** Point the guidance arrow at the current objective. NPC anchors ([pointAtNpc]) show a TILE
      *  arrow from any distance — all the way from Lumbridge — and snap to the npc itself up close. */
@@ -115,6 +135,7 @@ object WarPrepChain {
             Step.GEAR -> pointAtNpc(p, VANNAKA_NPC, VANNAKA_TILE)
             Step.TOWER -> pointAtNpc(p, KNIGHT_NPC, KNIGHT_TILE)
             Step.RETURN -> pointAtNpc(p, VANNAKA_NPC, VANNAKA_TILE)
+            Step.RANK -> pointAtNpc(p, DUKE_NPC, DUKE_TILE)
             Step.NONE -> {}
             Step.DONE -> p.clearHintArrow()
         }
@@ -136,9 +157,17 @@ object WarPrepChain {
         advanceTo(p, Step.RETURN)
     }
 
-    /** RETURN: `SlayerPlugin` (Vannaka) calls this on the post-tower debrief — closes the quest. */
+    /** RETURN: `SlayerPlugin` (Vannaka) calls this on the post-tower debrief — pays the rank purse
+     *  ([RANK_REWARD_COINS]) and sends the recruit to Duke Horacio for the rank-up. */
     fun onReportedToVannaka(p: Player) {
         if (step(p) != Step.RETURN) return
+        advanceTo(p, Step.RANK)
+    }
+
+    /** RANK: `DukeHoracioPlugin` calls this when the player buys a rank — the rank-up (and the
+     *  armour tier it unlocks) is the chain's final beat, so the quest closes here. */
+    fun onRankBought(p: Player) {
+        if (step(p) != Step.RANK) return
         advanceTo(p, Step.DONE)
     }
 
@@ -149,6 +178,9 @@ object WarPrepChain {
     fun pollTick(p: Player) {
         when (step(p)) {
             Step.PRAYER -> if (p.getSkills().getBaseLevel(Skills.PRAYER) >= PRAYER_TARGET) { advanceTo(p, Step.GEAR); return }
+            // Already at/past the rung the purse was for (tower coin farmed and spent early, or a
+            // pre-existing character): nothing left to buy for the quest — close it out.
+            Step.RANK -> if (p.title.ordinal >= Title.SQUIRE.ordinal) { advanceTo(p, Step.DONE); return }
             else -> {}
         }
         if (isTracked(step(p))) {
@@ -165,6 +197,7 @@ object WarPrepChain {
         when (next) {
             Step.PRAYER -> giveItem(p, DRAGON_BONES, PRAYER_BONES) // bones for the church-altar training
             Step.RETURN -> grantGrimoire(p) // the spellbook unlock lands the moment the grimoire is taken
+            Step.RANK -> grantRankPurse(p)  // the tower's payout — enough to buy the next rank
             Step.DONE -> grantCompletion(p)
             else -> {}
         }
@@ -220,6 +253,13 @@ object WarPrepChain {
     private fun grantGrimoire(p: Player) {
         p.unlockMageBooks() // permanently unlock Ancient/Lunar/Arceuus
         p.message("<col=801700>The grimoire's power is yours:</col> the <col=801700>Ancient, Lunar and Arceuus</col> spellbooks are unlocked. Swap books with <col=801700>::spellbook</col>.")
+    }
+
+    /** RANK entry: Vannaka's payout for the tower — a purse sized to the next rank on the ladder,
+     *  so the quest flows straight into the Duke's rank-up and the armour tier it unlocks. */
+    private fun grantRankPurse(p: Player) {
+        giveItem(p, COINS, RANK_REWARD_COINS)
+        p.message("<col=801700>Vannaka pays you ${"%,d".format(RANK_REWARD_COINS)} coins for the tower</col> — enough to buy your next rank from Duke Horacio.")
     }
 
     private fun grantCompletion(p: Player) {
