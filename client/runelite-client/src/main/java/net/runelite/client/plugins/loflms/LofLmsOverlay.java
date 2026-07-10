@@ -13,6 +13,7 @@ import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import javax.inject.Inject;
 import net.runelite.api.Client;
+import net.runelite.client.plugins.loftheme.LofTheme;
 import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.overlay.Overlay;
 import net.runelite.client.ui.overlay.OverlayLayer;
@@ -26,12 +27,12 @@ class LofLmsOverlay extends Overlay
 	private static final int PAD = 6;
 	private static final int LINE_GAP = 2;
 
-	private static final Color PANEL = new Color(0, 0, 0, 170);
-	private static final Color BORDER = new Color(255, 255, 255, 55);
-	private static final Color TITLE = new Color(255, 152, 31);   // OSRS orange
-	private static final Color TEXT = Color.WHITE;
-	private static final Color VALUE = Color.YELLOW;
-	private static final Color FOG_ALERT = new Color(255, 60, 40); // red when the fog is (about to be) moving
+	private static final Color PANEL = LofTheme.alpha(LofTheme.PANEL_OPAQUE, 205);
+	private static final Color BORDER = LofTheme.alpha(LofTheme.EMBER_DARK, 210);
+	private static final Color TITLE = LofTheme.GOLD;
+	private static final Color TEXT = LofTheme.TEXT;
+	private static final Color VALUE = LofTheme.GOLD;
+	private static final Color FOG_ALERT = LofTheme.LAVA; // when the fog is (about to be) moving
 
 	private final Client client;
 	private final LofLmsConfig config;
