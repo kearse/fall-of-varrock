@@ -1,5 +1,5 @@
 /*
- * Kingdom of Lumbridge — Quest Journal minimap overlay.
+ * Fall of Varrock — Quest Journal minimap overlay.
  *
  * When the tracked objective sits inside the minimap's view, a small arrow bobs over its spot;
  * when it's beyond the edge, an arrow at the minimap's rim points the way (the classic Quest

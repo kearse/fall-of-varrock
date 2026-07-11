@@ -109,6 +109,51 @@ object WarState {
     /** Add [delta] (may be negative) to the realm supply meter; returns the new clamped value. */
     fun addSupplyMeter(delta: Int): Int { setSupplyMeter(supplyMeter + delta); return getSupplyMeter() }
 
+    // --- march counter (every Nth launched march is a GRAND MARCH — see MarchPlugin) ---
+    private var marchCount = 0
+
+    fun getMarchCount(): Int = marchCount
+
+    fun incMarchCount(): Int {
+        marchCount++
+        dirty = true
+        return marchCount
+    }
+
+    // --- patron-funded marches (store — story-and-grind-design §7): queued by the store's
+    //     RewardDeliveryPlugin on purchase, consumed by MarchPlugin at the next muster call.
+    //     Entries are "name|1" (grand) / "name|0". Persisted so a purchase survives a restart.
+    private val patronQueue = ArrayList<String>()
+
+    fun queuePatronMarch(name: String, grand: Boolean) {
+        patronQueue.add("$name|${if (grand) 1 else 0}")
+        dirty = true
+    }
+
+    /** Pop the next funded march as (patronName, isGrand), or null if none waits. */
+    fun popPatronMarch(): Pair<String, Boolean>? {
+        if (patronQueue.isEmpty()) return null
+        val e = patronQueue.removeAt(0)
+        dirty = true
+        return e.substringBeforeLast('|') to e.endsWith("|1")
+    }
+
+    // --- district pressure (the reconquest of Varrock — story-and-grind-design §5) ---
+    private val districtPressureByKey = HashMap<String, Int>()
+
+    fun getDistrictPressure(key: String): Int = districtPressureByKey[key] ?: 0
+
+    fun setDistrictPressure(key: String, value: Int) {
+        val v = value.coerceAtLeast(0)
+        if (districtPressureByKey.put(key, v) != v) dirty = true
+    }
+
+    /** Add [delta] (may be negative) to a district's pressure; returns the new value. */
+    fun addDistrictPressure(key: String, delta: Int): Int {
+        setDistrictPressure(key, getDistrictPressure(key) + delta)
+        return getDistrictPressure(key)
+    }
+
     // --- city-fallen (lasting penalty after General Zo's castle is overrun) ---
 
     fun isCityFallen(frontId: String): Boolean = (cityFallenTicksByFront[frontId] ?: 0) > 0
@@ -172,6 +217,13 @@ object WarState {
                 (sub.get("cityFallen") as? Number)?.let { cityFallenTicksByFront[frontId] = it.toInt().coerceAtLeast(0) }
             }
             (doc.get("supplyMeter") as? Number)?.let { supplyMeter = it.toInt().coerceIn(0, SUPPLY_METER_MAX) }
+            districtPressureByKey.clear()
+            (doc.get("districts", Document::class.java))?.forEach { (key, value) ->
+                (value as? Number)?.let { districtPressureByKey[key] = it.toInt().coerceAtLeast(0) }
+            }
+            (doc.get("marchCount") as? Number)?.let { marchCount = it.toInt().coerceAtLeast(0) }
+            patronQueue.clear()
+            (doc.get("patronMarches") as? List<*>)?.forEach { (it as? String)?.let(patronQueue::add) }
             dirty = false
             logger.info { "Loaded war state: ${knightPoolByFront.size} front(s) from $saveFile." }
         } catch (e: Exception) {
@@ -194,10 +246,15 @@ object WarState {
                         .append("cityFallen", cityFallenTicksByFront[frontId] ?: 0),
                 )
             }
+            val districts = Document()
+            districtPressureByKey.forEach { (key, value) -> districts.append(key, value) }
             val doc = Document()
                 .append("version", SCHEMA_VERSION)
                 .append("supplyMeter", supplyMeter)
                 .append("fronts", fronts)
+                .append("districts", districts)
+                .append("marchCount", marchCount)
+                .append("patronMarches", patronQueue.toList())
             saveFile.writeText(doc.toJson(prettyPrint))
             dirty = false
             logger.info { "Saved war state: ${knightPoolByFront.size} front(s) to $saveFile." }

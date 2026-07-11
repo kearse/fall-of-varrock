@@ -1,5 +1,5 @@
 /*
- * Kingdom of Lumbridge — teleport portal menu.
+ * Fall of Varrock — teleport portal menu.
  *
  * The home portal (server) pulses varp 4607 when used; this plugin opens a tabbed teleport window
  * (drawn client-side because cache interfaces don't render on our client). Clicking a row sends

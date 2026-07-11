@@ -13,6 +13,7 @@ import org.alter.game.model.queue.QueueTask
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
 import org.alter.plugins.content.war.address
+import org.alter.plugins.content.war.roguehunt.RogueHunt
 import org.alter.rscm.RSCM.getRSCM
 
 private val logger = KotlinLogging.logger {}
@@ -160,7 +161,23 @@ class RecruitTrialsPlugin(
             RecruitTrials.Step.DELIVER -> chatNpc(p, "Now take that dagger to the Quartermaster in The Mire and hand it in for the war — follow the marker.", npc = s, title = "Recruiting Sergeant")
             RecruitTrials.Step.RETURN -> chatNpc(p, "Supplies handed in? Report back to Vannaka — he'll square you up.", npc = s, title = "Recruiting Sergeant")
             RecruitTrials.Step.DONE -> {
+                // Rogue-hunting bounties (story-and-grind-design §4): the Sergeant is the milestone
+                // paymaster, so every bounty moment routes the hunter back to him.
+                val bounties = RogueHunt.payout(p)
+                if (bounties.isNotEmpty()) {
+                    chatNpc(p, "Word travels, ${p.address} — ${RogueHunt.kills(p)} of Varrock's cutthroats put down by your hand. The realm pays its hunters. Here's your bounty.", npc = s, title = "Recruiting Sergeant")
+                    chatNpc(p, "Keep at it. ${RogueHunt.statusLine(p)}", npc = s, title = "Recruiting Sergeant")
+                    return
+                }
                 chatNpc(p, "At ease, ${p.address}. You've fought, ranked, slain and supplied — a true citizen-soldier of Lumbridge. Make us proud.", npc = s, title = "Recruiting Sergeant")
+                // UX: the teleport portal was undiscoverable — nothing in the game ever mentioned it.
+                chatNpc(p, "One more thing every soldier should know: the <col=801700>glowing portal over the courtyard fountain</col> carries you to every front, skilling ground and arena the realm holds. Use it.", npc = s, title = "Recruiting Sergeant")
+                if (RogueHunt.kills(p) == 0) {
+                    chatNpc(p, "If you're hunting work: <col=801700>Fallen Varrock</col> crawls with rogues, muggers and highwaymen. The realm pays a bounty at every milestone of cutthroats you put down — report your tally to me. <col=ffae00>::rogues</col> tracks it.", npc = s, title = "Recruiting Sergeant")
+                    chatNpc(p, "Fair warning: those streets are lawless PvP ground. Take nothing you can't afford to lose — the tally, at least, is yours forever.", npc = s, title = "Recruiting Sergeant")
+                } else {
+                    chatNpc(p, RogueHunt.statusLine(p), npc = s, title = "Recruiting Sergeant")
+                }
                 chatPlayer(p, "I won't let the realm down, sergeant.")
             }
         }

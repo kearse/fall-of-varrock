@@ -1,5 +1,5 @@
 /*
- * Kingdom of Lumbridge — Companions management panel.
+ * Fall of Varrock — Companions management panel.
  *
  * The server pushes each companion's full state (levels, HP, orders, attack style, autocast, toggles,
  * ammo, and worn gear) over a hidden CONSOLE chat line tagged ~LOFCMP~, and replies to gear-picker
@@ -38,7 +38,7 @@ import net.runelite.client.ui.NavigationButton;
 
 @Slf4j
 @PluginDescriptor(
-	name = "Kingdom of Lumbridge Companions",
+	name = "Fall of Varrock Companions",
 	description = "Manage your companions: levels, attack style, autocast, gear from bank, ammo, orders.",
 	tags = {"lof", "companion", "knight", "bot", "panel"},
 	enabledByDefault = true

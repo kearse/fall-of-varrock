@@ -41,6 +41,8 @@ import net.runelite.client.util.ImageUtil;
 @Singleton
 public class LofLoginRenderer implements MouseListener, KeyListener
 {
+	/** The community site (account registration). TUNE to the live domain before shipping. */
+	private static final String SITE_URL = System.getProperty("fov.site", "https://fallofvarrock.com");
 	private static final int DW = 765, DH = 503;
 	private static final int FOCUS_NONE = 0, FOCUS_USER = 1, FOCUS_PASS = 2;
 	private static final int MAX_LEN = 30;
@@ -143,7 +145,7 @@ public class LofLoginRenderer implements MouseListener, KeyListener
 	private static final class Layout
 	{
 		int ox, oy, px, py, pw, ph, fx, fw;
-		Rectangle username, password, loginBtn, remember;
+		Rectangle username, password, loginBtn, remember, register;
 		Rectangle[] tiles; // [0..n-1] saved accounts, [n] = "+ New"
 		int savedShown;
 	}
@@ -152,7 +154,7 @@ public class LofLoginRenderer implements MouseListener, KeyListener
 	{
 		Layout l = new Layout();
 		int cw = client.getCanvasWidth(), ch = client.getCanvasHeight();
-		l.ox = (cw - DW) / 2;
+		l.ox = Math.max(0, (cw - DW) / 2); // clamp: sub-765px canvases pushed the panel off the left edge
 		l.oy = Math.max(0, (ch - DH) / 2);
 		l.pw = 340;
 		l.ph = 222;
@@ -164,6 +166,7 @@ public class LofLoginRenderer implements MouseListener, KeyListener
 		l.password = new Rectangle(l.fx, l.py + 100, l.fw, 30);
 		l.loginBtn = new Rectangle(l.fx, l.py + 146, l.fw, 38);
 		l.remember = new Rectangle(l.fx, l.py + 190, 130, 20);
+		l.register = new Rectangle(l.px + l.pw - 96, l.py + 20, 72, 18); // the "Register?" link
 
 		l.savedShown = Math.min(saved.size(), MAX_VISIBLE);
 		int count = l.savedShown + 1;
@@ -246,7 +249,6 @@ public class LofLoginRenderer implements MouseListener, KeyListener
 		field(g, l.username, username, false, focus == FOCUS_USER);
 
 		label(g, "PASSWORD", l.fx, l.py + 92);
-		rightText(g, "Forgot?", l.px + l.pw - 28, l.py + 92);
 		field(g, l.password, password, true, focus == FOCUS_PASS);
 
 		goldButton(g, l.loginBtn, "LOG IN");
@@ -304,6 +306,11 @@ public class LofLoginRenderer implements MouseListener, KeyListener
 		else if (l.loginBtn.contains(p))
 		{
 			doLogin();
+			e.consume();
+		}
+		else if (l.register.contains(p))
+		{
+			net.runelite.client.util.LinkBrowser.browse(SITE_URL + "/register");
 			e.consume();
 		}
 		else

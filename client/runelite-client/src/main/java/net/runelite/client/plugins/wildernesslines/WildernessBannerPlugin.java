@@ -1,5 +1,5 @@
 /*
- * Kingdom of Lumbridge — Wilderness / single / multi combat status banner.
+ * Fall of Varrock — Wilderness / single / multi combat status banner.
  *
  * Client-side overlay that shows a top-right banner with the player's current PvP zone
  * (MULTI vs SINGLE combat + wilderness level). Zone geometry is mirrored from the
@@ -15,7 +15,7 @@ import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.overlay.OverlayManager;
 
 @PluginDescriptor(
-	name = "Kingdom of Lumbridge Wilderness Banner",
+	name = "Fall of Varrock Wilderness Banner",
 	description = "Top-right banner showing your current PvP zone (multi/single combat + wilderness level).",
 	tags = {"lof", "wilderness", "wild", "pvp", "multi", "single", "banner", "pk"},
 	enabledByDefault = true

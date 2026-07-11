@@ -1,5 +1,5 @@
 /*
- * Kingdom of Lumbridge — war progress bar (config).
+ * Fall of Varrock — war progress bar (config).
  */
 package net.runelite.client.plugins.lofwarbar;
 

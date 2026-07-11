@@ -72,6 +72,9 @@ object SupplyDepot {
             if (boosted) {
                 p.message("<col=ffae00>Supply Drive bonus!</col> Your ${SupplyDrive.active?.display?.lowercase()} paid ${SupplyDrive.MULTIPLIER}x War Effort.")
             }
+            // UX: show the supplier what their hand-in did to the realm's stores — the meter
+            // only used to speak when it crossed a campaign threshold.
+            p.message("The realm's war-stores rise to <col=4f9b4f>${org.alter.plugins.content.war.RealmSupply.meter()}/${org.alter.plugins.content.war.RealmSupply.max()}</col> — marches and campaigns feed on them.")
         }
         return items to we
     }

@@ -26,6 +26,11 @@ export default async function SuccessPage({ searchParams }: { searchParams: { or
           Your purchase is queued. <strong>Log into the game</strong> and it will be delivered to you
           automatically on login. Donor points and membership apply instantly; items go to your bank.
         </p>
+        <p className="text-xs text-lumbridge-parchment/60">
+          Bought membership for the <strong>Discord role</strong>? It syncs only after your Discord is
+          linked — generate a link code on <Link href="/account" className="underline">your account page</Link>{" "}
+          and use <code>/link</code> in our Discord.
+        </p>
         <div className="flex justify-center gap-3">
           <Link href="/store" className="btn-ghost">Back to store</Link>
           <Link href="/account/purchases" className="btn-gold">My purchases</Link>

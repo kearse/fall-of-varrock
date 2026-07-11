@@ -1,5 +1,5 @@
 /*
- * Kingdom of Lumbridge — Last Man Standing HUD (renderer).
+ * Fall of Varrock — Last Man Standing HUD (renderer).
  *
  * Reads one packed varp and draws the OSRS-style LMS panel (TOP_RIGHT, movable):
  *   bit 0 in-game | bits 1-4 players remaining | bits 5-8 kills | bits 9-15 fog countdown seconds.

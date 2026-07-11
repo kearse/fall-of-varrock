@@ -70,10 +70,18 @@ export async function pollEvents(client: Client): Promise<void> {
         continue;
       }
       const channel = await client.channels.fetch(channelId).catch(() => null);
-      if (channel && channel.isTextBased()) {
-        await (channel as TextChannel).send({ embeds: [buildEmbed(ev)] }).catch((e) => {
-          console.error(`[eventFeed] send failed for ${ev.kind}:`, e?.message ?? e);
-        });
+      if (!channel) continue; // configured channel unreachable right now — retry next poll
+      if (channel.isTextBased()) {
+        // Only mark posted when the send actually succeeded — a transient Discord error
+        // used to permanently drop the event (it was stamped posted regardless).
+        let sent = false;
+        await (channel as TextChannel)
+          .send({ embeds: [buildEmbed(ev)] })
+          .then(() => { sent = true; })
+          .catch((e) => {
+            console.error(`[eventFeed] send failed for ${ev.kind} (will retry):`, e?.message ?? e);
+          });
+        if (!sent) continue;
       }
       await events.updateOne({ _id: ev._id }, { $set: { posted: true, postedAt: Date.now() } });
     }

@@ -1,5 +1,5 @@
 /*
- * Kingdom of Lumbridge — teleport portal overlay (renderer + hit-testing).
+ * Fall of Varrock — teleport portal overlay (renderer + hit-testing).
  *
  * A tabbed teleport window drawn client-side (cache interfaces don't render on our client).
  * Opened by the server pulsing varp 4607 (portal click); rows send "::tp <cat> <row>" back.

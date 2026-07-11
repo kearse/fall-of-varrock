@@ -8,7 +8,7 @@ const PROVIDERS: { id: string; label: string }[] = [
   { id: "coinbase", label: "Crypto" },
 ];
 
-export function BuyButtons({ packageId, loggedIn, devEnabled }: { packageId: string; loggedIn: boolean; devEnabled: boolean }) {
+export function BuyButtons({ packageId, loggedIn, devEnabled, providers }: { packageId: string; loggedIn: boolean; devEnabled: boolean; providers: string[] }) {
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -28,13 +28,24 @@ export function BuyButtons({ packageId, loggedIn, devEnabled }: { packageId: str
   }
 
   if (!loggedIn) {
-    return <a href="/login" className="btn-ghost w-full">Log in to buy</a>;
+    return <a href="/login?next=/store" className="btn-ghost w-full">Log in to buy</a>;
+  }
+
+  // UX: don't render payment buttons that can only fail — pre-disable when no provider
+  // is configured (mirrors the download cards' honest "Building…" state).
+  const enabled = PROVIDERS.filter((p) => providers.includes(p.id));
+  if (enabled.length === 0 && !devEnabled) {
+    return (
+      <button className="btn-ghost w-full cursor-not-allowed opacity-60" disabled>
+        Payments open soon
+      </button>
+    );
   }
 
   return (
     <div className="space-y-2">
-      <div className="grid grid-cols-3 gap-2">
-        {PROVIDERS.map((p) => (
+      <div className={`grid gap-2 ${enabled.length === 3 ? "grid-cols-3" : enabled.length === 2 ? "grid-cols-2" : "grid-cols-1"}`}>
+        {enabled.map((p) => (
           <button key={p.id} className="btn-gold px-2 py-1 text-sm" disabled={busy !== null} onClick={() => checkout(p.id)}>
             {busy === p.id ? "…" : p.label}
           </button>

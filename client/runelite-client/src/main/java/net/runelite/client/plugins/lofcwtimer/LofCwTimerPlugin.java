@@ -1,5 +1,5 @@
 /*
- * Kingdom of Lumbridge — Castle Wars timer overlay.
+ * Fall of Varrock — Castle Wars timer overlay.
  *
  * Shows the countdown above the chatbox (right side): "Next war" while in a waiting room,
  * "War ends" plus the live team score while fighting. The server's CastleWars engine publishes
@@ -15,7 +15,7 @@ import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.overlay.OverlayManager;
 
 @PluginDescriptor(
-	name = "Kingdom of Lumbridge Castle Wars Timer",
+	name = "Fall of Varrock Castle Wars Timer",
 	description = "Countdown above the chatbox while waiting for or fighting in Castle Wars.",
 	tags = {"lof", "castle", "wars", "cw", "timer", "minigame"},
 	enabledByDefault = true

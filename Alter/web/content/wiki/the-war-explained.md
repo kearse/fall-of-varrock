@@ -3,7 +3,7 @@ title: The War explained
 category: The War
 summary: Campaigns, conquests, troop command and how pooled war loot is split by contribution.
 order: 1
-updated: 2026-07-05
+updated: 2026-07-11
 ---
 
 The War is the server's endgame. Enemy forces hold every city beyond Lumbridge, and high-ranking players spend real coin to launch offensives against them — with every participant paid out of a pooled reward split by **personal contribution**.
@@ -16,12 +16,16 @@ The first target is [Fallen Varrock](/wiki/fallen-varrock). The city has no army
 
 | Operation | Rank needed | Cost | Supply needed | Allied force | Win condition | Reward pool |
 | --- | --- | --- | --- | --- | --- | --- |
+| **March** (scheduled) | — anyone joins | free | 150 supply | 10 knights | Kill 15 in the district | Pooled spoils + 1–3 Commendations |
+| **Grand March** (every 8th) | — anyone joins | free | 300 supply | 16 knights | Kill 20; fell the Warden | Pooled spoils + up to 5 Commendations + Warden's embers |
 | Send troops | Lord+ | 1,000,000 gp | — | 8 knights | Boss raid support | Damage share |
 | Summon boss | Lord+ | 3,000,000 gp | — | Backing raid | Kill the boss | Boss drops (damage split) |
 | Campaign (Varrock) | Minister+ | 3,000,000 gp | 1,500 supply | 40 knights | Kill 60 frontier enemies | 750,000 gp + 25 prestige |
 | Conquest (Varrock) | King | 15,000,000 gp | 2,800 supply | 64 knights | Kill 140 enemies | 3,000,000 gp + 60 prestige |
 
-Commands: `::sendtroops`, `::summonboss corporeal_beast`, `::campaign`, `::conquest`. Check the realm's war stores anytime with `::supply` — the meter is filled by skillers handing supplies to the Quartermaster in The Mire (see [Skilling & the war effort](/wiki/skilling-overview)).
+The scheduled **marches** are the free, no-rank way in — see [Marches & the reconquest](/wiki/marches-and-the-reconquest) for districts, Wardens and the wanted captains. Broken districts shave 10% each off a campaign/conquest kill quota on Varrock.
+
+Commands: `::march`, `::districts`, `::bounties`, `::sendtroops`, `::summonboss corporeal_beast`, `::campaign`, `::conquest`. Check the realm's war stores anytime with `::supply` — the meter is filled by skillers handing supplies to the Quartermaster in The Mire (see [Skilling & the war effort](/wiki/skilling-overview)).
 
 ## Troop command
 

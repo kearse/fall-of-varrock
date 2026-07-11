@@ -1,5 +1,5 @@
 /*
- * Kingdom of Lumbridge — war progress bar.
+ * Fall of Varrock — war progress bar.
  *
  * Shows how far through the current fight the player is: a campaign's kill-quota progress, or the
  * HP depleted on a nearby city boss. The server's WarProgressPlugin packs the context + percent

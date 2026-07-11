@@ -1,5 +1,5 @@
 /*
- * Kingdom of Lumbridge — Quest Journal config.
+ * Fall of Varrock — Quest Journal config.
  */
 package net.runelite.client.plugins.lofquests;
 

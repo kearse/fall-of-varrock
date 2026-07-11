@@ -1,5 +1,5 @@
 /*
- * Kingdom of Lumbridge — PK / KD stats overlay (config).
+ * Fall of Varrock — PK / KD stats overlay (config).
  */
 package net.runelite.client.plugins.lofpkstats;
 

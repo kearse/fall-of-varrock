@@ -1,5 +1,5 @@
 /*
- * Kingdom of Lumbridge — quest journal varp contract.
+ * Fall of Varrock — quest journal varp contract.
  *
  * The server's QuestJournalPlugin publishes each custom quest chain's live state into these varps
  * (see Alter: org.alter.plugins.content.quests.QuestJournal — the layouts must match exactly).

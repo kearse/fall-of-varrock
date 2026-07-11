@@ -1,5 +1,5 @@
 /*
- * Kingdom of Lumbridge — teleport portal overlay (config).
+ * Fall of Varrock — teleport portal overlay (config).
  */
 package net.runelite.client.plugins.lofteleports;
 

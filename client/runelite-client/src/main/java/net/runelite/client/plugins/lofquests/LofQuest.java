@@ -1,5 +1,5 @@
 /*
- * Kingdom of Lumbridge — the custom quest registry.
+ * Fall of Varrock — the custom quest registry.
  *
  * One entry per Fall of Varrock quest, mirroring the server-side chains step-for-step (the step
  * ordinals MUST match the server enums — RecruitTrials.Step and WarPrepChain.Step in Alter).

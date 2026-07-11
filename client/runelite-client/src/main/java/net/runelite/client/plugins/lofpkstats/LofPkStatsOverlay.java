@@ -1,5 +1,5 @@
 /*
- * Kingdom of Lumbridge — PK / KD stats overlay (renderer).
+ * Fall of Varrock — PK / KD stats overlay (renderer).
  *
  * Roak-style: RuneScape font, green text on a transparent background (no panel), top-left,
  * shown ONLY while in the wilderness. Reads four server-published varps:

@@ -1,5 +1,5 @@
 /*
- * Kingdom of Lumbridge — server announcement ticker.
+ * Fall of Varrock — server announcement ticker.
  *
  * Surfaces curated server headlines (boss spawns, campaign captures, events, votes) in a
  * roak-style panel above the chat box. The server sends these as ChatMessageType.BROADCAST
@@ -25,7 +25,7 @@ import net.runelite.client.ui.overlay.OverlayManager;
 import net.runelite.client.util.Text;
 
 @PluginDescriptor(
-	name = "Kingdom of Lumbridge Announcements",
+	name = "Fall of Varrock Announcements",
 	description = "Server announcement ticker above the chat box (boss spawns, campaigns, events).",
 	tags = {"lof", "announcement", "broadcast", "ticker", "boss", "campaign"},
 	enabledByDefault = true

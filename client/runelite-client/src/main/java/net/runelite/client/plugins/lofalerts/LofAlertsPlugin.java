@@ -1,5 +1,5 @@
 /*
- * Kingdom of Lumbridge — server-driven on-screen alerts.
+ * Fall of Varrock — server-driven on-screen alerts.
  *
  * Watches a server varplayer; when the server sets it non-zero, shows an
  * on-screen banner and fires a notification. The server raises the alert
@@ -19,7 +19,7 @@ import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.overlay.OverlayManager;
 
 @PluginDescriptor(
-	name = "Kingdom of Lumbridge Alerts",
+	name = "Fall of Varrock Alerts",
 	description = "On-screen banners and notifications for server events (sieges, raids, etc.)",
 	tags = {"lof", "alert", "siege", "war", "notification", "banner"},
 	enabledByDefault = true

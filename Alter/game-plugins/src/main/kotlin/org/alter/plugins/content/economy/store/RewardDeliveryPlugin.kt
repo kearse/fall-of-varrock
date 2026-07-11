@@ -77,6 +77,7 @@ class RewardDeliveryPlugin(
                 "donor_points" -> applyDonorPoints(player, doc.get("payload", Document::class.java))
                 "items" -> applyItems(player, doc.get("payload", Document::class.java))
                 "membership" -> applyMembership(player, doc.get("payload", Document::class.java))
+                "patron_march" -> applyPatronMarch(player, doc.get("payload", Document::class.java))
                 else -> false
             }
             if (applied) {
@@ -115,6 +116,15 @@ class RewardDeliveryPlugin(
             val leftover = amount - added.completed
             if (leftover > 0) world.spawn(GroundItem(itemId, leftover, player.tile, player))
         }
+        return true
+    }
+
+    /** Patron of the (Grand) March — queue a realm march funded in the buyer's name
+     *  (story-and-grind-design §7); MarchPlugin consumes it at the next muster call. */
+    private fun applyPatronMarch(player: Player, payload: Document?): Boolean {
+        val grand = payload?.getBoolean("grand", false) ?: false
+        org.alter.plugins.content.war.WarState.queuePatronMarch(player.username, grand)
+        player.message("<col=ffae00>Patron of the ${if (grand) "Grand March" else "March"}:</col> the Knight-Captain will muster your march at the next call — in your name.")
         return true
     }
 

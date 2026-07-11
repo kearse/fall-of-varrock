@@ -27,10 +27,28 @@ enum class CampaignTier(
     val prestige: Int,
     /** Realm war-supply the operation requires AND consumes on launch (the Mire fills it). RAID is free. */
     val supplyCost: Int,
+    /** Max Commendations (the war-forging service token) a participant earns from a WON op,
+     *  scaled by contribution share ([CapturePayout]). RAID pays via the boss instead. */
+    val commendMax: Int = 0,
 ) {
     RAID("raid party", troops = 8, quota = 0, cost = 0, coinPool = 0, prestige = 10, supplyCost = 0),
-    CAMPAIGN("campaign", troops = 40, quota = 60, cost = 3_000_000, coinPool = 750_000, prestige = 25, supplyCost = 1500),
-    CONQUEST("conquest", troops = 64, quota = 140, cost = 15_000_000, coinPool = 3_000_000, prestige = 60, supplyCost = 2800),
+    CAMPAIGN("campaign", troops = 40, quota = 60, cost = 3_000_000, coinPool = 750_000, prestige = 25, supplyCost = 1500, commendMax = 6),
+    CONQUEST("conquest", troops = 64, quota = 140, cost = 15_000_000, coinPool = 3_000_000, prestige = 60, supplyCost = 2800, commendMax = 10),
+
+    /**
+     * The **realm's own scheduled warband** ([MarchPlugin]) — no commander, launched by the world
+     * itself and free for ANY player to fight beside (`::march`). The beginner/mid player's entry
+     * into the war's offense: the command ladder reads March (anyone) → Raid (Lord) → Campaign
+     * (Minister) → Conquest (King). Costs the realm supplies, so the Mire loop visibly feeds it.
+     */
+    MARCH("march", troops = 10, quota = 15, cost = 0, coinPool = 0, prestige = 5, supplyCost = 150, commendMax = 3),
+
+    /**
+     * The **GRAND MARCH** ([MarchPlugin]) — every Nth scheduled march, upsized and led against
+     * the district's **Warden** (a boss-tier defender whose fall pays the forge's ember
+     * components). Same realm sponsorship and `::march` join as a regular march.
+     */
+    GRAND_MARCH("grand march", troops = 16, quota = 20, cost = 0, coinPool = 0, prestige = 10, supplyCost = 300, commendMax = 5),
 }
 
 /**

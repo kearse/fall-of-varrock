@@ -1,5 +1,5 @@
 /*
- * Kingdom of Lumbridge — Quest Journal.
+ * Fall of Varrock — Quest Journal.
  *
  * A Quest-Helper-style guide for Fall of Varrock's custom quest line: a sidebar journal listing
  * every custom quest (done, in flight, and what's ahead), each with its "why", its step checklist

@@ -31,7 +31,7 @@ import net.runelite.client.util.HotkeyListener;
  * this plugin just gets the framing clean. Off by default — enable it, then hit the toggle key.
  */
 @PluginDescriptor(
-	name = "Kingdom of Lumbridge Cinematic Mode",
+	name = "Fall of Varrock Cinematic Mode",
 	description = "Hide the HUD and unlock the camera for recording promo videos.",
 	tags = {"lof", "cinematic", "camera", "promo", "video", "hud"},
 	enabledByDefault = false

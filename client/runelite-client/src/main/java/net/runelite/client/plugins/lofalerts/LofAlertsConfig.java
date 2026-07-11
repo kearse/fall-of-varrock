@@ -1,5 +1,5 @@
 /*
- * Kingdom of Lumbridge — server-driven on-screen alerts.
+ * Fall of Varrock — server-driven on-screen alerts.
  */
 package net.runelite.client.plugins.lofalerts;
 

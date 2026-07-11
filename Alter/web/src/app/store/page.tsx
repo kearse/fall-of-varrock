@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { PACKAGES, STORE_SECTIONS, formatPrice } from "@/lib/store";
+import { stripeConfigured, paypalConfigured, coinbaseConfigured } from "@/lib/payments";
 import { getSession } from "@/lib/session";
 import { BuyButtons } from "@/components/store/BuyButtons";
 import { Reveal } from "@/components/Reveal";
@@ -11,13 +12,15 @@ const SECTION_ART: Record<string, string> = {
   Membership: "/img/store-membership.png",
   "Donator Points": "/img/store-donator.png",
   Bundles: "/img/store-bundles.png",
+  Patron: "/img/store-bundles.png",
 };
 
 const SECTION_COPY: Record<string, string> = {
   Bonds: "Tradeable in-game. Buy one with cash, or earn one from another player with gold.",
-  Membership: "30-day perk tiers. Time stacks with whatever you already have.",
+  Membership: "30-day perk tiers. Time stacks with whatever you already have. Discord roles need your Discord linked on the account page.",
   "Donator Points": "Currency for the in-game donor store.",
   Bundles: "One-time kits, delivered straight to your bank.",
+  Patron: "Fund a march for the whole server - your name on the muster call, content for everyone, power for no one.",
 };
 
 function sectionId(section: string) {
@@ -27,6 +30,11 @@ function sectionId(section: string) {
 export default async function StorePage() {
   const session = await getSession();
   const devEnabled = process.env.STORE_DEV_CHECKOUT === "1";
+  const providers = [
+    ...(stripeConfigured() ? ["stripe"] : []),
+    ...(coinbaseConfigured() ? ["coinbase"] : []),
+    ...(paypalConfigured() ? ["paypal"] : []),
+  ];
 
   return (
     <div className="space-y-12">
@@ -124,7 +132,7 @@ export default async function StorePage() {
                         <span className="text-[10px] font-semibold uppercase tracking-wider text-lumbridge-parchmentdark">USD</span>
                       </div>
                       <div className="mt-auto">
-                        <BuyButtons packageId={p.id} loggedIn={!!session} devEnabled={devEnabled} />
+                        <BuyButtons packageId={p.id} loggedIn={!!session} devEnabled={devEnabled} providers={providers} />
                       </div>
                     </div>
                   );

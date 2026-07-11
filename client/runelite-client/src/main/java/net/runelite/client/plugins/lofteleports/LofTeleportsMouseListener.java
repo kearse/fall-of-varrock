@@ -1,5 +1,5 @@
 /*
- * Kingdom of Lumbridge — teleport portal overlay (mouse input).
+ * Fall of Varrock — teleport portal overlay (mouse input).
  *
  * Hit-tests left-clicks against the open window: tabs switch category, a row sends the teleport
  * ("::tp <cat> <row>") and closes, the X closes. Clicks anywhere on the window are consumed so

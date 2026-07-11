@@ -1,5 +1,5 @@
 /*
- * Kingdom of Lumbridge — war progress bar (renderer).
+ * Fall of Varrock — war progress bar (renderer).
  *
  * Reads one packed varp and draws a labelled progress bar (TOP_CENTER, movable).
  *   bits 0-1 kind (0 none / 1 boss / 2 campaign), bits 2-8 pct (0-100), bits 9-10 tier.

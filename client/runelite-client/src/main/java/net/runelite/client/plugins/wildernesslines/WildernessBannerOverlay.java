@@ -1,5 +1,5 @@
 /*
- * Kingdom of Lumbridge — Wilderness level indicator (client overlay), roak-style.
+ * Fall of Varrock — Wilderness level indicator (client overlay), roak-style.
  *
  * Vanilla-OSRS look: a skull on top of "Level: N" and the attackable combat range "lo-hi",
  * in red RuneScape font on a transparent background, shown only while in the wilderness.

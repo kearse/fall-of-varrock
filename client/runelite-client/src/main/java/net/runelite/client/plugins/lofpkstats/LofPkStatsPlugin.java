@@ -1,5 +1,5 @@
 /*
- * Kingdom of Lumbridge — PK / KD stats overlay.
+ * Fall of Varrock — PK / KD stats overlay.
  *
  * Renders the roak-style top-left info box: Kills, Deaths, K/D ratio, Elo + global TOP% rank.
  * The server's PkStatsPlugin publishes the four values into varps each refresh; this overlay
@@ -15,7 +15,7 @@ import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.overlay.OverlayManager;
 
 @PluginDescriptor(
-	name = "Kingdom of Lumbridge PK Stats",
+	name = "Fall of Varrock PK Stats",
 	description = "Top-left PK info box: Kills, Deaths, K/D ratio and Elo rank.",
 	tags = {"lof", "pk", "pvp", "kd", "elo", "stats"},
 	enabledByDefault = true

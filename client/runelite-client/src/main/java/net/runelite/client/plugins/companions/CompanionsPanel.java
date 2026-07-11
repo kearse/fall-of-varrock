@@ -1,5 +1,5 @@
 /*
- * Kingdom of Lumbridge — Companions side panel.
+ * Fall of Varrock — Companions side panel.
  *
  * A three-screen panel driven by the server's ~LOFCMP~ message channel (distance-independent):
  *   1. ROSTER  — one card per companion (Sir <name>, style, combat, HP, order-all + per-companion orders).

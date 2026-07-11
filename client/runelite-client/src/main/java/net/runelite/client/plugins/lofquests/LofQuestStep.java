@@ -1,5 +1,5 @@
 /*
- * Kingdom of Lumbridge — one step of a custom quest.
+ * Fall of Varrock — one step of a custom quest.
  *
  * Mirrors a server-side chain step (the ordinal must match the server enum's ordinal). Steps with
  * a world anchor get the guidance arrow + tile highlight when their quest is tracked.
