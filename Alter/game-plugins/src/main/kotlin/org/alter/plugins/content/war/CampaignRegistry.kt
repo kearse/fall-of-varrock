@@ -39,11 +39,12 @@ object CampaignRegistry {
     /**
      * Begin a [tier] operation for [sponsor] (null = the realm's own scheduled MARCH). Returns
      * false (and does nothing) if that Lord already has a squad out — callers must charge only
-     * after this succeeds, or refund on false.
+     * after this succeeds, or refund on false. [onResult] fires once with the outcome
+     * (true = victory) — e.g. the march's district pressure credit.
      */
-    fun start(world: World, op: CampaignOp, tier: CampaignTier, sponsor: Player?): Boolean {
+    fun start(world: World, op: CampaignOp, tier: CampaignTier, sponsor: Player?, onResult: ((Boolean) -> Unit)? = null): Boolean {
         if (sponsor != null && hasSquad(sponsor)) return false
-        val director = CampaignDirector(op, tier, sponsor) { active.remove(it) }
+        val director = CampaignDirector(op, tier, sponsor, onResult) { active.remove(it) }
         active += director
         director.init(world)
         return true

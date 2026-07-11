@@ -48,6 +48,8 @@ class CampaignDirector(
     val tier: CampaignTier,
     /** The Lord who paid for this squad — or null for a realm-sponsored [CampaignTier.MARCH]. */
     private val sponsor: Player?,
+    /** Optional outcome hook (true = victory) — e.g. district pressure credit for a march. */
+    private val onResult: ((Boolean) -> Unit)? = null,
     private val onFinished: (CampaignDirector) -> Unit,
 ) {
     val cityId: Int get() = op.cityId
@@ -77,11 +79,14 @@ class CampaignDirector(
     /** True if [tile] is inside this campaign's battlefield (where enemy loot pools to [lootPool]). */
     fun coversBattle(tile: Tile): Boolean = op.battleArea.contains(tile)
 
+    /** The op's effective kill quota — the tier's base, shaved by broken districts ([Districts]). */
+    private var quota = tier.quota
+
     /** 0-100 "how far through" this campaign is = enemies cleared toward the kill quota. */
     fun progressPct(world: World): Int {
         val living = Frontiers.zone(op.cityKey)?.livingEnemies(world)?.size ?: 0
         val cleared = (startEnemies - living).coerceAtLeast(0)
-        return (cleared * 100 / tier.quota.coerceAtLeast(1)).coerceIn(0, 100)
+        return (cleared * 100 / quota.coerceAtLeast(1)).coerceIn(0, 100)
     }
 
     /** Label code for the client progress bar: 1 = Conquest, else Campaign. */
@@ -141,6 +146,7 @@ class CampaignDirector(
     private val ignoreEnemy = HashMap<Npc, HashMap<Int, Int>>()
 
     fun init(world: World) {
+        quota = Districts.effectiveQuota(op.cityKey, tier) // broken districts weaken the garrison
         val zone = Frontiers.zone(op.cityKey)
         // Only a full campaign/conquest freezes the city's respawn (so clearing the garrison
         // sticks). A small boss-backing RAID party just adds muscle — it must NOT halt the
@@ -437,7 +443,7 @@ class CampaignDirector(
         val bossUp = BossScheduler.bossesIn(op.cityId).isNotEmpty()
         val won = when (tier) {
             CampaignTier.RAID -> ticks > RAID_GRACE && !bossUp       // the summoned boss has fallen
-            else -> cleared >= tier.quota                            // the garrison has been broken
+            else -> cleared >= quota                                 // the garrison has been broken
         }
         when {
             won -> finish(world, victory = true)
@@ -469,6 +475,7 @@ class CampaignDirector(
             val whose = sponsor?.let { "${it.username}'s" } ?: "The realm's"
             broadcast(world, "<col=801700>$whose ${tier.display} was driven back from ${op.displayName}.</col>")
         }
+        runCatching { onResult?.invoke(victory) } // outcome hook (e.g. district pressure credit)
         onFinished(this)
     }
 

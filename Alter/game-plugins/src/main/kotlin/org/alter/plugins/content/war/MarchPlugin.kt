@@ -42,6 +42,8 @@ class MarchPlugin(
     private var nextFireCycle = 0
     /** username -> world cycle until which their `::march` hot-zone confirmation stands. */
     private val hotConfirm = HashMap<String, Int>()
+    /** The district the mustering march will move on (picked at the muster call). */
+    private var target: District? = null
 
     init {
         val timer = TimerKey()
@@ -80,6 +82,11 @@ class MarchPlugin(
             player.message("<col=4f9b4f>You rally to the knights' column. Fight beside them — the realm pays its soldiers from the spoils.</col>")
         }
 
+        // ::districts — the reconquest map: every district's pressure/broken state.
+        onCommand("districts", description = "Show the reconquest of Varrock, district by district") {
+            Districts.statusLines().forEach { player.message(it) }
+        }
+
         // ::marchnow — admin: skip the wait and run the next cycle step immediately.
         onCommand("marchnow", Privilege.ADMIN_POWER, description = "Force the march cycle forward (test)") {
             world.timers[timer] = 1
@@ -111,7 +118,9 @@ class MarchPlugin(
             schedule(world, timer, INTERVAL_TICKS - WARN_TICKS)
             return
         }
-        Announce.broadcast(world, "<col=4f9b4f>The Knight-Captain musters a march on ${op!!.displayName} — it sets out in ~${WARN_TICKS * 6 / 600} minutes! Any soldier may fight beside the column: answer with <col=ffae00>::march</col><col=4f9b4f>.</col>")
+        val d = Districts.marchTarget(world)
+        target = d
+        Announce.broadcast(world, "<col=4f9b4f>The Knight-Captain musters a march on <col=ffae00>${d.display}</col><col=4f9b4f> of Fallen ${op!!.displayName} — it sets out in ~${WARN_TICKS * 6 / 600} minutes! Any soldier may fight beside the column: answer with <col=ffae00>::march</col><col=4f9b4f>.</col>")
         state = State.MUSTERING
         schedule(world, timer, WARN_TICKS)
     }
@@ -124,12 +133,23 @@ class MarchPlugin(
             Announce.broadcast(world, "<col=801700>The march is called off — the realm's war-stores ran dry at the gate.</col>")
             return
         }
-        if (!CampaignRegistry.start(world, op, CampaignTier.MARCH, sponsor = null)) {
-            logger.warn { "[MARCH] scheduled march on ${op.cityKey} failed to start" }
+        // Point the column at the mustered district: the campaign route to the city mouth, then
+        // the district's street approach (waypoints snap to walkable + unstick, so a rough hop heals).
+        val d = target ?: Districts.marchTarget(world)
+        target = null
+        val marchOp = op.copy(
+            route = op.route.takeWhile { it.z <= CITY_MOUTH_Z } + d.approach,
+            objectiveTile = d.rally,
+        )
+        val started = CampaignRegistry.start(world, marchOp, CampaignTier.MARCH, sponsor = null) { won ->
+            if (won) Districts.creditMarchWin(world, d)
+        }
+        if (!started) {
+            logger.warn { "[MARCH] scheduled march on ${op.cityKey}/${d.key} failed to start" }
             return
         }
-        RealmSupply.consume(world, CampaignTier.MARCH, "The Knights of Lumbridge", op.displayName)
-        logger.info { "[MARCH] scheduled march launched on ${op.cityKey} (supplies now ${RealmSupply.meter()})." }
+        RealmSupply.consume(world, CampaignTier.MARCH, "The Knights of Lumbridge", "${d.display} of ${op.displayName}")
+        logger.info { "[MARCH] scheduled march launched on ${op.cityKey}/${d.key} (supplies now ${RealmSupply.meter()})." }
     }
 
     private companion object {
@@ -139,5 +159,7 @@ class MarchPlugin(
         const val WARN_TICKS = 500
         /** How long a `::march` hot-zone confirmation stands (~30s). */
         const val CONFIRM_WINDOW = 50
+        /** Where the campaign route enters Varrock's streets — district approaches branch here. */
+        const val CITY_MOUTH_Z = 3425
     }
 }

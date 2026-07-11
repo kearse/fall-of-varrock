@@ -124,7 +124,18 @@ buildings — a Historian NPC + collection log; relics are a forge material, §6
 
 ---
 
-## 5. The reconquest of Varrock ⬜ (the meta-progression)
+## 5. The reconquest of Varrock 🔶 (the meta-progression)
+
+> **Built (v1):** `Districts.kt` — four districts (the Slums, the Old Market, the East
+> Quarter, the Museum Quarter) with persistent pressure meters in `WarState`. Every march
+> targets a district (its own street approach off the campaign route's city mouth — TUNE
+> the waypoints in-game); a won march raises pressure, breaking the district at its
+> threshold with realm-wide announcements, and once all four are broken the Palace-road
+> call goes out. Broken districts shave 10% each off a campaign/conquest kill quota on
+> Varrock (floor 50%) — the marches genuinely soften the ground the commanders fight on.
+> `::districts` shows the map. **Still ⬜:** counterattacks that re-raise broken districts,
+> district armouries (§6), named captains per district, Palace conquest gating on
+> all-broken, liberated safe pockets.
 
 Fallen Varrock is split into **districts** (Old Market, the slums, the church quarter,
 the Grand Exchange approaches, … , the **Palace** last). Each district has a persistent
@@ -262,7 +273,10 @@ unlock), commendations or any forge ingredient, XP, stats.
    - ✅ Persistent rogue-family kill counter + Sergeant milestone bounties
      (10/50/250/1000), `::rogues` progress command.
    - ⬜ Rotating weekly bounty target, named captains (with item 4's districts).
-4. ⬜ **Districts + pressure meter** (§5) — turns marches into meta-progression.
+4. 🔶 **Districts + pressure meter** (§5) — turns marches into meta-progression.
+   - ✅ Four districts w/ persistent pressure, march targeting + win credit, break/all-broken
+     announcements, campaign quota discount, `::districts`.
+   - ⬜ Counterattacks, armouries, named captains, Palace gating, liberated safe pockets.
 5. ⬜ **Commendations + the Royal Smith + first war-forged pieces** (§6) — the endgame
    chase. Start with one weapon per style + one armour set; expand.
 6. ⬜ **Grand March / Wardens, named captains' spec weapons, armouries** — content
