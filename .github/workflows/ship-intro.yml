@@ -1,0 +1,45 @@
+name: Ship Intro Video
+
+# Uploads deploy/client-files/intro.mp4 to /opt/kol/client/ on the VPS, where
+# Caddy serves it at https://fallofvarrock.com/client/intro.mp4. The custom
+# client's lofintro plugin fetches it with ETag revalidation on every launch,
+# so swapping the first-login intro is just replacing that file and pushing —
+# no client or server rebuild. See docs/intro-video.md.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "deploy/client-files/intro.mp4"
+      - ".github/workflows/ship-intro.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: ship-intro-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  ship:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Ship to VPS
+        run: |
+          install -m 600 /dev/null deploy_key
+          printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > deploy_key
+          # Stage under a temp name, then mv into place: a client fetching
+          # mid-deploy must never receive a partial file.
+          scp -i deploy_key -o StrictHostKeyChecking=accept-new \
+            deploy/client-files/intro.mp4 \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:/opt/kol/client/intro.mp4.new"
+          ssh -i deploy_key -o StrictHostKeyChecking=accept-new \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+            "set -e; cd /opt/kol/client; mv intro.mp4.new intro.mp4"
+
+      - name: Verify hosted file
+        run: |
+          LOCAL=$(stat -c%s deploy/client-files/intro.mp4)
+          REMOTE=$(curl -fsSI https://fallofvarrock.com/client/intro.mp4 | tr -d '\r' | awk 'tolower($1)=="content-length:"{print $2}')
+          echo "local:  $LOCAL bytes"
+          echo "hosted: $REMOTE bytes"
+          [ "$REMOTE" = "$LOCAL" ] || { echo "MISMATCH — hosted size is not what we shipped"; exit 1; }

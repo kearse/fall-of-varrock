@@ -131,9 +131,12 @@ fun main(args: Array<String>) {
     val questRows = mutableListOf<Map<String, Any?>>()
     for (fileId in cache.files(CONFIGS, DBROW)) {
         val data = cache.data(CONFIGS, DBROW, fileId) ?: continue
-        val row = runCatching { decodeRow(fileId, data) }.getOrElse {
-            println("  !! row $fileId failed to decode: ${it.message}"); continue
+        val decoded = runCatching { decodeRow(fileId, data) }
+        if (decoded.isFailure) {
+            println("  !! row $fileId failed to decode: ${decoded.exceptionOrNull()?.message}")
+            continue
         }
+        val row = decoded.getOrThrow()
         rowsByTable.merge(row.tableId, 1, Int::plus)
         if (row.tableId != QUEST_TABLE_ID) continue
 

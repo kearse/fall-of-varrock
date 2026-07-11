@@ -34,11 +34,17 @@ The video is **not** baked into anything. The client fetches
 `https://fallofvarrock.com/client/intro.mp4` (VPS path `/opt/kol/client/intro.mp4`,
 served by Caddy) into a local cache, revalidating by ETag on every client start.
 
-To replace the intro — one command, nothing to rebuild or deploy:
+To replace the intro: overwrite `deploy/client-files/intro.mp4` in the repo and push —
+the **Ship Intro Video** workflow uploads it to the VPS and verifies the hosted size.
+Nothing else rebuilds or redeploys.
 
 ```powershell
-scp -i $env:USERPROFILE\.ssh\kol_admin "C:\path\to\new-intro.mp4" ubuntu@15.204.245.41:/opt/kol/client/intro.mp4
+Copy-Item "C:\path\to\new-intro.mp4" "deploy\client-files\intro.mp4"
+git add deploy/client-files/intro.mp4; git commit -m "New intro video"; git push
 ```
+
+(Manual fallback, same effect, no CI:
+`scp -i $env:USERPROFILE\.ssh\kol_admin new-intro.mp4 ubuntu@15.204.245.41:/opt/kol/client/intro.mp4`)
 
 Caddy issues a new ETag for the changed file; every installed client refetches it on
 next launch automatically. Keep the file **H.264 video + AAC audio in .mp4** (that's
@@ -49,9 +55,10 @@ what JavaFX Media decodes; the Blender VSE pipeline's default mp4 export is fine
 The server trigger must go live **last** — it permanently marks new accounts as
 intro-seen, so the video and client must already be in place:
 
-1. Upload the video (command above).
-2. Ship the client: `client-build\ship-client.ps1 -Rebuild`
-3. Push to main (deploys the game server with the trigger plugin).
+1. Ship the video (Ship Intro Video workflow, or the scp fallback).
+2. Ship the client (Ship Client workflow runs automatically on client changes;
+   `client-build\ship-client.ps1 -Rebuild` is the local fallback).
+3. Deploy the game server (push to main → Deploy workflow) with the trigger plugin.
 
 ## Testing
 
