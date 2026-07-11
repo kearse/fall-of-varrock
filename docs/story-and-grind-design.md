@@ -111,9 +111,13 @@ Effort + realm supply; `SupplyDrive.kt`: rotating 2× demand window). The build 
   pocket) and a "Rogue-hunter" cosmetic title.
 - **Rotating bounty:** "this week the Sergeant pays double for dark wizards" — one
   config line, feeds the Discord event feed.
-- **Bounty board:** wanted posters for **named captains** — elite, uniquely-named
-  spawns ("Karn the Red — last seen: the Old Market, wilderness 28") on long respawns.
-  Each district has one (§5); each carries a **signature broken spec weapon** (§6).
+- ✅ **Bounty board — named captains** (`war/captains/`): one elite, uniquely-named
+  captain per district (Karn the Red / Silas the Hollow / Vex of the Row / Grimjaw),
+  ~60-min respawn, boosted stats on the base model's combat def. A kill pays 100k coins
+  (banked — no PK bonus), 2 Commendations and 25 War Effort, and rolls the captain's
+  **signature weapon** at 1/8 (Dragon claws / Nightmare staff / Armadyl crossbow /
+  Dragon warhammer — realm-wide broadcast on the drop). `::bounties` shows the board.
+  Captains count toward the rogue tally. All numbers TUNE.
 - Introduced by the Act II quest **"The Rogue Problem"** — the player's first scripted
   trip into Fallen Varrock, the city they will one day retake.
 
@@ -294,8 +298,12 @@ unlock), commendations or any forge ingredient, XP, stats.
    - ✅ Commendation item token paid on won ops (contribution-scaled); Royal Smith NPC
      with forge dialogue; six BIS recipes (Torva/Masori/Ancestral body+legs).
    - ⬜ Relics + forge components in recipes, spec weapons, helms/weapons, self-made mark.
-6. ⬜ **Grand March / Wardens, named captains' spec weapons, armouries** — content
+6. 🔶 **Grand March / Wardens, named captains' spec weapons, armouries** — content
    breadth on top of the framework.
+   - ✅ Named captains per district with bounties + signature spec-weapon drops,
+     `::bounties` board.
+   - ⬜ Weekly Grand March + district Wardens (boss-tier, pity shards), district
+     armouries, broken-weapon restoration recipes at the forge.
 7. ⬜ **Patron products** (§7) — after marches exist: patron-funded march, banners,
    memorial. Store SKUs ride the existing entitlements pipeline (`Alter/web`).
 8. ⬜ **Wiki pages on deploy** — `Alter/web/content/wiki/`: "The grind explained"
