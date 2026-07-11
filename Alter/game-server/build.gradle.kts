@@ -182,6 +182,14 @@ tasks.register<JavaExec>("itemDef") {
     mainClass.set("org.alter.tools.itemdef.ItemDefToolKt")
     args = ((project.findProperty("itemDefArgs") as String?) ?: "inspect 4067 8851").split(" ")
 }
+tasks.register<JavaExec>("questTable") {
+    description = "Quest tab cache tool: relabel reused OSRS quest rows to Fall of Varrock quests (docs/quest-tab-handoff.md)"
+    group = "application"
+    workingDir = rootProject.projectDir
+    classpath = sourceSets["main"].runtimeClasspath
+    mainClass.set("org.alter.tools.quests.QuestTablePatchKt")
+    args = ((project.findProperty("questArgs") as String?) ?: "inspect").split(" ")
+}
 tasks.register<JavaExec>("shortcutScan") {
     description = "Scan the cache for agility-shortcut objects (by action verb) and all their world placements; 'audit' mode checks bound shortcuts land on connected ground"
     group = "application"

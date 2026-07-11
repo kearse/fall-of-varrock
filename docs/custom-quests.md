@@ -62,8 +62,9 @@ list. The panel and overlays pick it up automatically.
 ## 3. Replacing the OSRS quest tab contents 🔶 (recon tooled — see the handoff)
 
 > **Execution runbook:** [`quest-tab-handoff.md`](quest-tab-handoff.md) — self-contained for a
-> session/dev with cache access. Phase 1 is ready to run:
-> `gradlew :plugins:tools:dumpQuestTable` (read-only dump of the quest DBTable + its indexes).
+> session/dev with cache access. Recon is done (dump analysed); the **Phase 1 relabel proof** is
+> tooled: `gradlew :game-server:questTable -PquestArgs="relabel"` renames the reused OSRS quest
+> rows to FoV quests, and the server already drives their colour varps. Read the handoff §0.
 
 **Can we?** Yes. The quest tab (interface 399, mounted in quest root 629 — see
 `CharacterSummaryPlugin.kt`) is rendered **client-side from a cache DBTable**, not sent by the
