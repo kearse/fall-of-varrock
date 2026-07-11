@@ -100,13 +100,15 @@ Effort + realm supply; `SupplyDrive.kt`: rotating 2× demand window). The build 
 - ⬜ Introduced by the Act II quest **"Supply Lines"**.
 - Directly feeds §2: contracts fill the meter, the meter feeds marches.
 
-## 4. Rogue hunting & the bounty board ⬜ (the solo hunter's track)
+## 4. Rogue hunting & the bounty board 🔶 (the solo hunter's track)
 
-- **Milestone track:** the Recruiting Sergeant pays on total rogue-family kills
-  (rogues, muggers, highwaymen, thugs — the occupiers of Varrock) at **10 / 50 / 250 /
-  1,000**: coins + War Effort early, the **"Rogue-hunter"** title mid, something
-  functional at the top (Sergeant's shop discount, or a key to a third Varrock safe
-  pocket). The counter is a persistent stat — death never resets it.
+- ✅ **Milestone track** (`war/roguehunt/`): lifetime rogue-family kill counter (rogues,
+  muggers, highwaymen, thugs, bandits, outlaws — persistent, death never resets it),
+  milestones at **10 / 50 / 250 / 1,000** paying escalating coins + War Effort. The
+  Recruiting Sergeant is the paymaster (bounty dialogue + the pitch that sends veterans
+  to Fallen Varrock); `::rogues` tracks progress; milestone crossings nudge in chat.
+- ⬜ Top-milestone functional reward (Sergeant's shop discount or a third Varrock safe
+  pocket) and a "Rogue-hunter" cosmetic title.
 - **Rotating bounty:** "this week the Sergeant pays double for dark wizards" — one
   config line, feeds the Discord event feed.
 - **Bounty board:** wanted posters for **named captains** — elite, uniquely-named
@@ -256,9 +258,10 @@ unlock), commendations or any forge ingredient, XP, stats.
      participation-split spoils, War-Prep finale now points at the muster call.
    - ⬜ Physical muster at the gate (Knight-Captain NPC), Commendation payouts (item 5),
      district targets (item 4), "March" HUD label in the client.
-3. ⬜ **Rogue milestones + bounty board** (§4) — cheap, parallel solo track.
-   - Persistent rogue-family kill counter, Sergeant milestone dialogue (10/50/250/1000),
-     rotating weekly bounty target.
+3. 🔶 **Rogue milestones + bounty board** (§4) — cheap, parallel solo track.
+   - ✅ Persistent rogue-family kill counter + Sergeant milestone bounties
+     (10/50/250/1000), `::rogues` progress command.
+   - ⬜ Rotating weekly bounty target, named captains (with item 4's districts).
 4. ⬜ **Districts + pressure meter** (§5) — turns marches into meta-progression.
 5. ⬜ **Commendations + the Royal Smith + first war-forged pieces** (§6) — the endgame
    chase. Start with one weapon per style + one armour set; expand.

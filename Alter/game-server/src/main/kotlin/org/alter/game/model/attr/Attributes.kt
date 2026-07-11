@@ -259,6 +259,15 @@ val RESOURCE_CONTRACT_ITEM_ATTR = AttributeKey<String>("resource_contract_item")
 val RESOURCE_CONTRACT_LEFT_ATTR = AttributeKey<Int>("resource_contract_left")
 
 /**
+ * **Rogue hunting** (content/war/roguehunt — story-and-grind-design §4): [ROGUE_KILLS_ATTR] is the
+ * lifetime count of rogue-family kills (the human cutthroats occupying Fallen Varrock); the
+ * Recruiting Sergeant pays escalating milestone bounties on it. [ROGUE_MILESTONE_PAID_ATTR] is how
+ * many milestones he has already paid. Death never resets the counter. Persistent.
+ */
+val ROGUE_KILLS_ATTR = AttributeKey<Int>("rogue_kills")
+val ROGUE_MILESTONE_PAID_ATTR = AttributeKey<Int>("rogue_milestone_paid")
+
+/**
  * A flag which indicates that the player will not take collision into account
  * when walking.
  */
