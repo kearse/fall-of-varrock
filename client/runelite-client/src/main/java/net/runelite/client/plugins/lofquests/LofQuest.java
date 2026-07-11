@@ -54,17 +54,19 @@ enum LofQuest
 		"The front's mages will eat an unprepared soldier alive. Vannaka drills your Prayer to 37 "
 			+ "for Protect from Magic, arms you in mystic gear, and sends you to clear the Wizard "
 			+ "Tower with the Void Knight — the grimoire inside unlocks the old magics.",
-		5, // DONE ordinal
+		6, // DONE ordinal (RANK was inserted at 5 — see WarPrepChain.Step)
 		Arrays.asList(
 			new LofQuestStep(1, "Train Prayer to 37", "Use the dragon bones on the Lumbridge church altar.", new WorldPoint(3242, 3207, 0)),
 			new LofQuestStep(2, "Return to Vannaka to be armed", "He kits you out for the tower.", new WorldPoint(3219, 3215, 0)),
 			new LofQuestStep(3, "Clear the Wizard Tower", "Speak to the Void Knight at the bridge; take the grimoire from the Archmage.", new WorldPoint(3113, 3208, 0)),
-			new LofQuestStep(4, "Return to Vannaka with word of the grimoire", new WorldPoint(3219, 3215, 0))
+			new LofQuestStep(4, "Return to Vannaka with word of the grimoire", new WorldPoint(3219, 3215, 0)),
+			new LofQuestStep(5, "Buy your next rank from Duke Horacio", "Vannaka's purse covers it — heavier armour awaits.", new WorldPoint(3222, 3218, 0))
 		),
 		Arrays.asList(
 			"Protect from Magic (Prayer 37)",
 			"The Ancient, Lunar and Arceuus spellbooks (::spellbook)",
 			"Mystic gear, runes and prayer potions",
+			"A purse that covers your next feudal rank",
 			"Access to the war's raids"
 		)),
 

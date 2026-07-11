@@ -59,7 +59,11 @@ A first-party sidebar plugin (book icon) modelled on the RuneLite **Quest Helper
 (server), then add a `LofQuest` entry with the same step ordinals, targets, why-text and unlock
 list. The panel and overlays pick it up automatically.
 
-## 3. Replacing the OSRS quest tab contents ⬜ (researched, needs the cache)
+## 3. Replacing the OSRS quest tab contents 🔶 (recon tooled — see the handoff)
+
+> **Execution runbook:** [`quest-tab-handoff.md`](quest-tab-handoff.md) — self-contained for a
+> session/dev with cache access. Phase 1 is ready to run:
+> `gradlew :plugins:tools:dumpQuestTable` (read-only dump of the quest DBTable + its indexes).
 
 **Can we?** Yes. The quest tab (interface 399, mounted in quest root 629 — see
 `CharacterSummaryPlugin.kt`) is rendered **client-side from a cache DBTable**, not sent by the
