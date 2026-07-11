@@ -14,7 +14,7 @@ does four things:
 | **In-game event feed** | The game's `DiscordBridge` writes events to the `discord_events` queue; the bot posts them to `#achievements`, `#drops-showcase`, `#pk-highlights`, `#boss-and-war`, `#updates`. |
 | **Hiscores commands** | `/player <name>`, `/hiscores`, `/online`, `/whoami` read player data straight from the shared save. |
 | **Tickets** | `#support-ticket` has an "Open a ticket" button → private staff thread. Re-post the panel with `/ticketpanel`. |
-| **Seed content** | `/setup` (and `/seed`) fill the info channels with embeds + buttons. Copy lives in `src/seed/content.ts`. |
+| **Seed content** | `/setup` (and `/seed`) fill the info channels with embeds + buttons. Copy lives in `src/seed/content.ts`. Re-running `/seed` refreshes already-posted embeds in place, so copy/URL changes (e.g. a new `SITE_URL`) land with one command. |
 | **Guides** | `#guides` indexes the website guides (`/guides`) with link buttons. List in `src/seed/guidesIndex.ts`; full guides seeded via web `npm run seed:guides`. |
 | **Live boards** | `#server-status` (world UP/DOWN via TCP probe + online count) and `#hiscores` (top-10), pinned messages refreshed every minute. |
 | **Giveaways** | `/giveaway start\|end\|reroll`; enter via button (must be linked); auto-draw to `#daily-winners`/`#weekly-winners`. |

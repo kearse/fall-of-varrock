@@ -43,11 +43,14 @@ export const config = {
   gameHost: opt("GAME_HOST", "localhost"),
   gamePort: num("GAME_PORT", 43594),
   liveBoardMs: num("LIVE_BOARD_MS", 60_000),
-  // Download links shown in #download / #welcome (edit to your real URLs).
+  // Direct client download links for the #download buttons. Empty = button
+  // hidden (the "All downloads" button to SITE_URL/play always shows). Accepts
+  // the website's CLIENT_*_URL names as a fallback so one .env can feed both.
   downloads: {
-    windows: opt("DOWNLOAD_WINDOWS", ""),
-    mac: opt("DOWNLOAD_MAC", ""),
-    jar: opt("DOWNLOAD_JAR", ""),
+    windows: opt("DOWNLOAD_WINDOWS", opt("CLIENT_WINDOWS_URL")),
+    mac: opt("DOWNLOAD_MAC", opt("CLIENT_MAC_URL")),
+    linux: opt("DOWNLOAD_LINUX", opt("CLIENT_LINUX_URL")),
+    jar: opt("DOWNLOAD_JAR", opt("CLIENT_JAR_URL")),
   },
 } as const;
 

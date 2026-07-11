@@ -4,17 +4,21 @@ import { CH } from "../guild.js";
 /**
  * All seed copy for the info channels, in one editable place. `seed.ts` turns
  * these into embeds (+ optional link buttons) and posts them idempotently.
- * Edit freely — re-running /seed updates nothing already posted (matched by the
- * embed title), so to refresh a channel delete the old message then /seed.
+ * Edit freely — re-running /seed REFRESHES every already-posted message in
+ * place (matched by the embed title), so copy or URL changes land with one
+ * /seed run. Only if a TITLE changes does the old message need deleting by hand.
  *
  * Every claim here is accurate to the game (Fall of Varrock: a war server —
  * feudal ranks bought from Duke Horacio, war commands, Wilderness PKing). Full
  * how-to guides live on the website; #guides links to them.
  *
- * Links/download URLs come from config (env: SITE_URL, DOWNLOAD_*).
+ * Links/download URLs come from config (env: SITE_URL, DOWNLOAD_* — the web's
+ * CLIENT_*_URL vars work too). Buttons with an empty URL are dropped, so the
+ * per-platform download buttons only appear once real artifacts are hosted —
+ * the "All downloads" button always points at the website's download page.
  */
 const SITE = config.siteUrl;
-const client = (fallback: string) => fallback || `${SITE}/download/client`;
+const DOWNLOAD_PAGE = `${SITE}/play#download`;
 
 export interface SeedEntry {
   channel: string;
@@ -67,12 +71,14 @@ export const SEED: SeedEntry[] = [
     body:
       "Grab the official Fall of Varrock client for your platform, then log in (new username + " +
       "password at the login screen creates your account). Trouble loading? Open a support ticket.\n\n" +
-      "The website has every download link and the current login world host.",
+      "The **All downloads** button below opens the website's download page — it always has every " +
+      "platform and the current login world host.",
     links: [
-      { label: "Windows", url: client(config.downloads.windows), emoji: "🪟" },
-      { label: "Mac", url: client(config.downloads.mac), emoji: "🍎" },
-      { label: "Jar", url: client(config.downloads.jar), emoji: "☕" },
-      { label: "All downloads / help", url: `${SITE}/play`, emoji: "🌐" },
+      { label: "Windows", url: config.downloads.windows, emoji: "🪟" },
+      { label: "Mac", url: config.downloads.mac, emoji: "🍎" },
+      { label: "Linux", url: config.downloads.linux, emoji: "🐧" },
+      { label: "Jar", url: config.downloads.jar, emoji: "☕" },
+      { label: "All downloads", url: DOWNLOAD_PAGE, emoji: "🌐" },
     ],
   },
   {
