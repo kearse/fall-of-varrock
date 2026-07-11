@@ -170,6 +170,8 @@ class RecruitTrialsPlugin(
                     return
                 }
                 chatNpc(p, "At ease, ${p.address}. You've fought, ranked, slain and supplied — a true citizen-soldier of Lumbridge. Make us proud.", npc = s, title = "Recruiting Sergeant")
+                // UX: the teleport portal was undiscoverable — nothing in the game ever mentioned it.
+                chatNpc(p, "One more thing every soldier should know: the <col=801700>glowing portal over the courtyard fountain</col> carries you to every front, skilling ground and arena the realm holds. Use it.", npc = s, title = "Recruiting Sergeant")
                 if (RogueHunt.kills(p) == 0) {
                     chatNpc(p, "If you're hunting work: <col=801700>Fallen Varrock</col> crawls with rogues, muggers and highwaymen. The realm pays a bounty at every milestone of cutthroats you put down — report your tally to me. <col=ffae00>::rogues</col> tracks it.", npc = s, title = "Recruiting Sergeant")
                     chatNpc(p, "Fair warning: those streets are lawless PvP ground. Take nothing you can't afford to lose — the tally, at least, is yours forever.", npc = s, title = "Recruiting Sergeant")

@@ -1,5 +1,5 @@
 /*
- * Kingdom of Lumbridge — server announcement ticker (overlay).
+ * Fall of Varrock — server announcement ticker (overlay).
  *
  * Roak-style: RuneScape font, coloured text on a transparent background (no panel), anchored
  * just above the chat box, left-aligned. Each line keeps the colour the server sent it in

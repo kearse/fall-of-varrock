@@ -1,5 +1,5 @@
 /*
- * Kingdom of Lumbridge — Castle Wars timer overlay (renderer).
+ * Fall of Varrock — Castle Wars timer overlay (renderer).
  *
  * Sits above the chatbox on the right-hand side (the classic Castle Wars spot). Reads four
  * server-published varps:

@@ -1,5 +1,5 @@
 /*
- * Kingdom of Lumbridge — PvP zone geometry, MIRRORED from the server.
+ * Fall of Varrock — PvP zone geometry, MIRRORED from the server.
  *
  * This is a hand-kept copy of org.alter.plugins.content.combat.PvpZones (server module
  * game-plugins). The client has no live feed of the zone boxes, so they are duplicated

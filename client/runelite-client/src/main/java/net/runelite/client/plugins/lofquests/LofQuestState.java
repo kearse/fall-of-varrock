@@ -1,5 +1,5 @@
 /*
- * Kingdom of Lumbridge — display state of a custom quest, coloured like the OSRS quest list.
+ * Fall of Varrock — display state of a custom quest, coloured like the OSRS quest list.
  */
 package net.runelite.client.plugins.lofquests;
 

@@ -120,6 +120,24 @@ object WarState {
         return marchCount
     }
 
+    // --- patron-funded marches (store — story-and-grind-design §7): queued by the store's
+    //     RewardDeliveryPlugin on purchase, consumed by MarchPlugin at the next muster call.
+    //     Entries are "name|1" (grand) / "name|0". Persisted so a purchase survives a restart.
+    private val patronQueue = ArrayList<String>()
+
+    fun queuePatronMarch(name: String, grand: Boolean) {
+        patronQueue.add("$name|${if (grand) 1 else 0}")
+        dirty = true
+    }
+
+    /** Pop the next funded march as (patronName, isGrand), or null if none waits. */
+    fun popPatronMarch(): Pair<String, Boolean>? {
+        if (patronQueue.isEmpty()) return null
+        val e = patronQueue.removeAt(0)
+        dirty = true
+        return e.substringBeforeLast('|') to e.endsWith("|1")
+    }
+
     // --- district pressure (the reconquest of Varrock — story-and-grind-design §5) ---
     private val districtPressureByKey = HashMap<String, Int>()
 
@@ -204,6 +222,8 @@ object WarState {
                 (value as? Number)?.let { districtPressureByKey[key] = it.toInt().coerceAtLeast(0) }
             }
             (doc.get("marchCount") as? Number)?.let { marchCount = it.toInt().coerceAtLeast(0) }
+            patronQueue.clear()
+            (doc.get("patronMarches") as? List<*>)?.forEach { (it as? String)?.let(patronQueue::add) }
             dirty = false
             logger.info { "Loaded war state: ${knightPoolByFront.size} front(s) from $saveFile." }
         } catch (e: Exception) {
@@ -234,6 +254,7 @@ object WarState {
                 .append("fronts", fronts)
                 .append("districts", districts)
                 .append("marchCount", marchCount)
+                .append("patronMarches", patronQueue.toList())
             saveFile.writeText(doc.toJson(prettyPrint))
             dirty = false
             logger.info { "Saved war state: ${knightPoolByFront.size} front(s) to $saveFile." }

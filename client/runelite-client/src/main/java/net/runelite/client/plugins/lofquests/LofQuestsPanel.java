@@ -1,5 +1,5 @@
 /*
- * Kingdom of Lumbridge — the Quest Journal sidebar.
+ * Fall of Varrock — the Quest Journal sidebar.
  *
  * One card per custom quest, coloured like the OSRS quest list: click a card to unfold its story
  * ("why am I doing this?"), the step checklist (done ✓ / current ➤ / ahead ○), and what completing

@@ -18,7 +18,7 @@ const BULLETS = [
   },
 ];
 
-export default async function LoginPage() {
+export default async function LoginPage({ searchParams }: { searchParams: { next?: string } }) {
   if (await getSession()) redirect("/");
   return (
     <div className="relative left-1/2 right-1/2 -mx-[50vw] -my-10 w-screen">
@@ -71,7 +71,7 @@ export default async function LoginPage() {
                 Return to the <span className="text-gradient">fight</span>
               </h2>
             </div>
-            <AuthForm mode="login" />
+            <AuthForm mode="login" next={searchParams.next} />
           </div>
         </div>
       </div>

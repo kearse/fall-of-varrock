@@ -18,7 +18,7 @@ const BULLETS = [
   },
 ];
 
-export default async function RegisterPage() {
+export default async function RegisterPage({ searchParams }: { searchParams: { next?: string } }) {
   if (await getSession()) redirect("/");
   return (
     <div className="relative left-1/2 right-1/2 -mx-[50vw] -my-10 w-screen">
@@ -71,7 +71,7 @@ export default async function RegisterPage() {
                 Join the <span className="text-gradient">front line</span>
               </h2>
             </div>
-            <AuthForm mode="register" />
+            <AuthForm mode="register" next={searchParams.next} />
           </div>
         </div>
       </div>

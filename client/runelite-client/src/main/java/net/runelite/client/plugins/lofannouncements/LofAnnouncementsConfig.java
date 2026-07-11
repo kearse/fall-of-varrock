@@ -1,5 +1,5 @@
 /*
- * Kingdom of Lumbridge — server announcement ticker (config).
+ * Fall of Varrock — server announcement ticker (config).
  */
 package net.runelite.client.plugins.lofannouncements;
 

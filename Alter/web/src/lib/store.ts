@@ -6,7 +6,7 @@ import { EntitlementDoc } from "./collections";
  *
  * Items use rscm names (resolved server-side via getRSCM) or numeric ids.
  */
-export type StoreCategory = "Bonds" | "Membership" | "Donator Points" | "Bundles";
+export type StoreCategory = "Bonds" | "Membership" | "Donator Points" | "Bundles" | "Patron";
 
 export interface StorePackage {
   id: string;
@@ -59,6 +59,28 @@ export const PACKAGES: StorePackage[] = [
     category: "Bonds",
     badge: "Best value",
     entitlement: { kind: "items", payload: { items: [{ item: "item.bond", amount: 10 }] } },
+  },
+
+  // ---- Patron (server-event funding: buys visibility + content for EVERYONE, never power;
+  //      see docs/story-and-grind-design.md §7) ----
+  {
+    id: "patron-march",
+    name: "Patron of the March",
+    description:
+      "Fund the realm's next march yourself: the muster call goes out in YOUR name, the supply cost is covered, and every player online gets the fight. Pure glory - no combat power sold.",
+    priceCents: 499,
+    category: "Patron",
+    entitlement: { kind: "patron_march", payload: { grand: false } },
+  },
+  {
+    id: "patron-grand-march",
+    name: "Patron of the Grand March",
+    description:
+      "Fund a GRAND MARCH in your name - sixteen knights against a district Warden, with the Warden's embers on the line for everyone who fights. The biggest event money can give the whole server.",
+    priceCents: 999,
+    category: "Patron",
+    badge: "Server event",
+    entitlement: { kind: "patron_march", payload: { grand: true } },
   },
 
   // ---- Membership tiers (time-based perks + Discord role) ----
@@ -147,7 +169,7 @@ export const PACKAGES: StorePackage[] = [
   },
 ];
 
-export const STORE_SECTIONS: StoreCategory[] = ["Bonds", "Membership", "Donator Points", "Bundles"];
+export const STORE_SECTIONS: StoreCategory[] = ["Bonds", "Membership", "Donator Points", "Bundles", "Patron"];
 
 export function getPackage(id: string): StorePackage | undefined {
   return PACKAGES.find((p) => p.id === id);

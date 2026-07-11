@@ -1,5 +1,5 @@
 /*
- * Kingdom of Lumbridge — Quest Journal scene overlay.
+ * Fall of Varrock — Quest Journal scene overlay.
  *
  * Draws the tracked quest's objective in the 3D scene: a bouncing arrow above the target tile and
  * an outline on the tile itself. Only renders when the target is on the player's plane and inside

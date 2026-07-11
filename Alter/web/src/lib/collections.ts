@@ -35,7 +35,7 @@ export interface DetailsDoc extends Document {
 // ---- entitlements: purchases waiting to be applied in-game on next login. ----
 export interface EntitlementDoc extends Document {
   loginUsername: string;
-  kind: "donor_points" | "membership" | "items";
+  kind: "donor_points" | "membership" | "items" | "patron_march";
   payload: Document; // e.g. { points: 500 } | { tier, days } | { items:[...] }
   orderId: string;
   applied: boolean;

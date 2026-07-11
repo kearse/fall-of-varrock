@@ -1,5 +1,5 @@
 /*
- * Kingdom of Lumbridge — Castle Wars timer overlay (config).
+ * Fall of Varrock — Castle Wars timer overlay (config).
  */
 package net.runelite.client.plugins.lofcwtimer;
 

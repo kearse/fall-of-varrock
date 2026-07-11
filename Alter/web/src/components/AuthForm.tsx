@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-export function AuthForm({ mode }: { mode: "login" | "register" }) {
+export function AuthForm({ mode, next }: { mode: "login" | "register"; next?: string }) {
   const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -31,7 +31,9 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
         setError(data.error ?? "Something went wrong.");
         return;
       }
-      router.push("/");
+      // UX: return the user to where they were (e.g. the store), never off-site.
+      const dest = next && next.startsWith("/") && !next.startsWith("//") ? next : "/";
+      router.push(dest);
       router.refresh();
     } catch {
       setError("Network error. Try again.");

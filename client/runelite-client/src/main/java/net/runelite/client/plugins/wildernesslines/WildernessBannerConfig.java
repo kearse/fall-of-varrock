@@ -1,5 +1,5 @@
 /*
- * Kingdom of Lumbridge — Wilderness / single / multi combat status banner (client overlay).
+ * Fall of Varrock — Wilderness / single / multi combat status banner (client overlay).
  */
 package net.runelite.client.plugins.wildernesslines;
 

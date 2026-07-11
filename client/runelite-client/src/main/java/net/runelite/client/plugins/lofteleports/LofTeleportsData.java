@@ -1,5 +1,5 @@
 /*
- * Kingdom of Lumbridge — teleport portal: client-side mirror of the server destination catalog.
+ * Fall of Varrock — teleport portal: client-side mirror of the server destination catalog.
  *
  * MUST stay in sync with the server's org.alter.plugins.content.teleport.TeleportRegistry +
  * TeleportCategory (same category order, same per-category row order) — the overlay sends

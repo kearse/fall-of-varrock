@@ -52,17 +52,14 @@ object TeleportRegistry {
         // castle; gravestones stripped) — bank + processing + stalls + the Quartermaster crypt. The
         // COLLECTION GROUNDS (trees/rocks/fish/herbs/thickets) are the swamp just south. Skilling rows
         // land in the yard (pad @ 3243,3193). Mining/Smithing keep the cellar; old plaza spots = legacy.
-        built("swamp_hub", "The Mire (Skilling)", SKILLING, Tile(3243, 3193, 0), SAFE_ZONE),
+        // ONE hub row for the Mire working yard — the old per-skill rows (woodcutting/
+        // firemaking/fishing/cooking/crafting/runecraft/farming) all landed on this same
+        // pad, which read as a bug from the player's side (UX review). Skills with a
+        // genuinely distinct destination keep their own row below.
+        built("swamp_hub", "The Mire — Skilling Grounds", SKILLING, Tile(3243, 3193, 0), SAFE_ZONE),
         built("skill_mining", "Mining", SKILLING, Tile(3214, 9617, 0), SAFE_ZONE),       // cellar mine room
         built("skill_smithing", "Smithing", SKILLING, Tile(3210, 9620, 0), SAFE_ZONE),   // cellar furnace + anvils
-        built("skill_woodcutting", "Woodcutting", SKILLING, Tile(3243, 3193, 0), SAFE_ZONE),   // the Mire grove
-        built("skill_firemaking", "Firemaking", SKILLING, Tile(3243, 3193, 0), SAFE_ZONE),     // the Mire
-        built("skill_fishing", "Fishing", SKILLING, Tile(3243, 3193, 0), SAFE_ZONE),           // the Mire pools
-        built("skill_cooking", "Cooking", SKILLING, Tile(3243, 3193, 0), SAFE_ZONE),           // the Mire cookfire
-        built("skill_crafting", "Crafting", SKILLING, Tile(3243, 3193, 0), SAFE_ZONE),         // the Mire spinning wheel
         built("skill_construction", "Construction", SKILLING, Tile(3239, 3205, 0), SAFE_ZONE), // bench
-        built("skill_runecraft", "Runecraft", SKILLING, Tile(3243, 3193, 0), SAFE_ZONE),       // the Mire altar
-        built("skill_farming", "Farming", SKILLING, Tile(3243, 3193, 0), SAFE_ZONE),           // the Mire patches
         built("skill_hunter", "Hunter", SKILLING, Tile(3231, 3172, 0), SAFE_ZONE),       // the Croaking Thickets
         built("skill_agility", "Agility", SKILLING, Tile(3227, 3174, 0), SAFE_ZONE),     // the Mire Run dispenser
         built("skill_herblore", "Herblore", SKILLING, Tile(3236, 3206, 0), SAFE_ZONE),   // TUNE (inventory skill)

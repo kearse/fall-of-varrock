@@ -50,6 +50,8 @@ class MarchPlugin(
     private var target: District? = null
     /** True while the mustering/next march is a GRAND MARCH (every [GRAND_EVERY]th). */
     private var pendingGrand = false
+    /** The store patron funding the mustering march (name), if any — covers its supply cost. */
+    private var patron: String? = null
     /** The live district Warden of a running Grand March, if any. */
     private var warden: Npc? = null
     private var wardenDistrict: District? = null
@@ -128,10 +130,13 @@ class MarchPlugin(
             schedule(world, timer, INTERVAL_TICKS - WARN_TICKS) // try again next cycle
             return
         }
-        // Every GRAND_EVERYth launched march is a GRAND MARCH — upsized, against the district's Warden.
-        val grand = (WarState.getMarchCount() + 1) % GRAND_EVERY == 0
+        // A store patron's funded march jumps the queue (and pays its own supply cost);
+        // otherwise every GRAND_EVERYth launched march is a GRAND MARCH.
+        val funded = WarState.popPatronMarch()
+        patron = funded?.first
+        val grand = funded?.second ?: ((WarState.getMarchCount() + 1) % GRAND_EVERY == 0)
         val tier = if (grand) CampaignTier.GRAND_MARCH else CampaignTier.MARCH
-        if (!RealmSupply.canAfford(tier.supplyCost)) {
+        if (funded == null && !RealmSupply.canAfford(tier.supplyCost)) {
             Announce.broadcast(world, "<col=801700>The Knights of Lumbridge cannot march — the realm's war-stores are too low (${RealmSupply.meter()}/${tier.supplyCost} needed). Hand supplies to a Quartermaster!</col>")
             schedule(world, timer, INTERVAL_TICKS - WARN_TICKS)
             return
@@ -139,10 +144,16 @@ class MarchPlugin(
         val d = Districts.marchTarget(world)
         target = d
         pendingGrand = grand
-        if (grand) {
-            Announce.broadcast(world, "<col=ffcc00>A GRAND MARCH musters against <col=ffae00>the Warden of ${d.display}</col><col=ffcc00> — ${tier.troops} knights set out in ~${WARN_TICKS * 6 / 600} minutes! The Warden's embers feed the Royal Smith's forge. <col=ffae00>::march</col><col=ffcc00> to fight!</col>")
-        } else {
-            Announce.broadcast(world, "<col=4f9b4f>The Knight-Captain musters a march on <col=ffae00>${d.display}</col><col=4f9b4f> of Fallen ${op!!.displayName} — it sets out in ~${WARN_TICKS * 6 / 600} minutes! Any soldier may fight beside the column: answer with <col=ffae00>::march</col><col=4f9b4f>.</col>")
+        val mins = WARN_TICKS * 6 / 600
+        when {
+            funded != null && grand ->
+                Announce.broadcast(world, "<col=ffcc00>${funded.first}, Patron of the Realm, funds a GRAND MARCH against <col=ffae00>the Warden of ${d.display}</col><col=ffcc00> — ${tier.troops} knights set out in ~$mins minutes! <col=ffae00>::march</col><col=ffcc00> to fight!</col>")
+            funded != null ->
+                Announce.broadcast(world, "<col=4f9b4f>${funded.first}, Patron of the Realm, funds a march on <col=ffae00>${d.display}</col><col=4f9b4f> — it sets out in ~$mins minutes! Fight beside their banner: <col=ffae00>::march</col><col=4f9b4f>.</col>")
+            grand ->
+                Announce.broadcast(world, "<col=ffcc00>A GRAND MARCH musters against <col=ffae00>the Warden of ${d.display}</col><col=ffcc00> — ${tier.troops} knights set out in ~$mins minutes! The Warden's embers feed the Royal Smith's forge. <col=ffae00>::march</col><col=ffcc00> to fight!</col>")
+            else ->
+                Announce.broadcast(world, "<col=4f9b4f>The Knight-Captain musters a march on <col=ffae00>${d.display}</col><col=4f9b4f> of Fallen ${op!!.displayName} — it sets out in ~$mins minutes! Any soldier may fight beside the column: answer with <col=ffae00>::march</col><col=4f9b4f>.</col>")
         }
         state = State.MUSTERING
         schedule(world, timer, WARN_TICKS)
@@ -150,12 +161,14 @@ class MarchPlugin(
 
     /** Launch the column (re-checking the gates — the world may have changed since the call). */
     private fun launch(world: World) {
-        val op = Campaigns.hostileTarget() ?: return
-        if (CampaignRegistry.activeMarch() != null || CampaignRegistry.isAttacking(op.cityKey)) return
+        val fundedBy = patron
+        patron = null
+        val op = Campaigns.hostileTarget() ?: return requeue(fundedBy)
+        if (CampaignRegistry.activeMarch() != null || CampaignRegistry.isAttacking(op.cityKey)) return requeue(fundedBy)
         val grand = pendingGrand
         pendingGrand = false
         val tier = if (grand) CampaignTier.GRAND_MARCH else CampaignTier.MARCH
-        if (!RealmSupply.canAfford(tier.supplyCost)) {
+        if (fundedBy == null && !RealmSupply.canAfford(tier.supplyCost)) {
             Announce.broadcast(world, "<col=801700>The march is called off — the realm's war-stores ran dry at the gate.</col>")
             return
         }
@@ -177,8 +190,18 @@ class MarchPlugin(
         }
         WarState.incMarchCount()
         if (grand) spawnWarden(world, d)
-        RealmSupply.consume(world, tier, "The Knights of Lumbridge", "${d.display} of ${op.displayName}")
-        logger.info { "[MARCH] scheduled ${tier.display} launched on ${op.cityKey}/${d.key} (supplies now ${RealmSupply.meter()})." }
+        if (fundedBy != null) {
+            // The patron covered the supply cost — the realm's stores stay untouched.
+            Announce.broadcast(world, "<col=ffae00>$fundedBy's patronage carries the ${tier.display} to ${d.display} — the realm's war-stores stay full.</col>")
+        } else {
+            RealmSupply.consume(world, tier, "The Knights of Lumbridge", "${d.display} of ${op.displayName}")
+        }
+        logger.info { "[MARCH] scheduled ${tier.display} launched on ${op.cityKey}/${d.key} patron=$fundedBy (supplies now ${RealmSupply.meter()})." }
+    }
+
+    /** A funded march that couldn't launch goes back on the queue — a purchase is never lost. */
+    private fun requeue(fundedBy: String?) {
+        if (fundedBy != null) WarState.queuePatronMarch(fundedBy, pendingGrand)
     }
 
     /** The Grand March's boss-tier defender: the district's Warden, waiting at the rally point. */

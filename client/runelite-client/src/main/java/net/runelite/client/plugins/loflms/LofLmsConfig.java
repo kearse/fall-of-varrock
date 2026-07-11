@@ -1,5 +1,5 @@
 /*
- * Kingdom of Lumbridge — Last Man Standing HUD (config).
+ * Fall of Varrock — Last Man Standing HUD (config).
  */
 package net.runelite.client.plugins.loflms;
 

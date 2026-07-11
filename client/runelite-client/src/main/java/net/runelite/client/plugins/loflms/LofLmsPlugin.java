@@ -1,5 +1,5 @@
 /*
- * Kingdom of Lumbridge — Last Man Standing HUD.
+ * Fall of Varrock — Last Man Standing HUD.
  *
  * The OSRS-style LMS overlay: while you're in a game it shows the players remaining, your kills
  * this round, and the countdown to the next fog contraction. The server's LmsGame packs the round

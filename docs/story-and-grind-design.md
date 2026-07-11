@@ -260,9 +260,9 @@ early (a bond needs a grinder with gp on the other side). The store sells on top
 
 | Product | What it is | Why it's safe |
 |---------|-----------|----------------|
-| **Patron of the March** | Real money funds an extra March (or covers its supply cost); warband carries the patron's banner, announcement credits them, patron picks the target from currently-softened districts | Donor buys visibility + influence; *everyone* gets more content. This is "pay to stimulate the economy" done right |
+| **Patron of the March** ✅ | Real money funds the next March or Grand March in the patron's name: the muster call and launch credit them realm-wide, and the realm's supply meter is untouched (the patron covered it). Store SKUs `patron-march`/`patron-grand-march` → `patron_march` entitlement → persisted queue in `WarState`, consumed by `MarchPlugin` at the next muster (re-queued if the cycle skips — a purchase is never lost) | Donor buys visibility + influence; *everyone* gets more content. This is "pay to stimulate the economy" done right |
 | **Sponsored events** | Grand March sponsorship, double-contract-pay hour | Server-wide faucet, individually credited |
-| **Companion stable slots** | Own 3 companions, **deploy one at a time** (hard rule) | Variety/convenience, zero combat power |
+| **Companion stable slots** ⬜ | Own 3 companions, **deploy one at a time** (hard rule) | Variety/convenience, zero combat power. **Blocked on a rework:** today `Title.companions` is how many fight *simultaneously*, so selling slots would sell army size — build the stable/deploy-one system first |
 | **Companion & gear cosmetics** | Skins, armour paint matching war-forged sets, banners, titles | Pure status |
 | **War Chest seasonal pass** | Cosmetic reward track advanced by marches/contracts/bounties; free track for all, paid track for donors | Monetizes engagement with the loops we want populated |
 | **Liberation memorial** | Patrons who funded marches on a district get their name on a statue in the liberated streets | The highest-status purchase is recognition, not power |
@@ -309,8 +309,15 @@ unlock), commendations or any forge ingredient, XP, stats.
    - ✅ Grand March (every 8th) + district Wardens dropping Warden's embers; ember-gated
      helm recipes complete the three war-forged sets (9 recipes total).
    - ⬜ District armouries, broken-weapon restoration recipes, pity shards on embers.
-7. ⬜ **Patron products** (§7) — after marches exist: patron-funded march, banners,
-   memorial. Store SKUs ride the existing entitlements pipeline (`Alter/web`).
-8. ⬜ **Wiki pages on deploy** — `Alter/web/content/wiki/`: "The grind explained"
-   (marches, contracts, forging recipes as checklists), update "The War explained" with
-   the district reconquest, store page copy for patron products.
+7. 🔶 **Patron products** (§7) — store SKUs ride the entitlements pipeline (`Alter/web`).
+   - ✅ Patron of the March + Patron of the Grand March: store "Patron" category →
+     `patron_march` entitlement → persisted `WarState` queue → next muster call runs in
+     the patron's name with the supply cost covered.
+   - ⬜ Companion stable slots (blocked on the deploy-one rework), War Chest pass,
+     liberation memorial.
+8. 🔶 **Wiki pages** — `Alter/web/content/wiki/`:
+   - ✅ "Marches & the reconquest of Varrock" (marches, districts, Grand March/Wardens,
+     Commendations, wanted captains) + "War-forging — the Royal Smith" (all nine
+     recipes + ingredient sources); "The War explained" table gains March/Grand March
+     rows and links the reconquest page.
+   - ⬜ Post-deploy sweep once numbers settle in-game (rates/costs are TUNE).
