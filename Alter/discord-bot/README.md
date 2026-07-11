@@ -125,5 +125,5 @@ Discord can't be fully automated, so when you host, do these once:
    (compose already sets `MONGODB_URI=mongodb://mongo:27017`, db `lumbridge`).
 
 > Not using Docker on the host? Run it under a process manager instead — `pm2
-> start npm --name lumbridge-bot -- start` + `pm2 save` (see the local-run notes
+> start npm --name varrock-bot -- start` + `pm2 save` (see the local-run notes
 > above). Either way the box has to stay powered on for feeds to be live.

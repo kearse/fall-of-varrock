@@ -25,7 +25,7 @@ export async function welcomeMember(member: GuildMember): Promise<void> {
   if (!channel) return;
   await channel
     .send({
-      content: `${member} just joined the Kingdom! 👋`,
+      content: `${member} just joined the Fall of Varrock! 👋`,
       embeds: [
         new EmbedBuilder()
           .setColor(0xd4af37)

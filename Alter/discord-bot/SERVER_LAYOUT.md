@@ -21,7 +21,7 @@ There are two ways to stand this layout up:
 
 ## Roles
 
-Top of list = highest. Colours are hex. `Lumbridge Bot` must sit **above** every
+Top of list = highest. Colours are hex. `Varrock Bot` must sit **above** every
 role it manages (donor/member/linked/player) so it can assign them.
 
 | Role | Colour | Source of truth | Notes |
@@ -33,7 +33,7 @@ role it manages (donor/member/linked/player) so it can assign them.
 | 🗡️ Lord | `#2980b9` | `accounts.roles` contains `moderator` | Staff/mod |
 | 🧙 Developer | `#8e44ad` | `accounts.roles` contains `developer` | Dev team |
 | 📣 Support | `#16a085` | `accounts.roles` contains `support`/`helper` | Helpers |
-| 🤖 Lumbridge Bot | `#5865f2` | the bot's own integration role | Auto, keep high |
+| 🤖 Varrock Bot | `#5865f2` | the bot's own integration role | Auto, keep high |
 | ── Donors ── | `#000000` | divider (hoisted, no perms) | cosmetic separator |
 | 💎 Diamond Donor | `#b9f2ff` | `membership.tier == "diamond"` | |
 | 🥇 Gold Donor | `#f1c40f` | `membership.tier == "gold"` | |
@@ -127,7 +127,7 @@ touching the rest of the bot.
 - Donor/Member roles: cosmetic colour + hoist + (optional) a `#donator-lounge`
   you can add later; no extra channel grants by default.
 - Staff roles: full access to the STAFF category and moderation.
-- `Lumbridge Bot`: needs **Manage Roles, Manage Channels, Send Messages, Embed
+- `Varrock Bot`: needs **Manage Roles, Manage Channels, Send Messages, Embed
   Links, Use Application Commands**, plus **Create Private Threads / Manage
   Threads / Send Messages in Threads** for the ticket system. For `/setup` it
   also needs **Manage Server** briefly. Keep its role above all managed roles.
