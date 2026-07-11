@@ -1,0 +1,92 @@
+name: Ship Client
+
+# Builds the RuneLite fork's shaded jar, patches it with PatchClient (RSA
+# modulus, host checks, window title, .fov-home config dir), and uploads
+# fov-client.jar + fov-client.jar.sha256 to /opt/kol/client/ on the VPS.
+# Every installed launcher (FovLauncher) sees the new sha256 on next launch
+# and auto-updates — no installer rebuild needed.
+#
+# Runs automatically when client code changes on main, or manually from
+# Actions -> Ship Client -> Run workflow (set dry_run to build without
+# uploading, e.g. to validate a branch). Replaces the Windows-only
+# client-build/ship-client.ps1, which remains as a local fallback.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "client/**"
+      - "client-build/PatchClient.java"
+      - ".github/workflows/ship-client.yml"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Build and patch only — skip the upload to the VPS."
+        type: boolean
+        default: false
+
+concurrency:
+  group: ship-client
+  cancel-in-progress: false
+
+jobs:
+  ship:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: maven
+
+      - name: Build shaded client jar
+        run: mvn -f client/pom.xml install -DskipTests -pl runelite-client -am --no-transfer-progress -q
+
+      - name: Patch (modulus + host checks + title + config dir)
+        run: |
+          MODULUS=$(grep -E '^[0-9a-f]{200,}$' Alter/MODULUS.txt | tr -d '\n')
+          SHADED=$(ls client/runelite-client/target/client-*-shaded.jar)
+          javac -d pc client-build/PatchClient.java
+          java -cp pc PatchClient shaded "$SHADED" fov-client.jar "$MODULUS"
+          sha256sum fov-client.jar | cut -d' ' -f1 > fov-client.jar.sha256
+          echo "sha256 = $(cat fov-client.jar.sha256)"
+          ls -l fov-client.jar
+
+      - name: Upload build artifact (record of what shipped)
+        uses: actions/upload-artifact@v4
+        with:
+          name: fov-client
+          path: |
+            fov-client.jar
+            fov-client.jar.sha256
+
+      - name: Ship to VPS
+        if: ${{ github.event_name == 'push' || !inputs.dry_run }}
+        run: |
+          install -m 600 /dev/null deploy_key
+          printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > deploy_key
+          # Stage under temp names, then swap the jar in place BEFORE the
+          # sha256: a launcher that polls mid-deploy must never see the new
+          # hash while the old (or a partial) jar is still being served.
+          scp -i deploy_key -o StrictHostKeyChecking=accept-new \
+            fov-client.jar \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:/opt/kol/client/fov-client.jar.new"
+          scp -i deploy_key -o StrictHostKeyChecking=accept-new \
+            fov-client.jar.sha256 \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:/opt/kol/client/fov-client.jar.sha256.new"
+          ssh -i deploy_key -o StrictHostKeyChecking=accept-new \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+            "set -e; cd /opt/kol/client; \
+             mv fov-client.jar.new fov-client.jar; \
+             mv fov-client.jar.sha256.new fov-client.jar.sha256"
+
+      - name: Verify hosted files
+        if: ${{ github.event_name == 'push' || !inputs.dry_run }}
+        run: |
+          REMOTE=$(curl -fsS https://fallofvarrock.com/client/fov-client.jar.sha256)
+          LOCAL=$(cat fov-client.jar.sha256)
+          echo "hosted:  $REMOTE"
+          echo "shipped: $LOCAL"
+          [ "$REMOTE" = "$LOCAL" ] || { echo "MISMATCH — hosted sha256 is not what we shipped"; exit 1; }
+          echo "Players auto-update on next client launch."
