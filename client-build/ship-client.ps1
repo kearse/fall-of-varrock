@@ -1,5 +1,10 @@
 # Fall of Varrock — ship a client update (players auto-update on next launch).
 #
+# PREFERRED: the "Ship Client" GitHub Actions workflow (.github/workflows/
+# ship-client.yml) does all of this from any machine — it also runs
+# automatically when client code changes on main. This script is the local
+# Windows fallback.
+#
 # After changing the client (fork source, plugins, login screen, etc.):
 #   .\ship-client.ps1 -Rebuild      # rebuild the fork first, then patch+host
 #   .\ship-client.ps1               # just re-patch the current shaded jar + host
