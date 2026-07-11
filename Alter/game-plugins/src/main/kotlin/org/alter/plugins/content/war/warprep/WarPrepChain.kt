@@ -266,7 +266,8 @@ object WarPrepChain {
 
     private fun grantCompletion(p: Player) {
         p.unlockMageBooks() // idempotent — already unlocked on the RETURN step
-        p.message("<col=801700>War-Prep — Magic complete!</col> You've proven you can survive the front's magic. The war's raids are opening to you.")
+        p.message("<col=801700>War-Prep — Magic complete!</col> You've proven you can survive the front's magic. You may now fight beside the Knights of Lumbridge when they march on the enemy.")
+        p.message("<col=801700>Watch for the Knight-Captain's muster call</col> — it sounds before every march — and answer it with <col=ffae00>::march</col>.")
     }
 
     // --- guidance helpers (mirrors RecruitTrials) ---------------------------------------

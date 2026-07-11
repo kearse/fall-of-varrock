@@ -29,7 +29,18 @@ The guidance never stops — it changes altitude.
 
 ---
 
-## 2. Marches ⬜ (the scheduled knight warband)
+## 2. Marches 🔶 (the scheduled knight warband)
+
+> **Built (v1):** `MarchPlugin.kt` + a realm-sponsored `CampaignTier.MARCH` (10 knights,
+> quota 15, 150 supplies) riding the whole campaign engine — `CampaignDirector` (nullable
+> sponsor) does the marching/fighting down the Varrock route, `CapturePayout` splits the
+> pooled spoils by participation (no commander stake/tithe on a realm march). Cycle: muster
+> call ~5 min ahead → launch every ~30 min → win/loss broadcast. Skips (and says so) when
+> the realm's supply meter is under 150 — the Mire loop made visible. `::march` rallies any
+> player to the column, with a type-it-twice warning when the column is on PvP ground.
+> `::marchnow` (admin) fast-forwards the cycle. War-Prep's finale now points here.
+> **Still ⬜:** the physical muster (Knight-Captain NPC + column forming at the gate),
+> commendation payouts (build item 5), district targets (item 4), a "March" HUD label.
 
 Every ~30 minutes, **10 Knights of Lumbridge march on a hostile target. Any player can
 join.** This is the beginner/mid player's entry into the war's *offense* (today they only
@@ -239,10 +250,12 @@ unlock), commendations or any forge ingredient, XP, stats.
      best-tier-preferred assignment, Vannaka's "rank up for richer work" nudge.
    - ✅ Launch-generosity payout multiplier (`ResourceContracts.GENEROSITY_MULT`).
    - ⬜ Smithed-goods work orders; "Supply Lines" intro quest.
-2. ⬜ **Marches** (§2) — visible war offense; point the War-Prep finale ("First March")
-   at it. Fixes the tutorial dead-end.
-   - Muster event at the gate (5-min warning, Knight-Captain NPC, `::march` late-join),
-     supply cost, contribution-scaled rewards, first Commendation payouts.
+2. 🔶 **Marches** (§2) — visible war offense; fixes the tutorial dead-end.
+   - ✅ Scheduled MARCH tier on the campaign engine: 30-min cycle, 5-min muster call,
+     supply cost + starved-realm skip, `::march` rally (PvP double-confirm),
+     participation-split spoils, War-Prep finale now points at the muster call.
+   - ⬜ Physical muster at the gate (Knight-Captain NPC), Commendation payouts (item 5),
+     district targets (item 4), "March" HUD label in the client.
 3. ⬜ **Rogue milestones + bounty board** (§4) — cheap, parallel solo track.
    - Persistent rogue-family kill counter, Sergeant milestone dialogue (10/50/250/1000),
      rotating weekly bounty target.

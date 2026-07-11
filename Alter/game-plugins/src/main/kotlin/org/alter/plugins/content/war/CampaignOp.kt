@@ -31,6 +31,14 @@ enum class CampaignTier(
     RAID("raid party", troops = 8, quota = 0, cost = 0, coinPool = 0, prestige = 10, supplyCost = 0),
     CAMPAIGN("campaign", troops = 40, quota = 60, cost = 3_000_000, coinPool = 750_000, prestige = 25, supplyCost = 1500),
     CONQUEST("conquest", troops = 64, quota = 140, cost = 15_000_000, coinPool = 3_000_000, prestige = 60, supplyCost = 2800),
+
+    /**
+     * The **realm's own scheduled warband** ([MarchPlugin]) — no commander, launched by the world
+     * itself and free for ANY player to fight beside (`::march`). The beginner/mid player's entry
+     * into the war's offense: the command ladder reads March (anyone) → Raid (Lord) → Campaign
+     * (Minister) → Conquest (King). Costs the realm supplies, so the Mire loop visibly feeds it.
+     */
+    MARCH("march", troops = 10, quota = 15, cost = 0, coinPool = 0, prestige = 5, supplyCost = 150),
 }
 
 /**

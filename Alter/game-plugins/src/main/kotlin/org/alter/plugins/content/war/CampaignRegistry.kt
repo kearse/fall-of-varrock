@@ -33,12 +33,16 @@ object CampaignRegistry {
     fun isAttacking(cityKey: String): Boolean =
         active.any { it.tier != CampaignTier.RAID && it.targetCityKey.equals(cityKey, ignoreCase = true) }
 
+    /** The realm's scheduled warband currently in the field ([CampaignTier.MARCH]), if any. */
+    fun activeMarch(): CampaignDirector? = active.firstOrNull { it.tier == CampaignTier.MARCH }
+
     /**
-     * Begin a [tier] operation for [sponsor]. Returns false (and does nothing) if that Lord already
-     * has a squad out — callers must charge only after this succeeds, or refund on false.
+     * Begin a [tier] operation for [sponsor] (null = the realm's own scheduled MARCH). Returns
+     * false (and does nothing) if that Lord already has a squad out — callers must charge only
+     * after this succeeds, or refund on false.
      */
-    fun start(world: World, op: CampaignOp, tier: CampaignTier, sponsor: Player): Boolean {
-        if (hasSquad(sponsor)) return false
+    fun start(world: World, op: CampaignOp, tier: CampaignTier, sponsor: Player?): Boolean {
+        if (sponsor != null && hasSquad(sponsor)) return false
         val director = CampaignDirector(op, tier, sponsor) { active.remove(it) }
         active += director
         director.init(world)
@@ -58,10 +62,12 @@ object CampaignRegistry {
         return true
     }
 
-    /** Total damage all active squads in [cityId] dealt to [target], grouped by their Lord. */
+    /** Total damage all active squads in [cityId] dealt to [target], grouped by their Lord.
+     *  Realm-sponsored marches have no Lord to credit, so they're skipped. */
     fun troopDamageByOwner(cityId: Int, target: Npc): Map<Player, Int> =
         squadsIn(cityId)
-            .associate { it.owner to it.troopDamageTo(target) }
+            .mapNotNull { d -> d.owner?.let { it to d.troopDamageTo(target) } }
+            .toMap()
             .filterValues { it > 0 }
 
     /** TEST (`::wintest`): force [sponsor]'s active squad to a victory now, seeding [seedValue] gp into

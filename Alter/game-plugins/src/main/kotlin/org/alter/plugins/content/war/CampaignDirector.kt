@@ -46,7 +46,8 @@ enum class SquadMode { ADVANCE, FOLLOW }
 class CampaignDirector(
     private val op: CampaignOp,
     val tier: CampaignTier,
-    private val sponsor: Player,
+    /** The Lord who paid for this squad — or null for a realm-sponsored [CampaignTier.MARCH]. */
+    private val sponsor: Player?,
     private val onFinished: (CampaignDirector) -> Unit,
 ) {
     val cityId: Int get() = op.cityId
@@ -64,11 +65,14 @@ class CampaignDirector(
     private val allTroops = ArrayList<Npc>()
     private var ticks = 0
 
-    /** The Lord who paid for this squad. */
-    val owner: Player get() = sponsor
+    /** The Lord who paid for this squad, or null for a realm-sponsored march. */
+    val owner: Player? get() = sponsor
 
     /** True if [player] is this squad's sponsor (by name, so it survives a relog within the op). */
-    fun ownedBy(player: Player): Boolean = sponsor.username.equals(player.username, ignoreCase = true)
+    fun ownedBy(player: Player): Boolean = sponsor?.username?.equals(player.username, ignoreCase = true) == true
+
+    /** Where a late joiner rallies to (`::march`): the column's head, or the muster if none stand. */
+    fun rallyTile(world: World): Tile = troops.firstOrNull { isAlive(world, it) }?.tile ?: op.stagingTile
 
     /** True if [tile] is inside this campaign's battlefield (where enemy loot pools to [lootPool]). */
     fun coversBattle(tile: Tile): Boolean = op.battleArea.contains(tile)
@@ -152,7 +156,7 @@ class CampaignDirector(
         // A boss-backing RAID musters ON the sponsor (they escort the player to the boss). A
         // campaign/conquest musters at the target city's staging tile — the front — where the
         // commander is teleported on launch; so it doesn't matter where the player ran the command.
-        val anchor = if (tier == CampaignTier.RAID && sponsor.index >= 0 && !sponsor.isDead()) sponsor.tile else op.stagingTile
+        val anchor = if (tier == CampaignTier.RAID && sponsor != null && sponsor.index >= 0 && !sponsor.isDead()) sponsor.tile else op.stagingTile
         if (marching) {
             // Snap each waypoint to walkable land, then spawn the FIRST wave at the muster; the rest
             // trickle in over the next ticks ([spawnWave]) so the army forms up as a marching column.
@@ -163,10 +167,14 @@ class CampaignDirector(
             repeat(tier.troops) { spawnTroop(world, anchor) }
         }
         logger.info { "Campaign '${op.cityKey}' ${tier.name} [$mode] marching=$marching: ${troops.size}/${tier.troops} '$troopName' mustering at $anchor (start enemies=$startEnemies)." }
-        val cry = if (tier == CampaignTier.RAID)
-            "<col=4f9b4f>${sponsor.username}, ${sponsor.title.display}, sends their men to the fight!</col>"
-        else
-            "<col=4f9b4f>${sponsor.username}, ${sponsor.title.display}, marches a ${tier.display} on ${op.displayName}!</col>"
+        val cry = when {
+            sponsor == null ->
+                "<col=4f9b4f>The Knights of Lumbridge march on ${op.displayName}! Any soldier of the realm may fight beside them — <col=ffae00>::march</col><col=4f9b4f> to rally to the column.</col>"
+            tier == CampaignTier.RAID ->
+                "<col=4f9b4f>${sponsor.username}, ${sponsor.title.display}, sends their men to the fight!</col>"
+            else ->
+                "<col=4f9b4f>${sponsor.username}, ${sponsor.title.display}, marches a ${tier.display} on ${op.displayName}!</col>"
+        }
         broadcast(world, cry)
     }
 
@@ -354,7 +362,7 @@ class CampaignDirector(
      *     world, fall back to holding the objective tile.
      */
     private fun steerFollow(world: World, enemies: List<Npc>) {
-        val leader = sponsor
+        val leader = sponsor ?: return steerAdvance(world, enemies) // realm marches have no leader
         val leaderAlive = leader.index >= 0 && !leader.isDead()
         for (k in troops) {
             val cur = k.getCombatTarget()
@@ -452,12 +460,14 @@ class CampaignDirector(
                 // The boss + its loot already rewarded everyone (BossLoot); the party just disbands.
                 broadcast(world, "<col=4f9b4f>The raid party's work in ${op.displayName} is done.</col>")
             } else {
-                broadcast(world, "<col=ffcc00>${op.displayName} is taken! ${sponsor.username}'s ${tier.display} seizes the spoils.</col>")
+                val whose = sponsor?.let { "${it.username}'s" } ?: "The realm's"
+                broadcast(world, "<col=ffcc00>${op.displayName} is taken! $whose ${tier.display} seizes the spoils.</col>")
                 CapturePayout.award(world, op, tier, participation, sponsor, lootPool)
-                if (sponsor.index >= 0) sponsor.addPoints(PointKind.PRESTIGE, tier.prestige)
+                if (sponsor != null && sponsor.index >= 0) sponsor.addPoints(PointKind.PRESTIGE, tier.prestige)
             }
         } else {
-            broadcast(world, "<col=801700>${sponsor.username}'s ${tier.display} was driven back from ${op.displayName}.</col>")
+            val whose = sponsor?.let { "${it.username}'s" } ?: "The realm's"
+            broadcast(world, "<col=801700>$whose ${tier.display} was driven back from ${op.displayName}.</col>")
         }
         onFinished(this)
     }

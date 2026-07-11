@@ -37,19 +37,20 @@ object CapturePayout {
         op: CampaignOp,
         tier: CampaignTier,
         participation: Map<Player, Int>,
-        sponsor: Player,
+        /** The commanding Lord — or null for a realm-sponsored MARCH (no stake, no tithe). */
+        sponsor: Player?,
         lootPool: Long,
     ) {
         // The commander recoups their war-stake on a WIN — they only forfeit it if the campaign fails.
         // Banked on top of their share, so a successful campaign returns the cost plus profit.
-        if (sponsor.index >= 0 && tier.cost > 0) {
+        if (sponsor != null && sponsor.index >= 0 && tier.cost > 0) {
             bankCoins(world, sponsor, tier.cost.toLong())
             sponsor.message("<col=ffae00>${op.displayName} is taken — your ${fmt(tier.cost.toLong())} coin war-stake is returned.</col>")
         }
 
         val contrib = participation.filterKeys { it.index >= 0 && !it.isDead() }
         if (contrib.isEmpty()) {
-            if (sponsor.index >= 0) sponsor.message("<col=801700>${op.displayName} fell, but no soldier of yours stood to claim the spoils.</col>")
+            if (sponsor != null && sponsor.index >= 0) sponsor.message("<col=801700>${op.displayName} fell, but no soldier of yours stood to claim the spoils.</col>")
             return
         }
         val pool = lootPool.coerceAtLeast(0)
@@ -59,8 +60,8 @@ object CapturePayout {
         }
 
         val total = contrib.values.sum().coerceAtLeast(1)
-        val tithe = if (sponsor.index >= 0) (pool * TITHE).toLong().coerceAtLeast(0) else 0
-        if (tithe > 0) {
+        val tithe = if (sponsor != null && sponsor.index >= 0) (pool * TITHE).toLong().coerceAtLeast(0) else 0
+        if (sponsor != null && tithe > 0) {
             bankCoins(world, sponsor, tithe)
             sponsor.message("<col=ffae00>Your commander's tithe from ${op.displayName}: ${fmt(tithe)} coins, banked.</col>")
         }
