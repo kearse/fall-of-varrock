@@ -23,6 +23,38 @@ docker compose up -d mongo forum
 3. Create the **admin account** (this is the forum super-admin; separate from game accounts).
 4. Finish — NodeBB builds and starts. You're in.
 
+## Installer reappeared? Reconnecting to the existing forum
+
+If `forum.<domain>` greets you with the **NodeBB Installer** again, the container lost its
+`config.json` (it was recreated and the config wasn't in the persisted volume — fixed in
+compose by mounting `nodebb-config:/opt/config`). **Your forum data is safe**: users, posts
+and settings all live in Mongo's `nodebb` database, not in that file. Re-running the wizard
+against the same database reconnects to everything.
+
+Fill the wizard like this:
+
+| Field | Value |
+| --- | --- |
+| Web Address (URL) | `https://forum.<domain>` — **https**, not the pre-filled http |
+| Admin username/email/password | Anything — ignored when the database already has an admin |
+| Database Type | MongoDB |
+| Host | `mongo` |
+| Port | `27017` |
+| MongoDB username / password | **Blank** — our Mongo runs without auth. Clear the pre-filled `nodebb`/`nodebb` defaults or "Test Database" fails |
+| Database name | `nodebb` (must match the original install to keep the data) |
+
+Then pull the fixed compose file, recreate the service so the config persists from now on,
+and check the SSO plugin:
+
+```bash
+docker compose up -d --force-recreate forum
+```
+
+Plugins are installed into the container filesystem (not a volume), so after a recreate the
+**session-sharing** plugin may be gone even though its *settings* survive in the database.
+If site logins stop carrying over, reinstall/activate it per the SSO section below —
+the saved settings reappear as soon as the plugin is active.
+
 ## Wire up single sign-on (game/website accounts → forum)
 
 The website issues a signed JWT session cookie named **`kol_session`** (HS256, signed with
