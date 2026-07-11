@@ -39,7 +39,8 @@ class LofSuppliesOverlay extends Overlay
 	{
 		this.client = client;
 		this.config = config;
-		setPosition(OverlayPosition.TOP_RIGHT);
+		// Bottom-right of the chat area (movable, so players can reposition it).
+		setPosition(OverlayPosition.ABOVE_CHATBOX_RIGHT);
 		setLayer(OverlayLayer.ABOVE_WIDGETS);
 		setMovable(true);
 		setSnappable(true);
