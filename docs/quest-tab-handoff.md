@@ -42,12 +42,18 @@ findings that shape everything below:
 to not-started/in-progress/complete from real quest state). So the proof is just the cache half:
 
 ```powershell
-# from the repo root, JDK 17
-.\Alter\gradlew.bat -p .\Alter :game-server:questTable -PquestArgs="inspect"   # see current names
-.\Alter\gradlew.bat -p .\Alter :game-server:questTable -PquestArgs="relabel"   # back up + rename
-# ...restart the server so it serves the edited cache, then log in.
-.\Alter\gradlew.bat -p .\Alter :game-server:questTable -PquestArgs="restore"   # roll back if needed
+# from the repo root, JDK 17. Point at the cache YOUR SERVER READS — a fresh git clone's
+# data/cache is empty, so pass the install path (spaces are fine; the tool rejoins them):
+$c = "C:/Program Files (x86)/Kearse RSPS/Alter/data/cache"
+.\Alter\gradlew.bat -p .\Alter :game-server:questTable -PquestArgs="inspect $c"   # see current names
+.\Alter\gradlew.bat -p .\Alter :game-server:questTable -PquestArgs="relabel $c"   # back up + rename
+# ...restart the server (the one that serves that cache), then log in.
+.\Alter\gradlew.bat -p .\Alter :game-server:questTable -PquestArgs="restore $c"   # roll back if needed
 ```
+
+(Omit the path to use the default `data/cache` if you run the server from the clone with the cache
+copied in. Each row's pristine bytes are backed up to `Alter/data/cache-backups/dbrow_<id>.bin`
+before the first rewrite; `restore` reads them back, so run it from the same repo root.)
 
 `relabel` backs up each row to `Alter/data/cache-backups/dbrow_<id>.bin` first, rewrites only the
 two name columns (no indexed column touched → **no index rebuild, minimal risk**), and verifies by

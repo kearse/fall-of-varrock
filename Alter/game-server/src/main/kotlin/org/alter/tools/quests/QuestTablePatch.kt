@@ -71,8 +71,16 @@ private val PLAN = listOf(
 
 fun main(args: Array<String>) {
     val mode = args.getOrNull(0)?.lowercase() ?: "inspect"
-    val cachePath = args.getOrNull(1) ?: CACHE_PATH
+    // Everything after the mode is the cache path, rejoined with spaces — the Gradle task splits
+    // -PquestArgs on spaces, so a Windows path like "C:\Program Files (x86)\..." arrives in pieces.
+    val cachePath = if (args.size > 1) args.drop(1).joinToString(" ") else CACHE_PATH
     println("quest-table tool: mode=$mode cache=${File(cachePath).absolutePath}")
+    if (!File(cachePath, "main_file_cache.dat2").exists()) {
+        println("!! No cache at that path (looked for main_file_cache.dat2). A fresh git clone has an")
+        println("   empty data/cache — point at your install cache, e.g.:")
+        println("   gradlew :game-server:questTable -PquestArgs=\"relabel C:/Program Files (x86)/Kearse RSPS/Alter/data/cache\"")
+        return
+    }
     when (mode) {
         "inspect" -> inspect(cachePath)
         "relabel" -> relabel(cachePath)
