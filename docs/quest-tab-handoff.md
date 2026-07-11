@@ -8,7 +8,71 @@
 > `Alter/data/cache` and on the VPS at `/opt/kol/data/cache`).
 >
 > Companion doc: `docs/custom-quests.md` (what the Quest Journal already does).
-> **Phase 1 (recon) is tooled and ready to run — start at §3.**
+> **Recon is DONE (dump analysed). Phase 1 (relabel proof) is tooled and ready — start at §0.**
+
+---
+
+## 0. Recon findings + Phase 1 relabel (do this first)
+
+The quest table was dumped from the live rev-228 cache (`quest-table-dump.json`) and analysed. Key
+findings that shape everything below:
+
+- **The quest table (DBTable 0) has 198 rows, one per OSRS quest.** Column meanings decoded:
+  `col0` = the quest id (unique 1-198, this is what `QUEST_STATUS_GET` keys on), `col1` = hidden
+  sort name, `col2` = displayed name, `col6` = category, `col7` = difficulty (0-4), `col8` =
+  quest points, `col9` = release date, `col13` = start coord, `col14` = start NPC, `col16` = map
+  element, `col19` ≈ completion value, `col21` = parent quest (RFD sub-quests only), `col23` =
+  skill reqs, `col25` = prerequisite quests, `col37` = reward blurb.
+- **There is NO varbit/varp column.** Row colour (not-started / in-progress / finished) is resolved
+  by the compiled clientscript `QUEST_STATUS_GET(col0)`, which maps the quest id → that quest's
+  progress varp internally. We can't repoint that to our own varp without editing cs2.
+- **Therefore: reuse existing quest ids.** Relabel a simple OSRS quest's row to our quest name and
+  drive that quest's varp from the server — the stock tab then colours it for us. Verified varps
+  for good reuse candidates (all classic F2P, single linear varp, unused by our content):
+
+  | Our quest | Reused OSRS quest | DBROW id | quest id (col0) | progress varp | complete val |
+  |---|---|---|---|---|---|
+  | Recruit Trials | Cook's Assistant | 17 | 1 | **29** | 2 |
+  | War-Prep I — Magic | Doric's Quest | 30 | 11 | **31** | 100 |
+  | War-Prep II — Ranged | The Restless Ghost | 120 | 3 | 107 | 5 |
+  | War-Prep III — Survival | Sheep Shearer | 131 | 5 | 179 | 21 |
+  | King of Lumbridge | Witch's Potion | 161 | 13 | 67 | 3 |
+
+**The server already drives the first two varps** (`QuestJournal.syncNativeTab` writes varp 29/31
+to not-started/in-progress/complete from real quest state). So the proof is just the cache half:
+
+```powershell
+# from the repo root, JDK 17
+.\Alter\gradlew.bat -p .\Alter :game-server:questTable -PquestArgs="inspect"   # see current names
+.\Alter\gradlew.bat -p .\Alter :game-server:questTable -PquestArgs="relabel"   # back up + rename
+# ...restart the server so it serves the edited cache, then log in.
+.\Alter\gradlew.bat -p .\Alter :game-server:questTable -PquestArgs="restore"   # roll back if needed
+```
+
+`relabel` backs up each row to `Alter/data/cache-backups/dbrow_<id>.bin` first, rewrites only the
+two name columns (no indexed column touched → **no index rebuild, minimal risk**), and verifies by
+re-decoding. It renames only the two LIVE quests (Cook's Assistant → "Recruit Trials", Doric's →
+"War-Prep I — Magic"); the other OSRS quests still list unchanged — that's expected in Phase 1.
+
+**Proof to confirm the whole mechanism works** (do before Phase 2): after `relabel` + restart, make
+a fresh account. The quest tab should show "Recruit Trials" in **red**; as you talk to the Sergeant
+and progress it should go **yellow**, and **green** on completion. If it colours correctly, the
+col0→varp→colour chain is confirmed and Phase 2 is safe to build. If it doesn't, the status
+resolution differs from the assumption above and needs a clientscript/enum dump — stop and report.
+
+## Phase 2 — list ONLY FoV quests (build after the proof passes)
+
+Once Phase 1 is confirmed, extend the tool with a `replace` mode that removes the other ~196 DBROW
+rows and rebuilds the DBTableIndex (js5 index 21, archive 0) so the tab lists only our quests:
+1. Back up the whole cache (zip) first.
+2. Keep the reused rows (17, 30, 120, 131, 161); remove every other `tableId == 0` DBROW.
+3. Rebuild index-21 archive 0: the **master** file (0) listing exactly the kept row ids, plus each
+   present column index file (`column0/4/5/6/7/10/11/16/21/36` per the dump) with the same tuple
+   shapes — the clientscripts iterate quests via the master index, so a stale index shows the old
+   set. The index byte format is in §2 and implemented in `QuestTableDump.decodeTableIndex`.
+4. Fix the summary counts in `CharacterSummaryPlugin.kt` (`@TODO` at ~line 28-31) to our quest
+   count, and add an `onButton(399, 7)` handler to open the sidebar Journal on a row click.
+5. Relabel all five rows (including the three future teasers) as part of the replace.
 
 ---
 
