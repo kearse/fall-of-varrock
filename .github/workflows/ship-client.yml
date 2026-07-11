@@ -17,6 +17,12 @@ on:
       - "client/**"
       - "client-build/PatchClient.java"
       - ".github/workflows/ship-client.yml"
+  # PRs touching client code build + patch as a check, but never upload.
+  pull_request:
+    paths:
+      - "client/**"
+      - "client-build/PatchClient.java"
+      - ".github/workflows/ship-client.yml"
   workflow_dispatch:
     inputs:
       dry_run:
@@ -25,7 +31,7 @@ on:
         default: false
 
 concurrency:
-  group: ship-client
+  group: ship-client-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
@@ -62,7 +68,7 @@ jobs:
             fov-client.jar.sha256
 
       - name: Ship to VPS
-        if: ${{ github.event_name == 'push' || !inputs.dry_run }}
+        if: ${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && !inputs.dry_run) }}
         run: |
           install -m 600 /dev/null deploy_key
           printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > deploy_key
@@ -82,7 +88,7 @@ jobs:
              mv fov-client.jar.sha256.new fov-client.jar.sha256"
 
       - name: Verify hosted files
-        if: ${{ github.event_name == 'push' || !inputs.dry_run }}
+        if: ${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && !inputs.dry_run) }}
         run: |
           REMOTE=$(curl -fsS https://fallofvarrock.com/client/fov-client.jar.sha256)
           LOCAL=$(cat fov-client.jar.sha256)
