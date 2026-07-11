@@ -16,6 +16,11 @@ on:
         required: false
         default: ""
 
+env:
+  # Bump on every installer rollout: Windows treats a same-version reinstall
+  # as already-installed and may skip files.
+  APP_VERSION: "1.0.1"
+
 jobs:
   package:
     strategy:
@@ -118,7 +123,7 @@ jobs:
           "$JPACKAGE" \
             --type ${{ matrix.type }} \
             --name "Fall of Varrock" \
-            --app-version 1.0.0 \
+            --app-version "$APP_VERSION" \
             --vendor "Fall of Varrock" \
             --icon "$ICON" \
             --input input \
@@ -154,3 +159,25 @@ jobs:
             out/*.exe
             out/*.dmg
             out/*.tar.gz
+
+  # Publish the installers where the website's /play buttons point:
+  # /opt/kol/client/download/ on the VPS (see CLIENT_*_URL in docker-compose.prod.yml).
+  ship:
+    needs: package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: art
+
+      - name: Ship installers to VPS
+        run: |
+          set -e
+          mkdir -p up
+          cp "art/fov-client-windows-latest/Fall of Varrock-${APP_VERSION}.exe" "up/FallOfVarrock-Setup.exe"
+          cp "art/fov-client-macos-latest/Fall of Varrock-${APP_VERSION}.dmg" "up/FallOfVarrock.dmg"
+          cp "art/fov-client-ubuntu-latest/FallOfVarrock-linux-x86_64.tar.gz" "up/FallOfVarrock-linux-x86_64.tar.gz"
+          install -m 600 /dev/null deploy_key
+          printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > deploy_key
+          scp -i deploy_key -o StrictHostKeyChecking=accept-new up/* \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:/opt/kol/client/download/"

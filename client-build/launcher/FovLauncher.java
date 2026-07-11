@@ -76,7 +76,13 @@ public final class FovLauncher {
 
     private static void launch(Path jar, String[] args) throws Exception {
         System.setProperty("runelite.launcher.version", "2.7.4-SNAPSHOT");
-        URLClassLoader cl = new URLClassLoader(new URL[]{jar.toUri().toURL()}, FovLauncher.class.getClassLoader());
+        // Parent = PLATFORM classloader, deliberately NOT this class's loader: jpackage
+        // puts every jar in the app dir on the app classpath, including the bundled seed
+        // fov-client.jar. With the app classloader as parent, parent-first delegation
+        // resolved every net.runelite class from the STALE SEED and the freshly updated
+        // ~/.fov-home jar was never actually used (clients were pinned to install-day
+        // code). The platform loader has all JDK classes and none of the app's.
+        URLClassLoader cl = new URLClassLoader(new URL[]{jar.toUri().toURL()}, ClassLoader.getPlatformClassLoader());
         Thread.currentThread().setContextClassLoader(cl);
         Class<?> rl = Class.forName(MAIN_CLASS, true, cl);
         Method main = rl.getMethod("main", String[].class);
