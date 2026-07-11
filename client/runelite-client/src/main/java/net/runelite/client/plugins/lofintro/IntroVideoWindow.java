@@ -1,30 +1,34 @@
 /*
- * Unskippable video window covering the game client.
+ * Unskippable video overlay docked over the game viewport.
  *
  * Swing shell + JavaFX media pipeline:
- *   - undecorated JDialog, APPLICATION_MODAL (blocks input to every other window of
- *     the app, i.e. the game), always-on-top, sized to the client window (full screen
- *     only as a fallback when the window can't be found), hidden cursor
+ *   - undecorated modeless JDialog OWNED by the client frame, sized to the game
+ *     canvas and tracking it live. Owned windows always stack above their owner and
+ *     minimize/hide with it, so the video behaves like part of the client: the player
+ *     can move, resize, minimize the client or alt-tab to other apps — but the game
+ *     viewport itself stays covered and there is no way to dismiss the video.
+ *     (Deliberately NOT application-modal / always-on-top: that made the video hold
+ *     the whole desktop hostage. And deliberately not a Swing overlay inside the
+ *     frame: the game canvas is a heavyweight component blitting via BufferStrategy,
+ *     which repaints over lightweight components.)
  *   - JFXPanel hosting a MediaView, letterboxed on black
- *   - closes itself on end-of-media; there is no user-facing way to close it
- *   - failsafes so a decode stall can never trap the player forever: a hard cap from
- *     the moment the window shows, tightened to duration+grace once the media reports
- *     its length; any player/media error also closes it
+ *   - never steals keyboard focus (focusableWindowState=false)
+ *   - closes itself on end-of-media; failsafes so a decode stall can never trap the
+ *     player: any player/media error, duration+grace once known, and a hard cap
  *
- * Everything FX is reached via Platform.runLater; the dialog itself lives on the EDT.
- * If the FX toolkit cannot start at all (e.g. no natives for this OS in the shaded
- * jar), play() logs and returns without showing anything.
+ * Everything FX is reached via Platform.runLater; the dialog lives on the EDT. If the
+ * FX toolkit cannot start at all (e.g. no natives for this OS in the shaded jar),
+ * play() logs and returns without showing anything.
  */
 package net.runelite.client.plugins.lofintro;
 
-import java.awt.Cursor;
-import java.awt.Dialog;
-import java.awt.GraphicsConfiguration;
-import java.awt.GraphicsEnvironment;
+import java.awt.Canvas;
 import java.awt.Point;
-import java.awt.Toolkit;
+import java.awt.Rectangle;
 import java.awt.Window;
-import java.awt.image.BufferedImage;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
 import java.io.File;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -43,7 +47,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 final class IntroVideoWindow
 {
-	/** Absolute ceiling on how long the window may exist, whatever the media does. */
+	/** Absolute ceiling on how long the overlay may exist, whatever the media does. */
 	private static final int HARD_CAP_MS = 10 * 60 * 1000;
 
 	/** Extra allowance past the reported media duration before force-closing. */
@@ -55,16 +59,21 @@ final class IntroVideoWindow
 	{
 	}
 
-	/** Show the video full-screen and block the game until it finishes. Call on the EDT. */
-	static void play(Window owner, File videoFile)
+	/** Dock the video over the game canvas until it finishes. Call on the EDT. */
+	static void play(Canvas canvas, File videoFile)
 	{
+		if (canvas == null || !canvas.isShowing())
+		{
+			log.warn("intro video skipped: game canvas not available");
+			return;
+		}
 		if (!SHOWING.compareAndSet(false, true))
 		{
 			return;
 		}
 		try
 		{
-			show(owner, videoFile);
+			show(canvas, videoFile);
 		}
 		catch (Throwable t)
 		{
@@ -74,42 +83,56 @@ final class IntroVideoWindow
 		}
 	}
 
-	private static void show(Window owner, File videoFile)
+	private static void show(Canvas canvas, File videoFile)
 	{
 		final JFXPanel fxPanel = new JFXPanel(); // boots the FX toolkit
 		Platform.setImplicitExit(false);
 
-		final JDialog dialog = new JDialog(owner, Dialog.ModalityType.APPLICATION_MODAL);
+		final Window frame = SwingUtilities.getWindowAncestor(canvas);
+		final JDialog dialog = new JDialog(frame);
 		dialog.setUndecorated(true);
-		dialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE); // Alt+F4 does nothing
-		dialog.setAlwaysOnTop(true);
+		dialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
+		// Never take keyboard focus: the client keeps behaving normally around the video.
+		dialog.setFocusableWindowState(false);
+		dialog.setAutoRequestFocus(false);
 		dialog.getContentPane().setBackground(java.awt.Color.BLACK);
 		dialog.setBackground(java.awt.Color.BLACK);
-
-		if (owner != null)
-		{
-			// Cover the game window exactly (the modal blocks moving/resizing it while
-			// the video runs, so the overlay stays aligned). Not the whole screen: a
-			// full-desktop takeover reads as hostile on a first launch, and the video
-			// is 720p — client-sized playback is also crisper than a 4K upscale.
-			dialog.setBounds(owner.getBounds());
-		}
-		else
-		{
-			final GraphicsConfiguration gc =
-				GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDefaultConfiguration();
-			dialog.setBounds(gc.getBounds());
-		}
-
-		final Cursor blank = Toolkit.getDefaultToolkit().createCustomCursor(
-			new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB), new Point(0, 0), "blank");
-		dialog.setCursor(blank);
-		fxPanel.setCursor(blank);
 		fxPanel.setBackground(java.awt.Color.BLACK);
 		dialog.add(fxPanel);
 
+		// Follow the game viewport: cover exactly the canvas, wherever it goes.
+		final Runnable reposition = () ->
+		{
+			if (canvas.isShowing())
+			{
+				final Point p = canvas.getLocationOnScreen();
+				dialog.setBounds(new Rectangle(p.x, p.y, canvas.getWidth(), canvas.getHeight()));
+			}
+		};
+		final ComponentListener tracker = new ComponentAdapter()
+		{
+			@Override
+			public void componentResized(ComponentEvent e)
+			{
+				reposition.run();
+			}
+
+			@Override
+			public void componentMoved(ComponentEvent e)
+			{
+				reposition.run();
+			}
+		};
+		canvas.addComponentListener(tracker);
+		if (frame != null)
+		{
+			frame.addComponentListener(tracker);
+		}
+
 		final AtomicReference<MediaPlayer> playerRef = new AtomicReference<>();
 		final AtomicBoolean closed = new AtomicBoolean();
+		final AtomicReference<Runnable> closeRef = new AtomicReference<>();
+		final Timer hardCap = new Timer(HARD_CAP_MS, e -> closeRef.get().run());
 		final Runnable close = () ->
 		{
 			if (!closed.compareAndSet(false, true))
@@ -133,13 +156,19 @@ final class IntroVideoWindow
 			});
 			SwingUtilities.invokeLater(() ->
 			{
+				hardCap.stop();
+				canvas.removeComponentListener(tracker);
+				if (frame != null)
+				{
+					frame.removeComponentListener(tracker);
+				}
 				dialog.setVisible(false);
 				dialog.dispose();
 				SHOWING.set(false);
 			});
 		};
 
-		final Timer hardCap = new Timer(HARD_CAP_MS, e -> close.run());
+		closeRef.set(close);
 		hardCap.setRepeats(false);
 		hardCap.start();
 
@@ -179,10 +208,13 @@ final class IntroVideoWindow
 						// Tighten the failsafe: close shortly after the video should have ended.
 						SwingUtilities.invokeLater(() ->
 						{
-							hardCap.stop();
-							final Timer t = new Timer((int) Math.min(HARD_CAP_MS, durationMs + END_GRACE_MS), e -> close.run());
-							t.setRepeats(false);
-							t.start();
+							if (!closed.get())
+							{
+								hardCap.stop();
+								final Timer t = new Timer((int) Math.min(HARD_CAP_MS, durationMs + END_GRACE_MS), ev -> close.run());
+								t.setRepeats(false);
+								t.start();
+							}
 						});
 					}
 				});
@@ -195,8 +227,7 @@ final class IntroVideoWindow
 			}
 		});
 
-		// Modal: blocks here (pumping events) until close() disposes the dialog.
-		dialog.setVisible(true);
-		hardCap.stop();
+		reposition.run();
+		dialog.setVisible(true); // modeless: returns immediately, the video runs on its own
 	}
 }

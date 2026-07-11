@@ -1,7 +1,9 @@
 # First-login intro video
 
-New accounts see the Fall of Varrock intro film over the game window on their **first
-ever login** — unskippable, closes itself when it ends. No account ever sees it twice.
+New accounts see the Fall of Varrock intro film docked over the game viewport on their
+**first ever login** — unskippable, closes itself when it ends. The client window stays
+usable (move, minimize, resize, alt-tab); only the game itself is covered. No account
+ever sees it twice.
 
 ## How it works
 
@@ -22,9 +24,11 @@ IntroVideoPlugin (server)  ──BROADCAST "FOV_INTRO:play"──►  lofintro (
   so players can't disable it to skip the intro). Catches the trigger line, rewrites it
   in the chatbox to a welcome message, and plays the video via JavaFX Media (H.264/AAC),
   shaded into `fov-client.jar` (Windows natives self-extract to `~/.openjfx/cache`).
-  The window is undecorated, APPLICATION_MODAL (game input blocked), always-on-top,
-  cursor hidden, Alt+F4 ignored. Failsafes: any media error, or duration+15 s, or a
-  10-minute hard cap closes it — a playback problem can never trap a player.
+  The overlay is an undecorated modeless dialog OWNED by the client frame, sized to and
+  tracking the game canvas — it stacks above the client, minimizes with it, and never
+  steals focus, so the desktop stays fully usable while the game viewport is covered.
+  Failsafes: any media error, or duration+15 s, or a 10-minute hard cap closes it — a
+  playback problem can never trap a player.
 - **The announcement ticker** (`lofannouncements`) explicitly ignores `FOV_INTRO:*`
   lines so the trigger never renders as a headline.
 

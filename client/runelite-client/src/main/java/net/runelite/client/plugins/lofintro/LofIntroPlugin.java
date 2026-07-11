@@ -4,8 +4,9 @@
  * The server sends a one-shot "FOV_INTRO:play" BROADCAST chat line to brand-new
  * accounts on their first login (see the server-side IntroVideoPlugin). This plugin
  * catches that trigger, hides the magic string from the chatbox, and plays the intro
- * video over the game window: undecorated, application-modal, always-on-top, no way
- * to skip. The window closes itself when the video ends.
+ * video docked over the game viewport (the client frame stays usable: move, minimize,
+ * resize all work — but the game itself stays covered and the video can't be
+ * dismissed). The overlay closes itself when the video ends.
  *
  * The video itself is NOT baked into the client. It is fetched from
  * https://fallofvarrock.com/client/intro.mp4 into ~/.fov-home/client/intro/ with
@@ -25,8 +26,6 @@ import java.io.File;
 import java.util.concurrent.ScheduledExecutorService;
 import javax.inject.Inject;
 import javax.swing.SwingUtilities;
-import java.awt.Canvas;
-import java.awt.Window;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.ChatMessageType;
 import net.runelite.api.Client;
@@ -139,12 +138,7 @@ public class LofIntroPlugin extends Plugin
 				log.warn("intro video unavailable (download failed and no cached copy) — skipping intro");
 				return;
 			}
-			SwingUtilities.invokeLater(() ->
-			{
-				final Canvas canvas = client.getCanvas();
-				final Window owner = canvas != null ? SwingUtilities.getWindowAncestor(canvas) : null;
-				IntroVideoWindow.play(owner, video);
-			});
+			SwingUtilities.invokeLater(() -> IntroVideoWindow.play(client.getCanvas(), video));
 		});
 	}
 }
