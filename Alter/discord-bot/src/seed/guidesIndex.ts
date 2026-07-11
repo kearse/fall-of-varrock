@@ -4,8 +4,9 @@ import { config } from "../config.js";
 /**
  * The #guides index: a single message with a card per guide and a row of
  * "Read full guide ↗" link buttons pointing at the website (SITE_URL/guides/<slug>),
- * which is the single source of truth for long-form guides. Idempotent (matched
- * by the header embed title), like the other panels. Slugs MUST match
+ * which is the single source of truth for long-form guides. Idempotent and
+ * self-refreshing (matched by the header embed title): re-running /seed edits
+ * the existing index in place, so URL/copy changes propagate. Slugs MUST match
  * web/scripts/seed-guides.ts.
  */
 
@@ -56,12 +57,11 @@ function guideUrl(slug: string): string {
   return `${config.siteUrl}/guides/${slug}`;
 }
 
-export async function postGuidesIndexIfMissing(channel: TextChannel): Promise<boolean> {
+export async function postGuidesIndex(channel: TextChannel): Promise<"posted" | "updated"> {
   const recent = await channel.messages.fetch({ limit: 25 }).catch(() => null);
-  const exists = recent?.some(
+  const existing = recent?.find(
     (m) => m.author.id === channel.client.user?.id && m.embeds.some((e) => e.title === HEADER_TITLE),
   );
-  if (exists) return false;
 
   const header = new EmbedBuilder()
     .setColor(0xd4af37)
@@ -78,6 +78,11 @@ export async function postGuidesIndexIfMissing(channel: TextChannel): Promise<bo
     row.addComponents(new ButtonBuilder().setStyle(ButtonStyle.Link).setEmoji(g.emoji).setLabel(g.title).setURL(guideUrl(g.slug)));
   }
 
-  await channel.send({ embeds: [header, ...cards], components: [row] });
-  return true;
+  const payload = { embeds: [header, ...cards], components: [row] };
+  if (existing) {
+    await existing.edit(payload);
+    return "updated";
+  }
+  await channel.send(payload);
+  return "posted";
 }

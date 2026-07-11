@@ -35,6 +35,12 @@ services:
       NEXT_PUBLIC_SITE_NAME: Fall of Varrock
       NEXT_PUBLIC_SITE_URL: ${SITE_URL:-http://localhost:3000}
       NEXT_PUBLIC_GAME_WORLD_HOST: ${GAME_WORLD_HOST:-localhost}
+      # Client download links on /play (empty = "Building…" cards). The
+      # discord-bot service reuses the same values for its #download buttons.
+      CLIENT_WINDOWS_URL: ${CLIENT_WINDOWS_URL:-}
+      CLIENT_MAC_URL: ${CLIENT_MAC_URL:-}
+      CLIENT_LINUX_URL: ${CLIENT_LINUX_URL:-}
+      CLIENT_JAR_URL: ${CLIENT_JAR_URL:-}
       DISCORD_WEBHOOK_URL: ${DISCORD_WEBHOOK_URL:-}
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
@@ -58,6 +64,11 @@ services:
       MONGODB_URI: mongodb://mongo:27017
       MONGODB_DB: lumbridge
       SITE_URL: ${SITE_URL:-http://localhost:3000}
+      # Direct client download links for the #download buttons (empty = hidden).
+      DOWNLOAD_WINDOWS: ${CLIENT_WINDOWS_URL:-}
+      DOWNLOAD_MAC: ${CLIENT_MAC_URL:-}
+      DOWNLOAD_LINUX: ${CLIENT_LINUX_URL:-}
+      DOWNLOAD_JAR: ${CLIENT_JAR_URL:-}
       DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN:-}
       DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID:-}
       DISCORD_GUILD_ID: ${DISCORD_GUILD_ID:-}

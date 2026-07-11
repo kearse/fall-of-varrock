@@ -13,7 +13,7 @@ import { syncAllRoles } from "./roles/sync.js";
 import { runSetup } from "./setup/serverSetup.js";
 import { postTicketPanelIfMissing } from "./tickets/tickets.js";
 import { seedContent } from "./seed/seed.js";
-import { postGuidesIndexIfMissing } from "./seed/guidesIndex.js";
+import { postGuidesIndex } from "./seed/guidesIndex.js";
 import { postRolesPanelIfMissing } from "./engagement/engagement.js";
 import { endLatest, parseDuration, rerollLatest, startGiveaway } from "./giveaways/giveaways.js";
 import { CH, findText } from "./guild.js";
@@ -106,9 +106,10 @@ async function cmdSeed(i: ChatInputCommandInteraction) {
   await i.deferReply({ ephemeral: true });
   const res = await seedContent(i.guild);
   const guidesCh = findText(i.guild, CH.guides);
-  if (guidesCh) await postGuidesIndexIfMissing(guidesCh).catch(() => {});
-  const lines = [`Seeded ${res.posted.length} channel(s)${guidesCh ? " + guides index" : ""}.`];
-  if (res.skipped.length) lines.push(`Skipped (already posted): ${res.skipped.join(", ")}`);
+  if (guidesCh) await postGuidesIndex(guidesCh).catch(() => {});
+  const lines = [
+    `Seeded ${res.posted.length} new channel(s), refreshed ${res.updated.length} in place${guidesCh ? " + guides index" : ""}.`,
+  ];
   if (res.missing.length) lines.push(`⚠️ Missing channels (run /setup first): ${res.missing.join(", ")}`);
   await i.editReply(lines.join("\n"));
 }
@@ -238,13 +239,13 @@ async function cmdSetup(i: ChatInputCommandInteraction) {
   // Fill the info channels, the guides index, and the self-roles panel in one go.
   const seed = await seedContent(i.guild);
   const guidesCh = findText(i.guild, CH.guides);
-  if (guidesCh) await postGuidesIndexIfMissing(guidesCh).catch(() => {});
+  if (guidesCh) await postGuidesIndex(guidesCh).catch(() => {});
   const rolesCh = findText(i.guild, CH.roles);
   if (rolesCh) await postRolesPanelIfMissing(rolesCh).catch(() => {});
 
   const lines: string[] = [];
   lines.push(`**Setup complete.** Created ${res.rolesCreated.length} role(s), ${res.channelsCreated.length} channel(s).`);
-  lines.push(`Seeded ${seed.posted.length} info channel(s)${seed.skipped.length ? `, ${seed.skipped.length} already had content` : ""}.`);
+  lines.push(`Seeded ${seed.posted.length} info channel(s)${seed.updated.length ? `, refreshed ${seed.updated.length} in place` : ""}.`);
   if (res.feeds.length) {
     lines.push("\n**Add these to the bot's `.env` so feeds post to the right channels:**", "```");
     for (const f of res.feeds) lines.push(`${f.envVar}=${f.channelId}   # ${f.channelName}`);

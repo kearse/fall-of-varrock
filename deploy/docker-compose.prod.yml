@@ -84,6 +84,12 @@ services:
       MONGODB_URI: mongodb://mongo:27017
       MONGODB_DB: lumbridge
       SITE_URL: https://${DOMAIN}
+      # Same client artifacts the website's /play page serves (hosted by Caddy) —
+      # keep in sync with the web service's CLIENT_*_URL above.
+      DOWNLOAD_WINDOWS: https://${DOMAIN}/client/download/FallOfVarrock-Setup.exe
+      DOWNLOAD_MAC: https://${DOMAIN}/client/download/FallOfVarrock.dmg
+      DOWNLOAD_LINUX: https://${DOMAIN}/client/download/FallOfVarrock-linux-x86_64.tar.gz
+      DOWNLOAD_JAR: https://${DOMAIN}/client/fov-client.jar
       DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN:-}
       DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID:-}
       DISCORD_GUILD_ID: ${DISCORD_GUILD_ID:-}

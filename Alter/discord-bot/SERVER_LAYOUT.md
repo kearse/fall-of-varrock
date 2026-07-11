@@ -144,8 +144,10 @@ their Manage Threads permission. A **Close ticket** button locks + archives it.
 - **Seed content** — polished embeds (with link buttons) in `#welcome`, `#rules`,
   `#download`, `#how-to-play`, `#store`, `#donations`, `#link-account`,
   `#bot-commands`, `#market`, `#bug-reports`, `#check-eligibility`. All copy lives
-  in [`src/seed/content.ts`](./src/seed/content.ts); edit it and re-run `/seed`
-  (idempotent — won't duplicate). `/setup` runs the seed automatically.
+  in [`src/seed/content.ts`](./src/seed/content.ts); edit it and re-run `/seed` —
+  existing posts are refreshed **in place** (matched by embed title), so copy and
+  URL changes propagate without deleting anything. `/setup` runs the seed
+  automatically.
 - **#guides index** — `#guides` gets a card per guide with a "Read full guide ↗"
   link button. Full guides live on the **website** (`/guides`), seeded via
   `web/scripts/seed-guides.ts` (`npm run seed:guides`); the Discord index just
