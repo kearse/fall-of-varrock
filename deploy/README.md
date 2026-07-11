@@ -18,6 +18,7 @@ On the VPS everything lives under **`/opt/kol/`**:
 ├── docker-compose.prod.yml   # shipped by CI each deploy
 ├── Caddyfile                 # shipped by CI each deploy
 ├── backup.sh                 # shipped by CI each deploy
+├── server.sh                 # ops helper (restart/redeploy/status/logs) — shipped by CI
 ├── .env                      # secrets — created BY HAND, never in git
 ├── .deployed-tag             # image tag currently live (rollback reference)
 ├── runtime/                  # server-only files, never in git
@@ -107,12 +108,25 @@ NodeBB's first-boot setup wizard + the Discord bot `/setup` step (see
 
 ## Everyday operations
 
-- **Deploy**: merge/push to `main`. Done.
+- **Deploy / rebuild from source**: merge/push to `main`. Done. (Or Actions →
+  Deploy → *Run workflow* with an empty tag to rebuild the current `main`.)
+- **Restart / redeploy / status / logs — no SSH needed**: Actions → **Server Ops** →
+  *Run workflow*. Works from any browser or the GitHub mobile app. Pick an action:
+  - `restart` — bounce containers in place (fastest; no image pull)
+  - `redeploy` — re-pull the currently deployed tag and recreate containers
+    (fixes a wedged container or a bad in-place state)
+  - `stop` / `start` / `status` / `logs`
+  and optionally a single service (`game`, `web`, `discord-bot`, `forum`, `caddy`,
+  `mongo`) — `all` targets the whole stack. It never builds images; that's Deploy.
 - **Rollback**: Actions → Deploy → *Run workflow* → set `image_tag` to a previous
   deploy's 7-char SHA (visible in old run logs, `/opt/kol/.deployed-tag` history, or
   the Packages page). No build happens; the old images are redeployed in ~1 minute.
-- **Logs**: `ssh root@<ip> "docker compose -f /opt/kol/docker-compose.prod.yml logs -f game"`
-- **Status**: `... ps` / `... top`
+- **Same ops over SSH** (when you do have a terminal): `/opt/kol/server.sh
+  restart game`, `... redeploy`, `... status`, `TAIL=500 /opt/kol/server.sh logs game`.
+  It exports `IMAGE_TAG` from `.deployed-tag` so a redeploy keeps the live tag
+  (including after a rollback) instead of drifting to `latest`.
+- **Logs (raw)**: `ssh root@<ip> "docker compose -f /opt/kol/docker-compose.prod.yml logs -f game"`
+- **Status (raw)**: `... ps` / `... top`
 - **Backups**: nightly at 07:10 UTC to `/opt/kol/backups` (14 kept). To ship offsite,
   install rclone (`apt install rclone`), run `rclone config`, name the remote `offsite`
   (Backblaze B2 recommended, ~$1/mo) — backup.sh picks it up automatically.
