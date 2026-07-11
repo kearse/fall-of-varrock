@@ -137,15 +137,17 @@ mid-late tier. (The minigame stays the smart path, R3.)
 
 ## 6. Implementation checklist
 
-1. ⬜ **Fix the boss-currency bug**: Armoury Armour/Crystal wings → `ItemCurrency(item.boss_ticket)`
-   (and audit every `PointsCurrency(PointKind.BOSS)` / `PointKind.VOTE` use).
-2. ⬜ **Split the Armoury** per §3: move PvP gear into PK Rewards; stand up the Monster
-   Rewards vendor on tickets; delete the ❌ items; reprice Barrows wing.
-3. ⬜ **LMS shop**: replace tradeable gear with cosmetics/consumables.
-4. ⬜ **Donor store** (new): cosmetics + QoL on `PointsCurrency(DONOR)`.
-5. ⬜ **Prestige shop** (new, small): commander cosmetics on `PointsCurrency(PRESTIGE)`.
-6. ⬜ **Vote shop**: +2–3 items.
-7. ⬜ **Wiki**: rewrite the shops/economy pages to the new map; update `the-war-explained`
-   / `war-forging` cross-links.
+1. ✅ **Boss-currency bug fixed**: every Armoury wing now charges `ItemCurrency(item.boss_ticket)`
+   (the old wings charged the vestigial counter — unbuyable). Bonus fix: **bot kills no longer
+   mint Blood Money** (code paid for bot victims; the wiki always said they don't).
+2. ✅ **Armoury split** per §3: PK Rewards gains Spec Weapons / Wilderness Sets / Revenant
+   shelves (BM); the Armoury is the all-ticket PvM catalogue; Torva/Masori/Ancestral/Virtus,
+   fire/infernal capes and sigil shields removed; Barrows repriced 120M→12–20M.
+3. ✅ **LMS shop**: tradeable gear removed (crates keep the RNG); consumables + halos stay.
+4. ✅ **Donor store** (`::donorstore`): partyhats/santa/h'ween masks on `PointsCurrency(DONOR)`.
+5. ✅ **Prestige shop** (`::prestigeshop`): the sanguine regalia, moved from the Armoury.
+6. ✅ **Vote shop**: +stamina, +divine super combat.
+7. ✅ **Wiki**: `pk-rewards-and-stats` (four shelves + tables) and `trading-post-and-shops`
+   (new vendor map) updated.
 8. ⬜ Post-launch: step `GENEROSITY_MULT` 2→1; watch BM/ticket prices on the Trading
    Post and tune §3 price bands.

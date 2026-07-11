@@ -180,12 +180,9 @@ class LmsPlugin(
             Triple("item.super_restore4", 1000, 2),
             Triple("item.cooked_karambwan", 5000, 1),
             Triple("item.super_combat_potion4", 1000, 4),
-            // Weapons / gear
-            Triple("item.granite_maul", Int.MAX_VALUE, 120),
-            Triple("item.dragon_claws", Int.MAX_VALUE, 260),
-            Triple("item.armadyl_godsword", Int.MAX_VALUE, 320),
-            Triple("item.occult_necklace", Int.MAX_VALUE, 130),
-            Triple("item.magic_shortbow", Int.MAX_VALUE, 60),
+            // NOTE (shop-economy-redesign §4): tradeable gear (gmaul/claws/AGS/occult/msb)
+            // removed — the LMS crates keep the gear RNG, and the PvP gear chase lives at
+            // PK Rewards (Blood Money). The point shop is consumables + cosmetics only.
             // Cosmetics (the classic LMS halos)
             Triple("item.saradomin_halo", Int.MAX_VALUE, 500),
             Triple("item.zamorak_halo", Int.MAX_VALUE, 500),

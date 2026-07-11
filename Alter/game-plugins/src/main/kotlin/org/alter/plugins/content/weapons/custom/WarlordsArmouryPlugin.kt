@@ -13,8 +13,6 @@ import org.alter.game.model.shop.ShopCurrency
 import org.alter.game.model.shop.ShopItem
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
-import org.alter.plugins.content.economy.PointKind
-import org.alter.plugins.content.economy.PointsCurrency
 import org.alter.plugins.content.economy.SupplyDepot
 import org.alter.plugins.content.mechanics.shops.CoinCurrency
 import org.alter.plugins.content.mechanics.shops.ItemCurrency
@@ -26,20 +24,21 @@ import org.alter.rscm.RSCM.getRSCM
 private val logger = KotlinLogging.logger {}
 
 /**
- * Warlord's Armoury — the end-game vendor + chase-gear sink. A quartermaster at Lumbridge
- * sells every chase-tier weapon, armour set, accessory, Barrows/Revenant/Crystal/Charged
- * item in the cache (plus our custom gear and cosmetics). Sell-only ([PurchasePolicy.BUY_NONE])
- * so it never buys gear back (no inflation leak).
+ * Warlord's Armoury — the **PvM** end-game vendor + war-supply sink (shop-economy-redesign
+ * §3b). The Quartermaster sells the PvM chase catalogue for **Boss Tickets** (the tradeable
+ * ticket item every boss and PvM minigame pays — NOT the vestigial boss-point counter this
+ * shop once charged), plus the Barrows pity wing for gp (the mid-game coin sink). Sell-only
+ * ([PurchasePolicy.BUY_NONE]) so it never buys gear back.
  *
- * Currency is tiered so the best gear is *earned*, not bought with raw GP:
- *   - **Weapons + Revenant** -> **Blood Money** (the PK item-currency; killing players earns it).
- *   - **Armour + Crystal**   -> **Boss points** (the PvM counter).
- *   - **Barrows / Charged / Accessories** -> **GP** (the affordable mid-tier).
+ * What it deliberately does NOT sell (redesign rules R1/R2/R4):
+ *  - **PvP gear** (spec weapons, wilderness sets, revenant weapons) — that's the PK Rewards
+ *    vendor's Blood-Money catalogue (`economy/pk/PkRewardsPlugin`).
+ *  - **War-forged BIS** (Torva/Masori/Ancestral) — Royal Smith exclusive; Virtus is parked
+ *    for a future source; the sanguine regalia moved to the Prestige shop.
+ *  - **Untradeable prestige** (fire/infernal capes) and **Corp's sigil shields** — earned only.
  *
- * Prices are tuned per-currency (Blood Money/points are small grindable numbers; GP is large).
- * Stock is split across wings so each stays under the ~40-slot display cap; the quartermaster
- * opens a category menu (Weapons / Armour / Accessories / More...). An admin `::armoury`
- * command opens the same menu for testing. Missing cache keys are skipped defensively.
+ * Megarares (scythe/tbow/shadow) are priced as CAREERS — the deterministic pity path until
+ * raids ship gear. All prices TUNE.
  */
 class WarlordsArmouryPlugin(
     r: PluginRepository,
@@ -55,84 +54,52 @@ class WarlordsArmouryPlugin(
         const val ARMOUR = "Warlord's Armoury - Armour"
         const val ACCESSORIES = "Warlord's Armoury - Accessories"
         const val BARROWS = "Warlord's Armoury - Barrows"
-        const val REVENANT = "Warlord's Armoury - Revenant Weapons"
         const val CRYSTAL = "Warlord's Armoury - Crystal Gear"
         const val CHARGED = "Warlord's Armoury - Charged & Degradable"
     }
 
-    // ============================ stock — Blood Money (PK) ============================
-    // Earned ~25 + 3*combat per player kill; priced as a real-but-achievable PK grind.
+    // ======================== stock — Boss Tickets (PvM) ========================
+    // Earn rates for scale: Zulrah 40/kill, Inferno 400/clear, Fight Cave 150/clear,
+    // GWD 35/kill. Megarares are ~300 Zulrah kills / ~30 Inferno clears — a career.
 
     private val weaponStock = listOf(
-        Ware("item.holy_scythe_of_vitur", 50_000),        // Bloodforged Scythe (lifesteal)
-        Ware("item.sanguine_scythe_of_vitur", 50_000),
-        Ware("item.scythe_of_vitur", 40_000),
-        Ware("item.twisted_bow", 50_000),                 // Plaguebringer Bow (venom)
-        Ware("item.tumekens_shadow", 50_000),             // Staff of the Storm (chain)
-        Ware("item.holy_sanguinesti_staff", 35_000),
-        Ware("item.sanguinesti_staff", 25_000),
-        Ware("item.elder_maul", 20_000),                  // Executioner's Maul (spec)
-        Ware("item.elder_maul_or", 25_000),
-        Ware("item.soulreaper_axe", 35_000),
-        Ware("item.voidwaker", 30_000),
-        Ware("item.ghrazi_rapier", 22_000),
-        Ware("item.zaryte_crossbow", 25_000),
-        Ware("item.venator_bow", 25_000),
-        Ware("item.dragon_hunter_crossbow", 18_000),
-        Ware("item.dragon_hunter_lance", 18_000),
-        Ware("item.osmumtens_fang", 15_000),
-        Ware("item.harmonised_nightmare_staff", 18_000),
-        Ware("item.abyssal_whip", 3_000),
-        Ware("item.armadyl_godsword", 15_000),
-        Ware("item.ancient_godsword", 20_000),
-        Ware("item.keris_partisan", 8_000),
-        Ware("item.tonalztics_of_ralos", 18_000),
-        Ware("item.burning_claws", 14_000),
-        Ware("item.dragon_claws", 12_000),
-        Ware("item.dragon_claws_or", 16_000),
-        Ware("item.dragon_warhammer", 10_000),
+        // Megarares — the pity path until raids drop gear (career prices).
+        Ware("item.holy_scythe_of_vitur", 15_000),
+        Ware("item.sanguine_scythe_of_vitur", 15_000),
+        Ware("item.scythe_of_vitur", 12_000),
+        Ware("item.twisted_bow", 12_000),
+        Ware("item.tumekens_shadow", 12_000),
+        // High PvM weapons.
+        Ware("item.holy_sanguinesti_staff", 8_000),
+        Ware("item.sanguinesti_staff", 6_000),
+        Ware("item.soulreaper_axe", 8_000),
+        Ware("item.zaryte_crossbow", 6_000),
+        Ware("item.venator_bow", 5_000),
+        Ware("item.harmonised_nightmare_staff", 4_500),
+        Ware("item.ghrazi_rapier", 4_000),
+        Ware("item.tonalztics_of_ralos", 4_000),
+        Ware("item.dragon_hunter_crossbow", 3_500),
+        Ware("item.dragon_hunter_lance", 3_500),
+        Ware("item.osmumtens_fang", 2_500),
+        Ware("item.keris_partisan", 1_500),
     )
 
-    private val revenantStock = listOf(
-        Ware("item.craws_bow", 6_000),
-        Ware("item.viggoras_chainmace", 6_000),
-        Ware("item.thammarons_sceptre", 6_000),
-        Ware("item.webweaver_bow", 12_000),       // craw's bow upgrade
-        Ware("item.ursine_chainmace", 12_000),    // viggora's upgrade
-        Ware("item.accursed_sceptre", 10_000),    // thammaron's upgrade
-    )
-
-    // ============================ stock — Boss points (PvM) ============================
-
+    /** GWD bases (they feed the Royal Smith's forge — R3) + mid PvM armour. */
     private val armourStock = listOf(
-        Ware("item.torva_full_helm", 1_500),
-        Ware("item.torva_platebody", 2_000),
-        Ware("item.torva_platelegs", 2_000),
-        Ware("item.masori_mask", 1_200),
-        Ware("item.masori_body", 1_800),
-        Ware("item.masori_chaps", 1_500),
-        Ware("item.virtus_mask", 1_200),
-        Ware("item.virtus_robe_top", 1_800),
-        Ware("item.virtus_robe_bottom", 1_500),
-        Ware("item.ancestral_hat", 1_000),
-        Ware("item.ancestral_robe_top", 1_500),
-        Ware("item.ancestral_robe_bottom", 1_200),
+        Ware("item.bandos_chestplate", 600),
+        Ware("item.bandos_tassets", 800),
+        Ware("item.armadyl_chestplate", 600),
+        Ware("item.armadyl_chainskirt", 800),
         Ware("item.justiciar_faceguard", 900),
         Ware("item.justiciar_chestguard", 1_200),
         Ware("item.justiciar_legguards", 1_100),
         Ware("item.inquisitors_great_helm", 900),
         Ware("item.inquisitors_hauberk", 1_200),
         Ware("item.inquisitors_plateskirt", 1_100),
-        Ware("item.bandos_chestplate", 600),
-        Ware("item.bandos_tassets", 800),
         Ware("item.elite_void_top", 400),
         Ware("item.elite_void_robe", 400),
         Ware("item.void_knight_top", 250),
         Ware("item.void_knight_gloves", 250),
-        // Warlord's Regalia — prestige cosmetic set (stat-less recolor).
-        Ware("item.sanguine_torva_full_helm", 2_500),
-        Ware("item.sanguine_torva_platebody", 2_500),
-        Ware("item.sanguine_torva_platelegs", 2_500),
     )
 
     private val crystalStock = listOf(
@@ -145,88 +112,84 @@ class WarlordsArmouryPlugin(
         Ware("item.blade_of_saeldor", 1_500),
     )
 
-    // ============================ stock — GP (mid-tier) ============================
-
+    /** BIS accessories — moved off raw GP (R4). Ely/Arcane/Spectral stay Corp-only. */
     private val accessoryStock = listOf(
         // Amulets
-        Ware("item.occult_necklace", 300_000_000),
-        Ware("item.amulet_of_torture", 400_000_000),
-        Ware("item.necklace_of_anguish", 400_000_000),
-        Ware("item.amulet_of_blood_fury", 350_000_000),
-        Ware("item.amulet_of_fury", 200_000_000),
+        Ware("item.occult_necklace", 800),
+        Ware("item.amulet_of_torture", 1_200),
+        Ware("item.necklace_of_anguish", 1_200),
+        Ware("item.amulet_of_blood_fury", 1_000),
+        Ware("item.amulet_of_fury", 400),
         // Boots
-        Ware("item.primordial_boots", 300_000_000),
-        Ware("item.pegasian_boots", 300_000_000),
-        Ware("item.eternal_boots", 300_000_000),
+        Ware("item.primordial_boots", 900),
+        Ware("item.pegasian_boots", 900),
+        Ware("item.eternal_boots", 900),
         // Rings
-        Ware("item.ultor_ring", 800_000_000),
-        Ware("item.magus_ring", 800_000_000),
-        Ware("item.bellator_ring", 800_000_000),
-        Ware("item.venator_ring", 800_000_000),
-        Ware("item.lightbearer", 500_000_000),
-        Ware("item.ring_of_suffering", 400_000_000),
-        Ware("item.brimstone_ring", 300_000_000),
-        Ware("item.berserker_ring_i", 250_000_000),
-        // Shields & defenders
-        Ware("item.elysian_spirit_shield", 1_500_000_000),
-        Ware("item.arcane_spirit_shield", 800_000_000),
-        Ware("item.spectral_spirit_shield", 700_000_000),
-        Ware("item.dinhs_bulwark", 500_000_000),
-        Ware("item.ancient_wyvern_shield", 300_000_000),
-        Ware("item.dragonfire_shield", 250_000_000),
-        Ware("item.avernic_defender", 700_000_000),
+        Ware("item.ultor_ring", 2_500),
+        Ware("item.magus_ring", 2_500),
+        Ware("item.bellator_ring", 2_500),
+        Ware("item.venator_ring", 2_500),
+        Ware("item.lightbearer", 1_200),
+        Ware("item.ring_of_suffering", 1_000),
+        Ware("item.brimstone_ring", 600),
+        Ware("item.berserker_ring_i", 500),
+        // Shields & defenders (sigil shields deliberately absent — Corp's table only)
+        Ware("item.dinhs_bulwark", 1_200),
+        Ware("item.ancient_wyvern_shield", 600),
+        Ware("item.dragonfire_shield", 500),
+        Ware("item.avernic_defender", 2_000),
         // Gloves / vambraces
-        Ware("item.zaryte_vambraces", 400_000_000),
-        Ware("item.ferocious_gloves", 400_000_000),
-        Ware("item.barrows_gloves", 200_000_000),
-        // Capes
-        Ware("item.infernal_cape", 800_000_000),
-        Ware("item.infernal_max_cape", 1_200_000_000),
-        Ware("item.fire_cape", 100_000_000),
+        Ware("item.zaryte_vambraces", 1_200),
+        Ware("item.ferocious_gloves", 1_200),
+        Ware("item.barrows_gloves", 300),
     )
 
-    /** The six Barrows brothers — helm, body, legs, weapon each. */
+    /**
+     * The six Barrows brothers — helm, body, legs, weapon each. Stays GP on purpose:
+     * the mid-game coin sink (redesign §3d), priced above the minigame's expected grind
+     * so the chest stays the smart path.
+     */
     private val barrowsStock = listOf(
-        Ware("item.dharoks_helm", 120_000_000), Ware("item.dharoks_platebody", 120_000_000),
-        Ware("item.dharoks_platelegs", 120_000_000), Ware("item.dharoks_greataxe", 180_000_000),
-        Ware("item.ahrims_hood", 120_000_000), Ware("item.ahrims_robetop", 120_000_000),
-        Ware("item.ahrims_robeskirt", 120_000_000), Ware("item.ahrims_staff", 180_000_000),
-        Ware("item.karils_coif", 120_000_000), Ware("item.karils_leathertop", 120_000_000),
-        Ware("item.karils_leatherskirt", 120_000_000), Ware("item.karils_crossbow", 180_000_000),
-        Ware("item.guthans_helm", 120_000_000), Ware("item.guthans_platebody", 120_000_000),
-        Ware("item.guthans_chainskirt", 120_000_000), Ware("item.guthans_warspear", 180_000_000),
-        Ware("item.torags_helm", 120_000_000), Ware("item.torags_platebody", 120_000_000),
-        Ware("item.torags_platelegs", 120_000_000), Ware("item.torags_hammers", 180_000_000),
-        Ware("item.veracs_helm", 120_000_000), Ware("item.veracs_brassard", 120_000_000),
-        Ware("item.veracs_plateskirt", 120_000_000), Ware("item.veracs_flail", 180_000_000),
+        Ware("item.dharoks_helm", 12_000_000), Ware("item.dharoks_platebody", 12_000_000),
+        Ware("item.dharoks_platelegs", 12_000_000), Ware("item.dharoks_greataxe", 20_000_000),
+        Ware("item.ahrims_hood", 12_000_000), Ware("item.ahrims_robetop", 12_000_000),
+        Ware("item.ahrims_robeskirt", 12_000_000), Ware("item.ahrims_staff", 20_000_000),
+        Ware("item.karils_coif", 12_000_000), Ware("item.karils_leathertop", 12_000_000),
+        Ware("item.karils_leatherskirt", 12_000_000), Ware("item.karils_crossbow", 20_000_000),
+        Ware("item.guthans_helm", 12_000_000), Ware("item.guthans_platebody", 12_000_000),
+        Ware("item.guthans_chainskirt", 12_000_000), Ware("item.guthans_warspear", 20_000_000),
+        Ware("item.torags_helm", 12_000_000), Ware("item.torags_platebody", 12_000_000),
+        Ware("item.torags_platelegs", 12_000_000), Ware("item.torags_hammers", 20_000_000),
+        Ware("item.veracs_helm", 12_000_000), Ware("item.veracs_brassard", 12_000_000),
+        Ware("item.veracs_plateskirt", 12_000_000), Ware("item.veracs_flail", 20_000_000),
     )
 
     /** Charged / degradable gear — sold at the base id; players charge them to use. */
     private val chargedStock = listOf(
-        Ware("item.trident_of_the_swamp", 250_000_000),
-        Ware("item.trident_of_the_seas", 200_000_000),
-        Ware("item.toxic_staff_of_the_dead", 300_000_000),
-        Ware("item.toxic_blowpipe", 500_000_000),
-        Ware("item.abyssal_tentacle", 250_000_000),
-        Ware("item.dragon_hunter_wand", 600_000_000),
-        Ware("item.scorching_bow", 500_000_000),
-        Ware("item.serpentine_helm", 250_000_000),
-        Ware("item.magma_helm", 300_000_000),
-        Ware("item.tanzanite_helm", 300_000_000),
+        Ware("item.trident_of_the_seas", 600),
+        Ware("item.trident_of_the_swamp", 800),
+        Ware("item.toxic_staff_of_the_dead", 1_000),
+        Ware("item.toxic_blowpipe", 1_800),
+        Ware("item.abyssal_tentacle", 900),
+        Ware("item.dragon_hunter_wand", 2_000),
+        Ware("item.scorching_bow", 1_800),
+        Ware("item.serpentine_helm", 800),
+        Ware("item.magma_helm", 900),
+        Ware("item.tanzanite_helm", 900),
     )
 
     // ----------------------------------- wiring -----------------------------------
 
     init {
-        // Chase wings: earned currencies.
-        shopWith(WEAPONS, bloodMoney(), weaponStock)
-        shopWith(REVENANT, bloodMoney(), revenantStock)
-        shopWith(ARMOUR, PointsCurrency(PointKind.BOSS), armourStock)
-        shopWith(CRYSTAL, PointsCurrency(PointKind.BOSS), crystalStock)
-        // Mid-tier wings: GP.
-        shopWith(ACCESSORIES, CoinCurrency(), accessoryStock)
+        // PvM wings: Boss Tickets (the ITEM — the old boss-point counter was vestigial
+        // and nothing fills it; charging it made these wings unbuyable).
+        shopWith(WEAPONS, bossTickets(), weaponStock)
+        shopWith(ARMOUR, bossTickets(), armourStock)
+        shopWith(CRYSTAL, bossTickets(), crystalStock)
+        shopWith(ACCESSORIES, bossTickets(), accessoryStock)
+        shopWith(CHARGED, bossTickets(), chargedStock)
+        // The mid-game coin sink.
         shopWith(BARROWS, CoinCurrency(), barrowsStock)
-        shopWith(CHARGED, CoinCurrency(), chargedStock)
 
         // Quartermaster vendor — end-game cluster just south of the shop hub's west column.
         // Gear OUT (the armoury), supplies IN (the §3B war-supply sink).
@@ -288,8 +251,8 @@ class WarlordsArmouryPlugin(
 
     private val quartermasterId = runCatching { getRSCM("npc.quartermaster") }.getOrDefault(-1)
 
-    private fun bloodMoney(): ShopCurrency =
-        ItemCurrency(getRSCM("item.blood_money"), "Blood Money", "Blood Money")
+    private fun bossTickets(): ShopCurrency =
+        ItemCurrency(getRSCM("item.boss_ticket"), "Boss Ticket", "Boss Tickets")
 
     private fun shopWith(name: String, currency: ShopCurrency, wares: List<Ware>) {
         val stock = wares.mapNotNull { w -> resolveOrNull(w.key)?.let { ShopItem(it, STOCK, w.price) } }
@@ -308,11 +271,10 @@ class WarlordsArmouryPlugin(
     }
 
     private suspend fun QueueTask.moreMenu(player: Player) {
-        when (options(player, "Barrows sets", "Revenant weapons", "Crystal gear", "Charged & degradable", "Nevermind", title = "More Gear")) {
+        when (options(player, "Barrows sets (coins)", "Crystal gear", "Charged & degradable", "Nevermind", title = "More Gear")) {
             1 -> player.openShop(BARROWS)
-            2 -> player.openShop(REVENANT)
-            3 -> player.openShop(CRYSTAL)
-            4 -> player.openShop(CHARGED)
+            2 -> player.openShop(CRYSTAL)
+            3 -> player.openShop(CHARGED)
         }
     }
 

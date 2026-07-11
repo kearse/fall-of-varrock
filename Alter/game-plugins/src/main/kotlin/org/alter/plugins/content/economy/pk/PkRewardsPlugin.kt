@@ -1,15 +1,14 @@
 package org.alter.plugins.content.economy.pk
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import org.alter.api.ext.message
-import org.alter.api.ext.openShop
-import org.alter.api.ext.player
+import org.alter.api.ext.*
 import org.alter.game.Server
 import org.alter.game.model.Direction
 import org.alter.game.model.World
 import org.alter.game.model.attr.KILLER_ATTR
 import org.alter.game.model.entity.GroundItem
 import org.alter.game.model.entity.Player
+import org.alter.game.model.queue.QueueTask
 import org.alter.game.model.shop.PurchasePolicy
 import org.alter.game.model.shop.ShopItem
 import org.alter.game.plugin.KotlinPlugin
@@ -22,16 +21,23 @@ import org.alter.rscm.RSCM.getRSCM
 private val logger = KotlinLogging.logger {}
 
 /**
- * **Blood Money — the PK currency** (Phase 6 economy: texture + a reason to fight).
+ * **Blood Money — the PK currency and the PvP gear chase** (shop-economy-redesign §3a).
  *
- * Killing another player (including the [PkBot] fake-players, which are the PK targets on this
- * server) awards Blood Money scaled by the victim's combat level. It's an inventory item
- * (`item.blood_money`) so it can itself be risked/dropped on death. Spent at the **PK Rewards**
- * shop (the emblem trader) — a Blood-Money sink stocked with PK *supplies* (food/potions), which
- * feeds the consumption loop rather than injecting tradeable end-game gear.
+ * Killing another REAL player awards Blood Money scaled by the victim's combat level; it's an
+ * inventory item (`item.blood_money`) so it can itself be risked/dropped on death. [PkBot]
+ * fake-players pay NO Blood Money in either direction (they're loot + practice, per the wiki) —
+ * their worth is the kit in their loot keys, never minted currency.
  *
- * Earning is wired on [onPlayerPreDeath] (additive — runs alongside the bot kit-drop hook); only
- * real human killers earn (bots don't), and self/bot-on-player kills award nothing.
+ * Spent at the **PK Rewards** vendor (the emblem trader), now a full PvP catalogue:
+ *  - **Supplies** — food/potions (the consumption loop).
+ *  - **Spec weapons** — AGS, claws, DWH, voidwaker... (the captains of Fallen Varrock stay the
+ *    cheaper path — shop prices are the pity route, redesign R3).
+ *  - **Wilderness sets** — Vesta's (incl. the longsword), Statius's, Morrigan's, Zuriel's: the
+ *    rank-gated wildy prestige sets that previously had NO source in the game.
+ *  - **Revenant weapons** — craw's/viggora's/thammaron's and their upgrades.
+ *
+ * All wings sell-only (no buy-back). PvM chase gear deliberately lives elsewhere (the Warlord's
+ * Armoury, Boss Tickets) — currency matches playstyle (R1). Prices TUNE.
  */
 class PkRewardsPlugin(
     r: PluginRepository,
@@ -41,31 +47,79 @@ class PkRewardsPlugin(
 
     private val bm = getRSCM("item.blood_money")
 
-    /** PK Rewards shop wares: PK supplies only (Blood-Money sink). price = Blood Money cost. */
-    private val wares = listOf(
-        "item.shark" to 5,
-        "item.prayer_potion4" to 20,
-        "item.super_restore4" to 30,
-        "item.ranging_potion4" to 25,
-        "item.super_combat_potion4" to 40,
-        "item.saradomin_brew4" to 35,
+    private data class Ware(val key: String, val price: Int)
+
+    /** PK supplies (the consumption loop). */
+    private val supplyWares = listOf(
+        Ware("item.shark", 5),
+        Ware("item.prayer_potion4", 20),
+        Ware("item.super_restore4", 30),
+        Ware("item.ranging_potion4", 25),
+        Ware("item.super_combat_potion4", 40),
+        Ware("item.saradomin_brew4", 35),
+    )
+
+    /** Spec weapons — the PKer's chase. Claws/DWH priced above the captains route (R3). */
+    private val specWares = listOf(
+        Ware("item.voidwaker", 30_000),
+        Ware("item.elder_maul", 20_000),
+        Ware("item.elder_maul_or", 25_000),
+        Ware("item.ancient_godsword", 20_000),
+        Ware("item.armadyl_godsword", 15_000),
+        Ware("item.dragon_claws_or", 16_000),
+        Ware("item.burning_claws", 14_000),
+        Ware("item.dragon_claws", 12_000),
+        Ware("item.dragon_warhammer", 10_000),
+        Ware("item.abyssal_whip", 3_000),
+        Ware("item.granite_maul", 1_500),
+    )
+
+    /** The wilderness prestige sets — rank-gated in Title.kt but previously sourceless. */
+    private val wildySetWares = listOf(
+        Ware("item.vestas_longsword", 25_000),
+        Ware("item.vestas_chainbody", 15_000),
+        Ware("item.vestas_plateskirt", 12_000),
+        Ware("item.statiuss_warhammer", 20_000),
+        Ware("item.statiuss_full_helm", 10_000),
+        Ware("item.statiuss_platebody", 15_000),
+        Ware("item.statiuss_platelegs", 12_000),
+        Ware("item.morrigans_coif", 8_000),
+        Ware("item.morrigans_leather_body", 12_000),
+        Ware("item.morrigans_leather_chaps", 10_000),
+        Ware("item.zuriels_hood", 8_000),
+        Ware("item.zuriels_robe_top", 12_000),
+        Ware("item.zuriels_robe_bottom", 10_000),
+    )
+
+    /** Revenant weapons + their wilderness upgrades (moved from the Warlord's Armoury). */
+    private val revenantWares = listOf(
+        Ware("item.craws_bow", 6_000),
+        Ware("item.viggoras_chainmace", 6_000),
+        Ware("item.thammarons_sceptre", 6_000),
+        Ware("item.webweaver_bow", 12_000),
+        Ware("item.ursine_chainmace", 12_000),
+        Ware("item.accursed_sceptre", 10_000),
     )
 
     init {
-        val stock = wares.mapNotNull { (key, price) -> resolveOrNull(key)?.let { ShopItem(it, Int.MAX_VALUE, price) } }
-        createShop(SHOP_NAME, ItemCurrency(bm, "Blood Money", "Blood Money"),
-            purchasePolicy = PurchasePolicy.BUY_NONE, stockSize = maxOf(stock.size, 1)) {
-            stock.forEachIndexed { i, item -> items[i] = item }
-        }
+        shopOf(SUPPLIES, supplyWares)
+        shopOf(SPEC_WEAPONS, specWares)
+        shopOf(WILDY_SETS, wildySetWares)
+        shopOf(REVENANT, revenantWares)
 
         spawnNpc(TRADER, 3224, 3216, 0, 0, Direction.WEST) // end-game/PK cluster, south of the hub's east column
         bindTrader(TRADER)
-        onCommand("pkshop", description = "Open the PK Rewards (Blood Money) shop") { player.openShop(SHOP_NAME) }
+        onCommand("pkshop", description = "Open the PK Rewards (Blood Money) shops") {
+            player.queue { traderMenu(player) }
+        }
 
         onPlayerPreDeath {
             val victim = player
             val killer = victim.attr[KILLER_ATTR]?.get() as? Player ?: return@onPlayerPreDeath
             if (killer === victim || killer is PkBot) return@onPlayerPreDeath // bots/self don't earn
+            // Bots don't PAY either (wiki: "loot and practice, not ladder points") — minting
+            // currency from farmable bots would flood the Blood-Money gear economy.
+            if (victim is PkBot) return@onPlayerPreDeath
 
             val reward = BM_BASE + victim.combatLevel * BM_PER_LEVEL
             val added = killer.inventory.add(item = bm, amount = reward, assureFullInsertion = false)
@@ -76,9 +130,26 @@ class PkRewardsPlugin(
         }
     }
 
+    private suspend fun QueueTask.traderMenu(player: Player) {
+        when (options(player, "PK supplies", "Spec weapons", "Wilderness sets", "Revenant weapons", "Nevermind", title = "PK Rewards")) {
+            1 -> player.openShop(SUPPLIES)
+            2 -> player.openShop(SPEC_WEAPONS)
+            3 -> player.openShop(WILDY_SETS)
+            4 -> player.openShop(REVENANT)
+        }
+    }
+
+    private fun shopOf(name: String, wares: List<Ware>) {
+        val stock = wares.mapNotNull { (key, price) -> resolveOrNull(key)?.let { ShopItem(it, STOCK, price) } }
+        createShop(name, ItemCurrency(bm, "Blood Money", "Blood Money"),
+            purchasePolicy = PurchasePolicy.BUY_NONE, stockSize = maxOf(stock.size, 1)) {
+            stock.forEachIndexed { i, item -> items[i] = item }
+        }
+    }
+
     /** Bind EVERY vendor option (Talk-to AND Trade) so neither is a dead click on the trader. */
     private fun bindTrader(npc: String) {
-        if (!bindVendorOptions(npc) { player.openShop(SHOP_NAME) }) {
+        if (!bindVendorOptions(npc) { player.queue { traderMenu(player) } }) {
             logger.warn { "pk-rewards: '$npc' has no click options; use ::pkshop." }
         }
     }
@@ -86,8 +157,12 @@ class PkRewardsPlugin(
     private fun resolveOrNull(key: String): Int? = try { getRSCM(key) } catch (e: Exception) { null }
 
     private companion object {
-        const val SHOP_NAME = "PK Rewards"
+        const val SUPPLIES = "PK Rewards"
+        const val SPEC_WEAPONS = "PK Rewards - Spec Weapons"
+        const val WILDY_SETS = "PK Rewards - Wilderness Sets"
+        const val REVENANT = "PK Rewards - Revenant Weapons"
         const val TRADER = "npc.emblem_trader"
+        const val STOCK = 100
         const val BM_BASE = 25
         const val BM_PER_LEVEL = 3
     }
