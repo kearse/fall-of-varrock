@@ -4,6 +4,7 @@ import com.sun.management.HotSpotDiagnosticMXBean
 import org.alter.api.ext.player
 import org.alter.game.Server
 import org.alter.game.model.World
+import org.alter.game.model.priv.Privilege
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
 import org.alter.rscm.RSCM.getRSCM
@@ -20,7 +21,7 @@ class MemoryTestPlugin(
 ) : KotlinPlugin(r, world, server) {
         
     init {
-        onCommand("qutest", description = "Check memory usage") {
+        onCommand("qutest", Privilege.DEV_POWER, description = "Check memory usage") {
             repeat(10_000_000) {
                 player.queue {
                     player.inventory.add(getRSCM("item.coins_995"), 1)
@@ -28,11 +29,11 @@ class MemoryTestPlugin(
             }
         }
 
-        onCommand("gc", description = "Garbage Collector - Will free up unused memory.") {
+        onCommand("gc", Privilege.DEV_POWER, description = "Garbage Collector - Will free up unused memory.") {
             System.gc()
         }
 
-        onCommand("heap", description = "Creates heap dump") {
+        onCommand("heap", Privilege.DEV_POWER, description = "Creates heap dump") {
             val outp = Paths.get("../dump.hprof")
             val asFile = outp.toFile()
             if (asFile.exists()) asFile.delete()

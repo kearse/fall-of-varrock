@@ -15,7 +15,7 @@ import org.alter.rscm.RSCM.getRSCM
 
 /**
  * **Duke Horacio** in Lumbridge Castle sells feudal ranks for coins (The War /
- * progression — `docs/long-term-vision.md`). Each rank bought raises the armour
+ * progression — `docs/war-system-design.md`). Each rank bought raises the armour
  * tier the player may wear (enforced by [TitlePlugin]). He is already spawned by
  * the Lumbridge chat spawns, so we only bind his dialogue.
  */

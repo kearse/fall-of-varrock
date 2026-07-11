@@ -6,6 +6,7 @@ import org.alter.api.ext.player
 import org.alter.game.Server
 import org.alter.game.model.Tile
 import org.alter.game.model.World
+import org.alter.game.model.priv.Privilege
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
 
@@ -16,7 +17,7 @@ class GetdistPlugin(
 ) : KotlinPlugin(r, world, server) {
         
     init {
-        onCommand("getdist") {
+        onCommand("getdist", Privilege.DEV_POWER) {
             val args = player.getCommandArgs()
             val x = args[0].toInt()
             val z = args[1].toInt()

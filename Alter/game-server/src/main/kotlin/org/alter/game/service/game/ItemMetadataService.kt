@@ -121,7 +121,7 @@ class ItemMetadataService : Service {
                 // Only WEAPONS (equip slot 3) keep their cache skill-level requirements. Armour and
                 // every other worn slot has NO level requirement on this server — wearing armour is
                 // gated by the player's bought feudal rank instead (TitlePlugin's armour-tier gate,
-                // see Title.kt / docs/long-term-vision.md).
+                // see Title.kt / docs/war-system-design.md).
                 if (def.equipSlot == 3 && def.params?.containsKey(ParamMapper.item.PRIMARY_SKILL) == true) {
                     // Only write requirement pairs whose skill param actually exists in the cache.
                     // Unconditional puts used the 0-defaults for absent secondary/tertiary/quaternary

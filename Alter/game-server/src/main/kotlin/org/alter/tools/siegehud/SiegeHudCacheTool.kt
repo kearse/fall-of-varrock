@@ -4,7 +4,7 @@ import com.displee.cache.CacheLibrary
 import java.io.ByteArrayOutputStream
 
 /**
- * Stage 1 of the custom siege-HUD interface (see `docs/long-term-vision.md` §4).
+ * Stage 1 of the custom siege-HUD interface (see `docs/war-system-design.md`).
  *
  * The vendored OpenRune filestore is read-only, so we author interfaces with the
  * displee cache library. But first we must trust our hand-written **if3** codec:

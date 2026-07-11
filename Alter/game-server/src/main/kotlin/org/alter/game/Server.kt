@@ -12,6 +12,7 @@ import org.alter.game.model.entity.GroundItem
 import org.alter.game.model.entity.Npc
 import org.alter.game.model.skill.SkillSet
 import org.alter.game.saving.PlayerDetails
+import org.alter.game.saving.PlayerModeration
 import org.alter.game.saving.PlayerSaving
 import org.alter.game.saving.formats.SaveFormatType
 import org.alter.rscm.RSCM
@@ -114,6 +115,7 @@ class Server {
                 gItemDespawnDelay = gameProperties.getOrDefault("gitem-despawn-delay", GroundItem.DEFAULT_DESPAWN_CYCLES),
                 preloadMaps = gameProperties.getOrDefault("preload-maps", false),
                 owners = gameProperties.getOrDefault("owners", emptyList<String>()),
+                whitelistOnly = gameProperties.getOrDefault("whitelist-only", false),
             )
 
         val devContext =
@@ -130,6 +132,7 @@ class Server {
 
         PlayerDetails.init(gameContext)
         PlayerSaving.init(gameContext)
+        PlayerModeration.init(gameContext)
 
         /*
          * Load the file store.

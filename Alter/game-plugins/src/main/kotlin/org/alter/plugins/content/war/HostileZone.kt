@@ -92,7 +92,7 @@ class MonsterPack(
 }
 
 /**
- * A hostile area beyond the cities (The War / open world — `docs/long-term-vision.md`:
+ * A hostile area beyond the cities (The War / open world — `docs/war-system-design.md`:
  * "only cities are safe"). Maintains packs of monsters that roam, aggro, and fight
  * back with real combat stats. Loot is handled by the owning plugin's `onNpcDeath`.
  * Mirrors the robust spawn/maintain pattern from [WarFront].

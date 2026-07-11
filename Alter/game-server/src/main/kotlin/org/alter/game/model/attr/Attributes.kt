@@ -68,7 +68,7 @@ val RESPAWN_TILE_ATTR = AttributeKey<Int>("respawn_tile")
 /**
  * The player's purchased feudal **rank**, stored as the title's ordinal (0 =
  * Peasant). Bought with coins from Duke Horacio; caps the armour tier the player
- * may wear (The War / progression — see `docs/long-term-vision.md`). Persistent.
+ * may wear (The War / progression — see `docs/war-system-design.md`). Persistent.
  */
 val PLAYER_TITLE_ATTR = AttributeKey<Int>("player_title")
 

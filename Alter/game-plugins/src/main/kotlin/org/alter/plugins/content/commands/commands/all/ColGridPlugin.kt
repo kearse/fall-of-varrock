@@ -7,6 +7,7 @@ import org.alter.game.model.Tile
 import org.alter.game.model.World
 import org.alter.game.model.collision.isClipped
 import org.alter.game.model.entity.Player
+import org.alter.game.model.priv.Privilege
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
 
@@ -17,7 +18,7 @@ class ColGridPlugin(
 ) : KotlinPlugin(r, world, server) {
 
     init {
-        onCommand("col_grid") {
+        onCommand("col_grid", Privilege.DEV_POWER) {
             val args = player.getCommandArgs()
             val p = world.getPlayerForName(args[0].replace("_", " ")) ?: return@onCommand
             printGridAroundTile(p, p.getCentreTile())

@@ -26,6 +26,10 @@ class Json(override val collectionName: String) : FormatHandler(collectionName) 
         path.resolve(client.loginUsername).writeText(document.toJson(prettyPrintSettings))
     }
 
+    override fun saveDocument(loginUsername: String, document: Document) {
+        path.resolve(loginUsername).writeText(document.toJson(prettyPrintSettings))
+    }
+
     override fun parseDocument(client : Client): Document {
         return Document.parse(path.resolve(client.loginUsername).readText())
     }

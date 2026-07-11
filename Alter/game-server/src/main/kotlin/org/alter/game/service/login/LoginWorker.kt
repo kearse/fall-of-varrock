@@ -88,6 +88,8 @@ class LoginWorker(private val boss: LoginService, private val verificationServic
                             PlayerLoadResult.INVALID_CREDENTIALS -> LoginResponse.InvalidUsernameOrPassword
                             PlayerLoadResult.INVALID_RECONNECTION -> LoginResponse.BadSessionId
                             PlayerLoadResult.MALFORMED -> LoginResponse.Locked
+                            PlayerLoadResult.BANNED -> LoginResponse.Banned
+                            PlayerLoadResult.NOT_WHITELISTED -> LoginResponse.ClosedBetaInvitedOnly
                             else -> LoginResponse.InvalidSave
                         }
                     request.responseHandler.writeFailedResponse(errorCode)

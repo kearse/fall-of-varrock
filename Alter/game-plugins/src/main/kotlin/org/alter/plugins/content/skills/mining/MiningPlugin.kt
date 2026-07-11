@@ -25,7 +25,7 @@ private val logger = KotlinLogging.logger {}
  * A basic **Mining** skill (the server had none). Click a rock with a pickaxe to
  * mine ore for XP; the rock depletes and respawns. Rocks are spawned where we want
  * mining to be available — first batch is in/around Lumbridge Castle so players have
- * a safe, in-city way to earn (per the gated-economy plan, `docs/long-term-vision.md`).
+ * a safe, in-city way to earn (per the gated-economy plan, `docs/economy.md`).
  *
  * Mirrors the thieving-stall pattern (interact → check tool/level → reward → deplete
  * → respawn). Rock object ids were found by scanning the cache for a "Mine" action.

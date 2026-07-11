@@ -8,6 +8,15 @@ revision: 228
 home-x: 3218
 home-z: 3218
 
+# Closed-beta mode: when true, only accounts whitelisted in-game via
+# `::whitelist add <name>` (plus the `owners` list below) can log in.
+# Everyone else gets the "closed beta - invited players only" login screen.
+whitelist-only: false
+
+# Login usernames that are forced to the owner privilege on every login and
+# always bypass the whitelist.
+owners: []
+
 # Privileges
 # Any privilege you want to be represented in-game you define here.
 privileges:

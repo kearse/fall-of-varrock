@@ -55,6 +55,20 @@ object PlayerSaving {
     }
 
     fun loadPlayer(client: Client, block: LoginBlock<*>): PlayerLoadResult {
+        // Moderation gate first, before any account is created or credentials
+        // are checked: bans always win, and on a whitelist-only world an
+        // unknown name must not even auto-register.
+        if (PlayerModeration.isBanned(client.loginUsername)) {
+            return PlayerLoadResult.BANNED
+        }
+        val context = client.world.gameContext
+        if (context.whitelistOnly &&
+            !PlayerModeration.isWhitelisted(client.loginUsername) &&
+            client.loginUsername.lowercase() !in context.owners.map { it.lowercase() }
+        ) {
+            return PlayerLoadResult.NOT_WHITELISTED
+        }
+
         // No credential record at all -> brand-new account, created in-game.
         if (!PlayerDetails.playerExists(client)) {
             configureNewPlayer(client, block)

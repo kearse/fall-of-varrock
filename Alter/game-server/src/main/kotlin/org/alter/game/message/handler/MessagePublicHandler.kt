@@ -3,6 +3,7 @@ package org.alter.game.message.handler
 import net.rsprot.protocol.game.incoming.messaging.MessagePublic
 import org.alter.game.message.MessageHandler
 import org.alter.game.model.entity.Client
+import org.alter.game.saving.PlayerModeration
 import org.alter.game.service.log.LoggerService
 
 /**
@@ -48,6 +49,11 @@ class MessagePublicHandler : MessageHandler<MessagePublic> {
                     return
                 }
             }
+        }
+
+        if (PlayerModeration.isMuted(client.loginUsername)) {
+            client.writeMessage("You are muted and cannot talk.")
+            return
         }
 
         client.avatar.extendedInfo.setChat(

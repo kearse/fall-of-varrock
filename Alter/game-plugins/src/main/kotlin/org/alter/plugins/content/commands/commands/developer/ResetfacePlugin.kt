@@ -11,6 +11,7 @@ import org.alter.game.model.container.*
 import org.alter.game.model.container.key.*
 import org.alter.game.model.entity.*
 import org.alter.game.model.item.*
+import org.alter.game.model.priv.Privilege
 import org.alter.game.model.queue.*
 import org.alter.game.model.shop.*
 import org.alter.game.model.timer.*
@@ -26,7 +27,7 @@ class ResetfacePlugin(
 ) : KotlinPlugin(r, world, server) {
         
     init {
-        onCommand("resetface") {
+        onCommand("resetface", Privilege.DEV_POWER) {
             player.resetFacePawn()
             player.resetInteractions()
         }

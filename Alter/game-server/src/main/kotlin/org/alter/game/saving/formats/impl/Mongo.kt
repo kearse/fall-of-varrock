@@ -1,6 +1,7 @@
 package org.alter.game.saving.formats.impl
 
 import com.mongodb.client.model.Filters.regex
+import com.mongodb.client.model.ReplaceOptions
 import com.mongodb.client.model.Updates.set
 import org.alter.game.model.entity.Client
 import org.alter.game.saving.formats.FormatHandler
@@ -21,6 +22,14 @@ class Mongo(override val collectionName: String) : FormatHandler(collectionName)
             val attrs = document.get("attributes", Document::class.java)
             DatabaseManager.getCollection(collectionName).updateOne(caseInsensitiveFilter, set("attributes", attrs))
         }
+    }
+
+    override fun saveDocument(loginUsername: String, document: Document) {
+        DatabaseManager.getCollection(collectionName).replaceOne(
+            regex("loginUsername", "^${Regex.escape(loginUsername)}$", "i"),
+            document,
+            ReplaceOptions().upsert(true),
+        )
     }
 
     override fun parseDocument(client : Client): Document {

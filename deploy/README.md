@@ -119,6 +119,24 @@ NodeBB's first-boot setup wizard + the Discord bot `/setup` step (see
 - **Restore drill** (do this once before launch!): `mongorestore --archive --gzip <
   mongo-*.archive.gz` into a fresh mongo + untar runtime — confirm a test login works.
 
+## Moderation & closed beta
+
+Staff tooling (all persisted in the `moderation` Mongo collection, shared with saves):
+
+- `::kick <name>`, `::ban <name> [reason]`, `::unban <name>`, `::bans`,
+  `::mute <name> [hours]` (no hours = until unmuted), `::unmute <name>` — require the
+  `mod` power. Bans are enforced at login (client shows the "account disabled" screen);
+  mutes silence public chat and `::yell`. Staff and configured owners can't be targeted.
+- `::whitelist <add|remove|list> [name]` — requires the `admin` power. With
+  `whitelist-only: true` in the production `game.yml` (`/opt/kol/runtime/game.yml`),
+  only whitelisted names and the `owners` list can log in — everyone else gets the
+  "closed beta — invited players only" login screen. Use underscores for names with
+  spaces. Whitelist changes apply immediately, no restart; flipping `whitelist-only`
+  itself requires a game-container restart.
+- Privileges come from `game.yml`: the `owners:` list is forced to the owner rank on
+  every login; to appoint a moderator, grant their account a privilege whose powers
+  include `mod` (see the `privileges:` block in `game.example.yml`).
+
 ## Known follow-ups
 
 - The client bootstrap server (port 8228) still runs on the dev machine — it needs to
