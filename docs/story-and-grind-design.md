@@ -151,10 +151,21 @@ variant. Every forge consumes materials from a different pillar:
 | Material | Pillar | Source | Tradeable |
 |----------|--------|--------|-----------|
 | **Base item** | PvM / wilderness | boss drop or bot-kit loot key | yes |
-| **Commendations** | the war | March/Raid/Campaign participation, MVP bonus (item tokens, like the boss/vote ticket migration — no new currency enum) | **no** — your war record is yours |
+| **Commendations** | the war | March/Raid/Campaign participation, MVP bonus (item tokens, like the boss/vote ticket migration — no new currency enum) | **no** — the one untradeable, and deliberately the *smallest* ingredient (a handful of marches, not the wall) |
 | **Relics of old Varrock** | risk/salvage | Fallen Varrock salvage runs + rare rogue drops | yes (trading post — creates a market) |
 | **Smithing materials** | skilling | supply-contract outputs (bars, leathers, cloth) | yes |
 | **Forge component** | apex PvM | named captains (§4), district Wardens (Grand March MVP), campaign bosses — each drops a *specific* component | yes, rare |
+
+**Finished war-forged gear is tradeable too.** This is the RSPS economy players expect —
+grind gp your own way, buy power on the market (the OSRS twisted-bow model). The
+commendation fee doesn't stop a rich player buying a finished piece from a grinder; it
+guarantees every forged item in the economy represents real marches fought by *somebody*,
+so the war stays populated no matter how wealth flows, and the store can never mint max
+gear. It's a faucet control, not a player restriction.
+
+**Self-made mark:** an item forged entirely from ingredients the customer earned
+themselves gets a small cosmetic mark + the title *"forged by their own hand"*. Same
+stats as a bought piece — power is tradeable, status is earned.
 
 **Spec weapons** follow the same path with a flavor twist: each district's named captain
 carries a **broken signature weapon** (e.g. *Karn's cleaver* → restored as an
@@ -169,11 +180,14 @@ recipe.
   lucky week.
 - **Bad-luck protection** on forge components: district Wardens drop a pity shard every
   kill; N shards = one component. RNG excites, determinism retains.
-- Commendations being untradeable is the anti-swipe valve: you cannot buy your way past
-  the war itself (bonds can buy relics/materials off other players — that's fine, it
-  pays the skillers).
+- Commendations being untradeable is the anti-swipe valve on the *faucet*: bonds can buy
+  gp, gp can buy every tradeable ingredient and even finished pieces — but the store
+  alone can never create a forged item that no one marched for.
 - Sink: war-forged gear uses the standard death rules — smithable **repair** costs
-  (more contract materials) rather than loss, so the economy keeps cycling.
+  (more contract materials + a gp fee) rather than loss, so the economy keeps cycling.
+- **Inflation watch:** tradeable + very-high-value only works if gp has sinks. Bond
+  buyers inject demand; if prices outrun what self-made players can earn, tighten the
+  sinks (repair/forge fees) or widen the faucets (contract payouts) — tune, don't panic.
 
 ### 6d. Why this shape
 
