@@ -1,0 +1,70 @@
+name: Server Ops
+
+# Restart, redeploy, or inspect the VPS stack from the Actions tab — works
+# from any browser (or the GitHub mobile app), no SSH access needed.
+#
+#   restart   restart containers in place (fastest; no image pull)
+#   redeploy  re-pull the currently deployed tag and recreate containers
+#   stop      stop the stack / one service
+#   start     start the stack / one service
+#   status    show container states + deployed tag
+#   logs      print the last 200 log lines
+#
+# This never builds images. To rebuild from source, run the Deploy workflow
+# (or just push to main).
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "What to do"
+        type: choice
+        required: true
+        default: restart
+        options: [restart, redeploy, stop, start, status, logs]
+      service:
+        description: "Which service (all = whole stack)"
+        type: choice
+        required: true
+        default: all
+        options: [all, game, web, discord-bot, forum, caddy, mongo]
+
+# Share the deploy group so ops never race a running deploy
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  ops:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Write SSH key
+        run: |
+          install -m 600 /dev/null deploy_key
+          printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > deploy_key
+
+      - name: Ship latest server.sh
+        run: |
+          scp -i deploy_key -o StrictHostKeyChecking=accept-new \
+            deploy/server.sh \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:/opt/kol/server.sh"
+
+      - name: Run ${{ inputs.action }} ${{ inputs.service }}
+        run: |
+          SERVICE='${{ inputs.service }}'
+          [ "$SERVICE" = all ] && SERVICE=''
+          ssh -i deploy_key -o StrictHostKeyChecking=accept-new \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+            "chmod +x /opt/kol/server.sh; /opt/kol/server.sh '${{ inputs.action }}' $SERVICE"
+
+      - name: Health check
+        if: ${{ inputs.action == 'restart' || inputs.action == 'redeploy' || inputs.action == 'start' }}
+        run: |
+          sleep 25
+          ssh -i deploy_key -o StrictHostKeyChecking=accept-new \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+            "set -e; \
+             /opt/kol/server.sh status; \
+             nc -z localhost 43594 && echo 'game: port 43594 up'"
