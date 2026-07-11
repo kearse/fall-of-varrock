@@ -1,8 +1,7 @@
 package org.alter.plugins.content.war.roguehunt
 
 import dev.openrune.cache.CacheManager.getNpc
-import org.alter.api.ext.message
-import org.alter.api.ext.player
+import org.alter.api.ext.*
 import org.alter.game.Server
 import org.alter.game.model.World
 import org.alter.game.model.attr.KILLER_ATTR
