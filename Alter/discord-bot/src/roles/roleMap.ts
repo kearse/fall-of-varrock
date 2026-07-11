@@ -43,7 +43,7 @@ export const MANAGED_ROLES: ManagedRole[] = [
 ];
 
 /** The bot's own integration role name (created/positioned above managed roles). */
-export const BOT_ROLE_NAME = "🤖 Lumbridge Bot";
+export const BOT_ROLE_NAME = "🤖 Varrock Bot";
 
 /**
  * Roles the sync engine OWNS: it will add them when `applies` is true and remove
