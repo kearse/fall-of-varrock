@@ -1,16 +1,20 @@
 package org.alter.plugins.content.war
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import org.alter.api.ext.message
-import org.alter.api.ext.player
+import org.alter.api.NpcSkills
+import org.alter.api.ext.*
 import org.alter.game.Server
 import org.alter.game.model.World
+import org.alter.game.model.entity.Npc
+import org.alter.game.model.entity.Player
 import org.alter.game.model.move.moveTo
 import org.alter.game.model.priv.Privilege
 import org.alter.game.model.timer.TimerKey
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
 import org.alter.plugins.content.announce.Announce
+import org.alter.plugins.content.war.forge.WarForge
+import org.alter.rscm.RSCM.getRSCM
 
 private val logger = KotlinLogging.logger {}
 
@@ -44,6 +48,11 @@ class MarchPlugin(
     private val hotConfirm = HashMap<String, Int>()
     /** The district the mustering march will move on (picked at the muster call). */
     private var target: District? = null
+    /** True while the mustering/next march is a GRAND MARCH (every [GRAND_EVERY]th). */
+    private var pendingGrand = false
+    /** The live district Warden of a running Grand March, if any. */
+    private var warden: Npc? = null
+    private var wardenDistrict: District? = null
 
     init {
         val timer = TimerKey()
@@ -82,6 +91,12 @@ class MarchPlugin(
             player.message("<col=4f9b4f>You rally to the knights' column. Fight beside them — the realm pays its soldiers from the spoils.</col>")
         }
 
+        // Warden kill: additive death hook, bails instantly unless a Grand March Warden is up.
+        onAnyNpcDeath {
+            val w = warden ?: return@onAnyNpcDeath
+            if (npc === w) onWardenSlain(world, w)
+        }
+
         // ::districts — the reconquest map: every district's pressure/broken state.
         onCommand("districts", description = "Show the reconquest of Varrock, district by district") {
             Districts.statusLines().forEach { player.message(it) }
@@ -113,14 +128,22 @@ class MarchPlugin(
             schedule(world, timer, INTERVAL_TICKS - WARN_TICKS) // try again next cycle
             return
         }
-        if (!RealmSupply.canAfford(CampaignTier.MARCH.supplyCost)) {
-            Announce.broadcast(world, "<col=801700>The Knights of Lumbridge cannot march — the realm's war-stores are too low (${RealmSupply.meter()}/${CampaignTier.MARCH.supplyCost} needed). Hand supplies to a Quartermaster!</col>")
+        // Every GRAND_EVERYth launched march is a GRAND MARCH — upsized, against the district's Warden.
+        val grand = (WarState.getMarchCount() + 1) % GRAND_EVERY == 0
+        val tier = if (grand) CampaignTier.GRAND_MARCH else CampaignTier.MARCH
+        if (!RealmSupply.canAfford(tier.supplyCost)) {
+            Announce.broadcast(world, "<col=801700>The Knights of Lumbridge cannot march — the realm's war-stores are too low (${RealmSupply.meter()}/${tier.supplyCost} needed). Hand supplies to a Quartermaster!</col>")
             schedule(world, timer, INTERVAL_TICKS - WARN_TICKS)
             return
         }
         val d = Districts.marchTarget(world)
         target = d
-        Announce.broadcast(world, "<col=4f9b4f>The Knight-Captain musters a march on <col=ffae00>${d.display}</col><col=4f9b4f> of Fallen ${op!!.displayName} — it sets out in ~${WARN_TICKS * 6 / 600} minutes! Any soldier may fight beside the column: answer with <col=ffae00>::march</col><col=4f9b4f>.</col>")
+        pendingGrand = grand
+        if (grand) {
+            Announce.broadcast(world, "<col=ffcc00>A GRAND MARCH musters against <col=ffae00>the Warden of ${d.display}</col><col=ffcc00> — ${tier.troops} knights set out in ~${WARN_TICKS * 6 / 600} minutes! The Warden's embers feed the Royal Smith's forge. <col=ffae00>::march</col><col=ffcc00> to fight!</col>")
+        } else {
+            Announce.broadcast(world, "<col=4f9b4f>The Knight-Captain musters a march on <col=ffae00>${d.display}</col><col=4f9b4f> of Fallen ${op!!.displayName} — it sets out in ~${WARN_TICKS * 6 / 600} minutes! Any soldier may fight beside the column: answer with <col=ffae00>::march</col><col=4f9b4f>.</col>")
+        }
         state = State.MUSTERING
         schedule(world, timer, WARN_TICKS)
     }
@@ -129,7 +152,10 @@ class MarchPlugin(
     private fun launch(world: World) {
         val op = Campaigns.hostileTarget() ?: return
         if (CampaignRegistry.activeMarch() != null || CampaignRegistry.isAttacking(op.cityKey)) return
-        if (!RealmSupply.canAfford(CampaignTier.MARCH.supplyCost)) {
+        val grand = pendingGrand
+        pendingGrand = false
+        val tier = if (grand) CampaignTier.GRAND_MARCH else CampaignTier.MARCH
+        if (!RealmSupply.canAfford(tier.supplyCost)) {
             Announce.broadcast(world, "<col=801700>The march is called off — the realm's war-stores ran dry at the gate.</col>")
             return
         }
@@ -141,15 +167,78 @@ class MarchPlugin(
             route = op.route.takeWhile { it.z <= CITY_MOUTH_Z } + d.approach,
             objectiveTile = d.rally,
         )
-        val started = CampaignRegistry.start(world, marchOp, CampaignTier.MARCH, sponsor = null) { won ->
+        val started = CampaignRegistry.start(world, marchOp, tier, sponsor = null) { won ->
             if (won) Districts.creditMarchWin(world, d)
+            despawnWarden(world, marchWon = won)
         }
         if (!started) {
             logger.warn { "[MARCH] scheduled march on ${op.cityKey}/${d.key} failed to start" }
             return
         }
-        RealmSupply.consume(world, CampaignTier.MARCH, "The Knights of Lumbridge", "${d.display} of ${op.displayName}")
-        logger.info { "[MARCH] scheduled march launched on ${op.cityKey}/${d.key} (supplies now ${RealmSupply.meter()})." }
+        WarState.incMarchCount()
+        if (grand) spawnWarden(world, d)
+        RealmSupply.consume(world, tier, "The Knights of Lumbridge", "${d.display} of ${op.displayName}")
+        logger.info { "[MARCH] scheduled ${tier.display} launched on ${op.cityKey}/${d.key} (supplies now ${RealmSupply.meter()})." }
+    }
+
+    /** The Grand March's boss-tier defender: the district's Warden, waiting at the rally point. */
+    private fun spawnWarden(world: World, d: District) {
+        runCatching {
+            val npc = Npc(getRSCM(WARDEN_NPC), d.rally, world)
+            npc.walkRadius = 4
+            world.spawn(npc)
+            WarNpcNames.rename(npc, "The Warden of ${d.display}")
+            npc.combatDef = npc.combatDef.copy(
+                attack = WARDEN_ATTACK, strength = WARDEN_STRENGTH,
+                defence = WARDEN_DEFENCE, hitpoints = WARDEN_HP,
+            )
+            npc.stats.setMaxLevel(NpcSkills.ATTACK, WARDEN_ATTACK)
+            npc.stats.setCurrentLevel(NpcSkills.ATTACK, WARDEN_ATTACK)
+            npc.stats.setMaxLevel(NpcSkills.STRENGTH, WARDEN_STRENGTH)
+            npc.stats.setCurrentLevel(NpcSkills.STRENGTH, WARDEN_STRENGTH)
+            npc.stats.setMaxLevel(NpcSkills.DEFENCE, WARDEN_DEFENCE)
+            npc.stats.setCurrentLevel(NpcSkills.DEFENCE, WARDEN_DEFENCE)
+            npc.setCurrentHp(WARDEN_HP)
+            npc.respawns = false
+            npc.setActive(true)
+            warden = npc
+            wardenDistrict = d
+        }.onFailure { logger.error(it) { "[MARCH] failed to spawn the Warden of ${d.key}" } }
+    }
+
+    /** Tear down a surviving Warden when its Grand March ends (with a taunt if the march lost). */
+    private fun despawnWarden(world: World, marchWon: Boolean) {
+        val w = warden ?: return
+        val d = wardenDistrict
+        warden = null
+        wardenDistrict = null
+        if (w.index >= 0 && world.npcs.contains(w) && !w.isDead()) {
+            world.remove(w)
+            if (!marchWon && d != null) {
+                Announce.broadcast(world, "<col=801700>The Warden of ${d.display} still stands — his embers stay cold in the enemy's grip.</col>")
+            }
+        }
+    }
+
+    /** Warden slain: embers for the fighters — guaranteed for the MVP, rolled for the rest. */
+    private fun onWardenSlain(world: World, w: Npc) {
+        val d = wardenDistrict
+        warden = null
+        wardenDistrict = null
+        val fighters = ArrayList<Player>()
+        world.players.forEach { p ->
+            if (p.index >= 0 && w.damageMap.getDamageFrom(p) > 0) fighters.add(p)
+        }
+        val mvp = fighters.maxByOrNull { w.damageMap.getDamageFrom(it) }
+        fighters.forEach { p ->
+            when {
+                p === mvp -> WarForge.awardEmbers(p, 1)
+                world.random(EMBER_ROLL - 1) == 0 -> WarForge.awardEmbers(p, 1)
+                else -> p.message("<col=801700>The Warden's embers scatter — the killing blow's crew claimed them.</col>")
+            }
+        }
+        val where = d?.display ?: "the district"
+        Announce.broadcast(world, "<col=ffcc00>The Warden of $where has FALLEN${mvp?.let { " — ${it.username} struck truest" } ?: ""}! His embers feed the Royal Smith's forge.</col>")
     }
 
     private companion object {
@@ -161,5 +250,15 @@ class MarchPlugin(
         const val CONFIRM_WINDOW = 50
         /** Where the campaign route enters Varrock's streets — district approaches branch here. */
         const val CITY_MOUTH_Z = 3425
+        /** Every Nth launched march is a GRAND MARCH (persisted counter in [WarState]). TUNE. */
+        const val GRAND_EVERY = 8
+        /** 1-in-N Warden's-ember roll for non-MVP fighters. TUNE. */
+        const val EMBER_ROLL = 3
+        /** The Warden's base model (renamed + boosted at spawn). */
+        const val WARDEN_NPC = "npc.black_knight"
+        const val WARDEN_ATTACK = 200
+        const val WARDEN_STRENGTH = 180
+        const val WARDEN_DEFENCE = 160
+        const val WARDEN_HP = 1500
     }
 }

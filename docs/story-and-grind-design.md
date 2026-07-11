@@ -74,9 +74,13 @@ The March is the public bus; the Lord's Raid is chartered.
   district pressure meter (§5); even NPC-only marches move it slightly.
 - **Rewards scale with participation, not presence** — reuse the siege-defense
   contribution tracking. Pays coins + War Effort + **Commendations** (§6), MVP bonus.
-- **Weekly Grand March** ⬜ — a bigger roster against a district's **Warden** (a
-  boss-tier defender using the `BossCombat` primitives). Guaranteed forge component
-  (§6) for the MVP, rolled for everyone else.
+- ✅ **Grand March** — every 8th launched march (persisted counter in `WarState`),
+  upsized (`CampaignTier.GRAND_MARCH`: 16 knights, quota 20, 300 supplies, up to 5
+  Commendations). The district's **Warden** (boss-tier, 1500hp, base-model animations)
+  waits at the rally; his fall pays **Warden's embers** (`item.burnt_page` — tradeable
+  forge component): guaranteed for the damage MVP, 1/3 roll for every other fighter,
+  realm-wide broadcast. A driven-back Grand March despawns the Warden with a taunt.
+  Embers gate the forge's **helm tier** (§6). Cadence/stats TUNE.
 
 Engineering note: this is the inverse of the existing goblin raid event — the
 `AttackDirector` / commander / Force layers and `CityFrontiers` are the reuse surface.
@@ -302,8 +306,9 @@ unlock), commendations or any forge ingredient, XP, stats.
    breadth on top of the framework.
    - ✅ Named captains per district with bounties + signature spec-weapon drops,
      `::bounties` board.
-   - ⬜ Weekly Grand March + district Wardens (boss-tier, pity shards), district
-     armouries, broken-weapon restoration recipes at the forge.
+   - ✅ Grand March (every 8th) + district Wardens dropping Warden's embers; ember-gated
+     helm recipes complete the three war-forged sets (9 recipes total).
+   - ⬜ District armouries, broken-weapon restoration recipes, pity shards on embers.
 7. ⬜ **Patron products** (§7) — after marches exist: patron-funded march, banners,
    memorial. Store SKUs ride the existing entitlements pipeline (`Alter/web`).
 8. ⬜ **Wiki pages on deploy** — `Alter/web/content/wiki/`: "The grind explained"

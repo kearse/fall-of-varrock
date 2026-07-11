@@ -33,8 +33,9 @@ object CampaignRegistry {
     fun isAttacking(cityKey: String): Boolean =
         active.any { it.tier != CampaignTier.RAID && it.targetCityKey.equals(cityKey, ignoreCase = true) }
 
-    /** The realm's scheduled warband currently in the field ([CampaignTier.MARCH]), if any. */
-    fun activeMarch(): CampaignDirector? = active.firstOrNull { it.tier == CampaignTier.MARCH }
+    /** The realm's scheduled warband currently in the field (MARCH or GRAND_MARCH), if any. */
+    fun activeMarch(): CampaignDirector? =
+        active.firstOrNull { it.tier == CampaignTier.MARCH || it.tier == CampaignTier.GRAND_MARCH }
 
     /**
      * Begin a [tier] operation for [sponsor] (null = the realm's own scheduled MARCH). Returns

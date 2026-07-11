@@ -109,6 +109,17 @@ object WarState {
     /** Add [delta] (may be negative) to the realm supply meter; returns the new clamped value. */
     fun addSupplyMeter(delta: Int): Int { setSupplyMeter(supplyMeter + delta); return getSupplyMeter() }
 
+    // --- march counter (every Nth launched march is a GRAND MARCH — see MarchPlugin) ---
+    private var marchCount = 0
+
+    fun getMarchCount(): Int = marchCount
+
+    fun incMarchCount(): Int {
+        marchCount++
+        dirty = true
+        return marchCount
+    }
+
     // --- district pressure (the reconquest of Varrock — story-and-grind-design §5) ---
     private val districtPressureByKey = HashMap<String, Int>()
 
@@ -192,6 +203,7 @@ object WarState {
             (doc.get("districts", Document::class.java))?.forEach { (key, value) ->
                 (value as? Number)?.let { districtPressureByKey[key] = it.toInt().coerceAtLeast(0) }
             }
+            (doc.get("marchCount") as? Number)?.let { marchCount = it.toInt().coerceAtLeast(0) }
             dirty = false
             logger.info { "Loaded war state: ${knightPoolByFront.size} front(s) from $saveFile." }
         } catch (e: Exception) {
@@ -221,6 +233,7 @@ object WarState {
                 .append("supplyMeter", supplyMeter)
                 .append("fronts", fronts)
                 .append("districts", districts)
+                .append("marchCount", marchCount)
             saveFile.writeText(doc.toJson(prettyPrint))
             dirty = false
             logger.info { "Saved war state: ${knightPoolByFront.size} front(s) to $saveFile." }

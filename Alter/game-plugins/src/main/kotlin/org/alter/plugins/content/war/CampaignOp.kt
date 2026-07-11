@@ -42,6 +42,13 @@ enum class CampaignTier(
      * (Minister) → Conquest (King). Costs the realm supplies, so the Mire loop visibly feeds it.
      */
     MARCH("march", troops = 10, quota = 15, cost = 0, coinPool = 0, prestige = 5, supplyCost = 150, commendMax = 3),
+
+    /**
+     * The **GRAND MARCH** ([MarchPlugin]) — every Nth scheduled march, upsized and led against
+     * the district's **Warden** (a boss-tier defender whose fall pays the forge's ember
+     * components). Same realm sponsorship and `::march` join as a regular march.
+     */
+    GRAND_MARCH("grand march", troops = 16, quota = 20, cost = 0, coinPool = 0, prestige = 10, supplyCost = 300, commendMax = 5),
 }
 
 /**
