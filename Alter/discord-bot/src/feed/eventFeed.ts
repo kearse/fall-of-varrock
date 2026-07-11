@@ -18,6 +18,7 @@ const COLOR: Record<string, number> = {
   raid: 0xe67e22,
   war: 0xc0392b,
   status: 0x95a5a6,
+  update: 0x5865f2,
   boot: 0x2ecc71,
   shutdown: 0x95a5a6,
 };
@@ -32,6 +33,7 @@ const EMOJI: Record<string, string> = {
   raid: "🏰",
   war: "🚩",
   status: "📡",
+  update: "🛠️",
   boot: "🟢",
   shutdown: "🔴",
 };

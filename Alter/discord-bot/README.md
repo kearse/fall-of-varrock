@@ -86,7 +86,10 @@ Paste those into `.env` and restart, so the feeds post to the right channels.
 
 `game-server/.../discord/DiscordBridge.kt` writes to Mongo. It is wired from
 `game-plugins/.../content/discord/DiscordIntegrationPlugin.kt` (login/logout
-presence, PK kills, boss kills, boot) and from `LevelUpPlugin.kt` (level-99s).
+presence, PK kills, boss kills, and boot-time update announcements sourced from
+`data/update-notes.md` — edit that file before a deploy to tell the community
+what shipped; an unchanged file means a silent boot) and from `LevelUpPlugin.kt`
+(level-99s).
 To add a new feed event from anywhere in game code:
 
 ```kotlin

@@ -44,7 +44,7 @@ object DiscordBridge {
     /**
      * Queue an event for the bot to post. `kind` routes it to a channel
      * (see discord-bot/src/config.ts channelForEventKind):
-     * "level99", "drop", "pk", "boss", "raid", "war", "status", "boot", "shutdown".
+     * "level99", "drop", "pk", "boss", "raid", "war", "status", "update", "boot", "shutdown".
      */
     fun event(
         kind: String,
@@ -73,6 +73,34 @@ object DiscordBridge {
             DatabaseManager.getCollection("discord_events").insertOne(doc)
         } catch (e: Exception) {
             failOnce(e)
+        }
+    }
+
+    /**
+     * Returns true exactly once per distinct update-notes content: compares [hash]
+     * against the last announced hash (stored in `server_meta`) and records the new
+     * one. Returns false when the hash is unchanged or Mongo is unreachable, so a
+     * plain restart never re-announces the same update.
+     */
+    fun shouldAnnounceUpdate(hash: String): Boolean {
+        if (!enabled()) return false
+        return try {
+            DatabaseManager.connect()
+            val meta = DatabaseManager.getCollection("server_meta")
+            val last = meta.find(Filters.eq("_id", "update_notes")).first()?.getString("hash")
+            if (last == hash) return false
+            meta.updateOne(
+                Filters.eq("_id", "update_notes"),
+                Updates.combine(
+                    Updates.set("hash", hash),
+                    Updates.set("announcedAt", System.currentTimeMillis()),
+                ),
+                UpdateOptions().upsert(true),
+            )
+            true
+        } catch (e: Exception) {
+            failOnce(e)
+            false
         }
     }
 
