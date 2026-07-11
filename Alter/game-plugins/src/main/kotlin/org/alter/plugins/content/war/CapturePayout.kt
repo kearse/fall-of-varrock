@@ -53,6 +53,17 @@ object CapturePayout {
             if (sponsor != null && sponsor.index >= 0) sponsor.message("<col=801700>${op.displayName} fell, but no soldier of yours stood to claim the spoils.</col>")
             return
         }
+
+        // Commendations — the war-forging service token: paid on ANY won op (even with bare
+        // coffers), contribution-scaled up to the tier's cap. Untradeable by design.
+        if (tier.commendMax > 0) {
+            val totalScore = contrib.values.sum().coerceAtLeast(1)
+            contrib.forEach { (player, score) ->
+                val n = (1 + (tier.commendMax - 1) * score / totalScore).coerceIn(1, tier.commendMax)
+                org.alter.plugins.content.war.forge.WarForge.awardCommendations(player, n)
+            }
+        }
+
         val pool = lootPool.coerceAtLeast(0)
         if (pool <= 0) {
             contrib.keys.forEach { it.message("<col=801700>${op.displayName} is taken — but its coffers were bare.</col>") }

@@ -157,7 +157,19 @@ The Palace                 ──▶  the King's Conquest — the server-wide cl
 
 ---
 
-## 6. The endgame gear economy ⬜ — max gear as the grind
+## 6. The endgame gear economy 🔶 — max gear as the grind
+
+> **Built (v1):** `war/forge/` — **Commendations** are live as an item token
+> (`item.ectotoken`: stackable, cache-untradeable; TUNE: rename/resprite via a cache
+> edit), paid by `CapturePayout` on every WON war op, contribution-scaled (March 1–3,
+> Campaign 1–6, Conquest 1–10; losses pay nothing). The **Royal Smith** stands in the
+> Lumbridge castle courtyard (tile TUNE) and forges the three BIS armour lines —
+> Bandos→Torva, Armadyl→Masori, Ahrim's→Ancestral, two pieces each — for
+> 1 base + 25 Commendations + 20 runite bars + 250k coins per piece (TUNE). Forging is
+> gated at rank Knight; outputs are Lord-tier to wear and fully tradeable; each forging
+> is a realm-wide headline. **Still ⬜:** relics as a recipe ingredient (salvage runs),
+> forge components + pity shards (Wardens, item 6), spec-weapon restoration (named
+> captains), the self-made cosmetic mark, weapons/helms to complete the sets.
 
 **Goal:** the long-term chase is a full set of best-in-slot gear per combat style — but
 no single loop grants it. Every max piece routes through **all four pillars**: the war,
@@ -277,8 +289,11 @@ unlock), commendations or any forge ingredient, XP, stats.
    - ✅ Four districts w/ persistent pressure, march targeting + win credit, break/all-broken
      announcements, campaign quota discount, `::districts`.
    - ⬜ Counterattacks, armouries, named captains, Palace gating, liberated safe pockets.
-5. ⬜ **Commendations + the Royal Smith + first war-forged pieces** (§6) — the endgame
-   chase. Start with one weapon per style + one armour set; expand.
+5. 🔶 **Commendations + the Royal Smith + first war-forged pieces** (§6) — the endgame
+   chase.
+   - ✅ Commendation item token paid on won ops (contribution-scaled); Royal Smith NPC
+     with forge dialogue; six BIS recipes (Torva/Masori/Ancestral body+legs).
+   - ⬜ Relics + forge components in recipes, spec weapons, helms/weapons, self-made mark.
 6. ⬜ **Grand March / Wardens, named captains' spec weapons, armouries** — content
    breadth on top of the framework.
 7. ⬜ **Patron products** (§7) — after marches exist: patron-funded march, banners,
