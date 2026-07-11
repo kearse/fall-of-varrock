@@ -11,6 +11,8 @@ import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
 import org.alter.plugins.content.combat.PvpZones
 import org.alter.rscm.RSCM.getRSCM
+import java.io.File
+import java.security.MessageDigest
 
 /**
  * Bridges in-game events to the Discord bot via [DiscordBridge] (which writes to
@@ -18,7 +20,10 @@ import org.alter.rscm.RSCM.getRSCM
  * Alter/discord-bot/README.md).
  *
  * Wired here:
- *  - boot               → "server online" status + clears stale presence
+ *  - boot               → clears stale presence + announces data/update-notes.md
+ *                         to the news channel IF its content changed since the
+ *                         last announcement (so restarts/redeploys without new
+ *                         notes stay silent instead of spamming "server online")
  *  - login / logout     → live presence for the bot's /online command
  *  - wilderness PK kills → #pk-highlights feed
  *  - boss kills          → #boss-and-war feed (for ids you list in [BOSSES])
@@ -48,7 +53,7 @@ class DiscordIntegrationPlugin(
 
         onWorldInit {
             DiscordBridge.clearOnline()
-            DiscordBridge.event(kind = "boot", title = "The Fall of Varrock is now online!")
+            announceUpdateNotes()
         }
 
         onLogin {
@@ -81,5 +86,35 @@ class DiscordIntegrationPlugin(
                 player = killer?.username,
             )
         }
+    }
+
+    /**
+     * Post `data/update-notes.md` to Discord as an update announcement, once per
+     * distinct file content (dedupe lives in [DiscordBridge.shouldAnnounceUpdate]).
+     * First line = title, rest = body; HTML comments are stripped. Missing or
+     * empty file = no announcement.
+     */
+    private fun announceUpdateNotes() {
+        val file = sequenceOf("../data/update-notes.md", "data/update-notes.md")
+            .map(::File)
+            .firstOrNull { it.isFile } ?: return
+        val text = file.readText()
+            .replace(Regex("<!--.*?-->", RegexOption.DOT_MATCHES_ALL), "")
+            .trim()
+        if (text.isEmpty()) return
+
+        val hash = MessageDigest.getInstance("SHA-1")
+            .digest(text.toByteArray())
+            .joinToString("") { "%02x".format(it) }
+        if (!DiscordBridge.shouldAnnounceUpdate(hash)) return
+
+        val lines = text.lines()
+        val title = lines.first().trimStart('#', ' ').trim()
+        val body = lines.drop(1).joinToString("\n").trim()
+        DiscordBridge.event(
+            kind = "update",
+            title = title,
+            description = body.take(4000).ifEmpty { null },
+        )
     }
 }
