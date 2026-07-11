@@ -16,18 +16,27 @@ Every real-player kill drops Blood Money into your inventory:
 - It's a real inventory item, so it's riskable and lootable like anything else.
 - Bot kills pay **nothing** — Blood Money only comes from humans.
 
-Spend it at the **PK Rewards shop** (`::pkshop`, or the Emblem Trader in the Lumbridge market's east row):
+Spend it at the **PK Rewards vendor** (`::pkshop`, or the Emblem Trader in the Lumbridge market's east row) — four shelves:
 
-| Item | Blood Money |
-| --- | --- |
-| Shark | 5 |
-| Prayer potion (4) | 20 |
-| Ranging potion (4) | 25 |
-| Super restore (4) | 30 |
-| Saradomin brew (4) | 35 |
-| Super combat potion (4) | 40 |
+**PK supplies** — the consumables PKing burns (shark 5, prayer pot 20, ranging 25, restore 30, brew 35, super combat 40). The loop feeds itself.
 
-The shop stocks the consumables PKing burns — the loop feeds itself.
+**Spec weapons** — the PKer's gear chase, priced in Blood Money:
+
+| Item | BM | Item | BM |
+| --- | --- | --- | --- |
+| Granite maul | 1,500 | Burning claws | 14,000 |
+| Abyssal whip | 3,000 | Armadyl godsword | 15,000 |
+| Dragon warhammer | 10,000 | Dragon claws (or) | 16,000 |
+| Dragon claws | 12,000 | Elder maul | 20,000 |
+| Ancient godsword | 20,000 | Voidwaker | 30,000 |
+
+Claws and the warhammer also drop from the [wanted captains](/wiki/marches-and-the-reconquest) at 1/8 — hunting them is the cheaper path; the shop is your bad-luck protection.
+
+**Wilderness sets** — Vesta's (including the **Vesta's longsword**), Statius's, Morrigan's and Zuriel's, 8,000–25,000 BM per piece. These are the wilderness prestige sets your rank gates — and Blood Money is their only source.
+
+**Revenant weapons** — craw's / viggora's / thammaron's at 6,000, their upgraded forms at 10,000–12,000.
+
+PvM chase gear (tbow, scythe, GWD bases…) deliberately is NOT here — that's the [Warlord's Armoury](/wiki/trading-post-and-shops)'s Boss-Ticket catalogue. Currency matches playstyle.
 
 ## Stats, Elo and rank
 

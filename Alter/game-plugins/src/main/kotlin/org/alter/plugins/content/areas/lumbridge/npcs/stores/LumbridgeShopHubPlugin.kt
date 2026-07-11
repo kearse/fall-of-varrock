@@ -386,6 +386,9 @@ class LumbridgeShopHubPlugin(
         Ware("item.royal_partyhat", 1000, 40),   // cosmetic
         Ware("item.super_restore4", 1000, 6),
         Ware("item.ranging_potion4", 1000, 6),
+        // Shop-economy-redesign §4: the vote shelf was 3 items thin — two QoL consumables.
+        Ware("item.stamina_potion4", 1000, 6),
+        Ware("item.divine_super_combat_potion4", 1000, 15),
     )
 
     // Declared last so every stock list above is initialised before this init runs.
