@@ -1,0 +1,85 @@
+name: Quest cache relabel
+
+# One-click quest-tab cache edit on the LIVE server, over the same secure SSH path
+# the Deploy workflow uses (secrets DEPLOY_SSH_KEY / DEPLOY_USER / DEPLOY_HOST) — no
+# manual SSH needed. Runs the questTable tool that already ships inside the game image
+# against the live cache at /opt/kol/runtime/cache.
+#
+#   inspect  — read-only: print the target rows + what they'll become (safe, do first)
+#   relabel  — back up the cache (once, to runtime/cache.prerelabel), rename the rows,
+#              restart the game container (~90s disconnect)
+#   restore  — swap the pristine backup back and restart the game container
+#
+# Actions -> Quest cache relabel -> Run workflow -> pick an action.
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "What to do to the live quest cache"
+        type: choice
+        required: true
+        default: inspect
+        options: [inspect, relabel, restore]
+
+concurrency:
+  group: quest-cache
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Write SSH key
+        run: |
+          install -m 600 /dev/null deploy_key
+          printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > deploy_key
+
+      - name: Run quest cache ${{ inputs.action }} on the VPS
+        run: |
+          ssh -i deploy_key -o StrictHostKeyChecking=accept-new \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+            'bash -s' '${{ inputs.action }}' <<'REMOTE'
+          set -euo pipefail
+          ACTION="${1:-inspect}"
+          cd /opt/kol
+          export IMAGE_TAG="$(cat .deployed-tag 2>/dev/null || echo latest)"
+          CACHE=/opt/kol/runtime/cache
+          COMPOSE="docker compose -f docker-compose.prod.yml"
+
+          run_tool() {
+            $COMPOSE run --rm -T --no-deps \
+              -v "$CACHE":/cache --entrypoint java game \
+              -cp '/app/lib/*' org.alter.tools.quests.QuestTablePatchKt "$1" /cache
+          }
+
+          echo "== quest cache: $ACTION (image tag $IMAGE_TAG) =="
+          case "$ACTION" in
+            inspect)
+              run_tool inspect
+              ;;
+            relabel)
+              if [ ! -d runtime/cache.prerelabel ]; then
+                cp -r runtime/cache runtime/cache.prerelabel
+                echo "backed up pristine cache -> runtime/cache.prerelabel"
+              else
+                echo "pristine backup already exists (runtime/cache.prerelabel) — keeping it"
+              fi
+              run_tool relabel
+              $COMPOSE restart game
+              echo "game container restarted — relog to see the change"
+              ;;
+            restore)
+              if [ ! -d runtime/cache.prerelabel ]; then
+                echo "ERROR: no backup at runtime/cache.prerelabel — nothing to restore"; exit 1
+              fi
+              $COMPOSE stop game
+              rm -rf runtime/cache
+              cp -r runtime/cache.prerelabel runtime/cache
+              $COMPOSE up -d game
+              echo "restored pristine cache + restarted game"
+              ;;
+            *)
+              echo "unknown action: $ACTION"; exit 1 ;;
+          esac
+          REMOTE
