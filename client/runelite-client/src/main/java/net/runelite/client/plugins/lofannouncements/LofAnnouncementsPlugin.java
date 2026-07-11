@@ -21,6 +21,7 @@ import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
+import net.runelite.client.plugins.lofintro.LofIntroPlugin;
 import net.runelite.client.ui.overlay.OverlayManager;
 import net.runelite.client.util.Text;
 
@@ -78,7 +79,14 @@ public class LofAnnouncementsPlugin extends Plugin
 		// Keep the RAW message (with <col> tags) so the overlay can honour the server's colour;
 		// only the visible text matters for the empty check.
 		final String raw = event.getMessage();
-		if (Text.removeTags(raw).trim().isEmpty())
+		final String visible = Text.removeTags(raw).trim();
+		if (visible.isEmpty())
+		{
+			return;
+		}
+
+		// Machine-to-machine trigger for the intro video plugin, not a headline.
+		if (visible.startsWith(LofIntroPlugin.TRIGGER_PREFIX))
 		{
 			return;
 		}

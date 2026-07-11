@@ -87,12 +87,33 @@ public final class PatchClient {
         System.out.println("[done] -> " + out);
     }
 
+    // --- patch-target guard --------------------------------------------------
+
+    /**
+     * Entries the byte-scans must never touch: the JavaFX runtime (shaded in for the
+     * intro video) and any native library. A stray needle match in a DLL would corrupt
+     * it AND leave the real target unpatched (the scans stop at the first hit).
+     */
+    private static boolean isPatchable(String name) {
+        if (name.endsWith(".dll") || name.endsWith(".so") || name.endsWith(".dylib")) return false;
+        return !(name.startsWith("javafx/")
+                || name.startsWith("com/sun/javafx/")
+                || name.startsWith("com/sun/glass/")
+                || name.startsWith("com/sun/prism/")
+                || name.startsWith("com/sun/media/")
+                || name.startsWith("com/sun/scenario/")
+                || name.startsWith("com/sun/pisces/")
+                || name.startsWith("com/sun/marlin/")
+                || name.startsWith("com/sun/openpisces/"));
+    }
+
     // --- modulus -----------------------------------------------------------
 
     /** Find the entry containing the RSA exponent "10001", patch its modulus. Returns null if absent. */
     private static String overwriteModulus(Map<String, byte[]> zip, String rsa) {
         byte[] needle = "10001".getBytes(StandardCharsets.UTF_8);
         for (Map.Entry<String, byte[]> e : zip.entrySet()) {
+            if (!isPatchable(e.getKey())) continue;
             byte[] bytes = e.getValue();
             if (indexOf(bytes, needle, 0) == -1) continue;
             String[] old = new String[1];
@@ -113,6 +134,7 @@ public final class PatchClient {
         byte[] needle = from.getBytes(StandardCharsets.UTF_8);
         int len = needle.length, count = 0;
         for (Map.Entry<String, byte[]> e : zip.entrySet()) {
+            if (!isPatchable(e.getKey())) continue;
             byte[] bytes = e.getValue();
             int at = 0, idx;
             while ((idx = indexOf(bytes, needle, at)) != -1) {
@@ -146,6 +168,7 @@ public final class PatchClient {
         int len = needle.length;
         boolean any = false;
         for (Map.Entry<String, byte[]> e : zip.entrySet()) {
+            if (!isPatchable(e.getKey())) continue;
             byte[] bytes = e.getValue();
             int from = 0, idx;
             while ((idx = indexOf(bytes, needle, from)) != -1) {
@@ -182,6 +205,7 @@ public final class PatchClient {
     private static boolean overwriteLocalHost(Map<String, byte[]> zip) {
         byte[] needle = "127.0.0.1".getBytes(StandardCharsets.UTF_8);
         for (Map.Entry<String, byte[]> e : zip.entrySet()) {
+            if (!isPatchable(e.getKey())) continue;
             if (indexOf(e.getValue(), needle, 0) == -1) continue;
             e.setValue(setString(e.getValue(), indexOf(e.getValue(), needle, 0), ""));
             return true;

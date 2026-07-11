@@ -296,6 +296,36 @@
 			<version>3.14.9</version>
 			<scope>test</scope>
 		</dependency>
+
+		<!-- JavaFX media stack for the first-login intro video (lofintro). Windows-classifier
+		     jars carry the native DLLs; JavaFX self-extracts them to ~/.openjfx/cache at
+		     runtime, which works from the shaded jar + the launcher's URLClassLoader
+		     (verified on JDK 11, the bundled player runtime). 17.x is the last FX line
+		     supporting Java 11. On mac/linux (no natives shaded) lofintro skips gracefully. -->
+		<dependency>
+			<groupId>org.openjfx</groupId>
+			<artifactId>javafx-base</artifactId>
+			<version>17.0.13</version>
+			<classifier>win</classifier>
+		</dependency>
+		<dependency>
+			<groupId>org.openjfx</groupId>
+			<artifactId>javafx-graphics</artifactId>
+			<version>17.0.13</version>
+			<classifier>win</classifier>
+		</dependency>
+		<dependency>
+			<groupId>org.openjfx</groupId>
+			<artifactId>javafx-media</artifactId>
+			<version>17.0.13</version>
+			<classifier>win</classifier>
+		</dependency>
+		<dependency>
+			<groupId>org.openjfx</groupId>
+			<artifactId>javafx-swing</artifactId>
+			<version>17.0.13</version>
+			<classifier>win</classifier>
+		</dependency>
 	</dependencies>
 
 	<dependencyManagement>
@@ -377,6 +407,10 @@
 									<artifact>*:*</artifact>
 									<excludes>
 										<exclude>META-INF/versions/**/module-info.class</exclude>
+										<!-- JavaFX jars each carry a top-level module-info; the shaded
+										     jar runs on the classpath where it's dead weight and would
+										     overlap across the four artifacts. -->
+										<exclude>module-info.class</exclude>
 									</excludes>
 								</filter>
 							</filters>
