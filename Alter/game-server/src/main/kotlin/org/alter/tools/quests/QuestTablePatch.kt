@@ -3,9 +3,11 @@ package org.alter.tools.quests
 import com.displee.cache.CacheLibrary
 import dev.openrune.cache.CONFIGS
 import dev.openrune.cache.DBROW
+import dev.openrune.cache.DBTABLEINDEX
 import dev.openrune.cache.filestore.buffer.BufferReader
 import dev.openrune.cache.filestore.buffer.BufferWriter
 import dev.openrune.cache.filestore.buffer.Reader
+import dev.openrune.cache.filestore.buffer.Writer
 import dev.openrune.cache.filestore.definition.data.DBRowType
 import dev.openrune.cache.filestore.definition.decoder.decodeColumnFields
 import dev.openrune.cache.filestore.definition.decoder.readVarInt2
@@ -25,23 +27,26 @@ import java.io.File
  * server can freely drive ([QuestJournal.RECRUIT_QUEST_VARP] etc.): relabel its row's name columns
  * and mirror our quest state into its varp → the stock tab colours it red/yellow/green for free.
  *
- * This phase only rewrites the STRING name columns (1 = sort name, 2 = displayed name). It does NOT
- * change the row set or any indexed column, so **no DBTableIndex rebuild is needed** and the risk is
- * minimal — the other OSRS quests still list unchanged. Deleting them and listing only FoV quests is
- * Phase 2 (a full row-set replace + index-21 rebuild — see docs/quest-tab-handoff.md).
+ * `relabel` only rewrites the STRING name columns (1 = sort name, 2 = displayed name) — no row set
+ * or indexed column changes, so the other OSRS quests still list. **Phase 2 (`hide`)** then prunes
+ * the quest table's master row index down to just our rows, so the tab lists ONLY FoV quests (the
+ * other rows are hidden, not deleted — fully reversible). See [hide].
  *
- *   gradlew :game-server:questTable                              # inspect (read-only)
- *   gradlew :game-server:questTable -PquestArgs="inspect"
+ *   gradlew :game-server:questTable -PquestArgs="inspect"        # read-only
  *   gradlew :game-server:questTable -PquestArgs="relabel"        # back up + rename the rows
- *   gradlew :game-server:questTable -PquestArgs="restore"        # undo from the backups
+ *   gradlew :game-server:questTable -PquestArgs="hide"           # list ONLY our quests
+ *   gradlew :game-server:questTable -PquestArgs="restore"        # undo the relabels
  *   gradlew :game-server:questTable -PquestArgs="relabel D:/path/to/cache"
  *
- * After `relabel`, restart the server so it serves the edited cache, log in, and watch the
- * "Recruit Trials" row track a fresh account (red → yellow as you start → green on completion).
+ * After each write, restart the server so it serves the edited cache. On the live VPS this all runs
+ * through the "Quest cache relabel" GitHub Actions workflow (docs/quest-tab-handoff.md).
  */
 
 private const val CACHE_PATH = "data/cache"
 private const val BACKUP_DIR = "data/cache-backups"
+
+private const val QUEST_TABLE_ID = 0 // DBTable id the quest tab renders (also its DBTABLEINDEX archive)
+private const val MASTER_INDEX_FILE = 0 // DBTABLEINDEX file 0 = the "all rows" master the list iterates
 
 private const val COL_SORT_NAME = 1 // hidden sort key (list orders by this within a category)
 private const val COL_DISPLAY_NAME = 2 // the name shown in the quest tab (DBTableID.Quest.NAME)
@@ -69,6 +74,9 @@ private val PLAN = listOf(
     Relabel(dbrowId = 30, questId = 11, sortName = "2 War-Prep I - Magic", displayName = "War-Prep I - Magic", varp = 31),
 )
 
+/** The only quest rows the tab should list after `hide` — exactly the ones we relabelled. */
+private val KEPT: Set<Int> = PLAN.map { it.dbrowId }.toSet()
+
 fun main(args: Array<String>) {
     val mode = args.getOrNull(0)?.lowercase() ?: "inspect"
     // Everything after the mode is the cache path, rejoined with spaces — the Gradle task splits
@@ -85,7 +93,8 @@ fun main(args: Array<String>) {
         "inspect" -> inspect(cachePath)
         "relabel" -> relabel(cachePath)
         "restore" -> restore(cachePath)
-        else -> println("usage: inspect | relabel | restore  [cachePath]")
+        "hide" -> hide(cachePath)
+        else -> println("usage: inspect | relabel | restore | hide  [cachePath]")
     }
 }
 
@@ -227,4 +236,124 @@ private fun str(row: DBRowType, col: Int): String? =
 private fun setString(row: DBRowType, col: Int, value: String) {
     val values = row.columnValues ?: return
     values[col] = arrayOf<Any?>(value)
+}
+
+// --- Phase 2: list ONLY our quests, by pruning the quest table's master row index ----------
+
+/**
+ * **hide** — make the quest tab list only [KEPT] (our relabelled rows), hiding the ~196 OSRS quests.
+ *
+ * The rev-228 quest list enumerates rows via the quest table's **master index** (js5 index
+ * [DBTABLEINDEX], archive [QUEST_TABLE_ID], file [MASTER_INDEX_FILE]) — one key mapping to every row
+ * id. We simply rewrite that row list down to [KEPT]. The other rows' data is left intact (not
+ * deleted), so this is fully reversible and the per-column indexes stay valid for lookups; they're
+ * just no longer reachable from the list. Backs up the original master index and verifies by
+ * re-decode.
+ */
+private fun hide(cachePath: String) {
+    val lib = CacheLibrary(cachePath)
+    try {
+        val data = lib.index(DBTABLEINDEX).archive(QUEST_TABLE_ID)?.file(MASTER_INDEX_FILE)?.data
+            ?: run { println("ABORT: no quest master index (idx $DBTABLEINDEX / archive $QUEST_TABLE_ID / file $MASTER_INDEX_FILE)"); return }
+
+        val backup = File(BACKUP_DIR, "questindex_${QUEST_TABLE_ID}_$MASTER_INDEX_FILE.bin")
+        if (!backup.exists()) {
+            backup.parentFile.mkdirs()
+            backup.writeBytes(data)
+            println("backed up quest master index (${data.size} bytes) -> $backup")
+        }
+
+        val tuples = decodeIndex(data)
+        var before = 0
+        var after = 0
+        for (t in tuples) {
+            val iter = t.values.iterator()
+            while (iter.hasNext()) {
+                val rows = iter.next().second
+                before += rows.size
+                rows.retainAll { it in KEPT }
+                after += rows.size
+                if (rows.isEmpty()) iter.remove()
+            }
+        }
+        println("quest master index: $before row refs -> $after (keeping ${KEPT.sorted()})")
+        lib.put(DBTABLEINDEX, QUEST_TABLE_ID, MASTER_INDEX_FILE, encodeIndex(tuples))
+        lib.update()
+    } finally {
+        lib.close()
+    }
+
+    // verify: the master must now enumerate exactly KEPT
+    val lib2 = CacheLibrary(cachePath)
+    try {
+        val data = lib2.index(DBTABLEINDEX).archive(QUEST_TABLE_ID)?.file(MASTER_INDEX_FILE)?.data
+            ?: run { println("VERIFY FAIL: master index missing after write"); return }
+        val rows = decodeIndex(data).flatMap { t -> t.values.flatMap { it.second } }.toSet()
+        if (rows == KEPT) {
+            println("OK — quest tab now lists only ${KEPT.sorted()}. Restart the server to serve it.")
+        } else {
+            println("VERIFY: master now lists $rows (expected $KEPT) — run 'restore' if this is wrong.")
+        }
+    } finally {
+        lib2.close()
+    }
+}
+
+/** One tuple of a DBTableIndex file: a key type and its (key -> row ids) entries. */
+private class IndexTuple(val type: Int, val values: MutableList<Pair<Any, MutableList<Int>>>)
+
+/** Decode a DBTableIndex file (mirrors RuneLite's DBTableIndexLoader / the dump tool). */
+private fun decodeIndex(data: ByteArray): List<IndexTuple> {
+    val r: Reader = BufferReader(data)
+    val tupleCount = r.readVarInt2()
+    val tuples = ArrayList<IndexTuple>(tupleCount)
+    repeat(tupleCount) {
+        val type = r.readUnsignedByte()
+        val valueCount = r.readVarInt2()
+        val values = ArrayList<Pair<Any, MutableList<Int>>>(valueCount)
+        repeat(valueCount) {
+            val key: Any = when (type) {
+                0 -> r.readInt()
+                1 -> r.readLong()
+                2 -> r.readString()
+                else -> error("unknown DBTableIndex key type $type")
+            }
+            val rowCount = r.readVarInt2()
+            val rows = ArrayList<Int>(rowCount)
+            repeat(rowCount) { rows.add(r.readVarInt2()) }
+            values.add(key to rows)
+        }
+        tuples.add(IndexTuple(type, values))
+    }
+    return tuples
+}
+
+/** Re-encode a DBTableIndex file (inverse of [decodeIndex]). */
+private fun encodeIndex(tuples: List<IndexTuple>): ByteArray {
+    val w = BufferWriter(4096)
+    w.writeVarInt2(tuples.size)
+    for (t in tuples) {
+        w.writeByte(t.type)
+        w.writeVarInt2(t.values.size)
+        for ((key, rows) in t.values) {
+            when (t.type) {
+                0 -> w.writeInt(key as Int)
+                1 -> w.writeLong(key as Long)
+                2 -> w.writeString(key as String)
+            }
+            w.writeVarInt2(rows.size)
+            for (row in rows) w.writeVarInt2(row)
+        }
+    }
+    return w.toArray()
+}
+
+/** LEB128 unsigned varint — the write side of [readVarInt2]. */
+private fun Writer.writeVarInt2(value: Int) {
+    var v = value
+    while (v and 0x7F.inv() != 0) {
+        writeByte((v and 0x7F) or 0x80)
+        v = v ushr 7
+    }
+    writeByte(v and 0x7F)
 }
