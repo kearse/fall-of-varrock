@@ -72,16 +72,21 @@ Engineering note: this is the inverse of the existing goblin raid event — the
 
 ---
 
-## 3. Supply contracts ⬜ (the skilling faucet)
+## 3. Supply contracts 🔶 (the skilling faucet)
 
-The Quartermaster posts rotating **work orders**: *"200 oak logs for siege ladders"*,
-*"50 lobsters for the garrison"*, *"30 mithril platebodies for the levy"*. Filling one
-pays **coins + War Effort + realm supply**.
+Vannaka's **resource contracts** already exist (`ResourceContracts.kt`: gather N of a
+resource → coins + War Effort, auto-completing; `SupplyDepot.kt`: finished goods → War
+Effort + realm supply; `SupplyDrive.kt`: rotating 2× demand window). The build here is
+**opening the faucet**:
 
-- This is roadmap item 4 (the gated economy, `long-term-vision.md` §3) wearing a war
-  skin — the missing coin faucet for the Squire → Lord climb.
-- Contracts rotate daily; higher-rank players see higher-tier (better-paying) orders.
-- Introduced by the Act II quest **"Supply Lines"**.
+- ✅ **Rank-tiered work orders** — richer contracts unlock with feudal rank (coal →
+  runite, willow → magic logs, pike → shark), Knight-tier pay ~40–45k/contract so the
+  Squire→Lord climb is weeks of skilling, not months of 50-gp goblins. Assignment
+  prefers the best unlocked tier; Vannaka points at the Duke when skills outrank title.
+- ✅ **Launch generosity multiplier** (`GENEROSITY_MULT`) on contract payouts — start
+  hot, step toward 1 as the economy matures (§7).
+- ⬜ Smithed-goods work orders ("30 mithril platebodies for the levy") — the Yeoman rung.
+- ⬜ Introduced by the Act II quest **"Supply Lines"**.
 - Directly feeds §2: contracts fill the meter, the meter feeds marches.
 
 ## 4. Rogue hunting & the bounty board ⬜ (the solo hunter's track)
@@ -202,15 +207,52 @@ recipe.
 
 ---
 
-## 7. Build order
+## 7. Monetization ⬜ (sell speed, status, and events — never rank, command, or stats)
 
-1. ⬜ **Supply contracts** (§3) — the coin faucet; unblocks the Squire→Lord chasm and
+Principles: the free game is tuned to be fun on its own (**launch generosity curve** —
+contract payouts / drop rates / commendation gains start hot, tighten as the economy
+matures, plus event weekends). Bonds are the coin-buying valve and are self-limiting
+early (a bond needs a grinder with gp on the other side). The store sells on top:
+
+| Product | What it is | Why it's safe |
+|---------|-----------|----------------|
+| **Patron of the March** | Real money funds an extra March (or covers its supply cost); warband carries the patron's banner, announcement credits them, patron picks the target from currently-softened districts | Donor buys visibility + influence; *everyone* gets more content. This is "pay to stimulate the economy" done right |
+| **Sponsored events** | Grand March sponsorship, double-contract-pay hour | Server-wide faucet, individually credited |
+| **Companion stable slots** | Own 3 companions, **deploy one at a time** (hard rule) | Variety/convenience, zero combat power |
+| **Companion & gear cosmetics** | Skins, armour paint matching war-forged sets, banners, titles | Pure status |
+| **War Chest seasonal pass** | Cosmetic reward track advanced by marches/contracts/bounties; free track for all, paid track for donors | Monetizes engagement with the loops we want populated |
+| **Liberation memorial** | Patrons who funded marches on a district get their name on a statue in the liberated streets | The highest-status purchase is recognition, not power |
+| **Rank commission (cap: Soldier)** | Optional catch-up product for late joiners | Below Knight/Lord — no command powers, mid armour tier only |
+
+**Never sold:** ranks above Soldier (campaigns spend the *shared* supply meter — wallet
+commanders burning communal supplies is community poison; rank colors are the status
+ladder), companion style-flex/NH (raw combat power — if it exists at all it's an earned
+unlock), commendations or any forge ingredient, XP, stats.
+
+---
+
+## 8. Build order — the working checklist
+
+1. 🔶 **Supply contracts** (§3) — the coin faucet; unblocks the Squire→Lord chasm and
    feeds everything else. (= long-term-vision roadmap #4.)
+   - ✅ Rank-tiered contract roster (Peasant → Knight) with chasm-bridging payouts,
+     best-tier-preferred assignment, Vannaka's "rank up for richer work" nudge.
+   - ✅ Launch-generosity payout multiplier (`ResourceContracts.GENEROSITY_MULT`).
+   - ⬜ Smithed-goods work orders; "Supply Lines" intro quest.
 2. ⬜ **Marches** (§2) — visible war offense; point the War-Prep finale ("First March")
    at it. Fixes the tutorial dead-end.
+   - Muster event at the gate (5-min warning, Knight-Captain NPC, `::march` late-join),
+     supply cost, contribution-scaled rewards, first Commendation payouts.
 3. ⬜ **Rogue milestones + bounty board** (§4) — cheap, parallel solo track.
+   - Persistent rogue-family kill counter, Sergeant milestone dialogue (10/50/250/1000),
+     rotating weekly bounty target.
 4. ⬜ **Districts + pressure meter** (§5) — turns marches into meta-progression.
 5. ⬜ **Commendations + the Royal Smith + first war-forged pieces** (§6) — the endgame
    chase. Start with one weapon per style + one armour set; expand.
 6. ⬜ **Grand March / Wardens, named captains' spec weapons, armouries** — content
    breadth on top of the framework.
+7. ⬜ **Patron products** (§7) — after marches exist: patron-funded march, banners,
+   memorial. Store SKUs ride the existing entitlements pipeline (`Alter/web`).
+8. ⬜ **Wiki pages on deploy** — `Alter/web/content/wiki/`: "The grind explained"
+   (marches, contracts, forging recipes as checklists), update "The War explained" with
+   the district reconquest, store page copy for patron products.

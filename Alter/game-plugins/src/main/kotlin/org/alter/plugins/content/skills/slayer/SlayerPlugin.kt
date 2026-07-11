@@ -149,6 +149,10 @@ class SlayerPlugin(
         val (task, amount) = assigned
         chatNpc(p, "Resource contract: gather <col=801700>$amount ${task.display}</col> — that's ${task.skill} work. You keep what you gather; I just need it done.")
         chatNpc(p, "Coin and War Effort when it's complete. Off you go.")
+        // The faucet advertises the ladder: skills already qualify for richer rank-gated work.
+        if (ResourceContracts.richerWorkAwaits(p)) {
+            chatNpc(p, "And ${p.address} — your skills are worth more than this. Buy your next rank from <col=801700>Duke Horacio</col> and I'll commission you for far richer work.")
+        }
     }
 
     private fun reportResource(p: Player) {
