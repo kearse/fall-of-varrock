@@ -55,4 +55,10 @@ data class GameContext(
     val gItemDespawnDelay: Int,
     val preloadMaps: Boolean,
     val owners: List<String> = emptyList(),
+    /**
+     * When true, only whitelisted accounts (see
+     * [org.alter.game.saving.PlayerModeration]) and configured [owners] can
+     * log in — used for closed-beta/tester phases.
+     */
+    val whitelistOnly: Boolean = false,
 )

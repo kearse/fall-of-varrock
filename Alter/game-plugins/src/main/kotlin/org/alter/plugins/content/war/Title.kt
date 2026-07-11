@@ -20,7 +20,7 @@ enum class ArmourTier(val display: String) {
 }
 
 /**
- * The feudal rank ladder (The War / progression — see `docs/long-term-vision.md`).
+ * The feudal rank ladder (The War / progression — see `docs/war-system-design.md`).
  * Ranks are **bought with coins** from Duke Horacio (not earned passively). Coins
  * come from fighting goblins and from skilling + selling to the general store.
  *

@@ -17,7 +17,7 @@ import org.alter.rscm.RSCM.getRSCM
 /**
  * Feudal rank: the `::title` lookup, the **armour-tier equip gate**, and admin test
  * commands. Ranks are bought from Duke Horacio ([DukeHoracioPlugin]); this enforces
- * what each rank may wear (The War / progression — `docs/long-term-vision.md`).
+ * what each rank may wear (The War / progression — `docs/war-system-design.md`).
  */
 class TitlePlugin(
     r: PluginRepository,

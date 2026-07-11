@@ -30,4 +30,14 @@ enum class PlayerLoadResult {
      * There was an error decoding the data.
      */
     MALFORMED,
+
+    /**
+     * The account is banned.
+     */
+    BANNED,
+
+    /**
+     * The world is whitelist-only and this account is not on the whitelist.
+     */
+    NOT_WHITELISTED,
 }

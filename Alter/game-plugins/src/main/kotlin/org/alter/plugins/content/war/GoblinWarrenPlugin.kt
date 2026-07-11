@@ -14,7 +14,7 @@ import org.alter.game.plugin.PluginRepository
 import org.alter.rscm.RSCM.getRSCM
 
 /**
- * The **Goblin Warren** (The War / "venture out" content - `docs/long-term-vision.md`):
+ * The **Goblin Warren** (The War / "venture out" content - `docs/war-system-design.md`):
  * a hostile area east of Lumbridge where the besieging horde musters. Tougher
  * monsters than the city goblins - hill giant brutes, ogres, and the goblin generals
  * Bentnoze & Wartface as bosses - that fight back and drop escalating coin piles, so

@@ -39,7 +39,7 @@ class TeleportsPlugin(
         onCommand("gnome", Privilege.Companion.ADMIN_POWER, description = "Teleports you to Gnome Stronghold") {
             player.moveTo(Tile(x = 2461, z = 3443, height = 0))
         }
-        onCommand("thieving", description = "Teleports you to the test thieving") {
+        onCommand("thieving", Privilege.Companion.ADMIN_POWER, description = "Teleports you to the test thieving") {
             player.moveTo(Tile(x = 2591, z = 4731, height = 0))
         }
     }
