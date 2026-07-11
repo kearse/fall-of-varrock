@@ -4,8 +4,8 @@
  * The server sends a one-shot "FOV_INTRO:play" BROADCAST chat line to brand-new
  * accounts on their first login (see the server-side IntroVideoPlugin). This plugin
  * catches that trigger, hides the magic string from the chatbox, and plays the intro
- * video full-screen: undecorated, application-modal, always-on-top, no way to skip.
- * The window closes itself when the video ends.
+ * video over the game window: undecorated, application-modal, always-on-top, no way
+ * to skip. The window closes itself when the video ends.
  *
  * The video itself is NOT baked into the client. It is fetched from
  * https://fallofvarrock.com/client/intro.mp4 into ~/.fov-home/client/intro/ with

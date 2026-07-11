@@ -1,9 +1,10 @@
 /*
- * Full-screen, unskippable video window.
+ * Unskippable video window covering the game client.
  *
  * Swing shell + JavaFX media pipeline:
  *   - undecorated JDialog, APPLICATION_MODAL (blocks input to every other window of
- *     the app, i.e. the game), always-on-top, covers the whole screen, hidden cursor
+ *     the app, i.e. the game), always-on-top, sized to the client window (full screen
+ *     only as a fallback when the window can't be found), hidden cursor
  *   - JFXPanel hosting a MediaView, letterboxed on black
  *   - closes itself on end-of-media; there is no user-facing way to close it
  *   - failsafes so a decode stall can never trap the player forever: a hard cap from
@@ -85,10 +86,20 @@ final class IntroVideoWindow
 		dialog.getContentPane().setBackground(java.awt.Color.BLACK);
 		dialog.setBackground(java.awt.Color.BLACK);
 
-		final GraphicsConfiguration gc = owner != null
-			? owner.getGraphicsConfiguration()
-			: GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDefaultConfiguration();
-		dialog.setBounds(gc.getBounds());
+		if (owner != null)
+		{
+			// Cover the game window exactly (the modal blocks moving/resizing it while
+			// the video runs, so the overlay stays aligned). Not the whole screen: a
+			// full-desktop takeover reads as hostile on a first launch, and the video
+			// is 720p — client-sized playback is also crisper than a 4K upscale.
+			dialog.setBounds(owner.getBounds());
+		}
+		else
+		{
+			final GraphicsConfiguration gc =
+				GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDefaultConfiguration();
+			dialog.setBounds(gc.getBounds());
+		}
 
 		final Cursor blank = Toolkit.getDefaultToolkit().createCustomCursor(
 			new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB), new Point(0, 0), "blank");

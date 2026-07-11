@@ -1,7 +1,7 @@
 # First-login intro video
 
-New accounts see the Fall of Varrock intro film full-screen on their **first ever
-login** — unskippable, closes itself when it ends. No account ever sees it twice.
+New accounts see the Fall of Varrock intro film over the game window on their **first
+ever login** — unskippable, closes itself when it ends. No account ever sees it twice.
 
 ## How it works
 
