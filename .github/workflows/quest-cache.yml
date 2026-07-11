@@ -8,6 +8,8 @@ name: Quest cache relabel
 #   inspect  — read-only: print the target rows + what they'll become (safe, do first)
 #   relabel  — back up the cache (once, to runtime/cache.prerelabel), rename the rows,
 #              restart the game container (~90s disconnect)
+#   hide     — list ONLY the Fall of Varrock quests (prune the other ~196 from the tab),
+#              restart the game container. Run after relabel.
 #   restore  — swap the pristine backup back and restart the game container
 #
 # Actions -> Quest cache relabel -> Run workflow -> pick an action.
@@ -20,7 +22,7 @@ on:
         type: choice
         required: true
         default: inspect
-        options: [inspect, relabel, restore]
+        options: [inspect, relabel, hide, restore]
 
 concurrency:
   group: quest-cache
@@ -68,6 +70,15 @@ jobs:
               run_tool relabel
               $COMPOSE restart game
               echo "game container restarted — relog to see the change"
+              ;;
+            hide)
+              if [ ! -d runtime/cache.prerelabel ]; then
+                cp -r runtime/cache runtime/cache.prerelabel
+                echo "backed up pristine cache -> runtime/cache.prerelabel"
+              fi
+              run_tool hide
+              $COMPOSE restart game
+              echo "game container restarted — quest tab now lists only FoV quests"
               ;;
             restore)
               if [ ! -d runtime/cache.prerelabel ]; then

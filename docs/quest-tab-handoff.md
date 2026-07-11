@@ -66,19 +66,30 @@ and progress it should go **yellow**, and **green** on completion. If it colours
 col0→varp→colour chain is confirmed and Phase 2 is safe to build. If it doesn't, the status
 resolution differs from the assumption above and needs a clientscript/enum dump — stop and report.
 
-## Phase 2 — list ONLY FoV quests (build after the proof passes)
+## Phase 2 — list ONLY FoV quests ✅ (tooled: the `hide` action)
 
-Once Phase 1 is confirmed, extend the tool with a `replace` mode that removes the other ~196 DBROW
-rows and rebuilds the DBTableIndex (js5 index 21, archive 0) so the tab lists only our quests:
-1. Back up the whole cache (zip) first.
-2. Keep the reused rows (17, 30, 120, 131, 161); remove every other `tableId == 0` DBROW.
-3. Rebuild index-21 archive 0: the **master** file (0) listing exactly the kept row ids, plus each
-   present column index file (`column0/4/5/6/7/10/11/16/21/36` per the dump) with the same tuple
-   shapes — the clientscripts iterate quests via the master index, so a stale index shows the old
-   set. The index byte format is in §2 and implemented in `QuestTableDump.decodeTableIndex`.
-4. Fix the summary counts in `CharacterSummaryPlugin.kt` (`@TODO` at ~line 28-31) to our quest
-   count, and add an `onButton(399, 7)` handler to open the sidebar Journal on a row click.
-5. Relabel all five rows (including the three future teasers) as part of the replace.
+Confirmed on the live server (2026-07): relabelled rows show with the right names and colours. Phase
+2 is the **`hide`** action — run it after `relabel`:
+
+```
+Actions -> Quest cache relabel -> Run workflow -> hide
+```
+
+**How it works (simpler than a full rebuild).** The rev-228 quest list enumerates rows via the quest
+table's **master index** (js5 index 21, archive 0, file 0) — one key mapping to every row id. `hide`
+rewrites just that row list down to our kept rows (17, 30). The other ~196 rows' *data is left
+intact* (not deleted), so the per-column indexes stay valid and it's fully reversible — they're just
+no longer reachable from the list. `QuestTablePatch.decodeIndex`/`encodeIndex` handle the index byte
+format (§2); it backs the master index up and verifies by re-decode. Rollback is the `restore` action
+(swaps the whole pristine `runtime/cache.prerelabel` back).
+
+**Still open (polish, not blockers):**
+- The summary-tab counts in `CharacterSummaryPlugin.kt` (`@TODO` ~line 28-31) still show placeholder
+  totals — set them to our quest count for a tidy "quests completed" line.
+- An `onButton(399, 7)` handler could open the sidebar Journal when a quest row is clicked.
+- To add more quests to the tab later: add rows to `PLAN` in `QuestTablePatch.kt` (each reusing an
+  OSRS quest's varp — the §0 table has three more mapped), mirror their varps in `QuestJournal`, then
+  re-run `relabel` + `hide`.
 
 ---
 
