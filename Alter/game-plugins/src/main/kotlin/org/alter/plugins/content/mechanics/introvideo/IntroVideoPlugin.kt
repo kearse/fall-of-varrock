@@ -43,7 +43,14 @@ class IntroVideoPlugin(
         onLogin {
             if (player.attr[NEW_ACCOUNT_ATTR] == true && player.attr[INTRO_SEEN_ATTR] != true) {
                 player.attr[INTRO_SEEN_ATTR] = true
-                player.message(TRIGGER_MESSAGE, ChatMessageType.BROADCAST)
+                // Don't send during the login handshake — a chat line fired that early is
+                // dropped before the client is listening (::introtest worked, first-login
+                // didn't). A couple of ticks in, the client is fully in-game.
+                val p = player
+                p.queue {
+                    wait(3)
+                    p.message(TRIGGER_MESSAGE, ChatMessageType.BROADCAST)
+                }
             }
         }
 
