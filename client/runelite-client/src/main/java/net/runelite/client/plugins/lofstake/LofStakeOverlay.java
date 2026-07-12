@@ -1,16 +1,16 @@
 /*
  * Fall of Varrock — Duel Arena stake overlay (renderer + hit-testing).
  *
- * A fully custom, themed stake window drawn client-side over the standard trade interface (group
- * 335) the server opens for a staked duel. It READS the live offers straight from that interface's
- * widgets — your offer (335.25), the opponent's (335.28), the title (335.31), your value (335.24) —
- * so no custom packets are needed. Actions route back through the existing SECURE TradeSession:
+ * The classic Duel Arena *Stakes* screen, themed and drawn client-side over the server's standard
+ * trade interface (group 335) during a staked duel. Design-system standard modal (480x400 — see
+ * docs/overlay-design-system.md), matched to the rules window. It READS the live offers straight
+ * from interface 335 — your offer (335.25), the opponent's (335.28), title (335.31), your value
+ * (335.24) — so no custom packets are needed. Actions route through the existing SECURE TradeSession:
  *   - click one of YOUR staked items → "::stake rm <slot>" (un-stake)
- *   - Accept / Decline buttons       → "::stake a" / "::stake d"
- * Adding items stays native (click the real inventory on the right, which the overlay never covers).
+ *   - Accept / Decline               → "::stake a" / "::stake d"
+ * Adding items stays native (the window is viewport-anchored, leaving the inventory column clickable).
  *
- * Every widget read is null-guarded: if the interface's shape differs at runtime the window simply
- * renders empty rather than throwing — it can never crash the client.
+ * Every widget read is null-guarded: it renders empty rather than throwing, so it can't crash.
  */
 package net.runelite.client.plugins.lofstake;
 
@@ -52,20 +52,24 @@ class LofStakeOverlay extends Overlay
 	static final int DECLINE = 2;
 	static final int SLOT_BASE = 100; // + your-stake slot index
 
-	private static final int WIN_W = 210;
-	private static final int WIN_H = 372;
+	// Design-system standard modal (matches the rules window).
+	static final int WIN_W = 480;
+	static final int WIN_H = 400;
 	private static final int WIN_ARC = 14;
-	private static final int TITLE_H = 36;
+	private static final int TITLE_H = 38;
 	private static final int PAD = 12;
-	private static final int COLS = 7;
-	private static final int ROWS = 4;
-	private static final int SLOT = 24;
-	private static final int SLOT_GAP = 1;
-	private static final int GRID_W = COLS * SLOT + (COLS - 1) * SLOT_GAP; // 175
-	private static final int GRID_H = ROWS * SLOT + (ROWS - 1) * SLOT_GAP; // 99
-	private static final int YOUR_GRID_Y = TITLE_H + 24;
-	private static final int THEIR_GRID_Y = YOUR_GRID_Y + GRID_H + 40;
+	private static final int COLS = 4;
+	private static final int ROWS = 7;
+	private static final int SLOT = 26;
+	private static final int SLOT_GAP = 2;
+	private static final int GRID_W = COLS * SLOT + (COLS - 1) * SLOT_GAP; // 110
+	private static final int GRID_TOP = TITLE_H + 30;
 	private static final int BTN_H = 32;
+
+	// column x-origins: your stake (left), opponent (right), grids centred within each half.
+	private static final int HALF = (WIN_W - PAD * 2) / 2;                       // 228
+	private static final int YOUR_X = PAD + (HALF - GRID_W) / 2;                 // grid left edge
+	private static final int THEIR_X = PAD + HALF + (HALF - GRID_W) / 2;
 
 	private static final Color GREEN = new Color(110, 205, 110);
 
@@ -94,18 +98,19 @@ class LofStakeOverlay extends Overlay
 		return title != null && !title.isHidden() && text(title).startsWith("Staking");
 	}
 
-	// Left-anchored so it never covers the inventory on the right (needed to add items natively).
-	private int originX() { return 12; }
+	// Centred in the game viewport (left ~516 in fixed mode) so the inventory column on the right
+	// stays clickable for adding items — same anchor as the rules window.
+	private int originX() { return Math.max(12, (Math.min(client.getCanvasWidth(), 516) - WIN_W) / 2); }
 	private int originY() { return Math.max(0, (client.getCanvasHeight() - WIN_H) / 2); }
 
-	private Rectangle slotRect(int ox, int oy, int gridY, int i)
+	private Rectangle slotRect(int ox, int oy, int gridX, int i)
 	{
 		final int col = i % COLS, row = i / COLS;
-		return new Rectangle(ox + PAD + col * (SLOT + SLOT_GAP), oy + gridY + row * (SLOT + SLOT_GAP), SLOT, SLOT);
+		return new Rectangle(ox + gridX + col * (SLOT + SLOT_GAP), oy + GRID_TOP + row * (SLOT + SLOT_GAP), SLOT, SLOT);
 	}
 
-	private Rectangle acceptRect(int ox, int oy) { return new Rectangle(ox + PAD, oy + WIN_H - PAD - BTN_H, (WIN_W - PAD * 2 - 6) / 2, BTN_H); }
-	private Rectangle declineRect(int ox, int oy) { final Rectangle a = acceptRect(ox, oy); return new Rectangle(a.x + a.width + 6, a.y, a.width, BTN_H); }
+	private Rectangle acceptRect(int ox, int oy) { return new Rectangle(ox + WIN_W - PAD - 210, oy + WIN_H - PAD - BTN_H, 100, BTN_H); }
+	private Rectangle declineRect(int ox, int oy) { return new Rectangle(ox + WIN_W - PAD - 100, oy + WIN_H - PAD - BTN_H, 100, BTN_H); }
 
 	int hitTest(Point p)
 	{
@@ -116,7 +121,7 @@ class LofStakeOverlay extends Overlay
 		if (declineRect(ox, oy).contains(p)) return DECLINE;
 		for (int i = 0; i < COLS * ROWS; i++)
 		{
-			if (slotRect(ox, oy, YOUR_GRID_Y, i).contains(p)) return SLOT_BASE + i;
+			if (slotRect(ox, oy, YOUR_X, i).contains(p)) return SLOT_BASE + i;
 		}
 		return INSIDE;
 	}
@@ -124,10 +129,7 @@ class LofStakeOverlay extends Overlay
 	@Override
 	public Dimension render(Graphics2D g)
 	{
-		if (!isShowing())
-		{
-			return null;
-		}
+		if (!isShowing()) return null;
 
 		final Object oldAA = g.getRenderingHint(RenderingHints.KEY_ANTIALIASING);
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -145,34 +147,37 @@ class LofStakeOverlay extends Overlay
 		g.setClip(clip);
 		LofTheme.emberUnderline(g, ox + 1, oy + TITLE_H - 2, WIN_W - 2);
 		final BufferedImage logo = LofTheme.logo();
-		int titleX = ox + 12;
-		if (logo != null)
-		{
-			g.drawImage(logo, ox + 10, oy + 5, 26, 26, null);
-			titleX = ox + 42;
-		}
+		int titleX = ox + 14;
+		if (logo != null) { g.drawImage(logo, ox + 12, oy + 5, 28, 28, null); titleX = ox + 46; }
 		g.setFont(FontManager.getRunescapeBoldFont());
-		LofTheme.shadowText(g, "Duel Stake", titleX, oy + 24, LofTheme.GOLD);
+		LofTheme.shadowText(g, "Duel Arena", titleX, oy + 25, LofTheme.GOLD);
 
-		// your stake
+		// column headers
 		g.setFont(FontManager.getRunescapeSmallFont());
-		final String yourVal = valueText(client.getWidget(TRADE_GROUP, YOUR_VALUE_CHILD));
-		LofTheme.shadowText(g, "YOUR STAKE", ox + PAD, oy + YOUR_GRID_Y - 6, LofTheme.GOLD_DIM);
-		if (yourVal != null)
-		{
-			LofTheme.shadowText(g, yourVal, ox + WIN_W - PAD - g.getFontMetrics().stringWidth(yourVal), oy + YOUR_GRID_Y - 6, GREEN);
-		}
-		drawGrid(g, ox, oy, YOUR_GRID_Y, client.getWidget(TRADE_GROUP, YOUR_OFFER_CHILD), mouse, true);
-
-		// opponent stake
+		LofTheme.shadowText(g, "YOUR STAKE", ox + PAD, oy + TITLE_H + 22, LofTheme.GOLD_DIM);
 		final boolean theyAccepted = text(client.getWidget(TRADE_GROUP, ACCEPT_TEXT_CHILD)).contains("accepted");
-		LofTheme.shadowText(g, "OPPONENT", ox + PAD, oy + THEIR_GRID_Y - 6, LofTheme.GOLD_DIM);
+		LofTheme.shadowText(g, "OPPONENT", ox + PAD + HALF, oy + TITLE_H + 22, LofTheme.GOLD_DIM);
 		if (theyAccepted)
 		{
 			final String tag = "ACCEPTED";
-			LofTheme.shadowText(g, tag, ox + WIN_W - PAD - g.getFontMetrics().stringWidth(tag), oy + THEIR_GRID_Y - 6, GREEN);
+			LofTheme.shadowText(g, tag, ox + WIN_W - PAD - g.getFontMetrics().stringWidth(tag), oy + TITLE_H + 22, GREEN);
 		}
-		drawGrid(g, ox, oy, THEIR_GRID_Y, client.getWidget(TRADE_GROUP, THEIR_OFFER_CHILD), mouse, false);
+
+		// grids
+		drawGrid(g, ox, oy, YOUR_X, client.getWidget(TRADE_GROUP, YOUR_OFFER_CHILD), mouse, true);
+		drawGrid(g, ox, oy, THEIR_X, client.getWidget(TRADE_GROUP, THEIR_OFFER_CHILD), mouse, false);
+
+		// centre divider
+		g.setColor(LofTheme.alpha(LofTheme.EMBER_DARK, 150));
+		g.fillRect(ox + WIN_W / 2 - 1, oy + GRID_TOP - 4, 2, ROWS * (SLOT + SLOT_GAP));
+
+		// your value under your grid
+		final int valY = oy + GRID_TOP + ROWS * (SLOT + SLOT_GAP) + 14;
+		final String yourVal = valueText(client.getWidget(TRADE_GROUP, YOUR_VALUE_CHILD));
+		if (yourVal != null)
+		{
+			LofTheme.shadowText(g, yourVal, ox + PAD, valY, GREEN);
+		}
 
 		// buttons
 		g.setFont(FontManager.getRunescapeBoldFont());
@@ -184,13 +189,13 @@ class LofStakeOverlay extends Overlay
 		return new Dimension(WIN_W, WIN_H);
 	}
 
-	/** Draw a 7x4 item grid from an offer widget's item children (null-safe). */
-	private void drawGrid(Graphics2D g, int ox, int oy, int gridY, Widget offer, Point mouse, boolean yours)
+	/** Draw a 4x7 item grid from an offer widget's item children (null-safe). */
+	private void drawGrid(Graphics2D g, int ox, int oy, int gridX, Widget offer, Point mouse, boolean yours)
 	{
 		final Widget[] items = offer == null ? null : offer.getDynamicChildren();
 		for (int i = 0; i < COLS * ROWS; i++)
 		{
-			final Rectangle rc = slotRect(ox, oy, gridY, i);
+			final Rectangle rc = slotRect(ox, oy, gridX, i);
 			final boolean hov = yours && rc.contains(mouse);
 			g.setColor(hov ? LofTheme.ROW_HOVER : LofTheme.ROW);
 			g.fillRoundRect(rc.x, rc.y, rc.width, rc.height, 4, 4);
@@ -226,7 +231,6 @@ class LofStakeOverlay extends Overlay
 		LofTheme.shadowText(g, label, rc.x + (rc.width - tw) / 2, rc.y + rc.height / 2 + 6, accent);
 	}
 
-	/** "Value: 3,200,000 coins" text stripped of tags, or null. */
 	private static String valueText(Widget w)
 	{
 		final String t = text(w);

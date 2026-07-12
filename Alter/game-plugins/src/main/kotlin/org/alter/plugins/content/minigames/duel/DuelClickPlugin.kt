@@ -13,6 +13,8 @@ import org.alter.game.plugin.PluginRepository
  * The client sends `::duel <action>` as public chat; `MessagePublicHandler` routes it here as the
  * `duelclick` command:
  *   - `t<i>` → toggle rule i (0..11)
+ *   - `s<i>` → toggle forbidden equipment slot i (0..10, the paper-doll)
+ *   - `load` → load the "last duel" preset
  *   - `a`    → accept
  *   - `d`    → decline / close
  *
@@ -35,7 +37,9 @@ class DuelClickPlugin(
         when {
             action == "a" -> DuelRulesClientMenu.accept(p)
             action == "d" -> DuelRulesClientMenu.cancel(p)
+            action == "load" -> DuelRulesClientMenu.loadPreset(p)
             action.startsWith("t") -> action.drop(1).toIntOrNull()?.let { DuelRulesClientMenu.toggle(p, it) }
+            action.startsWith("s") -> action.drop(1).toIntOrNull()?.let { DuelRulesClientMenu.toggleSlot(p, it) }
         }
     }
 }
