@@ -78,7 +78,7 @@ class LofCommandsOverlay extends Overlay
 		this.client = client;
 		this.plugin = plugin;
 		setPosition(OverlayPosition.DYNAMIC);
-		setLayer(OverlayLayer.ABOVE_WIDGETS);
+		setLayer(OverlayLayer.ALWAYS_ON_TOP);
 	}
 
 	boolean isVisible()

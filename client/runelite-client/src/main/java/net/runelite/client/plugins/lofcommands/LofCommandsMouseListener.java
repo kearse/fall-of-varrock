@@ -36,13 +36,13 @@ class LofCommandsMouseListener extends MouseAdapter
 		if (hit == LofCommandsOverlay.OUTSIDE)
 		{
 			// Click-away closes the window, and the click still reaches the game.
-			overlay.setVisible(false);
+			plugin.close();
 			return event;
 		}
 
 		if (hit == LofCommandsOverlay.CLOSE)
 		{
-			overlay.setVisible(false);
+			plugin.close();
 		}
 		else if (hit >= LofCommandsOverlay.ROW_BASE)
 		{
@@ -50,7 +50,7 @@ class LofCommandsMouseListener extends MouseAdapter
 			if (cmd != null)
 			{
 				plugin.insertCommand(cmd);
-				overlay.setVisible(false);
+				plugin.close();
 			}
 		}
 		else if (hit >= LofCommandsOverlay.TAB_BASE)

@@ -51,12 +51,13 @@ public final class LofTheme
 		return LOGO;
 	}
 
-	/** Drop shadow + rounded panel + ember border — the standard window/HUD backing. */
+	/** Drop shadow + rounded panel + ember border — the standard window/HUD backing.
+	 *  Body is fully OPAQUE ({@link #PANEL_OPAQUE}) — our windows never let the game show through. */
 	public static void panel(Graphics2D g, int x, int y, int w, int h, int arc)
 	{
 		g.setColor(SHADOW);
 		g.fillRoundRect(x + 3, y + 4, w, h, arc + 4, arc + 4);
-		g.setColor(PANEL);
+		g.setColor(PANEL_OPAQUE);
 		g.fillRoundRect(x, y, w, h, arc, arc);
 		g.setColor(new Color(EMBER_DARK.getRed(), EMBER_DARK.getGreen(), EMBER_DARK.getBlue(), 210));
 		g.drawRoundRect(x, y, w - 1, h - 1, arc, arc);

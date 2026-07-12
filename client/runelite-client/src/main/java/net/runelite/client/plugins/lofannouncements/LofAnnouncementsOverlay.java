@@ -19,9 +19,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.inject.Inject;
 import net.runelite.api.Client;
-import net.runelite.api.Point;
-import net.runelite.api.widgets.ComponentID;
-import net.runelite.api.widgets.Widget;
 import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.overlay.Overlay;
 import net.runelite.client.ui.overlay.OverlayLayer;
@@ -66,23 +63,12 @@ class LofAnnouncementsOverlay extends Overlay
 		final FontMetrics fm = graphics.getFontMetrics();
 		final int lineH = fm.getHeight();
 
-		// Anchor to the chat box: left edge for x, just above its top for y. Fall back to the
-		// bottom-left of the canvas (classic 519x165 chat) if the widget isn't loaded.
-		final Widget chatbox = client.getWidget(ComponentID.CHATBOX_FRAME);
-		final int chatX, chatTop, chatW;
-		if (chatbox != null && !chatbox.isHidden())
-		{
-			final Point loc = chatbox.getCanvasLocation();
-			chatX = loc.getX();
-			chatTop = loc.getY();
-			chatW = chatbox.getWidth();
-		}
-		else
-		{
-			chatX = MARGIN;
-			chatW = Math.min(519, client.getCanvasWidth());
-			chatTop = client.getCanvasHeight() - 165;
-		}
+		// Position straight from the canvas — NOT the chat-box widget, which can report an
+		// off-screen/zeroed location in fixed mode and hide the ticker entirely (that was the bug).
+		// The classic chat box is ~165px tall in the bottom-left; sit just above it, left-aligned.
+		final int chatX = MARGIN;
+		final int chatW = Math.min(519, client.getCanvasWidth());
+		final int chatTop = client.getCanvasHeight() - 165;
 
 		// Cap at 3/4 of the chat width so the right quarter stays clear for the dial / CW timer.
 		final int cap = Math.max(120, chatW * 3 / 4);

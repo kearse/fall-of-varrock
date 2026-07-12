@@ -82,7 +82,7 @@ class LofDuelOverlay extends Overlay
 		this.client = client;
 		this.config = config;
 		setPosition(OverlayPosition.DYNAMIC);
-		setLayer(OverlayLayer.ABOVE_WIDGETS);
+		setLayer(OverlayLayer.ALWAYS_ON_TOP);
 	}
 
 	boolean isShowing()
