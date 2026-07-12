@@ -70,8 +70,9 @@ export function channelForEventKind(kind: string): string {
     case "war":
       return config.channels.boss;
     case "update":
-      // Deploy/update announcements belong with the news, not the status feed.
-      return config.channels.news || config.channels.status;
+      // Deploy/update announcements → #updates (the status feed channel per
+      // the layout), NOT #announcements — that channel is for website news.
+      return config.channels.status || config.channels.news;
     case "status":
     case "boot":
     case "shutdown":
