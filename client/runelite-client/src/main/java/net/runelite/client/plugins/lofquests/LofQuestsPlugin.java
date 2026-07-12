@@ -126,25 +126,40 @@ public class LofQuestsPlugin extends Plugin
 		}
 	}
 
+	/** A quest we can point an arrow at — in progress, or not started yet (the intro's first step). */
+	private static boolean guidable(LofQuestState state)
+	{
+		return state == LofQuestState.IN_PROGRESS || state == LofQuestState.NOT_STARTED;
+	}
+
 	/** Re-derive tracking and repaint the journal (safe to call from the client thread). */
 	private void refresh()
 	{
-		// Drop the tracker once its quest completes; then auto-track may pick the next one up.
-		if (trackedQuest != null && trackedQuest.state(client) != LofQuestState.IN_PROGRESS)
+		// Drop the tracker once its quest is finished/locked; then auto-track picks the next one up.
+		if (trackedQuest != null && !guidable(trackedQuest.state(client)))
 		{
 			trackedQuest = null;
 			playerUntracked = false;
 		}
+		// Auto-guide by default (the server no longer draws arrows): follow the active quest, or the
+		// next not-started one so a fresh recruit is guided from the very first objective.
 		if (trackedQuest == null && !playerUntracked && config.autoTrack())
 		{
+			LofQuest inProgress = null;
+			LofQuest notStarted = null;
 			for (LofQuest quest : LofQuest.values())
 			{
-				if (quest.state(client) == LofQuestState.IN_PROGRESS)
+				LofQuestState state = quest.state(client);
+				if (state == LofQuestState.IN_PROGRESS && inProgress == null)
 				{
-					trackedQuest = quest;
-					break;
+					inProgress = quest;
+				}
+				else if (state == LofQuestState.NOT_STARTED && notStarted == null)
+				{
+					notStarted = quest;
 				}
 			}
+			trackedQuest = inProgress != null ? inProgress : notStarted;
 		}
 		if (panel != null)
 		{
@@ -173,6 +188,11 @@ public class LofQuestsPlugin extends Plugin
 	WorldPoint activeTarget()
 	{
 		if (trackedQuest == null || client.getGameState() != GameState.LOGGED_IN)
+		{
+			return null;
+		}
+		// Guidance muted (free play, ::questguide / the Journal toggle) — draw no arrows.
+		if (LofQuestVarps.guideMuted(client))
 		{
 			return null;
 		}

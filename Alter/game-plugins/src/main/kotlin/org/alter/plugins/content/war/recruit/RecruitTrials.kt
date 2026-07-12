@@ -146,66 +146,14 @@ object RecruitTrials {
         s == Step.REPORT || s == Step.RANK || s == Step.SLAY || s == Step.MINE_BRIEF ||
             s == Step.SUPPLY || s == Step.SMELT || s == Step.SMITH || s == Step.DELIVER || s == Step.RETURN
 
-    /** Point the guidance hint arrow at the current objective (or clear it when there's no fixed spot).
-     *  Muted guidance (free play) skips the arrow entirely — the mute toggle cleared it already. */
-    fun updateHintArrow(p: Player) {
-        if (org.alter.plugins.content.quests.QuestJournal.muted(p)) return
-        when (step(p)) {
-            Step.TALK -> pointAtNpc(p, SERGEANT_NPC, SERGEANT_TILE)
-            Step.FIGHT -> p.setTileHintArrow(FIGHT_TILE.first, FIGHT_TILE.second, ARROW_HEIGHT)
-            Step.REPORT -> pointAtNpc(p, SERGEANT_NPC, SERGEANT_TILE) // back to the Sergeant
-            Step.RANK -> pointAtNpc(p, DUKE_NPC, DUKE_TILE)
-            Step.SLAY ->
-                if (p.attr[SLAYER_TASK_NPC_ATTR] != null) {
-                    p.setTileHintArrow(RAT_AREA_TILE.first, RAT_AREA_TILE.second, ARROW_HEIGHT) // contract taken — go kill the rats
-                } else {
-                    pointAtNpc(p, VANNAKA_NPC, VANNAKA_TILE) // go take the contract
-                }
-            Step.MINE_BRIEF -> pointAtNpc(p, VANNAKA_NPC, VANNAKA_TILE) // back to Vannaka for the supply contract
-            Step.SUPPLY -> p.setTileHintArrow(MINE_ROCK_TILE.first, MINE_ROCK_TILE.second, ARROW_HEIGHT) // to the copper/tin in The Mire
-            Step.SMELT -> p.setTileHintArrow(FURNACE_TILE.first, FURNACE_TILE.second, ARROW_HEIGHT) // to the furnace
-            Step.SMITH -> p.setTileHintArrow(ANVIL_TILE.first, ANVIL_TILE.second, ARROW_HEIGHT) // to the anvil
-            Step.DELIVER -> pointAtNpc(p, QUARTERMASTER_NPC, QUARTERMASTER_TILE) // hand the dagger to the Supply Officer
-            Step.RETURN -> pointAtNpc(p, VANNAKA_NPC, VANNAKA_TILE) // back to Vannaka for the reward
-            Step.DONE -> p.clearHintArrow()
-        }
-    }
-
     /**
-     * Floor-aware guidance to an npc objective:
-     *  - if the target stands on a different floor ([anchor].third = its plane) than the recruit,
-     *    point at [stairs] first — up or down (a tile arrow carries no plane, so without this it
-     *    would land on whatever floor the recruit is on, under/over the npc);
-     *  - else, an over-head npc arrow once the target is actually in view (same plane, within
-     *    render range), or a raised tile arrow at [anchor] to guide there from a distance.
+     * Guidance arrows are now drawn **client-side** by the Quest Journal plugin (`lofquests`), which
+     * auto-guides the active objective and can be toggled off for free play. The server no longer
+     * draws its own over-tile/over-npc hint arrows for the trials — this just clears any arrow left
+     * over from before the change (harmless once none is set).
      */
-    private fun pointAtNpc(p: Player, npcKey: String, anchor: Triple<Int, Int, Int>, stairs: Triple<Int, Int, Int>? = null) {
-        if (stairs != null && p.tile.height != anchor.third) {
-            p.setTileHintArrow(stairs.first, stairs.second, ARROW_HEIGHT) // take the stairs to the npc's floor first
-            return
-        }
-        val id = runCatching { getRSCM(npcKey) }.getOrNull()
-        val npc = if (id != null) nearestNpc(p, id, anchor.first, anchor.second) else null
-        if (npc != null &&
-            npc.tile.height == p.tile.height &&
-            abs(npc.tile.x - p.tile.x) <= NEAR_TILES &&
-            abs(npc.tile.z - p.tile.z) <= NEAR_TILES
-        ) {
-            p.setNpcHintArrow(npc.index)
-        } else {
-            p.setTileHintArrow(anchor.first, anchor.second, ARROW_HEIGHT)
-        }
-    }
-
-    private fun nearestNpc(p: Player, id: Int, x: Int, z: Int): Npc? {
-        var best: Npc? = null
-        var bestD = Int.MAX_VALUE
-        p.world.npcs.forEach { n ->
-            if (n.id != id || n.isDead()) return@forEach
-            val d = abs(n.tile.x - x) + abs(n.tile.z - z)
-            if (d < bestD) { bestD = d; best = n }
-        }
-        return best
+    fun updateHintArrow(p: Player) {
+        p.clearHintArrow()
     }
 
     // --- pillar hooks -------------------------------------------------------------------

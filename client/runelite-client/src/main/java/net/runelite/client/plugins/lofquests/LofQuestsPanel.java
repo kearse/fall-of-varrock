@@ -164,7 +164,7 @@ class LofQuestsPanel extends PluginPanel
 				}
 			}
 
-			if (state == LofQuestState.IN_PROGRESS)
+			if (state == LofQuestState.IN_PROGRESS || state == LofQuestState.NOT_STARTED)
 			{
 				boolean tracked = plugin.getTrackedQuest() == quest;
 				JButton trackButton = new JButton(tracked ? "Stop tracking" : "Track this quest");
