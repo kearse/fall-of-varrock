@@ -1,11 +1,12 @@
 /*
  * Fall of Varrock — server announcement ticker (overlay).
  *
- * Roak-style: RuneScape font, coloured text on a transparent background (no panel), anchored
- * just above the chat box, left-aligned. Each line keeps the colour the server sent it in
- * (boss spawns orange, campaign captures gold, etc.), falling back to a warm yellow. The block
- * is capped at 3/4 of the canvas width so it never runs across the whole screen; longer lines
- * are truncated with an ellipsis.
+ * Coloured broadcast lines drawn on a transparent background, positioned ABSOLUTELY just above
+ * the chat box, left-aligned. We compute the position from the chat-box widget instead of using a
+ * BOTTOM_LEFT snap corner, because in fixed mode that corner sits at the viewport bottom and the
+ * text renders behind the opaque chat frame (invisible). The block is capped at 3/4 of the chat
+ * width so it never runs under the war-supply dial / Castle Wars timer on the right; longer lines
+ * are ellipsised. Each line keeps the colour the server sent it in, else a warm yellow.
  */
 package net.runelite.client.plugins.lofannouncements;
 
@@ -18,6 +19,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.inject.Inject;
 import net.runelite.api.Client;
+import net.runelite.api.Point;
 import net.runelite.api.widgets.ComponentID;
 import net.runelite.api.widgets.Widget;
 import net.runelite.client.ui.FontManager;
@@ -30,6 +32,7 @@ class LofAnnouncementsOverlay extends Overlay
 {
 	private static final Color DEFAULT_COLOR = new Color(255, 238, 130);
 	private static final Pattern COL = Pattern.compile("<col=([0-9a-fA-F]{6})>");
+	private static final int MARGIN = 4;
 
 	private final LofAnnouncementsPlugin plugin;
 	private final Client client;
@@ -39,12 +42,10 @@ class LofAnnouncementsOverlay extends Overlay
 	{
 		this.plugin = plugin;
 		this.client = client;
-		// Just above the chat box, left-aligned (the classic broadcast spot). Movable, so
-		// players can reposition it.
-		setPosition(OverlayPosition.BOTTOM_LEFT);
+		// DYNAMIC: we place ourselves (absolute, above the chat box) rather than snapping to a
+		// corner. Not movable — the position tracks the chat box every frame.
+		setPosition(OverlayPosition.DYNAMIC);
 		setLayer(OverlayLayer.ABOVE_WIDGETS);
-		setMovable(true);
-		setSnappable(true);
 	}
 
 	@Override
@@ -65,15 +66,28 @@ class LofAnnouncementsOverlay extends Overlay
 		final FontMetrics fm = graphics.getFontMetrics();
 		final int lineH = fm.getHeight();
 
-		// Cap the block at 3/4 of the CHAT BOX width (the announcements sit directly above it,
-		// left-aligned). This keeps the right quarter of the chat strip clear for the war-supply
-		// dial and the Castle Wars timer, which anchor to ABOVE_CHATBOX_RIGHT — so the text never
-		// runs under those. Fall back to the classic 519px chat width if the widget isn't loaded.
+		// Anchor to the chat box: left edge for x, just above its top for y. Fall back to the
+		// bottom-left of the canvas (classic 519x165 chat) if the widget isn't loaded.
 		final Widget chatbox = client.getWidget(ComponentID.CHATBOX_FRAME);
-		final int chatW = chatbox != null ? chatbox.getWidth() : Math.min(519, client.getCanvasWidth());
+		final int chatX, chatTop, chatW;
+		if (chatbox != null && !chatbox.isHidden())
+		{
+			final Point loc = chatbox.getCanvasLocation();
+			chatX = loc.getX();
+			chatTop = loc.getY();
+			chatW = chatbox.getWidth();
+		}
+		else
+		{
+			chatX = MARGIN;
+			chatW = Math.min(519, client.getCanvasWidth());
+			chatTop = client.getCanvasHeight() - 165;
+		}
+
+		// Cap at 3/4 of the chat width so the right quarter stays clear for the dial / CW timer.
 		final int cap = Math.max(120, chatW * 3 / 4);
 
-		// Pre-fit each line to the cap (ellipsised) and measure the widest.
+		// Fit each line to the cap (ellipsised) and measure the widest.
 		int w = 0;
 		final String[] fitted = new String[raw.size()];
 		for (int i = 0; i < raw.size(); i++)
@@ -83,26 +97,28 @@ class LofAnnouncementsOverlay extends Overlay
 			w = Math.max(w, fm.stringWidth(text));
 		}
 
-		int y = fm.getAscent();
+		final int totalH = raw.size() * lineH;
+		final int baseX = chatX + MARGIN;
+		final int baseY = chatTop - totalH - MARGIN; // sit just above the chat box
+
+		int y = baseY + fm.getAscent();
 		for (int i = 0; i < raw.size(); i++)
 		{
 			final Color color = colorOf(raw.get(i));
 			final String text = fitted[i];
-			final int x = 0; // left-aligned
 
-			// Full 1px outline (not just a single drop-shadow) so warm colours stay legible
-			// against the bright game world behind the transparent banner.
+			// Full 1px outline so warm colours stay legible against the bright game world.
 			graphics.setColor(Color.BLACK);
-			graphics.drawString(text, x - 1, y);
-			graphics.drawString(text, x + 1, y);
-			graphics.drawString(text, x, y - 1);
-			graphics.drawString(text, x, y + 1);
+			graphics.drawString(text, baseX - 1, y);
+			graphics.drawString(text, baseX + 1, y);
+			graphics.drawString(text, baseX, y - 1);
+			graphics.drawString(text, baseX, y + 1);
 			graphics.setColor(color);
-			graphics.drawString(text, x, y);
+			graphics.drawString(text, baseX, y);
 			y += lineH;
 		}
 
-		return new Dimension(w, raw.size() * lineH);
+		return new Dimension(w, totalH);
 	}
 
 	/** Truncate text with a trailing "…" so it fits within maxW pixels. */

@@ -49,18 +49,21 @@ class TeleportPortalObjectPlugin(
     init {
         spawnObj(obj = PORTAL, x = PORTAL_X, z = PORTAL_Z, height = 0, type = PORTAL_TYPE, rot = 0)
 
-        // Open the panel UI directly (testing / fallback if the portal object isn't clickable).
-        onCommand("portalui", description = "Open the teleport portal panel") { TeleportPanel.open(player) }
+        // Open the themed client overlay directly (testing). The old TabbedPanel cache UI is
+        // still reachable via ::portalpanel for comparison.
+        onCommand("portalui", description = "Open the teleport portal overlay") { TeleportClientMenu.open(player) }
+        onCommand("portalpanel", description = "Open the old TabbedPanel teleport UI") { TeleportPanel.open(player) }
 
         val actions = getObject(getRSCM(PORTAL)).actions
         val present = actions.filterNotNull().filter { it.isNotBlank() }
         if (present.isEmpty()) {
-            logger.warn { "Teleport portal '$PORTAL' has no click options; use ::portal until a clickable model is set." }
+            logger.warn { "Teleport portal '$PORTAL' has no click options; use ::portalui until a clickable model is set." }
         } else {
-            // First option opens the shared TabbedPanel UI (the same panel the Collection Log
-            // uses) — category tabs + clickable teleport rows. The chat menu (::portal) and the
-            // old client overlay stay as fallbacks. Extra object options repeat the last teleport.
-            onObjOption(PORTAL, present.first()) { TeleportPanel.open(player) }
+            // First option opens the themed client overlay (net.runelite.client.plugins.lofteleports)
+            // by pulsing varp 4607 — the ember/gold Fall of Varrock window. Row clicks come back as
+            // "::tp <cat> <row>" (see TeleportClickPlugin). The old TabbedPanel cache UI is kept on
+            // ::portalpanel as a fallback. Extra object options repeat the last teleport.
+            onObjOption(PORTAL, present.first()) { TeleportClientMenu.open(player) }
             present.drop(1).forEach { opt -> onObjOption(PORTAL, opt) { previousTeleport(player) } }
         }
     }
