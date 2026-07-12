@@ -7,19 +7,23 @@
  * (one tab per rank) styled like the teleport portal.
  *
  * Transport: the server sends the list as ChatMessageType.CONSOLE chat lines, each prefixed with
- * "FOV_CMDS:" (see the server-side BookOfCommandsPlugin) — the same hidden channel the companion
- * system streams its machine data on. CONSOLE lines are delivered to the ChatMessage event (fires
- * exactly once per line, so the window opens instantly) but are NEVER rendered in the chat box and
- * live in their own line buffer — so they cannot flood, evict, or otherwise disturb the player's
- * visible chat. No filtering, no hiding, no chat mutation of any kind.
+ * "FOV_CMDS:" (see the server-side BookOfCommandsPlugin). CONSOLE lines are delivered to the
+ * ChatMessage event (fires exactly once per line, so the window opens instantly) and live in
+ * their OWN line buffer — so, crucially, they can never evict the player's game messages (the
+ * "::commands deletes my chat" bug). This rev-228 client DOES render CONSOLE lines in the chat
+ * box, so they are hidden from display with a block-only "chatFilterCheck" (a pure display
+ * filter — it never touches the buffers) plus one forced refreshChat() at batch end so the hide
+ * applies immediately. Hiding is cosmetic; eviction-safety comes from the channel.
  *
  * Hard-won transport rules (each earlier variant caused a live glitch — do NOT regress):
  *   1. NEVER send this data as GAME_MESSAGE — even display-filtered, each hidden line still
  *      consumed a slot in the game-message buffer and silently EVICTED the player's oldest game
  *      messages ("::commands deletes my chat").
  *   2. NEVER parse in the chatFilterCheck hook — it re-runs over the whole retained history on
- *      every chatbox rebuild (open-lag / tab-reset / reopen bugs).
+ *      every chatbox rebuild (open-lag / tab-reset / reopen bugs). Block-only there.
  *   3. NEVER mass-remove lines from the chat buffers (removeMessageNode) — it wiped the chat.
+ *   4. CONSOLE renders in THIS client's chat box (unlike modern clients) — pair it with the
+ *      block-only display filter.
  *
  * Wire format (one line each):
  *   FOV_CMDS:open|&lt;RankTitle&gt;
@@ -43,6 +47,7 @@ import net.runelite.api.ScriptID;
 import net.runelite.api.VarClientStr;
 import net.runelite.api.events.ChatMessage;
 import net.runelite.api.events.CommandExecuted;
+import net.runelite.api.events.ScriptCallbackEvent;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
@@ -154,6 +159,37 @@ public class LofCommandsPlugin extends Plugin
 		handle(message.substring(PREFIX.length()));
 	}
 
+	/**
+	 * Display-only hiding of the machine lines (this client renders CONSOLE in the chat box).
+	 * Pure filter — blocks the line from the rebuilt display, never touches the buffers. Parsing
+	 * happens in onChatMessage only (rule 2 above).
+	 */
+	@Subscribe
+	public void onScriptCallbackEvent(ScriptCallbackEvent event)
+	{
+		if (!"chatFilterCheck".equals(event.getEventName()))
+		{
+			return;
+		}
+
+		final String[] stringStack = client.getStringStack();
+		final int stringStackSize = client.getStringStackSize();
+		if (stringStackSize <= 0)
+		{
+			return;
+		}
+
+		final String message = stringStack[stringStackSize - 1];
+		if (message == null || !message.startsWith(PREFIX))
+		{
+			return;
+		}
+
+		final int[] intStack = client.getIntStack();
+		final int intStackSize = client.getIntStackSize();
+		intStack[intStackSize - 3] = 0; // block from display
+	}
+
 	@Subscribe
 	public void onCommandExecuted(CommandExecuted event)
 	{
@@ -200,6 +236,10 @@ public class LofCommandsPlugin extends Plugin
 			}
 			case "end":
 				commit();
+				// Apply the display filter to the just-arrived lines immediately (this client
+				// doesn't run chatFilterCheck on the add path — without this they'd sit visible
+				// until the next natural rebuild). Rebuild-only; no buffer mutation.
+				clientThread.invokeLater(client::refreshChat);
 				break;
 			default:
 				break;
