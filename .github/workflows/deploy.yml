@@ -113,7 +113,9 @@ jobs:
       # Auto-announce every shipped push to Discord. Inserts a kind:"update"
       # event into the discord_events queue the bot already drains (routed to
       # the news channel, falls back to the status feed) — no webhook secret
-      # needed. The body is the push's commit subjects, merge commits skipped.
+      # needed. Each non-merge commit posts as a bold subject plus its full
+      # message body (Co-Authored-By/Claude-Session trailers stripped, body
+      # capped at 600 chars, whole embed at 3500 — Discord's limit is 4096).
       # Runs only after a healthy deploy; a failure here never fails the deploy.
       # (The curated data/update-notes.md boot announcement still exists on top
       # of this — it only fires when that file is edited.)
@@ -121,13 +123,19 @@ jobs:
         if: ${{ github.event_name == 'push' }}
         run: |
           DOC=$(jq -c '
-            ([.commits[]?.message | split("\n")[0]
-              | select((startswith("Merge pull request") or startswith("Merge branch")) | not)]) as $subs
-            | (if ($subs | length) > 0 then $subs
-               else [.head_commit.message | split("\n")[0]] end) as $lines
+            ([.commits[]?.message
+              | split("\n")
+              | map(select(test("^(Co-Authored-By:|Claude-Session:)") | not))
+              | select((.[0] | startswith("Merge pull request") or startswith("Merge branch")) | not)
+              | (.[0]) as $subject
+              | (.[1:] | join("\n") | gsub("\\n{3,}"; "\n\n") | gsub("\\A\\s+|\\s+\\z"; "")) as $body
+              | "**" + $subject + "**" + (if $body == "" then "" else "\n" + $body[0:600] end)
+             ]) as $entries
+            | (if ($entries | length) > 0 then $entries
+               else [.head_commit.message | split("\n")[0] | "**" + . + "**"] end) as $lines
             | { kind: "update",
                 title: "Server update deployed",
-                description: (($lines | map("• " + .) | join("\n"))[0:3500]),
+                description: (($lines | join("\n\n"))[0:3500]),
                 posted: false,
                 createdAt: (now * 1000 | floor) }
           ' "$GITHUB_EVENT_PATH")
