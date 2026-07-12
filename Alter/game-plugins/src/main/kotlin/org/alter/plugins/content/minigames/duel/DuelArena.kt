@@ -23,6 +23,14 @@ object DuelArena {
      */
     var useRulesGrid = false
 
+    /**
+     * Whether the challenge flow uses the **themed client-overlay** rules screen
+     * ([DuelRulesClientMenu] → `net.runelite.client.plugins.lofduel`). ON by default: unlike the
+     * cache rules-grid, a client overlay can't crash the client, so it's safe to ship. Takes
+     * precedence over [useRulesGrid]. Flip with `::dueloverlay`.
+     */
+    var useRulesOverlay = true
+
     /** Every duel currently in progress (counting down or fighting). */
     val active = mutableListOf<Duel>()
 
