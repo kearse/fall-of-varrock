@@ -42,25 +42,26 @@ class LofCommandsOverlay extends Overlay
 	static final int TAB_BASE = 100;
 	static final int ROW_BASE = 1000;
 
-	private static final int WIN_W = 588;
-	private static final int WIN_H = 420;
+	// 480x400 framed-modal standard (docs/overlay-design-system.md §6A).
+	private static final int WIN_W = 480;
+	private static final int WIN_H = 400;
 	private static final int WIN_ARC = 14;
 	private static final int TITLE_H = 38;
 	private static final int TAB_X = 10;
-	private static final int TAB_W = 138;
+	private static final int TAB_W = 116;
 	private static final int TAB_Y0 = TITLE_H + 16;
-	private static final int TAB_H = 30;
-	private static final int TAB_GAP = 34;
-	private static final int LIST_X = 160;
-	private static final int LIST_W = WIN_W - LIST_X - 10;
+	private static final int TAB_H = 28;
+	private static final int TAB_GAP = 32;
+	private static final int LIST_X = 134;
+	private static final int LIST_W = WIN_W - LIST_X - 10;     // 336
 	private static final int SCROLLBAR_W = 5;
-	private static final int VP_TOP = TITLE_H + 30;
-	private static final int VP_BOTTOM = WIN_H - 12;
-	private static final int VP_H = VP_BOTTOM - VP_TOP;
+	private static final int VP_TOP = TITLE_H + 14;            // 52
+	private static final int VP_BOTTOM = WIN_H - 12;           // 388
+	private static final int VP_H = VP_BOTTOM - VP_TOP;        // 336
 	private static final int CARD_X = LIST_X + 2;
-	private static final int CARD_W = LIST_W - SCROLLBAR_W - 8;
-	private static final int CARD_H = 28;
-	private static final int STEP = 32;
+	private static final int CARD_W = LIST_W - SCROLLBAR_W - 8; // 323
+	private static final int CARD_H = 22;                      // §4 standard row height
+	private static final int STEP = 26;
 
 	private static final Color CLOSE_HOVER = LofTheme.EMBER;
 
@@ -122,7 +123,11 @@ class LofCommandsOverlay extends Overlay
 
 	private int originX()
 	{
-		return Math.max(0, (client.getCanvasWidth() - WIN_W) / 2);
+		// Centre within the game viewport, not the whole canvas, so the window clears the
+		// inventory/tab column in fixed mode (§6A). In fixed mode the world view is the left ~512px.
+		final int canvasW = client.getCanvasWidth();
+		final int viewportW = client.isResized() ? canvasW : Math.min(canvasW, 512);
+		return Math.max(0, Math.min((canvasW - WIN_W) / 2, (viewportW - WIN_W) / 2));
 	}
 
 	private int originY()
@@ -262,7 +267,7 @@ class LofCommandsOverlay extends Overlay
 		g.fillRoundRect(cr.x, cr.y, cr.width, cr.height, 6, 6);
 		g.setColor(closeHov ? LofTheme.TEXT : LofTheme.TEXT_DIM);
 		final Stroke oldStroke = g.getStroke();
-		g.setStroke(new BasicStroke(1.6f));
+		g.setStroke(new BasicStroke(1.4f));
 		g.drawLine(cr.x + 6, cr.y + 6, cr.x + cr.width - 7, cr.y + cr.height - 7);
 		g.drawLine(cr.x + cr.width - 7, cr.y + 6, cr.x + 6, cr.y + cr.height - 7);
 		g.setStroke(oldStroke);
@@ -277,12 +282,12 @@ class LofCommandsOverlay extends Overlay
 			final Rectangle tr = tabRect(ox, oy, t);
 			final boolean sel = t == activeTab;
 			final boolean hov = tr.contains(mouse);
-			final Color rc = roleColor(tabs.get(t).role);
+			// §7 tab rail: selected = ember bar + alpha(ember,44) fill + gold label (one system).
 			if (sel)
 			{
-				g.setColor(LofTheme.alpha(rc, 44));
+				g.setColor(LofTheme.alpha(LofTheme.EMBER, 44));
 				g.fillRoundRect(tr.x, tr.y, tr.width, tr.height, 8, 8);
-				g.setColor(rc);
+				g.setColor(LofTheme.EMBER);
 				g.fillRoundRect(tr.x, tr.y + 6, 3, tr.height - 12, 2, 2);
 			}
 			else if (hov)
@@ -291,7 +296,7 @@ class LofCommandsOverlay extends Overlay
 				g.fillRoundRect(tr.x, tr.y, tr.width, tr.height, 8, 8);
 			}
 			final String label = ellipsise(tabFm, tabs.get(t).role, TAB_W - 20);
-			LofTheme.shadowText(g, label, tr.x + 12, tr.y + 20, sel ? rc : (hov ? LofTheme.TEXT : LofTheme.TEXT_DIM));
+			LofTheme.shadowText(g, label, tr.x + 12, tr.y + 19, sel ? LofTheme.GOLD : (hov ? LofTheme.TEXT : LofTheme.TEXT_DIM));
 		}
 
 		// commands (clipped to viewport)
@@ -321,7 +326,7 @@ class LofCommandsOverlay extends Overlay
 				g.drawRoundRect(cx, cy, CARD_W, CARD_H, 8, 8);
 			}
 
-			final int ty = cy + CARD_H / 2 + 5;
+			final int ty = cy + CARD_H / 2 + 4;
 			LofTheme.shadowText(g, e.cmd, cx + 10, ty, LofTheme.GOLD);
 			if (!e.desc.isEmpty())
 			{
@@ -348,37 +353,6 @@ class LofCommandsOverlay extends Overlay
 
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, oldAA == null ? RenderingHints.VALUE_ANTIALIAS_DEFAULT : oldAA);
 		return new Dimension(WIN_W, WIN_H);
-	}
-
-	/** A distinct hue per rank so tabs read apart at a glance. */
-	private static Color roleColor(String role)
-	{
-		final String r = role.toLowerCase();
-		if (r.startsWith("player"))
-		{
-			return new Color(122, 201, 130); // green
-		}
-		if (r.startsWith("donor"))
-		{
-			return LofTheme.LAVA; // orange
-		}
-		if (r.startsWith("moderator"))
-		{
-			return new Color(120, 170, 255); // blue
-		}
-		if (r.startsWith("admin"))
-		{
-			return LofTheme.EMBER; // red
-		}
-		if (r.startsWith("dev"))
-		{
-			return new Color(196, 132, 232); // purple
-		}
-		if (r.startsWith("owner"))
-		{
-			return LofTheme.GOLD;
-		}
-		return LofTheme.TEXT;
 	}
 
 	/** Truncate text with a trailing "…" so it fits within maxW pixels. */
