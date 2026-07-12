@@ -174,13 +174,15 @@ Reusable pieces — reach for these before inventing a new one. Metrics above.
   - *Large state* (item lists): **read the existing interface's widgets** (`client.getWidget(group,
     child)` → `getDynamicChildren()`), null-guarded. No custom packet.
   - *Bulk data via chat lines* (the commands list): the server tags lines with a machine prefix
-    (`FOV_CMDS:` etc.). **Consume them in `onChatMessage`** (fires exactly ONCE, on arrival), then
-    **delete them from chat history** (`getChatLineMap().get(node.getType().getType())
-    .removeMessageNode(node)` + `refreshChat()`) so they never render and never re-fire. NEVER parse
-    in the `chatFilterCheck` script hook — it re-runs over the whole retained history on **every
-    chatbox rebuild**, so parsing there floods the chat on arrival, delays the window until the next
-    rebuild, and re-triggers open/tab-reset afterwards (the ::commands glitches). Keep a block-only
-    `chatFilterCheck` as cover for rebuilds that run before the purge lands.
+    (`FOV_CMDS:` etc.). **Consume them in `onChatMessage`** (fires exactly ONCE, on arrival), hide
+    them with a **block-only `chatFilterCheck`** (`intStack[size-3] = 0`), and force **one
+    `refreshChat()`** at batch end so the filter applies immediately (this client doesn't run the
+    filter on the add path). Two hard rules, both learned from live glitches:
+    **(1) NEVER parse in `chatFilterCheck`** — it re-runs over the whole retained history on every
+    chatbox rebuild, so parsing there delays the window until the next rebuild and re-triggers it
+    afterwards (open-lag / tab-reset / reopen). **(2) NEVER mass-remove the lines from the chat
+    buffers** (`ChatLineBuffer.removeMessageNode` in a loop) — it wiped the player's visible chat.
+    Blocked lines stay harmlessly in history, hidden by the filter on every rebuild.
 - **Action → server:** send `"::<cmd> <args>"` via `runScript(ScriptID.CHAT_SEND, …)`; the server
   intercepts it in `MessagePublicHandler`, runs the matching command, and suppresses the chat line.
   Existing channels: `::tp`, `::duel`, `::stake`.
