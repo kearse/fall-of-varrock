@@ -84,6 +84,7 @@ Antialiasing: turn it **on** at the top of `render` and **restore the prior hint
 Build every framed window the same way:
 
 1. **Panel** — `LofTheme.panel(g, ox, oy, w, h, ARC)` (drop shadow + rounded body + ember border).
+   The body is **fully opaque** — our windows never let the game show through them.
 2. **Header** — fill the top `38px` with `HEADER` (clip to the title strip), then
    `LofTheme.emberUnderline(...)` a 2px fading ember line under it. Draw the **shield logo**
    (`LofTheme.logo()`, 28px, at `ox+12, oy+5`) then the **gold bold title** at `ox+46`. Optional
@@ -125,7 +126,11 @@ Supply dial, war-progress bar, alerts banner, LMS panel, announcement ticker, PK
 - Panelled HUDs use `PANEL_OPAQUE` backings + `EMBER_DARK` borders; **text-only tickers stay transparent**
   (no panel) for readability over the world.
 
-All overlays draw on `OverlayLayer.ABOVE_WIDGETS`.
+**Layer / z-order:** framed **modals draw on `OverlayLayer.ALWAYS_ON_TOP`** so they sit above the
+corner HUDs (e.g. the war-supply dial) — otherwise a HUD renders over the open window and blocks it.
+**HUDs draw on `OverlayLayer.ABOVE_WIDGETS`.** Text tickers that position absolutely (announcements)
+compute their spot from the **canvas** (e.g. `canvasHeight - 165` for the classic chat height), not
+the chat-box widget — the widget can report a zeroed/off location in fixed mode and hide the overlay.
 
 ---
 

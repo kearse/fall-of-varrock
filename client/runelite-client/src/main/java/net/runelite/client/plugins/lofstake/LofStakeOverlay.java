@@ -84,7 +84,7 @@ class LofStakeOverlay extends Overlay
 		this.config = config;
 		this.itemManager = itemManager;
 		setPosition(OverlayPosition.DYNAMIC);
-		setLayer(OverlayLayer.ABOVE_WIDGETS);
+		setLayer(OverlayLayer.ALWAYS_ON_TOP);
 	}
 
 	/** Only while the server's stake trade screen is open (title reads "Staking with …"). */

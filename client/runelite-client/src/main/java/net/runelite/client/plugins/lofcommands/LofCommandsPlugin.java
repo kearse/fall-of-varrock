@@ -24,7 +24,9 @@ package net.runelite.client.plugins.lofcommands;
 
 import com.google.inject.Provides;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import javax.inject.Inject;
 import net.runelite.api.Client;
 import net.runelite.api.ScriptID;
@@ -78,6 +80,13 @@ public class LofCommandsPlugin extends Plugin
 	private final List<Row> buffer = new ArrayList<>();
 	private String rankTitle = "";
 	private String bufferRank = "";
+
+	/** True once the player dismissed the window (X / click-away / picked a command). A server
+	 *  re-send within {@link #REOPEN_GAP_MS} then refreshes the data WITHOUT forcing it back open;
+	 *  a genuinely new request (a longer gap) clears this and opens fresh on tab 0. */
+	private boolean userClosed;
+	private long lastCommitAt;
+	private static final long REOPEN_GAP_MS = 5000;
 
 	@Provides
 	LofCommandsConfig provideConfig(ConfigManager configManager)
@@ -202,26 +211,47 @@ public class LofCommandsPlugin extends Plugin
 		}
 	}
 
-	/** Turn the streamed rows into rank tabs and open the window. */
+	/** Turn the streamed rows into rank tabs and open (or refresh) the window. */
 	private void commit()
 	{
-		tabs.clear();
+		// Group by UNIQUE role (first-seen order) so interleaved rows can't create duplicate tabs.
+		final Map<String, Tab> byRole = new LinkedHashMap<>();
 		for (Row r : buffer)
 		{
-			Tab last = tabs.isEmpty() ? null : tabs.get(tabs.size() - 1);
-			if (last == null || !last.role.equals(r.role))
-			{
-				last = new Tab(r.role);
-				tabs.add(last);
-			}
-			last.rows.add(new Entry(r.cmd, r.desc));
+			byRole.computeIfAbsent(r.role, Tab::new).rows.add(new Entry(r.cmd, r.desc));
 		}
+		tabs.clear();
+		tabs.addAll(byRole.values());
 		rankTitle = bufferRank;
-		if (!tabs.isEmpty())
+		if (tabs.isEmpty())
 		{
+			return;
+		}
+
+		final long now = System.currentTimeMillis();
+		final boolean freshRequest = now - lastCommitAt > REOPEN_GAP_MS;
+		lastCommitAt = now;
+
+		if (freshRequest)
+		{
+			// A new ::commands (or book read): open fresh on the first tab.
+			userClosed = false;
 			overlay.setActiveTab(0);
 			overlay.setVisible(true);
 		}
+		else if (!userClosed)
+		{
+			// A rapid server re-send: refresh the data but KEEP the player's current tab (the render
+			// clamps if it's now out of range) and don't yank a dismissed window back open.
+			overlay.setVisible(true);
+		}
+	}
+
+	/** Dismiss the window and remember the player did so, so a re-send won't reopen it. */
+	void close()
+	{
+		userClosed = true;
+		overlay.setVisible(false);
 	}
 
 	/** Put "&lt;cmd&gt; " into the chat input (unsent) so the player can add arguments and press enter. */
