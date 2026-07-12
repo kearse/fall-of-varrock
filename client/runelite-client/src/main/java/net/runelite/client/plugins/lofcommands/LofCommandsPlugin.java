@@ -8,12 +8,17 @@
  *
  * Transport: the server sends the list as ordinary GAME_MESSAGE chat lines, each prefixed with
  * "FOV_CMDS:" (see the server-side BookOfCommandsPlugin). We consume them the moment they ARRIVE
- * (the ChatMessage event — fires exactly once per line), then DELETE the lines from the chat
- * history (ChatLineBuffer.removeMessageNode + refreshChat) so they never render and never re-fire.
- * The "chatFilterCheck" hook is kept purely as a belt-and-braces BLOCK for any line that gets
- * rebuilt before the purge lands — it does NOT parse (the filter hook re-runs over the whole chat
- * history on every chatbox rebuild, so parsing there re-triggered the window: the old open-lag /
- * tab-reset / reopen bugs). No custom packets; nothing leaks into the chat scrollback.
+ * (the ChatMessage event — fires exactly once per line, so the window opens instantly), and hide
+ * them from display with a block-only "chatFilterCheck" hook + one forced refreshChat() at batch
+ * end — the exact mechanism the stock Chat Filter plugin uses, which never disturbs the chat.
+ *
+ * Two hard-won rules (both caused live glitches — do NOT regress them):
+ *   1. NEVER parse in chatFilterCheck — it re-runs over the whole retained chat history on every
+ *      chatbox rebuild, so parsing there delayed the window until the next rebuild and re-fired
+ *      the batch afterwards (open-lag / tab-reset / reopen bugs).
+ *   2. NEVER remove the lines from the chat buffers (ChatLineBuffer.removeMessageNode) — mass
+ *      removal WIPED the player's visible chat. The blocked lines stay harmlessly in history,
+ *      hidden by the filter on every rebuild.
  *
  * Wire format (one line each):
  *   FOV_CMDS:open|&lt;RankTitle&gt;
@@ -31,10 +36,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import javax.inject.Inject;
-import net.runelite.api.ChatLineBuffer;
 import net.runelite.api.ChatMessageType;
 import net.runelite.api.Client;
-import net.runelite.api.MessageNode;
 import net.runelite.api.ScriptID;
 import net.runelite.api.VarClientStr;
 import net.runelite.api.events.ChatMessage;
@@ -87,10 +90,6 @@ public class LofCommandsPlugin extends Plugin
 	private final List<Row> buffer = new ArrayList<>();
 	private String rankTitle = "";
 	private String bufferRank = "";
-
-	/** The chat-history nodes of the current streaming batch — purged from the chat once the
-	 *  batch completes, so the lines never render and never re-fire on chat rebuilds. */
-	private final List<MessageNode> capturedNodes = new ArrayList<>();
 
 	@Provides
 	LofCommandsConfig provideConfig(ConfigManager configManager)
@@ -151,7 +150,6 @@ public class LofCommandsPlugin extends Plugin
 		{
 			return;
 		}
-		capturedNodes.add(event.getMessageNode());
 		handle(message.substring(PREFIX.length()));
 	}
 
@@ -176,34 +174,21 @@ public class LofCommandsPlugin extends Plugin
 			return;
 		}
 
-		// Ours — hide it from this rebuild (0 = block). Parsing happens in onChatMessage only;
-		// this is just cover for any rebuild that runs before the purge removes the lines.
+		// Ours — hide it from this rebuild (0 = block). Parsing happens in onChatMessage only.
 		final int[] intStack = client.getIntStack();
 		final int intStackSize = client.getIntStackSize();
 		intStack[intStackSize - 3] = 0;
 	}
 
-	/** Delete the batch's lines from the chat history so they never render or re-fire. */
-	private void purgeCapturedLines()
+	/**
+	 * Force one chat rebuild so the just-arrived batch is hidden by the filter immediately (this
+	 * client doesn't run chatFilterCheck on the add path, so without this the raw lines sat
+	 * visible until the next rebuild). The lines stay in history, hidden — we deliberately do NOT
+	 * remove them from the chat buffers: mass removeMessageNode wiped the player's chat.
+	 */
+	private void hideCapturedLines()
 	{
-		if (capturedNodes.isEmpty())
-		{
-			return;
-		}
-		final List<MessageNode> nodes = new ArrayList<>(capturedNodes);
-		capturedNodes.clear();
-		clientThread.invokeLater(() ->
-		{
-			for (MessageNode node : nodes)
-			{
-				final ChatLineBuffer lineBuffer = client.getChatLineMap().get(node.getType().getType());
-				if (lineBuffer != null)
-				{
-					lineBuffer.removeMessageNode(node);
-				}
-			}
-			client.refreshChat();
-		});
+		clientThread.invokeLater(client::refreshChat);
 	}
 
 	@Subscribe
@@ -252,7 +237,7 @@ public class LofCommandsPlugin extends Plugin
 			}
 			case "end":
 				commit();
-				purgeCapturedLines();
+				hideCapturedLines();
 				break;
 			default:
 				break;
