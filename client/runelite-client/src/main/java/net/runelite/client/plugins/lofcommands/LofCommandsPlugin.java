@@ -7,10 +7,13 @@
  * (one tab per rank) styled like the teleport portal.
  *
  * Transport: the server sends the list as ordinary GAME_MESSAGE chat lines, each prefixed with
- * "FOV_CMDS:" (see the server-side BookOfCommandsPlugin). We catch those lines in the client's
- * "chatFilterCheck" hook — the same hook the Chat Filter plugin uses to censor game messages —
- * and BLOCK them (intStack[size-3] = 0), so they never appear in the chat box at all. No custom
- * packets; nothing leaks into the chat scrollback or the announcement ticker.
+ * "FOV_CMDS:" (see the server-side BookOfCommandsPlugin). We consume them the moment they ARRIVE
+ * (the ChatMessage event — fires exactly once per line), then DELETE the lines from the chat
+ * history (ChatLineBuffer.removeMessageNode + refreshChat) so they never render and never re-fire.
+ * The "chatFilterCheck" hook is kept purely as a belt-and-braces BLOCK for any line that gets
+ * rebuilt before the purge lands — it does NOT parse (the filter hook re-runs over the whole chat
+ * history on every chatbox rebuild, so parsing there re-triggered the window: the old open-lag /
+ * tab-reset / reopen bugs). No custom packets; nothing leaks into the chat scrollback.
  *
  * Wire format (one line each):
  *   FOV_CMDS:open|&lt;RankTitle&gt;
@@ -28,9 +31,13 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import javax.inject.Inject;
+import net.runelite.api.ChatLineBuffer;
+import net.runelite.api.ChatMessageType;
 import net.runelite.api.Client;
+import net.runelite.api.MessageNode;
 import net.runelite.api.ScriptID;
 import net.runelite.api.VarClientStr;
+import net.runelite.api.events.ChatMessage;
 import net.runelite.api.events.CommandExecuted;
 import net.runelite.api.events.ScriptCallbackEvent;
 import net.runelite.client.callback.ClientThread;
@@ -81,12 +88,9 @@ public class LofCommandsPlugin extends Plugin
 	private String rankTitle = "";
 	private String bufferRank = "";
 
-	/** True once the player dismissed the window (X / click-away / picked a command). A server
-	 *  re-send within {@link #REOPEN_GAP_MS} then refreshes the data WITHOUT forcing it back open;
-	 *  a genuinely new request (a longer gap) clears this and opens fresh on tab 0. */
-	private boolean userClosed;
-	private long lastCommitAt;
-	private static final long REOPEN_GAP_MS = 5000;
+	/** The chat-history nodes of the current streaming batch — purged from the chat once the
+	 *  batch completes, so the lines never render and never re-fire on chat rebuilds. */
+	private final List<MessageNode> capturedNodes = new ArrayList<>();
 
 	@Provides
 	LofCommandsConfig provideConfig(ConfigManager configManager)
@@ -130,6 +134,27 @@ public class LofCommandsPlugin extends Plugin
 		buffer.clear();
 	}
 
+	/**
+	 * Consume a command-list line the moment it ARRIVES. ChatMessage fires exactly once per line
+	 * (unlike chatFilterCheck, which re-runs over the whole retained history on every chat rebuild
+	 * — parsing there made the window lag until the next rebuild and re-open/reset afterwards).
+	 */
+	@Subscribe
+	public void onChatMessage(ChatMessage event)
+	{
+		if (event.getType() != ChatMessageType.GAMEMESSAGE)
+		{
+			return;
+		}
+		final String message = event.getMessage();
+		if (message == null || !message.startsWith(PREFIX))
+		{
+			return;
+		}
+		capturedNodes.add(event.getMessageNode());
+		handle(message.substring(PREFIX.length()));
+	}
+
 	@Subscribe
 	public void onScriptCallbackEvent(ScriptCallbackEvent event)
 	{
@@ -151,12 +176,34 @@ public class LofCommandsPlugin extends Plugin
 			return;
 		}
 
-		// Ours — drop it from the chat box entirely (0 = block), then consume it into the model.
+		// Ours — hide it from this rebuild (0 = block). Parsing happens in onChatMessage only;
+		// this is just cover for any rebuild that runs before the purge removes the lines.
 		final int[] intStack = client.getIntStack();
 		final int intStackSize = client.getIntStackSize();
 		intStack[intStackSize - 3] = 0;
+	}
 
-		handle(message.substring(PREFIX.length()));
+	/** Delete the batch's lines from the chat history so they never render or re-fire. */
+	private void purgeCapturedLines()
+	{
+		if (capturedNodes.isEmpty())
+		{
+			return;
+		}
+		final List<MessageNode> nodes = new ArrayList<>(capturedNodes);
+		capturedNodes.clear();
+		clientThread.invokeLater(() ->
+		{
+			for (MessageNode node : nodes)
+			{
+				final ChatLineBuffer lineBuffer = client.getChatLineMap().get(node.getType().getType());
+				if (lineBuffer != null)
+				{
+					lineBuffer.removeMessageNode(node);
+				}
+			}
+			client.refreshChat();
+		});
 	}
 
 	@Subscribe
@@ -205,13 +252,16 @@ public class LofCommandsPlugin extends Plugin
 			}
 			case "end":
 				commit();
+				purgeCapturedLines();
 				break;
 			default:
 				break;
 		}
 	}
 
-	/** Turn the streamed rows into rank tabs and open (or refresh) the window. */
+	/** Turn the streamed rows into rank tabs and open the window. A batch now fires exactly once
+	 *  per ::commands (arrival-based capture + purge — no rebuild re-triggers), so every commit is
+	 *  a genuine player request: open fresh on the first tab. */
 	private void commit()
 	{
 		// Group by UNIQUE role (first-seen order) so interleaved rows can't create duplicate tabs.
@@ -223,34 +273,16 @@ public class LofCommandsPlugin extends Plugin
 		tabs.clear();
 		tabs.addAll(byRole.values());
 		rankTitle = bufferRank;
-		if (tabs.isEmpty())
+		if (!tabs.isEmpty())
 		{
-			return;
-		}
-
-		final long now = System.currentTimeMillis();
-		final boolean freshRequest = now - lastCommitAt > REOPEN_GAP_MS;
-		lastCommitAt = now;
-
-		if (freshRequest)
-		{
-			// A new ::commands (or book read): open fresh on the first tab.
-			userClosed = false;
 			overlay.setActiveTab(0);
-			overlay.setVisible(true);
-		}
-		else if (!userClosed)
-		{
-			// A rapid server re-send: refresh the data but KEEP the player's current tab (the render
-			// clamps if it's now out of range) and don't yank a dismissed window back open.
 			overlay.setVisible(true);
 		}
 	}
 
-	/** Dismiss the window and remember the player did so, so a re-send won't reopen it. */
+	/** Dismiss the window (X / click-away / picking a command). */
 	void close()
 	{
-		userClosed = true;
 		overlay.setVisible(false);
 	}
 

@@ -129,6 +129,12 @@ class LofDuelOverlay extends Overlay
 		final Object oldAA = g.getRenderingHint(RenderingHints.KEY_ANTIALIASING);
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
+		// This overlay draws at ABSOLUTE canvas coordinates. Undo any translate the renderer
+		// applied (e.g. a saved drag offset) so absolute means absolute.
+		final java.awt.Rectangle selfBounds = getBounds();
+		g.translate(-selfBounds.x, -selfBounds.y);
+
+
 		final int state = client.getVarpValue(STATE_VARP);
 		final boolean myAccept = (state & (1 << 13)) != 0;
 		final boolean theirAccept = (state & (1 << 14)) != 0;
