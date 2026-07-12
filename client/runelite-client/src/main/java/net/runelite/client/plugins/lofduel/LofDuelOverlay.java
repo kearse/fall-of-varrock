@@ -1,11 +1,12 @@
 /*
  * Fall of Varrock — Duel Arena rules overlay (renderer + hit-testing).
  *
- * A themed rules-grid window drawn client-side (cache interfaces crash our client). The server
- * (DuelRulesClientMenu) publishes the shared state in one packed varp 4630; this overlay reads it
- * every frame and draws the 12 rule toggles + accept/decline. Clicks send "::duel <action>" back
- * (t<i> toggle, a accept, d decline), which the server intercepts. Label order MUST match the
- * server's DuelRulesClientMenu.LABELS.
+ * A faithful rebuild of the classic Duel Arena *Options* screen, themed and drawn client-side (cache
+ * interfaces crash our client). Two controls, like the original: the combat-rule checkboxes (left)
+ * and the equipment paper-doll (right — click a worn slot to forbid it), plus a "Load last duel"
+ * preset. The server (DuelRulesClientMenu) publishes the shared state in one packed varp 4630; this
+ * overlay reads it each frame and sends clicks back as "::duel <action>". RULES + SLOT order MUST
+ * match DuelRulesClientMenu.
  */
 package net.runelite.client.plugins.lofduel;
 
@@ -38,26 +39,37 @@ class LofDuelOverlay extends Overlay
 	static final int INSIDE = 0;
 	static final int DECLINE = 1;
 	static final int ACCEPT = 2;
-	static final int CHIP_BASE = 100;
+	static final int LOAD = 3;
+	static final int RULE_BASE = 100; // + rule index (0..11)
+	static final int SLOT_BASE = 200; // + doll slot index (0..10)
 
-	/** MUST match DuelRulesClientMenu.LABELS order. */
-	private static final String[] LABELS = {
+	/** MUST match DuelRulesClientMenu.RULES. */
+	private static final String[] RULES = {
 		"No Melee", "No Ranged", "No Magic", "No Prayer", "No Food", "No Drinks",
-		"No Movement", "Boxing (no gear)", "Whip only", "DDS only", "Fun weapons", "Allow companions",
+		"No Movement", "No Forfeit", "Whip only", "DDS only", "Fun weapons", "Allow companions",
 	};
 
-	private static final int WIN_W = 470;
-	private static final int WIN_H = 372;
+	/** Paper-doll slot labels, in DuelRulesClientMenu.SLOT_IDS order. */
+	private static final String[] SLOTS = { "Head", "Cape", "Neck", "Weap", "Body", "Shld", "Legs", "Hand", "Foot", "Ring", "Ammo" };
+	// Grid position (col,row) of each doll slot — the classic worn-equipment layout (3 columns).
+	private static final int[] DOLL_COL = { 1, 0, 1, 0, 1, 2, 1, 0, 1, 2, 2 };
+	private static final int[] DOLL_ROW = { 0, 1, 1, 2, 2, 2, 3, 4, 4, 4, 1 };
+
+	// Shared window size (design-system standard modal — matches the stake overlay). See
+	// docs/overlay-design-system.md.
+	static final int WIN_W = 480;
+	static final int WIN_H = 400;
 	private static final int WIN_ARC = 14;
 	private static final int TITLE_H = 38;
 	private static final int PAD = 12;
-	private static final int GRID_TOP = TITLE_H + 34;
-	private static final int COLS = 2;
-	private static final int ROWS = 6;
-	private static final int CHIP_GAP = 8;
-	private static final int CHIP_H = 30;
-	private static final int CHIP_W = (WIN_W - PAD * 2 - CHIP_GAP) / COLS;   // 219
-	private static final int BTN_H = 34;
+	private static final int RULE_TOP = TITLE_H + 30;
+	private static final int RULE_H = 22;
+	private static final int RULE_W = 226;
+	private static final int DOLL_X = 288;
+	private static final int DOLL_TOP = TITLE_H + 40;
+	private static final int SLOT_SZ = 42;
+	private static final int SLOT_GAP = 6;
+	private static final int BTN_H = 32;
 
 	private static final Color GREEN = new Color(110, 205, 110);
 
@@ -80,42 +92,39 @@ class LofDuelOverlay extends Overlay
 			&& (client.getVarpValue(STATE_VARP) & 0x1) != 0;
 	}
 
-	private int originX() { return Math.max(0, (client.getCanvasWidth() - WIN_W) / 2); }
+	// Centred in the game viewport (left ~516 in fixed mode) so it sits clear of the inventory
+	// column — the same anchor the stake window uses, so the two duel screens appear in one spot.
+	private int originX() { return Math.max(12, (Math.min(client.getCanvasWidth(), 516) - WIN_W) / 2); }
 	private int originY() { return Math.max(0, (client.getCanvasHeight() - WIN_H) / 2); }
 
-	private Rectangle chipRect(int ox, int oy, int i)
+	private Rectangle ruleRect(int ox, int oy, int i) { return new Rectangle(ox + PAD, oy + RULE_TOP + i * RULE_H, RULE_W, RULE_H - 2); }
+	private Rectangle slotRect(int ox, int oy, int i)
 	{
-		final int col = i / ROWS;                 // col-major: 0..5 left, 6..11 right
-		final int row = i % ROWS;
-		final int x = ox + PAD + col * (CHIP_W + CHIP_GAP);
-		final int y = oy + GRID_TOP + row * (CHIP_H + CHIP_GAP);
-		return new Rectangle(x, y, CHIP_W, CHIP_H);
+		final int x = ox + DOLL_X + DOLL_COL[i] * (SLOT_SZ + SLOT_GAP);
+		final int y = oy + DOLL_TOP + DOLL_ROW[i] * (SLOT_SZ + SLOT_GAP);
+		return new Rectangle(x, y, SLOT_SZ, SLOT_SZ);
 	}
-
-	private Rectangle acceptRect(int ox, int oy) { return new Rectangle(ox + PAD, oy + WIN_H - PAD - BTN_H, (WIN_W - PAD * 2 - CHIP_GAP) / 2, BTN_H); }
-	private Rectangle declineRect(int ox, int oy) { final Rectangle a = acceptRect(ox, oy); return new Rectangle(a.x + a.width + CHIP_GAP, a.y, a.width, BTN_H); }
+	private Rectangle loadRect(int ox, int oy) { return new Rectangle(ox + PAD, oy + WIN_H - PAD - BTN_H, 96, BTN_H); }
+	private Rectangle acceptRect(int ox, int oy) { return new Rectangle(ox + WIN_W - PAD - 210, oy + WIN_H - PAD - BTN_H, 100, BTN_H); }
+	private Rectangle declineRect(int ox, int oy) { return new Rectangle(ox + WIN_W - PAD - 100, oy + WIN_H - PAD - BTN_H, 100, BTN_H); }
 
 	int hitTest(Point p)
 	{
 		if (!isShowing()) return OUTSIDE;
 		final int ox = originX(), oy = originY();
 		if (!new Rectangle(ox, oy, WIN_W, WIN_H).contains(p)) return OUTSIDE;
+		if (loadRect(ox, oy).contains(p)) return LOAD;
 		if (acceptRect(ox, oy).contains(p)) return ACCEPT;
 		if (declineRect(ox, oy).contains(p)) return DECLINE;
-		for (int i = 0; i < LABELS.length; i++)
-		{
-			if (chipRect(ox, oy, i).contains(p)) return CHIP_BASE + i;
-		}
+		for (int i = 0; i < RULES.length; i++) if (ruleRect(ox, oy, i).contains(p)) return RULE_BASE + i;
+		for (int i = 0; i < SLOTS.length; i++) if (slotRect(ox, oy, i).contains(p)) return SLOT_BASE + i;
 		return INSIDE;
 	}
 
 	@Override
 	public Dimension render(Graphics2D g)
 	{
-		if (!isShowing())
-		{
-			return null;
-		}
+		if (!isShowing()) return null;
 
 		final Object oldAA = g.getRenderingHint(RenderingHints.KEY_ANTIALIASING);
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -137,85 +146,94 @@ class LofDuelOverlay extends Overlay
 		LofTheme.emberUnderline(g, ox + 1, oy + TITLE_H - 2, WIN_W - 2);
 		final BufferedImage logo = LofTheme.logo();
 		int titleX = ox + 14;
-		if (logo != null)
-		{
-			g.drawImage(logo, ox + 12, oy + 5, 28, 28, null);
-			titleX = ox + 46;
-		}
+		if (logo != null) { g.drawImage(logo, ox + 12, oy + 5, 28, 28, null); titleX = ox + 46; }
 		g.setFont(FontManager.getRunescapeBoldFont());
 		LofTheme.shadowText(g, "Duel Arena", titleX, oy + 25, LofTheme.GOLD);
+
+		// section labels
 		g.setFont(FontManager.getRunescapeSmallFont());
 		LofTheme.shadowText(g, "COMBAT RULES", ox + PAD + 2, oy + TITLE_H + 22, LofTheme.GOLD_DIM);
+		LofTheme.shadowText(g, "FORBIDDEN GEAR", ox + DOLL_X, oy + TITLE_H + 22, LofTheme.GOLD_DIM);
 
-		// rule chips
+		// rule checkboxes
 		g.setFont(FontManager.getRunescapeFont());
-		for (int i = 0; i < LABELS.length; i++)
+		for (int i = 0; i < RULES.length; i++)
 		{
 			final boolean on = (state & (1 << (i + 1))) != 0;
-			final Rectangle rc = chipRect(ox, oy, i);
-			final boolean hov = rc.contains(mouse);
-			chip(g, rc, LABELS[i], on, hov);
+			checkbox(g, ruleRect(ox, oy, i), RULES[i], on, ruleRect(ox, oy, i).contains(mouse));
 		}
 
-		// status line
-		final String status;
-		if (myAccept && !theirAccept)
+		// equipment paper-doll
+		for (int i = 0; i < SLOTS.length; i++)
 		{
-			status = "Waiting for the other player…";
+			final boolean forbidden = (state & (1 << (i + 15))) != 0;
+			dollSlot(g, slotRect(ox, oy, i), SLOTS[i], forbidden, slotRect(ox, oy, i).contains(mouse));
 		}
-		else if (!myAccept && theirAccept)
-		{
-			status = "Opponent has accepted — waiting on you.";
-		}
-		else
-		{
-			status = "Either player can change a rule; both must accept.";
-		}
+
+		// status
+		final String status = myAccept && !theirAccept ? "Waiting for the other player…"
+			: !myAccept && theirAccept ? "Opponent has accepted — waiting on you."
+			: "Either player can change the rules; both must accept.";
 		g.setFont(FontManager.getRunescapeSmallFont());
-		LofTheme.shadowText(g, status, ox + PAD + 2, oy + WIN_H - PAD - BTN_H - 8,
-			(myAccept ^ theirAccept) ? GREEN : LofTheme.TEXT_DIM);
+		LofTheme.shadowText(g, status, ox + PAD + 2, oy + WIN_H - PAD - BTN_H - 8, (myAccept ^ theirAccept) ? GREEN : LofTheme.TEXT_DIM);
 
 		// buttons
 		g.setFont(FontManager.getRunescapeBoldFont());
-		final Rectangle acc = acceptRect(ox, oy);
-		final Rectangle dec = declineRect(ox, oy);
-		button(g, acc, myAccept ? "✔ Accepted" : "Accept", LofTheme.GOLD, myAccept, acc.contains(mouse));
-		button(g, dec, "Decline", LofTheme.EMBER, false, dec.contains(mouse));
+		button(g, loadRect(ox, oy), "Load Last", LofTheme.GOLD_DIM, false, loadRect(ox, oy).contains(mouse));
+		button(g, acceptRect(ox, oy), myAccept ? "✔ Accepted" : "Accept", LofTheme.GOLD, myAccept, acceptRect(ox, oy).contains(mouse));
+		button(g, declineRect(ox, oy), "Decline", LofTheme.EMBER, false, declineRect(ox, oy).contains(mouse));
 
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, oldAA == null ? RenderingHints.VALUE_ANTIALIAS_DEFAULT : oldAA);
 		return new Dimension(WIN_W, WIN_H);
 	}
 
-	private static void chip(Graphics2D g, Rectangle rc, String label, boolean on, boolean hov)
+	private static void checkbox(Graphics2D g, Rectangle rc, String label, boolean on, boolean hov)
 	{
-		g.setColor(on ? LofTheme.alpha(GREEN, 34) : (hov ? LofTheme.ROW_HOVER : LofTheme.ROW));
-		g.fillRoundRect(rc.x, rc.y, rc.width, rc.height, 8, 8);
-		g.setColor(on ? LofTheme.alpha(GREEN, 110) : LofTheme.alpha(LofTheme.EMBER, hov ? 130 : 40));
-		g.drawRoundRect(rc.x, rc.y, rc.width - 1, rc.height - 1, 8, 8);
-		// checkbox
-		final int bx = rc.x + 8, by = rc.y + (rc.height - 14) / 2;
+		g.setColor(on ? LofTheme.alpha(GREEN, 30) : (hov ? LofTheme.ROW_HOVER : LofTheme.ROW));
+		g.fillRoundRect(rc.x, rc.y, rc.width, rc.height, 6, 6);
+		final int bx = rc.x + 6, by = rc.y + (rc.height - 13) / 2;
 		g.setColor(on ? GREEN : new Color(0, 0, 0, 120));
-		g.fillRoundRect(bx, by, 14, 14, 4, 4);
+		g.fillRoundRect(bx, by, 13, 13, 3, 3);
 		if (on)
 		{
 			final Stroke old = g.getStroke();
 			g.setColor(new Color(20, 20, 20));
 			g.setStroke(new BasicStroke(2f));
-			g.drawLine(bx + 3, by + 7, bx + 6, by + 10);
-			g.drawLine(bx + 6, by + 10, bx + 11, by + 3);
+			g.drawLine(bx + 3, by + 7, bx + 5, by + 9);
+			g.drawLine(bx + 5, by + 9, bx + 10, by + 3);
 			g.setStroke(old);
 		}
-		LofTheme.shadowText(g, label, bx + 20, rc.y + rc.height / 2 + 5, on ? LofTheme.TEXT : LofTheme.TEXT_DIM);
+		LofTheme.shadowText(g, label, bx + 19, rc.y + rc.height / 2 + 5, on ? LofTheme.TEXT : LofTheme.TEXT_DIM);
+	}
+
+	/** A paper-doll equipment slot — red when the slot is forbidden. */
+	private static void dollSlot(Graphics2D g, Rectangle rc, String label, boolean forbidden, boolean hov)
+	{
+		g.setColor(forbidden ? LofTheme.alpha(LofTheme.EMBER, 60) : (hov ? LofTheme.ROW_HOVER : LofTheme.ROW));
+		g.fillRoundRect(rc.x, rc.y, rc.width, rc.height, 6, 6);
+		g.setColor(forbidden ? LofTheme.EMBER : LofTheme.alpha(LofTheme.EMBER, hov ? 130 : 40));
+		g.drawRoundRect(rc.x, rc.y, rc.width - 1, rc.height - 1, 6, 6);
+		LofTheme.shadowText(g, label, rc.x + (rc.width - g.getFontMetrics().stringWidth(label)) / 2, rc.y + rc.height / 2 + 5,
+			forbidden ? new Color(255, 150, 140) : LofTheme.TEXT_DIM);
+		if (forbidden)
+		{
+			final Stroke old = g.getStroke();
+			g.setColor(LofTheme.alpha(LofTheme.EMBER, 200));
+			g.setStroke(new BasicStroke(2f));
+			g.drawLine(rc.x + 6, rc.y + 6, rc.x + rc.width - 6, rc.y + rc.height - 6);
+			g.drawLine(rc.x + rc.width - 6, rc.y + 6, rc.x + 6, rc.y + rc.height - 6);
+			g.setStroke(old);
+		}
 	}
 
 	private static void button(Graphics2D g, Rectangle rc, String label, Color accent, boolean active, boolean hov)
 	{
 		g.setColor(active ? LofTheme.alpha(accent, 46) : (hov ? LofTheme.alpha(accent, 30) : new Color(255, 255, 255, 12)));
-		g.fillRoundRect(rc.x, rc.y, rc.width, rc.height, 9, 9);
+		g.fillRoundRect(rc.x, rc.y, rc.width, rc.height, 8, 8);
 		g.setColor(LofTheme.alpha(accent, hov || active ? 200 : 120));
 		final Stroke old = g.getStroke();
 		g.setStroke(new BasicStroke(1.4f));
-		g.drawRoundRect(rc.x, rc.y, rc.width - 1, rc.height - 1, 9, 9);
+		g.drawRoundRect(rc.x, rc.y, rc.width - 1, rc.height - 1, 8, 8);
 		g.setStroke(old);
 		final int tw = g.getFontMetrics().stringWidth(label);
 		LofTheme.shadowText(g, label, rc.x + (rc.width - tw) / 2, rc.y + rc.height / 2 + 6, accent);

@@ -30,7 +30,8 @@ class TradeSession(
      */
     private val stake: StakeHook? = null,
 ) {
-    private val isStake = stake != null
+    /** True for a Duel-Arena stake session (vs a plain trade). Read by the themed stake overlay driver. */
+    val isStake = stake != null
 
     /**
      * A copy of this player's inventory, so we don't interfere with the player's real inventory unless necessary

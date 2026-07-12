@@ -53,6 +53,11 @@ class MessagePublicHandler : MessageHandler<MessagePublic> {
                     client.world.plugins.executeCommand(client, "duelclick", parts.drop(1).toTypedArray())
                     return
                 }
+                // Stake overlay (lofstake): "::stake <action> [slot]" → stake interaction, suppress chat.
+                "stake" -> {
+                    client.world.plugins.executeCommand(client, "stakeclick", parts.drop(1).toTypedArray())
+                    return
+                }
             }
         }
 
