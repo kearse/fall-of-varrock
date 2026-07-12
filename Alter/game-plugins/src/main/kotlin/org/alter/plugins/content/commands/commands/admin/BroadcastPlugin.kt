@@ -1,6 +1,5 @@
 package org.alter.plugins.content.commands.commands.admin
 
-import org.alter.api.ChatMessageType
 import org.alter.api.ext.getCommandArgs
 import org.alter.api.ext.message
 import org.alter.api.ext.player
@@ -21,12 +20,12 @@ class BroadcastPlugin(
 ) : KotlinPlugin(r, world, server) {
 
     init {
+        // Command args are split on spaces — re-join them so the whole sentence goes out (this
+        // used to send only the first word).
         onCommand("broadcast", Privilege.ADMIN_POWER, description = "Broadcast for everyone") {
-            val args = player.getCommandArgs()
-            val text = args[0]
-            player.world.players.forEach {
-                it.message("$text.", ChatMessageType.BROADCAST)
-            }
+            val text = player.getCommandArgs().joinToString(" ").trim()
+            if (text.isNotEmpty()) Announce.broadcast(world, text)
+            else player.message("Usage: ::broadcast <message>")
         }
 
         // Full-sentence headline announcement (drives the client announcement ticker). Command args

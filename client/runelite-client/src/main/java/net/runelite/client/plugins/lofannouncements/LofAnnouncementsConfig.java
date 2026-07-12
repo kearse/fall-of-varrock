@@ -22,32 +22,43 @@ public interface LofAnnouncementsConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = "hideFromChat",
+		name = "Hide from chat box",
+		description = "Keep server broadcasts out of the chat box — they only show in the ticker (roat-style).",
+		position = 2
+	)
+	default boolean hideFromChat()
+	{
+		return true;
+	}
+
+	@ConfigItem(
 		keyName = "maxLines",
 		name = "Lines shown",
 		description = "How many of the most recent announcements to show at once.",
-		position = 2
+		position = 3
 	)
 	default int maxLines()
 	{
-		return 2;
+		return 3;
 	}
 
 	@ConfigItem(
 		keyName = "lifetimeSeconds",
 		name = "Hold time (s)",
 		description = "How long each announcement stays on screen before fading out.",
-		position = 3
+		position = 4
 	)
 	default int lifetimeSeconds()
 	{
-		return 25;
+		return 60;
 	}
 
 	@ConfigItem(
 		keyName = "fontSize",
 		name = "Font size",
 		description = "Text size of the announcement ticker.",
-		position = 4
+		position = 5
 	)
 	default int fontSize()
 	{
