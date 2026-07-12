@@ -6,19 +6,20 @@
  * by the rank that unlocks each one — and this plugin renders them in a clean, tabbed window
  * (one tab per rank) styled like the teleport portal.
  *
- * Transport: the server sends the list as ordinary GAME_MESSAGE chat lines, each prefixed with
- * "FOV_CMDS:" (see the server-side BookOfCommandsPlugin). We consume them the moment they ARRIVE
- * (the ChatMessage event — fires exactly once per line, so the window opens instantly), and hide
- * them from display with a block-only "chatFilterCheck" hook + one forced refreshChat() at batch
- * end — the exact mechanism the stock Chat Filter plugin uses, which never disturbs the chat.
+ * Transport: the server sends the list as ChatMessageType.CONSOLE chat lines, each prefixed with
+ * "FOV_CMDS:" (see the server-side BookOfCommandsPlugin) — the same hidden channel the companion
+ * system streams its machine data on. CONSOLE lines are delivered to the ChatMessage event (fires
+ * exactly once per line, so the window opens instantly) but are NEVER rendered in the chat box and
+ * live in their own line buffer — so they cannot flood, evict, or otherwise disturb the player's
+ * visible chat. No filtering, no hiding, no chat mutation of any kind.
  *
- * Two hard-won rules (both caused live glitches — do NOT regress them):
- *   1. NEVER parse in chatFilterCheck — it re-runs over the whole retained chat history on every
- *      chatbox rebuild, so parsing there delayed the window until the next rebuild and re-fired
- *      the batch afterwards (open-lag / tab-reset / reopen bugs).
- *   2. NEVER remove the lines from the chat buffers (ChatLineBuffer.removeMessageNode) — mass
- *      removal WIPED the player's visible chat. The blocked lines stay harmlessly in history,
- *      hidden by the filter on every rebuild.
+ * Hard-won transport rules (each earlier variant caused a live glitch — do NOT regress):
+ *   1. NEVER send this data as GAME_MESSAGE — even display-filtered, each hidden line still
+ *      consumed a slot in the game-message buffer and silently EVICTED the player's oldest game
+ *      messages ("::commands deletes my chat").
+ *   2. NEVER parse in the chatFilterCheck hook — it re-runs over the whole retained history on
+ *      every chatbox rebuild (open-lag / tab-reset / reopen bugs).
+ *   3. NEVER mass-remove lines from the chat buffers (removeMessageNode) — it wiped the chat.
  *
  * Wire format (one line each):
  *   FOV_CMDS:open|&lt;RankTitle&gt;
@@ -42,7 +43,6 @@ import net.runelite.api.ScriptID;
 import net.runelite.api.VarClientStr;
 import net.runelite.api.events.ChatMessage;
 import net.runelite.api.events.CommandExecuted;
-import net.runelite.api.events.ScriptCallbackEvent;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
@@ -134,14 +134,15 @@ public class LofCommandsPlugin extends Plugin
 	}
 
 	/**
-	 * Consume a command-list line the moment it ARRIVES. ChatMessage fires exactly once per line
-	 * (unlike chatFilterCheck, which re-runs over the whole retained history on every chat rebuild
-	 * — parsing there made the window lag until the next rebuild and re-open/reset afterwards).
+	 * Consume a command-list line the moment it ARRIVES. ChatMessage fires exactly once per line,
+	 * so the window opens instantly. CONSOLE is the transport channel (never rendered, own line
+	 * buffer); GAMEMESSAGE is also accepted briefly for back-compat with a server that hasn't
+	 * redeployed yet — the prefix gate makes that harmless.
 	 */
 	@Subscribe
 	public void onChatMessage(ChatMessage event)
 	{
-		if (event.getType() != ChatMessageType.GAMEMESSAGE)
+		if (event.getType() != ChatMessageType.CONSOLE && event.getType() != ChatMessageType.GAMEMESSAGE)
 		{
 			return;
 		}
@@ -151,44 +152,6 @@ public class LofCommandsPlugin extends Plugin
 			return;
 		}
 		handle(message.substring(PREFIX.length()));
-	}
-
-	@Subscribe
-	public void onScriptCallbackEvent(ScriptCallbackEvent event)
-	{
-		if (!"chatFilterCheck".equals(event.getEventName()))
-		{
-			return;
-		}
-
-		final String[] stringStack = client.getStringStack();
-		final int stringStackSize = client.getStringStackSize();
-		if (stringStackSize <= 0)
-		{
-			return;
-		}
-
-		final String message = stringStack[stringStackSize - 1];
-		if (message == null || !message.startsWith(PREFIX))
-		{
-			return;
-		}
-
-		// Ours — hide it from this rebuild (0 = block). Parsing happens in onChatMessage only.
-		final int[] intStack = client.getIntStack();
-		final int intStackSize = client.getIntStackSize();
-		intStack[intStackSize - 3] = 0;
-	}
-
-	/**
-	 * Force one chat rebuild so the just-arrived batch is hidden by the filter immediately (this
-	 * client doesn't run chatFilterCheck on the add path, so without this the raw lines sat
-	 * visible until the next rebuild). The lines stay in history, hidden — we deliberately do NOT
-	 * remove them from the chat buffers: mass removeMessageNode wiped the player's chat.
-	 */
-	private void hideCapturedLines()
-	{
-		clientThread.invokeLater(client::refreshChat);
 	}
 
 	@Subscribe
@@ -237,7 +200,6 @@ public class LofCommandsPlugin extends Plugin
 			}
 			case "end":
 				commit();
-				hideCapturedLines();
 				break;
 			default:
 				break;
