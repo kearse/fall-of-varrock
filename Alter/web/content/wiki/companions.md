@@ -3,7 +3,7 @@ title: Companions
 category: Companions & Progression
 summary: Recruit, train, gear and command your own levelable AI fighters — up to three at your side.
 order: 1
-updated: 2026-07-08
+updated: 2026-07-12
 ---
 
 **Companions** are player-owned AI fighters — real combatants with real skills that level from combat, wearing real gear you give them. You can field up to **three** at once, in melee, ranged and mage archetypes. They spawn when you log in, follow you across the world, and fight beside you.
@@ -23,7 +23,7 @@ Everything runs through `::companion` (and `::companions` to list your roster):
 - `::companion retaliate <slot>` — toggle auto-retaliation.
 - `::companion rename <slot> <name>` — name them; the world addresses them as "Sir <Name>".
 
-**Donor perk:** `::companion loot` toggles auto-looting — your companion banks nearby drops for you.
+**Donor perk:** `::companion loot` toggles auto-looting — your companion banks nearby drops for you. No command needed in the custom client: the Companions side panel has an **Auto-loot ALL to bank** button on the roster, plus a per-companion toggle in each companion's detail view.
 
 ## Levelling & death
 

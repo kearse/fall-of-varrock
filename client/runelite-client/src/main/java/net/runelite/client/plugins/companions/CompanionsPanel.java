@@ -201,6 +201,15 @@ class CompanionsPanel extends PluginPanel
 		allButtons.setBorder(BorderFactory.createEmptyBorder(0, 0, 8, 0));
 		page.add(allButtons);
 
+		if (!rows.isEmpty())
+		{
+			// ::companion loot (no slot) flips every companion to the OPPOSITE of the first one's
+			// state, so the label mirrors the first row — that's the state the click inverts.
+			page.add(button("Auto-loot ALL to bank: " + onOff(rows.get(0).autoLoot),
+				() -> actions.order("loot")));
+			page.add(spacer(8));
+		}
+
 		if (rows.isEmpty())
 		{
 			final JLabel empty = small("No companions. Recruit at General Zo.");
