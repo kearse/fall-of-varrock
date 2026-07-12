@@ -72,6 +72,8 @@ class DuelArenaPlugin(
         onLogin {
             player.attr[DUEL_REQUESTS_ATTR] = HashSet()
             player.sendOption("Challenge", CHALLENGE_OPTION_SLOT)
+            // Clear any stale rules-overlay state (transient signal must never persist across login).
+            player.setVarp(DuelRulesClientMenu.STATE_VARP, 0)
             // Crash recovery: a leftover escrow blob means a duel never resolved — refund the stake.
             player.attr[DUEL_ESCROW_ATTR]?.let { blob ->
                 val refunded = itemsFromBlob(blob)
@@ -125,6 +127,7 @@ class DuelArenaPlugin(
         // declined by the trade plugin's own onLogout, which safely returns the un-committed items).
         onLogout {
             if (DuelRulesScreen.isOpen(player)) DuelRulesScreen.cancel(player)
+            if (DuelRulesClientMenu.isOpen(player)) DuelRulesClientMenu.cancel(player)
             DuelArena.duelOf(player)?.let { d -> resolve(d, loser = player) }
         }
 
@@ -140,6 +143,10 @@ class DuelArenaPlugin(
         // Live-verify controls for the grid (see docs/duel-rules-grid.md): flip the flow to the
         // grid once the cache group is authored, and open a solo layout test (self-vs-self; toggles
         // work, accept can't complete — Decline to exit).
+        onCommand("dueloverlay", Privilege.ADMIN_POWER, description = "Toggle the themed client-overlay duel rules screen") {
+            DuelArena.useRulesOverlay = !DuelArena.useRulesOverlay
+            player.message("Duel rules overlay: ${if (DuelArena.useRulesOverlay) "ON" else "OFF"}.")
+        }
         onCommand("duelgrid", Privilege.ADMIN_POWER, description = "Toggle the duel rules-grid interface flow") {
             DuelArena.useRulesGrid = !DuelArena.useRulesGrid
             player.message("Duel rules grid: ${if (DuelArena.useRulesGrid) "ON" else "OFF (chatbox menus)"}.")
@@ -169,14 +176,16 @@ class DuelArenaPlugin(
             // the challenger picks from the chatbox menus.
             myRequests.remove(target)
             (target.attr[DUEL_REQUESTS_ATTR])?.remove(player)
-            if (DuelArena.useRulesGrid) {
-                DuelRulesScreen.open(player, target) { rules ->
-                    target.message("<col=801700>Duel rules agreed: ${rules.summary()}.</col>")
-                    player.message("<col=801700>Duel rules agreed: ${rules.summary()}.</col>")
-                    openStake(player, target, rules)
-                }
-            } else {
-                player.queue { pickRulesThenStake(player, target) }
+            val onRules: (DuelRules) -> Unit = { rules ->
+                target.message("<col=801700>Duel rules agreed: ${rules.summary()}.</col>")
+                player.message("<col=801700>Duel rules agreed: ${rules.summary()}.</col>")
+                openStake(player, target, rules)
+            }
+            when {
+                // Themed client overlay (safe, default) → cache grid (if verified) → chatbox menus.
+                DuelArena.useRulesOverlay -> DuelRulesClientMenu.open(player, target, onRules)
+                DuelArena.useRulesGrid -> DuelRulesScreen.open(player, target, onRules)
+                else -> player.queue { pickRulesThenStake(player, target) }
             }
         } else {
             (target.attr[DUEL_REQUESTS_ATTR] ?: HashSet<Player>().also { target.attr[DUEL_REQUESTS_ATTR] = it }).add(player)
@@ -186,7 +195,8 @@ class DuelArenaPlugin(
     }
 
     private fun busy(p: Player): Boolean =
-        p.getTradeSession() != null || p.isLocked() || DuelArena.duelOf(p) != null || DuelRulesScreen.isOpen(p) ||
+        p.getTradeSession() != null || p.isLocked() || DuelArena.duelOf(p) != null ||
+            DuelRulesScreen.isOpen(p) || DuelRulesClientMenu.isOpen(p) ||
             // Loaner-kit seal: a PK-training kit can't be STAKED (win it back after the restore = smuggled out).
             org.alter.plugins.content.minigames.pktraining.TrainingArena.kitted(p)
 

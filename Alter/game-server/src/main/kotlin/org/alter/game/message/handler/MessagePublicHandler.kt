@@ -48,6 +48,11 @@ class MessagePublicHandler : MessageHandler<MessagePublic> {
                     client.world.plugins.executeCommand(client, "tpclick", parts.drop(1).toTypedArray())
                     return
                 }
+                // Duel rules overlay (lofduel): "::duel <action>" → rules interaction, suppress chat.
+                "duel" -> {
+                    client.world.plugins.executeCommand(client, "duelclick", parts.drop(1).toTypedArray())
+                    return
+                }
             }
         }
 
