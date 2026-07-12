@@ -109,3 +109,31 @@ jobs:
              nc -z localhost 43594 && echo 'game: port 43594 up'; \
              curl -fsS -o /dev/null http://localhost:80 --max-time 10 || true; \
              docker compose -f /opt/kol/docker-compose.prod.yml ps"
+
+      # Auto-announce every shipped push to Discord. Inserts a kind:"update"
+      # event into the discord_events queue the bot already drains (routed to
+      # the news channel, falls back to the status feed) — no webhook secret
+      # needed. The body is the push's commit subjects, merge commits skipped.
+      # Runs only after a healthy deploy; a failure here never fails the deploy.
+      # (The curated data/update-notes.md boot announcement still exists on top
+      # of this — it only fires when that file is edited.)
+      - name: Announce update to Discord
+        if: ${{ github.event_name == 'push' }}
+        run: |
+          DOC=$(jq -c '
+            ([.commits[]?.message | split("\n")[0]
+              | select((startswith("Merge pull request") or startswith("Merge branch")) | not)]) as $subs
+            | (if ($subs | length) > 0 then $subs
+               else [.head_commit.message | split("\n")[0]] end) as $lines
+            | { kind: "update",
+                title: "Server update deployed",
+                description: (($lines | map("• " + .) | join("\n"))[0:3500]),
+                posted: false,
+                createdAt: (now * 1000 | floor) }
+          ' "$GITHUB_EVENT_PATH")
+          echo "Announcing: $DOC"
+          ssh -i deploy_key -o StrictHostKeyChecking=accept-new \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+            'docker exec -i $(docker compose -f /opt/kol/docker-compose.prod.yml ps -q mongo) mongosh --quiet lumbridge' \
+            <<< "db.discord_events.insertOne($DOC)" \
+            || echo "::warning::Discord update announcement failed (deploy unaffected)"
