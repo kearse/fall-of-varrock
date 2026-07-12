@@ -29,8 +29,10 @@ import javax.swing.SwingUtilities;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.ChatMessageType;
 import net.runelite.api.Client;
+import net.runelite.api.GameState;
 import net.runelite.api.events.ChatMessage;
 import net.runelite.api.events.CommandExecuted;
+import net.runelite.api.events.GameStateChanged;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
@@ -85,6 +87,19 @@ public class LofIntroPlugin extends Plugin
 	}
 
 	@Subscribe
+	public void onGameStateChanged(GameStateChanged event)
+	{
+		// Once-per-LOGIN guard, not once-per-client-process: without this, running
+		// ::introtest (which also flips the guard via the server's echo) and then
+		// logging into a brand-new account in the same client session would swallow
+		// that account's one real first-login trigger.
+		if (event.getGameState() == GameState.LOGIN_SCREEN || event.getGameState() == GameState.HOPPING)
+		{
+			playedThisSession = false;
+		}
+	}
+
+	@Subscribe
 	public void onChatMessage(ChatMessage event)
 	{
 		if (event.getType() != ChatMessageType.BROADCAST)
@@ -106,6 +121,7 @@ public class LofIntroPlugin extends Plugin
 		}
 
 		final String command = msg.substring(TRIGGER_PREFIX.length()).trim();
+		log.info("intro trigger received: '{}' (alreadyPlayedThisLogin={})", command, playedThisSession);
 		if ("play".equals(command) && !playedThisSession)
 		{
 			playedThisSession = true;

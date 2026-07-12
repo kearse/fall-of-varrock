@@ -43,13 +43,16 @@ class IntroVideoPlugin(
         onLogin {
             if (player.attr[NEW_ACCOUNT_ATTR] == true && player.attr[INTRO_SEEN_ATTR] != true) {
                 player.attr[INTRO_SEEN_ATTR] = true
-                // Don't send during the login handshake — a chat line fired that early is
-                // dropped before the client is listening (::introtest worked, first-login
-                // didn't). A couple of ticks in, the client is fully in-game.
+                // Delay past the login handshake (a chat line fired inside onLogin is sent
+                // before the client is listening), and do it on a WORLD queue: a player
+                // queue would be terminated by the next plugin that queues on this player
+                // (the recruit sergeant dialogue does, on this exact login).
                 val p = player
-                p.queue {
+                world.queue {
                     wait(3)
-                    p.message(TRIGGER_MESSAGE, ChatMessageType.BROADCAST)
+                    if (p.isOnline) {
+                        p.message(TRIGGER_MESSAGE, ChatMessageType.BROADCAST)
+                    }
                 }
             }
         }
