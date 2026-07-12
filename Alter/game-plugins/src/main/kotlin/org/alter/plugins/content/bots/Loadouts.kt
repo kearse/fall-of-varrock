@@ -549,164 +549,303 @@ object BotLoadouts {
         ),
     )
 
-    /**
-     * Real **bracketed PKer** — melee main + ranged switch, full prayer + a dragon-dagger(/granite-
-     * maul) spec finisher. NOT a "metal-armour knight": this is an authentic hybrid PK kit, so the NH
-     * [BotBrain] prays protect + (level-appropriate) offence, switches off the opponent's overhead,
-     * and specs to finish — it fights like a real player. Gear/stats are tuned per bracket; the gear
-     * blocks reuse the verified meta tank/DPS sets (d'hide + fighter torso + defender, msb switch).
-     */
-    private fun pkKit(
+    // ============================ SHALLOW-WILD METAL LADDER (wild 1–10) ============================
+    // Simple low-level metal-armour fighters for the wilderness edge, where brand-new (cb 1–20)
+    // players are. Each tier wears a full metal set + that metal's scimitar, with stats matched to the
+    // gear's real OSRS equip requirement. They are NOT NHers — no protect prayers, melee only — so a
+    // newbie can actually win. They still drop their (cheap) kit on death like any bot.
+
+    /** Build a metal-armour fighter: full helm + platebody + platelegs + kiteshield + scimitar of
+     *  [metal] (all follow the `item.<metal>_<piece>` naming; verified for bronze→dragon). */
+    private fun metalKit(
         key: String,
         displayName: String,
         combatLevel: Int,
         melee: Int,
         hp: Int,
-        ranged: Int,
-        prayer: Int,
-        meleeGear: GearBlock,
-        rangeGear: GearBlock,
-        specRotation: List<String>,
-        inventory: List<BotItem>,
+        metal: String,
+        spec: List<String> = emptyList(),
+        foodAmt: Int = 1,
     ): BotLoadout = BotLoadout(
         key = key,
         displayName = displayName,
-        tier = "pk",
+        tier = "metal",
         combatLevel = combatLevel,
         stats = BotStats(
             attack = melee, strength = melee, defence = melee,
-            hitpoints = hp, ranged = ranged, magic = 1, prayer = prayer,
+            hitpoints = hp, ranged = 1, magic = 1, prayer = 1,
         ),
         baseStyle = BotStyle.MELEE,
-        gear = mapOf(BotStyle.MELEE to meleeGear, BotStyle.RANGED to rangeGear),
-        meleeSpecRotation = specRotation,
-        inventory = inventory,
-        usesPrayer = true,
+        gear = mapOf(
+            BotStyle.MELEE to gb(
+                EquipmentType.HEAD to "item.${metal}_full_helm",
+                EquipmentType.CHEST to "item.${metal}_platebody",
+                EquipmentType.LEGS to "item.${metal}_platelegs",
+                EquipmentType.SHIELD to "item.${metal}_kiteshield",
+                EquipmentType.WEAPON to "item.${metal}_scimitar",
+                EquipmentType.GLOVES to "item.leather_gloves",
+                EquipmentType.BOOTS to "item.leather_boots",
+            ),
+        ),
+        meleeSpecRotation = spec,
+        inventory = spec.take(1).map { BotItem(it) } + BotItem("item.lobster", foodAmt),
+        usesPrayer = false,
     )
 
-    // --- Gear grades (LOW → MID → HIGH). Authentic PK switches: d'hide tank + fighter torso melee,
-    // berserker/strength jewellery + defender, magic shortbow + d'hide for the ranged switch. ---
-
-    private fun lowMelee(weapon: String) = gb(
-        EquipmentType.HEAD to "item.berserker_helm",
-        EquipmentType.CAPE to "item.obsidian_cape",
-        EquipmentType.AMULET to "item.amulet_of_strength",
-        EquipmentType.WEAPON to weapon,
-        EquipmentType.CHEST to "item.fighter_torso",
-        EquipmentType.SHIELD to "item.rune_defender",
-        EquipmentType.LEGS to "item.black_dhide_chaps",
-        EquipmentType.GLOVES to "item.combat_bracelet",
-        EquipmentType.BOOTS to "item.climbing_boots",
-        EquipmentType.RING to "item.berserker_ring",
+    // Combat levels are tuned to the user's target ladder (bronze/iron ~1–10 … dragon ~50+), matched
+    // to the armour's real attack/defence requirement. The deeper metal tiers carry a dds for a bit
+    // of bite, but never pray.
+    val BRONZE = metalKit("bronze_pker", "Bandit", combatLevel = 6, melee = 4, hp = 10, metal = "bronze")
+    val IRON = metalKit("iron_pker", "Brigand", combatLevel = 11, melee = 8, hp = 13, metal = "iron")
+    val STEEL = metalKit("steel_pker", "Marauder", combatLevel = 13, melee = 10, hp = 15, metal = "steel")
+    val BLACK = metalKit("black_pker", "Rogue", combatLevel = 15, melee = 12, hp = 18, metal = "black")
+    val MITHRIL = metalKit("mithril_pker", "Raider", combatLevel = 21, melee = 17, hp = 22, metal = "mithril")
+    val ADAMANT = metalKit(
+        "adamant_pker", "Reaver", combatLevel = 31, melee = 26, hp = 30, metal = "adamant",
+        spec = listOf("item.dragon_dagger"),
     )
-    private fun lowRange(ammo: String) = gb(
-        EquipmentType.HEAD to "item.coif",
-        EquipmentType.CAPE to "item.obsidian_cape",
-        EquipmentType.AMULET to "item.amulet_of_power",
-        EquipmentType.WEAPON to "item.magic_shortbow",
-        EquipmentType.CHEST to "item.black_dhide_body",
-        EquipmentType.LEGS to "item.black_dhide_chaps",
-        EquipmentType.GLOVES to "item.black_dhide_vambraces",
-        EquipmentType.BOOTS to "item.snakeskin_boots",
-        EquipmentType.RING to "item.archers_ring",
-        EquipmentType.AMMO to ammo,
+    val RUNE = metalKit(
+        "rune_pker", "Warlord", combatLevel = 42, melee = 35, hp = 40, metal = "rune",
+        spec = listOf("item.dragon_dagger"),
     )
-    private fun midMelee(weapon: String, amulet: String, legs: String) = gb(
-        EquipmentType.HEAD to "item.helm_of_neitiznot",
-        EquipmentType.CAPE to "item.fire_cape",
-        EquipmentType.AMULET to amulet,
-        EquipmentType.WEAPON to weapon,
-        EquipmentType.CHEST to "item.fighter_torso",
-        EquipmentType.SHIELD to "item.dragon_defender",
-        EquipmentType.LEGS to legs,
-        EquipmentType.GLOVES to "item.barrows_gloves",
-        EquipmentType.BOOTS to "item.dragon_boots",
-        EquipmentType.RING to "item.berserker_ring",
-    )
-    private fun midRange(amulet: String) = gb(
-        EquipmentType.HEAD to "item.karils_coif",
-        EquipmentType.CAPE to "item.fire_cape",
-        EquipmentType.AMULET to amulet,
-        EquipmentType.WEAPON to "item.magic_shortbow",
-        EquipmentType.CHEST to "item.black_dhide_body",
-        EquipmentType.LEGS to "item.black_dhide_chaps",
-        EquipmentType.GLOVES to "item.black_dhide_vambraces",
-        EquipmentType.BOOTS to "item.dragon_boots",
-        EquipmentType.RING to "item.archers_ring",
-        EquipmentType.AMMO to "item.rune_arrow",
+    val DRAGON = metalKit(
+        "dragon_pker", "Marauder", combatLevel = 53, melee = 45, hp = 50, metal = "dragon",
+        spec = listOf("item.dragon_dagger"), foodAmt = 2,
     )
 
-    // Standard PK inventory: spec weapon + food (light kits), or the full NH pack (dds + gmaul +
-    // brews/restores/karambwan) for the upper brackets that actually prayer-switch and combo.
-    private fun lightPack(food: String, foodAmt: Int, restores: Int = 0): List<BotItem> =
-        listOf(BotItem("item.dragon_dagger"), BotItem(food, foodAmt)) +
-            (if (restores > 0) listOf(BotItem("item.super_restore4", restores)) else emptyList())
-    private fun fullPack(brews: Int, restores: Int, karam: Int): List<BotItem> = listOf(
-        BotItem("item.dragon_dagger"),
-        BotItem("item.granite_maul"),
-        BotItem("item.shark", 4),
-        BotItem("item.saradomin_brew4", brews),
-        BotItem("item.super_restore4", restores),
-        BotItem("item.cooked_karambwan", karam),
-        BotItem("item.super_combat_potion4", 1),
+    // ========================= BUDGET PK SETS (wild 11–20) — real, popular kits =========================
+
+    /** Low-def PURE: rune scimitar / magic shortbow, black d'hide, strength/power jewellery, dds spec.
+     *  Prays protect + offence but has 1 defence, so it dies fast if you out-tank it. */
+    val BUDGET_PURE = BotLoadout(
+        key = "budget_pure",
+        displayName = "Rogue",
+        tier = "budget",
+        combatLevel = 68,
+        stats = BotStats(attack = 60, strength = 75, defence = 1, hitpoints = 75, ranged = 75, magic = 1, prayer = 44),
+        baseStyle = BotStyle.MELEE,
+        gear = mapOf(
+            BotStyle.MELEE to gb(
+                EquipmentType.HEAD to "item.coif",
+                EquipmentType.CAPE to "item.obsidian_cape",
+                EquipmentType.AMULET to "item.amulet_of_strength",
+                EquipmentType.WEAPON to "item.rune_scimitar",
+                EquipmentType.CHEST to "item.black_dhide_body",
+                EquipmentType.LEGS to "item.black_dhide_chaps",
+                EquipmentType.GLOVES to "item.combat_bracelet",
+                EquipmentType.BOOTS to "item.climbing_boots",
+                EquipmentType.RING to "item.berserker_ring",
+            ),
+            BotStyle.RANGED to gb(
+                EquipmentType.HEAD to "item.coif",
+                EquipmentType.CAPE to "item.obsidian_cape",
+                EquipmentType.AMULET to "item.amulet_of_power",
+                EquipmentType.WEAPON to "item.magic_shortbow",
+                EquipmentType.CHEST to "item.black_dhide_body",
+                EquipmentType.LEGS to "item.black_dhide_chaps",
+                EquipmentType.GLOVES to "item.black_dhide_vambraces",
+                EquipmentType.BOOTS to "item.snakeskin_boots",
+                EquipmentType.RING to "item.archers_ring",
+                EquipmentType.AMMO to "item.rune_arrow",
+            ),
+        ),
+        meleeSpecRotation = listOf("item.dragon_dagger"),
+        inventory = listOf(
+            BotItem("item.dragon_dagger"),
+            BotItem("item.shark", 4),
+            BotItem("item.super_restore4", 1),
+        ),
     )
 
-    // Bronze → rune progression: LOW pures (rune scim + dds), MID hybrids (d scim/whip + dds + gmaul),
-    // HIGH bruisers (whip + dds + gmaul, brews). Combat level + stats + kit scale with the bracket.
-    val BRONZE = pkKit(
-        "bronze_pker", "Bandit", combatLevel = 52, melee = 50, hp = 55, ranged = 50, prayer = 43,
-        meleeGear = lowMelee("item.rune_scimitar"), rangeGear = lowRange("item.adamant_arrow"),
-        specRotation = listOf("item.dragon_dagger"),
-        inventory = lightPack("item.lobster", 5),
+    /** ZERKER: 45-def whip zerker — fighter torso + berserker helm + rune defender + barrows gloves,
+     *  dds+gmaul combo, magic shortbow switch. The classic Edgeville brawler. */
+    val BUDGET_ZERKER = BotLoadout(
+        key = "budget_zerker",
+        displayName = "Thug",
+        tier = "budget",
+        combatLevel = 84,
+        stats = BotStats(attack = 70, strength = 75, defence = 45, hitpoints = 75, ranged = 70, magic = 1, prayer = 52),
+        baseStyle = BotStyle.MELEE,
+        gear = mapOf(
+            BotStyle.MELEE to gb(
+                EquipmentType.HEAD to "item.berserker_helm",
+                EquipmentType.CAPE to "item.fire_cape",
+                EquipmentType.AMULET to "item.amulet_of_fury",
+                EquipmentType.WEAPON to "item.abyssal_whip",
+                EquipmentType.CHEST to "item.fighter_torso",
+                EquipmentType.SHIELD to "item.rune_defender",
+                EquipmentType.LEGS to "item.black_dhide_chaps",
+                EquipmentType.GLOVES to "item.barrows_gloves",
+                EquipmentType.BOOTS to "item.dragon_boots",
+                EquipmentType.RING to "item.berserker_ring",
+            ),
+            BotStyle.RANGED to gb(
+                EquipmentType.HEAD to "item.karils_coif",
+                EquipmentType.CAPE to "item.fire_cape",
+                EquipmentType.AMULET to "item.amulet_of_power",
+                EquipmentType.WEAPON to "item.magic_shortbow",
+                EquipmentType.CHEST to "item.black_dhide_body",
+                EquipmentType.LEGS to "item.black_dhide_chaps",
+                EquipmentType.GLOVES to "item.black_dhide_vambraces",
+                EquipmentType.BOOTS to "item.dragon_boots",
+                EquipmentType.RING to "item.archers_ring",
+                EquipmentType.AMMO to "item.rune_arrow",
+            ),
+        ),
+        meleeSpecRotation = listOf("item.dragon_dagger", "item.granite_maul"),
+        inventory = listOf(
+            BotItem("item.dragon_dagger"),
+            BotItem("item.granite_maul"),
+            BotItem("item.shark", 6),
+            BotItem("item.super_restore4", 2),
+        ),
     )
-    val IRON = pkKit(
-        "iron_pker", "Brigand", combatLevel = 63, melee = 55, hp = 60, ranged = 55, prayer = 44,
-        meleeGear = lowMelee("item.rune_scimitar"), rangeGear = lowRange("item.rune_arrow"),
-        specRotation = listOf("item.dragon_dagger"),
-        inventory = lightPack("item.swordfish", 5, restores = 1),
+
+    /** BUDGET MAIN: full rune + whip + fire cape + fury, dds+gmaul. A maxing main on a budget. */
+    val BUDGET_MAIN = BotLoadout(
+        key = "budget_main",
+        displayName = "Highwayman",
+        tier = "budget",
+        combatLevel = 92,
+        stats = BotStats(attack = 75, strength = 78, defence = 70, hitpoints = 80, ranged = 75, magic = 1, prayer = 60),
+        baseStyle = BotStyle.MELEE,
+        gear = mapOf(
+            BotStyle.MELEE to gb(
+                EquipmentType.HEAD to "item.helm_of_neitiznot",
+                EquipmentType.CAPE to "item.fire_cape",
+                EquipmentType.AMULET to "item.amulet_of_fury",
+                EquipmentType.WEAPON to "item.abyssal_whip",
+                EquipmentType.CHEST to "item.rune_platebody",
+                EquipmentType.SHIELD to "item.dragon_defender",
+                EquipmentType.LEGS to "item.rune_platelegs",
+                EquipmentType.GLOVES to "item.barrows_gloves",
+                EquipmentType.BOOTS to "item.dragon_boots",
+                EquipmentType.RING to "item.berserker_ring",
+            ),
+            BotStyle.RANGED to gb(
+                EquipmentType.HEAD to "item.karils_coif",
+                EquipmentType.CAPE to "item.fire_cape",
+                EquipmentType.AMULET to "item.amulet_of_power",
+                EquipmentType.WEAPON to "item.magic_shortbow",
+                EquipmentType.CHEST to "item.black_dhide_body",
+                EquipmentType.LEGS to "item.black_dhide_chaps",
+                EquipmentType.GLOVES to "item.black_dhide_vambraces",
+                EquipmentType.BOOTS to "item.dragon_boots",
+                EquipmentType.RING to "item.archers_ring",
+                EquipmentType.AMMO to "item.rune_arrow",
+            ),
+        ),
+        meleeSpecRotation = listOf("item.dragon_dagger", "item.granite_maul"),
+        inventory = listOf(
+            BotItem("item.dragon_dagger"),
+            BotItem("item.granite_maul"),
+            BotItem("item.shark", 6),
+            BotItem("item.super_restore4", 3),
+        ),
     )
-    val STEEL = pkKit(
-        "steel_pker", "Marauder", combatLevel = 76, melee = 65, hp = 70, ranged = 65, prayer = 52,
-        meleeGear = midMelee("item.dragon_scimitar", "item.amulet_of_glory", "item.black_dhide_chaps"),
-        rangeGear = midRange("item.amulet_of_glory"),
-        specRotation = listOf("item.dragon_dagger", "item.granite_maul"),
-        inventory = fullPack(brews = 2, restores = 2, karam = 2),
+
+    // ========================= MAXER MAINS (wild 31–40 high tier) — no Voidwaker =========================
+
+    /** MAXED MAIN: Bandos + whip + avernic, AGS→gmaul spec, magic shortbow switch. A pure-melee bruiser
+     *  maxer (distinct from the tribrid [ELITE_NH]). No Voidwaker. */
+    val MAX_MAIN = BotLoadout(
+        key = "max_main",
+        displayName = "Champion",
+        tier = "high",
+        combatLevel = 126,
+        stats = BotStats(attack = 99, strength = 99, defence = 99, hitpoints = 99, ranged = 99, magic = 1, prayer = 99),
+        baseStyle = BotStyle.MELEE,
+        gear = mapOf(
+            BotStyle.MELEE to gb(
+                EquipmentType.HEAD to "item.neitiznot_faceguard",
+                EquipmentType.CAPE to "item.fire_cape",
+                EquipmentType.AMULET to "item.amulet_of_torture",
+                EquipmentType.WEAPON to "item.abyssal_whip",
+                EquipmentType.CHEST to "item.bandos_chestplate",
+                EquipmentType.SHIELD to "item.avernic_defender",
+                EquipmentType.LEGS to "item.bandos_tassets",
+                EquipmentType.GLOVES to "item.ferocious_gloves",
+                EquipmentType.BOOTS to "item.primordial_boots",
+                EquipmentType.RING to "item.berserker_ring_i",
+            ),
+            BotStyle.RANGED to gb(
+                EquipmentType.HEAD to "item.karils_coif",
+                EquipmentType.CAPE to "item.fire_cape",
+                EquipmentType.AMULET to "item.necklace_of_anguish",
+                EquipmentType.WEAPON to "item.magic_shortbow_i",
+                EquipmentType.CHEST to "item.black_dhide_body",
+                EquipmentType.LEGS to "item.black_dhide_chaps",
+                EquipmentType.GLOVES to "item.barrows_gloves",
+                EquipmentType.BOOTS to "item.pegasian_boots",
+                EquipmentType.RING to "item.archers_ring_i",
+                EquipmentType.AMMO to "item.dragon_arrow",
+            ),
+        ),
+        meleeSpecRotation = listOf("item.armadyl_godsword", "item.granite_maul"),
+        inventory = listOf(
+            BotItem("item.armadyl_godsword"),
+            BotItem("item.granite_maul"),
+            BotItem("item.saradomin_brew4", 6),
+            BotItem("item.super_restore4", 4),
+            BotItem("item.cooked_karambwan", 3),
+        ),
     )
-    val BLACK = pkKit(
-        "black_pker", "Mercenary", combatLevel = 85, melee = 70, hp = 75, ranged = 70, prayer = 60,
-        meleeGear = midMelee("item.dragon_scimitar", "item.amulet_of_glory", "item.black_dhide_chaps"),
-        rangeGear = midRange("item.amulet_of_fury"),
-        specRotation = listOf("item.dragon_dagger", "item.granite_maul"),
-        inventory = fullPack(brews = 3, restores = 2, karam = 2),
-    )
-    val MITHRIL = pkKit(
-        "mithril_pker", "Raider", combatLevel = 95, melee = 80, hp = 85, ranged = 80, prayer = 70,
-        meleeGear = midMelee("item.abyssal_whip", "item.amulet_of_fury", "item.black_dhide_chaps"),
-        rangeGear = midRange("item.amulet_of_fury"),
-        specRotation = listOf("item.dragon_dagger", "item.granite_maul"),
-        inventory = fullPack(brews = 4, restores = 3, karam = 3),
-    )
-    val ADAMANT = pkKit(
-        "adamant_pker", "Reaver", combatLevel = 103, melee = 85, hp = 90, ranged = 85, prayer = 74,
-        meleeGear = midMelee("item.abyssal_whip", "item.amulet_of_fury", "item.rune_platelegs"),
-        rangeGear = midRange("item.amulet_of_fury"),
-        specRotation = listOf("item.dragon_dagger", "item.granite_maul"),
-        inventory = fullPack(brews = 5, restores = 3, karam = 3),
-    )
-    val RUNE = pkKit(
-        "rune_pker", "Warlord", combatLevel = 110, melee = 90, hp = 92, ranged = 90, prayer = 80,
-        meleeGear = midMelee("item.abyssal_whip", "item.amulet_of_fury", "item.rune_platelegs"),
-        rangeGear = midRange("item.amulet_of_fury"),
-        specRotation = listOf("item.dragon_dagger", "item.granite_maul"),
-        inventory = fullPack(brews = 6, restores = 4, karam = 4),
+
+    /** MAXED TENT: abyssal tentacle main with a Dragon Claws spec KO. Bandos tank body. No Voidwaker. */
+    val MAX_TENT = BotLoadout(
+        key = "max_tent",
+        displayName = "Enforcer",
+        tier = "high",
+        combatLevel = 126,
+        stats = BotStats(attack = 99, strength = 99, defence = 99, hitpoints = 99, ranged = 90, magic = 1, prayer = 99),
+        baseStyle = BotStyle.MELEE,
+        gear = mapOf(
+            BotStyle.MELEE to gb(
+                EquipmentType.HEAD to "item.neitiznot_faceguard",
+                EquipmentType.CAPE to "item.fire_cape",
+                EquipmentType.AMULET to "item.amulet_of_fury",
+                EquipmentType.WEAPON to "item.abyssal_tentacle",
+                EquipmentType.CHEST to "item.bandos_chestplate",
+                EquipmentType.SHIELD to "item.avernic_defender",
+                EquipmentType.LEGS to "item.bandos_tassets",
+                EquipmentType.GLOVES to "item.barrows_gloves",
+                EquipmentType.BOOTS to "item.dragon_boots",
+                EquipmentType.RING to "item.berserker_ring_i",
+            ),
+            BotStyle.RANGED to gb(
+                EquipmentType.HEAD to "item.karils_coif",
+                EquipmentType.CAPE to "item.fire_cape",
+                EquipmentType.AMULET to "item.amulet_of_power",
+                EquipmentType.WEAPON to "item.magic_shortbow",
+                EquipmentType.CHEST to "item.black_dhide_body",
+                EquipmentType.LEGS to "item.black_dhide_chaps",
+                EquipmentType.GLOVES to "item.black_dhide_vambraces",
+                EquipmentType.BOOTS to "item.dragon_boots",
+                EquipmentType.RING to "item.archers_ring",
+                EquipmentType.AMMO to "item.rune_arrow",
+            ),
+        ),
+        meleeSpecRotation = listOf("item.dragon_claws"),
+        inventory = listOf(
+            BotItem("item.dragon_claws"),
+            BotItem("item.saradomin_brew4", 6),
+            BotItem("item.super_restore4", 4),
+            BotItem("item.cooked_karambwan", 3),
+        ),
     )
 
     private val byKey: Map<String, BotLoadout> =
         listOf(
-            BRONZE, IRON, STEEL, BLACK, MITHRIL, ADAMANT, RUNE,
-            CLASSIC_HYBRID, ELITE_NH,
-            MAGE_MID, MAGE_ELITE, RANGE_MID, RANGE_ELITE,
-            DHAROK_MID, DHAROK_DHER, ANCIENT_MAGE, CLAWS_BRID,
+            // Shallow-wild metal ladder (wild 1–10)
+            BRONZE, IRON, STEEL, BLACK, MITHRIL, ADAMANT, RUNE, DRAGON,
+            // Budget PK sets (wild 11–20)
+            BUDGET_PURE, BUDGET_ZERKER, BUDGET_MAIN,
+            // Mid archetypes (wild 21–30)
+            CLASSIC_HYBRID, MAGE_MID, RANGE_MID, DHAROK_MID,
+            // High / maxer tier (wild 31–40)
+            MAX_MAIN, MAX_TENT, ANCIENT_MAGE, CLAWS_BRID,
+            // Elite meta (wild 41+)
+            ELITE_NH, MAGE_ELITE, RANGE_ELITE, DHAROK_DHER,
         ).associateBy { it.key }
 
     fun get(key: String): BotLoadout? = byKey[key.lowercase()]
