@@ -113,16 +113,19 @@ final class LofArrow
 		{
 			return null;
 		}
+		// Only the DIRECTION matters (getEdgeLine re-derives the angle), so normalise to a fixed
+		// magnitude and rotate exactly the way Perspective.localToMinimap does — same yaw source,
+		// same table, same sign — so the rim arrow lines up with the real minimap orientation.
 		x = (int) (x * 100 / maxDistance);
 		y = (int) (y * 100 / maxDistance);
 
-		final int angle = client.getMapAngle() & 0x7FF;
+		final int angle = client.getCameraYawTarget() & 0x7FF;
 		final int sin = Perspective.SINE[angle];
 		final int cos = Perspective.COSINE[angle];
-		final int xx = y * sin + cos * x >> 16;
-		final int yy = sin * x - y * cos >> 16;
+		final int rx = cos * x + sin * y >> 16;
+		final int ry = sin * x - cos * y >> 16;
 
-		return new Point(playerOnMinimap.getX() + xx, playerOnMinimap.getY() - yy);
+		return new Point(playerOnMinimap.getX() + rx, playerOnMinimap.getY() + ry);
 	}
 
 	/** The edge-arrow segment: from 55px to 65px out of the player dot, toward [direction]. */
