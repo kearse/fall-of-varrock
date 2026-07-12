@@ -173,9 +173,22 @@ Reusable pieces — reach for these before inventing a new one. Metrics above.
     companions · 4620-4623 Castle Wars · **4630 duel rules**.
   - *Large state* (item lists): **read the existing interface's widgets** (`client.getWidget(group,
     child)` → `getDynamicChildren()`), null-guarded. No custom packet.
+  - *Bulk data via chat lines* (the commands list): the server tags lines with a machine prefix
+    (`FOV_CMDS:` etc.). **Consume them in `onChatMessage`** (fires exactly ONCE, on arrival), then
+    **delete them from chat history** (`getChatLineMap().get(node.getType().getType())
+    .removeMessageNode(node)` + `refreshChat()`) so they never render and never re-fire. NEVER parse
+    in the `chatFilterCheck` script hook — it re-runs over the whole retained history on **every
+    chatbox rebuild**, so parsing there floods the chat on arrival, delays the window until the next
+    rebuild, and re-triggers open/tab-reset afterwards (the ::commands glitches). Keep a block-only
+    `chatFilterCheck` as cover for rebuilds that run before the purge lands.
 - **Action → server:** send `"::<cmd> <args>"` via `runScript(ScriptID.CHAT_SEND, …)`; the server
   intercepts it in `MessagePublicHandler`, runs the matching command, and suppresses the chat line.
   Existing channels: `::tp`, `::duel`, `::stake`.
+- **Absolute drawing (DYNAMIC overlays):** the renderer `translate()`s every overlay by its computed
+  location — including a **saved drag offset** if the overlay was ever movable (offsets persist in
+  config across builds). Any overlay that draws at absolute canvas coordinates MUST undo that first:
+  `final Rectangle b = getBounds(); g.translate(-b.x, -b.y);` at the top of `render()` — otherwise a
+  stale offset silently pushes it off-screen (the invisible-ticker bug).
 - **Mouse:** a `MouseAdapter` hit-tests `mousePressed` against the window; consume any click on the
   window (incl. `mouseClicked`/`mouseReleased`) so it never falls through to the world; return
   `OUTSIDE` for clicks off the window so the game still gets them.

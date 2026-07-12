@@ -59,6 +59,12 @@ class LofAnnouncementsOverlay extends Overlay
 			return null;
 		}
 
+		// This overlay draws at ABSOLUTE canvas coordinates. Undo any translate the renderer
+		// applied — this overlay was movable in an earlier build, and a drag offset saved from
+		// that era still gets applied to DYNAMIC overlays, which pushed the ticker off-screen.
+		final java.awt.Rectangle selfBounds = getBounds();
+		graphics.translate(-selfBounds.x, -selfBounds.y);
+
 		graphics.setFont(FontManager.getRunescapeFont());
 		final FontMetrics fm = graphics.getFontMetrics();
 		final int lineH = fm.getHeight();

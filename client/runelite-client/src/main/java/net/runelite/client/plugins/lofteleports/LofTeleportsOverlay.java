@@ -42,7 +42,10 @@ class LofTeleportsOverlay extends Overlay
 	static final int TAB_BASE = 100;
 	static final int ROW_BASE = 1000;
 
-	private static final int WIN_W = 560;
+	// Design-system standard modal (480x400 — docs/overlay-design-system.md); viewport-anchored so
+	// the window clears the inventory/tab column in fixed mode (it used to be 560 wide, canvas-
+	// centred, which draped over the side panel once modals moved to ALWAYS_ON_TOP).
+	private static final int WIN_W = 480;
 	private static final int WIN_H = 400;
 	private static final int WIN_ARC = 14;
 	private static final int TITLE_H = 38;
@@ -52,7 +55,7 @@ class LofTeleportsOverlay extends Overlay
 	private static final int TAB_H = 30;
 	private static final int TAB_GAP = 34;
 	private static final int LIST_X = 144;
-	private static final int LIST_W = WIN_W - LIST_X - 10;     // 406
+	private static final int LIST_W = WIN_W - LIST_X - 10;     // 326
 	private static final int SCROLLBAR_W = 5;
 	private static final int VP_TOP = TITLE_H + 32;            // 70, below the column headers
 	private static final int VP_BOTTOM = WIN_H - 12;
@@ -102,7 +105,14 @@ class LofTeleportsOverlay extends Overlay
 
 	private int maxScroll() { return Math.max(0, rowCount() * STEP - VP_H); }
 
-	private int originX() { return Math.max(0, (client.getCanvasWidth() - WIN_W) / 2); }
+	private int originX()
+	{
+		// Centre within the game viewport, not the whole canvas (§6A): in fixed mode the world
+		// view is the left ~512px, so this keeps the window off the inventory/tab column.
+		final int canvasW = client.getCanvasWidth();
+		final int viewportW = client.isResized() ? canvasW : Math.min(canvasW, 512);
+		return Math.max(0, Math.min((canvasW - WIN_W) / 2, (viewportW - WIN_W) / 2));
+	}
 
 	private int originY() { return Math.max(0, (client.getCanvasHeight() - WIN_H) / 2); }
 
@@ -150,6 +160,12 @@ class LofTeleportsOverlay extends Overlay
 
 		final Object oldAA = g.getRenderingHint(RenderingHints.KEY_ANTIALIASING);
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+		// This overlay draws at ABSOLUTE canvas coordinates. Undo any translate the renderer
+		// applied (e.g. a saved drag offset) so absolute means absolute.
+		final java.awt.Rectangle selfBounds = getBounds();
+		g.translate(-selfBounds.x, -selfBounds.y);
+
 
 		final int ox = originX(), oy = originY();
 		final Point mouse = mousePoint();
@@ -251,7 +267,8 @@ class LofTeleportsOverlay extends Overlay
 			LofTheme.shadowText(g, d.name, cx + 32, ty, d.built ? LofTheme.TEXT : LofTheme.TEXT_DIM);
 			if (d.built)
 			{
-				LofTheme.shadowText(g, "FREE", cx + CARD_W - 190, ty, FREE_GREEN);
+				// FREE sits between the longest names and the danger pill (narrower 480 frame).
+				LofTheme.shadowText(g, "FREE", cx + CARD_W - 120, ty, FREE_GREEN);
 			}
 			LofTheme.pill(g, fm, d.danger, cx + CARD_W - 10, ty, d.built ? d.colour : LofTheme.TEXT_DIM);
 		}
