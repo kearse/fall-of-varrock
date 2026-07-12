@@ -58,13 +58,12 @@ object QuestJournal {
     fun toggleMute(p: Player) {
         val nowMuted = !muted(p)
         p.attr[QUEST_GUIDE_MUTED_ATTR] = nowMuted
+        // Guidance arrows are drawn client-side now; [GUIDE_MUTED_VARP] (synced below) tells the
+        // Quest Journal plugin whether to draw them, so the toggle is just the flag + a line.
         if (nowMuted) {
-            p.clearHintArrow()
-            p.message("<col=801700>Quest guidance muted.</col> The arrows will leave you be — free play. Type <col=801700>::questguide</col> (or use the Quest Journal) to turn them back on.")
+            p.message("<col=801700>Quest guidance off.</col> The on-screen arrows will leave you be — free play. Type <col=801700>::questguide</col> (or use the Quest Journal) to turn them back on.")
         } else {
-            p.message("<col=801700>Quest guidance back on.</col>")
-            RecruitTrials.updateHintArrow(p)
-            WarPrepChain.updateHintArrow(p)
+            p.message("<col=801700>Quest guidance on.</col> The Quest Journal will point the way again.")
         }
         sync(p)
     }

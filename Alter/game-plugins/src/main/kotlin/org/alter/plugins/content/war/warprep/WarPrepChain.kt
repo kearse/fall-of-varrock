@@ -127,20 +127,13 @@ object WarPrepChain {
     private fun isTracked(s: Step): Boolean =
         s == Step.PRAYER || s == Step.GEAR || s == Step.TOWER || s == Step.RETURN || s == Step.RANK
 
-    /** Point the guidance arrow at the current objective. NPC anchors ([pointAtNpc]) show a TILE
-     *  arrow from any distance — all the way from Lumbridge — and snap to the npc itself up close.
-     *  Muted guidance (free play) skips the arrow entirely — the mute toggle cleared it already. */
+    /**
+     * Guidance arrows are now drawn **client-side** by the Quest Journal plugin (`lofquests`); the
+     * server no longer draws its own hint arrows for War-Prep. This just clears any arrow left over
+     * from before the change.
+     */
     fun updateHintArrow(p: Player) {
-        if (org.alter.plugins.content.quests.QuestJournal.muted(p)) return
-        when (step(p)) {
-            Step.PRAYER -> p.setTileHintArrow(CHURCH_ALTAR_TILE.first, CHURCH_ALTAR_TILE.second, ARROW_HEIGHT)
-            Step.GEAR -> pointAtNpc(p, VANNAKA_NPC, VANNAKA_TILE)
-            Step.TOWER -> pointAtNpc(p, KNIGHT_NPC, KNIGHT_TILE)
-            Step.RETURN -> pointAtNpc(p, VANNAKA_NPC, VANNAKA_TILE)
-            Step.RANK -> pointAtNpc(p, DUKE_NPC, DUKE_TILE)
-            Step.NONE -> {}
-            Step.DONE -> p.clearHintArrow()
-        }
+        p.clearHintArrow()
     }
 
     // --- pillar hooks -------------------------------------------------------------------
@@ -268,33 +261,6 @@ object WarPrepChain {
         p.unlockMageBooks() // idempotent — already unlocked on the RETURN step
         p.message("<col=801700>War-Prep — Magic complete!</col> You've proven you can survive the front's magic. You may now fight beside the Knights of Lumbridge when they march on the enemy.")
         p.message("<col=801700>Watch for the Knight-Captain's muster call</col> — it sounds before every march — and answer it with <col=ffae00>::march</col>.")
-    }
-
-    // --- guidance helpers (mirrors RecruitTrials) ---------------------------------------
-
-    private fun pointAtNpc(p: Player, npcKey: String, anchor: Triple<Int, Int, Int>) {
-        val id = runCatching { getRSCM(npcKey) }.getOrNull()
-        val npc = if (id != null) nearestNpc(p, id, anchor.first, anchor.second) else null
-        if (npc != null &&
-            npc.tile.height == p.tile.height &&
-            abs(npc.tile.x - p.tile.x) <= NEAR_TILES &&
-            abs(npc.tile.z - p.tile.z) <= NEAR_TILES
-        ) {
-            p.setNpcHintArrow(npc.index)
-        } else {
-            p.setTileHintArrow(anchor.first, anchor.second, ARROW_HEIGHT)
-        }
-    }
-
-    private fun nearestNpc(p: Player, id: Int, x: Int, z: Int): Npc? {
-        var best: Npc? = null
-        var bestD = Int.MAX_VALUE
-        p.world.npcs.forEach { n ->
-            if (n.id != id || n.isDead()) return@forEach
-            val d = abs(n.tile.x - x) + abs(n.tile.z - z)
-            if (d < bestD) { bestD = d; best = n }
-        }
-        return best
     }
 
     /** Add [amount] of [key] to the bag; whatever doesn't fit overflows to the bank. Defensive on keys. */
