@@ -61,39 +61,43 @@ data class BotZoneConfig(
 
 object BotZones {
 
-    // Tier pools. Edge zones lean classic/budget; deep zones are elite NHers.
-    // Depth-tiered loadout pools: weak metal PKers near the entrance, escalating to rune, then the
-    // elite (above-rune) NHers in the real wilderness.
-    private val T_BRONZE = BotTier(listOf("bronze_pker" to 2, "iron_pker" to 2))
-    private val T_STEEL = BotTier(listOf("steel_pker" to 2, "black_pker" to 2))
-    private val T_MITHRIL = BotTier(listOf("mithril_pker" to 2, "adamant_pker" to 1))
-    // From rune up, the budget mage/ranger/DHer variants join so you can't just pray one style.
-    private val T_RUNE = BotTier(listOf(
-        "rune_pker" to 2, "adamant_pker" to 1, "range_mid" to 1, "mage_mid" to 1, "dharok_mid" to 1,
+    // Depth ladder (see [tierForWildLevel]). Wild 1–10 is a low-level METAL-armour ladder sized for the
+    // new (cb 1–20) players who leave Lumbridge; past level 10 it becomes a random spread of authentic
+    // PK sets — budget → mid → high (maxers) → elite meta — with mixed fight styles. No bot uses a
+    // Voidwaker.
+
+    // Wild 1–10: metal-armour fodder, weighted so the very edge is mostly bronze/iron and dragon is rare.
+    private val T_METAL = BotTier(listOf(
+        "bronze_pker" to 5, "iron_pker" to 5, "steel_pker" to 4, "black_pker" to 4,
+        "mithril_pker" to 3, "adamant_pker" to 2, "rune_pker" to 2, "dragon_pker" to 1,
     ))
-    // Elite tiers field the full variety: melee NHers, freezers, rangers, DHers, blood mages, claws.
+    // Wild 11–20: budget PK sets — a low-def pure, a 45-def whip zerker, a rune-clad main.
+    private val T_BUDGET = BotTier(listOf("budget_pure" to 2, "budget_zerker" to 2, "budget_main" to 1))
+    // Wild 21–30: mid mains — the classic whip hybrid, a mid ranger, a mid freezer, a budget DHer.
+    private val T_MID = BotTier(listOf(
+        "classic_hybrid" to 2, "range_mid" to 1, "mage_mid" to 1, "dharok_mid" to 1,
+    ))
+    // Wild 31–40: high / maxer tier — Bandos maxers (AGS + tentacle/claws), blood mage, claws brid.
+    private val T_HIGH = BotTier(listOf(
+        "max_main" to 2, "max_tent" to 1, "claws_brid" to 1, "ancient_mage" to 1,
+    ))
+    // Wild 41+: elite meta — tribrid NHer, kodai freezer, masori ranger, Dharok DHer.
     private val T_ELITE = BotTier(listOf(
-        "elite_nh" to 1, "claws_brid" to 1, "range_elite" to 1, "mage_elite" to 1,
-        "ancient_mage" to 1, "dharok_dher" to 1, "classic_hybrid" to 1,
-    ))
-    private val T_ELITE_DEEP = BotTier(listOf(
-        "elite_nh" to 2, "claws_brid" to 1, "range_elite" to 1, "mage_elite" to 1,
-        "ancient_mage" to 1, "dharok_dher" to 1,
+        "elite_nh" to 2, "mage_elite" to 1, "range_elite" to 1, "dharok_dher" to 1, "claws_brid" to 1,
     ))
 
     /**
      * Loadout tier for a given custom wilderness level ([PvpZones.wildernessLevel], depth north from
-     * the wild's south edge). This is the single source of truth for "tier PKers by our custom
-     * wilderness level" — a bot's danger is decided by how deep it spawned, not by a hand-picked box:
-     * weak metal PKers at the frontier, escalating to elite "above-rune" NHers in the deep wild.
+     * the wild's south edge). The single source of truth for "tier PKers by depth": a bot's danger is
+     * decided by how deep it spawned. Wild 1–10 is a metal-armour ladder for new players; past 10 the
+     * gear escalates budget → mid → high → elite as you push deeper.
      */
     fun tierForWildLevel(level: Int): BotTier = when {
-        level <= 6 -> T_BRONZE     // frontier / shallow
-        level <= 12 -> T_STEEL
-        level <= 20 -> T_MITHRIL
-        level <= 30 -> T_RUNE      // rune + budget mage/range/DHer variety
-        level <= 44 -> T_ELITE     // full elite variety
-        else -> T_ELITE_DEEP       // deepest wild — the scariest NHers
+        level <= 10 -> T_METAL     // frontier — low-level metal-armour fodder for new players
+        level <= 20 -> T_BUDGET    // budget PK sets (pure / zerker / rune main)
+        level <= 30 -> T_MID       // mid mains (whip hybrid / range / mage / DHer)
+        level <= 40 -> T_HIGH      // high / maxers (Bandos AGS/tent/claws, blood mage)
+        else -> T_ELITE            // deepest wild — the elite meta NHers
     }
 
     /** Tiles wider than this get split, so each zone activates locally (a player at one end of the wild

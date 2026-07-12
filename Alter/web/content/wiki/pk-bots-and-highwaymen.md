@@ -1,35 +1,34 @@
 ---
 title: PK bots of the wilderness
 category: PvP & Wilderness
-summary: Fake-player fighters roam the entire wilderness — gear tier scales with depth, and Fallen Varrock crawls with them.
+summary: Fake-player fighters roam the wilderness — weak metal fodder at the edge, escalating to elite NH meta the deeper you go.
 order: 4
-updated: 2026-07-06
+updated: 2026-07-12
 ---
 
 Even at low population you'll always find a fight. **PK bots** are fake players — real gear, real stats, real combat brains (they eat, pot, switch and spec) — that roam the wilderness. They live **only in PvP zones**: step across the wilderness line and you're hunted; stay in a safe town and they can't touch you.
 
 ## Deeper is deadlier
 
-The whole custom wilderness is seeded with wandering PKers. A bot's gear tier is decided by the **wilderness level where it spawned** — the same number you see on your screen:
+A bot's gear and level are decided by the **wilderness level where it spawned** — the same number you see on your screen. The edge is a training ground; the deep wild is the real thing:
 
-| Wilderness level | Gear tier |
+| Wilderness level | What roams there |
 | --- | --- |
-| 1–6 | Bronze / Iron |
-| 7–12 | Steel / Black |
-| 13–20 | Mithril / Adamant |
-| 21–30 | Rune, plus budget mage / range / Dharok's variants |
-| 31–44 | Elite bridders (Bandos, Ancestral, Masori...) |
-| 45+ | Elite, heavy NH — the scariest fights in the game |
+| 1–10 | **Metal-armour fodder** — bronze and iron up through dragon, low combat levels a new player can actually beat |
+| 11–20 | **Budget PK sets** — a 1-def pure, a 45-def whip zerker, a rune-clad main |
+| 21–30 | **Mid mains** — whip hybrids, mid rangers, Ice-Blitz freezers, budget Dharok's |
+| 31–40 | **Maxers** — Bandos AGS bruisers, tentacle claw-spec KOers, Blood Barrage mages |
+| 41+ | **Elite meta** — tribrid NHers, Kodai freezers, Masori rangers, Dharok DHers — the scariest fights in the game |
 
-The elite bots run real archetypes: NH bridders with AGS→gmaul spec rotations, Ice Barrage freezers, Blood Barrage healers, Dharok's low-HP gamblers, claw-spec bridders. Deep wilderness is genuinely dangerous.
+Past level 10 the styles are mixed and random: you might meet a pure, a zerker, a maxed main or a full NH bridder. They run real archetypes — AGS→gmaul spec rotations, Ice Barrage freezes, Blood Barrage heals, Dharok's low-HP gambles, claw-spec KOs. (No bot carries a Voidwaker.) The shallow wilderness, by contrast, is safe to cut your teeth on.
 
 ## Fallen Varrock — the rogues' den
 
-[Fallen Varrock](/wiki/fallen-varrock) is the loot hub of the realm, and the PKers know it. On top of the usual wilderness wanderers, a **dedicated pack of bots prowls the city streets** (mithril-to-rune tier at Varrock's depth). Between them, the street monsters and other players, banking your loot there is never a formality.
+[Fallen Varrock](/wiki/fallen-varrock) is the loot hub of the realm, and the PKers know it. On top of the usual wilderness wanderers, a **dedicated pack of bots prowls the city streets** (budget-to-mid PK sets at Varrock's depth). Between them, the street monsters and other players, banking your loot there is never a formality.
 
 ## The Lumbridge goblin camp
 
-There's one bot that breaks the wilderness-only rule. A lone **low-level PKer** (combat 52, "Bandit" kit) prowls the **goblin camp east of Lumbridge**, where a handful of **Knights of Lumbridge** are locked in an endless brawl with the camp goblins. Unlike the wilderness bots, this one **will ambush you on safe ground** — a taste of the fight for new players who've never crossed the line. It's a single, weak bot: kill it for its kit, or leave it to the knights. The whole scene only appears while a player is nearby.
+There's one bot that breaks the wilderness-only rule. A lone, genuinely weak **Bandit** in full **bronze** (around combat 6) prowls the **goblin camp east of Lumbridge**, where a handful of **Knights of Lumbridge** are locked in an endless brawl with the camp goblins. Unlike the wilderness bots, this one **will ambush you on safe ground** — a first taste of PvP for new players who've never crossed the line. It's a single, weak bot: kill it for its (bronze) kit, or leave it to the knights. The whole scene only appears while a player is nearby.
 
 ## What they're worth
 
