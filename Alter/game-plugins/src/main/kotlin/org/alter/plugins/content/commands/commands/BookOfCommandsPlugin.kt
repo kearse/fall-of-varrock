@@ -27,11 +27,13 @@ private val logger = KotlinLogging.logger {}
  * plus everything below, and so on.
  *
  * ### How it reaches the overlay
- * There is no custom packet. We send the list as ordinary [ChatMessageType.GAME_MESSAGE] chat
- * lines, each prefixed with [OVERLAY_PREFIX]. The custom client's `lofcommands` plugin catches
- * those lines in the `chatFilterCheck` hook, removes them from the chat box entirely (so nothing
- * is ever shown as text), and renders the panel. On any other client the raw lines would simply
- * appear as chat — this server ships its own client, so that's a non-issue.
+ * There is no custom packet. We send the list as [ChatMessageType.CONSOLE] chat lines, each
+ * prefixed with [OVERLAY_PREFIX] — the same hidden channel the companion system streams its
+ * machine data on (`~LOFCMP~`). CONSOLE lines are delivered to the client's ChatMessage event
+ * but are NEVER rendered in the chat box and live in their own line buffer, so they cannot
+ * evict or disturb the player's visible chat. (GAME_MESSAGE was tried first: even when
+ * display-filtered, each hidden line still consumed a slot in the game-message buffer and
+ * silently evicted the player's oldest game messages — the "::commands deletes my chat" bug.)
  *
  * Wire format (one line each):
  * - `FOV_CMDS:open|<RankTitle>`
@@ -81,14 +83,14 @@ class BookOfCommandsPlugin(
         rows.sortWith(compareBy({ it.order }, { it.cmd }))
 
         val rankTitle = p.privilege.name.replaceFirstChar { it.titlecase() }
-        p.message("${OVERLAY_PREFIX}open|$rankTitle", ChatMessageType.GAME_MESSAGE)
+        p.message("${OVERLAY_PREFIX}open|$rankTitle", ChatMessageType.CONSOLE)
         for (row in rows) {
             // One command per line keeps us comfortably under the ~250-byte MESSAGE_GAME cap;
             // hard-trim a pathologically long description so a single line can never overflow.
             val desc = if (row.desc.length > MAX_DESC) row.desc.take(MAX_DESC - 3) + "..." else row.desc
-            p.message("${OVERLAY_PREFIX}row|${row.order}|${row.label}|${row.cmd}|$desc", ChatMessageType.GAME_MESSAGE)
+            p.message("${OVERLAY_PREFIX}row|${row.order}|${row.label}|${row.cmd}|$desc", ChatMessageType.CONSOLE)
         }
-        p.message("${OVERLAY_PREFIX}end", ChatMessageType.GAME_MESSAGE)
+        p.message("${OVERLAY_PREFIX}end", ChatMessageType.CONSOLE)
     }
 
     /** Maps a command's required power to its (sort order, display label) in the overlay. */

@@ -173,16 +173,18 @@ Reusable pieces — reach for these before inventing a new one. Metrics above.
     companions · 4620-4623 Castle Wars · **4630 duel rules**.
   - *Large state* (item lists): **read the existing interface's widgets** (`client.getWidget(group,
     child)` → `getDynamicChildren()`), null-guarded. No custom packet.
-  - *Bulk data via chat lines* (the commands list): the server tags lines with a machine prefix
-    (`FOV_CMDS:` etc.). **Consume them in `onChatMessage`** (fires exactly ONCE, on arrival), hide
-    them with a **block-only `chatFilterCheck`** (`intStack[size-3] = 0`), and force **one
-    `refreshChat()`** at batch end so the filter applies immediately (this client doesn't run the
-    filter on the add path). Two hard rules, both learned from live glitches:
-    **(1) NEVER parse in `chatFilterCheck`** — it re-runs over the whole retained history on every
-    chatbox rebuild, so parsing there delays the window until the next rebuild and re-triggers it
-    afterwards (open-lag / tab-reset / reopen). **(2) NEVER mass-remove the lines from the chat
-    buffers** (`ChatLineBuffer.removeMessageNode` in a loop) — it wiped the player's visible chat.
-    Blocked lines stay harmlessly in history, hidden by the filter on every rebuild.
+  - *Bulk data via chat lines* (the commands list, companion state): send from the server as
+    **`ChatMessageType.CONSOLE`** lines tagged with a machine prefix (`FOV_CMDS:`, `~LOFCMP~`).
+    CONSOLE is delivered to the client's `ChatMessage` event (fires exactly ONCE, on arrival —
+    consume there) but is **never rendered in the chat box and lives in its own line buffer**, so
+    it cannot flood, evict, or disturb the player's visible chat. No filtering or hiding needed.
+    Three hard rules, each learned from a live glitch with the commands list:
+    **(1) NEVER send machine data as `GAME_MESSAGE`** — even display-filtered, every hidden line
+    still consumes a slot in the game-message buffer and silently **evicts the player's oldest
+    game messages** ("::commands deletes my chat"). **(2) NEVER parse in `chatFilterCheck`** — it
+    re-runs over the whole retained history on every chatbox rebuild (open-lag / tab-reset /
+    reopen). **(3) NEVER mass-remove lines from the chat buffers** (`removeMessageNode` loops) —
+    it wiped the visible chat.
 - **Action → server:** send `"::<cmd> <args>"` via `runScript(ScriptID.CHAT_SEND, …)`; the server
   intercepts it in `MessagePublicHandler`, runs the matching command, and suppresses the chat line.
   Existing channels: `::tp`, `::duel`, `::stake`.
