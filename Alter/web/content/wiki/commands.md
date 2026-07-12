@@ -16,9 +16,9 @@ This opens the **command window** in the centre of your screen — the same plac
 
 ## How it's laid out
 
-- **Tabs down the left** — one per rank you have access to. A brand-new player sees a single **Player** tab; staff see their extra tabs (Moderator, Administrator, and so on). You only ever see commands you can actually run.
+- **Tabs down the left** — one for each set of commands you have access to. You only ever see commands you can actually run.
 - **The list on the right** shows each command in that tab with a short description of what it does. Long lists scroll — use your mouse wheel.
-- **Click any command** to drop it into your chat box (for example `::item `), ready for you to type its arguments and press enter.
+- **Click any command** to drop it into your chat box, ready for you to type any arguments and press enter.
 
 ## Closing it
 
