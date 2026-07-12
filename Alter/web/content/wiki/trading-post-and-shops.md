@@ -3,10 +3,22 @@ title: Trading Post & the market
 category: Economy & Trading
 summary: The Lumbridge courtyard market, the Trading Post's buy/sell prices, and what's deliberately not sold.
 order: 1
-updated: 2026-07-06
+updated: 2026-07-12
 ---
 
 The economy centres on the **Lumbridge courtyard market** — every essential vendor stands in two shop rows by the castle, so you never hunt for a shop.
+
+## Shops open instantly — no dialogue
+
+Clicking **Trade** (or Talk-to on a pure shopkeeper) opens the store **directly** — no chat menus. Vendors that run several stores show a **tab strip along the bottom of the shop window**; click a tab to switch store instantly:
+
+- **Quartermaster** — Weapons / Armour / Accessories / Barrows / Crystal / Charged tabs.
+- **Emblem Trader** — Supplies / Spec weapons / Wildy sets / Revenant tabs.
+- **Melee Shop (Horvik)** — Weapons / Rank armour tabs.
+- **Herblore Shop (Jatix)** — all four seed stores, herbs, secondaries, unfinished potions and farm tools as tabs.
+- **Skilling, Fishing and Rewards shops** — Tools/Materials, Supplies/Fish and Boss/Vote reward tabs.
+
+The odd vendor with something to *say* still talks on **Talk-to** (Zaff can still lift you to the rune altar; the Quartermaster still takes war-supply hand-ins) — but **Trade always goes straight to the wares**.
 
 ## The Trading Post
 

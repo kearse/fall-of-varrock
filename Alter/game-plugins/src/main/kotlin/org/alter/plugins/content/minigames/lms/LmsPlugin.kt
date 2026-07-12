@@ -97,6 +97,9 @@ class LmsPlugin(
         acts.filter { it.equals("talk-to", true) || it.equals("talk", true) }.forEach { act ->
             onNpcOption(host, option = act) { player.queue { hostDialog(player) } }
         }
+        // Trade/Shop/Rewards open the points store DIRECTLY — no dialogue hop (storefront redesign).
+        acts.filter { it.equals("trade", true) || it.equals("shop", true) || it.equals("rewards", true) }
+            .forEach { act -> onNpcOption(host, option = act) { player.openShop(rewardShop) } }
         if (acts.none { it.equals("talk-to", true) || it.equals("talk", true) }) {
             logger.warn { "lms: host '$host' has no Talk-to (actions=$acts) — use ::lms + the shop stays reachable via dialogue-less entry." }
         }

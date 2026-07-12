@@ -15,7 +15,9 @@ import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
 import org.alter.plugins.content.mechanics.shops.CoinCurrency
 import org.alter.plugins.content.mechanics.shops.ItemCurrency
+import org.alter.plugins.content.mechanics.shops.ShopTabs
 import org.alter.plugins.content.mechanics.shops.bindVendorOptions
+import org.alter.plugins.content.mechanics.shops.bindVendorTalkAndTrade
 import org.alter.plugins.content.war.ApprenticeArmoury
 import org.alter.plugins.content.war.WarNpcNames
 import org.alter.plugins.content.war.WarServices
@@ -42,8 +44,9 @@ import org.alter.rscm.RSCM.getRSCM
  *     to the rune altar.
  *   - Materials: low/primary only, but ALL farming seeds are available so any herb can be grown.
  *
- * Big stores (Farming/Herblore, Skilling, Warrior, Rewards) use a category menu (nested
- * [options]) that opens focused sub-shops, each kept under the 40-slot shop display limit.
+ * Big stores (Farming/Herblore, Skilling, Warrior, Rewards) are TABBED storefronts ([ShopTabs]):
+ * clicking the vendor opens the shop window directly, with a tab per focused sub-shop (each kept
+ * under the 40-slot shop display limit) — no dialogue menus.
  *
  * Currencies: GP for the coin stores; existing Slayer/Boss/Vote point counters for the reward
  * exchange. (PK / Skilling-point / Donator / Prestige shops are staged for later — they need
@@ -60,9 +63,6 @@ class LumbridgeShopHubPlugin(
 
     /** One item line in a shop. Null prices fall back to cache value via the currency. */
     private data class Ware(val key: String, val amount: Int, val sell: Int? = null, val buy: Int? = null)
-
-    /** A labelled entry in a vendor's category menu -> the shop it opens. */
-    private data class Counter(val label: String, val shop: String)
 
     // ----------------------------------- shop builders -----------------------------------
 
@@ -97,98 +97,36 @@ class LumbridgeShopHubPlugin(
         bindVendorOptions(npc) { openOrClosed(player, shop) }
     }
 
-    /** A vendor that opens a category menu (every option routes straight into it). */
-    private fun menuVendor(npc: String, x: Int, z: Int, dir: Direction, menu: suspend QueueTask.(Player) -> Unit) {
+    /** A vendor with several stores: every option opens the TABBED storefront directly (the
+     *  custom client draws the tab strip on the shop window — see ShopTabs). No dialogue hop. */
+    private fun tabVendor(npc: String, x: Int, z: Int, dir: Direction, vararg tabs: ShopTabs.Tab) {
         spawnNpc(npc, x, z, 0, 0, dir)
-        bindVendorOptions(npc) { player.queue { menu(player) } }
+        val store = tabs.toList()
+        bindVendorOptions(npc) { ShopTabs.open(player, store, guard = hubGuard) }
+    }
+
+    /** War guard, shared by every hub storefront (re-checked on each tab switch too). */
+    private val hubGuard: (Player) -> Boolean = { p ->
+        if (WarServices.shopsClosed()) {
+            p.message("The shopkeepers have fled the fighting — come back when Lumbridge is safe.")
+            false
+        } else {
+            true
+        }
     }
 
     private fun openOrClosed(player: Player, shop: String) {
-        if (WarServices.shopsClosed()) {
-            player.message("The shopkeepers have fled the fighting — come back when Lumbridge is safe.")
-            return
-        }
-        player.openShop(shop)
+        if (hubGuard(player)) player.openShop(shop)
     }
 
-    /** Flat category menu (max 4 entries + an implicit "Nevermind"). */
-    private suspend fun QueueTask.chooseShop(player: Player, title: String, vararg entries: Counter) {
-        if (WarServices.shopsClosed()) {
-            chatNpc(player, "Not while Lumbridge is under siege — come back when it's safe.")
-            return
-        }
-        val labels = entries.map { it.label } + "Nevermind"
-        val pick = options(player, *labels.toTypedArray(), title = title)
-        entries.getOrNull(pick - 1)?.let { player.openShop(it.shop) }
-    }
-
-    // ----------------------------------- category menus -----------------------------------
-
-    /** Horvik — weapons sold flat (bronze→adamant); ARMOUR is the rank-gated apprentice
-     *  armoury (lesser pieces only), shared with the cellar Smithing Apprentice. */
-    private suspend fun QueueTask.warriorMenu(player: Player) {
-        if (WarServices.shopsClosed()) {
-            chatNpc(player, "Not while Lumbridge is under siege — come back when it's safe.")
-            return
-        }
-        when (options(player, "Armour for your rank", "Weapons (bronze - adamant)", "Nevermind", title = "Warrior's Shop")) {
-            1 -> ApprenticeArmoury.open(player)
-            2 -> openOrClosed(player, MELEE_WEAPONS)
-        }
-    }
-
-    /** Zaff — browse the rune/staff store, or get a lift to the rune-crafting altar. */
-    private suspend fun QueueTask.magicMenu(player: Player) {
-        if (WarServices.shopsClosed()) {
-            chatNpc(player, "Not while Lumbridge is under siege — come back when it's safe.")
-            return
-        }
+    /** Zaff's Talk-to keeps the rune-altar lift; Trade opens the store directly. */
+    private suspend fun QueueTask.zaffTalk(player: Player) {
         when (options(player, "View runes & staves", "Teleport me to the rune altar", "Nevermind", title = "Magic Store")) {
             1 -> openOrClosed(player, MAGIC_STORE)
             2 -> {
                 chatNpc(player, "Mind the essence — craft any rune your Runecraft level allows.")
                 player.moveTo(RUNE_ALTAR)
             }
-        }
-    }
-
-    /** Gerrant — fishing supplies, plus the fish stall (cooked up to swordfish; higher raw). */
-    private suspend fun QueueTask.fishingMenu(player: Player) = chooseShop(player, "Fishing Shop",
-        Counter("Fishing supplies", FISHING_SUPPLIES),
-        Counter("Fish (raw & cooked)", FISH))
-
-    /** Wydin — the general skilling vendor. */
-    private suspend fun QueueTask.skillingMenu(player: Player) = chooseShop(player, "Skilling Supplies",
-        Counter("Tools", SKILL_TOOLS),
-        Counter("Raw materials", SKILL_MATERIALS))
-
-    private suspend fun QueueTask.rewardsMenu(player: Player) = chooseShop(player, "Reward Exchange",
-        Counter("Boss rewards (Boss Tickets)", BOSS_REWARDS),
-        Counter("Vote rewards (Vote Tickets)", VOTE_REWARDS))
-
-    /** Farming & Herblore is the big one — nested so every menu stays within the option cap. */
-    private suspend fun QueueTask.farmingMenu(player: Player) {
-        if (WarServices.shopsClosed()) {
-            chatNpc(player, "Not while Lumbridge is under siege — come back when it's safe.")
-            return
-        }
-        when (options(player, "Seeds", "Herblore", "Farming tools", "Nevermind", title = "Farming & Herblore")) {
-            1 -> when (options(player,
-                "Allotment & flower seeds", "Herb seeds", "Tree & fruit seeds", "Special seeds",
-                title = "Seeds")) {
-                1 -> openOrClosed(player, ALLOTMENT_SEEDS)
-                2 -> openOrClosed(player, HERB_SEEDS)
-                3 -> openOrClosed(player, TREE_SEEDS)
-                4 -> openOrClosed(player, SPECIAL_SEEDS)
-            }
-            2 -> when (options(player,
-                "Clean herbs", "Secondaries & vials", "Unfinished potions",
-                title = "Herblore")) {
-                1 -> openOrClosed(player, HERBS)
-                2 -> openOrClosed(player, SECONDARIES)
-                3 -> openOrClosed(player, UNFINISHED_POTIONS)
-            }
-            3 -> openOrClosed(player, FARM_TOOLS)
         }
     }
 
@@ -420,18 +358,38 @@ class LumbridgeShopHubPlugin(
         // the rows). All tiles verified walkable against the cache collision dump.
 
         // ---- West row (x=3219), facing EAST toward the aisle: gear + prayer/crafting ----
-        menuVendor("npc.horvik", 3219, 3225, Direction.EAST) { warriorMenu(it) }    // weapons + rank armour
+        tabVendor("npc.horvik", 3219, 3225, Direction.EAST,                          // weapons + rank armour
+            ShopTabs.Tab("Weapons", MELEE_WEAPONS),
+            ShopTabs.Tab("Rank armour") { ApprenticeArmoury.open(it) })
         singleVendor("npc.lowe", 3219, 3224, Direction.EAST, RANGED_GEAR)
-        menuVendor("npc.zaff", 3219, 3223, Direction.EAST) { magicMenu(it) }         // runes + altar lift
+        // Zaff: Trade opens the store; Talk-to keeps the rune-altar lift dialogue.
+        spawnNpc("npc.zaff", 3219, 3223, 0, 0, Direction.EAST)
+        bindVendorTalkAndTrade("npc.zaff",
+            talk = { player.queue { zaffTalk(player) } },
+            trade = { openOrClosed(player, MAGIC_STORE) })
         singleVendor("npc.monk", 3219, 3222, Direction.EAST, BONES)                  // bones (Prayer)
         singleVendor("npc.gem_trader", 3219, 3221, Direction.EAST, CRAFTING)         // crafting/jewellery
 
         // ---- East row (x=3224), facing WEST toward the aisle: skilling + economy ----
-        menuVendor("npc.wydin", 3224, 3225, Direction.WEST) { skillingMenu(it) }     // tools + materials
-        menuVendor("npc.gerrant", 3224, 3224, Direction.WEST) { fishingMenu(it) }    // fishing + fish
-        menuVendor("npc.jatix", 3224, 3223, Direction.WEST) { farmingMenu(it) }      // seeds + herblore
+        tabVendor("npc.wydin", 3224, 3225, Direction.WEST,                           // tools + materials
+            ShopTabs.Tab("Tools", SKILL_TOOLS),
+            ShopTabs.Tab("Materials", SKILL_MATERIALS))
+        tabVendor("npc.gerrant", 3224, 3224, Direction.WEST,                         // fishing + fish
+            ShopTabs.Tab("Supplies", FISHING_SUPPLIES),
+            ShopTabs.Tab("Fish", FISH))
+        tabVendor("npc.jatix", 3224, 3223, Direction.WEST,                           // seeds + herblore
+            ShopTabs.Tab("Allotment seeds", ALLOTMENT_SEEDS),
+            ShopTabs.Tab("Herb seeds", HERB_SEEDS),
+            ShopTabs.Tab("Tree seeds", TREE_SEEDS),
+            ShopTabs.Tab("Special seeds", SPECIAL_SEEDS),
+            ShopTabs.Tab("Herbs", HERBS),
+            ShopTabs.Tab("Secondaries", SECONDARIES),
+            ShopTabs.Tab("Unf. potions", UNFINISHED_POTIONS),
+            ShopTabs.Tab("Farm tools", FARM_TOOLS))
         singleVendor("npc.sawmill_operator", 3224, 3222, Direction.WEST, CONSTRUCTION) // planks/nails
-        menuVendor("npc.valaine", 3224, 3221, Direction.WEST) { rewardsMenu(it) }    // boss/vote points
+        tabVendor("npc.valaine", 3224, 3221, Direction.WEST,                         // boss/vote tickets
+            ShopTabs.Tab("Boss rewards", BOSS_REWARDS),
+            ShopTabs.Tab("Vote rewards", VOTE_REWARDS))
 
         // End-game / war cluster sits just south of the west column (Quartermaster @ 3219,3216,
         // Slayer Master @ 3219,3215) and the Dice host @ 3224,3215 — spawned by their own plugins.
