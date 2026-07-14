@@ -1,7 +1,7 @@
 ---
 title: What's coming next
 category: Minigames & Bosses
-summary: Content that's on the roadmap or visible in-game as "coming soon" — and what's actually playable today.
+summary: Content that's on the roadmap or visible in-game as "coming soon" - and what's actually playable today.
 order: 5
 updated: 2026-07-04
 ---
@@ -14,12 +14,12 @@ Everything else on this wiki is playable now: the War (campaigns, conquests, cit
 
 ## In the works
 
-- **Raids** — the instancing framework is built and battle-tested (Wizard Tower runs on it). Full raids are next: **Inferno**, **Nightmare**, **Theatre of Blood** and **Chambers of Xeric** are the planned lineup.
-- **More minigames** — Castle Wars, Last Man Standing and the Duel Arena hold portal slots.
-- **Events tab** — HP events, tournaments, treasure hunts, vote bosses.
-- **Donator zones** — dedicated PvM and skilling areas for members.
-- **More PvP zones** — Fun-PK, Risk Zone, Edge bridding, Mage Bank and Ferox-style safety are portal placeholders.
-- **The war marches on** — Varrock is the first hostile city; the campaign map grows from there.
+- **Raids** - the instancing framework is built and battle-tested (Wizard Tower runs on it). Full raids are next: **Inferno**, **Nightmare**, **Theatre of Blood** and **Chambers of Xeric** are the planned lineup.
+- **More minigames** - Castle Wars, Last Man Standing and the Duel Arena hold portal slots.
+- **Events tab** - HP events, tournaments, treasure hunts, vote bosses.
+- **Donator zones** - dedicated PvM and skilling areas for members.
+- **More PvP zones** - Fun-PK, Risk Zone, Edge bridding, Mage Bank and Ferox-style safety are portal placeholders.
+- **The war marches on** - Varrock is the first hostile city; the campaign map grows from there.
 
 ## How updates land
 

@@ -1,5 +1,5 @@
 ---
-title: Supplying the war — the Quartermaster
+title: Supplying the war - the Quartermaster
 category: Skilling
 summary: What the Quartermaster pays for food, potions and bars, and how Supply Drives double your War Effort.
 order: 2
@@ -36,10 +36,10 @@ The **Quartermaster** in the Mire crypt is the end of every production chain: ha
 | Iron | 2 | Adamantite | 8 |
 | Steel | 3 | Runite | 12 |
 
-## Supply Drives — 2× windows
+## Supply Drives - 2× windows
 
-At any given time one category — **FOOD**, **POTIONS** or **BARS** — is in high demand and pays **double War Effort**. The category rotates on a timer, and you'll see "Supply Drive bonus!" when your deposit catches the window. Smart skillers bank goods ahead and dump them when their category comes up.
+At any given time one category - **FOOD**, **POTIONS** or **BARS** - is in high demand and pays **double War Effort**. The category rotates on a timer, and you'll see "Supply Drive bonus!" when your deposit catches the window. Smart skillers bank goods ahead and dump them when their category comes up.
 
 ## What War Effort gets you
 
-War Effort is your personal contribution score — it feeds rank progression and daily bonuses, and marks you as a wartime contributor when loot pools split. Between the Quartermaster, [resource contracts](/wiki/slayer-and-contracts), and defending frontiers, a dedicated skiller can climb the ladder without ever winning a duel.
+War Effort is your personal contribution score - it feeds rank progression and daily bonuses, and marks you as a wartime contributor when loot pools split. Between the Quartermaster, [resource contracts](/wiki/slayer-and-contracts), and defending frontiers, a dedicated skiller can climb the ladder without ever winning a duel.
