@@ -71,6 +71,11 @@ class MessagePublicHandler : MessageHandler<MessagePublic> {
                     client.world.plugins.executeCommand(client, "shopcloseclick", parts.drop(1).toTypedArray())
                     return
                 }
+                // War spoils window (lofwarspoils): "::spoils <action> [index]" → claim, suppress chat.
+                "spoils" -> {
+                    client.world.plugins.executeCommand(client, "spoilsclick", parts.drop(1).toTypedArray())
+                    return
+                }
             }
         }
 

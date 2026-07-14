@@ -137,6 +137,15 @@ val COMPANIONS_ATTR = AttributeKey<String>("companions")
 val LOOT_KEYS_ATTR = AttributeKey<String>("loot_keys")
 
 /**
+ * A Minister/King's **unclaimed war spoils** — the commander's cut of a won campaign/conquest
+ * (war-stake return + tithe, plus a rare 3rd age relic) held pending an explicit `::claim` instead
+ * of auto-banking. Stored as a JSON item blob (same pattern as [LOOT_KEYS_ATTR]; the war-spoils
+ * system owns the encode/decode). Persistent, so a commander can claim after a relog. See
+ * content/war/WarSpoils.
+ */
+val WAR_SPOILS_ATTR = AttributeKey<String>("war_spoils")
+
+/**
  * **Donor points** — the monetization-side currency (master design brief §6: "money buys time and
  * flair"). Earned by donating and as the donor's campaign perk (a 1% cut of a won campaign's loot,
  * MINTED in donor points so it never inflates gp or skims the participants' earned pool — see

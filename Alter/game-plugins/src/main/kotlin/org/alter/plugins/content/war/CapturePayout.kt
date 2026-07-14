@@ -16,8 +16,10 @@ import org.alter.rscm.RSCM.getRSCM
  * a raid ends with coin in your bank rather than a scramble on the ground.
  *
  * The slice model (master design brief §3C, see memory `rsps-campaign-loot-model`):
- *  - **Commander tithe** — the sponsor who funded + led the op takes [TITHE] off the top of the pool.
- *  - **Participants** — split the rest by contribution share; auto-banked as gp.
+ *  - **Commander cut** — the sponsor who funded + led the op takes their war-stake back plus a [TITHE]
+ *    off the top of the pool, and (rank-gated) may earn a 3rd age relic. This does NOT auto-bank: it's
+ *    held in the [WarSpoils] claim box and collected with `::claim` (the commander is toasted).
+ *  - **Participants** — split the rest by contribution share; auto-banked as gp (the sponsor too, as a fighter).
  *  - **Donor bonus** — every donor PARTICIPANT also gets [DONOR_CUT] of the pool's value, paid in
  *    **donor points** (NOT gp). Minted alongside, never out of the pool: cash-side flair can't skim
  *    the players' earned loot, and donor points don't inflate the gp economy. No cap — even a few
@@ -41,16 +43,25 @@ object CapturePayout {
         sponsor: Player?,
         lootPool: Long,
     ) {
-        // The commander recoups their war-stake on a WIN — they only forfeit it if the campaign fails.
-        // Banked on top of their share, so a successful campaign returns the cost plus profit.
-        if (sponsor != null && sponsor.index >= 0 && tier.cost > 0) {
-            bankCoins(world, sponsor, tier.cost.toLong())
-            sponsor.message("<col=ffae00>${op.displayName} is taken — your ${fmt(tier.cost.toLong())} coin war-stake is returned.</col>")
-        }
+        // A won war's COMMANDER cut no longer auto-banks — it accrues here and is collected with
+        // `::claim` (see [WarSpoils]). It starts with the war-stake, returned on a WIN (forfeit only on
+        // a loss), and the commander's tithe is added below once the pool is known. The rank-and-file
+        // contribution split still auto-banks for everyone (the sponsor included, as a fighter).
+        var sponsorSpoils = 0L
+        if (sponsor != null && sponsor.index >= 0 && tier.cost > 0) sponsorSpoils += tier.cost.toLong()
+
+        // Leadership relic ([ThirdAge]): a Minister/King who WON has a small flat chance to earn a 3rd
+        // age piece, added to their spoils on top of the coin. Rank-gated, independent of the pool, so
+        // the roll happens now and rides along whichever payout branch fires below.
+        val relic = sponsor != null && sponsor.index >= 0 &&
+            sponsor.title.ordinal >= Title.MINISTER.ordinal && ThirdAge.rollLeaderGift()
 
         val contrib = participation.filterKeys { it.index >= 0 && !it.isDead() }
         if (contrib.isEmpty()) {
-            if (sponsor != null && sponsor.index >= 0) sponsor.message("<col=801700>${op.displayName} fell, but no soldier of yours stood to claim the spoils.</col>")
+            if (sponsor != null && sponsor.index >= 0) {
+                WarSpoils.deliverCommanderLoot(world, sponsor, op.displayName, sponsorSpoils, relic)
+                sponsor.message("<col=801700>${op.displayName} fell, but no soldier of yours stood to claim the field spoils.</col>")
+            }
             return
         }
 
@@ -66,17 +77,18 @@ object CapturePayout {
 
         val pool = lootPool.coerceAtLeast(0)
         if (pool <= 0) {
+            if (sponsor != null && sponsor.index >= 0) WarSpoils.deliverCommanderLoot(world, sponsor, op.displayName, sponsorSpoils, relic)
             contrib.keys.forEach { it.message("<col=801700>${op.displayName} is taken — but its coffers were bare.</col>") }
             return
         }
 
         val total = contrib.values.sum().coerceAtLeast(1)
         val tithe = if (sponsor != null && sponsor.index >= 0) (pool * TITHE).toLong().coerceAtLeast(0) else 0
-        if (sponsor != null && tithe > 0) {
-            bankCoins(world, sponsor, tithe)
-            sponsor.message("<col=ffae00>Your commander's tithe from ${op.displayName}: ${fmt(tithe)} coins, banked.</col>")
-        }
+        if (tithe > 0) sponsorSpoils += tithe
         val split = pool - tithe
+
+        // The commander's cut (stake + tithe + any relic) → the ::claim box, not the bank ([WarSpoils]).
+        if (sponsor != null && sponsor.index >= 0) WarSpoils.deliverCommanderLoot(world, sponsor, op.displayName, sponsorSpoils, relic)
 
         contrib.forEach { (player, score) ->
             val coins = (split * score / total).coerceAtLeast(1)

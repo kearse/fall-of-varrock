@@ -214,7 +214,14 @@ class CityFrontierPlugin(
             // A campaign uses the rich [campaignKillValue] (the war plunder) when set, so the pool is
             // lucrative without inflating casual floor drops; falls back to the coin+gear value.
             val poolValue = if (line.campaignKillValue > 0) line.campaignKillValue else coins + (gear?.second ?: 0)
-            if (CampaignRegistry.creditCityKill(mob.tile, poolValue)) return@onNpcDeath
+            val inWar = CampaignRegistry.creditCityKill(mob.tile, poolValue)
+
+            // War relic: ONLY while a campaign/conquest is being fought over this ground can a fallen
+            // enemy yield a 3rd age piece — the prestige line's monster source (see [ThirdAge]). Rolled
+            // for the killer and handed straight to them (never pooled), so it can't be split away.
+            if (inWar && ThirdAge.rollWarDrop()) ThirdAge.awardDrop(world, killer, mob.tile)
+
+            if (inWar) return@onNpcDeath
 
             world.spawn(GroundItem(getRSCM("item.coins_995"), coins, mob.tile))
             killer.message("<col=ffcf48>The ${line.enemyNoun} drops ${"%,d".format(coins)} coins.</col>")

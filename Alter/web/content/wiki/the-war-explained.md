@@ -40,18 +40,17 @@ Lords who field troops earn a damage share for everything their squad kills - co
 
 When a campaign or conquest is won, the pooled reward is divided like this:
 
-- The **sponsor keeps a 10% tithe** off the top - rank has its privileges.
-- The rest is split by **contribution** - your time and activity in the battle is tracked every game tick.
+- The **commander** gets their war-stake back **plus a 10% tithe** off the top - rank has its privileges. This does **not** auto-bank: it's held as **war spoils** the commander collects with **`::claim`** (a themed claim window - Bank All, or take pieces one at a time). A short banner pops the moment the war is won.
+- The rest is split by **contribution** - your time and activity in the battle is tracked every game tick - and paid **straight to your bank**, no loot scramble. (The commander earns a contribution share too, as a fighter; only their *command* cut goes to `::claim`.)
 - **Donors** earn a bonus +1% of the pool value as donor points, minted on top (it never comes out of other players' shares).
 - Everyone who took part earns **prestige / war effort points** toward their next rank.
-- Coins are paid **straight to your bank** - no loot scramble.
 
 ## 3rd age relics - the war's prestige drop
 
 The [3rd age](/wiki/path-to-end-game) antique sets are earned in the war, two ways:
 
 - **Battlefield drop** - while a campaign or conquest is live, every enemy you cut down on the battlefield has a small chance (**~1/5,000**) to drop a random 3rd age piece straight to you. Server-sized rare: a piece surfaces only every few wars, so wearing one says you fought for it.
-- **Leadership relic** - the **Minister or King who wins the war** has a **1/500** chance to be gifted a random piece outright, on top of their tithe, the moment the war is won.
+- **Leadership relic** - the **Minister or King who wins the war** has a **1/1,000** chance to earn a random piece on top of their coin. It lands in their **`::claim`** war-spoils box alongside the tithe, the moment the war is won.
 
 Both are announced realm-wide. The Quartermaster still sells 3rd age as a slow, tripled-price pity-path, and buys pieces back from Lord+ at a third of shelf value - but the drop is the real story.
 

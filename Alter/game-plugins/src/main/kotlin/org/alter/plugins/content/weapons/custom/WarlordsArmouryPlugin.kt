@@ -13,13 +13,17 @@ import org.alter.game.model.shop.ShopCurrency
 import org.alter.game.model.shop.ShopItem
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
+import org.alter.plugins.content.economy.PointKind
 import org.alter.plugins.content.economy.SupplyDepot
+import org.alter.plugins.content.economy.awardTickets
 import org.alter.plugins.content.mechanics.shops.CoinCurrency
 import org.alter.plugins.content.mechanics.shops.ItemCurrency
 import org.alter.plugins.content.mechanics.shops.ShopTabs
 import org.alter.plugins.content.mechanics.shops.bindVendorTalkAndTrade
+import org.alter.plugins.content.war.Title
 import org.alter.plugins.content.war.address
 import org.alter.plugins.content.war.recruit.RecruitTrials
+import org.alter.plugins.content.war.title
 import org.alter.rscm.RSCM.getRSCM
 
 private val logger = KotlinLogging.logger {}
@@ -39,8 +43,9 @@ private val logger = KotlinLogging.logger {}
  *  - **Untradeable prestige** (fire/infernal capes) and **Corp's sigil shields** — earned only.
  *
  * Megarares (scythe/tbow/shadow) are priced as CAREERS — the deterministic pity path until
- * raids ship gear. The Relics wing (3rd age) follows the same precedent: clue scrolls don't
- * exist yet, so the shop IS the source, priced as the longest careers of all. All prices TUNE.
+ * raids ship gear. The Relics wing (3rd age) is now the exception: the war is the real source
+ * (battlefield drops + a leadership gift — see [org.alter.plugins.content.war.ThirdAge]); the shelf
+ * survives only as a tripled pity-path, and Lord+ can sell pieces back here. All prices TUNE.
  */
 class WarlordsArmouryPlugin(
     r: PluginRepository,
@@ -59,6 +64,9 @@ class WarlordsArmouryPlugin(
         const val CRYSTAL = "Warlord's Armoury - Crystal Gear"
         const val CHARGED = "Warlord's Armoury - Charged & Degradable"
         const val RELICS = "Warlord's Armoury - Relics"
+
+        /** Relics shelf markup over the old career base: buy = base × 3, buy-back = base (× 1). */
+        const val RELIC_BUY_MULT = 3
     }
 
     // ======================== stock — Boss Tickets (PvM) ========================
@@ -169,10 +177,14 @@ class WarlordsArmouryPlugin(
     )
 
     /**
-     * Relics — 3rd age, the realm's antique prestige line. Clue scrolls aren't implemented,
-     * so like the megarares this shelf is the deterministic source, priced ABOVE them: the
-     * armour is weaker than forge/raid BIS, so the price is pure flex — a full set says
-     * "I bossed for months", nothing else. Druidic is the apex (OSRS-faithful).
+     * Relics — 3rd age, the realm's antique prestige line. The REAL source is now the war: a piece
+     * drops from enemies on a live campaign/conquest battlefield, and the victorious Minister/King may
+     * be gifted one ([org.alter.plugins.content.war.ThirdAge]). This shelf survives only as a slow
+     * pity-path, priced at 3× the old career prices so buying a set is the most conspicuous flex on the
+     * realm — the drop is the way you're *meant* to get it. Lord+ can also sell pieces back here (see
+     * [sellRelics]) at a third of shelf value, deliberately below what a duplicate fetches in trade.
+     * Prices are the pre-triple BASE; [RELIC_BUY_MULT] scales them at build time and [sellRelics] uses
+     * the base as the buy-back. Druidic is the apex (OSRS-faithful).
      */
     private val relicStock = listOf(
         // Melee
@@ -200,7 +212,14 @@ class WarlordsArmouryPlugin(
         Ware("item._3rd_age_druidic_robe_bottoms", 12_000),
         Ware("item._3rd_age_druidic_staff", 12_000),
         Ware("item._3rd_age_druidic_cloak", 12_000),
-    )
+    ).map { Ware(it.key, it.price * RELIC_BUY_MULT) } // shelf price = 3× the base careers
+
+    /** Buy-back value (Boss Tickets) per 3rd age piece = the pre-triple BASE (shelf price / 3), keyed by
+     *  item id. Below player-trade value on purpose: a convenience sink for a noble's duplicates, never
+     *  the best way to cash a relic out. */
+    private val relicSellback: Map<Int, Int> by lazy {
+        relicStock.mapNotNull { w -> resolveOrNull(w.key)?.let { it to (w.price / RELIC_BUY_MULT).coerceAtLeast(1) } }.toMap()
+    }
 
     /** Charged / degradable gear — sold at the base id; players charge them to use. */
     private val chargedStock = listOf(
@@ -271,10 +290,60 @@ class WarlordsArmouryPlugin(
             recruitSupplyHandIn(player)
             return
         }
-        when (options(player, "Hand in war supplies", "Browse the armoury", "Nevermind", title = "Quartermaster")) {
-            1 -> depositMenu(player)
-            2 -> openArmoury(player)
+        // Lord+ get an extra option: sell 3rd age relics back for Boss Tickets (rank-gated buy-back).
+        if (player.title.ordinal >= Title.LORD.ordinal) {
+            when (options(player, "Hand in war supplies", "Browse the armoury", "Sell 3rd Age relics", "Nevermind", title = "Quartermaster")) {
+                1 -> depositMenu(player)
+                2 -> openArmoury(player)
+                3 -> sellRelics(player)
+            }
+        } else {
+            when (options(player, "Hand in war supplies", "Browse the armoury", "Nevermind", title = "Quartermaster")) {
+                1 -> depositMenu(player)
+                2 -> openArmoury(player)
+            }
         }
+    }
+
+    /**
+     * Rank-gated relic buy-back (Lord+ only): the Quartermaster purchases every 3rd age piece in the
+     * player's pack for Boss Tickets at a THIRD of shelf value ([relicSellback] = the pre-triple base).
+     * Deliberately below player-trade value — a convenience sink for a noble's duplicates, never the
+     * best way to cash a relic out. Confirmed before it fires so a piece is never sold by a misclick.
+     */
+    private suspend fun QueueTask.sellRelics(player: Player) {
+        if (player.title.ordinal < Title.LORD.ordinal) {
+            chatNpc(player, "Only a Lord of the realm or higher may treat with me for antiques, ${player.address}.", npc = quartermasterId, title = "Quartermaster")
+            return
+        }
+        val held = relicSellback.entries
+            .mapNotNull { (id, price) -> player.inventory.getItemCount(id).takeIf { it > 0 }?.let { Triple(id, it, price) } }
+        if (held.isEmpty()) {
+            chatNpc(player, "You've no relics of the Third Age on you, ${player.address}. Win them in the war and I'll take the pieces you don't want.", npc = quartermasterId, title = "Quartermaster")
+            return
+        }
+        val pieces = held.sumOf { it.second }
+        val payout = held.sumOf { it.second.toLong() * it.third }.coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
+        chatNpc(player, "I'll give ${"%,d".format(payout)} Boss Tickets for the $pieces relic${if (pieces == 1) "" else "s"} you're carrying — a third of shelf, mind. They fetch more in trade, ${player.address}.", npc = quartermasterId, title = "Quartermaster")
+        if (options(player, "Sell them (${"%,d".format(payout)} Boss Tickets)", "Keep them", title = "Sell all Third Age relics?") != 1) return
+
+        var sold = 0
+        var paid = 0L
+        for ((id, count, price) in held) {
+            val have = player.inventory.getItemCount(id)
+            if (have <= 0) continue
+            val removed = player.inventory.remove(id, have).completed
+            if (removed <= 0) continue
+            sold += removed
+            paid += removed.toLong() * price
+        }
+        if (sold <= 0) {
+            chatNpc(player, "You've nothing left to sell, ${player.address}.", npc = quartermasterId, title = "Quartermaster")
+            return
+        }
+        val ticketsOwed = paid.coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
+        player.awardTickets(PointKind.BOSS, ticketsOwed)
+        chatNpc(player, "$sold relic${if (sold == 1) "" else "s"} for ${"%,d".format(ticketsOwed)} Boss Tickets. A pleasure, ${player.address}.", npc = quartermasterId, title = "Quartermaster")
     }
 
     /** Intro-quest hand-in: the recruit gives the Quartermaster the bronze dagger they forged. Consumes
