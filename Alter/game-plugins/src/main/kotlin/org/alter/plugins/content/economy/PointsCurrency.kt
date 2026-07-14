@@ -17,6 +17,10 @@ import org.alter.game.model.shop.ShopItem
  */
 class PointsCurrency(private val kind: PointKind) : ShopCurrency {
 
+    override fun label(): String = kind.display
+
+    override fun balance(p: Player): Int = p.points(kind)
+
     override fun getSellPrice(world: World, item: Int): Int = maxOf(1, getItem(item).cost)
 
     override fun getBuyPrice(world: World, item: Int): Int = 0

@@ -79,6 +79,10 @@ open class ItemCurrency(
         }
     }
 
+    override fun label(): String = pluralCurrency
+
+    override fun balance(p: Player): Int = p.inventory.getItemCount(currencyItem)
+
     override fun getSellPrice(
         world: World,
         item: Int,

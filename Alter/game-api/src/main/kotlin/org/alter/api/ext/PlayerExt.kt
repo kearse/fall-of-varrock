@@ -67,9 +67,10 @@ private fun Player.showShop(s: org.alter.game.model.shop.Shop) {
     val previous = attr[CURRENT_SHOP_ATTR]
     attr[CURRENT_SHOP_ATTR] = s
     shopDirty = true
-    // Reset the custom client's storefront tab strip (lofshoptabs). A tabbed vendor sends its
-    // "FOV_SHOP:tabs|..." line right after this, so tabs never leak between different stores.
-    message("FOV_SHOP:clear", ChatMessageType.GAME_MESSAGE)
+    // Stream the full storefront to the custom client's shop window (lofshop). It draws the whole
+    // shop itself (cache interfaces don't render on our client), so it needs the stock + prices.
+    // A tabbed vendor sends its "FOV_SHOP:tabs|..." line right after this (see ShopTabs).
+    streamShopToClient(s)
     if (interfaces.getModal() == 300) {
         // SOFT SWAP — the shop window is already up (a storefront tab switch). Re-opening
         // interface 300 on top of itself desyncs server/client interface state and every click
@@ -87,6 +88,23 @@ private fun Player.showShop(s: org.alter.game.model.shop.Shop) {
     runClientScript(CommonClientScripts.SHOP_INIT, 3, s.name, -1, 0, 1)
     setInterfaceEvents(interfaceId = 300, component = 16, range = 0..s.items.size, setting = 1086)
     setInterfaceEvents(interfaceId = 301, component = 0, range = 0 until inventory.capacity, setting = 1086)
+}
+
+/**
+ * Stream a shop's stock to the custom client's shop window (lofshop). One GAME_MESSAGE line each,
+ * hidden from chat by the client's FOV_SHOP filter. The batch is framed by shop|…/shopend so the
+ * client rebuilds the grid atomically (same open/row/end pattern as the command window). Prices
+ * come from the shop entry's sellPrice, falling back to the currency's default sell price.
+ */
+private fun Player.streamShopToClient(s: org.alter.game.model.shop.Shop) {
+    message("FOV_SHOP:shop|${s.name}|${s.currency.label()}|${s.currency.balance(this)}", ChatMessageType.GAME_MESSAGE)
+    s.items.forEachIndexed { slot, item ->
+        if (item != null) {
+            val price = item.sellPrice ?: s.currency.getSellPrice(world, item.item)
+            message("FOV_SHOP:item|$slot|${item.item}|${item.currentAmount}|$price", ChatMessageType.GAME_MESSAGE)
+        }
+    }
+    message("FOV_SHOP:shopend", ChatMessageType.GAME_MESSAGE)
 }
 
 fun Player.message(

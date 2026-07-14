@@ -58,9 +58,17 @@ class MessagePublicHandler : MessageHandler<MessagePublic> {
                     client.world.plugins.executeCommand(client, "stakeclick", parts.drop(1).toTypedArray())
                     return
                 }
-                // Storefront tab strip (lofshoptabs): "::shoptab <index>" → switch shop tab, suppress chat.
+                // Custom shop window (lofshop): switch tab / buy an item / close, suppress chat.
                 "shoptab" -> {
                     client.world.plugins.executeCommand(client, "shoptabclick", parts.drop(1).toTypedArray())
+                    return
+                }
+                "shopbuy" -> {
+                    client.world.plugins.executeCommand(client, "shopbuyclick", parts.drop(1).toTypedArray())
+                    return
+                }
+                "shopclose" -> {
+                    client.world.plugins.executeCommand(client, "shopcloseclick", parts.drop(1).toTypedArray())
                     return
                 }
             }

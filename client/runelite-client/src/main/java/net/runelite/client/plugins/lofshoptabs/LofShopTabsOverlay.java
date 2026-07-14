@@ -1,33 +1,30 @@
 /*
- * Fall of Varrock — storefront tab strip (renderer + hit-testing).
+ * Fall of Varrock — custom shop window (renderer + hit-testing).
  *
- * A bare row of item-sprite buttons floating just ABOVE the open shop window (group 300) when
- * the current vendor owns several stores — real RuneScape item icons (a longsword for weapons,
- * a platebody for armour, ...), no backing panel, no shadow. The store name only appears as a
- * gold tooltip when hovering a button. Anchored to the live bounds of the shop's stock grid
- * (300.16 — the one child the server always drives), so it tracks the window in fixed and
- * resizable modes alike.
+ * Draws the whole shop client-side in the brand theme (LofTheme): a header with the shop name +
+ * the player's balance, an item-icon tab rail down the left for multi-store vendors, an 8-column
+ * item grid with prices, and a 1/5/10/50 buy-quantity selector. Viewport-anchored so it clears the
+ * inventory column (selling stays native: right-click an inventory item). Item sprites come from
+ * ItemManager; everything is null-guarded so it renders empty rather than throwing.
  *
- * Only the buttons themselves are hit-tested — every other click passes through untouched,
- * keeping the native shop window (buy/sell/close) fully clickable. Null-guarded throughout:
- * renders nothing rather than throwing.
+ * Hit-test codes tell the mouse listener what was clicked: close, a tab, a qty button, or an item.
  */
 package net.runelite.client.plugins.lofshoptabs;
 
 import java.awt.BasicStroke;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
+import java.awt.Shape;
 import java.awt.Stroke;
 import java.awt.image.BufferedImage;
-import java.util.ArrayList;
 import java.util.List;
 import javax.inject.Inject;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
-import net.runelite.api.widgets.Widget;
 import net.runelite.client.game.ItemManager;
 import net.runelite.client.plugins.loftheme.LofTheme;
 import net.runelite.client.ui.FontManager;
@@ -37,16 +34,30 @@ import net.runelite.client.ui.overlay.OverlayPosition;
 
 class LofShopTabsOverlay extends Overlay
 {
+	// hit-test result codes
 	static final int OUTSIDE = -1;
+	static final int INSIDE = 0;
+	static final int CLOSE = 1;
+	static final int TAB_BASE = 100;   // + tab index
+	static final int QTY_BASE = 500;   // + qty-button index (0..3)
+	static final int ITEM_BASE = 1000; // + grid index
 
-	// Item sprites are 36x32; the button hugs the sprite.
-	private static final int BTN_W = 36;
-	private static final int BTN_H = 32;
-	private static final int GAP = 5;
+	private static final int[] QTY_OPTS = {1, 5, 10, 50};
 
-	// The shop window's top edge sits roughly this far above the stock grid (title bar).
-	private static final int TITLE_OFFSET = 32;
-	private static final int GAP_ABOVE_WINDOW = 4;
+	// Window geometry.
+	private static final int WIN_W = 470;
+	private static final int WIN_ARC = 14;
+	private static final int TITLE_H = 34;
+	private static final int RAIL_X = 8;
+	private static final int RAIL_W = 44;
+	private static final int RAIL_BTN_H = 34;
+	private static final int RAIL_GAP = 4;
+	private static final int GRID_X = RAIL_X + RAIL_W + 8;   // 60
+	private static final int COLS = 8;
+	private static final int CELL_GAP = 4;
+	private static final int CELL_W = (WIN_W - GRID_X - 10 - (COLS - 1) * CELL_GAP) / COLS; // ~46
+	private static final int CELL_H = 50;
+	private static final int GRID_TOP = TITLE_H + 24;        // below the sub/qty row
 
 	private final Client client;
 	private final LofShopTabsPlugin plugin;
@@ -66,56 +77,103 @@ class LofShopTabsOverlay extends Overlay
 	{
 		return plugin.isEnabled()
 			&& client.getGameState() == GameState.LOGGED_IN
-			&& plugin.getTabs().size() > 1
-			&& plugin.isShopOpen();
+			&& plugin.isShopOpen()
+			&& !plugin.getItems().isEmpty();
 	}
 
-	/** The shop stock grid's live canvas bounds — the anchor for the button row. */
-	private Rectangle anchor()
+	private int rowCount()
 	{
-		final Widget stock = client.getWidget(LofShopTabsPlugin.SHOP_GROUP, LofShopTabsPlugin.STOCK_CHILD);
-		if (stock == null || stock.isHidden())
-		{
-			return null;
-		}
-		final Rectangle b = stock.getBounds();
-		return b == null || b.width <= 0 ? null : b;
+		final int n = plugin.getItems().size();
+		return Math.max(5, (n + COLS - 1) / COLS);
 	}
 
-	/** Button rectangles (canvas space), left-aligned in a single row above the window. */
-	private List<Rectangle> layout(Rectangle anchor, int count)
+	private int winH()
 	{
-		final int windowTop = anchor.y - TITLE_OFFSET;
-		final int y = Math.max(2, windowTop - GAP_ABOVE_WINDOW - BTN_H);
-		final List<Rectangle> rects = new ArrayList<>(count);
-		for (int i = 0; i < count; i++)
-		{
-			rects.add(new Rectangle(anchor.x + i * (BTN_W + GAP), y, BTN_W, BTN_H));
-		}
-		return rects;
+		return GRID_TOP + rowCount() * (CELL_H + CELL_GAP) + 10;
 	}
 
-	/** Index of the button under [p], or {@link #OUTSIDE}. Only button rects consume clicks. */
+	private int originX()
+	{
+		final int canvasW = client.getCanvasWidth();
+		final int viewportW = client.isResized() ? canvasW : Math.min(canvasW, 512);
+		return Math.max(0, Math.min((canvasW - WIN_W) / 2, (viewportW - WIN_W) / 2));
+	}
+
+	private int originY()
+	{
+		return Math.max(0, (client.getCanvasHeight() - winH()) / 2);
+	}
+
+	private Rectangle closeRect(int ox, int oy)
+	{
+		return new Rectangle(ox + WIN_W - 28, oy + 8, 18, 18);
+	}
+
+	private Rectangle tabRect(int ox, int oy, int t)
+	{
+		return new Rectangle(ox + RAIL_X, oy + TITLE_H + 8 + t * (RAIL_BTN_H + RAIL_GAP), RAIL_W, RAIL_BTN_H);
+	}
+
+	private Rectangle qtyRect(int ox, int oy, int i)
+	{
+		final int w = 22;
+		final int gap = 4;
+		final int right = ox + WIN_W - 10;
+		final int x = right - (QTY_OPTS.length - i) * (w + gap) + gap;
+		return new Rectangle(x, oy + TITLE_H + 3, w, 16);
+	}
+
+	private Rectangle cellRect(int ox, int oy, int i)
+	{
+		final int col = i % COLS;
+		final int row = i / COLS;
+		return new Rectangle(ox + GRID_X + col * (CELL_W + CELL_GAP), oy + GRID_TOP + row * (CELL_H + CELL_GAP), CELL_W, CELL_H);
+	}
+
 	int hitTest(Point p)
 	{
 		if (!isShowing())
 		{
 			return OUTSIDE;
 		}
-		final Rectangle anchor = anchor();
-		if (anchor == null)
+		final int ox = originX(), oy = originY();
+		if (!new Rectangle(ox, oy, WIN_W, winH()).contains(p))
 		{
 			return OUTSIDE;
 		}
-		final List<Rectangle> rects = layout(anchor, plugin.getTabs().size());
-		for (int i = 0; i < rects.size(); i++)
+		if (closeRect(ox, oy).contains(p))
 		{
-			if (rects.get(i).contains(p))
+			return CLOSE;
+		}
+		for (int i = 0; i < QTY_OPTS.length; i++)
+		{
+			if (qtyRect(ox, oy, i).contains(p))
 			{
-				return i;
+				return QTY_BASE + i;
 			}
 		}
-		return OUTSIDE;
+		final List<LofShopTabsPlugin.Tab> tabs = plugin.getTabs();
+		for (int t = 0; t < tabs.size(); t++)
+		{
+			if (tabRect(ox, oy, t).contains(p))
+			{
+				return TAB_BASE + t;
+			}
+		}
+		final int n = plugin.getItems().size();
+		for (int i = 0; i < n; i++)
+		{
+			if (cellRect(ox, oy, i).contains(p))
+			{
+				return ITEM_BASE + i;
+			}
+		}
+		return INSIDE;
+	}
+
+	int qtyValue(int i)
+	{
+		return QTY_OPTS[i];
 	}
 
 	@Override
@@ -125,81 +183,155 @@ class LofShopTabsOverlay extends Overlay
 		{
 			return null;
 		}
-		final Rectangle anchor = anchor();
-		if (anchor == null)
-		{
-			return null;
-		}
 
 		final Object oldAA = g.getRenderingHint(RenderingHints.KEY_ANTIALIASING);
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-		// Absolute canvas coordinates — undo any renderer translate (same trick as lofstake).
+		// Absolute canvas coordinates — undo any renderer translate (same as lofstake/lofteleports).
 		final Rectangle selfBounds = getBounds();
 		g.translate(-selfBounds.x, -selfBounds.y);
 
-		final List<LofShopTabsPlugin.Tab> tabs = plugin.getTabs();
-		final List<Rectangle> rects = layout(anchor, tabs.size());
+		final int ox = originX(), oy = originY();
+		final int h = winH();
 		final Point mouse = mousePoint();
-		final int selected = plugin.getSelected();
-		int hovered = -1;
 
-		final Stroke oldStroke = g.getStroke();
-		for (int i = 0; i < rects.size(); i++)
+		LofTheme.panel(g, ox, oy, WIN_W, h, WIN_ARC);
+
+		// header
+		final Shape clip = g.getClip();
+		g.setClip(ox, oy, WIN_W, TITLE_H);
+		g.setColor(LofTheme.HEADER);
+		g.fillRoundRect(ox, oy, WIN_W, TITLE_H + WIN_ARC, WIN_ARC, WIN_ARC);
+		g.setClip(clip);
+		LofTheme.emberUnderline(g, ox + 1, oy + TITLE_H - 2, WIN_W - 2);
+
+		final BufferedImage logo = LofTheme.logo();
+		int titleX = ox + 12;
+		if (logo != null)
 		{
-			final Rectangle rc = rects.get(i);
-			final boolean sel = i == selected;
-			final boolean hov = rc.contains(mouse);
-			if (hov)
-			{
-				hovered = i;
-			}
+			g.drawImage(logo, ox + 10, oy + 5, 24, 24, null);
+			titleX = ox + 40;
+		}
+		g.setFont(FontManager.getRunescapeBoldFont());
+		LofTheme.shadowText(g, plugin.getShopName(), titleX, oy + 22, LofTheme.GOLD);
 
-			// Bare button: translucent dark fill, accent border. No panel, no shadow.
-			g.setColor(sel ? LofTheme.alpha(LofTheme.EMBER, 52) : LofTheme.alpha(LofTheme.PANEL_OPAQUE, hov ? 190 : 140));
-			g.fillRoundRect(rc.x, rc.y, rc.width, rc.height, 6, 6);
-			g.setStroke(new BasicStroke(sel ? 1.6f : 1.0f));
-			g.setColor(sel ? LofTheme.alpha(LofTheme.GOLD, 235)
-				: LofTheme.alpha(hov ? LofTheme.EMBER : LofTheme.EMBER_DARK, hov ? 200 : 130));
-			g.drawRoundRect(rc.x, rc.y, rc.width - 1, rc.height - 1, 6, 6);
+		// balance (right of header)
+		g.setFont(FontManager.getRunescapeSmallFont());
+		final String bal = fmt(plugin.getBalance()) + " " + plugin.getCurrencyLabel();
+		final int balW = g.getFontMetrics().stringWidth(bal);
+		LofTheme.shadowText(g, bal, ox + WIN_W - 34 - balW, oy + 21, LofTheme.TEXT_DIM);
+
+		// close button
+		final Rectangle cr = closeRect(ox, oy);
+		final boolean closeHov = cr.contains(mouse);
+		g.setColor(closeHov ? LofTheme.EMBER : new Color(255, 255, 255, 18));
+		g.fillRoundRect(cr.x, cr.y, cr.width, cr.height, 5, 5);
+		g.setColor(closeHov ? LofTheme.TEXT : LofTheme.TEXT_DIM);
+		final Stroke oldStroke = g.getStroke();
+		g.setStroke(new BasicStroke(1.5f));
+		g.drawLine(cr.x + 5, cr.y + 5, cr.x + cr.width - 6, cr.y + cr.height - 6);
+		g.drawLine(cr.x + cr.width - 6, cr.y + 5, cr.x + 5, cr.y + cr.height - 6);
+		g.setStroke(oldStroke);
+
+		// qty selector
+		g.setFont(FontManager.getRunescapeSmallFont());
+		final int amount = plugin.getBuyAmount();
+		final String buyLbl = "Buy";
+		LofTheme.shadowText(g, buyLbl, qtyRect(ox, oy, 0).x - 4 - g.getFontMetrics().stringWidth(buyLbl), oy + TITLE_H + 15, LofTheme.TEXT_DIM);
+		for (int i = 0; i < QTY_OPTS.length; i++)
+		{
+			final Rectangle qr = qtyRect(ox, oy, i);
+			final boolean sel = QTY_OPTS[i] == amount;
+			final boolean hov = qr.contains(mouse);
+			g.setColor(sel ? LofTheme.alpha(LofTheme.EMBER, 60) : hov ? LofTheme.ROW_HOVER : LofTheme.ROW);
+			g.fillRoundRect(qr.x, qr.y, qr.width, qr.height, 5, 5);
+			g.setColor(LofTheme.alpha(sel ? LofTheme.GOLD : LofTheme.EMBER_DARK, sel ? 220 : 120));
+			g.drawRoundRect(qr.x, qr.y, qr.width - 1, qr.height - 1, 5, 5);
+			final String s = String.valueOf(QTY_OPTS[i]);
+			final int tw = g.getFontMetrics().stringWidth(s);
+			LofTheme.shadowText(g, s, qr.x + (qr.width - tw) / 2, qr.y + 12, sel ? LofTheme.GOLD : LofTheme.TEXT_DIM);
+		}
+
+		// tab rail
+		final List<LofShopTabsPlugin.Tab> tabs = plugin.getTabs();
+		final int selectedTab = plugin.getSelectedTab();
+		for (int t = 0; t < tabs.size(); t++)
+		{
+			final Rectangle tr = tabRect(ox, oy, t);
+			final boolean sel = t == selectedTab;
+			final boolean hov = tr.contains(mouse);
+			g.setColor(sel ? LofTheme.alpha(LofTheme.EMBER, 52) : hov ? LofTheme.ROW_HOVER : LofTheme.ROW);
+			g.fillRoundRect(tr.x, tr.y, tr.width, tr.height, 7, 7);
+			g.setColor(LofTheme.alpha(sel ? LofTheme.GOLD : LofTheme.EMBER_DARK, sel ? 220 : hov ? 160 : 90));
+			g.setStroke(new BasicStroke(sel ? 1.5f : 1.0f));
+			g.drawRoundRect(tr.x, tr.y, tr.width - 1, tr.height - 1, 7, 7);
+			g.setStroke(oldStroke);
 			if (sel)
 			{
-				LofTheme.emberUnderline(g, rc.x + 2, rc.y + rc.height - 2, rc.width - 4);
+				g.setColor(LofTheme.EMBER);
+				g.fillRoundRect(tr.x + 2, tr.y + 6, 3, tr.height - 12, 2, 2);
 			}
-
-			final LofShopTabsPlugin.Tab tab = tabs.get(i);
-			final BufferedImage img = tab.itemId > 0 ? itemManager.getImage(tab.itemId) : null;
-			if (img != null)
+			final LofShopTabsPlugin.Tab tab = tabs.get(t);
+			final BufferedImage icon = tab.itemId > 0 ? itemManager.getImage(tab.itemId) : null;
+			if (icon != null)
 			{
-				// Item sprites are 36x32 with their own padding — draw 1:1, centred.
-				g.drawImage(img, rc.x + (rc.width - img.getWidth()) / 2, rc.y + (rc.height - img.getHeight()) / 2, null);
+				g.drawImage(icon, tr.x + (tr.width - 32) / 2, tr.y + (tr.height - 28) / 2 - 2, 32, 28, null);
 			}
 			else
 			{
-				// No icon resolved — fall back to the first letters of the label.
-				g.setFont(FontManager.getRunescapeSmallFont());
-				final String s = tab.label.length() > 4 ? tab.label.substring(0, 4) : tab.label;
-				final int tw = g.getFontMetrics().stringWidth(s);
-				LofTheme.shadowText(g, s, rc.x + (rc.width - tw) / 2, rc.y + rc.height / 2 + 4,
-					sel ? LofTheme.GOLD : LofTheme.TEXT_DIM);
+				final String s = tab.label.isEmpty() ? "?" : tab.label.substring(0, 1);
+				LofTheme.shadowText(g, s, tr.x + tr.width / 2 - 3, tr.y + tr.height / 2 + 4, sel ? LofTheme.GOLD : LofTheme.TEXT_DIM);
 			}
 		}
-		g.setStroke(oldStroke);
 
-		// Hover tooltip: the store name in gold, just below the hovered button.
-		if (hovered >= 0)
+		// item grid
+		final List<LofShopTabsPlugin.Item> items = plugin.getItems();
+		for (int i = 0; i < items.size(); i++)
 		{
-			final Rectangle rc = rects.get(hovered);
+			final Rectangle rc = cellRect(ox, oy, i);
+			final boolean hov = rc.contains(mouse);
+			g.setColor(hov ? LofTheme.ROW_HOVER : LofTheme.ROW);
+			g.fillRoundRect(rc.x, rc.y, rc.width, rc.height, 7, 7);
+			g.setColor(LofTheme.alpha(hov ? LofTheme.EMBER : LofTheme.EMBER_DARK, hov ? 170 : 45));
+			g.drawRoundRect(rc.x, rc.y, rc.width - 1, rc.height - 1, 7, 7);
+
+			final LofShopTabsPlugin.Item it = items.get(i);
+			final BufferedImage img = it.itemId > 0 ? itemManager.getImage(it.itemId, Math.max(1, it.qty), it.qty > 1) : null;
+			if (img != null)
+			{
+				g.drawImage(img, rc.x + (rc.width - 36) / 2, rc.y + 2, 36, 32, null);
+			}
+			// price under the sprite
 			g.setFont(FontManager.getRunescapeSmallFont());
-			final String label = tabs.get(hovered).label;
-			final int tw = g.getFontMetrics().stringWidth(label);
-			final int tx = Math.max(2, Math.min(rc.x, client.getCanvasWidth() - tw - 4));
-			LofTheme.shadowText(g, label, tx, rc.y + rc.height + 13, LofTheme.GOLD);
+			final String price = fmt(it.price);
+			final int pw = g.getFontMetrics().stringWidth(price);
+			LofTheme.shadowText(g, price, rc.x + (rc.width - pw) / 2, rc.y + CELL_H - 4, LofTheme.GOLD);
 		}
 
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, oldAA == null ? RenderingHints.VALUE_ANTIALIAS_DEFAULT : oldAA);
-		final Rectangle last = rects.get(rects.size() - 1);
-		return new Dimension(last.x + last.width - rects.get(0).x, BTN_H);
+		return new Dimension(WIN_W, h);
+	}
+
+	/** Compact price: 1.2k / 3.4m / 1.1b, else the raw number with separators. */
+	private static String fmt(int v)
+	{
+		if (v >= 10_000_000)
+		{
+			return (v / 1_000_000) + "m";
+		}
+		if (v >= 1_000_000)
+		{
+			return String.format("%.1fm", v / 1_000_000.0);
+		}
+		if (v >= 100_000)
+		{
+			return (v / 1000) + "k";
+		}
+		if (v >= 1000)
+		{
+			return String.format("%.1fk", v / 1000.0);
+		}
+		return String.valueOf(v);
 	}
 
 	private Point mousePoint()

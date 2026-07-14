@@ -1,8 +1,10 @@
 /*
- * Fall of Varrock — storefront tab strip (mouse input).
+ * Fall of Varrock — custom shop window (mouse input).
  *
- * Only clicks that land ON a tab are consumed (and turned into "::shoptab <index>"); everything
- * else falls through so the native shop window — buy, sell, close, inventory — stays untouched.
+ * Consumes only clicks that land on the window (tab, qty button, item, close, or the frame);
+ * everything else falls through so the native inventory stays clickable for selling. Item clicks
+ * buy the selected quantity; the rest drive the window. All actions go back as public-chat tokens
+ * the server intercepts (see LofShopTabsPlugin / MessagePublicHandler).
  */
 package net.runelite.client.plugins.lofshoptabs;
 
@@ -33,9 +35,26 @@ class LofShopTabsMouseListener extends MouseAdapter
 		final int hit = overlay.hitTest(event.getPoint());
 		if (hit == LofShopTabsOverlay.OUTSIDE)
 		{
-			return event;
+			return event; // let clicks outside the window (e.g. the inventory) reach the game
 		}
-		plugin.selectTab(hit);
+
+		if (hit == LofShopTabsOverlay.CLOSE)
+		{
+			plugin.closeShop();
+		}
+		else if (hit >= LofShopTabsOverlay.ITEM_BASE)
+		{
+			plugin.buy(hit - LofShopTabsOverlay.ITEM_BASE);
+		}
+		else if (hit >= LofShopTabsOverlay.QTY_BASE)
+		{
+			plugin.setBuyAmount(overlay.qtyValue(hit - LofShopTabsOverlay.QTY_BASE));
+		}
+		else if (hit >= LofShopTabsOverlay.TAB_BASE)
+		{
+			plugin.selectTab(hit - LofShopTabsOverlay.TAB_BASE);
+		}
+
 		event.consume();
 		return event;
 	}
@@ -43,16 +62,16 @@ class LofShopTabsMouseListener extends MouseAdapter
 	@Override
 	public MouseEvent mouseClicked(MouseEvent event)
 	{
-		return swallowIfOnTab(event);
+		return swallowIfOnWindow(event);
 	}
 
 	@Override
 	public MouseEvent mouseReleased(MouseEvent event)
 	{
-		return swallowIfOnTab(event);
+		return swallowIfOnWindow(event);
 	}
 
-	private MouseEvent swallowIfOnTab(MouseEvent event)
+	private MouseEvent swallowIfOnWindow(MouseEvent event)
 	{
 		if (overlay.isShowing() && overlay.hitTest(event.getPoint()) != LofShopTabsOverlay.OUTSIDE)
 		{

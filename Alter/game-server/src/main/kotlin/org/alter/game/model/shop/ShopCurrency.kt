@@ -62,4 +62,15 @@ interface ShopCurrency {
         slot: Int,
         amt: Int,
     )
+
+    /**
+     * Short plural label for this currency ("coins", "Boss Tickets", "Blood Money", "LMS points").
+     * Used by the custom client shop window (lofshop) to caption prices + the balance.
+     */
+    fun label(): String = "coins"
+
+    /**
+     * The player's current spendable balance in this currency, for the shop window header.
+     */
+    fun balance(p: Player): Int = 0
 }

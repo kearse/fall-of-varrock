@@ -1,19 +1,24 @@
 package org.alter.plugins.content.mechanics.shops
 
+import org.alter.api.ext.closeInterface
 import org.alter.api.ext.getCommandArgs
 import org.alter.api.ext.player
 import org.alter.game.Server
 import org.alter.game.model.World
+import org.alter.game.model.attr.CURRENT_SHOP_ATTR
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
 
 /**
- * Handles a storefront tab click from the client overlay (lofshoptabs). The client sends
- * `::shoptab <index>` as public chat; `MessagePublicHandler` routes it here as the
- * `shoptabclick` command. [ShopTabs.switch] validates the index against the tab set the
- * vendor actually offered (a non-persistent attr), so this can't open arbitrary shops.
+ * Handles the custom shop window's client channel (lofshop). The client sends public-chat tokens
+ * that `MessagePublicHandler` routes here:
+ *   - `::shoptab <index>`         → switch storefront tab ([ShopTabs.switch])
+ *   - `::shopbuy <slot> <amount>` → buy from the open shop (reuses the native buy path)
+ *   - `::shopclose`               → close the shop window
  *
- * Also testable directly by typing `::shoptabclick <index>` in chat (the command path).
+ * Buy is validated exactly like the native interface: it goes through the open shop's currency,
+ * which checks affordability, stock and inventory space. A stale/forged slot is a harmless no-op.
+ * Each is also testable directly by typing the `...click` command in chat.
  */
 class ShopTabClickPlugin(
     r: PluginRepository,
@@ -25,6 +30,20 @@ class ShopTabClickPlugin(
         onCommand("shoptabclick", description = "Switch storefront tab (client overlay channel)") {
             val index = player.getCommandArgs().getOrNull(0)?.toIntOrNull() ?: return@onCommand
             ShopTabs.switch(player, index)
+        }
+
+        onCommand("shopbuyclick", description = "Buy from the open shop (client overlay channel)") {
+            val a = player.getCommandArgs()
+            val slot = a.getOrNull(0)?.toIntOrNull() ?: return@onCommand
+            val amount = a.getOrNull(1)?.toIntOrNull() ?: 1
+            val shop = player.attr[CURRENT_SHOP_ATTR] ?: return@onCommand
+            if (slot !in shop.items.indices) return@onCommand
+            if (shop.items[slot] == null) return@onCommand
+            shop.currency.sellToPlayer(player, shop, slot, amount)
+        }
+
+        onCommand("shopcloseclick", description = "Close the shop window (client overlay channel)") {
+            player.closeInterface(interfaceId = 300)
         }
     }
 }
