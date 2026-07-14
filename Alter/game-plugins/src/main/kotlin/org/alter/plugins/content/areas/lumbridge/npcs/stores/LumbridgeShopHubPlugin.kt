@@ -381,24 +381,24 @@ class LumbridgeShopHubPlugin(
 
         // ---- East row (x=3224), facing WEST toward the aisle: skilling + economy ----
         tabVendor("npc.wydin", 3224, 3225, Direction.WEST,                           // tools + materials
-            ShopTabs.Tab("Tools", SKILL_TOOLS),
-            ShopTabs.Tab("Materials", SKILL_MATERIALS))
+            ShopTabs.Tab("Tools", SKILL_TOOLS, icon = "item.rune_pickaxe"),
+            ShopTabs.Tab("Materials", SKILL_MATERIALS, icon = "item.iron_ore"))
         tabVendor("npc.gerrant", 3224, 3224, Direction.WEST,                         // fishing + fish
-            ShopTabs.Tab("Supplies", FISHING_SUPPLIES),
-            ShopTabs.Tab("Fish", FISH))
+            ShopTabs.Tab("Supplies", FISHING_SUPPLIES, icon = "item.fishing_rod"),
+            ShopTabs.Tab("Fish", FISH, icon = "item.swordfish"))
         tabVendor("npc.jatix", 3224, 3223, Direction.WEST,                           // seeds + herblore
-            ShopTabs.Tab("Allotment seeds", ALLOTMENT_SEEDS),
-            ShopTabs.Tab("Herb seeds", HERB_SEEDS),
-            ShopTabs.Tab("Tree seeds", TREE_SEEDS),
-            ShopTabs.Tab("Special seeds", SPECIAL_SEEDS),
-            ShopTabs.Tab("Herbs", HERBS),
-            ShopTabs.Tab("Secondaries", SECONDARIES),
-            ShopTabs.Tab("Unf. potions", UNFINISHED_POTIONS),
-            ShopTabs.Tab("Farm tools", FARM_TOOLS))
+            ShopTabs.Tab("Allotment seeds", ALLOTMENT_SEEDS, icon = "item.potato_seed"),
+            ShopTabs.Tab("Herb seeds", HERB_SEEDS, icon = "item.ranarr_seed"),
+            ShopTabs.Tab("Tree seeds", TREE_SEEDS, icon = "item.acorn"),
+            ShopTabs.Tab("Special seeds", SPECIAL_SEEDS, icon = "item.mushroom_spore"),
+            ShopTabs.Tab("Herbs", HERBS, icon = "item.ranarr_weed"),
+            ShopTabs.Tab("Secondaries", SECONDARIES, icon = "item.eye_of_newt"),
+            ShopTabs.Tab("Unf. potions", UNFINISHED_POTIONS, icon = "item.ranarr_potion_unf"),
+            ShopTabs.Tab("Farm tools", FARM_TOOLS, icon = "item.rake"))
         singleVendor("npc.sawmill_operator", 3224, 3222, Direction.WEST, CONSTRUCTION) // planks/nails
         tabVendor("npc.valaine", 3224, 3221, Direction.WEST,                         // boss/vote tickets
-            ShopTabs.Tab("Boss rewards", BOSS_REWARDS),
-            ShopTabs.Tab("Vote rewards", VOTE_REWARDS))
+            ShopTabs.Tab("Boss rewards", BOSS_REWARDS, icon = "item.boss_ticket"),
+            ShopTabs.Tab("Vote rewards", VOTE_REWARDS, icon = "item.vote_ticket"))
 
         // End-game / war cluster sits just south of the west column (Quartermaster @ 3219,3216,
         // Slayer Master @ 3219,3215) and the Dice host @ 3224,3215 — spawned by their own plugins.

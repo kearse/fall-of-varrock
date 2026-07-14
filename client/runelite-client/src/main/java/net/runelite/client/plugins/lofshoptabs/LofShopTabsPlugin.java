@@ -14,8 +14,11 @@
  * history on every rebuild) and NEVER remove lines from the chat buffers (that wiped the chat).
  *
  * Wire format (each fits one line — labels are short):
- *   FOV_SHOP:clear                              (every openShop — resets the strip)
- *   FOV_SHOP:tabs|<selectedIndex>|<label0>|...  (a tabbed storefront just opened)
+ *   FOV_SHOP:clear                                        (every openShop — resets the strip)
+ *   FOV_SHOP:tabs|<sel>|<label0>~<iconItemId0>|...        (a tabbed storefront just opened)
+ *
+ * Tabs render as REAL item sprites (the icon item id) in a row of small buttons floating above
+ * the shop window — no panel, no shadow; the label only shows as a hover tooltip.
  */
 package net.runelite.client.plugins.lofshoptabs;
 
@@ -75,9 +78,22 @@ public class LofShopTabsPlugin extends Plugin
 
 	private LofShopTabsMouseListener mouseListener;
 
-	/** Current tab labels ([]) = no tabbed storefront) + selected index. Client thread only. */
-	private final List<String> tabs = new ArrayList<>();
+	/** Current tabs (empty = no tabbed storefront) + selected index. Client thread only. */
+	private final List<Tab> tabs = new ArrayList<>();
 	private int selected;
+
+	/** One storefront tab: hover label + the item whose sprite is the button. */
+	static final class Tab
+	{
+		final String label;
+		final int itemId;
+
+		Tab(String label, int itemId)
+		{
+			this.label = label;
+			this.itemId = itemId;
+		}
+	}
 
 	@Provides
 	LofShopTabsConfig provideConfig(ConfigManager configManager)
@@ -126,7 +142,7 @@ public class LofShopTabsPlugin extends Plugin
 		}
 		else if (body.startsWith("tabs|"))
 		{
-			// tabs|<selected>|<label0>|<label1>|...
+			// tabs|<selected>|<label0>~<iconItemId0>|<label1>~<iconItemId1>|...
 			final String[] f = body.split("\\|");
 			tabs.clear();
 			if (f.length >= 3)
@@ -141,10 +157,25 @@ public class LofShopTabsPlugin extends Plugin
 				}
 				for (int i = 2; i < f.length; i++)
 				{
-					if (!f[i].isEmpty())
+					if (f[i].isEmpty())
 					{
-						tabs.add(f[i]);
+						continue;
 					}
+					final int tilde = f[i].lastIndexOf('~');
+					String label = f[i];
+					int itemId = -1;
+					if (tilde >= 0)
+					{
+						label = f[i].substring(0, tilde);
+						try
+						{
+							itemId = Integer.parseInt(f[i].substring(tilde + 1));
+						}
+						catch (NumberFormatException ignored)
+						{
+						}
+					}
+					tabs.add(new Tab(label, itemId));
 				}
 				selected = Math.max(0, Math.min(sel, tabs.size() - 1));
 			}
@@ -213,7 +244,7 @@ public class LofShopTabsPlugin extends Plugin
 		return config.enabled();
 	}
 
-	List<String> getTabs()
+	List<Tab> getTabs()
 	{
 		return tabs;
 	}

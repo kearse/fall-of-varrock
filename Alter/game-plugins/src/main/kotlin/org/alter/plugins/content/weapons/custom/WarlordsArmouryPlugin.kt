@@ -252,13 +252,13 @@ class WarlordsArmouryPlugin(
     }
 
     private val ARMOURY_TABS = listOf(
-        ShopTabs.Tab("Weapons", WEAPONS),
-        ShopTabs.Tab("Armour", ARMOUR),
-        ShopTabs.Tab("Accessories", ACCESSORIES),
-        ShopTabs.Tab("Barrows", BARROWS),
-        ShopTabs.Tab("Crystal", CRYSTAL),
-        ShopTabs.Tab("Charged", CHARGED),
-        ShopTabs.Tab("Relics", RELICS),
+        ShopTabs.Tab("Weapons", WEAPONS, icon = "item.ghrazi_rapier"),
+        ShopTabs.Tab("Armour", ARMOUR, icon = "item.bandos_chestplate"),
+        ShopTabs.Tab("Accessories", ACCESSORIES, icon = "item.berserker_ring"),
+        ShopTabs.Tab("Barrows", BARROWS, icon = "item.dharoks_greataxe"),
+        ShopTabs.Tab("Crystal", CRYSTAL, icon = "item.crystal_body"),
+        ShopTabs.Tab("Charged", CHARGED, icon = "item.toxic_blowpipe"),
+        ShopTabs.Tab("Relics", RELICS, icon = "item._3rd_age_platebody"),
     )
 
     // ----------------------------- §3B war-supply sink -----------------------------
