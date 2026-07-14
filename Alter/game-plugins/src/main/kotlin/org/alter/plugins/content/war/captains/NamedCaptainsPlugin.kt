@@ -153,7 +153,11 @@ class NamedCaptainsPlugin(
         const val BOUNTY_COINS = 100_000
         const val BOUNTY_COMMENDATIONS = 2
         const val BOUNTY_WAR_EFFORT = 25
-        const val SIGNATURE_RATE = 8 // 1-in-N signature-weapon roll per kill. TUNE.
+        // 1-in-N signature-weapon roll per kill. At the ~60-min respawn this caps each
+        // signature at ~1.6/day realm-wide (was 1/8 ≈ 3/day — flooding); expected ~15
+        // contested hourly kills per drop keeps the PK-shop price (claws 12k BM) the
+        // deliberately slower pity path (shop-economy-redesign R3/§5.5). TUNE.
+        const val SIGNATURE_RATE = 15
         const val CAPTAIN_ATTACK = 150
         const val CAPTAIN_STRENGTH = 140
         const val CAPTAIN_DEFENCE = 120

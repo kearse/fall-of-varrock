@@ -30,7 +30,7 @@ Spend it at the **PK Rewards vendor** (`::pkshop`, or the Emblem Trader in the L
 | Dragon claws | 12,000 | Elder maul | 20,000 |
 | Ancient godsword | 20,000 | Voidwaker | 30,000 |
 
-Claws and the warhammer also drop from the [wanted captains](/wiki/marches-and-the-reconquest) at 1/8 — hunting them is the cheaper path; the shop is your bad-luck protection.
+Claws and the warhammer also drop from the [wanted captains](/wiki/marches-and-the-reconquest) at 1/15 — hunting them is the cheaper path; the shop is your bad-luck protection.
 
 **Wilderness sets** — Vesta's (including the **Vesta's longsword**), Statius's, Morrigan's and Zuriel's, 8,000–25,000 BM per piece. These are the wilderness prestige sets your rank gates — and Blood Money is their only source.
 

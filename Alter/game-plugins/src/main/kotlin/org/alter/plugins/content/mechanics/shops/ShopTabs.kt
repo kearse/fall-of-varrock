@@ -5,6 +5,7 @@ import org.alter.api.ext.message
 import org.alter.api.ext.openShop
 import org.alter.game.model.attr.AttributeKey
 import org.alter.game.model.entity.Player
+import org.alter.rscm.RSCM.getRSCM
 
 /**
  * Roat-style tabbed storefronts: an NPC that owns several shops opens ONE shop window with a
@@ -16,8 +17,11 @@ import org.alter.game.model.entity.Player
  * lines with a machine prefix the client parses on arrival and hides from the chat box.
  * A vendor's tab set fits ONE line (labels are short), so no open/row/end batching is needed:
  *
- *   `FOV_SHOP:tabs|<selectedIndex>|<label0>|<label1>|...`   (sent when a tabbed store opens)
+ *   `FOV_SHOP:tabs|<sel>|<label0>~<iconItemId0>|<label1>~<iconItemId1>|...`   (tabbed store opened)
  *   `FOV_SHOP:clear`                                        (sent by every [openShop] — see PlayerExt)
+ *
+ * Each tab carries a REAL item id (`icon` rscm key, resolved defensively to -1 if missing); the
+ * client draws the item sprite as the tab button and shows the label only as a hover tooltip.
  *
  * Clicking a tab client-side sends `::shoptab <index>` as public chat, which
  * `MessagePublicHandler` routes to the `shoptabclick` command → [switch] → re-open on the
@@ -25,10 +29,12 @@ import org.alter.game.model.entity.Player
  * a tab click can never open a store the vendor didn't just offer.
  */
 object ShopTabs {
-    /** One tab: a short strip label + what opening it does (usually `openShop(name)`, but a
-     *  tab can resolve dynamically — e.g. Horvik's rank-gated armoury tier). */
-    class Tab(val label: String, val open: (Player) -> Unit) {
-        constructor(label: String, shop: String) : this(label, { p -> p.openShop(shop) })
+    /** One tab: hover label + icon item (rscm key, drawn as the tab button) + what opening it
+     *  does (usually `openShop(name)`, but a tab can resolve dynamically — e.g. Horvik's
+     *  rank-gated armoury tier). */
+    class Tab(val label: String, val icon: String? = null, val open: (Player) -> Unit) {
+        constructor(label: String, shop: String, icon: String? = null) :
+            this(label, icon, { p -> p.openShop(shop) })
     }
 
     /** The tab set (+ optional vendor guard) backing the storefront currently on screen. */
@@ -54,7 +60,10 @@ object ShopTabs {
         if (tabs.size > 1) {
             val line = buildString {
                 append(PREFIX).append("tabs|").append(i)
-                tabs.forEach { append('|').append(it.label) }
+                tabs.forEach {
+                    val iconId = it.icon?.let { key -> runCatching { getRSCM(key) }.getOrNull() } ?: -1
+                    append('|').append(it.label).append('~').append(iconId)
+                }
             }
             player.message(line, ChatMessageType.GAME_MESSAGE)
         }

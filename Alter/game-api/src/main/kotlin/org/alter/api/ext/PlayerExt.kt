@@ -48,16 +48,7 @@ val INTERFACE_INV_INIT_BIG = ClientScript("interface_inv_init_big")
 fun Player.openShop(shop: String) {
     val s = world.getShop(shop)
     if (s != null) {
-        attr[CURRENT_SHOP_ATTR] = s
-        shopDirty = true
-        // Reset the custom client's storefront tab strip (lofshoptabs). A tabbed vendor sends its
-        // "FOV_SHOP:tabs|..." line right after this, so tabs never leak between different stores.
-        message("FOV_SHOP:clear", ChatMessageType.GAME_MESSAGE)
-        openInterface(interfaceId = 300, dest = InterfaceDestination.MAIN_SCREEN)
-        openInterface(interfaceId = 301, dest = InterfaceDestination.TAB_AREA)
-        runClientScript(CommonClientScripts.SHOP_INIT, 3, s.name, -1, 0, 1)
-        setInterfaceEvents(interfaceId = 300, component = 16, range = 0..s.items.size, setting = 1086)
-        setInterfaceEvents(interfaceId = 301, component = 0, range = 0 until inventory.capacity, setting = 1086)
+        showShop(s)
     } else {
         World.logger.warn { "Player \"$username\" is unable to open shop \"$shop\" as it does not exist." }
     }
@@ -66,18 +57,36 @@ fun Player.openShop(shop: String) {
 fun Player.openShop(shopId: Int) {
     val s = world.getShop(shopId)
     if (s != null) {
-        attr[CURRENT_SHOP_ATTR] = s
-        shopDirty = true
-        // See the string overload — keeps the lofshoptabs strip from leaking between stores.
-        message("FOV_SHOP:clear", ChatMessageType.GAME_MESSAGE)
-        openInterface(interfaceId = 300, dest = InterfaceDestination.MAIN_SCREEN)
-        openInterface(interfaceId = 301, dest = InterfaceDestination.TAB_AREA)
-        runClientScript(CommonClientScripts.SHOP_INIT, 3, s.name, -1, 0, 1)
-        setInterfaceEvents(interfaceId = 300, component = 16, range = 0..s.items.size, setting = 1086)
-        setInterfaceEvents(interfaceId = 301, component = 0, range = 0 until inventory.capacity, setting = 1086)
+        showShop(s)
     } else {
         World.logger.warn { "Player \"$username\" is unable to open shop \"$shopId\" as it does not exist." }
     }
+}
+
+private fun Player.showShop(s: org.alter.game.model.shop.Shop) {
+    val previous = attr[CURRENT_SHOP_ATTR]
+    attr[CURRENT_SHOP_ATTR] = s
+    shopDirty = true
+    // Reset the custom client's storefront tab strip (lofshoptabs). A tabbed vendor sends its
+    // "FOV_SHOP:tabs|..." line right after this, so tabs never leak between different stores.
+    message("FOV_SHOP:clear", ChatMessageType.GAME_MESSAGE)
+    if (interfaces.getModal() == 300) {
+        // SOFT SWAP — the shop window is already up (a storefront tab switch). Re-opening
+        // interface 300 on top of itself desyncs server/client interface state and every click
+        // on the window goes dead until Esc. Instead swap the stock in place: hand the viewer
+        // registration over (ShopsPlugin's open/close hooks won't fire), retitle via SHOP_INIT,
+        // and refresh the click ranges for the new stock size below.
+        if (previous !== s) {
+            previous?.viewers?.remove(uid)
+            s.viewers.add(uid)
+        }
+    } else {
+        openInterface(interfaceId = 300, dest = InterfaceDestination.MAIN_SCREEN)
+        openInterface(interfaceId = 301, dest = InterfaceDestination.TAB_AREA)
+    }
+    runClientScript(CommonClientScripts.SHOP_INIT, 3, s.name, -1, 0, 1)
+    setInterfaceEvents(interfaceId = 300, component = 16, range = 0..s.items.size, setting = 1086)
+    setInterfaceEvents(interfaceId = 301, component = 0, range = 0 until inventory.capacity, setting = 1086)
 }
 
 fun Player.message(

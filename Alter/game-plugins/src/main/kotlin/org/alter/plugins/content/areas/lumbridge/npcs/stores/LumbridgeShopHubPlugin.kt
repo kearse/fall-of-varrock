@@ -327,6 +327,15 @@ class LumbridgeShopHubPlugin(
         // Shop-economy-redesign §4: the vote shelf was 3 items thin — two QoL consumables.
         Ware("item.stamina_potion4", 1000, 6),
         Ware("item.divine_super_combat_potion4", 1000, 15),
+        // The gilded line — rune-stat cosmetics, the vote loyalty chase (§4 asked for
+        // cosmetic shelf items). Tickets are tradeable, so non-voters buy off voters;
+        // a full set is months of daily votes.
+        Ware("item.gilded_full_helm", 1000, 30),
+        Ware("item.gilded_platebody", 1000, 60),
+        Ware("item.gilded_platelegs", 1000, 50),
+        Ware("item.gilded_kiteshield", 1000, 40),
+        Ware("item.gilded_scimitar", 1000, 40),
+        Ware("item.gilded_boots", 1000, 25),
     )
 
     // Declared last so every stock list above is initialised before this init runs.
@@ -359,8 +368,8 @@ class LumbridgeShopHubPlugin(
 
         // ---- West row (x=3219), facing EAST toward the aisle: gear + prayer/crafting ----
         tabVendor("npc.horvik", 3219, 3225, Direction.EAST,                          // weapons + rank armour
-            ShopTabs.Tab("Weapons", MELEE_WEAPONS),
-            ShopTabs.Tab("Rank armour") { ApprenticeArmoury.open(it) })
+            ShopTabs.Tab("Weapons", MELEE_WEAPONS, icon = "item.rune_longsword"),
+            ShopTabs.Tab("Rank armour", icon = "item.rune_platebody") { ApprenticeArmoury.open(it) })
         singleVendor("npc.lowe", 3219, 3224, Direction.EAST, RANGED_GEAR)
         // Zaff: Trade opens the store; Talk-to keeps the rune-altar lift dialogue.
         spawnNpc("npc.zaff", 3219, 3223, 0, 0, Direction.EAST)

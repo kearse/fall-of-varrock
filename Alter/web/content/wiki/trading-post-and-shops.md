@@ -12,7 +12,7 @@ The economy centres on the **Lumbridge courtyard market** — every essential ve
 
 Clicking **Trade** (or Talk-to on a pure shopkeeper) opens the store **directly** — no chat menus. Vendors that run several stores show a **tab strip along the bottom of the shop window**; click a tab to switch store instantly:
 
-- **Quartermaster** — Weapons / Armour / Accessories / Barrows / Crystal / Charged tabs.
+- **Quartermaster** — Weapons / Armour / Accessories / Barrows / Crystal / Charged / Relics tabs.
 - **Emblem Trader** — Supplies / Spec weapons / Wildy sets / Revenant tabs.
 - **Melee Shop (Horvik)** — Weapons / Rank armour tabs.
 - **Herblore Shop (Jatix)** — all four seed stores, herbs, secondaries, unfinished potions and farm tools as tabs.
@@ -37,7 +37,7 @@ The odd vendor with something to *say* still talks on **Talk-to** (Zaff can stil
 - **Armoury** — heavier armour unlocks with your [feudal rank](/wiki/titles-and-citizenship).
 - **Loot Chest** — claim your [wilderness loot keys](/wiki/wilderness-loot-keys).
 - **Emblem Trader** — the [PK Rewards vendor](/wiki/pk-rewards-and-stats) (Blood Money): PK supplies, spec weapons, the wilderness sets (Vesta's/Statius's/Morrigan's/Zuriel's) and revenant weapons. The PvP gear chase lives here.
-- **Quartermaster — the Warlord's Armoury** — the PvM gear chase, paid in **Boss Tickets**: GWD bases (they feed the [Royal Smith's war-forge](/wiki/war-forging)), Justiciar/Inquisitor/Void, crystal gear, charged weapons (blowpipe, tridents), BIS accessories, and the megarares (twisted bow, scythe, shadow) at career prices. His **Barrows wing** sells for coins — the mid-game gp sink. War-forged Torva/Masori/Ancestral are never sold: the Smith makes them, nobody else.
+- **Quartermaster — the Warlord's Armoury** — the PvM gear chase, paid in **Boss Tickets**: GWD bases (they feed the [Royal Smith's war-forge](/wiki/war-forging)), Justiciar/Inquisitor/Void, crystal gear, charged weapons (blowpipe, tridents), BIS accessories, the megarares (twisted bow, scythe, shadow) at career prices, and the **Relics wing** — 3rd age antiques, the longest careers of all. His **Barrows wing** sells for coins — the mid-game gp sink. War-forged Torva/Masori/Ancestral are never sold: the Smith makes them, nobody else.
 - **Bond Merchant** — redeem [bonds](/wiki/bonds-and-membership).
 - **Donor Store** (`::donorstore`) — cosmetic rares (partyhats, santa, h'ween masks) for **Donor Points**; tradeable, stat-less flex.
 - **Commander's Regalia** (`::prestigeshop`) — the sanguine regalia set for **Prestige** (commanders only earn it).

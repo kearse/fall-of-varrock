@@ -3,7 +3,7 @@ title: Marches & the reconquest of Varrock
 category: The War
 summary: The free warband anyone can join, the district pressure map, Grand Marches, Wardens and the wanted captains.
 order: 2
-updated: 2026-07-11
+updated: 2026-07-13
 ---
 
 Varrock fell. Lumbridge holds. The **reconquest** is how the realm takes it back — and unlike campaigns and conquests, you don't need rank or coin to fight in it. This is the beginner's door into the war.
@@ -41,7 +41,7 @@ When a Warden falls, his **Warden's embers** pay out to the players who fought h
 
 ## The wanted captains — `::bounties`
 
-Each district is run by a named captain on a long respawn — **Karn the Red** (the Slums), **Silas the Hollow** (the Old Market), **Vex of the Row** (the East Quarter) and **Grimjaw** (the Museum Quarter). Killing one pays a **100,000 coin bounty straight to your bank**, 2 Commendations and 25 War Effort — and rolls the captain's **signature weapon at 1 in 8**:
+Each district is run by a named captain on a long respawn — **Karn the Red** (the Slums), **Silas the Hollow** (the Old Market), **Vex of the Row** (the East Quarter) and **Grimjaw** (the Museum Quarter). Killing one pays a **100,000 coin bounty straight to your bank**, 2 Commendations and 25 War Effort — and rolls the captain's **signature weapon at 1 in 15**:
 
 | Captain | District | Signature drop |
 | --- | --- | --- |

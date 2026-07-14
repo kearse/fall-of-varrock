@@ -78,7 +78,12 @@ Two tabs, two ticket currencies — both tickets are **tradeable items**, so you
 | Ranging potion(4) | 6 |
 | Stamina potion(4) | 6 |
 | Divine super combat potion(4) | 15 |
+| Gilded boots | 25 |
+| Gilded full helm | 30 |
+| Gilded kiteshield / scimitar | 40 each |
 | Royal partyhat (cosmetic) | 40 |
+| Gilded platelegs | 50 |
+| Gilded platebody | 60 |
 
 ## The general store
 
@@ -94,7 +99,7 @@ The serious money stands at the **south end of the market**.
 
 ### The Warlord's Armoury (Quartermaster)
 
-The PvM gear chase. The **Quartermaster** trades in **Boss Tickets** (earned from every boss kill — see [bosses overview](/wiki/bosses-overview)) across five ticket tabs, plus a coins-only Barrows wing. Talk-to still takes [war-supply hand-ins](/wiki/supplying-the-war).
+The PvM gear chase. The **Quartermaster** trades in **Boss Tickets** (earned from every boss kill — see [bosses overview](/wiki/bosses-overview)) across six ticket tabs, plus a coins-only Barrows wing. Talk-to still takes [war-supply hand-ins](/wiki/supplying-the-war).
 
 **Weapons** (Boss Tickets):
 
@@ -135,7 +140,7 @@ The Bandos and Armadyl pieces here exist to feed the [Royal Smith's war-forge](/
 | --- | --- |
 | Ultor / magus / bellator / venator ring | 2,500 each |
 | Avernic defender | 2,000 |
-| Amulet of torture / necklace of anguish | 1,200 each |
+| Amulet of torture / necklace of anguish / tormented bracelet | 1,200 each |
 | Zaryte vambraces / ferocious gloves / lightbearer / Dinh's bulwark | 1,200 each |
 | Amulet of blood fury / ring of suffering | 1,000 each |
 | Primordial / pegasian / eternal boots | 900 each |
@@ -149,6 +154,19 @@ The Bandos and Armadyl pieces here exist to feed the [Royal Smith's war-forge](/
 **Crystal** (Boss Tickets): crystal shield 500, bow and halberd 600, helm 800, legs 900, body 1,000, **blade of saeldor 1,500**.
 
 **Charged & degradable** (Boss Tickets): trident of the seas 600, trident of the swamp 800, abyssal tentacle 900, toxic staff of the dead 1,000, toxic blowpipe 1,800, scorching bow 1,800, dragon hunter wand 2,000, serpentine helm 800, magma / tanzanite helm 900.
+
+**Relics** (Boss Tickets) — the 3rd age antiques, priced above the megarares as pure prestige (see [Path to end game](/wiki/path-to-end-game)):
+
+| Item | Tickets |
+| --- | --- |
+| 3rd age druidic robe top / bottoms / staff / cloak | 12,000 each |
+| 3rd age longsword / bow / wand | 10,000 each |
+| 3rd age platebody | 8,000 |
+| 3rd age cloak | 8,000 |
+| 3rd age platelegs / range top / mage robe top | 7,000 each |
+| 3rd age full helmet / kiteshield / range legs / mage robe | 6,000 each |
+| 3rd age range coif / mage hat | 5,000 each |
+| 3rd age vambraces / amulet | 4,000 each |
 
 **Barrows wing** (coins — the mid-game gp sink): every brother's helm, body and legs at **12,000,000 gp** apiece, every brothers' weapon at **20,000,000 gp**. The [Barrows minigame](/wiki/bosses-overview) is the cheaper path for those with patience.
 
@@ -183,7 +201,7 @@ The PvP gear chase, paid in **Blood Money** — earned only from killing **real 
 
 ## Beyond the market
 
-- **Lisa's LMS shop** — at the [Last Man Standing](/wiki/last-man-standing) lobby, **LMS points**: cooked karambwan 1, saradomin brew(4) and super restore(4) 2, super combat(4) 4, and the Saradomin/Zamorak/Guthix halos at 500 each. The gear prizes live in the LMS crates, not the shop.
+- **Lisa's LMS shop** — at the [Last Man Standing](/wiki/last-man-standing) lobby, **LMS points**: cooked karambwan 1, saradomin brew(4) and super restore(4) 2, super combat(4) 4, and the Saradomin/Zamorak/Guthix halos at 500 each. The island's chest gear exists only inside a match — you keep nothing and lose nothing.
 - **The Trading Post** (`::market`) — the player marketplace with an always-stocked backstop; see [Trading Post & the market](/wiki/trading-post-and-shops).
 - **Donor Store** (`::donorstore`) — cosmetic rares for **Donor Points**: partyhats 900 (white 1,350), santa hat 1,350, h'ween masks 700. Tradeable, stat-less. See [Bonds & membership](/wiki/bonds-and-membership).
 - **Commander's Regalia** (`::prestigeshop`) — the **sanguine Torva** cosmetic set for **Prestige** points: full helm 75, platebody and platelegs 100 each. Commanders only earn Prestige.

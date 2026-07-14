@@ -34,12 +34,13 @@ private val logger = KotlinLogging.logger {}
  * What it deliberately does NOT sell (redesign rules R1/R2/R4):
  *  - **PvP gear** (spec weapons, wilderness sets, revenant weapons) — that's the PK Rewards
  *    vendor's Blood-Money catalogue (`economy/pk/PkRewardsPlugin`).
- *  - **War-forged BIS** (Torva/Masori/Ancestral) — Royal Smith exclusive; Virtus is parked
- *    for a future source; the sanguine regalia moved to the Prestige shop.
+ *  - **War-forged BIS** (Torva/Masori/Ancestral) — Royal Smith exclusive; Virtus drops from
+ *    Nex (EliteBosses) like Torva does; the sanguine regalia moved to the Prestige shop.
  *  - **Untradeable prestige** (fire/infernal capes) and **Corp's sigil shields** — earned only.
  *
  * Megarares (scythe/tbow/shadow) are priced as CAREERS — the deterministic pity path until
- * raids ship gear. All prices TUNE.
+ * raids ship gear. The Relics wing (3rd age) follows the same precedent: clue scrolls don't
+ * exist yet, so the shop IS the source, priced as the longest careers of all. All prices TUNE.
  */
 class WarlordsArmouryPlugin(
     r: PluginRepository,
@@ -57,6 +58,7 @@ class WarlordsArmouryPlugin(
         const val BARROWS = "Warlord's Armoury - Barrows"
         const val CRYSTAL = "Warlord's Armoury - Crystal Gear"
         const val CHARGED = "Warlord's Armoury - Charged & Degradable"
+        const val RELICS = "Warlord's Armoury - Relics"
     }
 
     // ======================== stock — Boss Tickets (PvM) ========================
@@ -115,10 +117,11 @@ class WarlordsArmouryPlugin(
 
     /** BIS accessories — moved off raw GP (R4). Ely/Arcane/Spectral stay Corp-only. */
     private val accessoryStock = listOf(
-        // Amulets
+        // Amulets & zenyte jewellery
         Ware("item.occult_necklace", 800),
         Ware("item.amulet_of_torture", 1_200),
         Ware("item.necklace_of_anguish", 1_200),
+        Ware("item.tormented_bracelet", 1_200),
         Ware("item.amulet_of_blood_fury", 1_000),
         Ware("item.amulet_of_fury", 400),
         // Boots
@@ -165,6 +168,40 @@ class WarlordsArmouryPlugin(
         Ware("item.veracs_plateskirt", 12_000_000), Ware("item.veracs_flail", 20_000_000),
     )
 
+    /**
+     * Relics — 3rd age, the realm's antique prestige line. Clue scrolls aren't implemented,
+     * so like the megarares this shelf is the deterministic source, priced ABOVE them: the
+     * armour is weaker than forge/raid BIS, so the price is pure flex — a full set says
+     * "I bossed for months", nothing else. Druidic is the apex (OSRS-faithful).
+     */
+    private val relicStock = listOf(
+        // Melee
+        Ware("item._3rd_age_full_helmet", 6_000),
+        Ware("item._3rd_age_platebody", 8_000),
+        Ware("item._3rd_age_platelegs", 7_000),
+        Ware("item._3rd_age_kiteshield", 6_000),
+        // Range
+        Ware("item._3rd_age_range_coif", 5_000),
+        Ware("item._3rd_age_range_top", 7_000),
+        Ware("item._3rd_age_range_legs", 6_000),
+        Ware("item._3rd_age_vambraces", 4_000),
+        // Mage
+        Ware("item._3rd_age_mage_hat", 5_000),
+        Ware("item._3rd_age_robe_top", 7_000),
+        Ware("item._3rd_age_robe", 6_000),
+        Ware("item._3rd_age_amulet", 4_000),
+        // Weapons & cloak
+        Ware("item._3rd_age_longsword", 10_000),
+        Ware("item._3rd_age_bow", 10_000),
+        Ware("item._3rd_age_wand", 10_000),
+        Ware("item._3rd_age_cloak", 8_000),
+        // Druidic — the apex flex
+        Ware("item._3rd_age_druidic_robe_top", 12_000),
+        Ware("item._3rd_age_druidic_robe_bottoms", 12_000),
+        Ware("item._3rd_age_druidic_staff", 12_000),
+        Ware("item._3rd_age_druidic_cloak", 12_000),
+    )
+
     /** Charged / degradable gear — sold at the base id; players charge them to use. */
     private val chargedStock = listOf(
         Ware("item.trident_of_the_seas", 600),
@@ -189,6 +226,7 @@ class WarlordsArmouryPlugin(
         shopWith(CRYSTAL, bossTickets(), crystalStock)
         shopWith(ACCESSORIES, bossTickets(), accessoryStock)
         shopWith(CHARGED, bossTickets(), chargedStock)
+        shopWith(RELICS, bossTickets(), relicStock)
         // The mid-game coin sink.
         shopWith(BARROWS, CoinCurrency(), barrowsStock)
 
@@ -220,6 +258,7 @@ class WarlordsArmouryPlugin(
         ShopTabs.Tab("Barrows", BARROWS),
         ShopTabs.Tab("Crystal", CRYSTAL),
         ShopTabs.Tab("Charged", CHARGED),
+        ShopTabs.Tab("Relics", RELICS),
     )
 
     // ----------------------------- §3B war-supply sink -----------------------------

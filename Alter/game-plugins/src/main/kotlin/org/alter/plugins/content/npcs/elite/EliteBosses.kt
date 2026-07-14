@@ -182,12 +182,16 @@ object EliteBosses {
                     DropEntry("item.soul_rune", 150, 400, weight = 12),
                     DropEntry("item.nihil_shard", 10, 30, weight = 12), // craft into nihil / ancient blood
                 ),
-                // Signature: the full Torva set, Zaryte vambraces, Nihil horn → Zaryte crossbow,
-                // Ancient hilt → Ancient godsword, plus the Nexling pet. Apex tier — the chase of the game.
+                // Signature: the full Torva AND Virtus sets (Virtus is Nex's mage line — rank-gated
+                // in Title.kt, deliberately never sold), Zaryte vambraces, Nihil horn → Zaryte
+                // crossbow, Ancient hilt → Ancient godsword, plus the Nexling pet. Apex tier.
                 rare = listOf(
                     DropEntry("item.torva_full_helm", 1, 1, oneInN = 450, announce = true, log = true),
                     DropEntry("item.torva_platebody", 1, 1, oneInN = 450, announce = true, log = true),
                     DropEntry("item.torva_platelegs", 1, 1, oneInN = 450, announce = true, log = true),
+                    DropEntry("item.virtus_mask", 1, 1, oneInN = 450, announce = true, log = true),
+                    DropEntry("item.virtus_robe_top", 1, 1, oneInN = 450, announce = true, log = true),
+                    DropEntry("item.virtus_robe_bottom", 1, 1, oneInN = 450, announce = true, log = true),
                     DropEntry("item.zaryte_vambraces", 1, 1, oneInN = 450, announce = true, log = true),
                     DropEntry("item.nihil_horn", 1, 1, oneInN = 450, announce = true, log = true),
                     DropEntry("item.ancient_hilt", 1, 1, oneInN = 516, announce = true, log = true),

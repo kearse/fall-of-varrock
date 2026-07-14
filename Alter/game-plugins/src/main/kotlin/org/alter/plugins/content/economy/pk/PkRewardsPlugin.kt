@@ -132,10 +132,10 @@ class PkRewardsPlugin(
 
     /** The four Blood-Money wings as one tabbed storefront (see ShopTabs) — no dialogue hop. */
     private val traderTabs = listOf(
-        ShopTabs.Tab("Supplies", SUPPLIES),
-        ShopTabs.Tab("Spec weapons", SPEC_WEAPONS),
-        ShopTabs.Tab("Wildy sets", WILDY_SETS),
-        ShopTabs.Tab("Revenant", REVENANT),
+        ShopTabs.Tab("Supplies", SUPPLIES, icon = "item.shark"),
+        ShopTabs.Tab("Spec weapons", SPEC_WEAPONS, icon = "item.armadyl_godsword"),
+        ShopTabs.Tab("Wildy sets", WILDY_SETS, icon = "item.vestas_longsword"),
+        ShopTabs.Tab("Revenant", REVENANT, icon = "item.craws_bow"),
     )
 
     private fun shopOf(name: String, wares: List<Ware>) {
