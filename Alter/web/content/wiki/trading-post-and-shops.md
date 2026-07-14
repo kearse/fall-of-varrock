@@ -3,10 +3,10 @@ title: Trading Post & the market
 category: Economy & Trading
 summary: The Lumbridge courtyard market, the Trading Post's buy/sell prices, and what's deliberately not sold.
 order: 1
-updated: 2026-07-12
+updated: 2026-07-13
 ---
 
-The economy centres on the **Lumbridge courtyard market** — every essential vendor stands in two shop rows by the castle, so you never hunt for a shop.
+The economy centres on the **Lumbridge courtyard market** — every essential vendor stands in two shop rows by the castle, so you never hunt for a shop. This page explains how the market works; for the full stock-and-price reference see the [shops directory](/wiki/shops-directory), and for the route to every rare see [Path to end game](/wiki/path-to-end-game).
 
 ## Shops open instantly — no dialogue
 

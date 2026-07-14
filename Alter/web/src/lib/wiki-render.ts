@@ -23,13 +23,18 @@ function inline(s: string): string {
     .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+|\/[^\s)]*)\)/g, '<a href="$2" rel="noopener noreferrer">$1</a>');
 }
 
-/** Strip the inline markdown tokens for TOC/anchor text. */
+/** Strip the inline markdown tokens for TOC/anchor text. TOC text is rendered
+ * as React text (escaped again), so undo the document-wide escapeHtml here. */
 function plain(s: string): string {
   return s
     .replace(/`([^`]+)`/g, "$1")
     .replace(/\*\*([^*]+)\*\*/g, "$1")
     .replace(/\*([^*]+)\*/g, "$1")
-    .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1");
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&amp;/g, "&");
 }
 
 function headingId(text: string, used: Set<string>): string {
