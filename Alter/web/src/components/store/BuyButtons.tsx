@@ -31,7 +31,7 @@ export function BuyButtons({ packageId, loggedIn, devEnabled, providers }: { pac
     return <a href="/login?next=/store" className="btn-ghost w-full">Log in to buy</a>;
   }
 
-  // UX: don't render payment buttons that can only fail — pre-disable when no provider
+  // UX: don't render payment buttons that can only fail - pre-disable when no provider
   // is configured (mirrors the download cards' honest "Building…" state).
   const enabled = PROVIDERS.filter((p) => providers.includes(p.id));
   if (enabled.length === 0 && !devEnabled) {

@@ -80,8 +80,8 @@ bite - and the earlier waves can be picked apart from safety too.
 4. Melee monsters (Tz-Kek, Yt-MejKot) die **last**: you can just walk away from them while you
    deal with the real threats.
 
-**Prayer plan by wave:** pray **Missiles** whenever a Tok-Xil is alive (waves 4–7), pray
-**Magic** whenever a Ket-Zek is alive (waves 8–10 - on wave 9, pray Magic and kite the
+**Prayer plan by wave:** pray **Missiles** whenever a Tok-Xil is alive (waves 4-7), pray
+**Magic** whenever a Ket-Zek is alive (waves 8-10 - on wave 9, pray Magic and kite the
 Yt-MejKot; on wave 10 you'll eat some damage from whichever Ket-Zek you're not praying against,
 so kill one fast). Melee-only waves, save your points and just move.
 

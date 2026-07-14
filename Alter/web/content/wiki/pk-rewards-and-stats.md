@@ -32,9 +32,9 @@ Spend it at the **PK Rewards vendor** (`::pkshop`, or the Emblem Trader in the L
 
 Claws and the warhammer also drop from the [wanted captains](/wiki/marches-and-the-reconquest) at 1/15 - hunting them is the cheaper path; the shop is your bad-luck protection.
 
-**Wilderness sets** - Vesta's (including the **Vesta's longsword**), Statius's, Morrigan's and Zuriel's, 8,000–25,000 BM per piece. These are the wilderness prestige sets your rank gates - and Blood Money is their only source.
+**Wilderness sets** - Vesta's (including the **Vesta's longsword**), Statius's, Morrigan's and Zuriel's, 8,000-25,000 BM per piece. These are the wilderness prestige sets your rank gates - and Blood Money is their only source.
 
-**Revenant weapons** - craw's / viggora's / thammaron's at 6,000, their upgraded forms at 10,000–12,000.
+**Revenant weapons** - craw's / viggora's / thammaron's at 6,000, their upgraded forms at 10,000-12,000.
 
 PvM chase gear (tbow, scythe, GWD bases…) deliberately is NOT here - that's the [Warlord's Armoury](/wiki/trading-post-and-shops)'s Boss-Ticket catalogue. Currency matches playstyle.
 

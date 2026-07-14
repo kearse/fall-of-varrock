@@ -14,10 +14,10 @@ New here and wondering what the "point" of the server is? This page is the map. 
 | --- | --- | --- | --- |
 | 1. First hour | Peasant | free | Recruit Trials - guided tour, ends in full steel |
 | 2. First unlocks | Peasant → Commoner | 10k | War-Prep chain, spellbooks unlocked, first Marches |
-| 3. Early game | Squire → Soldier | 50k–150k | Money-making loops, mithril/adamant, finding your playstyle |
+| 3. Early game | Squire → Soldier | 50k-150k | Money-making loops, mithril/adamant, finding your playstyle |
 | 4. Mid game | Knight | 500k | Rune armour, first companion, entry bosses, fire cape, real PKing |
 | 5. Late game | Lord | 2m | ALL armour (dragon, barrows, GWD), 2 companions, commander powers |
-| 6. Endgame | Minister → King | 10m–50m | Launch campaigns and conquests - the reconquest itself |
+| 6. Endgame | Minister → King | 10m-50m | Launch campaigns and conquests - the reconquest itself |
 
 Check where you are anytime with `::title` - it shows your rank, your armour ceiling, and the price of the next rung.
 

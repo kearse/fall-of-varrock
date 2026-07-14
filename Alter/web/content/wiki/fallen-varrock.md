@@ -11,7 +11,7 @@ Varrock **fell** to the enemy long before you arrived. The guard was slaughtered
 ## What you'll find in the ruins
 
 - **No civilians, no guards.** The shops are abandoned and the old Varrock guard is gone. In their place, the streets crawl with **muggers, thugs, highwaymen, rogues, zombies, skeletons, dark wizards, chaos druids, Black Knights and bandits** - all attackable, all on the full real-OSRS drop tables.
-- **The whole city is PvP.** Varrock sits deep inside the wilderness zone (roughly levels 15–33 across the city - deeper toward the palace). Other players can attack you anywhere on its streets. Watch `::zone` if you're unsure where you stand.
+- **The whole city is PvP.** Varrock sits deep inside the wilderness zone (roughly levels 15-33 across the city - deeper toward the palace). Other players can attack you anywhere on its streets. Watch `::zone` if you're unsure where you stand.
 - **PKer bots stalk the streets.** The rogues' favourite hunting ground - expect mithril-to-rune-tier PKers prowling the city on top of the usual wilderness wanderers. Kill one and its whole kit seals into a [loot key](/wiki/wilderness-loot-keys).
 - **Wilderness rules apply.** Unprovoked attacks skull you, death drops your unprotected loot, and kills pay out through loot keys. Read [death & item protection](/wiki/death-and-item-protection) before you go.
 

@@ -10,7 +10,7 @@ updated: 2026-07-04
 
 ## Slayer tasks
 
-Right-click Vannaka → **Assignment** for a task. The starter roster runs from goblins, rats and chickens up through skeletons, zombies and guards, in batches of roughly 15–45 kills. Kills auto-track - check progress anytime with `::slayer`.
+Right-click Vannaka → **Assignment** for a task. The starter roster runs from goblins, rats and chickens up through skeletons, zombies and guards, in batches of roughly 15-45 kills. Kills auto-track - check progress anytime with `::slayer`.
 
 Completing tasks pays **Slayer points, scaled by your streak** - back-to-back completions pay progressively more, so keeping a streak alive matters. Spend points in Vannaka's **Rewards** shop.
 

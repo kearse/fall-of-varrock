@@ -10,7 +10,7 @@ The **Gambling Host** stands at the south end of the Lumbridge market's east row
 
 ## The game
 
-- Stake coins, the host rolls 1–100.
+- Stake coins, the host rolls 1-100.
 - **51 or higher wins** - you're paid double your stake minus the house's **5% rake**.
 - **50 or lower loses** - the house keeps your stake.
 

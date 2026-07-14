@@ -14,10 +14,10 @@ A bot's gear and level are decided by the **wilderness level where it spawned** 
 
 | Wilderness level | What roams there |
 | --- | --- |
-| 1–10 | **Metal-armour fodder** - bronze and iron up through dragon, low combat levels a new player can actually beat |
-| 11–20 | **Budget PK sets** - a 1-def pure, a 45-def whip zerker, a rune-clad main |
-| 21–30 | **Mid mains** - whip hybrids, mid rangers, Ice-Blitz freezers, budget Dharok's |
-| 31–40 | **Maxers** - Bandos AGS bruisers, tentacle claw-spec KOers, Blood Barrage mages |
+| 1-10 | **Metal-armour fodder** - bronze and iron up through dragon, low combat levels a new player can actually beat |
+| 11-20 | **Budget PK sets** - a 1-def pure, a 45-def whip zerker, a rune-clad main |
+| 21-30 | **Mid mains** - whip hybrids, mid rangers, Ice-Blitz freezers, budget Dharok's |
+| 31-40 | **Maxers** - Bandos AGS bruisers, tentacle claw-spec KOers, Blood Barrage mages |
 | 41+ | **Elite meta** - tribrid NHers, Kodai freezers, Masori rangers, Dharok DHers - the scariest fights in the game |
 
 Past level 10 the styles are mixed and random: you might meet a pure, a zerker, a maxed main or a full NH bridder. They run real archetypes - AGS→gmaul spec rotations, Ice Barrage freezes, Blood Barrage heals, Dharok's low-HP gambles, claw-spec KOs. (No bot carries a Voidwaker.) The shallow wilderness, by contrast, is safe to cut your teeth on.

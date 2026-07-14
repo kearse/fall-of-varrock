@@ -28,7 +28,7 @@ export default async function SuccessPage({ searchParams }: { searchParams: { or
         </p>
         <p className="text-xs text-lumbridge-parchment/60">
           Bought membership for the <strong>Discord role</strong>? It syncs only after your Discord is
-          linked — generate a link code on <Link href="/account" className="underline">your account page</Link>{" "}
+          linked - generate a link code on <Link href="/account" className="underline">your account page</Link>{" "}
           and use <code>/link</code> in our Discord.
         </p>
         <div className="flex justify-center gap-3">

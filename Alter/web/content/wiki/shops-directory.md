@@ -155,18 +155,18 @@ The Bandos and Armadyl pieces here exist to feed the [Royal Smith's war-forge](/
 
 **Charged & degradable** (Boss Tickets): trident of the seas 600, trident of the swamp 800, abyssal tentacle 900, toxic staff of the dead 1,000, toxic blowpipe 1,800, scorching bow 1,800, dragon hunter wand 2,000, serpentine helm 800, magma / tanzanite helm 900.
 
-**Relics** (Boss Tickets) - the 3rd age antiques, priced above the megarares as pure prestige (see [Path to end game](/wiki/path-to-end-game)):
+**Relics** (Boss Tickets) - the 3rd age antiques. The real source is now the war (battlefield drops + a leadership gift - see [Path to end game](/wiki/path-to-end-game)); this shelf is a slow pity-path at **3× the old prices**. **Lord+** can also sell pieces back here at a third of shelf value (below player-trade value on purpose):
 
 | Item | Tickets |
 | --- | --- |
-| 3rd age druidic robe top / bottoms / staff / cloak | 12,000 each |
-| 3rd age longsword / bow / wand | 10,000 each |
-| 3rd age platebody | 8,000 |
-| 3rd age cloak | 8,000 |
-| 3rd age platelegs / range top / mage robe top | 7,000 each |
-| 3rd age full helmet / kiteshield / range legs / mage robe | 6,000 each |
-| 3rd age range coif / mage hat | 5,000 each |
-| 3rd age vambraces / amulet | 4,000 each |
+| 3rd age druidic robe top / bottoms / staff / cloak | 36,000 each |
+| 3rd age longsword / bow / wand | 30,000 each |
+| 3rd age platebody | 24,000 |
+| 3rd age cloak | 24,000 |
+| 3rd age platelegs / range top / mage robe top | 21,000 each |
+| 3rd age full helmet / kiteshield / range legs / mage robe | 18,000 each |
+| 3rd age range coif / mage hat | 15,000 each |
+| 3rd age vambraces / amulet | 12,000 each |
 
 **Barrows wing** (coins - the mid-game gp sink): every brother's helm, body and legs at **12,000,000 gp** apiece, every brothers' weapon at **20,000,000 gp**. The [Barrows minigame](/wiki/bosses-overview) is the cheaper path for those with patience.
 

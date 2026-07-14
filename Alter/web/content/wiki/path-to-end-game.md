@@ -98,9 +98,11 @@ The **fire cape** is earned in the [Fight Cave](/wiki/fight-cave) - every Jad ki
 
 ## Relics - 3rd age & gilded
 
-The antique prestige lines. **3rd age** sells from the Quartermaster's **Relics tab** for Boss Tickets - priced above even the megarares, because the armour is weaker than forged BIS and the price is the point: a full set says you bossed for months. Melee, range and mage sets run **4,000–8,000 tickets a piece**, the 3rd age longsword, bow and wand are **10,000**, and the **druidic** robes are the apex at **12,000 each**. Wearing 3rd age is Lord-tier on the [rank ladder](/wiki/titles-and-citizenship), same as the other end-game sets.
+The antique prestige line, and **the war is how you earn it**. During a live [campaign or conquest](/wiki/the-war-explained) on Varrock, every enemy you cut down on the battlefield has a small chance (**~1/5,000**) to drop a random 3rd age piece straight to you - so a piece you're wearing says you fought the war for it. On top of that, the **Minister or King who wins a war** has a **1/500** chance to be gifted a piece outright as a leadership reward. Both are announced realm-wide when they land.
 
-**Gilded armour** is the voter's flex: Valaine's **Vote rewards** shelf sells the gilded full helm, platebody, platelegs, kiteshield, scimitar and boots for **25–60 Vote Tickets** a piece. Tickets are tradeable, so non-voters buy them off voters - but a full set represents months of daily votes either way.
+The Quartermaster's **Relics tab** still sells 3rd age for Boss Tickets, but only as a slow pity-path, now priced at **3× the old rates** - melee, range and mage pieces run **12,000-24,000 tickets**, the longsword, bow and wand are **30,000**, and the **druidic** robes are the apex at **36,000 each**. Buying a set is the single most conspicuous flex on the realm; the drop is how you're *meant* to get it. **Lords and above** can also sell pieces back to the Quartermaster at a third of shelf value - deliberately below what a duplicate fetches in player trade, so trading is always the better cash-out. Wearing 3rd age is Lord-tier on the [rank ladder](/wiki/titles-and-citizenship), same as the other end-game sets.
+
+**Gilded armour** is the voter's flex: Valaine's **Vote rewards** shelf sells the gilded full helm, platebody, platelegs, kiteshield, scimitar and boots for **25-60 Vote Tickets** a piece. Tickets are tradeable, so non-voters buy them off voters - but a full set represents months of daily votes either way.
 
 ## The wilderness shortcut
 

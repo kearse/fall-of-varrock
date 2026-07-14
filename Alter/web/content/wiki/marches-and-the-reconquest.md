@@ -13,7 +13,7 @@ Varrock fell. Lumbridge holds. The **reconquest** is how the realm takes it back
 Roughly every half hour the **Knight-Captain musters a march**: a column of Knights of Lumbridge that sets out from the castle and pushes into one **district** of [Fallen Varrock](/wiki/fallen-varrock). The muster call is announced ~5 minutes ahead, and **any player can fight beside the column** - walk with it from the gate, or type `::march` to rally straight to it (you'll be asked to confirm if the column is already fighting on PvP ground).
 
 - Marches are free to join but **cost the realm 150 war supplies** to launch. If the stores are dry, the march is called off and the whole server hears about it - go feed the [Quartermaster](/wiki/supplying-the-war).
-- A won march pays every fighter a **share of the pooled spoils by contribution**, plus **1–3 Commendations** (see below).
+- A won march pays every fighter a **share of the pooled spoils by contribution**, plus **1-3 Commendations** (see below).
 - Marches **can fail**. Ten knights alone are often driven back - the realm learns to march with them.
 
 The command ladder above the march is unchanged: **March (anyone) → Raid (Lord) → Campaign (Minister) → Conquest (King)** - see [The War explained](/wiki/the-war-explained).

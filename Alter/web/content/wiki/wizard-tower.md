@@ -35,12 +35,12 @@ There is **no timer** - the game lasts as long as you do. The mages are aggressi
 
 **First completion** (any mode): the Ancient, Lunar and Arceuus spellbooks unlock permanently on your account - switch books with `::spellbook`. See [Unlocking the magic books](/wiki/unlocking-spellbooks).
 
-**Every mage** drops coins (200–900) plus a parcel of runes - chaos, nature, cosmic, law, death, blood or soul, with a 1-in-60 shot at wrath runes. In multi games, **loot belongs to whoever lands the kill.**
+**Every mage** drops coins (200-900) plus a parcel of runes - chaos, nature, cosmic, law, death, blood or soul, with a 1-in-60 shot at wrath runes. In multi games, **loot belongs to whoever lands the kill.**
 
 **The Archmage** drops:
 
-- Always: 5,000–15,000 coins, 50–100 death runes and 40–90 blood runes
-- One of: law runes (80–150), nature runes (100–200), soul runes (60–120) or wrath runes (20–50)
+- Always: 5,000-15,000 coins, 50-100 death runes and 40-90 blood runes
+- One of: law runes (80-150), nature runes (100-200), soul runes (60-120) or wrath runes (20-50)
 
 Two rare collection-log items can drop: the **Mystic Lava Staff** (1 in 40) and the **Master Wand** (1 in 80).
 

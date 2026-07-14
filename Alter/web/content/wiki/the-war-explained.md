@@ -16,7 +16,7 @@ The first target is [Fallen Varrock](/wiki/fallen-varrock). The city has no army
 
 | Operation | Rank needed | Cost | Supply needed | Allied force | Win condition | Reward pool |
 | --- | --- | --- | --- | --- | --- | --- |
-| **March** (scheduled) | - anyone joins | free | 150 supply | 10 knights | Kill 15 in the district | Pooled spoils + 1–3 Commendations |
+| **March** (scheduled) | - anyone joins | free | 150 supply | 10 knights | Kill 15 in the district | Pooled spoils + 1-3 Commendations |
 | **Grand March** (every 8th) | - anyone joins | free | 300 supply | 16 knights | Kill 20; fell the Warden | Pooled spoils + up to 5 Commendations + Warden's embers |
 | Send troops | Lord+ | 1,000,000 gp | - | 8 knights | Boss raid support | Damage share |
 | Summon boss | Lord+ | 3,000,000 gp | - | Backing raid | Kill the boss | Boss drops (damage split) |
@@ -45,6 +45,15 @@ When a campaign or conquest is won, the pooled reward is divided like this:
 - **Donors** earn a bonus +1% of the pool value as donor points, minted on top (it never comes out of other players' shares).
 - Everyone who took part earns **prestige / war effort points** toward their next rank.
 - Coins are paid **straight to your bank** - no loot scramble.
+
+## 3rd age relics - the war's prestige drop
+
+The [3rd age](/wiki/path-to-end-game) antique sets are earned in the war, two ways:
+
+- **Battlefield drop** - while a campaign or conquest is live, every enemy you cut down on the battlefield has a small chance (**~1/5,000**) to drop a random 3rd age piece straight to you. Server-sized rare: a piece surfaces only every few wars, so wearing one says you fought for it.
+- **Leadership relic** - the **Minister or King who wins the war** has a **1/500** chance to be gifted a random piece outright, on top of their tithe, the moment the war is won.
+
+Both are announced realm-wide. The Quartermaster still sells 3rd age as a slow, tripled-price pity-path, and buys pieces back from Lord+ at a third of shelf value - but the drop is the real story.
 
 ## Defending the realm
 
