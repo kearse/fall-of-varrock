@@ -50,6 +50,9 @@ fun Player.openShop(shop: String) {
     if (s != null) {
         attr[CURRENT_SHOP_ATTR] = s
         shopDirty = true
+        // Reset the custom client's storefront tab strip (lofshoptabs). A tabbed vendor sends its
+        // "FOV_SHOP:tabs|..." line right after this, so tabs never leak between different stores.
+        message("FOV_SHOP:clear", ChatMessageType.GAME_MESSAGE)
         openInterface(interfaceId = 300, dest = InterfaceDestination.MAIN_SCREEN)
         openInterface(interfaceId = 301, dest = InterfaceDestination.TAB_AREA)
         runClientScript(CommonClientScripts.SHOP_INIT, 3, s.name, -1, 0, 1)
@@ -65,6 +68,8 @@ fun Player.openShop(shopId: Int) {
     if (s != null) {
         attr[CURRENT_SHOP_ATTR] = s
         shopDirty = true
+        // See the string overload — keeps the lofshoptabs strip from leaking between stores.
+        message("FOV_SHOP:clear", ChatMessageType.GAME_MESSAGE)
         openInterface(interfaceId = 300, dest = InterfaceDestination.MAIN_SCREEN)
         openInterface(interfaceId = 301, dest = InterfaceDestination.TAB_AREA)
         runClientScript(CommonClientScripts.SHOP_INIT, 3, s.name, -1, 0, 1)

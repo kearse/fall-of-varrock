@@ -16,7 +16,8 @@ import org.alter.game.plugin.PluginRepository
 import org.alter.plugins.content.economy.SupplyDepot
 import org.alter.plugins.content.mechanics.shops.CoinCurrency
 import org.alter.plugins.content.mechanics.shops.ItemCurrency
-import org.alter.plugins.content.mechanics.shops.bindVendorOptions
+import org.alter.plugins.content.mechanics.shops.ShopTabs
+import org.alter.plugins.content.mechanics.shops.bindVendorTalkAndTrade
 import org.alter.plugins.content.war.address
 import org.alter.plugins.content.war.recruit.RecruitTrials
 import org.alter.rscm.RSCM.getRSCM
@@ -197,9 +198,29 @@ class WarlordsArmouryPlugin(
         bindVendor("npc.quartermaster")
 
         onCommand("armoury", Privilege.ADMIN_POWER, description = "Open the Warlord's Armoury") {
-            player.queue { quartermasterMenu(player) }
+            openArmoury(player)
         }
     }
+
+    /** The armoury as a TABBED storefront (see ShopTabs) — Trade lands here directly. The
+     *  recruit-trials SUPPLY hand-in still intercepts first so the teaching beat can't be skipped
+     *  by clicking Trade instead of Talk-to. */
+    private fun openArmoury(player: Player) {
+        if (RecruitTrials.step(player) == RecruitTrials.Step.DELIVER) {
+            player.queue { recruitSupplyHandIn(player) }
+            return
+        }
+        ShopTabs.open(player, ARMOURY_TABS)
+    }
+
+    private val ARMOURY_TABS = listOf(
+        ShopTabs.Tab("Weapons", WEAPONS),
+        ShopTabs.Tab("Armour", ARMOUR),
+        ShopTabs.Tab("Accessories", ACCESSORIES),
+        ShopTabs.Tab("Barrows", BARROWS),
+        ShopTabs.Tab("Crystal", CRYSTAL),
+        ShopTabs.Tab("Charged", CHARGED),
+    )
 
     // ----------------------------- §3B war-supply sink -----------------------------
 
@@ -213,7 +234,7 @@ class WarlordsArmouryPlugin(
         }
         when (options(player, "Hand in war supplies", "Browse the armoury", "Nevermind", title = "Quartermaster")) {
             1 -> depositMenu(player)
-            2 -> armouryMenu(player)
+            2 -> openArmoury(player)
         }
     }
 
@@ -261,30 +282,18 @@ class WarlordsArmouryPlugin(
         }
     }
 
-    private suspend fun QueueTask.armouryMenu(player: Player) {
-        when (options(player, "Weapons", "Armour", "Accessories", "More gear...", "Nevermind", title = "Warlord's Armoury")) {
-            1 -> player.openShop(WEAPONS)
-            2 -> player.openShop(ARMOUR)
-            3 -> player.openShop(ACCESSORIES)
-            4 -> moreMenu(player)
-        }
-    }
-
-    private suspend fun QueueTask.moreMenu(player: Player) {
-        when (options(player, "Barrows sets (coins)", "Crystal gear", "Charged & degradable", "Nevermind", title = "More Gear")) {
-            1 -> player.openShop(BARROWS)
-            2 -> player.openShop(CRYSTAL)
-            3 -> player.openShop(CHARGED)
-        }
-    }
-
     /**
-     * Bind EVERY vendor option the quartermaster has (Talk-to AND Trade) to the category menu, so
-     * neither is a dead click. Binding a missing option throws, so [bindVendorOptions] resolves
-     * defensively from the cache def and skips options the npc doesn't carry.
+     * Talk-to keeps the war-supply dialogue (hand-ins + the recruit hand-in beat); Trade — and any
+     * other vendor option — opens the tabbed armoury storefront directly. Options are resolved
+     * defensively from the cache def so a missing option can't crash plugin init.
      */
     private fun bindVendor(npc: String) {
-        if (!bindVendorOptions(npc) { player.queue { quartermasterMenu(player) } }) {
+        val bound = bindVendorTalkAndTrade(
+            npc,
+            talk = { player.queue { quartermasterMenu(player) } },
+            trade = { openArmoury(player) },
+        )
+        if (!bound) {
             logger.warn { "Warlord's Armoury: '$npc' has no click options; use ::armoury to reach it." }
         }
     }

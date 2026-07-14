@@ -43,3 +43,41 @@ fun KotlinPlugin.bindVendorOptions(npc: String, logic: Plugin.() -> Unit): Boole
     if (toBind.isEmpty()) logger.warn { "vendor '$npc' has no click options to bind a shop/menu to." }
     return toBind.isNotEmpty()
 }
+
+/**
+ * Split binding for vendors that have something to SAY as well as something to SELL:
+ * "Talk-to"/"Talk" runs [talk] (dialogue), every other vendor-entry option — Trade, Shop,
+ * Rewards, … — runs [trade] (which should open the store DIRECTLY, no dialogue hop).
+ *
+ * If the npc has no talk option, [talk] is simply unreachable; if it has ONLY talk options,
+ * they run [trade] instead so the store is never dead — a shopkeeper you can only talk to
+ * still sells.
+ *
+ * @return true if at least one option was bound.
+ */
+fun KotlinPlugin.bindVendorTalkAndTrade(
+    npc: String,
+    talk: Plugin.() -> Unit,
+    trade: Plugin.() -> Unit,
+): Boolean {
+    val acts = try {
+        getNpc(getRSCM(npc)).actions.filterNotNull().filter { it.isNotBlank() }
+    } catch (e: Exception) { emptyList() }
+
+    val talkActs = acts.filter { it.equals("talk-to", true) || it.equals("talk", true) }
+    val tradeActs = acts.filter { a ->
+        a !in talkActs && VENDOR_ENTRY_OPTIONS.any { it.equals(a, true) }
+    }.ifEmpty { if (talkActs.isEmpty()) acts.take(1) else emptyList() }
+
+    if (tradeActs.isEmpty()) {
+        // No dedicated trade option — the talk option(s) must carry the store.
+        talkActs.forEach { opt -> onNpcOption(npc, option = opt, logic = trade) }
+    } else {
+        talkActs.forEach { opt -> onNpcOption(npc, option = opt, logic = talk) }
+        tradeActs.forEach { opt -> onNpcOption(npc, option = opt, logic = trade) }
+    }
+
+    val bound = talkActs.isNotEmpty() || tradeActs.isNotEmpty()
+    if (!bound) logger.warn { "vendor '$npc' has no click options to bind talk/trade to." }
+    return bound
+}

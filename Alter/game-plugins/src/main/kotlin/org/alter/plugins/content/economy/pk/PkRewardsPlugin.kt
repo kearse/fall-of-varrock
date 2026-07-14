@@ -8,13 +8,13 @@ import org.alter.game.model.World
 import org.alter.game.model.attr.KILLER_ATTR
 import org.alter.game.model.entity.GroundItem
 import org.alter.game.model.entity.Player
-import org.alter.game.model.queue.QueueTask
 import org.alter.game.model.shop.PurchasePolicy
 import org.alter.game.model.shop.ShopItem
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
 import org.alter.plugins.content.bots.PkBot
 import org.alter.plugins.content.mechanics.shops.ItemCurrency
+import org.alter.plugins.content.mechanics.shops.ShopTabs
 import org.alter.plugins.content.mechanics.shops.bindVendorOptions
 import org.alter.rscm.RSCM.getRSCM
 
@@ -110,7 +110,7 @@ class PkRewardsPlugin(
         spawnNpc(TRADER, 3224, 3216, 0, 0, Direction.WEST) // end-game/PK cluster, south of the hub's east column
         bindTrader(TRADER)
         onCommand("pkshop", description = "Open the PK Rewards (Blood Money) shops") {
-            player.queue { traderMenu(player) }
+            ShopTabs.open(player, traderTabs)
         }
 
         onPlayerPreDeath {
@@ -130,14 +130,13 @@ class PkRewardsPlugin(
         }
     }
 
-    private suspend fun QueueTask.traderMenu(player: Player) {
-        when (options(player, "PK supplies", "Spec weapons", "Wilderness sets", "Revenant weapons", "Nevermind", title = "PK Rewards")) {
-            1 -> player.openShop(SUPPLIES)
-            2 -> player.openShop(SPEC_WEAPONS)
-            3 -> player.openShop(WILDY_SETS)
-            4 -> player.openShop(REVENANT)
-        }
-    }
+    /** The four Blood-Money wings as one tabbed storefront (see ShopTabs) — no dialogue hop. */
+    private val traderTabs = listOf(
+        ShopTabs.Tab("Supplies", SUPPLIES),
+        ShopTabs.Tab("Spec weapons", SPEC_WEAPONS),
+        ShopTabs.Tab("Wildy sets", WILDY_SETS),
+        ShopTabs.Tab("Revenant", REVENANT),
+    )
 
     private fun shopOf(name: String, wares: List<Ware>) {
         val stock = wares.mapNotNull { (key, price) -> resolveOrNull(key)?.let { ShopItem(it, STOCK, price) } }
@@ -147,9 +146,9 @@ class PkRewardsPlugin(
         }
     }
 
-    /** Bind EVERY vendor option (Talk-to AND Trade) so neither is a dead click on the trader. */
+    /** Bind EVERY vendor option (Talk-to AND Trade) straight to the tabbed storefront. */
     private fun bindTrader(npc: String) {
-        if (!bindVendorOptions(npc) { player.queue { traderMenu(player) } }) {
+        if (!bindVendorOptions(npc) { ShopTabs.open(player, traderTabs) }) {
             logger.warn { "pk-rewards: '$npc' has no click options; use ::pkshop." }
         }
     }
