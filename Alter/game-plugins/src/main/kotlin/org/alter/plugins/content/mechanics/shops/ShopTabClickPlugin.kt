@@ -1,5 +1,6 @@
 package org.alter.plugins.content.mechanics.shops
 
+import org.alter.game.model.ExamineEntityType
 import org.alter.api.ext.closeInterface
 import org.alter.api.ext.getCommandArgs
 import org.alter.api.ext.player
@@ -48,6 +49,14 @@ class ShopTabClickPlugin(
             if (slot !in shop.items.indices) return@onCommand
             val shopItem = shop.items[slot] ?: return@onCommand
             shop.currency.onSellValueMessage(player, shopItem)
+        }
+
+        onCommand("shopexamineclick", description = "Examine an item in the open shop (client overlay channel)") {
+            val slot = player.getCommandArgs().getOrNull(0)?.toIntOrNull() ?: return@onCommand
+            val shop = player.attr[CURRENT_SHOP_ATTR] ?: return@onCommand
+            if (slot !in shop.items.indices) return@onCommand
+            val shopItem = shop.items[slot] ?: return@onCommand
+            world.sendExamine(player, shopItem.item, ExamineEntityType.ITEM)
         }
 
         onCommand("shopcloseclick", description = "Close the shop window (client overlay channel)") {

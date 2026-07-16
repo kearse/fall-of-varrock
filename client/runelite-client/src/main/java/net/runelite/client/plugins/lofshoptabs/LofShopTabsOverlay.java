@@ -45,6 +45,17 @@ class LofShopTabsOverlay extends Overlay
 	static final int TAB_BASE = 100;   // + tab index
 	static final int ITEM_BASE = 1000; // + grid index
 
+	// Our own right-click menu (drawn on top of the window so it can't hide behind it). Item-buy
+	// rows carry the item name; Buy X prompts for an amount. Indices map to LofShopTabsPlugin.menuAction.
+	static final String[] MENU_OPTS = {"Value", "Buy 1", "Buy 10", "Buy 100", "Buy X", "Examine", "Cancel"};
+	private static final int MENU_W = 240;
+	private static final int MENU_HEADER_H = 16;
+	private static final int MENU_ROW_H = 15;
+
+	private volatile boolean menuOpen;
+	private volatile int menuGridIndex = -1;
+	private volatile int menuX, menuY;
+
 	private static final int COLS = 8;
 	private static final int CELL_GAP = 3;
 	private static final int TITLE_H = 30;
@@ -200,18 +211,69 @@ class LofShopTabsOverlay extends Overlay
 		return INSIDE;
 	}
 
+	// -------- our own right-click menu --------
+
+	boolean isMenuOpen()
+	{
+		return menuOpen;
+	}
+
+	int menuGridIndex()
+	{
+		return menuGridIndex;
+	}
+
+	/** Open the menu for grid cell [gridIndex] at the cursor, clamped on-canvas. */
+	void openMenu(int gridIndex, int atX, int atY)
+	{
+		menuGridIndex = gridIndex;
+		final int h = MENU_HEADER_H + MENU_OPTS.length * MENU_ROW_H;
+		menuX = Math.max(2, Math.min(atX, client.getCanvasWidth() - MENU_W - 2));
+		menuY = Math.max(2, Math.min(atY, client.getCanvasHeight() - h - 2));
+		menuOpen = true;
+	}
+
+	void closeMenu()
+	{
+		menuOpen = false;
+		menuGridIndex = -1;
+	}
+
+	private Rectangle menuBox()
+	{
+		return new Rectangle(menuX, menuY, MENU_W, MENU_HEADER_H + MENU_OPTS.length * MENU_ROW_H);
+	}
+
+	/** Option index under [p] (0..n-1), or -1 for anywhere else (which dismisses the menu). */
+	int menuHit(Point p)
+	{
+		if (!menuOpen || !menuBox().contains(p))
+		{
+			return -1;
+		}
+		final int rel = p.y - (menuY + MENU_HEADER_H);
+		if (rel < 0)
+		{
+			return -1;
+		}
+		final int idx = rel / MENU_ROW_H;
+		return (idx >= 0 && idx < MENU_OPTS.length) ? idx : -1;
+	}
+
 	@Override
 	public Dimension render(Graphics2D g)
 	{
 		if (!computeShowing())
 		{
 			showing = false;
+			menuOpen = false;
 			return null;
 		}
 		final Rectangle w = windowRect();
 		if (w == null)
 		{
 			showing = false;
+			menuOpen = false;
 			return null;
 		}
 		// Publish for the mouse thread BEFORE drawing.
@@ -323,8 +385,51 @@ class LofShopTabsOverlay extends Overlay
 			LofTheme.shadowText(g, price, rc.x + (rc.width - g.getFontMetrics().stringWidth(price)) / 2, rc.y + ch - 3, LofTheme.GOLD);
 		}
 
+		// our own right-click menu — drawn LAST so it sits on top of the window
+		if (menuOpen)
+		{
+			drawMenu(g, mouse);
+		}
+
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, oldAA == null ? RenderingHints.VALUE_ANTIALIAS_DEFAULT : oldAA);
 		return new Dimension(w.width, w.height);
+	}
+
+	/** The OSRS-style "Choose Option" menu: Value / Buy 1 / 10 / 100 / X / Examine / Cancel, each
+	 *  buy row tagged with the item name. */
+	private void drawMenu(Graphics2D g, Point mouse)
+	{
+		final Rectangle box = menuBox();
+		g.setColor(new Color(0, 0, 0, 235));
+		g.fillRect(box.x, box.y, box.width, box.height);
+		g.setColor(LofTheme.EMBER_DARK);
+		g.drawRect(box.x, box.y, box.width - 1, box.height - 1);
+
+		// header
+		g.setColor(LofTheme.HEADER);
+		g.fillRect(box.x, box.y, box.width, MENU_HEADER_H);
+		g.setFont(FontManager.getRunescapeSmallFont());
+		LofTheme.shadowText(g, "Choose Option", box.x + 4, box.y + 12, LofTheme.GOLD);
+
+		final String name = plugin.itemName(menuGridIndex);
+		for (int i = 0; i < MENU_OPTS.length; i++)
+		{
+			final int ry = box.y + MENU_HEADER_H + i * MENU_ROW_H;
+			final boolean hov = mouse.y >= ry && mouse.y < ry + MENU_ROW_H && mouse.x >= box.x && mouse.x < box.x + box.width;
+			if (hov)
+			{
+				g.setColor(LofTheme.alpha(LofTheme.EMBER, 70));
+				g.fillRect(box.x + 1, ry, box.width - 2, MENU_ROW_H);
+			}
+			final String opt = MENU_OPTS[i];
+			LofTheme.shadowText(g, opt, box.x + 4, ry + 12, LofTheme.TEXT);
+			// item name in orange after buy/value/examine rows (not Cancel)
+			if (i < MENU_OPTS.length - 1 && !name.isEmpty())
+			{
+				final int ox = box.x + 4 + g.getFontMetrics().stringWidth(opt) + 5;
+				LofTheme.shadowText(g, name, ox, ry + 12, LofTheme.LAVA);
+			}
+		}
 	}
 
 	/** Compact price: 1.2k / 3.4m / 1.1b, else the raw number. */

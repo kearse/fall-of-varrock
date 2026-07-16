@@ -71,6 +71,10 @@ class MessagePublicHandler : MessageHandler<MessagePublic> {
                     client.world.plugins.executeCommand(client, "shopvalclick", parts.drop(1).toTypedArray())
                     return
                 }
+                "shopexamine" -> {
+                    client.world.plugins.executeCommand(client, "shopexamineclick", parts.drop(1).toTypedArray())
+                    return
+                }
                 "shopclose" -> {
                     client.world.plugins.executeCommand(client, "shopcloseclick", parts.drop(1).toTypedArray())
                     return

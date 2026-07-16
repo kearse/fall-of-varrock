@@ -29,7 +29,6 @@ import java.util.List;
 import javax.inject.Inject;
 import net.runelite.api.ChatMessageType;
 import net.runelite.api.Client;
-import net.runelite.api.MenuAction;
 import net.runelite.api.MenuEntry;
 import net.runelite.api.ScriptID;
 import net.runelite.api.events.ChatMessage;
@@ -39,6 +38,7 @@ import net.runelite.api.events.ScriptCallbackEvent;
 import net.runelite.api.widgets.Widget;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
+import net.runelite.client.game.chatbox.ChatboxPanelManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.input.MouseManager;
 import net.runelite.client.plugins.Plugin;
@@ -76,6 +76,9 @@ public class LofShopTabsPlugin extends Plugin
 
 	@Inject
 	private LofShopTabsConfig config;
+
+	@Inject
+	private ChatboxPanelManager chatboxPanelManager;
 
 	private LofShopTabsMouseListener mouseListener;
 
@@ -299,21 +302,89 @@ public class LofShopTabsPlugin extends Plugin
 		}
 	}
 
-	/** Buy from the right-click menu (Buy 1/5/10/50), by shop slot. */
-	void buy(int slot, int amount)
-	{
-		send("::shopbuy " + slot + " " + amount);
-	}
-
 	void closeShop()
 	{
 		send("::shopclose");
 	}
 
+	/** The item name for a grid cell (for the right-click menu), from the cache. */
+	String itemName(int index)
+	{
+		if (index < 0 || index >= items.size())
+		{
+			return "";
+		}
+		try
+		{
+			return client.getItemDefinition(items.get(index).itemId).getName();
+		}
+		catch (Exception e)
+		{
+			return "";
+		}
+	}
+
 	/**
-	 * Right-click over an item cell → the OSRS shop menu (Value + Buy 1/5/10/50), built with
-	 * onClick handlers that send the matching command. Over any other part of the window we clear
-	 * the menu so no world action ("Walk here") leaks through the overlay.
+	 * Act on a click in our own drawn right-click menu (see LofShopTabsOverlay.MENU_OPTS):
+	 * Value / Buy 1 / Buy 10 / Buy 100 / Buy X / Examine / Cancel.
+	 */
+	void menuAction(int gridIndex, int opt)
+	{
+		if (gridIndex < 0 || gridIndex >= items.size())
+		{
+			return;
+		}
+		final int slot = items.get(gridIndex).slot;
+		switch (opt)
+		{
+			case 0: // Value
+				send("::shopval " + slot);
+				break;
+			case 1: // Buy 1
+				send("::shopbuy " + slot + " 1");
+				break;
+			case 2: // Buy 10
+				send("::shopbuy " + slot + " 10");
+				break;
+			case 3: // Buy 100
+				send("::shopbuy " + slot + " 100");
+				break;
+			case 4: // Buy X — prompt for an amount
+				promptBuyX(slot);
+				break;
+			case 5: // Examine
+				send("::shopexamine " + slot);
+				break;
+			default: // Cancel
+				break;
+		}
+	}
+
+	private void promptBuyX(int slot)
+	{
+		clientThread.invokeLater(() ->
+			chatboxPanelManager.openTextInput("Enter amount:")
+				.onDone(input ->
+				{
+					try
+					{
+						final int amt = Integer.parseInt(input.trim().replaceAll("[^0-9]", ""));
+						if (amt > 0)
+						{
+							send("::shopbuy " + slot + " " + amt);
+						}
+					}
+					catch (NumberFormatException ignored)
+					{
+					}
+				})
+				.build());
+	}
+
+	/**
+	 * Right-clicking the overlay must not leave the game's own menu ("Choose Option" / "Walk here")
+	 * showing behind our window — we draw our own. Clear the game menu whenever the cursor is over
+	 * the shop window.
 	 */
 	@Subscribe
 	public void onMenuOpened(MenuOpened event)
@@ -323,43 +394,10 @@ public class LofShopTabsPlugin extends Plugin
 			return;
 		}
 		final net.runelite.api.Point m = client.getMouseCanvasPosition();
-		if (m == null)
+		if (m != null && overlay.hitTest(new java.awt.Point(m.getX(), m.getY())) != LofShopTabsOverlay.OUTSIDE)
 		{
-			return;
-		}
-		final int hit = overlay.hitTest(new java.awt.Point(m.getX(), m.getY()));
-		if (hit == LofShopTabsOverlay.OUTSIDE)
-		{
-			return;
-		}
-		if (hit >= LofShopTabsOverlay.ITEM_BASE)
-		{
-			final int idx = hit - LofShopTabsOverlay.ITEM_BASE;
-			if (idx >= items.size())
-			{
-				return;
-			}
-			final int slot = items.get(idx).slot;
-			client.setMenuEntries(new MenuEntry[0]);
-			addEntry("Buy 50", () -> buy(slot, 50));
-			addEntry("Buy 10", () -> buy(slot, 10));
-			addEntry("Buy 5", () -> buy(slot, 5));
-			addEntry("Buy 1", () -> buy(slot, 1));
-			addEntry("Value", () -> send("::shopval " + slot)); // last added = top entry
-		}
-		else
-		{
-			// Over the frame/tabs/close — suppress the default (world) menu.
 			client.setMenuEntries(new MenuEntry[0]);
 		}
-	}
-
-	private void addEntry(String option, Runnable action)
-	{
-		client.createMenuEntry(-1)
-			.setOption(option)
-			.setType(MenuAction.RUNELITE)
-			.onClick(e -> action.run());
 	}
 
 	private void send(String msg)
