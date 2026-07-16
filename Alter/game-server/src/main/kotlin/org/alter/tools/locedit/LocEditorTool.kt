@@ -45,8 +45,10 @@ import java.nio.file.Path
  * afterwards so it reloads the cache; clients pull the changed map on reconnect.
  */
 
-private const val CACHE_PATH = "data/cache"
-private const val XTEA_PATH = "data/xteas.json"
+// Overridable so the same tool runs locally (defaults) and inside the prod game image against the
+// mounted live cache (e.g. `apply /app/data/mapedit/ge_plaza.json /cache`). See .github/workflows/loc-cache.yml.
+private var cachePath = "data/cache"
+private var xteaPath = "data/xteas.json"
 private const val REVISION = 228
 
 // ---------------------------------------------------------------------------- edit-list schema
@@ -119,8 +121,8 @@ private fun encodeLocations(locs: List<LocationData>): ByteArray {
 // ---------------------------------------------------------------------------- cache helpers
 
 private fun initCache() {
-    CacheManager.init(Cache.load(Path.of(CACHE_PATH), false), REVISION)
-    val xteaFile = File(XTEA_PATH)
+    CacheManager.init(Cache.load(Path.of(cachePath), false), REVISION)
+    val xteaFile = File(xteaPath)
     if (xteaFile.exists()) XteaLoader.load(xteaFile)
 }
 
@@ -184,7 +186,11 @@ private fun applyEdits(spec: EditSpec, original: List<LocationData>): ApplyResul
 
 fun main(args: Array<String>) {
     val mode = args.getOrNull(0)?.lowercase() ?: "help"
-    println("loc-editor tool: mode=$mode cache=$CACHE_PATH rev=$REVISION")
+    // args[2] = cache dir, args[3] = xteas path (both optional; positions are consistent across modes:
+    //   verify/restore <region> [cacheDir] [xteas]   |   preview/apply <editfile> [cacheDir] [xteas])
+    args.getOrNull(2)?.let { cachePath = it }
+    args.getOrNull(3)?.let { xteaPath = it }
+    println("loc-editor tool: mode=$mode cache=$cachePath rev=$REVISION")
     initCache()
     when (mode) {
         "verify" -> verify(args.getOrNull(1)?.toIntOrNull())
@@ -260,7 +266,7 @@ private fun apply(path: String?) {
 
     backup(region)
     val keys = keysFor(region)
-    val lib = CacheLibrary(CACHE_PATH)
+    val lib = CacheLibrary(cachePath)
     try {
         lib.put(MAPS, "l${rx}_$ry", preBytes, keys)
         lib.update()
@@ -269,7 +275,7 @@ private fun apply(path: String?) {
     }
 
     // Read back through the SAME path the server uses and assert the loc set matches.
-    CacheManager.init(Cache.load(Path.of(CACHE_PATH), false), REVISION) // reopen so we read fresh bytes
+    CacheManager.init(Cache.load(Path.of(cachePath), false), REVISION) // reopen so we read fresh bytes
     val after = readLocs(region)
     if (after != null && canon(after) == expected) {
         println("=== VERIFIED: region $region written and re-decoded to the intended ${after.size} locs. ===")
@@ -301,7 +307,7 @@ private fun restore(region: Int?) {
     val lFile = File(dir, "l${rx}_$ry.bak")
     if (!lFile.exists()) { println("no backup for region $region at ${lFile.path}"); return }
     val keys = keysFor(region)
-    val lib = CacheLibrary(CACHE_PATH)
+    val lib = CacheLibrary(cachePath)
     try {
         lib.put(MAPS, "l${rx}_$ry", lFile.readBytes(), keys)
         lib.update()

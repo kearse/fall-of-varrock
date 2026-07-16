@@ -1,0 +1,106 @@
+name: Loc cache edit
+
+# One-click scenery (loc) cache edit on the LIVE server, over the same secure SSH path the Deploy
+# and Quest-cache workflows use. Runs the locEdit tool that already ships inside the game image
+# (org.alter.tools.locedit) against the live cache at /opt/kol/runtime/cache — no manual SSH.
+#
+# This is how a "war-fallen city" region edit reaches prod: the cache is a runtime mount, NOT part
+# of the pushed image, so pushing code never changes it — this workflow does, reversibly.
+#
+#   verify   — read-only: prove the encoder round-trips on a region (RUN THIS FIRST; confirms the
+#              prod cache is decodable/decrypted and reports the loc count)
+#   preview  — read-only: show what an edit-list removes/adds
+#   apply    — back up the cache ONCE (runtime/cache.preloc), apply the edit-list, restart game (~90s)
+#   restore  — swap the pristine backup back and restart game
+#
+# Actions -> Loc cache edit -> Run workflow -> pick an action.
+# NOTE: restore rolls the WHOLE cache back to the snapshot taken at the first apply (a full-cache
+# rollback, like quest-cache's). Take it before layering other cache edits on top.
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "What to do to the live loc cache"
+        type: choice
+        required: true
+        default: verify
+        options: [verify, preview, apply, restore]
+      region:
+        description: "Region id (verify / restore)"
+        required: false
+        default: "12598"
+      editfile:
+        description: "Edit-list path inside the game image (preview / apply)"
+        required: false
+        default: "/app/data/mapedit/ge_plaza.json"
+
+concurrency:
+  group: loc-cache
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Write SSH key
+        run: |
+          install -m 600 /dev/null deploy_key
+          printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > deploy_key
+
+      - name: Run loc cache ${{ inputs.action }} on the VPS
+        run: |
+          ssh -i deploy_key -o StrictHostKeyChecking=accept-new \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+            'bash -s' '${{ inputs.action }}' '${{ inputs.region }}' '${{ inputs.editfile }}' <<'REMOTE'
+          set -euo pipefail
+          ACTION="${1:-verify}"
+          REGION="${2:-12598}"
+          EDITFILE="${3:-/app/data/mapedit/ge_plaza.json}"
+          cd /opt/kol
+          export IMAGE_TAG="$(cat .deployed-tag 2>/dev/null || echo latest)"
+          CACHE=/opt/kol/runtime/cache
+          COMPOSE="docker compose -f docker-compose.prod.yml"
+
+          # Run the tool inside a throwaway game container with the live cache mounted rw at /cache.
+          # The map cache is decrypted (zero xtea keys) — no xteas mount needed; the tool falls back
+          # to empty keys, exactly as verified locally.
+          run_tool() {
+            $COMPOSE run --rm -T --no-deps \
+              -v "$CACHE":/cache --entrypoint java game \
+              -cp '/app/lib/*' org.alter.tools.locedit.LocEditorToolKt "$@" /cache
+          }
+
+          echo "== loc cache: $ACTION (image tag $IMAGE_TAG) =="
+          case "$ACTION" in
+            verify)
+              run_tool verify "$REGION"
+              ;;
+            preview)
+              run_tool preview "$EDITFILE"
+              ;;
+            apply)
+              if [ ! -d runtime/cache.preloc ]; then
+                cp -r runtime/cache runtime/cache.preloc
+                echo "backed up cache -> runtime/cache.preloc"
+              else
+                echo "loc backup already exists (runtime/cache.preloc) — keeping it"
+              fi
+              run_tool apply "$EDITFILE"
+              $COMPOSE restart game
+              echo "game container restarted — relog to see the change"
+              ;;
+            restore)
+              if [ ! -d runtime/cache.preloc ]; then
+                echo "ERROR: no backup at runtime/cache.preloc — nothing to restore"; exit 1
+              fi
+              $COMPOSE stop game
+              rm -rf runtime/cache
+              cp -r runtime/cache.preloc runtime/cache
+              $COMPOSE up -d game
+              echo "restored pre-loc cache + restarted game"
+              ;;
+            *)
+              echo "unknown action: $ACTION"; exit 1 ;;
+          esac
+          REMOTE
