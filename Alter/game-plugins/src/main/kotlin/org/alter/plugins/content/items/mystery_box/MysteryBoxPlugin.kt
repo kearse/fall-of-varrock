@@ -54,7 +54,7 @@ class MysteryBoxPlugin(
             }
         }
 
-        onCommand("randbank") {
+        onCommand("randbank", Privilege.DEV_POWER, "Fill bank with random items (dev only)") {
             repeat(700) {
                 val getItemRange = itemSize()
                 var getRandId = world.random(0..getItemRange)
