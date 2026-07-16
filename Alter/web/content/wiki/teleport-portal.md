@@ -2,7 +2,7 @@
 title: The teleport portal
 category: Getting Started
 summary: The home portal's nine tabs cover everything - skilling, bosses, wilderness tiers, minigames - with danger tags.
-order: 3
+order: 4
 updated: 2026-07-04
 ---
 

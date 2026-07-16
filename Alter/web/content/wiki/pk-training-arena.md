@@ -2,7 +2,7 @@
 title: PK Training Arena
 category: Minigames & Bosses
 summary: A Duel Arena sparring ground that teaches you to PK. Get loaned a Dharok's or NH kit (or bring your own), fight a matched bot at Easy/Medium/Hard, keep nothing, lose nothing, gain XP.
-order: 3
+order: 9
 updated: 2026-07-07
 infobox: Type = Sparring ground (duel-style rounds); Location = Duel Arena; Entry = Talk to Ardan the Ripper (or `::pktrain`); Kits = Dharok's / NH / Bring-your-own; Opponent = Matched sparring bot (Easy / Medium / Hard); Keep gear = No; Death = Safe (no item loss); XP = Full; Leave = Walk out or `::unkit`
 ---

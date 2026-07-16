@@ -2,7 +2,7 @@
 title: Duel Arena - Staking
 category: Minigames & Bosses
 summary: The classic stake-your-items duel. Challenge a player, set the rules, both put up items and coins, fight to the death - the winner takes the whole pot. Escrowed and crash-safe, so it can't be scammed.
-order: 4
+order: 8
 updated: 2026-07-06
 infobox: Type = Player-vs-player staking; Location = Duel Arena; Start = Right-click a player → Challenge; Rules = No prayer / food / drinks / movement / style limits; Stake = Items + coins (both sides); Payout = Winner takes both stakes; Personal gear = Never at risk; Forfeit/Logout = You lose your stake
 ---

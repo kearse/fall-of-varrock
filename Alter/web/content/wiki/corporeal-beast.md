@@ -2,7 +2,7 @@
 title: Corporeal Beast - the city boss
 category: Minigames & Bosses
 summary: Lumbridge's apex world boss - damage-split loot, sigil mega-rares, and Lord-sponsored summons.
-order: 4
+order: 5
 updated: 2026-07-04
 infobox: Type = City world boss; Location = North-east of Lumbridge, by the river; Teleport = `::worldboss`; Summon = `::summonboss corporeal_beast` (Lord+, 3,000,000 gp); Hitpoints = ~1,200; Requirement = Protect from Magic (Prayer 37); Loot = Pooled, split by damage; Notable drops = Sigils, Spirit shield, Draconic visage, pet
 ---

@@ -2,7 +2,7 @@
 title: Last Man Standing
 category: Minigames & Bosses
 summary: The original OSRS battle royale. Build your kit at Lisa, spawn on an instanced island at standardized stats, loot the village chests for upgrades, and outlast everyone as the fog closes in.
-order: 4
+order: 7
 updated: 2026-07-07
 infobox: Type = Battle royale (instanced); Location = Lumbridge LMS lobby (Lisa); Entry = Talk to Lisa (or `::lms`); Field = Up to 8 (players + filler competitors); Kit = Build your own at Lisa (saved between games); Stats = Standardized for the round (99s, 52 Prayer); Death = Safe (no item loss); Reward = LMS points → Lisa's reward shop; Maps = Deserted Island, The Ruins
 ---

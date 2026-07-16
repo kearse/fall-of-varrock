@@ -2,8 +2,9 @@
 title: Daily & vote rewards
 category: Economy & Trading
 summary: Free coins and vote tickets every calendar day - streaks stack the payout.
-order: 4
+order: 7
 updated: 2026-07-04
+infobox: Type = Daily login rewards; Daily = `::daily` - 50,000 gp, +10,000/day, cap 250,000, plus 1 Vote ticket; Vote = `::claimvote` - 2 Vote tickets, +1/day; Streaks = Tracked separately, reset on a missed day
 ---
 
 Two free claims reset every real calendar day. Both build **streaks** - miss a day and the streak resets.

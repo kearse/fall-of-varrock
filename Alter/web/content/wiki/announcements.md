@@ -2,7 +2,7 @@
 title: Server announcements
 category: Getting Started
 summary: Where server-wide headlines show up - the ticker above the chat box - and how to tune it.
-order: 8
+order: 6
 updated: 2026-07-12
 ---
 

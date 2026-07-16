@@ -2,8 +2,9 @@
 title: Gambling - house dice
 category: Economy & Trading
 summary: Percentile dice against the house - 51+ wins, 5% rake, 100m max bet.
-order: 3
+order: 6
 updated: 2026-07-04
+infobox: Type = Dice gambling (vs the house); Host = South end of the Lumbridge market's east row; Command = `::gamble`; Game = Percentile dice (roll 1-100); Win = 51 or higher; Payout = Double stake, minus 5% rake; Max bet = 100,000,000 gp
 ---
 
 The **Gambling Host** stands at the south end of the Lumbridge market's east row. He runs **percentile dice** against the house - no middlemen, no scams, every roll logged.

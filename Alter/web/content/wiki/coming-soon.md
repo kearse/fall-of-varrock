@@ -2,7 +2,7 @@
 title: What's coming next
 category: Minigames & Bosses
 summary: Content that's on the roadmap or visible in-game as "coming soon" - and what's actually playable today.
-order: 5
+order: 10
 updated: 2026-07-04
 ---
 

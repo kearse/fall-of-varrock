@@ -4,6 +4,7 @@ category: Getting Started
 summary: The four-step onboarding quest every new player gets, plus the starter kit and bank stake.
 order: 2
 updated: 2026-07-04
+infobox: Type = Intro quest (auto-starts); Start = Automatic on first login; Steps = 4 - Fight, Rank, Slay, Supply; Guidance = Hint arrows; Reward = Full steel kit + starter tools; Leads to = the War-Prep chain
 ---
 
 Every new account starts the **Recruit Trials** automatically - a four-step chain that walks you through the War loop and pays out a full steel kit. Hint arrows point the way and each step advances on its own when you complete it.

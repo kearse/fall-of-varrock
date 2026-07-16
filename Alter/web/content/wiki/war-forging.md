@@ -2,7 +2,7 @@
 title: War-forging - the Royal Smith
 category: Economy & Trading
 summary: The endgame gear chase - Torva, Masori and Ancestral, forged from war service, skilling and the market.
-order: 3
+order: 4
 updated: 2026-07-13
 infobox: Type = Endgame gear sink; Location = Lumbridge castle courtyard; Requires = Rank Knight+; Makes = Torva, Masori, Ancestral
 ---

@@ -2,7 +2,7 @@
 title: Gameplay roadmap - the player journey
 category: Getting Started
 summary: The whole journey on one page - from your first hour in steel to commanding armies as King.
-order: 2
+order: 3
 updated: 2026-07-13
 ---
 

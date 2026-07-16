@@ -2,7 +2,7 @@
 title: Path to end game - where every rare comes from
 category: Economy & Trading
 summary: The clear route to Torva, godswords, dragon claws, megarares and spirit shields - every source, every rate, every price.
-order: 4
+order: 5
 updated: 2026-07-13
 infobox: Type = Gear guide; Starts at = Rank armour & rune; Ends at = Torva, Masori, Ancestral & megarares; Currencies = Boss Tickets, Blood Money, Commendations, coins
 ---

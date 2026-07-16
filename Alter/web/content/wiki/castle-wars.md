@@ -2,7 +2,7 @@
 title: Castle Wars
 category: Minigames & Bosses
 summary: The classic capture-the-flag team war on the real Castle Wars arena. Pick Saradomin or Zamorak at the lobby portals (or let Guthix balance you), steal the enemy standard off their keep roof, and run it home to score. Bots fill both armies to 25-a-side, so there's always a full war.
-order: 5
+order: 6
 updated: 2026-07-07
 infobox: Type = Team capture-the-flag; Location = Castle Wars lobby (`::cw`); Entry = Lobby god portals; Teams = Saradomin vs Zamorak, 10 a side (bots fill empty slots); Game length = 20 minutes; Keep gear = Yes (your own gear, team cloak enforced); Death = Safe (respawn in your spawn room); Reward = Coins (win/draw/loss payout + capture bonus)
 ---

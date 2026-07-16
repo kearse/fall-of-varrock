@@ -43,3 +43,5 @@ At any given time one category - **FOOD**, **POTIONS** or **BARS** - is in high 
 ## What War Effort gets you
 
 War Effort is your personal contribution score - it feeds rank progression and daily bonuses, and marks you as a wartime contributor when loot pools split. Between the Quartermaster, [resource contracts](/wiki/slayer-and-contracts), and defending frontiers, a dedicated skiller can climb the ladder without ever winning a duel.
+
+Earning War Effort through the day also builds a **daily bonus** to your XP rate and drop rate - it tiers up the more you contribute and resets each day. Check your current tier and progress with `::warbonus`.

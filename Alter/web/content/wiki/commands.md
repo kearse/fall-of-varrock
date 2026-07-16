@@ -2,7 +2,7 @@
 title: The command window
 category: Getting Started
 summary: Type ::commands to open a tabbed window listing every command your rank can use - click one to drop it into your chat box.
-order: 3
+order: 5
 updated: 2026-07-12
 ---
 

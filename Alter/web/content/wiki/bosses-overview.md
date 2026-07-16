@@ -2,7 +2,7 @@
 title: Bosses - the full roster
 category: Minigames & Bosses
 summary: Every boss lair, its teleport command, and how the collection log tracks your drops.
-order: 3
+order: 4
 updated: 2026-07-04
 ---
 

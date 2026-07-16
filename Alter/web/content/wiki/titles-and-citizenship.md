@@ -2,7 +2,7 @@
 title: Titles & citizenship
 category: The War
 summary: The feudal rank ladder - what each title costs, what it unlocks, and why armour is rank-gated.
-order: 2
+order: 3
 updated: 2026-07-08
 ---
 

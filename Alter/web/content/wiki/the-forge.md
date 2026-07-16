@@ -2,7 +2,7 @@
 title: The Forge - rune to dragon
 category: Economy & Trading
 summary: Upgrade rune gear into dragon with runite bars, coins and Smithing levels.
-order: 2
+order: 3
 updated: 2026-07-04
 infobox: Type = Smithing sink; Location = The Mire working yard; Requires = Hammer, runite bars, coins; Levels = Smithing 60-75; Makes = Dragon weapons & armour; XP = 50 per bar
 ---

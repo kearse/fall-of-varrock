@@ -4,6 +4,7 @@ category: Store & Membership
 summary: How bonds move between players, what redeeming gets you, and the membership tiers.
 order: 1
 updated: 2026-07-04
+infobox: Type = Membership currency; Source = Bought on the store, traded player-to-player; Redeem = `::bonds` or the Bond Merchant; Value = 30 days membership OR 450 Donor Points; Tiers = Bronze, Silver, Gold, Diamond
 ---
 
 **Bonds** are the bridge between the [store](/store) and the in-game economy - bought with real money on the site, tradeable to other players for gold, and redeemable for membership or Donor Points. They're how a player who never spends real money can still earn membership with gp.

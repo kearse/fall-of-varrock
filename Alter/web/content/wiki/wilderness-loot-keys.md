@@ -4,6 +4,7 @@ category: PvP & Wilderness
 summary: PvP kills in the wilderness mint a loot key - claim it at the Lumbridge Loot Chest before someone takes it off your corpse.
 order: 1
 updated: 2026-07-05
+infobox: Type = Wilderness PvP reward; Minted by = Killing players in the wilderness; Held = Up to 5 keys at once; Cash in = the Loot Chest, east of the Lumbridge market; Command = `::lootkeys`; Risk = Keys always lost on death
 ---
 
 Kill a player in the wilderness and their lost items don't hit the ground - they're sealed into a **loot key** placed in your inventory. Bring it home to cash in.
