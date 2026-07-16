@@ -407,6 +407,7 @@ class LofShopTabsOverlay extends Overlay
 		final Shape gridClip = g.getClip();
 		g.setClip(vp.x, vp.y, vp.width, vp.height);
 		g.setFont(FontManager.getRunescapeSmallFont());
+		int hovered = -1;
 		for (int i = 0; i < items.size(); i++)
 		{
 			final Rectangle rc = cellRect(w, i);
@@ -415,6 +416,10 @@ class LofShopTabsOverlay extends Overlay
 				continue; // off-screen
 			}
 			final boolean hov = rc.contains(mouse) && mouse.y >= vp.y && mouse.y <= vp.y + vp.height;
+			if (hov)
+			{
+				hovered = i;
+			}
 			g.setColor(hov ? LofTheme.ROW_HOVER : LofTheme.ROW);
 			g.fillRoundRect(rc.x, rc.y, rc.width, rc.height, 6, 6);
 			g.setColor(LofTheme.alpha(hov ? LofTheme.EMBER : LofTheme.EMBER_DARK, hov ? 170 : 45));
@@ -445,6 +450,12 @@ class LofShopTabsOverlay extends Overlay
 			g.fillRoundRect(sbX, thumbY, SCROLLBAR_W, thumbH, SCROLLBAR_W, SCROLLBAR_W);
 		}
 
+		// hover tooltip: the item name near the cursor (OSRS-style), only when no menu is open
+		if (!menuOpen && hovered >= 0)
+		{
+			drawTooltip(g, plugin.itemName(hovered), mouse);
+		}
+
 		// our own right-click menu — drawn LAST so it sits on top of the window
 		if (menuOpen)
 		{
@@ -453,6 +464,27 @@ class LofShopTabsOverlay extends Overlay
 
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, oldAA == null ? RenderingHints.VALUE_ANTIALIAS_DEFAULT : oldAA);
 		return new Dimension(w.width, w.height);
+	}
+
+	/** Small item-name popup by the cursor, like the OSRS shop hover. */
+	private void drawTooltip(Graphics2D g, String name, Point mouse)
+	{
+		if (name == null || name.isEmpty())
+		{
+			return;
+		}
+		g.setFont(FontManager.getRunescapeSmallFont());
+		final int tw = g.getFontMetrics().stringWidth(name);
+		final int pad = 5;
+		int bx = mouse.x + 12;
+		int by = mouse.y + 18;
+		bx = Math.min(bx, client.getCanvasWidth() - tw - pad * 2 - 2);
+		by = Math.min(by, client.getCanvasHeight() - 18);
+		g.setColor(new Color(0, 0, 0, 220));
+		g.fillRect(bx, by, tw + pad * 2, 16);
+		g.setColor(LofTheme.EMBER_DARK);
+		g.drawRect(bx, by, tw + pad * 2 - 1, 15);
+		LofTheme.shadowText(g, name, bx + pad, by + 12, LofTheme.GOLD);
 	}
 
 	/** The OSRS-style "Choose Option" menu: Value / Buy 1 / 10 / 100 / X / Examine / Cancel, each

@@ -81,7 +81,38 @@ open class ItemCurrency(
 
     override fun label(): String = pluralCurrency
 
-    override fun balance(p: Player): Int = p.inventory.getItemCount(currencyItem)
+    /** Spendable = inventory + bank, so a player can shop straight out of the bank. */
+    override fun balance(p: Player): Int = spendable(p).coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
+
+    /** Total currency the player can spend (inventory first, then bank). */
+    private fun spendable(p: Player): Long =
+        p.inventory.getItemCount(currencyItem).toLong() + p.bank.getItemCount(currencyItem).toLong()
+
+    /**
+     * Deduct [total] currency, taking from the inventory first and the bank for the remainder.
+     * Returns false (and leaves the player untouched) if they can't cover it.
+     */
+    private fun spendCurrency(p: Player, total: Int): Boolean {
+        if (spendable(p) < total) {
+            return false
+        }
+        val fromInv = Math.min(p.inventory.getItemCount(currencyItem), total)
+        if (fromInv > 0) {
+            val r = p.inventory.remove(item = currencyItem, amount = fromInv, assureFullRemoval = true)
+            if (r.hasFailed()) {
+                return false
+            }
+        }
+        val fromBank = total - fromInv
+        if (fromBank > 0) {
+            val r = p.bank.remove(item = currencyItem, amount = fromBank, assureFullRemoval = true)
+            if (r.hasFailed()) {
+                if (fromInv > 0) p.inventory.add(item = currencyItem, amount = fromInv) // refund the inv portion
+                return false
+            }
+        }
+        return true
+    }
 
     override fun getSellPrice(
         world: World,
@@ -102,9 +133,10 @@ open class ItemCurrency(
         val shopItem = shop.items[slot] ?: return
 
         val currencyCost = shopItem.sellPrice ?: getSellPrice(p.world, shopItem.item)
-        val currencyCount = p.inventory.getItemCount(currencyItem)
+        // Affordability is inventory + bank (see [spendable]).
+        val available = spendable(p)
 
-        var amount = Math.min(Math.floor(currencyCount.toDouble() / currencyCost.toDouble()).toInt(), amt)
+        var amount = if (currencyCost <= 0) amt else Math.min(available / currencyCost, amt.toLong()).toInt()
 
         if (amount == 0) {
             p.message("You don't have enough $pluralCurrency.")
@@ -129,13 +161,8 @@ open class ItemCurrency(
             return
         }
 
-        if (p.inventory.getItemCount(itemId = currencyItem) < totalCost) {
+        if (!spendCurrency(p, totalCost.toInt())) {
             p.message("You don't have enough $pluralCurrency.")
-            return
-        }
-
-        val remove = p.inventory.remove(item = currencyItem, amount = totalCost.toInt(), assureFullRemoval = true)
-        if (remove.hasFailed()) {
             return
         }
 
