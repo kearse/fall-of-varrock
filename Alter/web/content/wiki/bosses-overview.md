@@ -22,7 +22,7 @@ Callisto (`::callisto`), Vet'ion (`::vetion`), Venenatis (`::venenatis`), Scorpi
 
 **PvM / Slayer bosses**
 
-Kraken, Cerberus, Giant Mole, Kalphite Queen, Sarachnis, Thermonuclear Smoke Devil, Demonic Gorillas, Skotizo, Dagannoth Kings - each has a `::<name>` command (e.g. `::kraken`, `::cerberus`).
+Kraken, Cerberus, Giant Mole, Kalphite Queen, Sarachnis, Thermonuclear Smoke Devil, Demonic Gorillas, Skotizo, and the Dagannoth Kings (`::dagannoth_rex`, `::dagannoth_prime`, `::dagannoth_supreme`) - each boss has its own `::<name>` command (e.g. `::kraken`, `::cerberus`, `::thermonuclear_smoke_devil`).
 
 **God Wars Dungeon** *(multi-way, team-friendly)*
 

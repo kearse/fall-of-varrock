@@ -41,7 +41,7 @@ Duel Arena staking in RSPS history is a notorious scam pit. This one is built so
 
 ## The rules
 
-When you close the challenge, you set the rules over two quick menus.
+When you close the challenge, you set the rules over three quick menus (supplies, gear, and companions).
 
 **Supplies & movement:**
 

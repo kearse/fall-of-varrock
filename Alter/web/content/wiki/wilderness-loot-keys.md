@@ -28,11 +28,11 @@ When a key is emptied it crumbles to dust and the chest moves on to your next ke
 
 ## The risk
 
-**Unclaimed keys are always lost on death.** They occupy no keep slot, Protect Item doesn't save them, and it doesn't matter where you die - wilderness or not. When you fall, your keys are destroyed and their contents merge into your lost loot for your killer to take. This applies to PK bots too.
+**Unclaimed keys are always lost on death.** They occupy no keep slot, Protect Item doesn't save them, and it doesn't matter where you die - wilderness or not. When you fall, your keys are destroyed and their contents spill into your lost loot. This applies to PK bots too.
 
 That's the whole tension of the system: every key you carry deep in the wild is a bounty on your head. Bank your winnings or gamble them on one more fight.
 
 ## What counts
 
 - Only **wilderness player-vs-player kills** mint keys (killable PK bots included - kill one in the wild and its kit seals into a key for you).
-- Road highwaymen and other safe-zone bot kills drop loot normally on the ground.
+- Safe-zone bot kills - like the goblin-camp bandit - drop loot normally on the ground.

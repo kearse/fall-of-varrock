@@ -33,7 +33,7 @@ nothing else.
 | 1 | 3 × Jal-Nib | Nibblers - swat them before they swarm |
 | 2 | Jal-MejRah | Ranged bat |
 | 3 | Jal-MejRah + 2 × Jal-Nib | - |
-| 4 | Jal-Ak | The blob: attacks with **random styles**, splits into 3 mini-casters on death |
+| 4 | Jal-Ak | The blob: attacks with **random styles**, splits into 3 smaller creatures on death |
 | 5 | Jal-Ak + Jal-MejRah | - |
 | 6 | Jal-ImKot | Heavy melee - **burrows to you** if you kite it too long |
 | 7 | Jal-ImKot + Jal-Ak | - |

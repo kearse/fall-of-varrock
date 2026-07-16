@@ -57,9 +57,7 @@ Pick **"Build my kit"** at Lisa to choose your starting loadout, just like OSRS.
 - **Win:** a large lump of **LMS points**.
 - **Each kill:** a smaller amount of LMS points, plus a supply drop.
 
-Spend LMS points at **Lisa's reward shop** (talk to her → **"Show me the rewards."**). Stock includes
-consumables, strong weapons like the **granite maul**, **dragon claws** and **Armadyl godsword**, and
-the classic LMS cosmetic **halos**.
+Spend LMS points at **Lisa's reward shop** (talk to her → **"Show me the rewards."**). Stock is **consumables and the classic LMS cosmetic halos** only - the strong weapons (granite maul, dragon claws, Armadyl godsword) come from the island chests **during a match**, not the shop.
 
 ## Maps
 

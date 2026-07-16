@@ -10,12 +10,11 @@ We build in the open, so you'll see some destinations and menus marked **coming 
 
 ## Live today
 
-Everything else on this wiki is playable now: the War (campaigns, conquests, city bosses, troops), the full boss roster, Fight Cave, Wizard Tower and the spellbook unlock, loot keys, PK bots, companions, the Mire skilling hub, the Forge, Trading Post, bonds and membership.
+Everything else on this wiki is playable now: the War (campaigns, conquests, city bosses, troops), the full boss roster, the Fight Cave and the Inferno, Castle Wars, Last Man Standing, the Duel Arena, Wizard Tower and the spellbook unlock, loot keys, PK bots, companions, the Mire skilling hub, the Forge, Trading Post, bonds and membership.
 
 ## In the works
 
-- **Raids** - the instancing framework is built and battle-tested (Wizard Tower runs on it). Full raids are next: **Inferno**, **Nightmare**, **Theatre of Blood** and **Chambers of Xeric** are the planned lineup.
-- **More minigames** - Castle Wars, Last Man Standing and the Duel Arena hold portal slots.
+- **Raids** - the instancing framework is built and battle-tested (Wizard Tower runs on it). Full raids are next: **Nightmare**, **Theatre of Blood** and **Chambers of Xeric** are the planned lineup.
 - **Events tab** - HP events, tournaments, treasure hunts, vote bosses.
 - **Donator zones** - dedicated PvM and skilling areas for members.
 - **More PvP zones** - Fun-PK, Risk Zone, Edge bridding, Mage Bank and Ferox-style safety are portal placeholders.

@@ -44,4 +44,4 @@ There is **no timer** - the game lasts as long as you do. The mages are aggressi
 
 Two rare collection-log items can drop: the **Mystic Lava Staff** (1 in 40) and the **Master Wand** (1 in 80).
 
-You get roughly 30 seconds to grab loot after the Archmage falls before the tower resets, so pick up before you celebrate.
+There's no loot timer - the instance stays up until everyone leaves, so grab your drops at your leisure.

@@ -12,7 +12,7 @@ updated: 2026-07-04
 
 Right-click Vannaka → **Assignment** for a task. The starter roster runs from goblins, rats and chickens up through skeletons, zombies and guards, in batches of roughly 15-45 kills. Kills auto-track - check progress anytime with `::slayer`.
 
-Completing tasks pays **Slayer points, scaled by your streak** - back-to-back completions pay progressively more, so keeping a streak alive matters. Spend points in Vannaka's **Rewards** shop.
+Completing tasks pays **War Effort**, with a bonus that grows every fifth completion in a streak - so keeping a streak alive matters. Spend it in Vannaka's **Rewards** shop.
 
 ## Resource contracts
 
@@ -20,12 +20,12 @@ Vannaka also issues **gathering contracts**, independent of your combat task:
 
 | Contract | Skill | Level | Pays |
 | --- | --- | --- | --- |
-| Copper / tin ore | Mining | 1 | 1,500 gp + 4 WE |
-| Iron ore | Mining | 15 | 2,500 gp + 6 WE |
-| Logs | Woodcutting | 1 | 1,500 gp + 4 WE |
-| Oak logs | Woodcutting | 15 | 2,500 gp + 6 WE |
-| Raw shrimps | Fishing | 1 | 1,500 gp + 4 WE |
-| Raw trout | Fishing | 20 | 2,500 gp + 6 WE |
+| Copper / tin ore | Mining | 1 | 3,000 gp + 8 WE |
+| Iron ore | Mining | 15 | 5,000 gp + 12 WE |
+| Logs | Woodcutting | 1 | 3,000 gp + 8 WE |
+| Oak logs | Woodcutting | 15 | 5,000 gp + 12 WE |
+| Raw shrimps | Fishing | 1 | 3,000 gp + 8 WE |
+| Raw trout | Fishing | 20 | 5,000 gp + 12 WE |
 
 Contracts **auto-complete as you gather** - no turn-in trip needed. The coins and War Effort land the moment you hit the quota.
 
