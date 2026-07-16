@@ -42,6 +42,14 @@ class ShopTabClickPlugin(
             shop.currency.sellToPlayer(player, shop, slot, amount)
         }
 
+        onCommand("shopvalclick", description = "Value an item in the open shop (client overlay channel)") {
+            val slot = player.getCommandArgs().getOrNull(0)?.toIntOrNull() ?: return@onCommand
+            val shop = player.attr[CURRENT_SHOP_ATTR] ?: return@onCommand
+            if (slot !in shop.items.indices) return@onCommand
+            val shopItem = shop.items[slot] ?: return@onCommand
+            shop.currency.onSellValueMessage(player, shopItem)
+        }
+
         onCommand("shopcloseclick", description = "Close the shop window (client overlay channel)") {
             player.closeInterface(interfaceId = 300)
         }

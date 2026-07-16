@@ -29,9 +29,12 @@ import java.util.List;
 import javax.inject.Inject;
 import net.runelite.api.ChatMessageType;
 import net.runelite.api.Client;
+import net.runelite.api.MenuAction;
+import net.runelite.api.MenuEntry;
 import net.runelite.api.ScriptID;
 import net.runelite.api.events.ChatMessage;
 import net.runelite.api.events.GameTick;
+import net.runelite.api.events.MenuOpened;
 import net.runelite.api.events.ScriptCallbackEvent;
 import net.runelite.api.widgets.Widget;
 import net.runelite.client.callback.ClientThread;
@@ -83,7 +86,6 @@ public class LofShopTabsPlugin extends Plugin
 	private final List<Item> items = new ArrayList<>();
 	private final List<Tab> tabs = new ArrayList<>();
 	private int selectedTab;
-	private int buyAmount = 1;
 
 	/** Streaming buffer, filled between shop| and shopend. */
 	private String bufName = "";
@@ -288,9 +290,19 @@ public class LofShopTabsPlugin extends Plugin
 		send("::shoptab " + index);
 	}
 
-	void buy(int slot)
+	/** Left-click an item (grid index): OSRS "Value" (option 1) — the server prints the price. */
+	void value(int index)
 	{
-		send("::shopbuy " + slot + " " + buyAmount);
+		if (index >= 0 && index < items.size())
+		{
+			send("::shopval " + items.get(index).slot);
+		}
+	}
+
+	/** Buy from the right-click menu (Buy 1/5/10/50), by shop slot. */
+	void buy(int slot, int amount)
+	{
+		send("::shopbuy " + slot + " " + amount);
 	}
 
 	void closeShop()
@@ -298,9 +310,56 @@ public class LofShopTabsPlugin extends Plugin
 		send("::shopclose");
 	}
 
-	void setBuyAmount(int amount)
+	/**
+	 * Right-click over an item cell → the OSRS shop menu (Value + Buy 1/5/10/50), built with
+	 * onClick handlers that send the matching command. Over any other part of the window we clear
+	 * the menu so no world action ("Walk here") leaks through the overlay.
+	 */
+	@Subscribe
+	public void onMenuOpened(MenuOpened event)
 	{
-		buyAmount = amount;
+		if (!overlay.isShowing())
+		{
+			return;
+		}
+		final net.runelite.api.Point m = client.getMouseCanvasPosition();
+		if (m == null)
+		{
+			return;
+		}
+		final int hit = overlay.hitTest(new java.awt.Point(m.getX(), m.getY()));
+		if (hit == LofShopTabsOverlay.OUTSIDE)
+		{
+			return;
+		}
+		if (hit >= LofShopTabsOverlay.ITEM_BASE)
+		{
+			final int idx = hit - LofShopTabsOverlay.ITEM_BASE;
+			if (idx >= items.size())
+			{
+				return;
+			}
+			final int slot = items.get(idx).slot;
+			client.setMenuEntries(new MenuEntry[0]);
+			addEntry("Buy 50", () -> buy(slot, 50));
+			addEntry("Buy 10", () -> buy(slot, 10));
+			addEntry("Buy 5", () -> buy(slot, 5));
+			addEntry("Buy 1", () -> buy(slot, 1));
+			addEntry("Value", () -> send("::shopval " + slot)); // last added = top entry
+		}
+		else
+		{
+			// Over the frame/tabs/close — suppress the default (world) menu.
+			client.setMenuEntries(new MenuEntry[0]);
+		}
+	}
+
+	private void addEntry(String option, Runnable action)
+	{
+		client.createMenuEntry(-1)
+			.setOption(option)
+			.setType(MenuAction.RUNELITE)
+			.onClick(e -> action.run());
 	}
 
 	private void send(String msg)
@@ -314,7 +373,6 @@ public class LofShopTabsPlugin extends Plugin
 		items.clear();
 		tabs.clear();
 		selectedTab = 0;
-		buyAmount = 1;
 	}
 
 	private static int parseInt(String s, int def)
@@ -362,10 +420,5 @@ public class LofShopTabsPlugin extends Plugin
 	int getSelectedTab()
 	{
 		return selectedTab;
-	}
-
-	int getBuyAmount()
-	{
-		return buyAmount;
 	}
 }

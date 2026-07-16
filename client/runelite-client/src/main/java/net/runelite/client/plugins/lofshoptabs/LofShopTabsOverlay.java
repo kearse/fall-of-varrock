@@ -27,6 +27,7 @@ import java.util.List;
 import javax.inject.Inject;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
+import net.runelite.api.widgets.ComponentID;
 import net.runelite.api.widgets.Widget;
 import net.runelite.client.game.ItemManager;
 import net.runelite.client.plugins.loftheme.LofTheme;
@@ -42,10 +43,7 @@ class LofShopTabsOverlay extends Overlay
 	static final int INSIDE = 0;
 	static final int CLOSE = 1;
 	static final int TAB_BASE = 100;   // + tab index
-	static final int QTY_BASE = 500;   // + qty-button index (0..3)
 	static final int ITEM_BASE = 1000; // + grid index
-
-	private static final int[] QTY_OPTS = {1, 5, 10, 50};
 
 	private static final int COLS = 8;
 	private static final int CELL_GAP = 3;
@@ -93,26 +91,20 @@ class LofShopTabsOverlay extends Overlay
 			&& !plugin.getItems().isEmpty();
 	}
 
-	// Native OSRS shop (group 300) chrome around the stock grid: title bar above, borders + the
-	// right scrollbar, the "Right-click to sell" footer below. We anchor to the grid (a known
-	// component) and expand generously so our opaque window fully covers the native frame with a
-	// little overshoot — bigger reads better than a frame peeking out.
-	private static final int CHROME_TOP = 42;
-	private static final int CHROME_SIDE = 20;
-	private static final int CHROME_BOTTOM = 34;
+	private static final int TOP_MARGIN = 4;
 
-	/** The native shop window's canvas rect, derived from the stock-grid bounds + shop chrome.
-	 *  Deterministic (no parent-walk, which can cross into the fullscreen container). */
+	/** The window fills the game viewport above the chatbox: chatbox width, from the top of the
+	 *  view down to the top of the chatbox (the area the player circled). Anchored to the chatbox
+	 *  frame so it tracks fixed/resizable layouts. */
 	private Rectangle windowRect()
 	{
-		final Widget stock = client.getWidget(LofShopTabsPlugin.SHOP_GROUP, LofShopTabsPlugin.STOCK_CHILD);
-		if (stock != null && !stock.isHidden())
+		final Widget chat = client.getWidget(ComponentID.CHATBOX_FRAME);
+		if (chat != null && !chat.isHidden())
 		{
-			final Rectangle s = stock.getBounds();
-			if (s != null && s.width > 0 && s.height > 0)
+			final Rectangle c = chat.getBounds();
+			if (c != null && c.width > 0 && c.y > 120)
 			{
-				return new Rectangle(s.x - CHROME_SIDE, s.y - CHROME_TOP,
-					s.width + CHROME_SIDE * 2, s.height + CHROME_TOP + CHROME_BOTTOM);
+				return new Rectangle(c.x, TOP_MARGIN, c.width, c.y - TOP_MARGIN);
 			}
 		}
 		// Fallback: viewport-centre at a fixed size.
@@ -133,7 +125,7 @@ class LofShopTabsOverlay extends Overlay
 
 	private int gridTop(Rectangle w)
 	{
-		return w.y + TITLE_H + 18; // below the qty row
+		return w.y + TITLE_H + 8;
 	}
 
 	private int cellW(Rectangle w)
@@ -168,14 +160,6 @@ class LofShopTabsOverlay extends Overlay
 		return new Rectangle(w.x + PAD, w.y + TITLE_H + PAD + t * (btnH + RAIL_GAP), RAIL_W, btnH);
 	}
 
-	private Rectangle qtyRect(Rectangle w, int i)
-	{
-		final int bw = 20, gap = 3;
-		final int right = w.x + w.width - PAD;
-		final int x = right - (QTY_OPTS.length - i) * (bw + gap) + gap;
-		return new Rectangle(x, w.y + TITLE_H + 1, bw, 15);
-	}
-
 	private Rectangle cellRect(Rectangle w, int i)
 	{
 		final int col = i % COLS, row = i / COLS;
@@ -193,13 +177,6 @@ class LofShopTabsOverlay extends Overlay
 		if (closeRect(w).contains(p))
 		{
 			return CLOSE;
-		}
-		for (int i = 0; i < QTY_OPTS.length; i++)
-		{
-			if (qtyRect(w, i).contains(p))
-			{
-				return QTY_BASE + i;
-			}
 		}
 		if (hasRail())
 		{
@@ -221,11 +198,6 @@ class LofShopTabsOverlay extends Overlay
 			}
 		}
 		return INSIDE;
-	}
-
-	int qtyValue(int i)
-	{
-		return QTY_OPTS[i];
 	}
 
 	@Override
@@ -291,23 +263,6 @@ class LofShopTabsOverlay extends Overlay
 		g.drawLine(cr.x + 5, cr.y + 5, cr.x + cr.width - 6, cr.y + cr.height - 6);
 		g.drawLine(cr.x + cr.width - 6, cr.y + 5, cr.x + 5, cr.y + cr.height - 6);
 		g.setStroke(oldStroke);
-
-		// qty selector
-		final int amount = plugin.getBuyAmount();
-		final String buyLbl = "Buy";
-		LofTheme.shadowText(g, buyLbl, qtyRect(w, 0).x - 4 - g.getFontMetrics().stringWidth(buyLbl), w.y + TITLE_H + 12, LofTheme.TEXT_DIM);
-		for (int i = 0; i < QTY_OPTS.length; i++)
-		{
-			final Rectangle qr = qtyRect(w, i);
-			final boolean sel = QTY_OPTS[i] == amount;
-			final boolean hov = qr.contains(mouse);
-			g.setColor(sel ? LofTheme.alpha(LofTheme.EMBER, 60) : hov ? LofTheme.ROW_HOVER : LofTheme.ROW);
-			g.fillRoundRect(qr.x, qr.y, qr.width, qr.height, 4, 4);
-			g.setColor(LofTheme.alpha(sel ? LofTheme.GOLD : LofTheme.EMBER_DARK, sel ? 220 : 120));
-			g.drawRoundRect(qr.x, qr.y, qr.width - 1, qr.height - 1, 4, 4);
-			final String s = String.valueOf(QTY_OPTS[i]);
-			LofTheme.shadowText(g, s, qr.x + (qr.width - g.getFontMetrics().stringWidth(s)) / 2, qr.y + 11, sel ? LofTheme.GOLD : LofTheme.TEXT_DIM);
-		}
 
 		// tab rail
 		if (hasRail())

@@ -28,6 +28,8 @@ class LofShopTabsMouseListener extends MouseAdapter
 	@Override
 	public MouseEvent mousePressed(MouseEvent event)
 	{
+		// Only LEFT clicks act here. Right clicks are left alone so the game opens a menu, which
+		// the plugin's onMenuOpened turns into the OSRS shop menu (Value + Buy 1/5/10/50).
 		if (!overlay.isShowing() || !SwingUtilities.isLeftMouseButton(event))
 		{
 			return event;
@@ -44,11 +46,7 @@ class LofShopTabsMouseListener extends MouseAdapter
 		}
 		else if (hit >= LofShopTabsOverlay.ITEM_BASE)
 		{
-			plugin.buy(hit - LofShopTabsOverlay.ITEM_BASE);
-		}
-		else if (hit >= LofShopTabsOverlay.QTY_BASE)
-		{
-			plugin.setBuyAmount(overlay.qtyValue(hit - LofShopTabsOverlay.QTY_BASE));
+			plugin.value(hit - LofShopTabsOverlay.ITEM_BASE); // left-click = Value (OSRS option 1)
 		}
 		else if (hit >= LofShopTabsOverlay.TAB_BASE)
 		{
@@ -62,18 +60,20 @@ class LofShopTabsMouseListener extends MouseAdapter
 	@Override
 	public MouseEvent mouseClicked(MouseEvent event)
 	{
-		return swallowIfOnWindow(event);
+		return swallowIfLeftOnWindow(event);
 	}
 
 	@Override
 	public MouseEvent mouseReleased(MouseEvent event)
 	{
-		return swallowIfOnWindow(event);
+		return swallowIfLeftOnWindow(event);
 	}
 
-	private MouseEvent swallowIfOnWindow(MouseEvent event)
+	private MouseEvent swallowIfLeftOnWindow(MouseEvent event)
 	{
-		if (overlay.isShowing() && overlay.hitTest(event.getPoint()) != LofShopTabsOverlay.OUTSIDE)
+		if (overlay.isShowing()
+			&& SwingUtilities.isLeftMouseButton(event)
+			&& overlay.hitTest(event.getPoint()) != LofShopTabsOverlay.OUTSIDE)
 		{
 			event.consume();
 		}
