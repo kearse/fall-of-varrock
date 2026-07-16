@@ -63,18 +63,58 @@ export function renderWikiMarkdown(input: string): { html: string; toc: TocEntry
   const html: string[] = [];
   const toc: TocEntry[] = [];
   const usedIds = new Set<string>();
-  let inList = false;
+  let listType: "ul" | "ol" | null = null;
+  let inFence = false;
+  let fenceLines: string[] = [];
 
   const closeList = () => {
-    if (inList) {
-      html.push("</ul>");
-      inList = false;
+    if (listType) {
+      html.push(listType === "ol" ? "</ol>" : "</ul>");
+      listType = null;
+    }
+  };
+  const openList = (t: "ul" | "ol") => {
+    if (listType && listType !== t) closeList();
+    if (!listType) {
+      html.push(t === "ol" ? "<ol>" : "<ul>");
+      listType = t;
+    }
+  };
+  // A wrapped continuation line (indented, no marker) belongs to the current list
+  // item — append it to the open <li> instead of orphaning it into its own <p>.
+  const appendContinuation = (textEscaped: string) => {
+    const last = html.pop();
+    if (last !== undefined && last.endsWith("</li>")) {
+      html.push(`${last.slice(0, -"</li>".length)} ${inline(textEscaped)}</li>`);
+    } else {
+      if (last !== undefined) html.push(last);
+      closeList();
+      html.push(`<p>${inline(textEscaped)}</p>`);
     }
   };
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     const trimmed = line.trim();
+
+    // Fenced code block (``` … ```). Contents are already HTML-escaped; emit verbatim.
+    if (inFence) {
+      if (/^```/.test(trimmed)) {
+        html.push(`<pre><code>${fenceLines.join("\n")}</code></pre>`);
+        fenceLines = [];
+        inFence = false;
+      } else {
+        fenceLines.push(line);
+      }
+      continue;
+    }
+    if (/^```/.test(trimmed)) {
+      closeList();
+      inFence = true;
+      fenceLines = [];
+      continue;
+    }
+
     if (trimmed === "") {
       closeList();
       continue;
@@ -110,17 +150,24 @@ export function renderWikiMarkdown(input: string): { html: string; toc: TocEntry
     } else if (/^#\s+/.test(trimmed)) {
       closeList();
       html.push(`<h2>${inline(trimmed.replace(/^#\s+/, ""))}</h2>`);
+    } else if (/^&gt;\s?/.test(trimmed)) {
+      // Blockquote — the leading ">" was HTML-escaped to "&gt;" up front.
+      closeList();
+      html.push(`<blockquote>${inline(trimmed.replace(/^&gt;\s?/, ""))}</blockquote>`);
     } else if (/^[-*]\s+/.test(trimmed)) {
-      if (!inList) {
-        html.push("<ul>");
-        inList = true;
-      }
+      openList("ul");
       html.push(`<li>${inline(trimmed.replace(/^[-*]\s+/, ""))}</li>`);
+    } else if (/^\d+\.\s+/.test(trimmed)) {
+      openList("ol");
+      html.push(`<li>${inline(trimmed.replace(/^\d+\.\s+/, ""))}</li>`);
+    } else if (listType && /^\s+/.test(line)) {
+      appendContinuation(trimmed);
     } else {
       closeList();
       html.push(`<p>${inline(trimmed)}</p>`);
     }
   }
+  if (inFence) html.push(`<pre><code>${fenceLines.join("\n")}</code></pre>`);
   closeList();
   return { html: html.join("\n"), toc };
 }
