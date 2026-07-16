@@ -54,6 +54,9 @@ class MiningPlugin(
     private val adamant = Rock(11374, "item.adamantite_ore", "adamantite ore", 70, 95.0, 8)
     private val rune = Rock(11376, "item.runite_ore", "runite ore", 85, 125.0, 11)
     private val amethyst = Rock(11388, "item.amethyst", "amethyst", 92, 240.0, 4)
+    // Rune essence — the Runecraft supply. Level 1, mined in the Mire skilling column so it feeds
+    // the fire altar a few tiles north. Object 16687 = the 1x1 "Rune essence" rock (has a Mine action).
+    private val essence = Rock(16687, "item.rune_essence", "rune essence", 1, 5.0, 2)
 
     // Lumbridge Castle cellar (underground), laid out per the user's plan. The room is
     // opened up at boot by openMineRoom() into one chamber. Outer-wall tiles are dead (edge
@@ -96,9 +99,13 @@ class MiningPlugin(
         RockSpawn(adamant, Tile(3237, 3184, 0)),
         RockSpawn(rune, Tile(3238, 3184, 0)),
         RockSpawn(amethyst, Tile(3237, 3183, 0)), // endgame AFK tier for the Bog Quarry (swamp buildout 2026-07-04)
+        // Rune essence — two rocks extending the column one tile north (walkable ground verified in
+        // the cache collision dump; mined from x3236 / x3239), feeding the Mire fire altar.
+        RockSpawn(essence, Tile(3237, 3190, 0)),
+        RockSpawn(essence, Tile(3238, 3190, 0)),
     )
 
-    private val rockTypes = listOf(copper, tin, clay, iron, silver, coal, gold, mithril, adamant, rune, amethyst)
+    private val rockTypes = listOf(copper, tin, clay, iron, silver, coal, gold, mithril, adamant, rune, amethyst, essence)
 
     init {
         onWorldInit {

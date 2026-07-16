@@ -250,6 +250,8 @@ class LumbridgeShopHubPlugin(
         Ware("item.mithril_axe", 10), Ware("item.adamant_axe", 5), Ware("item.rune_axe", 3),
         Ware("item.tinderbox", 20), Ware("item.chisel", 20), Ware("item.hammer", 20), Ware("item.knife", 20),
         Ware("item.needle", 20), Ware("item.shears", 20), Ware("item.glassblowing_pipe", 10),
+        // Hunter traps — reusable tools (the skill never consumes them), so a one-time buy.
+        Ware("item.bird_snare", 100, 25), Ware("item.box_trap", 100, 75),
     )
 
     /** Fishing supplies (Gerrant) — fishing gear + bait. */

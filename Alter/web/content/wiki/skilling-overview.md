@@ -28,8 +28,8 @@ Skilling here has a purpose beyond XP: finished goods feed the realm's **war-sup
 - **Fletching** - knife logs into shortbows and longbows (normal through magic), then string them with bow string - all in your inventory, no station needed. *(Phase 2 - bows only for now; arrows, darts and bolts are coming.)*
 - **Construction** - the **workbench** in the Mire working yard turns planks into furniture for XP, regular planks up to mahogany. It's a plank-fed XP bench, not a player-owned house yet; buy planks from the Sawmill Operator if you'd rather not chop them.
 - **Farming** - plant a seed on a **flowerbed patch** in the Mire and it grows in about ten seconds, then harvest the crop. Eight are live: potato, onion, cabbage, and the guam→irit herbs. *(Phase 2 - an instant-grow patch; the full seed range and tree/herb patches are still to come, so the shop stocks more seeds than currently grow.)*
-- **Hunter** - lay a bird snare or box trap on the **thickets** in the Mire collection grounds (snares for feathers, box traps for chinchompas from level 27). **Heads-up: the traps aren't stocked anywhere yet, so Hunter can't be trained until a trap source is added** - the skill is built and waiting on one.
-- **Runecraft** - a single altar in the Mire binds essence into the best rune your level allows, air through law, one rune per essence. **Heads-up: rune and pure essence aren't obtainable in-game yet, so Runecraft can't be trained until an essence source is added.**
+- **Hunter** - buy a bird snare or box trap from the **Skilling Tools** stall (Wydin) - they're reusable, so it's a one-time purchase - then lay them on the **thickets** in the Mire collection grounds. Snares catch birds for feathers; box traps catch chinchompas from level 27.
+- **Runecraft** - mine **rune essence** from the rocks in the Mire skilling column, then use it on the **fire altar** a few tiles north to bind the best rune your level allows, air through law, one rune per essence.
 
 ## Skilling → war power
 
