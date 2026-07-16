@@ -17,6 +17,10 @@ function escapeHtml(s: string): string {
 
 function inline(s: string): string {
   return s
+    // Images: root-relative sources only (local assets under /public) - never remote URLs,
+    // so the wiki can't be made to load a tracking/offsite image. Runs before the link rule
+    // so "![alt](/x)" isn't mis-parsed as a link.
+    .replace(/!\[([^\]]*)\]\((\/[^\s)]+)\)/g, '<img src="$2" alt="$1" loading="lazy">')
     .replace(/`([^`]+)`/g, "<code>$1</code>")
     .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
     .replace(/\*([^*]+)\*/g, "<em>$1</em>")
@@ -154,6 +158,12 @@ export function renderWikiMarkdown(input: string): { html: string; toc: TocEntry
       // Blockquote — the leading ">" was HTML-escaped to "&gt;" up front.
       closeList();
       html.push(`<blockquote>${inline(trimmed.replace(/^&gt;\s?/, ""))}</blockquote>`);
+    } else if (/^!\[[^\]]*\]\(\/[^\s)]+\)$/.test(trimmed)) {
+      // A line that is only an image -> a captioned figure (the alt text becomes the caption).
+      closeList();
+      const m = trimmed.match(/^!\[([^\]]*)\]\((\/[^\s)]+)\)$/)!;
+      const cap = m[1] ? `<figcaption>${m[1]}</figcaption>` : "";
+      html.push(`<figure class="wiki-figure"><img src="${m[2]}" alt="${m[1]}" loading="lazy">${cap}</figure>`);
     } else if (/^[-*]\s+/.test(trimmed)) {
       openList("ul");
       html.push(`<li>${inline(trimmed.replace(/^[-*]\s+/, ""))}</li>`);

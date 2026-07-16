@@ -185,6 +185,12 @@ h1, h2, h3, .font-display {
   color: #5b4a2f;
 }
 
+/* ---- Images & figures ---- */
+.wiki-content img { max-width: 100%; height: auto; border-radius: 3px; }
+.wiki-content .wiki-figure { margin: 0.9rem 0; text-align: center; }
+.wiki-content .wiki-figure img { border: 1px solid #ddd3ba; display: inline-block; }
+.wiki-content figcaption { font-size: 0.8rem; color: #6b5a3f; margin-top: 0.3rem; font-style: italic; }
+
 /* ---- See also ---- */
 .wiki-seealso {
   margin: 1.6rem 0 0.5rem;
