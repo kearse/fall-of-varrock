@@ -41,11 +41,32 @@ class BossTeleportCommandsPlugin(
         EliteBosses.all.forEach { add(Dest(cmd(it.key), it.name, it.lair)) }
     }.distinctBy { it.cmd }
 
+    /**
+     * Friendly command aliases the wiki documents, mapped to the canonical auto-generated command
+     * ([cmd] of the npc key). Each registers an extra `::<alias>` that teleports to the same lair;
+     * the generated commands (e.g. `::general_graardor`) keep working unchanged.
+     */
+    private val aliases: Map<String, String> = mapOf(
+        "gwd_graardor" to "general_graardor",
+        "gwd_kril" to "kril_tsutsaroth",
+        "gwd_kreearra" to "kreearra",
+        "gwd_zilyana" to "commander_zilyana",
+        "grotesque_guardians" to "dusk",
+        "crazy_arch" to "crazy_archaeologist",
+    )
+
     init {
         dests.forEach { d ->
             // Guard: a name clash with an existing command would otherwise throw and drop the plugin.
             runCatching {
                 onCommand(d.cmd, description = "Teleport to ${d.name}") { go(player, d) }
+            }
+        }
+
+        aliases.forEach { (alias, canonical) ->
+            val d = dests.firstOrNull { it.cmd == canonical } ?: return@forEach
+            runCatching {
+                onCommand(alias, description = "Teleport to ${d.name}") { go(player, d) }
             }
         }
 
