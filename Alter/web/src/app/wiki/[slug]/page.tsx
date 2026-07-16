@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getArticle } from "@/lib/wiki";
+import { getArticle, getAllArticles } from "@/lib/wiki";
 import { renderWikiMarkdown, renderWikiInline } from "@/lib/wiki-render";
 
 export const dynamic = "force-dynamic";
@@ -14,6 +14,9 @@ export default function WikiArticlePage({ params }: { params: { slug: string } }
   const article = getArticle(params.slug);
   if (!article) notFound();
   const { html, toc } = renderWikiMarkdown(article.body);
+
+  // Same-category siblings for an auto "See also" footer (getAllArticles is pre-sorted by order, title).
+  const seeAlso = getAllArticles().filter((a) => a.category === article.category && a.slug !== article.slug);
 
   // MediaWiki-style section numbering: 1, 1.1, 2 ...
   let major = 0;
@@ -60,6 +63,19 @@ export default function WikiArticlePage({ params }: { params: { slug: string } }
       )}
 
       <div className="wiki-content" dangerouslySetInnerHTML={{ __html: html }} />
+
+      {seeAlso.length > 0 && (
+        <nav className="wiki-seealso">
+          <div className="wiki-seealso-title">See also</div>
+          <ul>
+            {seeAlso.map((a) => (
+              <li key={a.slug}>
+                <Link href={`/wiki/${a.slug}`}>{a.title}</Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      )}
 
       <div className="wiki-catbar">
         <Link href="/wiki">Wiki</Link> › {article.category}
