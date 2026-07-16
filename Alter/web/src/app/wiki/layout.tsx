@@ -31,6 +31,7 @@ export default function WikiLayout({ children }: { children: React.ReactNode }) 
             <div className="wiki-portlet-title">Navigation</div>
             <ul>
               <li><Link href="/wiki">Main page</Link></li>
+              <li><Link href="/wiki/prices">Item prices</Link></li>
               <li><Link href="/wiki/random">Random page</Link></li>
               <li><Link href="/news">Game updates</Link></li>
               <li><Link href="/">Back to site</Link></li>

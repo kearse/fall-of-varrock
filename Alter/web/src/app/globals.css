@@ -185,6 +185,18 @@ h1, h2, h3, .font-display {
   color: #5b4a2f;
 }
 
+/* ---- Price index ---- */
+.wiki-price-search {
+  width: 100%;
+  padding: 0.5rem 0.7rem;
+  font-size: 0.9rem;
+  border: 1px solid #ccc0a0;
+  border-radius: 4px;
+  background: #fffdf7;
+  margin: 0.4rem 0;
+}
+.wiki-price-count { font-size: 0.8rem; color: #6b5a3f; margin-bottom: 0.5rem; }
+
 /* ---- Images & figures ---- */
 .wiki-content img { max-width: 100%; height: auto; border-radius: 3px; }
 .wiki-content .wiki-figure { margin: 0.9rem 0; text-align: center; }
