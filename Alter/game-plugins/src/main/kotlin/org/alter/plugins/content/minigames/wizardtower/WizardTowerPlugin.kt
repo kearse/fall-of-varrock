@@ -11,6 +11,7 @@ import org.alter.game.model.Direction
 import org.alter.game.model.EntityType
 import org.alter.game.model.Tile
 import org.alter.game.model.World
+import org.alter.game.model.attr.AttributeKey
 import org.alter.game.model.attr.KILLER_ATTR
 import org.alter.game.model.attr.NO_LOOT_ATTR
 import org.alter.game.model.attr.VOID_KNIGHT_INTRO_DONE_ATTR
@@ -39,6 +40,13 @@ import kotlin.math.abs
 import kotlin.math.max
 
 private val logger = KotlinLogging.logger {}
+
+/** SOLO checkpoint: the highest floor a player has climbed to in the tower. Persists across
+ *  logout so a solo player can leave through the portal to restock and pick up on the same
+ *  floor next time (cleared floors below stay clear; solo mages don't respawn). Reset to 0 the
+ *  moment they fell the Archmage (a completed run starts fresh from the bottom). Multi games,
+ *  which keep the respawn/farming loop, never touch this. */
+val WIZARD_TOWER_FLOOR_ATTR = AttributeKey<Int>(persistenceKey = "wizard_tower_floor")
 
 /**
  * **Wizard Tower** — a repeatable instanced combat minigame and the reward gate for the special
@@ -134,9 +142,12 @@ object WizardTower {
          *  isDead()" sweep here races it and the loot/boss hooks then can't find the npc's run
          *  (the no-drops bug). Mages RESPAWN (the farming loop), so they stay members for life. */
         val members: MutableSet<Npc> = mutableSetOf(),
-        /** Mages killed and waiting on the engine's respawn timer: invisible + unattackable, but
-         *  their hp is already reset (isDead() reads false) — the floor gate must ignore them. */
-        val awaitingRespawn: MutableSet<Npc> = mutableSetOf(),
+        /** Cumulative mage kills per floor (index = floor height). The staircase gate counts these
+         *  DOWN from [Floor.count]: in multi, mages respawn, so gating on surviving live mages made
+         *  the tally spring back to full on every respawn ("still 6 left" after you'd killed some).
+         *  Counting kills instead means a floor clears for good once its quota is dead. A solo
+         *  resume pre-fills the floors below the checkpoint as already cleared. */
+        val kills: IntArray = IntArray(FLOOR_COUNT),
         var boss: Npc? = null,
         var portal: DynamicObject? = null,
         var bossDead: Boolean = false,
@@ -151,6 +162,10 @@ object WizardTower {
      * that later multi challengers can join.
      */
     fun enter(p: Player, multi: Boolean) {
+        // Entering the tower ends any open conversation — the Void Knight's own Talk-to options,
+        // or a dialogue left hanging when the game is started from his "Solo/Multi game" right-click
+        // while that dialogue is up. Without this the chatbox stays stuck on screen inside the instance.
+        p.interruptQueues()
         if (inRun(p)) { p.message("You're already inside the tower."); return }
 
         if (multi) {
@@ -159,10 +174,15 @@ object WizardTower {
                 open.players += p
                 p.moveTo(spawnSpot(open, open.players.size - 1))
                 open.players.forEach { it.message("<col=8f00ff>${p.username} joins the assault!</col> (${open.players.size}/$MAX_PLAYERS)") }
-                briefing(p)
+                briefing(p, multi = true)
                 return
             }
         }
+
+        // Solo resume: pick up on the highest floor this player had reached. Floors below it stay
+        // cleared (no mages spawned), and the player lands on that floor's stair landing instead
+        // of the bridge. Multi always starts fresh at the bridge (resume is a solo affordance).
+        val resumeFloor = if (!multi) (p.attr[WIZARD_TOWER_FLOOR_ATTR] ?: 0).coerceIn(0, FLOOR_COUNT - 1) else 0
 
         val instance = RaidInstance.allocateFloors(
             world, SOURCE_AREA, levels = FLOOR_COUNT, exitTile = EXIT_TILE, owner = p.uid,
@@ -170,22 +190,33 @@ object WizardTower {
         )
         if (instance == null) { p.message("The tower is crowded right now — try again shortly."); return }
         val run = Run(mutableListOf(p), multi, instance)
+        // Floors below the resume point are already cleared — mark their quotas met so the gate
+        // lets the player climb back up through them freely (they have no mages spawned).
+        for (h in 0 until resumeFloor) run.kills[h] = FLOORS[h].count
         openDoors(run)
         sealFloorEdges(run)
-        FLOORS.forEach { spawnFloor(run, it) }
+        FLOORS.filter { it.height >= resumeFloor }.forEach { spawnFloor(run, it) }
         spawnBoss(run)
         spawnPortal(run)
         runs += run
-        p.moveTo(spawnSpot(run, 0))
-        briefing(p)
+        p.moveTo(if (resumeFloor > 0) snapWalkable(run.instance.translate(UP_ARRIVAL[resumeFloor])) else spawnSpot(run, 0))
+        briefing(p, multi, resumed = resumeFloor > 0)
         if (multi) {
             p.message("<col=8f00ff>This is an open game</col> — up to $MAX_PLAYERS can join you. Muster on the bridge, or push in alone.")
         }
     }
 
-    private fun briefing(p: Player) {
+    private fun briefing(p: Player, multi: Boolean, resumed: Boolean = false) {
+        if (resumed) {
+            p.message("<col=8f00ff>You return to the tower where you left off.</col> The floors you cleared stay clear — press on toward the Archmage. Keep <col=801700>Protect from Magic</col> up.")
+            return
+        }
         p.message("<col=8f00ff>Cross the bridge and take the tower.</col> Clear each floor's mages to climb — the Archmage holds the grimoire at the top.")
-        p.message("Keep <col=801700>Protect from Magic</col> active and their spells will wash off you. The mages respawn — farm runes as long as you like, and leave through the portal on the top floor.")
+        if (multi) {
+            p.message("Keep <col=801700>Protect from Magic</col> active and their spells will wash off you. The mages respawn — farm runes as long as you like, and leave through the portal on the top floor.")
+        } else {
+            p.message("Keep <col=801700>Protect from Magic</col> active and their spells will wash off you. Cleared mages stay down — step out through the top-floor portal any time to restock, and you'll return to the floor you reached.")
+        }
     }
 
     /** No timer: the way out is the portal on the top floor (bound in the plugin below). */
@@ -273,8 +304,9 @@ object WizardTower {
         // doesn't climb up INTO a mage.
         val pool = reachable.drop(6).ifEmpty { reachable }
         val tiles = if (pool.size <= floor.count) pool else List(floor.count) { pool[it * pool.size / floor.count] }
-        // respawns=true: killed mages come back (engine respawnDelay, ~30s) — the farming loop.
-        tiles.forEach { t -> run.members += spawn(id, t, respawns = true) }
+        // MULTI respawns (the rune-farming loop); SOLO mages stay dead once killed — a gentler,
+        // clearable climb for early-game players, and cleared floors stay clear on a restock trip.
+        tiles.forEach { t -> run.members += spawn(id, t, respawns = run.multi) }
         logger.info {
             "wizard-tower: floor h=${floor.height} '${floor.mageKey}' spawned ${tiles.size}/${floor.count} " +
                 "(reachable=${reachable.size} from stairs @${run.instance.translate(floor.seed)})"
@@ -329,7 +361,6 @@ object WizardTower {
      *  plugin's global npc-spawn hook (which fires on every respawn). */
     fun onNpcSpawned(npc: Npc) {
         val run = runs.firstOrNull { npc in it.members } ?: return
-        run.awaitingRespawn.remove(npc)
         npc.attr[NO_LOOT_ATTR] = true
         npc.aggroCheck = { _, target -> target.entityType.isHumanControlled }
     }
@@ -350,10 +381,11 @@ object WizardTower {
             run.members.remove(npc) // the Archmage doesn't respawn
             run.bossDead = true
         } else {
-            // Mages respawn (farming loop): keep membership, but flag the corpse — the engine
-            // refills its hp immediately (isDead() reads false while it waits invisibly on the
-            // respawn timer), so the floor gate needs this to know the floor is really clear.
-            run.awaitingRespawn += npc
+            // Tally the kill against this floor's quota. Mages respawn in multi, so the staircase
+            // gate counts kills DOWN from the quota (see [Run.kills]) instead of watching live mages
+            // — otherwise the "N left" tally springs back to full the moment a mage respawns.
+            val fh = run.instance.floorOf(npc.tile)
+            if (fh in run.kills.indices) run.kills[fh]++
         }
     }
 
@@ -373,7 +405,13 @@ object WizardTower {
     private fun complete(run: Run) {
         run.done = true
         run.players.forEach { p ->
-            p.message("<col=ffae00>The Archmage falls!</col> Stay and farm the mages as long as you like — the portal beside the rug leads out.")
+            // Beating the tower grants PERMANENT top-floor access: park the checkpoint at the top
+            // so a future solo visit drops the player straight onto the Archmage's floor to grind
+            // runes (the highest-mage-reached checkpoint only ever climbs, never resets).
+            p.attr[WIZARD_TOWER_FLOOR_ATTR] = FLOOR_COUNT - 1
+            val tail = if (run.multi) "Stay and farm the mages as long as you like — the portal beside the rug leads out."
+                       else "The portal leads out — and you can return solo any time to storm the top floor and grind runes."
+            p.message("<col=ffae00>The Archmage falls!</col> $tail")
             // First completion ALWAYS unlocks the special spellbooks (idempotent) — the War-Prep
             // chain additionally advances if the player is on its TOWER step.
             if (WarPrepChain.step(p) == WarPrepChain.Step.TOWER) {
@@ -389,7 +427,6 @@ object WizardTower {
     private fun endRun(run: Run) {
         run.members.forEach { if (it.index >= 0 && world.npcs.contains(it)) world.remove(it) }
         run.members.clear()
-        run.awaitingRespawn.clear()
         run.portal?.let { runCatching { world.remove(it) } }
         run.players.forEach { if (it.index >= 0 && run.instance.contains(it.tile)) it.moveTo(EXIT_TILE) }
         runs.remove(run)
@@ -410,17 +447,20 @@ object WizardTower {
                 p.message("You're at the top of the tower.")
                 return true
             }
-            // A mage on this floor still standing blocks the climb. Excluded: dying ones
-            // (isDead, their death event may be a few animation ticks away) and killed ones
-            // waiting invisibly on the respawn timer (their hp is already refilled).
-            val standing = run.members.count {
-                run.instance.floorOf(it.tile) == floor && it.index >= 0 && !it.isDead() && it !in run.awaitingRespawn
-            }
-            if (standing > 0) {
-                p.message("<col=ff0000>Clear this floor's mages before you climb higher! ($standing left)</col>")
+            // The gate counts KILLS down from the floor's quota (not surviving live mages): in
+            // multi the mages respawn, so a live-count gate would keep reading "full" as fast as
+            // you cleared it. Once you've felled the quota the staircase opens for good.
+            val required = FLOORS.getOrNull(floor)?.count ?: 0
+            val left = (required - run.kills.getOrElse(floor) { 0 }).coerceAtLeast(0)
+            if (left > 0) {
+                p.message("<col=ff0000>Clear this floor's mages before you climb higher! ($left left)</col>")
                 return true
             }
             p.moveTo(run.instance.translate(UP_ARRIVAL[floor + 1]))
+            // Solo checkpoint: remember the highest floor reached so a restock trip resumes here.
+            if (!run.multi && (p.attr[WIZARD_TOWER_FLOOR_ATTR] ?: 0) < floor + 1) {
+                p.attr[WIZARD_TOWER_FLOOR_ATTR] = floor + 1
+            }
         } else {
             if (floor <= 0) {
                 p.message("The basement is sealed off.")
@@ -613,6 +653,7 @@ class WizardTowerPlugin(
 
         bindKnight()
         onCommand("wizardtower", description = "Teleport to the Wizard Tower Void Knight") {
+            player.interruptQueues() // teleporting away closes any open NPC dialogue (raw moveTo doesn't)
             player.moveTo(teleTile)
             player.message("Speak to the <col=8f00ff>Void Knight</col> to enter the Wizard Tower — solo, or in a band of up to ${WizardTower.MAX_PLAYERS}.")
         }
