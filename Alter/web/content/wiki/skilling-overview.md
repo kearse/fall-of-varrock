@@ -3,7 +3,7 @@ title: Skilling & the war effort
 category: Skilling
 summary: Where every skill trains, why The Mire is the hub, and how skilling literally powers the war.
 order: 1
-updated: 2026-07-04
+updated: 2026-07-15
 ---
 
 Skilling here has a purpose beyond XP: finished goods feed the realm's **war-supply meter**, and campaigns can't launch until skillers have filled it. Miners and cooks are as much a part of a conquest as the soldiers.
@@ -23,7 +23,13 @@ Skilling here has a purpose beyond XP: finished goods feed the realm's **war-sup
 - **Thieving** - the Falador market stalls (veg through gem), plus pickpocketing.
 - **Prayer** - bury bones anywhere, or offer them at an altar for **3.5×** the XP; the home altar also instantly restores prayer points.
 - **Agility** - real-world shortcuts (stiles, stepping stones, log balances) plus the **Mire Run** lap course around the south pond. Attune to the Ticket Dispenser (150,000 coins, one-time), run the 5-obstacle lap, then Tag the dispenser: it pays coins plus real supplies (anglerfish, karambwans, manta rays, super restores, teleport sacks) with a chance at a Mark of Grace. Consecutive laps scale the payout up to ×5 - the streak breaks if you log out or idle more than 5 minutes.
-- Crafting, Fletching, Herblore, Hunter, Farming, Runecraft and Construction all have Mire-hub stations too.
+- **Herblore** - two steps, done anywhere in your inventory: a clean herb + a vial of water makes an unfinished potion, then adding the secondary finishes a 3-dose potion. Six are live - attack, strength, prayer, super attack, super strength and super defence - and Jatix's market stalls sell the herbs and secondaries. *(Phase 2 - the wider potion range is still to come.)*
+- **Crafting** - cut sapphires, emeralds, rubies and diamonds with a chisel; stitch leather armour (gloves through chaps) with a needle and thread; and spin flax into bow string or wool into balls of wool at the **Mire spinning wheel**. Gems, leather and thread are in the market's Crafting tab.
+- **Fletching** - knife logs into shortbows and longbows (normal through magic), then string them with bow string - all in your inventory, no station needed. *(Phase 2 - bows only for now; arrows, darts and bolts are coming.)*
+- **Construction** - the **workbench** in the Mire working yard turns planks into furniture for XP, regular planks up to mahogany. It's a plank-fed XP bench, not a player-owned house yet; buy planks from the Sawmill Operator if you'd rather not chop them.
+- **Farming** - plant a seed on a **flowerbed patch** in the Mire and it grows in about ten seconds, then harvest the crop. Eight are live: potato, onion, cabbage, and the guam→irit herbs. *(Phase 2 - an instant-grow patch; the full seed range and tree/herb patches are still to come, so the shop stocks more seeds than currently grow.)*
+- **Hunter** - lay a bird snare or box trap on the **thickets** in the Mire collection grounds (snares for feathers, box traps for chinchompas from level 27). **Heads-up: the traps aren't stocked anywhere yet, so Hunter can't be trained until a trap source is added** - the skill is built and waiting on one.
+- **Runecraft** - a single altar in the Mire binds essence into the best rune your level allows, air through law, one rune per essence. **Heads-up: rune and pure essence aren't obtainable in-game yet, so Runecraft can't be trained until an essence source is added.**
 
 ## Skilling → war power
 
