@@ -41,6 +41,7 @@ import net.runelite.client.config.ConfigManager;
 import net.runelite.client.game.chatbox.ChatboxPanelManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.input.MouseManager;
+import net.runelite.client.input.MouseWheelListener;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.overlay.OverlayManager;
@@ -81,6 +82,7 @@ public class LofShopTabsPlugin extends Plugin
 	private ChatboxPanelManager chatboxPanelManager;
 
 	private LofShopTabsMouseListener mouseListener;
+	private MouseWheelListener wheelListener;
 
 	/** Live shop state (client thread only — no locking). */
 	private String shopName = "";
@@ -138,6 +140,15 @@ public class LofShopTabsPlugin extends Plugin
 		overlayManager.add(overlay);
 		mouseListener = new LofShopTabsMouseListener(this, overlay);
 		mouseManager.registerMouseListener(mouseListener);
+		wheelListener = event ->
+		{
+			if (overlay.handleScroll(event.getPoint(), event.getWheelRotation()))
+			{
+				event.consume();
+			}
+			return event;
+		};
+		mouseManager.registerMouseWheelListener(wheelListener);
 	}
 
 	@Override
@@ -148,6 +159,11 @@ public class LofShopTabsPlugin extends Plugin
 		{
 			mouseManager.unregisterMouseListener(mouseListener);
 			mouseListener = null;
+		}
+		if (wheelListener != null)
+		{
+			mouseManager.unregisterMouseWheelListener(wheelListener);
+			wheelListener = null;
 		}
 		reset();
 	}
@@ -182,6 +198,7 @@ public class LofShopTabsPlugin extends Plugin
 			balance = bufBalance;
 			items.clear();
 			items.addAll(bufItems);
+			overlay.resetScroll();
 			return;
 		}
 
@@ -193,12 +210,16 @@ public class LofShopTabsPlugin extends Plugin
 		{
 			case "shop":
 			{
-				// shop|name|label|balance
+				// shop|name|label|balance — a fresh store: drop any prior vendor's tabs (a tabbed
+				// vendor re-sends its "tabs" line right after; a single-shop vendor sends none, so
+				// its window correctly shows no rail instead of the previous vendor's stale tabs).
 				final String[] f = rest.split("\\|", 3);
 				bufName = f.length > 0 ? f[0] : "";
 				bufLabel = f.length > 1 ? f[1] : "coins";
 				bufBalance = f.length > 2 ? parseInt(f[2], 0) : 0;
 				bufItems.clear();
+				tabs.clear();
+				selectedTab = 0;
 				break;
 			}
 			case "item":

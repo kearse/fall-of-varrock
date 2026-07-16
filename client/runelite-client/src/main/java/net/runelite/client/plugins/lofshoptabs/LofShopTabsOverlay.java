@@ -58,10 +58,15 @@ class LofShopTabsOverlay extends Overlay
 
 	private static final int COLS = 8;
 	private static final int CELL_GAP = 3;
+	private static final int CELL_H = 50;       // fixed — never scales with item count
 	private static final int TITLE_H = 30;
 	private static final int RAIL_W = 40;
 	private static final int RAIL_GAP = 4;
 	private static final int PAD = 6;
+	private static final int SCROLLBAR_W = 5;
+	private static final int SCROLL_STEP = CELL_H + CELL_GAP;
+
+	private volatile int scroll;
 
 	// Fallback size if the native bounds can't be read (should be rare).
 	private static final int FALLBACK_W = 480;
@@ -142,21 +147,29 @@ class LofShopTabsOverlay extends Overlay
 	private int cellW(Rectangle w)
 	{
 		final int gridW = w.x + w.width - PAD - gridX(w);
-		return (gridW - (COLS - 1) * CELL_GAP) / COLS;
-	}
-
-	private int cellH(Rectangle w)
-	{
-		final int rows = rowCount();
-		final int availH = w.y + w.height - PAD - gridTop(w);
-		final int fit = (availH - (rows - 1) * CELL_GAP) / rows;
-		return Math.max(30, Math.min(fit, cellW(w) + 14));
+		return (gridW - SCROLLBAR_W - 2 - (COLS - 1) * CELL_GAP) / COLS;
 	}
 
 	private int rowCount()
 	{
 		final int n = plugin.getItems().size();
 		return Math.max(1, (n + COLS - 1) / COLS);
+	}
+
+	/** The scrolling item area (below the header, right of the rail). */
+	private Rectangle gridViewport(Rectangle w)
+	{
+		final int x = gridX(w);
+		final int y = gridTop(w);
+		final int gw = w.x + w.width - PAD - x;
+		final int gh = w.y + w.height - PAD - y;
+		return new Rectangle(x, y, gw, gh);
+	}
+
+	private int maxScroll(Rectangle w)
+	{
+		final int contentH = rowCount() * (CELL_H + CELL_GAP);
+		return Math.max(0, contentH - gridViewport(w).height);
 	}
 
 	private Rectangle closeRect(Rectangle w)
@@ -174,8 +187,27 @@ class LofShopTabsOverlay extends Overlay
 	private Rectangle cellRect(Rectangle w, int i)
 	{
 		final int col = i % COLS, row = i / COLS;
-		final int cw = cellW(w), ch = cellH(w);
-		return new Rectangle(gridX(w) + col * (cw + CELL_GAP), gridTop(w) + row * (ch + CELL_GAP), cw, ch);
+		final int cw = cellW(w);
+		final int x = gridX(w) + col * (cw + CELL_GAP);
+		final int y = gridTop(w) + row * (CELL_H + CELL_GAP) - scroll;
+		return new Rectangle(x, y, cw, CELL_H);
+	}
+
+	void resetScroll()
+	{
+		scroll = 0;
+	}
+
+	/** Mouse-wheel scroll when the cursor is over the item area. */
+	boolean handleScroll(Point p, int rotation)
+	{
+		final Rectangle w = winRect;
+		if (!showing || w == null || !gridViewport(w).contains(p))
+		{
+			return false;
+		}
+		scroll = Math.max(0, Math.min(scroll + rotation * SCROLL_STEP, maxScroll(w)));
+		return true;
 	}
 
 	int hitTest(Point p)
@@ -199,6 +231,11 @@ class LofShopTabsOverlay extends Overlay
 					return TAB_BASE + t;
 				}
 			}
+		}
+		final Rectangle vp = gridViewport(w);
+		if (!vp.contains(p))
+		{
+			return INSIDE; // header/rail gap etc. — swallow but no action
 		}
 		final int n = plugin.getItems().size();
 		for (int i = 0; i < n; i++)
@@ -361,14 +398,23 @@ class LofShopTabsOverlay extends Overlay
 			}
 		}
 
-		// item grid
+		// item grid — fixed cell size; scrolls when it overflows, clipped to the viewport
 		final List<LofShopTabsPlugin.Item> items = plugin.getItems();
-		final int cw = cellW(w), ch = cellH(w);
+		final Rectangle vp = gridViewport(w);
+		scroll = Math.max(0, Math.min(scroll, maxScroll(w)));
+		final int cw = cellW(w);
 		final int spriteW = Math.min(36, cw - 4);
+		final Shape gridClip = g.getClip();
+		g.setClip(vp.x, vp.y, vp.width, vp.height);
+		g.setFont(FontManager.getRunescapeSmallFont());
 		for (int i = 0; i < items.size(); i++)
 		{
 			final Rectangle rc = cellRect(w, i);
-			final boolean hov = rc.contains(mouse);
+			if (rc.y + rc.height < vp.y || rc.y > vp.y + vp.height)
+			{
+				continue; // off-screen
+			}
+			final boolean hov = rc.contains(mouse) && mouse.y >= vp.y && mouse.y <= vp.y + vp.height;
 			g.setColor(hov ? LofTheme.ROW_HOVER : LofTheme.ROW);
 			g.fillRoundRect(rc.x, rc.y, rc.width, rc.height, 6, 6);
 			g.setColor(LofTheme.alpha(hov ? LofTheme.EMBER : LofTheme.EMBER_DARK, hov ? 170 : 45));
@@ -380,9 +426,23 @@ class LofShopTabsOverlay extends Overlay
 			{
 				g.drawImage(img, rc.x + (rc.width - spriteW) / 2, rc.y + 2, spriteW, (int) (spriteW * 32.0 / 36.0), null);
 			}
-			g.setFont(FontManager.getRunescapeSmallFont());
 			final String price = fmt(it.price);
-			LofTheme.shadowText(g, price, rc.x + (rc.width - g.getFontMetrics().stringWidth(price)) / 2, rc.y + ch - 3, LofTheme.GOLD);
+			LofTheme.shadowText(g, price, rc.x + (rc.width - g.getFontMetrics().stringWidth(price)) / 2, rc.y + CELL_H - 3, LofTheme.GOLD);
+		}
+		g.setClip(gridClip);
+
+		// scrollbar
+		final int ms = maxScroll(w);
+		if (ms > 0)
+		{
+			final int sbX = vp.x + vp.width - SCROLLBAR_W;
+			g.setColor(new Color(255, 255, 255, 14));
+			g.fillRoundRect(sbX, vp.y, SCROLLBAR_W, vp.height, SCROLLBAR_W, SCROLLBAR_W);
+			final int contentH = rowCount() * (CELL_H + CELL_GAP);
+			final int thumbH = Math.max(24, vp.height * vp.height / contentH);
+			final int thumbY = vp.y + (vp.height - thumbH) * scroll / ms;
+			g.setColor(LofTheme.alpha(LofTheme.EMBER, 190));
+			g.fillRoundRect(sbX, thumbY, SCROLLBAR_W, thumbH, SCROLLBAR_W, SCROLLBAR_W);
 		}
 
 		// our own right-click menu — drawn LAST so it sits on top of the window
