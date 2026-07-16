@@ -1,0 +1,36 @@
+{
+  "region": 12598,
+  "note": "GE plaza POC: crater the central trading floor, scatter rubble + fire (war-fallen Varrock, path B)",
+
+  "removes": [
+    {
+      "box": [3162, 3485, 3170, 3491],
+      "level": 0,
+      "_comment": "clear the paving locs (15810/16010/16155/11717) + anything else on the central floor to open the crater"
+    }
+  ],
+
+  "adds": [
+    { "id": 38568, "x": 3164, "z": 3487, "orient": 0, "_note": "rubble 2x2" },
+    { "id": 38568, "x": 3167, "z": 3489, "orient": 2, "_note": "rubble 2x2" },
+    { "id": 38569, "x": 3162, "z": 3488, "orient": 1, "_note": "rubble 2x2" },
+
+    { "id": 38566, "x": 3163, "z": 3486, "orient": 1, "_note": "rubble" },
+    { "id": 38566, "x": 3169, "z": 3486, "orient": 3, "_note": "rubble" },
+    { "id": 38566, "x": 3168, "z": 3491, "orient": 2, "_note": "rubble" },
+    { "id": 38566, "x": 3165, "z": 3490, "orient": 1, "_note": "rubble" },
+    { "id": 38566, "x": 3170, "z": 3489, "orient": 0, "_note": "rubble" },
+    { "id": 38567, "x": 3166, "z": 3488, "orient": 0, "_note": "rubble" },
+    { "id": 38567, "x": 3163, "z": 3490, "orient": 3, "_note": "rubble" },
+    { "id": 38567, "x": 3169, "z": 3488, "orient": 2, "_note": "rubble" },
+
+    { "id": 26185, "x": 3165, "z": 3487, "orient": 0, "_note": "fire" },
+    { "id": 26185, "x": 3167, "z": 3488, "orient": 1, "_note": "fire" },
+    { "id": 26185, "x": 3164, "z": 3490, "orient": 2, "_note": "fire" },
+    { "id": 26185, "x": 3168, "z": 3486, "orient": 3, "_note": "fire" },
+    { "id": 26185, "x": 3166, "z": 3491, "orient": 0, "_note": "fire" },
+
+    { "id": 1289, "x": 3161, "z": 3491, "orient": 0, "_note": "dead tree (NW edge)" },
+    { "id": 1289, "x": 3171, "z": 3486, "orient": 2, "_note": "dead tree (SE edge)" }
+  ]
+}

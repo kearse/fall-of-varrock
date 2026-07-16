@@ -230,6 +230,14 @@ tasks.register<JavaExec>("objCheck") {
     mainClass.set("org.alter.tools.objcheck.ObjCheckToolKt")
     args = ((project.findProperty("objArgs") as String?) ?: "43468").split(" ")
 }
+tasks.register<JavaExec>("locEdit") {
+    description = "Loc editor: rewrite a region's scenery from an edit-list (fallen-city POC). verify|preview|apply|restore"
+    group = "application"
+    workingDir = rootProject.projectDir
+    classpath = sourceSets["main"].runtimeClasspath
+    mainClass.set("org.alter.tools.locedit.LocEditorToolKt")
+    args = ((project.findProperty("locArgs") as String?) ?: "verify 12598").split(" ")
+}
 
 task<Copy>("extractDependencies") {
     from(zipTree("build/distributions/game-server-${project.version}.zip")) {
