@@ -62,6 +62,12 @@ class LofShopTabsOverlay extends Overlay
 	private final LofShopTabsPlugin plugin;
 	private final ItemManager itemManager;
 
+	// Computed on the client thread during render() and read by the mouse thread. Reading widgets
+	// off the client thread returns null/stale, which silently killed every click — so the click
+	// path (isShowing/hitTest) uses ONLY these cached values, never touches client.getWidget.
+	private volatile boolean showing;
+	private volatile Rectangle winRect;
+
 	@Inject
 	private LofShopTabsOverlay(Client client, LofShopTabsPlugin plugin, ItemManager itemManager)
 	{
@@ -72,7 +78,14 @@ class LofShopTabsOverlay extends Overlay
 		setLayer(OverlayLayer.ALWAYS_ON_TOP);
 	}
 
+	/** Cached — safe to call from the mouse thread (see the field note). */
 	boolean isShowing()
+	{
+		return showing && winRect != null;
+	}
+
+	/** The live client-thread check (widget access) — only call from render(). */
+	private boolean computeShowing()
 	{
 		return plugin.isEnabled()
 			&& client.getGameState() == GameState.LOGGED_IN
@@ -80,12 +93,13 @@ class LofShopTabsOverlay extends Overlay
 			&& !plugin.getItems().isEmpty();
 	}
 
-	// Native OSRS shop (group 300) chrome around the stock grid: title bar above, borders around,
-	// the "Right-click to sell" footer below. We anchor to the grid (a known component) and expand
-	// by these so our opaque window covers the whole native frame exactly, with no peek.
-	private static final int CHROME_TOP = 26;
-	private static final int CHROME_SIDE = 9;
-	private static final int CHROME_BOTTOM = 26;
+	// Native OSRS shop (group 300) chrome around the stock grid: title bar above, borders + the
+	// right scrollbar, the "Right-click to sell" footer below. We anchor to the grid (a known
+	// component) and expand generously so our opaque window fully covers the native frame with a
+	// little overshoot — bigger reads better than a frame peeking out.
+	private static final int CHROME_TOP = 42;
+	private static final int CHROME_SIDE = 20;
+	private static final int CHROME_BOTTOM = 34;
 
 	/** The native shop window's canvas rect, derived from the stock-grid bounds + shop chrome.
 	 *  Deterministic (no parent-walk, which can cross into the fullscreen container). */
@@ -171,12 +185,8 @@ class LofShopTabsOverlay extends Overlay
 
 	int hitTest(Point p)
 	{
-		if (!isShowing())
-		{
-			return OUTSIDE;
-		}
-		final Rectangle w = windowRect();
-		if (w == null || !w.contains(p))
+		final Rectangle w = winRect;
+		if (!showing || w == null || !w.contains(p))
 		{
 			return OUTSIDE;
 		}
@@ -221,15 +231,20 @@ class LofShopTabsOverlay extends Overlay
 	@Override
 	public Dimension render(Graphics2D g)
 	{
-		if (!isShowing())
+		if (!computeShowing())
 		{
+			showing = false;
 			return null;
 		}
 		final Rectangle w = windowRect();
 		if (w == null)
 		{
+			showing = false;
 			return null;
 		}
+		// Publish for the mouse thread BEFORE drawing.
+		winRect = w;
+		showing = true;
 
 		final Object oldAA = g.getRenderingHint(RenderingHints.KEY_ANTIALIASING);
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
