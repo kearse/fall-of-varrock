@@ -1,0 +1,45 @@
+{
+  "region": 12598,
+  "note": "GE fully demolished: flatten the whole octagon + east plaza (clan boards/benches/fountain/statues), scatter rubble + flames-only (15156) field. NPCs stripped server-side (WorldSpawnsPlugin GE_RUINS).",
+
+  "removes": [
+    {
+      "box": [3149, 3468, 3190, 3517],
+      "_comment": "the entire GE footprint, all planes: walls, roof, central desk, clerk/bank booths, paving, clan recruitment boards (41728/41730), benches (5615), fountain (5125), statues (3642)"
+    }
+  ],
+
+  "scatters": [
+    {
+      "box": [3150, 3469, 3189, 3516],
+      "ids": [38566, 38567, 38568, 38569],
+      "count": 150,
+      "seed": 11,
+      "_note": "rubble field (mix of 1x1 and 2x2 piles)"
+    },
+    {
+      "box": [3152, 3471, 3187, 3514],
+      "ids": [15156],
+      "count": 55,
+      "seed": 22,
+      "_note": "flames only, no logs (model 3818)"
+    },
+    {
+      "box": [3150, 3469, 3189, 3516],
+      "ids": [1289, 1286],
+      "count": 12,
+      "seed": 33,
+      "_note": "charred dead trees"
+    }
+  ],
+
+  "adds": [
+    { "id": 38568, "x": 3164, "z": 3490, "orient": 0, "_note": "hero rubble mound — old clerk desk" },
+    { "id": 38569, "x": 3170, "z": 3496, "orient": 2 },
+    { "id": 38568, "x": 3158, "z": 3484, "orient": 1 },
+    { "id": 38569, "x": 3178, "z": 3502, "orient": 3 },
+    { "id": 38568, "x": 3185, "z": 3474, "orient": 0, "_note": "east plaza where the clan boards stood" },
+    { "id": 15156, "x": 3164, "z": 3488, "orient": 0, "_note": "central pyre" },
+    { "id": 15156, "x": 3165, "z": 3489, "orient": 0 }
+  ]
+}

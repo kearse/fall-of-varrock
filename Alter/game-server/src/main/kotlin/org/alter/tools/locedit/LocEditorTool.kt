@@ -14,6 +14,7 @@ import dev.openrune.cache.filestore.loadLocations
 import dev.openrune.cache.util.XteaLoader
 import java.io.File
 import java.nio.file.Path
+import kotlin.random.Random
 
 /**
  * **Loc editor** — surgically rewrite the *scenery objects* (locs) of a single map region in the
@@ -59,6 +60,7 @@ private data class EditSpec(
     val note: String? = null,
     val removes: List<RemoveRule> = emptyList(),
     val adds: List<AddRule> = emptyList(),
+    val scatters: List<ScatterRule> = emptyList(),
 )
 
 /** Delete every loc whose world tile is inside [box] and (if given) matches level/types/ids. */
@@ -77,6 +79,21 @@ private data class AddRule(
     val type: Int = 10,
     val orient: Int = 0,
     val level: Int = 0,
+)
+
+/**
+ * Procedurally scatter [count] locs (id picked uniformly from [ids], random orientation) across
+ * [box], one per tile, deterministic by [seed] so a re-run reproduces the exact same field (and
+ * `verify`/`apply` round-trips). Turns "flatten the GE and rubble-ify it" into three lines instead
+ * of 150 hand-placed adds.
+ */
+private data class ScatterRule(
+    val box: List<Int>,     // [x0, z0, x1, z1] world tiles, inclusive
+    val ids: List<Int>,     // object ids to draw from
+    val count: Int,
+    val type: Int = 10,
+    val level: Int = 0,
+    val seed: Int = 1,
 )
 
 // ---------------------------------------------------------------------------- loc encoder (inverse of loadLocations)
@@ -172,12 +189,35 @@ private fun applyEdits(spec: EditSpec, original: List<LocationData>): ApplyResul
     val removed = original.size - kept.size
 
     val added = ArrayList<LocationData>()
+    val used = HashSet<Int>() // packed local tile (lx*64+ly) — keep scatter/adds one-per-tile
     for (a in spec.adds) {
         val lx = a.x - baseX; val ly = a.z - baseZ
         require(lx in 0..63 && ly in 0..63) {
             "add id=${a.id} at world (${a.x},${a.z}) is outside region ${spec.region} [${baseX}..${baseX + 63}, ${baseZ}..${baseZ + 63}]"
         }
         added += LocationData(a.id, a.type, a.orient, lx, ly, a.level)
+        used += lx * 64 + ly
+    }
+
+    for (s in spec.scatters) {
+        require(s.ids.isNotEmpty()) { "scatter rule with no ids" }
+        val lx0 = (minOf(s.box[0], s.box[2]) - baseX).coerceIn(0, 63)
+        val lx1 = (maxOf(s.box[0], s.box[2]) - baseX).coerceIn(0, 63)
+        val ly0 = (minOf(s.box[1], s.box[3]) - baseZ).coerceIn(0, 63)
+        val ly1 = (maxOf(s.box[1], s.box[3]) - baseZ).coerceIn(0, 63)
+        require(lx0 <= lx1 && ly0 <= ly1) { "scatter box does not intersect region ${spec.region}" }
+        val rng = Random(s.seed)
+        var placed = 0; var tries = 0
+        val cap = s.count * 40
+        while (placed < s.count && tries < cap) {
+            tries++
+            val lx = rng.nextInt(lx0, lx1 + 1)
+            val ly = rng.nextInt(ly0, ly1 + 1)
+            if (!used.add(lx * 64 + ly)) continue
+            added += LocationData(s.ids[rng.nextInt(s.ids.size)], s.type, rng.nextInt(4), lx, ly, s.level)
+            placed++
+        }
+        if (placed < s.count) println("  scatter note: only placed $placed/${s.count} (box has ${(lx1 - lx0 + 1) * (ly1 - ly0 + 1)} tiles)")
     }
     return ApplyResult(kept + added, removed, added.size)
 }
@@ -245,6 +285,10 @@ private fun preview(path: String?) {
     removedSample.forEach { println("   ${it.value}x  ${it.key}") }
     println("--- added ---")
     spec.adds.forEach { println("   ${it.id}\t${name(it.id)}\t@ (${it.x},${it.z}) type=${it.type} orient=${it.orient} level=${it.level}") }
+    spec.scatters.forEach { s ->
+        val names = s.ids.joinToString(", ") { "${name(it)}($it)" }
+        println("   scatter ${s.count}x [${names}] across (${s.box[0]},${s.box[1]})-(${s.box[2]},${s.box[3]}) seed=${s.seed}")
+    }
 
     val roundTrip = ArrayList<LocationData>().also { rt -> loadLocations(encodeLocations(res.edited)) { rt += it } }
     println(if (canon(roundTrip) == canon(res.edited)) "encode round-trip: OK (safe to apply)" else "encode round-trip: FAILED — do NOT apply")

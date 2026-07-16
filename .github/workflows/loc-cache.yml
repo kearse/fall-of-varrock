@@ -33,7 +33,7 @@ on:
       editfile:
         description: "Edit-list path inside the game image (preview / apply)"
         required: false
-        default: "/app/data/mapedit/ge_plaza.json"
+        default: "/app/data/mapedit/ge_ruins.json"
 
 concurrency:
   group: loc-cache

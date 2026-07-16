@@ -196,6 +196,7 @@ class WorldSpawnsPlugin(
      *    already have one (bespoke defs win).
      */
     private fun finalizeSpawnData() {
+        stripGrandExchange()
         applyFallenVarrock()
         val registered = HashSet<Int>()
         val it = WorldSpawns.byRegion.iterator()
@@ -242,6 +243,23 @@ class WorldSpawnsPlugin(
             "World spawns finalized: ${registered.size} combat defs registered, " +
                 "$prunedBespoke bespoke-owned + $prunedUnstatted unstatted high-level records pruned."
         }
+    }
+
+    /**
+     * The Grand Exchange was torn down (see data/mapedit/ge_ruins.json — the whole octagon is
+     * rubble + fire now). So its population goes too: EVERY spawn record inside [GE_RUINS] is
+     * removed with no replacement — clerks, bankers, the lot. Runs before [applyFallenVarrock]
+     * so the fallen-city pass never repopulates the ruins (and its "banks/GE survive" carve-out
+     * no longer applies here — there's nothing left to staff).
+     */
+    private fun stripGrandExchange() {
+        var removed = 0
+        for (list in WorldSpawns.byRegion.values) {
+            val before = list.size
+            list.removeAll { GE_RUINS.contains(it.x, it.z) }
+            removed += before - list.size
+        }
+        logger.info { "[GE RUINS] stripped $removed npc spawn record(s) inside the destroyed Grand Exchange." }
     }
 
     /**
@@ -421,6 +439,9 @@ class WorldSpawnsPlugin(
         // ---- Fallen Varrock (see applyFallenVarrock) ----
         /** The walled city + gates. TUNABLE — everything inside is "the fallen city". */
         val FALLEN_VARROCK = Area(3155, 3376, 3300, 3520)
+
+        /** The demolished Grand Exchange footprint — every npc spawn inside is stripped (see stripGrandExchange). */
+        val GE_RUINS = Area(3149, 3468, 3190, 3517)
 
         /** The old garrison — removed by NAME even though attackable (the city has no lawful guard). */
         val FALLEN_GARRISON = setOf("guard", "trainee guard", "museum guard", "guard captain")
