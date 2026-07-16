@@ -108,6 +108,6 @@ The Quartermaster's **Relics tab** still sells 3rd age for Boss Tickets, but onl
 
 Elite [PK bots](/wiki/pk-bots-and-highwaymen) roam the deep wilderness wearing and carrying real gear - Bandos, Ancestral pieces, fortified Masori, godswords, claws, BIS boots and jewellery. Kill one and its gear drops as a [loot key](/wiki/wilderness-loot-keys) you cash at the Lumbridge Loot Chest. It's the highest-risk, zero-cost route to end-game gear - and other players can kill *you* for your keys.
 
-## Not obtainable (yet)
+## One caveat: LMS loot
 
-So nobody wastes a grind chasing ghosts: the **Korasi sword** doesn't exist in this era of the game - its spirit lives on in the **Voidwaker**, which is very obtainable (above). And remember: gear from [LMS](/wiki/last-man-standing) chests exists only inside the match. When new rares get sources, this page will say so.
+Everything on this page has a real, current source - but one thing looks like a source and isn't: gear you loot from [Last Man Standing](/wiki/last-man-standing) chests only exists **inside the match**. You keep nothing and lose nothing there, so it's never a way to *own* an item. When new rares open up, this page will say so.
