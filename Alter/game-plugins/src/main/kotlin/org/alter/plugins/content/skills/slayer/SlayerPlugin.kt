@@ -15,6 +15,7 @@ import org.alter.game.model.attr.SLAYER_INTRO_DONE_ATTR
 import org.alter.game.model.attr.SLAYER_STREAK_ATTR
 import org.alter.game.model.attr.SLAYER_TASK_LEFT_ATTR
 import org.alter.game.model.attr.SLAYER_TASK_NPC_ATTR
+import org.alter.game.model.attr.SLAYER_TASK_TOTAL_ATTR
 import org.alter.game.model.entity.Player
 import org.alter.game.model.queue.QueueTask
 import org.alter.game.model.shop.PurchasePolicy
@@ -277,6 +278,7 @@ class SlayerPlugin(
             if (rat != null) {
                 p.attr[SLAYER_TASK_NPC_ATTR] = rat.npcName
                 p.attr[SLAYER_TASK_LEFT_ATTR] = TUTORIAL_RAT_COUNT
+                p.attr[SLAYER_TASK_TOTAL_ATTR] = TUTORIAL_RAT_COUNT
                 chatNpc(p, "For your first contract, something simple: kill <col=801700>$TUTORIAL_RAT_COUNT ${rat.display}</col>. They scurry about just outside, around the castle. Off you go.")
                 return
             }
@@ -290,6 +292,7 @@ class SlayerPlugin(
         val amount = world.random(task.amount)
         p.attr[SLAYER_TASK_NPC_ATTR] = task.npcName
         p.attr[SLAYER_TASK_LEFT_ATTR] = amount
+        p.attr[SLAYER_TASK_TOTAL_ATTR] = amount
         chatNpc(p, "Your task: slay <col=801700>$amount ${task.display}</col>. Good hunting.")
     }
 
@@ -321,6 +324,7 @@ class SlayerPlugin(
         // Contract complete: clear it, bump streak, pay streak-scaled War Effort (the one war currency).
         player.attr.remove(SLAYER_TASK_NPC_ATTR)
         player.attr[SLAYER_TASK_LEFT_ATTR] = 0
+        player.attr[SLAYER_TASK_TOTAL_ATTR] = 0 // hides the client slayer dial until the next task
         val streak = (player.attr[SLAYER_STREAK_ATTR] ?: 0) + 1
         player.attr[SLAYER_STREAK_ATTR] = streak
         val reward = WAR_EFFORT_BASE + (streak / 5) * STREAK_BONUS

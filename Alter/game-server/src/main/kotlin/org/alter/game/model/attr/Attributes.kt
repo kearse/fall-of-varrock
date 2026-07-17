@@ -252,10 +252,13 @@ val NO_LOOT_ATTR = AttributeKey<Boolean>()
 /**
  * The player's active Slayer assignment (content/skills/slayer). [SLAYER_TASK_NPC_ATTR]
  * is the RSCM npc key being hunted; [SLAYER_TASK_LEFT_ATTR] the remaining kill count;
- * [SLAYER_STREAK_ATTR] the completed-task streak (scales point rewards). Persistent.
+ * [SLAYER_TASK_TOTAL_ATTR] the count originally assigned (so the client dial can show how far
+ * through the task the player is); [SLAYER_STREAK_ATTR] the completed-task streak (scales point
+ * rewards). Persistent.
  */
 val SLAYER_TASK_NPC_ATTR = AttributeKey<String>("slayer_task_npc")
 val SLAYER_TASK_LEFT_ATTR = AttributeKey<Int>("slayer_task_left")
+val SLAYER_TASK_TOTAL_ATTR = AttributeKey<Int>("slayer_task_total")
 val SLAYER_STREAK_ATTR = AttributeKey<Int>("slayer_streak")
 
 /**

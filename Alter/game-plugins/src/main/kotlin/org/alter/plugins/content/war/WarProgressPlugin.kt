@@ -12,8 +12,9 @@ import org.alter.plugins.content.war.boss.BossScheduler
 /**
  * **War progress HUD feed** — tells each player how far through their current fight they are.
  *
- * Publishes one packed varp [VARP] that the client's war-progress bar overlay reads. The context is
- * resolved per player from where they're standing:
+ * Publishes one packed varp [VARP] that the client's dial row (`net.runelite.client.plugins.lofdials`)
+ * reads and draws as the campaign/conquest progress dial. The context is resolved per player from where
+ * they're standing:
  *   1. inside a non-RAID campaign's battlefield → that campaign's progress (enemies cleared / quota),
  *   2. else near an active city boss → that boss's HP depleted,
  *   3. else nothing (bar hidden).
