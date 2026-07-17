@@ -246,20 +246,39 @@ class WorldSpawnsPlugin(
     }
 
     /**
-     * The Grand Exchange was torn down (see data/mapedit/ge_ruins.json — the whole octagon is
-     * rubble + fire now). So its population goes too: EVERY spawn record inside [GE_RUINS] is
-     * removed with no replacement — clerks, bankers, the lot. Runs before [applyFallenVarrock]
+     * The Grand Exchange was torn down (see data/mapedit/ge_ruins.json — the octagon is rubble +
+     * fire now, only its perimeter walls left standing). So its population goes too: EVERY spawn
+     * record inside [GE_RUINS] is removed with no replacement — clerks, bankers, the lot. The two
+     * Castle-Wars faction recruiters ([GE_RECRUITERS]) loiter on the GE's *west* approach, just
+     * outside the footprint box, so they're stripped by id within [GE_APPROACH] as well (there's
+     * no faction recruiting to be done at a demolished exchange). Runs before [applyFallenVarrock]
      * so the fallen-city pass never repopulates the ruins (and its "banks/GE survive" carve-out
      * no longer applies here — there's nothing left to staff).
      */
     private fun stripGrandExchange() {
+        val recruiterIds = GE_RECRUITERS.mapNotNull { name ->
+            runCatching { getRSCM(name) }.getOrElse {
+                logger.warn { "[GE RUINS] unknown recruiter name '$name' — not stripped." }
+                null
+            }
+        }.toHashSet()
         var removed = 0
+        var recruiters = 0
         for (list in WorldSpawns.byRegion.values) {
             val before = list.size
-            list.removeAll { GE_RUINS.contains(it.x, it.z) }
+            list.removeAll { rec ->
+                when {
+                    GE_RUINS.contains(rec.x, rec.z) -> true
+                    rec.id in recruiterIds && GE_APPROACH.contains(rec.x, rec.z) -> {
+                        recruiters++
+                        true
+                    }
+                    else -> false
+                }
+            }
             removed += before - list.size
         }
-        logger.info { "[GE RUINS] stripped $removed npc spawn record(s) inside the destroyed Grand Exchange." }
+        logger.info { "[GE RUINS] stripped $removed npc spawn record(s) inside the destroyed Grand Exchange (incl. $recruiters GE recruiter(s))." }
     }
 
     /**
@@ -442,6 +461,12 @@ class WorldSpawnsPlugin(
 
         /** The demolished Grand Exchange footprint — every npc spawn inside is stripped (see stripGrandExchange). */
         val GE_RUINS = Area(3149, 3468, 3190, 3517)
+
+        /** GE + its western approach path, where the Castle-Wars recruiters stand (just outside [GE_RUINS]). */
+        val GE_APPROACH = Area(3138, 3468, 3190, 3517)
+
+        /** Castle-Wars faction recruiters at the GE — stripped by id within [GE_APPROACH] (they sit west of the box). */
+        val GE_RECRUITERS = listOf("npc.saradominist_recruiter", "npc.zamorakian_recruiter")
 
         /** The old garrison — removed by NAME even though attackable (the city has no lawful guard). */
         val FALLEN_GARRISON = setOf("guard", "trainee guard", "museum guard", "guard captain")
