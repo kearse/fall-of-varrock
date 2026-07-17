@@ -41,6 +41,14 @@ findings that shape everything below:
 **The server already drives the first two varps** (`QuestJournal.syncNativeTab` writes varp 29/31
 to not-started/in-progress/complete from real quest state). So the proof is just the cache half:
 
+> **Follow-up — "The Rogue Problem" (Act II) native-tab row.** The Act II quest
+> `RogueProblem.kt` is live and fully drives the **custom client's Quest Journal** (its own lofquests
+> varp 4617 — arrows + panel work today). It does **not** yet have a native quest-tab row: pick a
+> spare reuse quest below (the **War-Prep II — Ranged** slot, quest id 3 / varp 107, is a natural fit
+> since Ranged is still unbuilt, or reserve a fresh one), relabel it to "The Rogue Problem" here, and
+> add the matching `QuestJournal.syncNativeTab` write from `RogueProblem.step` (not-started when
+> `NONE`, complete at `DONE`). Server + cache halves both needed for the stock tab to colour it.
+
 ```powershell
 # from the repo root, JDK 17. Point at the cache YOUR SERVER READS — a fresh git clone's
 # data/cache is empty, so pass the install path (spaces are fine; the tool rejoins them):

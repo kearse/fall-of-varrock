@@ -14,6 +14,7 @@ import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
 import org.alter.plugins.content.war.address
 import org.alter.plugins.content.war.roguehunt.RogueHunt
+import org.alter.plugins.content.war.roguehunt.RogueProblem
 import org.alter.rscm.RSCM.getRSCM
 
 private val logger = KotlinLogging.logger {}
@@ -161,6 +162,41 @@ class RecruitTrialsPlugin(
             RecruitTrials.Step.DELIVER -> chatNpc(p, "Now take that dagger to the Quartermaster in The Mire and hand it in for the war — follow the marker.", npc = s, title = "Recruiting Sergeant")
             RecruitTrials.Step.RETURN -> chatNpc(p, "Supplies handed in? Report back to Vannaka — he'll square you up.", npc = s, title = "Recruiting Sergeant")
             RecruitTrials.Step.DONE -> {
+                // Act II — "The Rogue Problem" (story-and-grind-design §4). Once the War-Prep chain is
+                // done the Sergeant's dialogue becomes this quest's giver/paymaster; it falls through
+                // to the free-play milestone chatter below when the quest is inactive (NONE) or DONE.
+                when (RogueProblem.step(p)) {
+                    RogueProblem.Step.BRIEF -> {
+                        chatNpc(p, "Now you're blooded and ranked, ${p.address}, I've harder work. <col=801700>Fallen Varrock</col> — the old capital — has fallen to rogues, muggers and highwaymen. They bleed our supply roads dry.", npc = s, title = "Recruiting Sergeant")
+                        chatNpc(p, "Go into those streets and thin them out — ${RogueProblem.HUNT_GOAL} of the cutthroats. Then hunt down the captain who runs the district and put him down. Do that and there's a purse fit to buy your Knighthood in it.", npc = s, title = "Recruiting Sergeant")
+                        chatNpc(p, "Fair warning: those streets are lawless PvP ground. Take nothing you can't afford to lose. Follow the marker — and <col=ffae00>::bounties</col> names the captains.", npc = s, title = "Recruiting Sergeant")
+                        chatPlayer(p, "Consider it done, sergeant.")
+                        RogueProblem.onSergeantBriefed(p)
+                        return
+                    }
+                    RogueProblem.Step.HUNT -> {
+                        RogueHunt.payout(p) // keep paying the lifetime milestone bounties as they hunt
+                        chatNpc(p, "Keep at those streets, ${p.address}. ${RogueProblem.statusLine(p)} Then bring me the head of a captain.", npc = s, title = "Recruiting Sergeant")
+                        return
+                    }
+                    RogueProblem.Step.CAPTAIN -> {
+                        RogueHunt.payout(p)
+                        chatNpc(p, "The rank and file are thinned, but a captain still holds his district. Hunt him down — <col=ffae00>::bounties</col> shows the board — and the purse is yours.", npc = s, title = "Recruiting Sergeant")
+                        return
+                    }
+                    RogueProblem.Step.REPORT -> {
+                        chatNpc(p, "A captain of Fallen Varrock, dead by your hand. THAT is the work of a Knight, ${p.address}. The realm pays its debt.", npc = s, title = "Recruiting Sergeant")
+                        chatPlayer(p, "What now, sergeant?")
+                        chatNpc(p, "Take this purse to Duke Horacio and claim your Knighthood — it earns you rune, a companion of your own, and the right to hunt the wilderness. Go on — you've more than earned it.", npc = s, title = "Recruiting Sergeant")
+                        RogueProblem.onReportedToSergeant(p)
+                        return
+                    }
+                    RogueProblem.Step.RANK -> {
+                        chatNpc(p, "Off to Duke Horacio in the market, ${p.address} — climb to Knight. A companion and the wilderness are waiting on it.", npc = s, title = "Recruiting Sergeant")
+                        return
+                    }
+                    else -> {} // NONE (War-Prep unfinished) or DONE — fall through to the milestone/idle chatter
+                }
                 // Rogue-hunting bounties (story-and-grind-design §4): the Sergeant is the milestone
                 // paymaster, so every bounty moment routes the hunter back to him.
                 val bounties = RogueHunt.payout(p)

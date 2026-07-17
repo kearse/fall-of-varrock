@@ -125,8 +125,17 @@ Effort + realm supply; `SupplyDrive.kt`: rotating 2× demand window). The build 
   **signature weapon** at 1/8 (Dragon claws / Nightmare staff / Armadyl crossbow /
   Dragon warhammer — realm-wide broadcast on the drop). `::bounties` shows the board.
   Captains count toward the rogue tally. All numbers TUNE.
-- Introduced by the Act II quest **"The Rogue Problem"** — the player's first scripted
-  trip into Fallen Varrock, the city they will one day retake.
+- ✅ Introduced by the Act II quest **"The Rogue Problem"** (`war/roguehunt/RogueProblem.kt`) — the
+  player's first scripted trip into Fallen Varrock, the city they will one day retake. It
+  **auto-starts the moment the War-Prep chain finishes** (the Squire rank-up), given/paid by the
+  Recruiting Sergeant: hunt 30 rogues → fell a named captain → collect a purse sized off the ladder
+  (Soldier + Knight cost) → climb to **Knight** at Duke Horacio, which opens the first companion and
+  the wilderness/PK loop. Fully wired into the Quest Journal (client hint arrows + `::rogueproblem`)
+  so the quest helper guides the whole bridge from Wizard Tower to Knight. Numbers (hunt goal, purse)
+  are TUNE — the purse deliberately short-cuts the Squire→Knight grind into one guided quest; dial it
+  down to keep the climb a longer haul. **Still ⬜:** native quest-tab row (needs a cache relabel —
+  see `docs/quest-tab-handoff.md`); a dedicated wilderness hunt instance if the open streets prove
+  too punishing for a fresh Knight.
 
 Also planned, lower priority: **salvage runs** (loot "relics of old Varrock" from ruined
 buildings — a Historian NPC + collection log; relics are a forge material, §6),

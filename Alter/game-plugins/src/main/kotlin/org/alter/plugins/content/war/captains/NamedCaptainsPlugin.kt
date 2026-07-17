@@ -18,6 +18,7 @@ import org.alter.plugins.content.economy.addPoints
 import org.alter.plugins.content.war.District
 import org.alter.plugins.content.war.WarNpcNames
 import org.alter.plugins.content.war.forge.WarForge
+import org.alter.plugins.content.war.roguehunt.RogueProblem
 import org.alter.rscm.RSCM.getRSCM
 
 private val logger = KotlinLogging.logger {}
@@ -86,6 +87,7 @@ class NamedCaptainsPlugin(
                 WarForge.awardCommendations(killer, BOUNTY_COMMENDATIONS)
                 killer.addPoints(PointKind.WAR_EFFORT, BOUNTY_WAR_EFFORT)
                 killer.message("<col=4f9b4f>Bounty claimed:</col> ${def.name} of ${def.district.display} — ${"%,d".format(BOUNTY_COINS)} coins, banked.")
+                RogueProblem.onCaptainKill(killer) // advances the "Rogue Problem" quest's captain beat, if active
                 if (world.random(SIGNATURE_RATE - 1) == 0) {
                     val id = getRSCM(def.signatureKey)
                     world.spawn(GroundItem(id, 1, npc.tile, killer))
