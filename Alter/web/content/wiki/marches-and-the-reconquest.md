@@ -3,7 +3,7 @@ title: Marches & the reconquest of Varrock
 category: The War
 summary: The free warband anyone can join, the district pressure map, Grand Marches, Wardens and the wanted captains.
 order: 2
-updated: 2026-07-13
+updated: 2026-07-17
 ---
 
 Varrock fell. Lumbridge holds. The **reconquest** is how the realm takes it back - and unlike campaigns and conquests, you don't need rank or coin to fight in it. This is the beginner's door into the war.
@@ -12,7 +12,7 @@ Varrock fell. Lumbridge holds. The **reconquest** is how the realm takes it back
 
 Roughly every half hour the **Knight-Captain musters a march**: a column of Knights of Lumbridge that sets out from the castle and pushes into one **district** of [Fallen Varrock](/wiki/fallen-varrock). The muster call is announced ~5 minutes ahead, and **any player can fight beside the column** - walk with it from the gate, or type `::march` to rally straight to it (you'll be asked to confirm if the column is already fighting on PvP ground).
 
-- Marches are free to join but **cost the realm 150 war supplies** to launch. If the stores are dry, the march is called off and the whole server hears about it - go feed the [Quartermaster](/wiki/supplying-the-war).
+- Marches are free to join and **launch automatically every cycle, no matter what** - they keep the war moving even on a quiet server, so the early game never stalls. A march **costs the realm nothing**: it never touches the war-supply meter and is never called off for empty stores. (The war-supply meter is spent only by the paid command ladder - campaigns and conquests; see [Supplying the war](/wiki/supplying-the-war).)
 - A won march pays every fighter a **share of the pooled spoils by contribution**, plus **1-3 Commendations** (see below).
 - Marches **can fail**. Ten knights alone are often driven back - the realm learns to march with them.
 

@@ -32,11 +32,12 @@ The guidance never stops — it changes altitude.
 ## 2. Marches 🔶 (the scheduled knight warband)
 
 > **Built (v1):** `MarchPlugin.kt` + a realm-sponsored `CampaignTier.MARCH` (10 knights,
-> quota 15, 150 supplies) riding the whole campaign engine — `CampaignDirector` (nullable
+> quota 15) riding the whole campaign engine — `CampaignDirector` (nullable
 > sponsor) does the marching/fighting down the Varrock route, `CapturePayout` splits the
 > pooled spoils by participation (no commander stake/tithe on a realm march). Cycle: muster
-> call ~5 min ahead → launch every ~30 min → win/loss broadcast. Skips (and says so) when
-> the realm's supply meter is under 150 — the Mire loop made visible. `::march` rallies any
+> call ~5 min ahead → launch every ~30 min → win/loss broadcast. **Automatic and supply-free:**
+> a march fires every cycle no matter the player count or the supply meter, and spends nothing
+> from the realm's war-stores — the early game keeps moving on its own. `::march` rallies any
 > player to the column, with a type-it-twice warning when the column is on PvP ground.
 > `::marchnow` (admin) fast-forwards the cycle. War-Prep's finale now points here.
 > **Still ⬜:** the physical muster (Knight-Captain NPC + column forming at the gate),
@@ -44,13 +45,14 @@ The guidance never stops — it changes altitude.
 
 Every ~30 minutes, **10 Knights of Lumbridge march on a hostile target. Any player can
 join.** This is the beginner/mid player's entry into the war's *offense* (today they only
-defend), and the visible output of the realm-supply economy.
+defend), and the always-on heartbeat of the war — it runs on its own so there is always
+something to fight, no matter how quiet or unsupplied the realm is.
 
 **The command ladder** (naming is now canonical — do not overload "raid"):
 
 | Event | Who | Cost | Cadence |
 |-------|-----|------|---------|
-| **March** | anyone joins | consumes realm supplies | scheduled (~30 min) |
+| **March** | anyone joins | free (no supply cost) | scheduled (~30 min), automatic |
 | **Raid** (`::sendtroops`) | Lord commands | 1M coins | on demand |
 | **Campaign** (`::campaign`) | Minister commands | 3M + 1,500 supplies | on demand |
 | **Conquest** (`::conquest`) | King commands | 15M + 2,800 supplies | on demand |
@@ -63,10 +65,11 @@ The March is the public bus; the Lord's Raid is chartered.
   the Lumbridge gate and the server (and Discord feed) announces it. Talk to the
   **Knight-Captain** or stand in the muster zone to enlist. `::march` teleports a
   latecomer to the warband mid-fight.
-- **Supply-fed.** Each March consumes a slice of the shared realm-supply meter
-  (`RealmSupply`). Well-supplied realm ⇒ marches on schedule; starved realm ⇒ the
-  Captain announces "the stores are empty — no march today." Suppliers finally *see*
-  their hand-ins become knight activity.
+- **Automatic & supply-free.** A March fires every cycle regardless of the realm-supply
+  meter and spends nothing from it — the war keeps moving without waiting on players to
+  stock the stores, so the early game never stalls. The supply meter (`RealmSupply`) is
+  spent only by the paid command ladder (campaigns and conquests); Marches sit free
+  beneath it.
 - **Targets are Fallen Varrock districts** (plus the goblin camp, bandit camps, the dark
   wizards' tower) — see §5. Random among currently-contested targets.
 - **Marches can fail.** If no players join, the knights sometimes get wiped — players
@@ -75,8 +78,8 @@ The March is the public bus; the Lord's Raid is chartered.
 - **Rewards scale with participation, not presence** — reuse the siege-defense
   contribution tracking. Pays coins + War Effort + **Commendations** (§6), MVP bonus.
 - ✅ **Grand March** — every 8th launched march (persisted counter in `WarState`),
-  upsized (`CampaignTier.GRAND_MARCH`: 16 knights, quota 20, 300 supplies, up to 5
-  Commendations). The district's **Warden** (boss-tier, 1500hp, base-model animations)
+  upsized (`CampaignTier.GRAND_MARCH`: 16 knights, quota 20, up to 5
+  Commendations; supply-free like every march). The district's **Warden** (boss-tier, 1500hp, base-model animations)
   waits at the rally; his fall pays **Warden's embers** (`item.burnt_page` — tradeable
   forge component): guaranteed for the damage MVP, 1/3 roll for every other fighter,
   realm-wide broadcast. A driven-back Grand March despawns the Warden with a taunt.
@@ -285,7 +288,8 @@ unlock), commendations or any forge ingredient, XP, stats.
    - ⬜ Smithed-goods work orders; "Supply Lines" intro quest.
 2. 🔶 **Marches** (§2) — visible war offense; fixes the tutorial dead-end.
    - ✅ Scheduled MARCH tier on the campaign engine: 30-min cycle, 5-min muster call,
-     supply cost + starved-realm skip, `::march` rally (PvP double-confirm),
+     automatic and supply-free (fires no matter the player count or supply level),
+     `::march` rally (PvP double-confirm),
      participation-split spoils, War-Prep finale now points at the muster call.
    - ⬜ Physical muster at the gate (Knight-Captain NPC), Commendation payouts (item 5),
      district targets (item 4), "March" HUD label in the client.
