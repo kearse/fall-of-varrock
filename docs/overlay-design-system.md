@@ -116,7 +116,7 @@ frame** unless content genuinely needs more. This is the "all the overlays shoul
   (they're modal to a flow).
 
 ### B. HUD overlay — content-sized, corner-anchored
-Supply dial, war-progress bar, alerts banner, LMS panel, announcement ticker, PK stats, CW timer.
+War dial row (supply · campaign/conquest · Slayer), alerts banner, LMS panel, announcement ticker, PK stats, CW timer.
 
 - **Sized to content**, not the 480×400 frame. Small.
 - **Snap to a corner** (`TOP_LEFT/…/ABOVE_CHATBOX_RIGHT`) and set `setMovable(true)` + `setSnappable(true)`
@@ -153,10 +153,12 @@ Reusable pieces — reach for these before inventing a new one. Metrics above.
 - **Buttons** — rounded, hairline accent border, accent-coloured centred label; fill brightens on
   hover / when active. Accept=`GOLD`, Decline=`EMBER`, secondary=`GOLD_DIM`.
 - **Scrollbar** — 5px `alpha(EMBER,190)` rounded thumb on an `alpha(white,14)` track.
-- **Circular gauge** (supply dial) — `PANEL_OPAQUE` disc, track ring `alpha(white,28)`, value arc from
+- **Circular gauge** (`lofdials` row) — `PANEL_OPAQUE` disc, track ring `alpha(white,28)`, value arc from
   12-o'clock clockwise; ember while filling, gold + pulse when a threshold is met, `LAVA` at the top tier.
-- **Progress bar** (war bar) — `PANEL_OPAQUE` track, ember/gold fill, `EMBER_DARK` border, centred
-  shadowed label.
+  The dial row draws several of these right-anchored so they **stack leftward** (supply pinned far right,
+  campaign/conquest and Slayer to its left), each present only when its varp has data.
+- **Progress bar** — `PANEL_OPAQUE` track, ember/gold fill, `EMBER_DARK` border, centred shadowed label.
+  A reusable horizontal pattern (no HUD currently ships one — the war progress is a dial in `lofdials`).
 - **Banner / toast** (alerts) — `PANEL_OPAQUE` rounded panel, pulsing `EMBER` border, shield logo +
   bold text.
 - **Ticker** (announcements) — transparent, outlined coloured text, absolute-positioned above the chat.
@@ -170,7 +172,8 @@ Reusable pieces — reach for these before inventing a new one. Metrics above.
     server driver. Transient/event varps must **pulse to 0** and be cleared on login (persisted varps
     re-fire on login — see `docs/custom-client.md` §5e). Current varps: 4600 alert · 4601 war progress ·
     4602-4605 pk stats · 4606 wild level · 4607 teleport open · 4608 LMS · 4609 supplies · 4610-4612
-    companions · 4620-4623 Castle Wars · **4630 duel rules**.
+    companions · 4613-4615 companion status · 4616 slayer · 4620-4623 Castle Wars · **4630 duel rules**.
+    (4601/4609/4616 all feed the `lofdials` dial row.)
   - *Large state* (item lists): **read the existing interface's widgets** (`client.getWidget(group,
     child)` → `getDynamicChildren()`), null-guarded. No custom packet.
   - *Bulk data via chat lines* (the commands list, companion state): send from the server as
@@ -210,8 +213,7 @@ Reusable pieces — reach for these before inventing a new one. Metrics above.
 | `lofteleports` | Modal (tabbed) | 480×400 * | varp 4607 open + `::tp` |
 | `lofduel` (rules) | Modal | 480×400 | varp 4630 + `::duel` |
 | `lofstake` | Modal (inventory-clear) | 480×400, viewport-left | read iface 335 + `::stake` |
-| `lofsupplies` | HUD gauge | content, ABOVE_CHATBOX_RIGHT | varp 4609 |
-| `lofwarbar` | HUD bar | content, TOP_CENTER | varp 4601 |
+| `lofdials` | HUD dial row | content, ABOVE_CHATBOX_RIGHT | varps 4616 slayer · 4601 progress · 4609 supplies |
 | `lofalerts` | HUD banner | content, TOP_CENTER | plugin/varp 4600 |
 | `loflms` | HUD panel | content, TOP_RIGHT | varp 4608 |
 | `lofannouncements` | Ticker | content, above chat (absolute) | BROADCAST chat |

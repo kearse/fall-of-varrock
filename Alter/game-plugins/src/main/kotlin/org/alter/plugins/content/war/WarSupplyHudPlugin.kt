@@ -10,9 +10,9 @@ import org.alter.game.plugin.PluginRepository
 
 /**
  * **War-supply dial feed** — keeps the realm's war-supply meter ([RealmSupply]) in front of every
- * player. Publishes one packed varp [VARP] that the client's circular supply gauge
- * (`net.runelite.client.plugins.lofsupplies`) reads; same continuous-state pattern as
- * [WarProgressPlugin] (refresh timer + onLogin, only sent on change).
+ * player. Publishes one packed varp [VARP] that the client's dial row
+ * (`net.runelite.client.plugins.lofdials`) reads and draws as the far-right supply gauge; same
+ * continuous-state pattern as [WarProgressPlugin] (refresh timer + onLogin, only sent on change).
  *
  * Packed layout (must match the client overlay):
  *   bits 0-11   meter (0-4095; SUPPLY_METER_MAX is 3000 so this never clips)
