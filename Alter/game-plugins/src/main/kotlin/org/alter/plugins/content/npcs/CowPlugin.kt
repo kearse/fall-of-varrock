@@ -29,9 +29,20 @@ class CowPlugin(
 ) : KotlinPlugin(r, world, server) {
         
     init {
+        // Every adult "Cow" variant id, not just npc.cow (2790). The Lumbridge/world cow
+        // fields spawn several graphical variants of the same level-2 Cow (2791, 2793, 2795,
+        // 5842). Only ids registered here get this bespoke combat def; any that fall through
+        // are given WorldSpawnsPlugin's generic NpcCombatDef.DEFAULT, whose attackAnimation is
+        // 422 (the human unarmed-punch) — so an un-covered cow "attacks" by throwing punches
+        // instead of the cow headbutt (COW_ATTACK, 5849). Calves (cow_calf, 2792/2794/2801)
+        // are deliberately excluded: they aren't combat npcs.
         val cow_npc_list =
             listOf(
-                "npc.cow",
+                "npc.cow",       // 2790
+                "npc.cow_2791",  // 2791
+                "npc.cow_2793",  // 2793
+                "npc.cow_2795",  // 2795
+                "npc.cow_5842",  // 5842
             )
 
         val COW_YELL_DELAY = TimerKey()
