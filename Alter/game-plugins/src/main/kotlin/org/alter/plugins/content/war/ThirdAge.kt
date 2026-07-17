@@ -22,9 +22,10 @@ import org.alter.rscm.RSCM.getRSCM
  *    have a piece added to their commander spoils, on top of the coin ([CapturePayout] rolls it into
  *    the [WarSpoils] claim box). A rank-only reward, collected with `::claim`.
  *
- * The Quartermaster's Relics shelf still sells 3rd age (tripled pity prices) and buys it back from
- * Lord+ at a third of shelf value (WarlordsArmouryPlugin) — but the drop is now the prestige story,
- * and the buy-back is deliberately below player-trade value so a duplicate is worth more in trade.
+ * The Quartermaster's Relics storefront still sells 3rd age (tripled pity prices) and now buys it back
+ * from any player at a third of shelf value through the shop window (WarlordsArmouryPlugin) — but the
+ * drop is now the prestige story, and the buy-back is deliberately below player-trade value so a
+ * duplicate is worth more in trade.
  *
  * [PIECES] is the shared source of truth for both drop paths (a random pick); the shop keeps its own
  * priced `Ware` list in sync by key.
