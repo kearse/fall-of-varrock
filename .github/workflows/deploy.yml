@@ -57,14 +57,14 @@ jobs:
       - name: Ship compose + Caddyfile
         run: |
           scp -i deploy_key -o StrictHostKeyChecking=accept-new \
-            deploy/docker-compose.prod.yml deploy/Caddyfile deploy/backup.sh deploy/server.sh \
+            deploy/docker-compose.prod.yml deploy/Caddyfile deploy/backup.sh deploy/server.sh deploy/prune.sh \
             "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:/opt/kol/"
 
       - name: Deploy
         run: |
           ssh -i deploy_key -o StrictHostKeyChecking=accept-new \
             "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
-            "set -e; cd /opt/kol; chmod +x backup.sh server.sh; \
+            "set -e; cd /opt/kol; chmod +x backup.sh server.sh prune.sh; \
              # Reclaim disk BEFORE pulling so a full box self-heals instead of \
              # wedging the deploy. Only removes stopped containers, images, and \
              # build cache that nothing is using — never touches named volumes, \

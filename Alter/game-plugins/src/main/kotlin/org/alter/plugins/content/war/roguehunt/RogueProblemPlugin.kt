@@ -2,6 +2,7 @@ package org.alter.plugins.content.war.roguehunt
 
 import dev.openrune.cache.CacheManager.getNpc
 import org.alter.api.ext.message
+import org.alter.api.ext.npc
 import org.alter.api.ext.player
 import org.alter.game.Server
 import org.alter.game.model.World
