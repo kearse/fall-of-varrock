@@ -27,8 +27,12 @@ private val logger = KotlinLogging.logger {}
  * The cycle: a muster call goes out [WARN_TICKS] ahead ("the march sets out in ~5 minutes"),
  * then a [CampaignTier.MARCH] column launches down the standard campaign machinery
  * ([CampaignDirector] does the marching/fighting; [CapturePayout] splits the pooled spoils
- * by participation). Marches are free to players but **consume realm supplies** — a starved
- * realm skips the march and says so, which is the Mire supply loop made visible.
+ * by participation). Marches are **automatic and supply-free**: they fire every cycle no
+ * matter what — no player count and no supply level can stop them, and they never spend a
+ * single point of the realm's war-stores — so the war keeps moving on its own and the early
+ * game never stalls waiting on the realm to be supplied. The supply meter belongs entirely to
+ * the paid command ladder above the march (Raid → Campaign → Conquest); marches are the free
+ * tier beneath it.
  *
  * `::march` rallies a player to the column (with a second-confirmation warning when the
  * column is already fighting on PvP ground). Marches CAN fail — 10 knights alone will often
@@ -116,7 +120,7 @@ class MarchPlugin(
         nextFireCycle = world.currentCycle + ticks
     }
 
-    /** The muster call, [WARN_TICKS] before launch — or the starved/busy skip. */
+    /** The muster call, [WARN_TICKS] before launch — or the busy skip (never a supply skip). */
     private fun muster(world: World, timer: TimerKey) {
         val op = Campaigns.hostileTarget()
         val skip = when {
@@ -136,11 +140,8 @@ class MarchPlugin(
         patron = funded?.first
         val grand = funded?.second ?: ((WarState.getMarchCount() + 1) % GRAND_EVERY == 0)
         val tier = if (grand) CampaignTier.GRAND_MARCH else CampaignTier.MARCH
-        if (funded == null && !RealmSupply.canAfford(tier.supplyCost)) {
-            Announce.broadcast(world, "<col=801700>The Knights of Lumbridge cannot march — the realm's war-stores are too low (${RealmSupply.meter()}/${tier.supplyCost} needed). Hand supplies to a Quartermaster!</col>")
-            schedule(world, timer, INTERVAL_TICKS - WARN_TICKS)
-            return
-        }
+        // The march is unconditional and supply-free — it musters regardless of the realm's
+        // supply level and spends nothing, so the war keeps moving without waiting on players.
         val d = Districts.marchTarget(world)
         target = d
         pendingGrand = grand
@@ -168,10 +169,7 @@ class MarchPlugin(
         val grand = pendingGrand
         pendingGrand = false
         val tier = if (grand) CampaignTier.GRAND_MARCH else CampaignTier.MARCH
-        if (fundedBy == null && !RealmSupply.canAfford(tier.supplyCost)) {
-            Announce.broadcast(world, "<col=801700>The march is called off — the realm's war-stores ran dry at the gate.</col>")
-            return
-        }
+        // No supply gate here either — a march that mustered always launches.
         // Point the column at the mustered district: the campaign route to the city mouth, then
         // the district's street approach (waypoints snap to walkable + unstick, so a rough hop heals).
         val d = target ?: Districts.marchTarget(world)
@@ -190,13 +188,12 @@ class MarchPlugin(
         }
         WarState.incMarchCount()
         if (grand) spawnWarden(world, d)
+        // Marches never touch the realm's war-stores — they are the free, always-on tier. The
+        // supply meter is spent only by the paid command ladder (campaigns and conquests).
         if (fundedBy != null) {
-            // The patron covered the supply cost — the realm's stores stay untouched.
-            Announce.broadcast(world, "<col=ffae00>$fundedBy's patronage carries the ${tier.display} to ${d.display} — the realm's war-stores stay full.</col>")
-        } else {
-            RealmSupply.consume(world, tier, "The Knights of Lumbridge", "${d.display} of ${op.displayName}")
+            Announce.broadcast(world, "<col=ffae00>$fundedBy's patronage rides with the ${tier.display} to ${d.display} — the column sets out under their banner.</col>")
         }
-        logger.info { "[MARCH] scheduled ${tier.display} launched on ${op.cityKey}/${d.key} patron=$fundedBy (supplies now ${RealmSupply.meter()})." }
+        logger.info { "[MARCH] scheduled ${tier.display} launched on ${op.cityKey}/${d.key} patron=$fundedBy (supply-free)." }
     }
 
     /** A funded march that couldn't launch goes back on the queue — a purchase is never lost. */
