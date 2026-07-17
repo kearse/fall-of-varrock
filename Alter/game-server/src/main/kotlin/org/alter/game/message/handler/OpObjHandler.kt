@@ -49,22 +49,25 @@ class OpObjHandler : MessageHandler<OpObj> {
                 it.item == message.id && it.canBeViewedBy(client)
             }
         if (item == null) {
-            // DIAGNOSTIC: client sent a ground-item op for an item the server has no live,
-            // viewable match for at that tile. Dump the real server-side state so we can see why.
-            val atTile = chunk.getEntities<GroundItem>(tile, EntityType.GROUND_ITEM)
-            log(
-                client,
-                "GI MISS: clicked item=%d at (%d,%d,h%d); playerTile=(%d,%d,h%d); %d ground item(s) at tile",
-                message.id, message.x, message.z, tile.height,
-                client.tile.x, client.tile.z, client.tile.height,
-                atTile.size,
-            )
-            atTile.forEach { gi ->
+            // The client interacted with a ground item the server has no live, viewable match
+            // for at this tile: a client-side "phantom". These happen because the client tracks
+            // ground objs purely by OBJ_ADD/OBJ_DEL, and an obj can be added to the client twice
+            // (a cached obj-add is replayed when a chunk re-enters view even though the client
+            // still holds the live copy). A single pickup then sends one OBJ_DEL and only clears
+            // one copy, so the item still appears on the ground and looks pickable again.
+            //
+            // Tell the client to delete it so it can't be interacted with again. Non-stackable
+            // ground objs (armour/weapons/most gear — what this bug was reported for) always have
+            // a quantity of 1, which is the quantity the client is holding for the phantom, so an
+            // OBJ_DEL with quantity 1 removes it. If the server really does have a (different)
+            // item here it is untouched, since OBJ_DEL matches on both id and quantity.
+            chunk.clearClientObj(client, message.id, amount = 1, tile = tile)
+            if (client.world.devContext.debugItemActions) {
+                val atTile = chunk.getEntities<GroundItem>(tile, EntityType.GROUND_ITEM)
                 log(
                     client,
-                    "  -> id=%d amt=%d owner=%s public=%b owned=%b view=%b",
-                    gi.item, gi.amount, gi.ownerUID?.value?.toString() ?: "none",
-                    gi.isPublic(), gi.isOwnedBy(client), gi.canBeViewedBy(client),
+                    "Cleared phantom ground item %d at (%d,%d,h%d); %d real item(s) remain at tile",
+                    message.id, message.x, message.z, tile.height, atTile.size,
                 )
             }
             return

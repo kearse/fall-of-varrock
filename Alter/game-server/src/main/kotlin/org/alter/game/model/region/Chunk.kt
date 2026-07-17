@@ -6,6 +6,7 @@ import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
 import net.rsprot.protocol.api.util.ZonePartialEnclosedCacheBuffer
 import net.rsprot.protocol.common.client.OldSchoolClientType
 import net.rsprot.protocol.game.outgoing.zone.header.UpdateZonePartialEnclosed
+import net.rsprot.protocol.game.outgoing.zone.payload.ObjDel
 import net.rsprot.protocol.message.ZoneProt
 import org.alter.game.model.*
 import org.alter.game.model.collision.addLoc
@@ -257,6 +258,30 @@ class Chunk(val coords: ChunkCoords) {
         tile: Tile,
         vararg types: EntityType,
     ): List<T> = entities[tile]?.filter { it.entityType in types } as? List<T> ?: emptyList()
+
+    /**
+     * Sends a single [ObjDel] to [p] to remove a client-side ground item that the server no
+     * longer has at [tile].
+     *
+     * The client tracks ground objs purely from OBJ_ADD/OBJ_DEL and can end up holding a
+     * "phantom" copy — e.g. when a cached obj-add is replayed on a chunk re-reveal while the
+     * client still has the live copy, a single pickup's OBJ_DEL only clears one of the two. This
+     * lets us delete the leftover so it stops looking like it can be picked up again. OBJ_DEL
+     * matches on both id and [amount], so this only removes an obj the client is actually holding
+     * at that quantity.
+     */
+    fun clearClientObj(
+        p: Player,
+        itemId: Int,
+        amount: Int,
+        tile: Tile,
+    ) {
+        val messages = ObjectArrayList<ZoneProt>()
+        messages.add(ObjDel(itemId, amount, (tile.x and 0x7), (tile.z and 0x7)))
+        val local = p.lastKnownRegionBase!!.toLocal(coords.toTile())
+        val computed = zonePartialEnclosedCacheBuffer.computeZone(messages)
+        p.write(UpdateZonePartialEnclosed(zoneX = local.x, zoneZ = local.z, level = local.height, payload = computed[OldSchoolClientType.DESKTOP]!!))
+    }
 
     /**
      * Send the [update] to any [Client] entities that are within view distance

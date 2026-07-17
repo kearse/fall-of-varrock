@@ -314,7 +314,6 @@ class World(val gameContext: GameContext, val devContext: DevContext) {
                  * reached the public delay set by our game, we make it public.
                  */
                 groundItem.removeOwner()
-                groundItem.ownerShipType = 0
                 /**
                  * @TODO Hmm weird cuz it just vanished and appeared.
                  * And second : When [gItemPublicDelay] matches currentCycle some different update happens need to do more research on it.
@@ -471,7 +470,11 @@ class World(val gameContext: GameContext, val devContext: DevContext) {
                 val oldAmount = oldItem.amount
                 val newAmount = Math.min(Int.MAX_VALUE.toLong(), item.amount.toLong() + oldItem.amount.toLong()).toInt()
                 oldItem.amount = newAmount
-                chunk.updateGroundItem(this, item, oldAmount, newAmount)
+                // Pass the persistent merged stack (oldItem), not the transient incoming item:
+                // the cached obj-add replayed to players entering the chunk must reflect the new
+                // total, otherwise late-joiners hold a stale quantity and a later OBJ_DEL (which
+                // matches on quantity) can't clear it, leaving a phantom.
+                chunk.updateGroundItem(this, oldItem, oldAmount, newAmount)
                 return
             }
         }
