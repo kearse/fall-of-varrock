@@ -46,6 +46,18 @@ jobs:
           install -m 600 /dev/null deploy_key
           printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > deploy_key
 
+      # Reclaim disk FIRST, before any write to the box (scp/login/pull). A full
+      # disk otherwise wedges the deploy at the very first write. Read-only, safe
+      # ops only — never touches named volumes (Mongo, saves, NodeBB, certs).
+      - name: Reclaim disk on host
+        run: |
+          ssh -i deploy_key -o StrictHostKeyChecking=accept-new \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+            "docker container prune -f >/dev/null 2>&1 || true; \
+             docker image prune -af >/dev/null 2>&1 || true; \
+             docker builder prune -af >/dev/null 2>&1 || true; \
+             echo 'disk after prune:'; df -h / | tail -1"
+
       - name: Read currently-deployed tag
         id: prev
         run: |
@@ -60,18 +72,15 @@ jobs:
             deploy/docker-compose.prod.yml deploy/Caddyfile deploy/backup.sh deploy/server.sh deploy/prune.sh \
             "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:/opt/kol/"
 
+      # Disk is already reclaimed by the "Reclaim disk on host" step above,
+      # before any write to the box. Keep this command free of inline `#`
+      # comments — over SSH the whole string collapses to one line, so a `#`
+      # would comment out every command after it.
       - name: Deploy
         run: |
           ssh -i deploy_key -o StrictHostKeyChecking=accept-new \
             "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
             "set -e; cd /opt/kol; chmod +x backup.sh server.sh prune.sh; \
-             # Reclaim disk BEFORE pulling so a full box self-heals instead of \
-             # wedging the deploy. Only removes stopped containers, images, and \
-             # build cache that nothing is using — never touches named volumes, \
-             # so Mongo data / player saves / NodeBB / Caddy certs are untouched. \
-             docker container prune -f >/dev/null 2>&1 || true; \
-             docker image prune -af >/dev/null 2>&1 || true; \
-             docker builder prune -af >/dev/null 2>&1 || true; \
              echo '${{ secrets.GITHUB_TOKEN }}' | docker login ghcr.io -u '${{ github.actor }}' --password-stdin; \
              export IMAGE_TAG='${{ steps.tag.outputs.tag }}'; \
              docker compose -f docker-compose.prod.yml pull; \
