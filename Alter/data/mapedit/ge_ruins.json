@@ -1,11 +1,12 @@
 {
   "region": 12598,
-  "note": "GE fully demolished: flatten the whole octagon + east plaza (clan boards/benches/fountain/statues), scatter rubble + flames-only (15156) field. NPCs stripped server-side (WorldSpawnsPlugin GE_RUINS).",
+  "note": "GE gutted: KEEP the octagon perimeter walls standing (loc shapes 0/1/2/3 + diagonal 9), flatten everything else inside the footprint — roof, desks, booths, paving, wall decorations, clan boards/benches/fountain/statues — and scatter a rubble + flames-only (15156) field. NPCs stripped server-side (WorldSpawnsPlugin GE_RUINS + GE recruiters).",
 
   "removes": [
     {
       "box": [3149, 3468, 3190, 3517],
-      "_comment": "the entire GE footprint, all planes: walls, roof, central desk, clerk/bank booths, paving, clan recruitment boards (41728/41730), benches (5615), fountain (5125), statues (3642)"
+      "types": [4, 5, 6, 7, 8, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22],
+      "_comment": "the GE footprint, all planes — everything EXCEPT the structural walls (loc shapes 0/1/2/3 straight/corner + 9 diagonal): roof (12-21), centrepieces (10/11: central desk, clerk/bank booths, benches 5615, fountain 5125, statues 3642, clan recruitment boards 41728/41730), wall decorations (4-8), and ground decoration/paving (22). The octagon perimeter walls are LEFT STANDING so the ruins stay enclosed — removing them opened the footprint to the map edge (the 'glitched out' walls)."
     }
   ],
 
