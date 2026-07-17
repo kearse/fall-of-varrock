@@ -6,6 +6,7 @@ import gg.rsmod.util.ServerProperties
 import gg.rsmod.util.Stopwatch
 import io.github.oshai.kotlinlogging.KotlinLogging
 import it.unimi.dsi.fastutil.objects.ObjectArrayList
+import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -217,8 +218,22 @@ class World(val gameContext: GameContext, val devContext: DevContext) {
      * A local collection of [GroundItem]s that are currently spawned. We do
      * not use [ChunkSet]s to iterate through this as it takes quite a bit of
      * time to do so every cycle.
+     *
+     * This is an insertion-ordered hash set rather than a list so that
+     * [remove] is O(1) instead of a linear scan. Under a heavy drop load (e.g.
+     * mass-slaying), a big wave of items can despawn on the same cycle; with a
+     * list, each removal was an O(n) scan, making the per-cycle despawn sweep
+     * O(n^2) and a real contributor to cycle overrun.
      */
-    private val groundItems = ObjectArrayList<GroundItem>()
+    private val groundItems = ObjectLinkedOpenHashSet<GroundItem>()
+
+    /**
+     * Set once [groundItems] first exceeds [GROUND_ITEM_WARN_THRESHOLD] so we
+     * emit a single warning on the way up (and one "recovered" line on the way
+     * back down) instead of spamming a warning every cycle while the floor is
+     * flooded.
+     */
+    private var groundItemWarnActive = false
 
     /**
      * Any ground item that should be spawned in the future. For example, when
@@ -283,6 +298,26 @@ class World(val gameContext: GameContext, val devContext: DevContext) {
         /*
          * Cycle through ground items to handle any despawn or respawn.
          */
+
+        /*
+         * Watch the size of [groundItems] for unbounded growth. There is no
+         * hard cap on ground items (removal is purely the per-cycle despawn
+         * timer below), so if drops ever outpace despawns the list grows
+         * without bound. Warn once when we cross the threshold so an operator
+         * can tell a genuine leak / overload from ordinary loot churn, and log
+         * once more when it recovers.
+         */
+        val groundItemCount = groundItems.size
+        if (!groundItemWarnActive && groundItemCount >= GROUND_ITEM_WARN_THRESHOLD) {
+            groundItemWarnActive = true
+            logger.warn {
+                "Ground item count is high: $groundItemCount (threshold $GROUND_ITEM_WARN_THRESHOLD). " +
+                    "Possible loot buildup or cycle overrun preventing despawns."
+            }
+        } else if (groundItemWarnActive && groundItemCount < GROUND_ITEM_WARN_THRESHOLD - GROUND_ITEM_WARN_HYSTERESIS) {
+            groundItemWarnActive = false
+            logger.info { "Ground item count recovered: $groundItemCount." }
+        }
 
         /*
          * Any ground item that should be removed this cycle will be added here.
@@ -526,12 +561,11 @@ class World(val gameContext: GameContext, val devContext: DevContext) {
             }
         }
 
-        for (i in 0 until groundItems.size) {
-            val item = groundItems[i] ?: continue
-            if (area.contains(item.tile)) {
-                remove(item)
-            }
-        }
+        /*
+         * Snapshot the matches first: [remove] mutates [groundItems], so we
+         * cannot remove while iterating it directly.
+         */
+        groundItems.filter { area.contains(it.tile) }.forEach { remove(it) }
     }
 
     fun isSpawned(obj: GameObject): Boolean =
@@ -547,6 +581,12 @@ class World(val gameContext: GameContext, val devContext: DevContext) {
      * @return null if no ground item meets the conditions of [predicate].
      */
     fun getGroundItem(predicate: (GroundItem) -> Boolean): GroundItem? = groundItems.firstOrNull { predicate(it) }
+
+    /**
+     * The number of [GroundItem]s currently spawned in the world. Exposed for
+     * diagnostics (e.g. the game cycle overrun report).
+     */
+    fun getGroundItemCount(): Int = groundItems.size
 
     /**
      * Gets the [GameObject] that is located on [tile] and has a
@@ -730,5 +770,19 @@ class World(val gameContext: GameContext, val devContext: DevContext) {
          * begin to reject any log-in.
          */
         const val REJECT_LOGIN_REBOOT_THRESHOLD = 50
+
+        /**
+         * The ground item count at which we start warning about possible loot
+         * buildup / cycle overrun. This is a soft diagnostic threshold, not a
+         * hard cap — items are never dropped because of it.
+         */
+        const val GROUND_ITEM_WARN_THRESHOLD = 5_000
+
+        /**
+         * How far below [GROUND_ITEM_WARN_THRESHOLD] the count must fall before
+         * we consider it "recovered". Prevents log flapping when the count
+         * hovers right around the threshold.
+         */
+        const val GROUND_ITEM_WARN_HYSTERESIS = 500
     }
 }
