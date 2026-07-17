@@ -10,6 +10,9 @@ name: Server Ops
 #   status    show container states + deployed tag
 #   logs      print the last 200 log lines
 #
+#   inspect-save  READ-ONLY: dump a player's on-disk save files (set "player")
+#   reset-save    move a player's corrupt save aside, reversibly (set "player")
+#
 # This never builds images. To rebuild from source, run the Deploy workflow
 # (or just push to main).
 
@@ -21,13 +24,18 @@ on:
         type: choice
         required: true
         default: restart
-        options: [restart, redeploy, stop, start, status, logs]
+        options: [restart, redeploy, stop, start, status, logs, inspect-save, reset-save]
       service:
         description: "Which service (all = whole stack)"
         type: choice
         required: true
         default: all
         options: [all, game, web, discord-bot, forum, caddy, mongo]
+      player:
+        description: "Player name — required for inspect-save / reset-save only"
+        type: string
+        required: false
+        default: ""
 
 # Share the deploy group so ops never race a running deploy
 concurrency:
@@ -51,13 +59,32 @@ jobs:
             deploy/server.sh \
             "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:/opt/kol/server.sh"
 
-      - name: Run ${{ inputs.action }} ${{ inputs.service }}
+      - name: Run ${{ inputs.action }}
+        env:
+          # Pass inputs through the environment (never interpolate untrusted
+          # ${{ }} straight into the shell) and validate the player name so it
+          # can't inject anything into the remote command.
+          ACTION: ${{ inputs.action }}
+          SERVICE: ${{ inputs.service }}
+          PLAYER: ${{ inputs.player }}
+          DEPLOY_TARGET: ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}
         run: |
-          SERVICE='${{ inputs.service }}'
-          [ "$SERVICE" = all ] && SERVICE=''
+          case "$ACTION" in
+            inspect-save|reset-save)
+              if ! printf '%s' "$PLAYER" | grep -qE '^[A-Za-z0-9_]+$'; then
+                echo "The '$ACTION' action requires a valid 'player' name (letters, digits, underscore)." >&2
+                exit 1
+              fi
+              ARGS="$PLAYER"
+              ;;
+            *)
+              ARGS="$SERVICE"
+              if [ "$ARGS" = all ]; then ARGS=''; fi
+              ;;
+          esac
           ssh -i deploy_key -o StrictHostKeyChecking=accept-new \
-            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
-            "chmod +x /opt/kol/server.sh; /opt/kol/server.sh '${{ inputs.action }}' $SERVICE"
+            "$DEPLOY_TARGET" \
+            "chmod +x /opt/kol/server.sh; /opt/kol/server.sh '$ACTION' $ARGS"
 
       - name: Health check
         if: ${{ inputs.action == 'restart' || inputs.action == 'redeploy' || inputs.action == 'start' }}
