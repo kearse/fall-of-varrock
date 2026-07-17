@@ -295,16 +295,19 @@ class WorldSpawnsPlugin(
      *    drop tables;
      *  - upstairs (plane > 0) records are simply dropped (no demons stuck in bedrooms);
      *  - a handful of **tormented demons** are hand-placed at the city's landmarks
-     *    ([VARROCK_BOSS_TILES]) as the set-piece demon bosses.
-     * The Grand Exchange is handled separately ([stripGrandExchange]) and stays demolished rubble.
+     *    ([VARROCK_BOSS_TILES]) as the set-piece demon bosses;
+     *  - the demolished Grand Exchange ([stripGrandExchange] emptied it first) gets its own
+     *    scatter of demons + one tormented demon in the rubble ([injectGrandExchangeDemons]).
      */
     private fun applyFallenVarrock() {
         val demons = resolveMonsterPool(VARROCK_DEMON_POOL, "FALLEN VARROCK")
         val (replaced, dropped) = repopulateFallenCity(FALLEN_VARROCK, demons)
         val bosses = injectVarrockDemonBosses()
+        val geDemons = injectGrandExchangeDemons(demons)
         logger.info {
             "[FALLEN VARROCK] city purged: $replaced street spots now demons (${demons.size}-kind pool), " +
-                "$dropped records dropped (upstairs), $bosses tormented-demon boss(es) placed at landmarks."
+                "$dropped records dropped (upstairs), $bosses tormented-demon boss(es) at landmarks, " +
+                "$geDemons demon(s) in the GE ruins."
         }
     }
 
@@ -401,6 +404,47 @@ class WorldSpawnsPlugin(
             WorldSpawns.byRegion.getOrPut(regionId) { ArrayList() }.add(WorldSpawns.Rec(id, x, z, 0, BOSS_WALK))
         }
         return VARROCK_BOSS_TILES.size
+    }
+
+    /**
+     * The demons spilled into the demolished Grand Exchange too (emptied by [stripGrandExchange]
+     * before this runs): a scatter of greater/lesser demons across the rubble on a coarse grid,
+     * plus a single tormented demon lording over the ruin's heart. Records are added straight into
+     * `byRegion` after the strip/repopulate passes so nothing removes them again. Returns the count.
+     */
+    private fun injectGrandExchangeDemons(pool: List<Pair<Int, Int>>): Int {
+        fun place(id: Int, x: Int, z: Int, walk: Int) {
+            val regionId = ((x shr 6) shl 8) or (z shr 6)
+            WorldSpawns.byRegion.getOrPut(regionId) { ArrayList() }.add(WorldSpawns.Rec(id, x, z, 0, walk))
+        }
+        var placed = 0
+        val totalWeight = pool.sumOf { it.second }
+        if (totalWeight > 0) {
+            var x = GE_RUINS.bottomLeftX + GE_DEMON_MARGIN
+            while (x <= GE_RUINS.topRightX - GE_DEMON_MARGIN) {
+                var z = GE_RUINS.bottomLeftY + GE_DEMON_MARGIN
+                while (z <= GE_RUINS.topRightY - GE_DEMON_MARGIN) {
+                    var r = world.random(totalWeight - 1)
+                    var pick = pool.first().first
+                    for ((id, w) in pool) {
+                        if (r < w) {
+                            pick = id
+                            break
+                        }
+                        r -= w
+                    }
+                    place(pick, x, z, FALLEN_WALK)
+                    placed++
+                    z += GE_DEMON_SPACING
+                }
+                x += GE_DEMON_SPACING
+            }
+        }
+        runCatching { getRSCM("npc.tormented_demon") }.getOrNull()?.let { td ->
+            place(td, GE_TORMENTED_TILE.first, GE_TORMENTED_TILE.second, BOSS_WALK)
+            placed++
+        }
+        return placed
     }
 
     /**
@@ -531,6 +575,12 @@ class WorldSpawnsPlugin(
             "npc.lesser_demon" to 3,
             "npc.greater_demon" to 2,
         )
+
+        /** Demons scattered across the ruined Grand Exchange ([injectGrandExchangeDemons]): a coarse
+         *  grid step + edge margin inside [GE_RUINS], and the tile the lone tormented demon holds. TUNABLE. */
+        const val GE_DEMON_SPACING = 12
+        const val GE_DEMON_MARGIN = 4
+        val GE_TORMENTED_TILE = 3165 to 3490 // heart of the demolished octagon
 
         /** Landmark tiles that each get a tormented-demon boss ([injectVarrockDemonBosses]). TUNABLE. */
         val VARROCK_BOSS_TILES = listOf(
