@@ -22,6 +22,11 @@ import java.util.*
 class GroundItem private constructor(val item: Int, var amount: Int, internal var ownerUID: PlayerUID?) : Entity() {
     constructor(item: Int, amount: Int, tile: Tile, owner: Player? = null) : this(item, amount, owner?.uid) {
         this.tile = tile
+        // Keep the ownership type in step with whether the item actually has an owner. Owned
+        // drops are "Self" (1) to the player they belong to; without this, spawns that don't set
+        // it explicitly (death piles, pickup leftovers) would advertise themselves as public (0)
+        // to the client while the server still treats them as private.
+        this.ownerShipType = if (owner != null) 1 else 0
     }
 
     /**
@@ -64,6 +69,7 @@ class GroundItem private constructor(val item: Int, var amount: Int, internal va
 
     fun removeOwner() {
         ownerUID = null
+        ownerShipType = 0
     }
 
     fun copyAttr(attributes: Map<ItemAttribute, Int>): GroundItem {
