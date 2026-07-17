@@ -860,7 +860,18 @@ class PluginRepository(
     }
 
     fun executeLogin(p: Player) {
-        loginPlugins.forEach { logic -> p.executePlugin(logic) }
+        // Each login hook is isolated: the player is already registered and has been sent the
+        // OK + RebuildLogin by the time these run, so one hook throwing must NOT abort the rest of
+        // the sequence — that would strand the client on the loading screen ("stuck logging in") or
+        // drop a half-initialised session ("kicked back to login"). Log the failure and carry on so
+        // login always completes.
+        loginPlugins.forEach { logic ->
+            try {
+                p.executePlugin(logic)
+            } catch (e: Exception) {
+                logger.error(e) { "Error in login hook for player '${p.username}'." }
+            }
+        }
     }
 
     fun bindLogout(plugin: Plugin.() -> Unit) {
@@ -868,7 +879,16 @@ class PluginRepository(
     }
 
     fun executeLogout(p: Player) {
-        logoutPlugins.forEach { logic -> p.executePlugin(logic) }
+        // Same isolation as [executeLogin]: a throwing logout hook must not abort the rest of the
+        // logout sequence (unregister/save), or the player could be left as a ghost that blocks
+        // re-login with a Duplicate response.
+        logoutPlugins.forEach { logic ->
+            try {
+                p.executePlugin(logic)
+            } catch (e: Exception) {
+                logger.error(e) { "Error in logout hook for player '${p.username}'." }
+            }
+        }
     }
 
     fun bindComponentItemSwap(
