@@ -3,7 +3,7 @@ title: Wizard Tower
 category: Minigames & Bosses
 summary: The instanced tower-assault minigame - solo or in a band of five - that unlocks the special spellbooks and farms high-tier runes.
 order: 1
-updated: 2026-07-15
+updated: 2026-07-17
 infobox: Type = Instanced minigame; Start = Void Knight at the tower bridge; Command = `::wizardtower`; Modes = Solo or Multi (up to 5); Requirement = Prayer 37 (Protect from Magic) recommended; Timer = None - leave via the top-floor portal; Boss = The Archmage; First clear = Unlocks Ancient, Lunar & Arceuus; Death = Safe
 ---
 
@@ -36,6 +36,10 @@ There is **no timer** - the game lasts as long as you do. The mages are aggressi
 - **Multi** - mages **respawn** about 30 seconds after they die, so once you've carved your way up, your band can camp any floor and farm runes for as long as you like.
 
 When you're done, the **portal on the top floor** (beside the Archmage's rug) takes you back out to the Void Knight.
+
+### Planning your first climb
+
+Expect the first run to be a stop-start affair. The mages hit hard enough that you'll burn through **prayer potions** faster than the War-Prep stock lasts, and you'll likely need to top up before the tower's done - so don't be surprised if you end up running a **slayer task or two** to bank enough **War Effort** to restock. Prayer potion(4)s are cheap from **Vannaka's Rewards shop** (8 War Effort each), and [slayer contracts](/wiki/slayer-and-contracts) pay War Effort as you clear them. The practical rhythm for a first solo clear is **one floor at a time**: push up a floor, step out through the portal to bank and restock potions, then head back in - solo saves your spot, so you resume on the highest floor you reached with everything below already cleared. Once you've beaten the tower the whole restock loop falls away, since every future solo visit drops you straight onto the Archmage's floor.
 
 ## Rewards
 
