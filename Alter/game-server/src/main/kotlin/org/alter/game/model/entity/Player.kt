@@ -433,6 +433,14 @@ open class Player(world: World) : Pawn(world) {
      * Handles any logic that should be executed upon log in.
      */
     fun login() {
+        // Anti-void guard: a player whose SAVED tile lies in the reserved instance space but has
+        // no live map under it — the server crashed/restarted mid-instance (raid/minigame), so
+        // the map they were standing on is gone — would rebuild into an empty region and be
+        // soft-locked in black void with no way out. Send them home before the rebuild instead;
+        // persisted progress (e.g. minigame checkpoints) is untouched, so they can walk back in.
+        if (entityType.isHumanControlled && world.instanceAllocator.isInstanceSpace(tile)) {
+            tile = world.gameContext.home
+        }
         playerInfo.updateCoord(tile.height, tile.x, tile.z)
         npcInfo.updateCoord(-1, tile.height, tile.x, tile.z)
         worldEntityInfo.updateCoord(-1, tile.height, tile.x, tile.z)

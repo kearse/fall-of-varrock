@@ -160,6 +160,15 @@ class InstancedMapAllocator {
      */
     fun getMap(tile: Tile): InstancedMap? = maps.find { it.area.contains(tile) }
 
+    /**
+     * True if [tile] falls within the reserved instance space (see [VALID_AREA]). Instances are
+     * always entered LIVE (allocate + moveTo) and never survive a restart, so a player whose
+     * SAVED tile is in here is a stranded save — the server crashed/restarted while they stood in
+     * an instance (raid/minigame) that no longer exists. The login flow uses this to redirect
+     * them home instead of rebuilding into an empty region (the "logged in to black void" soft-lock).
+     */
+    fun isInstanceSpace(tile: Tile): Boolean = VALID_AREA.contains(tile)
+
     private fun applyCollision(
         world: World,
         map: InstancedMap,
