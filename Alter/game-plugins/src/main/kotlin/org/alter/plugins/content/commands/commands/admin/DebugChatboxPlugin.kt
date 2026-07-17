@@ -13,8 +13,9 @@ import org.alter.game.plugin.PluginRepository
 /**
  * `::debug [on|off]` — toggles the developer **chatbox debug diagnostics** for the calling admin,
  * and only for them. While on, the player sees the "Unhandled item/button/object action",
- * "Undefined spell", examine-id suffixes and similar messages that help identify unwired
- * content; while off (the default for everyone) those messages are suppressed.
+ * "Undefined spell", examine-id suffixes, the incoming-packet echoes ("Continue dialog…",
+ * "Click map…") and similar messages that help identify unwired content; while off (the default
+ * for everyone) those messages are suppressed and the chatbox only shows real chat.
  *
  * The toggle is session-only ([DEBUG_CHATBOX_ATTR] has no persistence key), so it clears on logout
  * and can never leak to ordinary players. With no argument the flag flips; `on`/`off` set it

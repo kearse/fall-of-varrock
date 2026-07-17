@@ -72,10 +72,17 @@ class Client(world: World) : Player(world) {
     var cameraYaw = 0
 
     /**
-     * A flag which indicates that the client will have their incoming packets
-     * ([org.alter.game.message.Message]s) logged.
+     * Whether this client's incoming packets ([org.alter.game.message.Message]s)
+     * are echoed to their chatbox as developer diagnostics (e.g. "Continue dialog…",
+     * "Click map…").
+     *
+     * This follows the same debug gate as the other chatbox diagnostics
+     * ([showChatboxDebug]): OFF for everyone by default so ordinary players only see
+     * real chat, and turned back on per-session by a dev via the `::debug` command or
+     * server-wide via the `debug-packets` dev property.
      */
-    var logPackets = true
+    val logPackets: Boolean
+        get() = showChatboxDebug(world.devContext.debugPackets)
 
     override val entityType: EntityType = EntityType.CLIENT
 
