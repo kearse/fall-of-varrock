@@ -90,27 +90,38 @@ case "$cmd" in
     # corrupt-backups/ folder. REVERSIBLE — nothing is deleted. After this the
     # next login rebuilds a fresh character on the SAME account/password (login
     # credentials live in MongoDB, not in this file). No container restart needed.
+    #
+    # The saves dir is owned by the game container's user (the image runs as
+    # root), so the host deploy user can't write into it — mkdir/mv would fail
+    # with "Permission denied". Do the move INSIDE the running game container,
+    # where the process owns the files. /app/data/saves/details there is the
+    # same bind mount as /opt/kol/runtime/saves/details on the host, so the move
+    # persists. loginUsername is stored lowercase on disk.
     user="${1:-}"
     [ -n "$user" ] || { echo "usage: server.sh reset-save <username>" >&2; exit 1; }
-    dir=/opt/kol/runtime/saves/details
     lc="$(printf '%s' "$user" | tr '[:upper:]' '[:lower:]')"
     ts="$(date -u +%Y%m%dT%H%M%SZ)"
-    dest="$dir/corrupt-backups/$ts"
-    moved=0
-    for name in "$lc" "$lc.bak" "$lc.tmp"; do
-      match="$(find "$dir" -maxdepth 1 -type f -iname "$name" 2>/dev/null | head -1)"
-      [ -n "$match" ] || continue
-      mkdir -p "$dest"
-      mv "$match" "$dest/"
-      echo "moved $(basename "$match") -> $dest/"
-      moved=1
-    done
-    if [ "$moved" -eq 1 ]; then
-      echo "reset-save: '$user' cleared. Files preserved under $dest (not deleted)."
-      echo "Next login rebuilds a fresh character on the same account/password."
-    else
-      echo "reset-save: nothing to move for '$user'."
-    fi
+    compose exec -T game sh -c '
+      set -eu
+      dir=/app/data/saves/details
+      lc=$1; ts=$2
+      dest=$dir/corrupt-backups/$ts
+      moved=0
+      for name in "$lc" "$lc.bak" "$lc.tmp"; do
+        f="$dir/$name"
+        [ -e "$f" ] || continue
+        mkdir -p "$dest"
+        mv "$f" "$dest/"
+        echo "moved $name -> corrupt-backups/$ts/"
+        moved=1
+      done
+      if [ "$moved" -eq 1 ]; then
+        echo "reset-save: $lc cleared; files preserved under $dest (not deleted)."
+        echo "Next login rebuilds a fresh character on the same account/password."
+      else
+        echo "reset-save: nothing to move for $lc."
+      fi
+    ' sh "$lc" "$ts"
     ;;
   help)
     sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//'
