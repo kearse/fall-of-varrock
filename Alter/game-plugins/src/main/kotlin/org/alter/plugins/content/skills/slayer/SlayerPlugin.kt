@@ -62,6 +62,17 @@ class SlayerPlugin(
         .filter { resolves(it.npcName) }
         .associateBy { it.npcName }
 
+    /**
+     * The cache name each task's monster answers to (e.g. "cow"), lower-cased. Many monsters
+     * exist under several npc ids that all share one name — cows alone spawn as 2790/2791/2793/2795
+     * — so a kill is credited by NAME, not by the single canonical id. Without this, only the one
+     * variant [resolveId] happens to return would ever count, and a "kill 24 Cows" contract could
+     * eat far more than 24 kills while the counter sat still. Resolved once at load.
+     */
+    private val taskName: Map<String, String> = tasks.mapNotNull { (key, _) ->
+        npcName(resolveId(key))?.let { key to it }
+    }.toMap()
+
     init {
         buildRewardShop()
 
@@ -310,7 +321,10 @@ class SlayerPlugin(
         val left = player.attr[SLAYER_TASK_LEFT_ATTR] ?: 0
         if (left <= 0) return
         val task = tasks[taskKey] ?: return
-        if (resolveId(taskKey) != deadId) return // not the assigned monster
+        // Match by the monster's cache name, not a single id: cows, skeletons, spiders &c. each
+        // spawn under several npc ids that share one name, and every one of them must count.
+        val target = taskName[taskKey] ?: return
+        if (!npcName(deadId).equals(target, ignoreCase = true)) return // not the assigned monster
 
         player.addXp(Skills.SLAYER, task.xpPerKill)
         val remaining = left - 1
@@ -352,6 +366,10 @@ class SlayerPlugin(
     private fun resolves(npcKey: String): Boolean = try { getRSCM(npcKey); true } catch (e: Exception) { false }
     private fun resolveId(npcKey: String): Int = try { getRSCM(npcKey) } catch (e: Exception) { -1 }
     private fun resolveOrNull(itemKey: String): Int? = try { getRSCM(itemKey) } catch (e: Exception) { null }
+
+    /** The cache display name of an npc id, lower-cased & trimmed, or null if it can't be resolved. */
+    private fun npcName(npcId: Int): String? =
+        try { getNpc(npcId).name.lowercase().trim() } catch (e: Exception) { null }
 
     private companion object {
         const val WAR_EFFORT_BASE = 8 // base War Effort for a completed combat contract
