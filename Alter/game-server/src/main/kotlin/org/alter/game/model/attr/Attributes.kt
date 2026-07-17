@@ -466,6 +466,16 @@ val LEVEL_UP_OLD_XP = AttributeKey<Double>()
 val CHANGE_LOGGING = AttributeKey<Boolean>()
 
 /**
+ * Per-player opt-in for the developer **chatbox debug diagnostics** — the "Unhandled item/button/
+ * object action", "Undefined spell", examine-id suffixes and similar messages that used to be
+ * gated only by the server-wide `dev-settings` flags. Those diagnostics are now OFF for everyone by
+ * default; an admin flips this on for their own session with `::debug` when they need to identify an
+ * unwired component/item/spell. Session-only (no persistenceKey) so it never sticks past a relog and
+ * can never leak to ordinary players. See [org.alter.game.model.entity.showChatboxDebug].
+ */
+val DEBUG_CHATBOX_ATTR = AttributeKey<Boolean>()
+
+/**
  * Instead of running tp
  */
 val CLIENT_KEY_COMBINATION = AttributeKey<Int>()

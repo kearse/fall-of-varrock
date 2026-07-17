@@ -10,6 +10,7 @@ import org.alter.game.Server
 import org.alter.game.model.World
 import org.alter.game.model.entity.Pawn
 import org.alter.game.model.entity.Player
+import org.alter.game.model.entity.debugMagicSpells
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
 import org.alter.plugins.content.combat.Combat
@@ -67,7 +68,7 @@ class CombatSpellsPlugin(
             /*
              * The spell is not defined in [CombatSpell].
              */
-            if (world.devContext.debugMagicSpells) {
+            if (player.debugMagicSpells) {
                 player.message("Undefined combat spell: [spellId=${spellMetadata.paramItem}, name=${spellMetadata.name}]")
             }
         }

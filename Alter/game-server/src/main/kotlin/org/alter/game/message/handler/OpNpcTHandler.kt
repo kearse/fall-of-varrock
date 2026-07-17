@@ -5,6 +5,8 @@ import org.alter.game.message.MessageHandler
 import org.alter.game.model.attr.*
 import org.alter.game.model.entity.Client
 import org.alter.game.model.entity.Entity
+import org.alter.game.model.entity.debugItemActions
+import org.alter.game.model.entity.debugMagicSpells
 import java.lang.ref.WeakReference
 
 @Suppress("UNREACHABLE_CODE")
@@ -43,13 +45,13 @@ class OpNpcTHandler : MessageHandler<OpNpcT> {
                 || client.world.plugins.executeItemOnNpc(client, verify)) {
                 return
             }
-            if (client.world.devContext.debugItemActions) {
+            if (client.debugItemActions) {
                 client.writeMessage("Unhandled item on npc [ $verify on ${npc.id}] ] ")
             }
         } else {
             if (!client.world.plugins.executeSpellOnNpc(client, parent, child)) {
                 client.writeMessage(Entity.NOTHING_INTERESTING_HAPPENS)
-                if (client.world.devContext.debugMagicSpells) {
+                if (client.debugMagicSpells) {
                     client.writeMessage("Unhandled magic spell: [$parent, $child] out here")
                 }
             }

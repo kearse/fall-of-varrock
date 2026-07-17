@@ -6,6 +6,7 @@ import org.alter.game.model.attr.INTERACTING_ITEM_ID
 import org.alter.game.model.attr.INTERACTING_OPT_ATTR
 import org.alter.game.model.attr.INTERACTING_SLOT_ATTR
 import org.alter.game.model.entity.Client
+import org.alter.game.model.entity.debugButtons
 
 class IfModelOp1Handler : MessageHandler<If1Button> {
     override fun consume(
@@ -30,7 +31,7 @@ class IfModelOp1Handler : MessageHandler<If1Button> {
             return
         }
 
-        if (client.world.devContext.debugButtons) {
+        if (client.debugButtons) {
             client.writeMessage("Unhandled button action: [component=[$interfaceId:$component], option=$option, slot=$slot, item=$item]")
         }
     }

@@ -68,7 +68,7 @@ class EquipmentPlugin(
                 else -> {
                     val item = player.equipment[equipment.id] ?: return@onButton
                     val menuOpt = opt
-                    if (!world.plugins.executeEquipmentOption(player, item.id, menuOpt) && world.devContext.debugItemActions) {
+                    if (!world.plugins.executeEquipmentOption(player, item.id, menuOpt) && player.debugItemActions) {
                         val action = ObjectExamineHolder.EQUIPMENT_MENU.get(item.id).equipmentMenu[menuOpt]
                         player.message("Unhandled equipment action: [item=${item.id}, option=$menuOpt, action=$action]")
                     }

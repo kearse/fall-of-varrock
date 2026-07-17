@@ -695,7 +695,7 @@ class World(val gameContext: GameContext, val devContext: DevContext) {
             }
 
         if (examine != null) {
-            val extension = if (devContext.debugExamines) " ($id)" else ""
+            val extension = if (p.debugExamines) " ($id)" else ""
             p.writeMessage(examine + extension)
         } else {
             logger.warn { "No examine info found for entity [$type, $id]" }

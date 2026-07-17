@@ -11,6 +11,7 @@ import org.alter.game.model.attr.INTERACTING_OPT_ATTR
 import org.alter.game.model.entity.Client
 import org.alter.game.model.entity.GroundItem
 import org.alter.game.model.entity.Player
+import org.alter.game.model.entity.debugItemActions
 import java.lang.ref.WeakReference
 
 /**
@@ -62,7 +63,7 @@ class OpObjHandler : MessageHandler<OpObj> {
             // OBJ_DEL with quantity 1 removes it. If the server really does have a (different)
             // item here it is untouched, since OBJ_DEL matches on both id and quantity.
             chunk.clearClientObj(client, message.id, amount = 1, tile = tile)
-            if (client.world.devContext.debugItemActions) {
+            if (client.debugItemActions) {
                 val atTile = chunk.getEntities<GroundItem>(tile, EntityType.GROUND_ITEM)
                 log(
                     client,

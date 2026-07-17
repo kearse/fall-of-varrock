@@ -8,6 +8,7 @@ import org.alter.game.model.attr.INTERACTING_OPT_ATTR
 import org.alter.game.model.entity.Entity
 import org.alter.game.model.entity.GroundItem
 import org.alter.game.model.entity.Player
+import org.alter.game.model.entity.debugItemActions
 import org.alter.game.model.item.Item
 import org.alter.game.model.queue.TaskPriority
 import org.alter.game.plugin.Plugin
@@ -120,12 +121,12 @@ object GroundItemRouteAction {
             val item = p.attr[INTERACTING_ITEM]?.get() ?: return
             val handled = p.world.plugins.executeItemOnGroundItem(p, item.id, groundItem.item)
 
-            if (!handled && p.world.devContext.debugItemActions) {
+            if (!handled && p.debugItemActions) {
                 p.writeMessage("Unhandled item on ground item action: [item=${item.id}, ground=${groundItem.item}]")
             }
         } else {
             val handled = p.world.plugins.executeGroundItem(p, groundItem.item, opt)
-            if (!handled && p.world.devContext.debugItemActions) {
+            if (!handled && p.debugItemActions) {
                 val definition = getItem(groundItem.item)
                 p.writeMessage("Unhandled ground item action: [item=${groundItem.item}, option=[$opt, ${definition.options[opt - 1]}]]")
             }

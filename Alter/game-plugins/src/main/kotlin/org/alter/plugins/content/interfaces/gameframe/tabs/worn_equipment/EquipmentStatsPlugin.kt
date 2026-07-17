@@ -115,7 +115,7 @@ class EquipmentStatsPlugin(
                 val item = player.equipment[equipment.id] ?: return@onButton
                 if (!world.plugins.executeItem(player, item.id, opt)) {
                     val slot = player.getInteractingSlot()
-                    if (world.devContext.debugButtons) {
+                    if (player.debugButtons) {
                         player.message(
                             "Unhandled button action: [component=[${EQUIPMENTSTATS_INTERFACE_ID}:$component], option=$opt, slot=$slot, item=${item.id}]",
                         )

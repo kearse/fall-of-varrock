@@ -13,6 +13,7 @@ import org.alter.api.ext.setInterfaceEvents
 import org.alter.api.ext.setInterfaceUnderlay
 import org.alter.api.ext.setVarbit
 import org.alter.game.model.entity.Player
+import org.alter.game.model.entity.debugButtons
 import org.alter.game.model.item.Item
 import org.alter.game.rsprot.RsModObjectProvider
 
@@ -180,8 +181,12 @@ object LootChestInterface {
         sessions.remove(p.index)
     }
 
-    /** Discovery aid for unwired components — reported in chat during testing. */
+    /**
+     * Discovery aid for unwired components — reported in chat only to a player who has opted into
+     * chatbox debug diagnostics (`::debug`). Silent for everyone else so ordinary players never see it.
+     */
     fun debugClick(p: Player, comp: Int, option: Int, slot: Int) {
+        if (!p.debugButtons) return
         p.message("<col=808080>[loot chest] comp=$comp opt=$option slot=$slot</col>")
     }
 }
