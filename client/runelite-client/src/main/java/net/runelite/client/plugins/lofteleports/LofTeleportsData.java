@@ -76,17 +76,13 @@ final class LofTeleportsData
 			s("Blackjack", "Soon", SOON, 6408),                // blackjack
 			s("Party Zone", "Soon", SOON, 1038));
 
+		// Mirrors TeleportRegistry SKILLING: the seven production skills consolidated into the
+		// single Mire hub row (UX review), then the skills with a distinct destination.
 		cat("Skilling",
+			b("The Mire — Skilling Grounds", "Safe Zone", SAFE, 5341), // rake (general skilling hub)
 			b("Mining", "Safe Zone", SAFE, 1275),              // rune pickaxe
 			b("Smithing", "Safe Zone", SAFE, 2347),            // hammer
-			b("Woodcutting", "Safe Zone", SAFE, 1359),         // rune axe
-			b("Firemaking", "Safe Zone", SAFE, 590),           // tinderbox
-			b("Fishing", "Safe Zone", SAFE, 307),              // fishing rod
-			b("Cooking", "Safe Zone", SAFE, 315),              // shrimps
-			b("Crafting", "Safe Zone", SAFE, 1755),            // chisel
 			b("Construction", "Safe Zone", SAFE, 8794),        // saw
-			b("Runecraft", "Safe Zone", SAFE, 1438),           // air talisman
-			b("Farming", "Safe Zone", SAFE, 952),              // spade
 			b("Hunter", "Safe Zone", SAFE, 10010),             // butterfly net
 			b("Agility", "Safe Zone", SAFE, 3105),             // climbing boots
 			b("Herblore", "Safe Zone", SAFE, 233),             // pestle and mortar
@@ -100,28 +96,43 @@ final class LofTeleportsData
 			b("Recruit Trials", "Safe Zone", SAFE, 1277),      // bronze sword
 			s("Active Campaign", "Soon", SOON, 1201));         // rune kiteshield
 
+		// Mirrors TeleportRegistry BOSSES row-for-row (34 rows: apex city bosses, the four GWD
+		// generals, the wilderness single bosses, the Slayer/PvM roster, then the raids).
 		cat("Bosses",
 			b("King Black Dragon", "Hostile", HOSTILE, 1149),  // dragon med helm
-			b("Ice Dragon", "Wild Lvl 15", WILD, 1751),        // blue dragonhide
-			b("Rat King", "Wild Lvl 8", WILD, 1985),           // cheese
+			b("Corporeal Beast", "Hostile", HOSTILE, 13734),   // spirit shield
 			s("World Boss", "Soon", SOON, 11864),              // slayer helmet
 			s("Zulrah", "Soon", SOON, 12934),                  // zulrah's scales
-			s("Barrows", "Soon", SOON, 4716),                  // dharok's helm
-			s("Kraken", "Soon", SOON, 12004),                  // kraken tentacle
-			s("Corporeal Beast", "Soon", SOON, 13734),         // spirit shield
-			s("Nex", "Soon", SOON, 11791),                     // staff of the dead
-			s("Callisto", "Soon", SOON, 12603),                // tyrannical ring
-			s("Vet'ion", "Soon", SOON, 12601),                 // ring of the gods
-			s("Venenatis", "Soon", SOON, 12605),               // treasonous ring
-			s("Scorpia", "Soon", SOON, 12806),                 // malediction ward
-			s("Chaos Elemental", "Soon", SOON, 7158),          // dragon 2h
-			s("Chaos Fanatic", "Soon", SOON, 12808),           // odium shard
-			s("Crazy Archaeologist", "Soon", SOON, 11924),     // fedora
-			s("Demonic Gorillas", "Soon", SOON, 19481),        // heavy ballista
-			s("Skotizo", "Soon", SOON, 19685),                 // dark totem
+			b("Barrows", "Safe Zone", SAFE, 4716),             // dharok's helm
+			b("Kraken", "Hostile", HOSTILE, 12004),            // kraken tentacle
+			b("Nex", "Hostile", HOSTILE, 11791),               // staff of the dead
+			b("Vorkath", "Hostile", HOSTILE, 21634),           // vorkath's head
+			b("Alchemical Hydra", "Hostile", HOSTILE, 22988),  // hydra leather
+			b("Phantom Muspah", "Hostile", HOSTILE, 28323),    // venator shard
+			b("Abyssal Sire", "Hostile", HOSTILE, 13262),      // abyssal orphan
+			b("Grotesque Guardians", "Hostile", HOSTILE, 21730), // granite gloves
+			b("General Graardor", "Hostile", HOSTILE, 11832),  // bandos chestplate
+			b("K'ril Tsutsaroth", "Hostile", HOSTILE, 11806),  // zamorak godsword
+			b("Kree'arra", "Hostile", HOSTILE, 11826),         // armadyl helmet
+			b("Commander Zilyana", "Hostile", HOSTILE, 11808), // saradomin godsword
+			b("Callisto", "Wild Lvl 40", WILD, 12603),         // tyrannical ring
+			b("Vet'ion", "Wild Lvl 32", WILD, 12601),          // ring of the gods
+			b("Venenatis", "Wild Lvl 33", WILD, 12605),        // treasonous ring
+			b("Scorpia", "Wild Lvl 54", WILD, 12806),          // malediction ward
+			b("Chaos Elemental", "Wild Lvl 50", WILD, 7158),   // dragon 2h
+			b("Chaos Fanatic", "Wild Lvl 42", WILD, 12808),    // odium shard
+			b("Crazy Archaeologist", "Wild Lvl 24", WILD, 11924), // fedora
+			b("Demonic Gorillas", "Hostile", HOSTILE, 19481),  // heavy ballista
+			b("Skotizo", "Hostile", HOSTILE, 19685),           // dark totem
+			b("Cerberus", "Hostile", HOSTILE, 13231),          // primordial boots
+			b("Giant Mole", "Hostile", HOSTILE, 7418),         // mole claw
+			b("Kalphite Queen", "Hostile", HOSTILE, 3140),     // dragon chainbody
+			b("Sarachnis", "Hostile", HOSTILE, 23528),         // sarachnis cudgel
+			b("Thermonuclear Smoke Devil", "Hostile", HOSTILE, 12002), // occult necklace
+			b("Dagannoth Kings", "Hostile", HOSTILE, 6737),    // berserker ring
 			s("Theatre of Blood", "Soon", SOON, 22326),        // justiciar faceguard
 			s("Chambers of Xeric", "Soon", SOON, 20997),       // twisted bow
-			s("Revenant Caves", "Soon", SOON, 22557));         // amulet of avarice
+			b("Revenant Caves", "Wild Lvl 17", WILD, 22557));  // amulet of avarice
 
 		cat("Wilderness",
 			b("Outlaw Camp", "Wild Lvl 5", WILD, 1333),        // rune scimitar
@@ -145,6 +156,8 @@ final class LofTeleportsData
 
 		cat("Mini-Games",
 			b("Fight Cave", "Safe Zone", SAFE, 6570),          // fire cape
+			b("The Inferno", "Safe Zone", SAFE, 21295),        // infernal cape
+			b("Wizard Tower", "Safe Zone", SAFE, 579),         // blue wizard hat
 			s("Castle Wars", "Soon", SOON, 4037),              // castle wars decor
 			s("Last Man Standing", "Soon", SOON, 11941),       // looting bag
 			s("Duel Arena", "Soon", SOON, 2552));              // ring of dueling
