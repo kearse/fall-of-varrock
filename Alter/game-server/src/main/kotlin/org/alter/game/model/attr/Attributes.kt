@@ -280,6 +280,19 @@ val ROGUE_KILLS_ATTR = AttributeKey<Int>("rogue_kills")
 val ROGUE_MILESTONE_PAID_ATTR = AttributeKey<Int>("rogue_milestone_paid")
 
 /**
+ * **The Rogue Problem** — the Act II quest (story-and-grind-design §4) that picks up where the
+ * War-Prep chain leaves off and bridges the Squire→Knight climb.
+ * [ROGUE_PROBLEM_STEP_ATTR] is the current step ordinal of
+ * [org.alter.plugins.content.war.roguehunt.RogueProblem.Step] (0 = not started).
+ * [ROGUE_PROBLEM_KILLS_ATTR] is a **quest-scoped** hunt counter for the HUNT step (kept separate
+ * from the lifetime [ROGUE_KILLS_ATTR] milestone tally so the quest goal is measured fresh, not
+ * satisfied by kills banked before the quest began). Both persistent; the chain never re-fires
+ * once DONE.
+ */
+val ROGUE_PROBLEM_STEP_ATTR = AttributeKey<Int>("rogue_problem_step")
+val ROGUE_PROBLEM_KILLS_ATTR = AttributeKey<Int>("rogue_problem_kills")
+
+/**
  * A flag which indicates that the player will not take collision into account
  * when walking.
  */

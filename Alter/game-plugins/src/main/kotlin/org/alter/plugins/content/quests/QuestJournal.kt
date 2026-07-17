@@ -9,6 +9,7 @@ import org.alter.game.model.attr.RECRUIT_GOBLIN_KILLS_ATTR
 import org.alter.game.model.attr.SLAYER_TASK_NPC_ATTR
 import org.alter.game.model.entity.Player
 import org.alter.plugins.content.war.recruit.RecruitTrials
+import org.alter.plugins.content.war.roguehunt.RogueProblem
 import org.alter.plugins.content.war.warprep.WarPrepChain
 
 /**
@@ -21,9 +22,12 @@ import org.alter.plugins.content.war.warprep.WarPrepChain
  *    the FIGHT trial (0-15 clamp), bit 10 = slayer war-contract taken (splits the SLAY arrow's
  *    "see Vannaka" vs "kill the rats" phases).
  *  - [WARPREP_VARP] = [WarPrepChain.Step] ordinal.
+ *  - [ROGUE_PROBLEM_VARP] packed: bits 0-5 = [RogueProblem.Step] ordinal, bits 6-11 = rogues felled
+ *    on the HUNT step (0-63 clamp) so the client can render the "(x/30)" progress.
  *  - [GUIDE_MUTED_VARP] = 1 while guidance is muted, else 0 (so the client toggle reflects state).
  *
- * Varps 4600-4608 and 4620-4623 are taken by the other client HUDs; quests own 4610-4612.
+ * Varps 4600-4608, 4613-4616 and 4620-4623 are taken by the other client HUDs; quests own
+ * 4610-4612 and 4617.
  * Non-zero varps persist ([VarpSerialisation]), but the attributes stay the source of truth —
  * everything here is re-derived and re-published on login and on the world poll.
  *
@@ -40,6 +44,7 @@ object QuestJournal {
     const val RECRUIT_VARP = 4610
     const val WARPREP_VARP = 4611
     const val GUIDE_MUTED_VARP = 4612
+    const val ROGUE_PROBLEM_VARP = 4617 // 4613-4616 belong to the companion + slayer HUDs
 
     // Reused OSRS quest progress varps that colour the relabelled native quest-tab rows. A value of
     // 0 reads as "not started" (red), the complete value as "finished" (green), anything between as
@@ -78,6 +83,11 @@ object QuestJournal {
 
         val warprep = WarPrepChain.step(p).ordinal
         if (p.getVarp(WARPREP_VARP) != warprep) p.setVarp(WARPREP_VARP, warprep)
+
+        val rogueStep = RogueProblem.step(p).ordinal and 0x3F
+        val rogueKills = RogueProblem.huntKills(p).coerceIn(0, 63)
+        val roguePacked = rogueStep or (rogueKills shl 6)
+        if (p.getVarp(ROGUE_PROBLEM_VARP) != roguePacked) p.setVarp(ROGUE_PROBLEM_VARP, roguePacked)
 
         val mutedFlag = if (muted(p)) 1 else 0
         if (p.getVarp(GUIDE_MUTED_VARP) != mutedFlag) p.setVarp(GUIDE_MUTED_VARP, mutedFlag)

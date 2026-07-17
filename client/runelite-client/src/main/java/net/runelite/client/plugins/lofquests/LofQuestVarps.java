@@ -13,11 +13,14 @@ final class LofQuestVarps
 	/** Packed Recruit Trials state: bits 0-5 step ordinal, bits 6-9 goblin kills, bit 10 contract taken. */
 	static final int RECRUIT = 4610;
 
-	/** War-Prep chain step ordinal (0 = not started … 5 = done). */
+	/** War-Prep chain step ordinal (0 = not started … 6 = done). */
 	static final int WARPREP = 4611;
 
 	/** 1 while the player has muted the server's guidance arrows (free play), else 0. */
 	static final int GUIDE_MUTED = 4612;
+
+	/** Packed "The Rogue Problem" state: bits 0-5 step ordinal, bits 6-11 rogues felled on the HUNT step. */
+	static final int ROGUE_PROBLEM = 4617;
 
 	static int recruitStep(Client client)
 	{
@@ -37,6 +40,16 @@ final class LofQuestVarps
 	static int warprepStep(Client client)
 	{
 		return client.getVarpValue(WARPREP) & 0x3F;
+	}
+
+	static int rogueProblemStep(Client client)
+	{
+		return client.getVarpValue(ROGUE_PROBLEM) & 0x3F;
+	}
+
+	static int rogueProblemKills(Client client)
+	{
+		return (client.getVarpValue(ROGUE_PROBLEM) >> 6) & 0x3F;
 	}
 
 	static boolean guideMuted(Client client)

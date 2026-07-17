@@ -7,6 +7,7 @@ import org.alter.game.model.attr.DUKE_INTRO_DONE_ATTR
 import org.alter.game.model.attr.PLAYER_TITLE_ATTR
 import org.alter.game.model.entity.Player
 import org.alter.plugins.content.war.recruit.RecruitTrials
+import org.alter.plugins.content.war.roguehunt.RogueProblem
 import org.alter.plugins.content.war.warprep.WarPrepChain
 import org.alter.game.model.queue.QueueTask
 import org.alter.game.plugin.KotlinPlugin
@@ -71,6 +72,23 @@ class DukeHoracioPlugin(
             return
         }
 
+        // "The Rogue Problem" finale (Act II): the Sergeant's purse covers the rungs up to Knight, so
+        // flow straight into claiming them — one per talk (Soldier, then Knight) until the quest closes.
+        if (RogueProblem.step(player) == RogueProblem.Step.RANK && next != null) {
+            val toKnight = if (next == RogueProblem.TARGET_TITLE) "the ${next.display}'s rune" else "${next.display} — and ${RogueProblem.TARGET_TITLE.display} beyond it"
+            chatNpc(player, "The Sergeant sends word — a captain of Fallen Varrock dead by your hand, and his purse to see you to Knighthood. Shall I raise you to ${next.display}? It costs ${fmt(next.cost)} coins, and earns you $toKnight.")
+            when (options(player, "Yes — make me a ${next.display}.", "Not just yet.")) {
+                1 -> {
+                    buy(player, next)
+                    if (player.title == RogueProblem.TARGET_TITLE) {
+                        chatNpc(player, "Arise, ${RogueProblem.TARGET_TITLE.display}. You've earned a companion of your own — General Zo in the courtyard will muster them — and the wilderness is yours to hunt. Wear your rune with pride.")
+                    }
+                }
+                2 -> chatPlayer(player, "Not just yet.")
+            }
+            return
+        }
+
         // Returning visitors get the concise greeting — skipped right after a first-meeting intro so
         // he doesn't re-introduce himself.
         if (!firstMeeting) {
@@ -115,6 +133,8 @@ class DukeHoracioPlugin(
         }
         RecruitTrials.onBuyRank(player) // advances the intro quest's RANK step, if active
         WarPrepChain.onRankBought(player) // closes the War-Prep chain's RANK step, if active
+        RogueProblem.begin(player)        // War-Prep's Squire rank-up opens Act II — start "The Rogue Problem"
+        RogueProblem.onRankBought(player) // closes "The Rogue Problem" RANK step once Knight is reached
     }
 
     private suspend fun QueueTask.ranksInfo(player: Player) {

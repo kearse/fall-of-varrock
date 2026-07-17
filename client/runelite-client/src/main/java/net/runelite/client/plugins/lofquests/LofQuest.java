@@ -70,6 +70,28 @@ enum LofQuest
 			"Access to the war's raids"
 		)),
 
+	THE_ROGUE_PROBLEM(
+		"The Rogue Problem",
+		"Lumbridge holds, but Fallen Varrock — the old capital — has fallen to rogues, muggers and "
+			+ "highwaymen. The Recruiting Sergeant sends the new Squire into its lawless streets to "
+			+ "thin the cutthroats and cut down one of their captains. Break them and the purse earns "
+			+ "your Knighthood — your first companion, and the right to hunt the wilderness.",
+		6, // DONE ordinal (RogueProblem.Step)
+		// World anchors are best-effort Fallen Varrock tiles — TUNE against the live map.
+		Arrays.asList(
+			new LofQuestStep(1, "Speak to the Recruiting Sergeant", "He has harder work now you're a Squire — by the Lumbridge gate.", new WorldPoint(3219, 3214, 0)),
+			new LofQuestStep(2, "Thin out the rogues of Fallen Varrock", "Cut down 30 cutthroats in the streets. Lawless PvP ground — risk little.", new WorldPoint(3212, 3428, 0)),
+			new LofQuestStep(3, "Hunt down a district captain", "Prowling deep in the city — see the board with ::bounties.", new WorldPoint(3216, 3421, 0)),
+			new LofQuestStep(4, "Return to the Recruiting Sergeant", "Report the captain's fall and claim your purse.", new WorldPoint(3219, 3214, 0)),
+			new LofQuestStep(5, "Rise to Knight at Duke Horacio", "The Sergeant's purse covers the climb — Soldier, then Knight.", new WorldPoint(3222, 3218, 0))
+		),
+		Arrays.asList(
+			"Knighthood — rune armour",
+			"Your first companion (General Zo musters them)",
+			"The wilderness / PK loop (start at the PK Training Arena)",
+			"A purse that covers the climb to Knight"
+		)),
+
 	WARPREP_RANGED(
 		"War-Prep II — Ranged",
 		"The next drill in the War-Prep chain: mastering the bow for the front's skirmish lines.",
@@ -131,6 +153,8 @@ enum LofQuest
 				return LofQuestVarps.recruitStep(client);
 			case WARPREP_MAGIC:
 				return LofQuestVarps.warprepStep(client);
+			case THE_ROGUE_PROBLEM:
+				return LofQuestVarps.rogueProblemStep(client);
 			default:
 				return 0;
 		}
@@ -153,6 +177,15 @@ enum LofQuest
 				// The chain auto-begins when the Recruit Trials finish; ordinal 0 = still locked.
 				return ord >= doneOrdinal ? LofQuestState.FINISHED
 					: ord == 0 ? LofQuestState.LOCKED : LofQuestState.IN_PROGRESS;
+			case THE_ROGUE_PROBLEM:
+				// Act II — locked until War-Prep I (Magic) finishes (its DONE ordinal is 6); after
+				// that the chain auto-begins at step 1, so ordinal 0 still reads as locked.
+				if (LofQuestVarps.warprepStep(client) < 6)
+				{
+					return LofQuestState.LOCKED;
+				}
+				return ord >= doneOrdinal ? LofQuestState.FINISHED
+					: ord == 0 ? LofQuestState.LOCKED : LofQuestState.IN_PROGRESS;
 			default:
 				return LofQuestState.LOCKED;
 		}
@@ -164,6 +197,10 @@ enum LofQuest
 		if (this == WARPREP_MAGIC && state(client) == LofQuestState.LOCKED)
 		{
 			return "Complete the Recruit Trials first.";
+		}
+		if (this == THE_ROGUE_PROBLEM && state(client) == LofQuestState.LOCKED)
+		{
+			return "Finish War-Prep I — Magic first.";
 		}
 		return null;
 	}
@@ -226,6 +263,10 @@ enum LofQuest
 		if (this == WARPREP_MAGIC && step.getOrdinal() == 1 && stepOrdinal(client) == 1)
 		{
 			return " (" + client.getRealSkillLevel(Skill.PRAYER) + "/37)";
+		}
+		if (this == THE_ROGUE_PROBLEM && step.getOrdinal() == 2 && stepOrdinal(client) == 2)
+		{
+			return " (" + LofQuestVarps.rogueProblemKills(client) + "/30)";
 		}
 		return "";
 	}
