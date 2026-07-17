@@ -25,10 +25,11 @@ private val logger = KotlinLogging.logger {}
 
 /**
  * **Named captains** (story-and-grind-design §4/§6) — the bounty board's marquee targets.
- * Each Varrock district is run by a named captain: an elite, uniquely-named cutthroat on a
- * long respawn, prowling near the district's heart (deep in the PvP city — the risk IS the
- * content). Killing one pays a fat bounty (coins + Commendations + War Effort) and rolls
- * their **signature weapon** — the spec-weapon chase the forge's armour lines don't cover.
+ * One elite, uniquely-named cutthroat per district on a long respawn. Since the demons took
+ * Varrock, the captains fled the city and now hole up in overrun Falador (their district labels
+ * carry over for the bounty board / pressure meter). Killing one pays a fat bounty (coins +
+ * Commendations + War Effort) and rolls their **signature weapon** — the spec-weapon chase the
+ * forge's armour lines don't cover.
  *
  * `::bounties` shows the board. Captains use their base model's combat def with boosted
  * stats, so animations stay right; their base ids are rogue-family, so a captain kill also
@@ -49,12 +50,13 @@ class NamedCaptainsPlugin(
         val signatureDisplay: String,
     )
 
-    /** One captain per district, spawned a few steps off its rally point. Tiles TUNE. */
+    /** One captain per district — driven out of demon-held Varrock, they now hole up in overrun
+     *  Falador (see WorldSpawnsPlugin.applyFallenFalador). Tiles TUNE. */
     private val DEFS = listOf(
-        CaptainDef("Karn the Red", District.SLUMS, "npc.rogue_526", Tile(3179, 3430, 0), "item.dragon_claws", "Dragon claws"),
-        CaptainDef("Silas the Hollow", District.OLD_MARKET, "npc.dark_wizard", Tile(3216, 3421, 0), "item.nightmare_staff", "Nightmare staff"),
-        CaptainDef("Vex of the Row", District.EAST_QUARTER, "npc.highwayman", Tile(3255, 3430, 0), "item.armadyl_crossbow", "Armadyl crossbow"),
-        CaptainDef("Grimjaw", District.MUSEUM_QUARTER, "npc.bandit_leader", Tile(3256, 3448, 0), "item.dragon_warhammer", "Dragon warhammer"),
+        CaptainDef("Karn the Red", District.SLUMS, "npc.rogue_526", Tile(3013, 3357, 0), "item.dragon_claws", "Dragon claws"),
+        CaptainDef("Silas the Hollow", District.OLD_MARKET, "npc.dark_wizard", Tile(2957, 3371, 0), "item.nightmare_staff", "Nightmare staff"),
+        CaptainDef("Vex of the Row", District.EAST_QUARTER, "npc.highwayman", Tile(3045, 3336, 0), "item.armadyl_crossbow", "Armadyl crossbow"),
+        CaptainDef("Grimjaw", District.MUSEUM_QUARTER, "npc.bandit_leader", Tile(2977, 3341, 0), "item.dragon_warhammer", "Dragon warhammer"),
     )
 
     /** Live captain NPC per def index; absent = slain and awaiting respawn. */
