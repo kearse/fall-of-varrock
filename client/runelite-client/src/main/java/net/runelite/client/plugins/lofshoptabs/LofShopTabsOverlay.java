@@ -109,11 +109,52 @@ class LofShopTabsOverlay extends Overlay
 
 	private static final int TOP_MARGIN = 4;
 
-	/** The window fills the game viewport above the chatbox: chatbox width, from the top of the
-	 *  view down to the top of the chatbox (the area the player circled). Anchored to the chatbox
-	 *  frame so it tracks fixed/resizable layouts. */
+	// Grow the covered rect this many px past the native window on every side, so no sliver of the
+	// OSRS frame survives at the edges.
+	private static final int FRAME_MARGIN = 3;
+
+	/** The on-canvas bounds of the native shop interface (group 300) — the exact area we must cover.
+	 *  The native window floats centred in the viewport and, in resizable mode, is wider than the
+	 *  chatbox and sits at a different position, so anchoring to it directly (rather than the
+	 *  chatbox) is the only thing that keeps it fully covered at every screen size. Returns null if
+	 *  it can't be read yet. Must be called on the client thread. */
+	private Rectangle nativeShopRect()
+	{
+		// The stock pane is the same widget isShopOpen() keys on, so it's present whenever we render.
+		final Widget stock = client.getWidget(LofShopTabsPlugin.SHOP_GROUP, LofShopTabsPlugin.STOCK_CHILD);
+		if (stock == null || stock.isHidden())
+		{
+			return null;
+		}
+		// Layer-0 of the group is the whole window frame; union with the stock pane guards against it
+		// being unexpectedly small/hidden so we always cover at least the visible content.
+		final Widget root = client.getWidget(LofShopTabsPlugin.SHOP_GROUP, 0);
+		Rectangle r = (root != null && !root.isHidden()) ? root.getBounds() : null;
+		final Rectangle sr = stock.getBounds();
+		if (sr != null && sr.width > 0 && sr.height > 0)
+		{
+			r = (r == null || r.width <= 0 || r.height <= 0) ? sr : r.union(sr);
+		}
+		return (r != null && r.width > 0 && r.height > 0) ? r : null;
+	}
+
+	/** The rectangle the shop panel is drawn over. Primary anchor is the native shop window itself,
+	 *  so the panel tracks it wherever the client places it (fixed OR resizable, any screen size).
+	 *  Chatbox/viewport are fallbacks only, for the rare tick the native bounds can't be read. */
 	private Rectangle windowRect()
 	{
+		final Rectangle shop = nativeShopRect();
+		if (shop != null)
+		{
+			// Grow by FRAME_MARGIN on every side, clamped to the canvas.
+			final int cw = client.getCanvasWidth(), ch = client.getCanvasHeight();
+			final int x0 = Math.max(0, shop.x - FRAME_MARGIN);
+			final int y0 = Math.max(0, shop.y - FRAME_MARGIN);
+			final int x1 = Math.min(cw, shop.x + shop.width + FRAME_MARGIN);
+			final int y1 = Math.min(ch, shop.y + shop.height + FRAME_MARGIN);
+			return new Rectangle(x0, y0, Math.max(1, x1 - x0), Math.max(1, y1 - y0));
+		}
+		// Fallback: anchor to the chatbox frame (fills the viewport above it).
 		final Widget chat = client.getWidget(ComponentID.CHATBOX_FRAME);
 		if (chat != null && !chat.isHidden())
 		{
