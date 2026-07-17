@@ -20,7 +20,7 @@ variant that fits each site's character limit.
 > ⚔️ OSRS war server — rise from Peasant to King, command armies, split the spoils. Not pay-to-win.
 
 **~200 chars (Discadia / top.gg short field):**
-> ⚔️ A custom OSRS (rev 228) war server. Varrock has fallen — enlist in Lumbridge, climb an *earned* feudal ladder from Peasant to King, lead up to 64 knights into battle, and split every war chest. Bosses, raids, Wilderness PK & companions that fight beside you. 100% not pay-to-win.
+> ⚔️ A custom OSRS (rev 228) war server. Varrock has fallen — enlist in Lumbridge, climb an *earned* feudal ladder from Peasant to King, lead up to 64 knights into battle, and split every war chest. Bossing, Wilderness PK & companions that fight beside you. 100% not pay-to-win.
 
 **Ultra-short tag line (banners / one-liners):**
 > Rise from Peasant to King. Command the war. Nothing is pay-to-win.
@@ -58,6 +58,7 @@ Every city beyond Lumbridge has fallen. Band together and take them back:
 • The **King** leads full conquests of the realm
 • Rally up to **64 allied knights**, storm a fallen city, and the enemy's loot **pools
 and splits by contribution** — everyone who shows up gets paid.
+• Not ranked yet? **Marches** are free, scheduled public war events any citizen can join.
 
 **🛡️ Companions that fight for you**
 Recruit up to three AI knights — melee, ranged and magic. Train them in real combat so
@@ -66,7 +67,7 @@ intact. Take them anywhere — bosses, the Wilderness, minigames, the war — an
 counts toward your share of the loot.
 
 **🗡️ Everything you expect from OSRS**
-• 🐉 **Bossing** — Corporeal Beast, God Wars and more, solo or in a team
+• 🐉 **Bossing** — Vorkath, Zulrah, Nex, the Corporeal Beast, God Wars and dozens more, solo or in a team
 • ⚔️ **Minigames** — Castle Wars, Last Man Standing, Fight Caves, the Inferno
 • ⛏️ **Full skilling** — mining, smithing, fishing, farming, agility and beyond
 • ☠️ **Slayer** — task-based combat reframed as war-contracts, with points & unlocks
@@ -75,8 +76,9 @@ counts toward your share of the loot.
 
 **🏴 Wilderness & PvP**
 Deep Wilderness with real risk versus reward. Earn **Blood Money**, climb an **Elo-ranked**
-PK ladder, and fight for loot on the contested roads. A player-run economy with a **Trading
-Post** (GP and Blood Money) keeps the market moving.
+PK ladder, grab **loot keys** off your kills, and fight on the contested roads. **AI PK bots**
+keep the Wilderness alive around the clock, so the wild is never dead — even on a fresh server.
+A player-run economy with a **Trading Post** (GP and Blood Money) keeps the market moving.
 
 **💎 100% NOT pay-to-win**
 Rank and power are *earned* in-game — no donation buys a title. The store sells cosmetics,
@@ -105,3 +107,10 @@ hiscores and event feeds.
   whole thing.
 - **Keep it in sync** with the website homepage and the Discord `#how-to-play` copy so a
   player never catches a mismatch.
+- **Optional flourish** (only if you want to lead on novelty): the war engine can be driven
+  by an **AI battle commander** that issues live tactical orders. It's a real, shipping
+  feature — but *opt-in and off by default*, so market it as an option ("an optional
+  AI-directed army commander"), never as the default experience.
+- **Don't overclaim raids.** Full PvM raids (Theatre of Blood / Chambers of Xeric / Nightmare)
+  are framework-only right now — leave them off the card. The **Inferno** and **Fight Caves**
+  are live and safe to name.
