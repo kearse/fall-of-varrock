@@ -45,6 +45,15 @@ cat > /etc/cron.d/kol-backup <<'CRON'
 CRON
 chmod 644 /etc/cron.d/kol-backup
 
+echo "== Docker prune cron (every 3 days, 06:30 UTC) =="
+# Keeps old SHA-tagged deploy images from piling up between manual deploys.
+# prune.sh is shipped by CI on every deploy; if it isn't on the box yet the
+# job is a harmless no-op until the first deploy lands it.
+cat > /etc/cron.d/kol-prune <<'CRON'
+30 6 */3 * * root [ -x /opt/kol/prune.sh ] && /opt/kol/prune.sh >> /var/log/kol-prune.log 2>&1
+CRON
+chmod 644 /etc/cron.d/kol-prune
+
 echo
 echo "Bootstrap complete. Remaining manual steps (see deploy/README.md):"
 echo "  1. docker login ghcr.io -u <github-user>   (PAT with read:packages)"
