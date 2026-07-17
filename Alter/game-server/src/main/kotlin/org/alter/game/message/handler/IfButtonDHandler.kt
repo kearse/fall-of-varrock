@@ -6,6 +6,7 @@ import org.alter.game.model.attr.INTERACTING_COMPONENT_CHILD
 import org.alter.game.model.attr.INTERACTING_ITEM_SLOT
 import org.alter.game.model.attr.OTHER_ITEM_SLOT_ATTR
 import org.alter.game.model.entity.Client
+import org.alter.game.model.entity.debugButtons
 
 /**
  * @author Tom <rspsmods@gmail.com>
@@ -49,7 +50,7 @@ class IfButtonDHandler : MessageHandler<IfButtonD> {
                 toInterfaceId,
                 toComponent,
             )
-        if (!swapped && client.world.devContext.debugButtons) {
+        if (!swapped && client.debugButtons) {
             client.writeMessage(
                 "[IfButtonDHandler] Unhandled component to component swap: [from_item=$fromItemId, to_item=$toItemId, from_slot=$fromSlot, to_slot=$toSlot, " +
                     "from_component=[$fromInterfaceId:$fromComponent], to_component=[$toInterfaceId:$toComponent]]",

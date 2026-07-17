@@ -17,6 +17,7 @@ import org.alter.game.model.entity.Entity
 import org.alter.game.model.entity.GameObject
 import org.alter.game.model.entity.Pawn
 import org.alter.game.model.entity.Player
+import org.alter.game.model.entity.debugObjects
 import org.alter.game.model.queue.QueueTask
 import org.alter.game.model.queue.TaskPriority
 import org.alter.game.model.timer.FROZEN_TIMER
@@ -74,7 +75,7 @@ object ObjectPathAction {
         walk(player, obj, lineOfSightRange) {
             if (!player.world.plugins.executeItemOnObject(player, obj.getTransform(player), item.id)) {
                 player.writeMessage(Entity.NOTHING_INTERESTING_HAPPENS)
-                if (player.world.devContext.debugObjects) {
+                if (player.debugObjects) {
                     player.writeMessage(
                         "Unhandled item on object: [item=$item, id=${obj.id}, type=${obj.type}, rot=${obj.rot}, x=${obj.tile.x}, y=${obj.tile.z}]",
                     )
@@ -141,7 +142,7 @@ object ObjectPathAction {
                     swingDoor(player.world, obj, opening = false)
                 } else {
                     player.writeMessage(Entity.NOTHING_INTERESTING_HAPPENS)
-                    if (player.world.devContext.debugObjects) {
+                    if (player.debugObjects) {
                         player.writeMessage(
                             "Unhandled object action: [opt=$opt, id=${obj.id}, type=${obj.type}, rot=${obj.rot}, x=${obj.tile.x}, y=${obj.tile.z}]",
                         )

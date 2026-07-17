@@ -69,7 +69,7 @@ class InventoryPlugin(
                     }
                     3 -> {
                         val result = EquipAction.equip(player, item, slot)
-                        if (result == EquipAction.Result.UNHANDLED && world.devContext.debugItemActions) {
+                        if (result == EquipAction.Result.UNHANDLED && player.debugItemActions) {
                             player.message("Unhandled item action: [item=${item.id}, slot=$slot, option=$option]")
                         }
                     }
@@ -85,7 +85,7 @@ class InventoryPlugin(
                              * (matching EquipAction's convention), so convert the raw client
                              * op back by subtracting 1 before dispatching.
                              */
-                            if (!world.plugins.executeItem(player, item.id, option - 1) && world.devContext.debugItemActions) {
+                            if (!world.plugins.executeItem(player, item.id, option - 1) && player.debugItemActions) {
                                 player.message("Unhandled item action: [item=${item.id}, slot=$slot, option=$option]")
                             }
                         }
