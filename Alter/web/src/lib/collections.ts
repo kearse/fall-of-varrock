@@ -35,12 +35,30 @@ export interface DetailsDoc extends Document {
 // ---- entitlements: purchases waiting to be applied in-game on next login. ----
 export interface EntitlementDoc extends Document {
   loginUsername: string;
-  kind: "donor_points" | "membership" | "items" | "patron_march";
+  kind: "donor_points" | "membership" | "items" | "patron_march" | "vote_points";
   payload: Document; // e.g. { points: 500 } | { tier, days } | { items:[...] }
   orderId: string;
   applied: boolean;
   createdAt: number;
   appliedAt?: number;
+}
+
+// ---- votes: confirmed toplist postbacks (audit trail + cooldown guard). ----
+// Written by /api/vote/postback/*; the points themselves ride the entitlements
+// pipeline (kind "vote_points") so the game delivers them like store purchases.
+export interface VoteDoc extends Document {
+  loginUsername: string;
+  site: string; // toplist id, e.g. "rsps-list"
+  points: number; // points credited for this vote
+  votedAt: number;
+}
+
+// ---- settings: small shared key/value config. Web reads, game admins write
+// (e.g. ::setvotepoints). Keyed by `key`. ----
+export interface SettingDoc extends Document {
+  key: string; // e.g. "votePointsPerVote"
+  value: number | string | boolean;
+  updatedAt: number;
 }
 
 // ---- orders: payment records (audit trail). ----
@@ -148,6 +166,8 @@ export const Collections = {
   accounts: () => col<AccountDoc>("accounts"),
   details: () => col<DetailsDoc>("details"),
   entitlements: () => col<EntitlementDoc>("entitlements"),
+  votes: () => col<VoteDoc>("votes"),
+  settings: () => col<SettingDoc>("settings"),
   orders: () => col<OrderDoc>("orders"),
   news: () => col<NewsDoc>("news"),
   forumCategories: () => col<ForumCategoryDoc>("forum_categories"),

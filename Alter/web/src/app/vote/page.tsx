@@ -18,8 +18,8 @@ const STEPS = [
   },
   {
     n: "03",
-    title: "Claim in-game",
-    body: "Log in and run ::claimvote. Your vote points land in your pouch, ready to spend.",
+    title: "Get paid in-game",
+    body: "Once the toplist confirms your vote, your Vote Tickets are delivered on your next login — or grab them right away with ::claimvote.",
   },
 ];
 
@@ -29,8 +29,15 @@ const REWARDS = [
   { icon: "📈", label: "A bigger army", body: "Every vote pushes us up the toplists and recruits new players to the war." },
 ];
 
-export default async function VotePage() {
+export default async function VotePage({
+  searchParams,
+}: {
+  searchParams?: { name?: string };
+}) {
+  // ?name= lets the in-game ::vote command deep-link with the player's login
+  // pre-filled (they may not be signed in to the site in their browser).
   const session = await getSession();
+  const defaultName = searchParams?.name?.trim().slice(0, 12) || session?.name || "";
   return (
     <div className="space-y-14">
       {/* ============ HERO ============ */}
@@ -58,7 +65,7 @@ export default async function VotePage() {
       {/* ============ VOTE PANEL (username + site cards) ============ */}
       <section>
         <Reveal>
-          <VotePanel defaultName={session?.name ?? ""} />
+          <VotePanel defaultName={defaultName} />
         </Reveal>
       </section>
 

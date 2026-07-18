@@ -19,10 +19,26 @@ export interface VoteSite {
 /** Standard toplist cooldown, used when a site doesn't override it. */
 export const DEFAULT_COOLDOWN_HOURS = 12;
 
+/**
+ * Settings-collection key for the admin-tunable points-per-vote (game admins set
+ * it with ::setvotepoints; the postback route reads it). Card badges below show
+ * the default; the credited amount always comes from this setting.
+ */
+export const VOTE_POINTS_SETTING_KEY = "votePointsPerVote";
+export const DEFAULT_VOTE_POINTS = 1;
+
 export const VOTE_SITES: VoteSite[] = [
-  // Example entries - replace with your real toplist callbacks when ready.
-  // { id: "runelocus", name: "RuneLocus", url: "https://www.runelocus.com/vote/...?username={username}", reward: "1 vote point", icon: "🗡️", rewardPoints: 1 },
-  // { id: "top100", name: "Top100Arena", url: "https://www.top100arena.com/...?u={username}", reward: "1 vote point", icon: "🏆", rewardPoints: 1, cooldownHours: 12 },
+  {
+    id: "rsps-list",
+    name: "RSPS-List",
+    // `u` is our listing account on rsps-list.com; `id` carries the voter's
+    // login name back to us in the postback's `userid` param.
+    url: "https://www.rsps-list.com/index.php?a=in&u=BizzyZ&id={username}",
+    reward: "1 vote point",
+    icon: "🗡️",
+    rewardPoints: DEFAULT_VOTE_POINTS,
+    cooldownHours: 12,
+  },
 ];
 
 export function voteUrl(site: VoteSite, username: string): string {

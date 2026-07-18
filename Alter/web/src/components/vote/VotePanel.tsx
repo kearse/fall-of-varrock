@@ -74,9 +74,9 @@ export function VotePanel({ defaultName }: { defaultName: string }) {
           </div>
         </div>
         <p className="mt-3 text-xs text-lumbridge-parchment/55">
-          Use your exact in-game login. Rewards are claimed in-game with{" "}
-          <code className="rounded bg-black/40 px-1 py-0.5 text-lumbridge-ember">::claimvote</code>{" "}
-          after the toplist confirms your vote.
+          Use your exact in-game login. Once the toplist confirms your vote, your reward is
+          delivered on your next login — or claim it right away with{" "}
+          <code className="rounded bg-black/40 px-1 py-0.5 text-lumbridge-ember">::claimvote</code>.
         </p>
       </div>
 
