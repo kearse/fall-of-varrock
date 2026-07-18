@@ -51,6 +51,18 @@ export const VOTE_SITES: VoteSite[] = [
     cooldownHours: 12,
   },
   {
+    id: "top100arena",
+    name: "Top100Arena",
+    // TODO: replace LISTING_ID with the numeric id from the Top100Arena
+    // account (the xxx in top100arena.com/listing/xxx/vote). `incentive`
+    // carries the voter's login name back in the postback's appended value.
+    url: "https://www.top100arena.com/listing/LISTING_ID/vote?incentive={username}",
+    reward: "1 vote point",
+    icon: "⚔️",
+    rewardPoints: DEFAULT_VOTE_POINTS,
+    cooldownHours: 12,
+  },
+  {
     id: "topg",
     name: "TopG",
     // TopG's "link with username" format: server-<id>-<username>. The username

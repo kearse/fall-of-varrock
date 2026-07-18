@@ -76,6 +76,7 @@ services:
       RSPS_LIST_SECRET: ${RSPS_LIST_SECRET:-}
       RULOCUS_SECRET: ${RULOCUS_SECRET:-}
       TOPG_SECRET: ${TOPG_SECRET:-}
+      TOP100ARENA_SECRET: ${TOP100ARENA_SECRET:-}
     logging: *default-logging
 
   discord-bot:

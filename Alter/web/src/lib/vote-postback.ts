@@ -76,6 +76,22 @@ export const POSTBACK_ADAPTERS: Record<string, PostbackAdapter> = {
       userid: p.get("p_resp"),
     }),
   },
+
+  // top100arena.com: after a vote they take the registered postback URL and
+  // append the vote link's incentive= value (the player's login name) to it.
+  // Register the URL with `&postback=` as the LAST param so the appended value
+  // lands there. No secret of their own — same ?key= scheme as the others:
+  // .../api/vote/postback/top100arena?key=<TOP100ARENA_SECRET>&postback=
+  top100arena: {
+    siteId: "top100arena",
+    secretEnv: "TOP100ARENA_SECRET",
+    allowTestSecret: true,
+    parse: (p) => ({
+      secret: p.get("key"),
+      voted: true,
+      userid: p.get("postback"),
+    }),
+  },
 };
 
 export function postbackSecretOk(adapter: PostbackAdapter, secret: string | null): boolean {
