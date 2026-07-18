@@ -166,19 +166,66 @@ object Campaigns {
     )
 
     /**
+     * **Falador** — the target of the realm's scheduled MARCHes and GRAND_MARCHes ([MarchPlugin]). The
+     * bandits, rogues and other enemies driven out of demon-held Varrock overran Falador, so the public
+     * war is fought here: the column marches the Lumbridge→Falador road, the city's frontier
+     * ([CityFrontiers.FALADOR]) defends it street by street, and the reconquest [Districts] track the
+     * push. Falador is march-only — commanders `::campaign`/`::conquest` demon-held Varrock instead.
+     *
+     * Route = the Lumbridge→Draynor→Falador road, best-effort waypoints down-sampled every ~8-10 tiles
+     * (each snapped to walkable land + self-healing via the march unstick). TUNABLE — re-record in-game
+     * with `::recroute` for a pixel-accurate column path, exactly as the Varrock route was produced.
+     */
+    val FALADOR = CampaignOp(
+        cityKey = "falador",
+        cityId = 3,
+        displayName = "Falador",
+        stagingTile = Tile(3222, 3220, 0),   // muster west of Lumbridge castle, at the road head
+        objectiveTile = Tile(3040, 3340, 0), // the Falador east-gate mouth (district approaches branch here)
+        // Must span the Falador box + its eastern approach so every kill/participation registers.
+        battleArea = Area(2938, 3290, 3066, 3406),
+        alliedNpc = "npc.knight_of_saradomin", // renamed "Knight of Lumbridge" at spawn
+        alliedDef = ALLIED_DEF,
+        timeoutTicks = 600, // a march is smaller than a conquest; ~12 min cap on the cross-country push
+        route = listOf(
+            Tile(3222, 3220, 0), Tile(3214, 3223, 0), Tile(3208, 3227, 0), // west off the castle, over the Lum
+            Tile(3200, 3229, 0), Tile(3190, 3231, 0), Tile(3180, 3233, 0), Tile(3170, 3236, 0),
+            Tile(3160, 3238, 0), Tile(3150, 3241, 0), Tile(3140, 3244, 0), Tile(3130, 3246, 0),
+            Tile(3120, 3248, 0), Tile(3110, 3249, 0), Tile(3101, 3251, 0), // the Draynor road
+            Tile(3097, 3259, 0), Tile(3096, 3268, 0), Tile(3097, 3278, 0), Tile(3099, 3288, 0),
+            Tile(3100, 3298, 0), Tile(3096, 3307, 0), Tile(3088, 3314, 0), // turn north-west for Falador
+            Tile(3079, 3320, 0), Tile(3069, 3325, 0), Tile(3060, 3330, 0), Tile(3052, 3335, 0),
+            Tile(3047, 3338, 0), Tile(3040, 3340, 0), // arrive at the Falador east gate — the city mouth
+        ),
+        bridgeSpans = emptyList(),
+        // The column ignores the road skirmishes and only "goes hot" at Falador's doorstep (its eastern
+        // approach, x<=3066). North/south of the Falador latitudes. TUNABLE.
+        aggroFromArea = Area(2930, 3290, 3066, 3406),
+    )
+
+    /**
      * **Hostile cities** a Minister/King can `::campaign` or `::conquest`. Each needs its own frontier
-     * ([CityFrontiers]) and battlefield region force-load. v1 slice: Varrock.
+     * ([CityFrontiers]) and battlefield region force-load. Demon-held Varrock is the commanders' target;
+     * Falador is march-only (not listed here) so `::campaign`/`::conquest` never point at it.
      */
     val HOSTILE: List<CampaignOp> = listOf(VARROCK)
+
+    /** Every op that carries a cross-country [CampaignOp.route] whose corridor must be force-loaded and
+     *  bridge-cleared at boot ([CampaignCommandPlugin.prepareMarchCorridors]) — the commanders' hostile
+     *  targets plus the scheduled marches' Falador target. */
+    val ROUTED: List<CampaignOp> = HOSTILE + FALADOR
 
     /** The home muster (v1: everyone's capital is Lumbridge). */
     fun home(): CampaignOp = HOME
 
-    /** The next hostile city to march on, or null if none is configured yet (Varrock pending). */
+    /** The next hostile city a commander marches on (campaigns/conquests), or null if none configured. */
     fun hostileTarget(): CampaignOp? = HOSTILE.firstOrNull()
+
+    /** The realm's scheduled-march target — the overrun city the public marches move on (Falador). */
+    fun marchTarget(): CampaignOp = FALADOR
 
     /** A hostile target by city key (e.g. `::campaign varrock`), or null if not a war target. */
     fun hostileByKey(key: String): CampaignOp? = HOSTILE.firstOrNull { it.cityKey.equals(key, ignoreCase = true) }
 
-    fun byKey(key: String): CampaignOp? = (listOf(HOME) + HOSTILE).firstOrNull { it.cityKey.equals(key, ignoreCase = true) }
+    fun byKey(key: String): CampaignOp? = (listOf(HOME, FALADOR) + HOSTILE).firstOrNull { it.cityKey.equals(key, ignoreCase = true) }
 }

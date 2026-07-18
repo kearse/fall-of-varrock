@@ -104,7 +104,7 @@ class MarchPlugin(
         }
 
         // ::districts — the reconquest map: every district's pressure/broken state.
-        onCommand("districts", description = "Show the reconquest of Varrock, district by district") {
+        onCommand("districts", description = "Show the reconquest of Falador, district by district") {
             Districts.statusLines().forEach { player.message(it) }
         }
 
@@ -122,11 +122,10 @@ class MarchPlugin(
 
     /** The muster call, [WARN_TICKS] before launch — or the busy skip (never a supply skip). */
     private fun muster(world: World, timer: TimerKey) {
-        val op = Campaigns.hostileTarget()
+        val op = Campaigns.marchTarget() // the scheduled marches move on overrun Falador
         val skip = when {
-            op == null -> true // no hostile front configured yet
             CampaignRegistry.activeMarch() != null -> true // last march still in the field
-            CampaignRegistry.isAttacking(op.cityKey) -> true // a commander's campaign holds the front
+            CampaignRegistry.isAttacking(op.cityKey) -> true // a march already holds the Falador front
             world.players.count() == 0 -> true // empty world — don't churn the garrison
             else -> false
         }
@@ -154,7 +153,7 @@ class MarchPlugin(
             grand ->
                 Announce.broadcast(world, "<col=ffcc00>A GRAND MARCH musters against <col=ffae00>the Warden of ${d.display}</col><col=ffcc00> — ${tier.troops} knights set out in ~$mins minutes! The Warden's embers feed the Royal Smith's forge. <col=ffae00>::march</col><col=ffcc00> to fight!</col>")
             else ->
-                Announce.broadcast(world, "<col=4f9b4f>The Knight-Captain musters a march on <col=ffae00>${d.display}</col><col=4f9b4f> of Fallen ${op!!.displayName} — it sets out in ~$mins minutes! Any soldier may fight beside the column: answer with <col=ffae00>::march</col><col=4f9b4f>.</col>")
+                Announce.broadcast(world, "<col=4f9b4f>The Knight-Captain musters a march on <col=ffae00>${d.display}</col><col=4f9b4f> of Fallen ${op.displayName} — it sets out in ~$mins minutes! Any soldier may fight beside the column: answer with <col=ffae00>::march</col><col=4f9b4f>.</col>")
         }
         state = State.MUSTERING
         schedule(world, timer, WARN_TICKS)
@@ -164,18 +163,19 @@ class MarchPlugin(
     private fun launch(world: World) {
         val fundedBy = patron
         patron = null
-        val op = Campaigns.hostileTarget() ?: return requeue(fundedBy)
+        val op = Campaigns.marchTarget() // overrun Falador
         if (CampaignRegistry.activeMarch() != null || CampaignRegistry.isAttacking(op.cityKey)) return requeue(fundedBy)
         val grand = pendingGrand
         pendingGrand = false
         val tier = if (grand) CampaignTier.GRAND_MARCH else CampaignTier.MARCH
         // No supply gate here either — a march that mustered always launches.
-        // Point the column at the mustered district: the campaign route to the city mouth, then
-        // the district's street approach (waypoints snap to walkable + unstick, so a rough hop heals).
+        // Point the column at the mustered district: the Falador march route to the city mouth (which is
+        // where the route ends), then the district's street approach (waypoints snap to walkable + unstick,
+        // so a rough hop heals).
         val d = target ?: Districts.marchTarget(world)
         target = null
         val marchOp = op.copy(
-            route = op.route.takeWhile { it.z <= CITY_MOUTH_Z } + d.approach,
+            route = op.route + d.approach,
             objectiveTile = d.rally,
         )
         val started = CampaignRegistry.start(world, marchOp, tier, sponsor = null) { won ->
@@ -268,8 +268,6 @@ class MarchPlugin(
         const val WARN_TICKS = 500
         /** How long a `::march` hot-zone confirmation stands (~30s). */
         const val CONFIRM_WINDOW = 50
-        /** Where the campaign route enters Varrock's streets — district approaches branch here. */
-        const val CITY_MOUTH_Z = 3425
         /** Every Nth launched march is a GRAND MARCH (persisted counter in [WarState]). TUNE. */
         const val GRAND_EVERY = 8
         /** 1-in-N Warden's-ember roll for non-MVP fighters. TUNE. */
