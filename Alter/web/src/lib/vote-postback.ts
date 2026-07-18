@@ -46,6 +46,71 @@ export const POSTBACK_ADAPTERS: Record<string, PostbackAdapter> = {
       userid: p.get("userid"),
     }),
   },
+
+  // rulocus.com: fires only on a successful vote, sending callback (the value
+  // from our vote link's callback= param, i.e. the player's login name) + ip.
+  // They send NO secret of their own, so ours rides in the callback URL we
+  // register with them: .../api/vote/postback/rulocus?key=<RULOCUS_SECRET>.
+  rulocus: {
+    siteId: "rulocus",
+    secretEnv: "RULOCUS_SECRET",
+    allowTestSecret: true,
+    parse: (p) => ({
+      secret: p.get("key"),
+      voted: true,
+      userid: p.get("callback"),
+    }),
+  },
+
+  // topg.org "Voting Check": fires only on a successful vote, sending p_resp
+  // (the value appended to our vote link — the player's login name) + ip.
+  // No secret of their own either — ours rides in the registered URL:
+  // .../api/vote/postback/topg?key=<TOPG_SECRET>.
+  topg: {
+    siteId: "topg",
+    secretEnv: "TOPG_SECRET",
+    allowTestSecret: true,
+    parse: (p) => ({
+      secret: p.get("key"),
+      voted: true,
+      userid: p.get("p_resp"),
+    }),
+  },
+
+  // top100arena.com: after a vote they take the registered postback URL and
+  // append the vote link's incentive= value (the player's login name) to it.
+  // Register the URL with `&postback=` as the LAST param so the appended value
+  // lands there. No secret of their own — same ?key= scheme as the others:
+  // .../api/vote/postback/top100arena?key=<TOP100ARENA_SECRET>&postback=
+  top100arena: {
+    siteId: "top100arena",
+    secretEnv: "TOP100ARENA_SECRET",
+    allowTestSecret: true,
+    parse: (p) => ({
+      secret: p.get("key"),
+      voted: true,
+      userid: p.get("postback"),
+    }),
+  },
+
+  // moparscape.org: no public callback docs, so this adapter is deliberately
+  // liberal — it takes the player name from the first common param present and
+  // honours a voted= flag only if one is sent. Tighten it to the exact scheme
+  // once their dashboard's callback description is known. Secret rides in the
+  // registered URL: .../api/vote/postback/moparscape?key=<MOPARSCAPE_SECRET>
+  moparscape: {
+    siteId: "moparscape",
+    secretEnv: "MOPARSCAPE_SECRET",
+    allowTestSecret: true,
+    parse: (p) => {
+      const userid =
+        ["postback", "incentive", "callback", "userid", "username", "id"]
+          .map((k) => p.get(k))
+          .find((v) => v && v.trim()) ?? null;
+      const voted = p.get("voted");
+      return { secret: p.get("key"), voted: voted === null || voted === "1", userid };
+    },
+  },
 };
 
 export function postbackSecretOk(adapter: PostbackAdapter, secret: string | null): boolean {
