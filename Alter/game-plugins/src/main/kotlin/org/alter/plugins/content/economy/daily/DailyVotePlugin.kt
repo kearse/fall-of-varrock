@@ -30,9 +30,10 @@ import org.alter.rscm.RSCM.getRSCM
  * **Daily reward + Vote** (Phase 7 retention — the "log in every day" loop).
  *
  *  - `::daily` — a gp + Vote-point payout with a consecutive-day streak (resets on a missed day).
- *  - `::vote`  — opens the website's vote page in the player's browser (the custom client's
- *    `lofvote` plugin acts on a `FOV_VOTE:` console line; other clients get the URL in chat).
- *    The toplists confirm each vote to the website via postback (`/api/vote/postback/<site>`),
+ *  - `::vote`  — streams the toplist sites to the custom client's `lofvote` window (clickable
+ *    rows with per-site cooldown state; clicking opens the site's vote page in the browser).
+ *    Old custom clients browse the website's vote page off the open| line; vanilla clients get
+ *    the URL in chat. The toplists confirm each vote via postback (`/api/vote/postback/<site>`),
  *    which queues a `vote_points` entitlement — delivered on next login by [RewardDeliveryPlugin].
  *  - `::claimvote` — drains pending vote rewards immediately for online players. On a server
  *    without MongoDB (local dev) it falls back to the old once-a-day streak stub.
@@ -81,14 +82,40 @@ class DailyVotePlugin(
         player.message("<col=801700>Daily reward (day $streak streak):</col> ${"%,d".format(gp)} coins + $votePts Vote Tickets.")
     }
 
-    /** ::vote — deep-link the vote page with the player's login pre-filled. */
+    /**
+     * ::vote — stream the toplist sites to the client's vote window (lofvote), one row per
+     * site with the player's login already substituted into the vote URL and the minutes
+     * left on that site's cooldown (from the shared `votes` collection the web postbacks
+     * write). Old clients act only on the open| line and browse the website's vote page.
+     */
     private fun openVotePage(player: Player) {
         val login = (player as? Client)?.loginUsername ?: player.username
-        val url = "$VOTE_PAGE_URL?name=${URLEncoder.encode(login, "UTF-8")}"
-        // The custom client's lofvote plugin opens this URL in the browser and
-        // rewrites the line; vanilla clients just see the fallback chat line.
-        player.message("$VOTE_TRIGGER_PREFIX$url", ChatMessageType.CONSOLE)
+        val encoded = URLEncoder.encode(login, "UTF-8")
+        val lastBySite = lastVoteBySite(login)
+        val now = System.currentTimeMillis()
+
+        player.message("${VOTE_TRIGGER_PREFIX}open|$VOTE_PAGE_URL?name=$encoded", ChatMessageType.CONSOLE)
+        VOTE_SITES.forEachIndexed { i, site ->
+            val url = site.urlTemplate.replace("{username}", encoded)
+            val last = lastBySite[site.id] ?: 0L
+            val remainingMins = ((last + VOTE_COOLDOWN_MS - now).coerceAtLeast(0L) / 60_000L).toInt()
+            player.message("${VOTE_TRIGGER_PREFIX}row|$i|${site.name}|$url|$remainingMins", ChatMessageType.CONSOLE)
+        }
+        player.message("${VOTE_TRIGGER_PREFIX}end", ChatMessageType.CONSOLE)
         player.message("Vote for Fall of Varrock at <col=801700>fallofvarrock.com/vote</col> — rewards are delivered automatically (or ::claimvote).")
+    }
+
+    /** Latest confirmed vote per site id for [login], from the web postbacks' `votes`
+     *  collection. Empty when Mongo isn't configured (local dev) — every site shows ready. */
+    private fun lastVoteBySite(login: String): Map<String, Long> = try {
+        DatabaseManager.connect()
+        DatabaseManager.getCollection("votes")
+            .find(Filters.eq("loginUsername", login))
+            .toList()
+            .groupBy { it.getString("site") ?: "" }
+            .mapValues { (_, docs) -> docs.maxOf { (it.get("votedAt") as? Number)?.toLong() ?: 0L } }
+    } catch (e: Exception) {
+        emptyMap()
     }
 
     private fun claimVote(player: Player) {
@@ -157,13 +184,32 @@ class DailyVotePlugin(
         const val DAILY_VOTE_POINTS = 1
         const val VOTE_POINTS_BASE = 2
 
-        /** The website's vote page — lists every toplist; keep as the single source of truth. */
+        /** The website's vote page — the old clients' fallback and the ?name= deep-link target. */
         const val VOTE_PAGE_URL = "https://fallofvarrock.com/vote"
 
         /** Machine prefix the `lofvote` client plugin listens for (must match its PREFIX). */
-        const val VOTE_TRIGGER_PREFIX = "FOV_VOTE:open|"
+        const val VOTE_TRIGGER_PREFIX = "FOV_VOTE:"
 
         /** `settings` key the web postback reads for points-per-vote (matches lib/vote.ts). */
         const val VOTE_POINTS_SETTING_KEY = "votePointsPerVote"
+
+        /** One credit per site per window — matches the web postback's cooldown guard. */
+        const val VOTE_COOLDOWN_MS = 12 * 3_600_000L
+
+        /**
+         * The toplists streamed to the vote window. KEEP IN SYNC with the website's
+         * VOTE_SITES (Alter/web/src/lib/vote.ts) — same ids (they key the cooldown
+         * lookup against the `votes` collection), same order, same {username} slot.
+         */
+        val VOTE_SITES = listOf(
+            VoteSite("rsps-list", "RSPS-List", "https://www.rsps-list.com/index.php?a=in&u=BizzyZ&id={username}"),
+            VoteSite("rulocus", "RuLocus", "https://www.rulocus.com/top-rsps-list/fall-of-varrock/vote?callback={username}"),
+            VoteSite("moparscape", "Moparscape", "https://www.moparscape.org/rsps-list/server/fall-of-varrock?incentive={username}"),
+            VoteSite("top100arena", "Top100Arena", "https://www.top100arena.com/listing/LISTING_ID/vote?incentive={username}"),
+            VoteSite("topg", "TopG", "https://topg.org/runescape-private-servers/server-684312-{username}#vote"),
+        )
     }
+
+    /** One toplist: web-matching id, display name, vote URL with a {username} slot. */
+    data class VoteSite(val id: String, val name: String, val urlTemplate: String)
 }
