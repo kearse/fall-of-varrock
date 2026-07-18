@@ -92,6 +92,25 @@ export const POSTBACK_ADAPTERS: Record<string, PostbackAdapter> = {
       userid: p.get("postback"),
     }),
   },
+
+  // moparscape.org: no public callback docs, so this adapter is deliberately
+  // liberal — it takes the player name from the first common param present and
+  // honours a voted= flag only if one is sent. Tighten it to the exact scheme
+  // once their dashboard's callback description is known. Secret rides in the
+  // registered URL: .../api/vote/postback/moparscape?key=<MOPARSCAPE_SECRET>
+  moparscape: {
+    siteId: "moparscape",
+    secretEnv: "MOPARSCAPE_SECRET",
+    allowTestSecret: true,
+    parse: (p) => {
+      const userid =
+        ["postback", "incentive", "callback", "userid", "username", "id"]
+          .map((k) => p.get(k))
+          .find((v) => v && v.trim()) ?? null;
+      const voted = p.get("voted");
+      return { secret: p.get("key"), voted: voted === null || voted === "1", userid };
+    },
+  },
 };
 
 export function postbackSecretOk(adapter: PostbackAdapter, secret: string | null): boolean {

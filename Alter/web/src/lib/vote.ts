@@ -63,6 +63,18 @@ export const VOTE_SITES: VoteSite[] = [
     cooldownHours: 12,
   },
   {
+    id: "moparscape",
+    name: "Moparscape",
+    // TODO: confirm the listing slug and how their vote link passes the player
+    // name (dashboard's incentive/callback instructions) — ?incentive= is the
+    // common convention their adapter also accepts.
+    url: "https://www.moparscape.org/rsps-list/server/fall-of-varrock?incentive={username}",
+    reward: "1 vote point",
+    icon: "🪖",
+    rewardPoints: DEFAULT_VOTE_POINTS,
+    cooldownHours: 12,
+  },
+  {
     id: "topg",
     name: "TopG",
     // TopG's "link with username" format: server-<id>-<username>. The username
