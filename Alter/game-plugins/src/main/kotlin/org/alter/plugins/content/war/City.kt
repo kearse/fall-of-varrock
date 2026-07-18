@@ -38,8 +38,9 @@ object Cities {
         fronts = listOf(WarStatePlugin.FRONTIER_NORTH),
     )
 
-    /** Varrock — the first HOSTILE target city (§3C). Not a citizenship home (no fronts of its own
-     *  yet); registered so its campaign [cityId]=2 resolves to a name. */
+    /** Varrock — the demon-held HOSTILE target city (§3C). Campaigns and conquests march here to
+     *  purge the demons that took the city. Not a citizenship home (no fronts of its own yet);
+     *  registered so its campaign [cityId]=2 resolves to a name. */
     val VARROCK = City(
         id = 2,
         key = "varrock",
@@ -48,7 +49,18 @@ object Cities {
         fronts = emptyList(),
     )
 
-    private val byId: Map<Int, City> = listOf(LUMBRIDGE, VARROCK).associateBy { it.id }
+    /** Falador — the overrun HOSTILE target city the scheduled marches/grand-marches move on. When the
+     *  demons took Varrock the bandits, rogues and other enemies fled here and hold the city (see
+     *  WorldSpawnsPlugin.applyFallenFalador); registered so its campaign [cityId]=3 resolves to a name. */
+    val FALADOR = City(
+        id = 3,
+        key = "falador",
+        displayName = "Falador",
+        respawnTile = Tile(x = 3013, z = 3353, height = 0), // Falador centre
+        fronts = emptyList(),
+    )
+
+    private val byId: Map<Int, City> = listOf(LUMBRIDGE, VARROCK, FALADOR).associateBy { it.id }
 
     val all: Collection<City> get() = byId.values
 

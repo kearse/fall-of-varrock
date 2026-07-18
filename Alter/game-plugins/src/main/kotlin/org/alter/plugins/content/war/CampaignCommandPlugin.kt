@@ -137,10 +137,11 @@ class CampaignCommandPlugin(
         }
     }
 
-    /** Force-load every hostile op's march-route corridor and open its bridge decks (once, at boot). */
+    /** Force-load every routed op's march-route corridor and open its bridge decks (once, at boot) —
+     *  the commanders' hostile targets plus the scheduled marches' Falador route ([Campaigns.ROUTED]). */
     private fun prepareMarchCorridors(world: World) {
         val regions = sortedSetOf<Int>()
-        for (op in Campaigns.HOSTILE) {
+        for (op in Campaigns.ROUTED) {
             if (op.route.isEmpty()) continue
             val xs = op.route.map { it.x }; val zs = op.route.map { it.z }
             val xMin = xs.min() - CORRIDOR_PAD; val xMax = xs.max() + CORRIDOR_PAD
@@ -154,7 +155,7 @@ class CampaignCommandPlugin(
         // Open bridge decks AFTER collision is built: clear the level-0 block on tiles that are blocked
         // on L0 but walkable on L1 (the deck), leaving real banks/walls (blocked on both) untouched.
         var opened = 0
-        for (op in Campaigns.HOSTILE) for (span in op.bridgeSpans) {
+        for (op in Campaigns.ROUTED) for (span in op.bridgeSpans) {
             for (x in span.bottomLeftX..span.topRightX) for (z in span.bottomLeftY..span.topRightY) {
                 if (world.collision.isClipped(Tile(x, z, 0)) && !world.collision.isClipped(Tile(x, z, 1))) {
                     world.collision.set(x, z, 0, 0); opened++
