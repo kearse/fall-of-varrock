@@ -46,6 +46,36 @@ export const POSTBACK_ADAPTERS: Record<string, PostbackAdapter> = {
       userid: p.get("userid"),
     }),
   },
+
+  // rulocus.com: fires only on a successful vote, sending callback (the value
+  // from our vote link's callback= param, i.e. the player's login name) + ip.
+  // They send NO secret of their own, so ours rides in the callback URL we
+  // register with them: .../api/vote/postback/rulocus?key=<RULOCUS_SECRET>.
+  rulocus: {
+    siteId: "rulocus",
+    secretEnv: "RULOCUS_SECRET",
+    allowTestSecret: true,
+    parse: (p) => ({
+      secret: p.get("key"),
+      voted: true,
+      userid: p.get("callback"),
+    }),
+  },
+
+  // topg.org "Voting Check": fires only on a successful vote, sending p_resp
+  // (the value appended to our vote link — the player's login name) + ip.
+  // No secret of their own either — ours rides in the registered URL:
+  // .../api/vote/postback/topg?key=<TOPG_SECRET>.
+  topg: {
+    siteId: "topg",
+    secretEnv: "TOPG_SECRET",
+    allowTestSecret: true,
+    parse: (p) => ({
+      secret: p.get("key"),
+      voted: true,
+      userid: p.get("p_resp"),
+    }),
+  },
 };
 
 export function postbackSecretOk(adapter: PostbackAdapter, secret: string | null): boolean {

@@ -39,10 +39,36 @@ export const VOTE_SITES: VoteSite[] = [
     rewardPoints: DEFAULT_VOTE_POINTS,
     cooldownHours: 12,
   },
+  {
+    id: "rulocus",
+    name: "RuLocus",
+    // Base URL comes from the RuLocus account's listing page; `callback`
+    // carries the voter's login name back in the postback's `callback` param.
+    url: "https://www.rulocus.com/top-rsps-list/fall-of-varrock/vote?callback={username}",
+    reward: "1 vote point",
+    icon: "🛡️",
+    rewardPoints: DEFAULT_VOTE_POINTS,
+    cooldownHours: 12,
+  },
+  {
+    id: "topg",
+    name: "TopG",
+    // TopG's "link with username" format: server-<id>-<username>. The username
+    // comes back in the postback's `p_resp` param (letters/digits/underscores
+    // only — voteUrl() converts spaces to underscores).
+    url: "https://topg.org/runescape-private-servers/server-684312-{username}#vote",
+    reward: "1 vote point",
+    icon: "🏆",
+    rewardPoints: DEFAULT_VOTE_POINTS,
+    cooldownHours: 12,
+  },
 ];
 
 export function voteUrl(site: VoteSite, username: string): string {
-  return site.url.replace(/\{username\}/g, encodeURIComponent(username.trim()));
+  // Send the login-form name (spaces → underscores): some toplists (TopG) only
+  // accept [A-Za-z0-9_], and the postback route normalizes it back regardless.
+  const login = username.trim().replace(/ /g, "_");
+  return site.url.replace(/\{username\}/g, encodeURIComponent(login));
 }
 
 export function siteIcon(site: VoteSite): string {
