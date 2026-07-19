@@ -121,6 +121,9 @@ class LofForgeOverlay extends Overlay
 	{
 		recipes = rows;
 		selected = 0;
+		// A re-push mid-confirm must disarm: selection resets to row 0, and an armed second
+		// click would otherwise forge the WRONG recipe — the exact mis-commit the confirm guards.
+		armed = false;
 	}
 
 	void setActiveTab(int t)

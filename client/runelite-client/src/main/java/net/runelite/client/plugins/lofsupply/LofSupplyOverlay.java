@@ -154,7 +154,7 @@ class LofSupplyOverlay extends Overlay
 	 * item earns a row it keeps that slot (dim, chip-less) after selling out, so a manifest
 	 * re-push never shifts the rows under a player's cursor mid-clicking (mis-sell guard).
 	 */
-	List<Entry> carriedRows()
+	synchronized List<Entry> carriedRows()
 	{
 		final Cat cat = active();
 		if (cat == null)
@@ -163,6 +163,37 @@ class LofSupplyOverlay extends Overlay
 		}
 		final java.util.LinkedHashSet<Integer> sticky =
 			stickyByTab.computeIfAbsent(activeTab, k -> new java.util.LinkedHashSet<>());
+
+		// Sold-out sticky slots hold their place ONLY while no new item needs the room:
+		// when the cap is reached and a fresh carried item is waiting, evict dead slots
+		// (oldest first) so the list never starves — the anti-shift guard shouldn't cost reach.
+		int carriedKinds = 0;
+		for (Entry e : cat.entries)
+		{
+			if (e.carried > 0)
+			{
+				carriedKinds++;
+			}
+		}
+		final java.util.Iterator<Integer> it = sticky.iterator();
+		while (sticky.size() > Math.max(0, MAX_ROWS - Math.min(carriedKinds, MAX_ROWS)) && it.hasNext())
+		{
+			final int id = it.next();
+			Entry entry = null;
+			for (Entry e : cat.entries)
+			{
+				if (e.id == id)
+				{
+					entry = e;
+					break;
+				}
+			}
+			if (entry == null || entry.carried <= 0)
+			{
+				it.remove();
+			}
+		}
+
 		final List<Entry> out = new ArrayList<>();
 		for (int id : sticky)
 		{
@@ -194,10 +225,11 @@ class LofSupplyOverlay extends Overlay
 		return out;
 	}
 
+	// touched from both the client (render) and AWT (mouse) threads — synchronized access only
 	private final java.util.Map<Integer, java.util.LinkedHashSet<Integer>> stickyByTab = new java.util.HashMap<>();
 
 	/** Forget sticky row slots — called when the window opens fresh (not on in-place refreshes). */
-	void resetStickyRows()
+	synchronized void resetStickyRows()
 	{
 		stickyByTab.clear();
 	}
