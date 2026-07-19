@@ -172,8 +172,9 @@ Reusable pieces — reach for these before inventing a new one. Metrics above.
     server driver. Transient/event varps must **pulse to 0** and be cleared on login (persisted varps
     re-fire on login — see `docs/custom-client.md` §5e). Current varps: 4600 alert · 4601 war progress ·
     4602-4605 pk stats · 4606 wild level · 4607 teleport open · 4608 LMS · 4609 supplies · 4610-4612
-    companions · 4613-4615 companion status · 4616 slayer · 4620-4623 Castle Wars · **4630 duel rules**.
-    (4601/4609/4616 all feed the `lofdials` dial row.)
+    companions · 4613-4615 companion status · 4616 slayer · 4617 quests · **4618 rank menu (payload =
+    title ordinal + 1)** · **4619 recruit menu (packed: open|count|cap|title)** · 4620-4623 Castle Wars ·
+    **4630 duel rules**. (4601/4609/4616 all feed the `lofdials` dial row.)
   - *Large state* (item lists): **read the existing interface's widgets** (`client.getWidget(group,
     child)` → `getDynamicChildren()`), null-guarded. No custom packet.
   - *Bulk data via chat lines* (the commands list, companion state): send from the server as
@@ -211,6 +212,8 @@ Reusable pieces — reach for these before inventing a new one. Metrics above.
 | Overlay | Type | Size / anchor | State channel |
 | --- | --- | --- | --- |
 | `lofteleports` | Modal (tabbed) | 480×400 * | varp 4607 open + `::tp` |
+| `lofranks` | Modal (progression) | 480×400 | varp 4618 (rank payload) + `::rank buy` + inventory coins |
+| `lofrecruit` | Modal (cards) | 480×400 | varp 4619 (packed) + 4613-4615 roster + `::zo recruit` |
 | `lofduel` (rules) | Modal | 480×400 | varp 4630 + `::duel` |
 | `lofstake` | Modal (inventory-clear) | 480×400, viewport-left | read iface 335 + `::stake` |
 | `lofdials` | HUD dial row | content, ABOVE_CHATBOX_RIGHT | varps 4616 slayer · 4601 progress · 4609 supplies |
