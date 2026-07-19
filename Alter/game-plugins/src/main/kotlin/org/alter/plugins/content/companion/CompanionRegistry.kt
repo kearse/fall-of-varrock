@@ -131,7 +131,14 @@ object CompanionRegistry {
         val blob = player.attr[COMPANIONS_ATTR]
         val roster = CompanionData.rosterFromBlob(blob)
         logger.info { "spawnFor ${player.username} uid=${player.uid.value}: blobPresent=${blob != null}, rosterSize=${roster.size}" }
-        if (roster.isEmpty()) return
+        if (roster.isEmpty()) {
+            // This account fields no companions — explicitly clear the client panel. Without this a
+            // client that just displayed a DIFFERENT account's roster (an account switch on the same
+            // session) keeps those stale cards forever: the per-tick pushState loop only speaks to
+            // owners present in `byOwner`, so a companion-less login is otherwise never told to clear.
+            player.message("${MSG_PREFIX}0/0", ChatMessageType.CONSOLE)
+            return
+        }
         val list = ArrayList<Companion>()
         roster.forEach { data ->
             if (data.dead) return@forEach

@@ -88,10 +88,10 @@ object TeleportRegistry {
         built("abyssal_sire", "Abyssal Sire", BOSSES, Tile(2970, 4384, 0), HOSTILE),
         built("grotesque_guardians", "Grotesque Guardians", BOSSES, Tile(3413, 3537, 0), HOSTILE),
         // Phase F — God Wars Dungeon generals (real throne rooms; see GodWarsBosses).
-        built("gwd_graardor", "General Graardor", BOSSES, Tile(2864, 5354, 2), HOSTILE),
-        built("gwd_kril", "K'ril Tsutsaroth", BOSSES, Tile(2925, 5333, 2), HOSTILE),
-        built("gwd_kreearra", "Kree'arra", BOSSES, Tile(2839, 5295, 2), HOSTILE),
-        built("gwd_zilyana", "Commander Zilyana", BOSSES, Tile(2907, 5266, 2), HOSTILE),
+        built("gwd_graardor", "General Graardor", BOSSES, Tile(2870, 5362, 2), HOSTILE),
+        built("gwd_kril", "K'ril Tsutsaroth", BOSSES, Tile(2926, 5325, 2), HOSTILE),
+        built("gwd_kreearra", "Kree'arra", BOSSES, Tile(2832, 5302, 2), HOSTILE),
+        built("gwd_zilyana", "Commander Zilyana", BOSSES, Tile(2897, 5300, 2), HOSTILE),
         // Phase C — wilderness single bosses (real OSRS lairs; see WildernessBosses).
         built("callisto", "Callisto", BOSSES, Tile(3300, 3840, 0), WILD, wild = 40),
         built("vetion", "Vet'ion", BOSSES, Tile(3239, 3779, 0), WILD, wild = 32),

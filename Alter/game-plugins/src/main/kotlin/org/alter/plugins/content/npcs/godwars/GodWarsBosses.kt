@@ -11,9 +11,10 @@ import org.alter.plugins.content.bosses.DropTable
  * [GodWarsPlugin] spawns the general + bodyguards, registers their combat defs, and handles
  * the general's death/loot; [GodWarsCombatPlugin] runs each general's dual-style rotation.
  *
- * **Adding a GWD boss = adding a [GwdBoss] here.** Lairs are real coords (TUNE); all multi-way
- * (force-loaded by [org.alter.plugins.content.bosses.BossLairs]). The OSRS **killcount door**
- * that gates each room is deferred — for now the teleport drops you straight in.
+ * **Adding a GWD boss = adding a [GwdBoss] here.** Lairs are the real throne-room centres,
+ * verified against the cache map dump (walkable plane-2 floor incl. the ±2 bodyguard tiles);
+ * all multi-way (force-loaded by [org.alter.plugins.content.bosses.BossLairs]). The OSRS
+ * **killcount door** that gates each room is deferred — for now the teleport drops you straight in.
  */
 object GodWarsBosses {
 
@@ -43,7 +44,7 @@ object GodWarsBosses {
     val all: List<GwdBoss> = listOf(
         GwdBoss(
             key = "npc.general_graardor", name = "General Graardor",
-            lair = Tile(2864, 5354, 2),
+            lair = Tile(2870, 5362, 2), // Bandos throne room centre (cache-verified plane-2 floor)
             hp = 255, att = 280, str = 350, def = 250, mag = 80, rng = 150,
             attackSpeed = 5, maxHit = 60, approach = 2, style1 = CombatClass.MELEE, style2 = CombatClass.RANGED, bossPoints = 35,
             bodyguards = listOf("npc.sergeant_strongstack", "npc.sergeant_steelwill", "npc.sergeant_grimspike"),
@@ -68,7 +69,7 @@ object GodWarsBosses {
         ),
         GwdBoss(
             key = "npc.kril_tsutsaroth", name = "K'ril Tsutsaroth",
-            lair = Tile(2925, 5333, 2),
+            lair = Tile(2926, 5325, 2), // Zamorak throne room centre (cache-verified; old tile was a 1-wide doorway)
             hp = 255, att = 280, str = 350, def = 250, mag = 300, rng = 1,
             attackSpeed = 5, maxHit = 49, approach = 2, style1 = CombatClass.MELEE, style2 = CombatClass.MAGIC, bossPoints = 35,
             bodyguards = listOf("npc.tstanon_karlak", "npc.balfrug_kreeyath", "npc.zakln_gritch"),
@@ -93,7 +94,7 @@ object GodWarsBosses {
         ),
         GwdBoss(
             key = "npc.kreearra_3162", name = "Kree'arra",
-            lair = Tile(2839, 5295, 2),
+            lair = Tile(2832, 5302, 2), // Armadyl eyrie centre (cache-verified; old tile sat on the boundary wall)
             hp = 255, att = 1, str = 1, def = 250, mag = 200, rng = 300,
             attackSpeed = 5, maxHit = 31, approach = 8, style1 = CombatClass.RANGED, style2 = CombatClass.MAGIC, bossPoints = 35,
             bodyguards = listOf("npc.wingman_skree", "npc.flockleader_geerin", "npc.flight_kilisa"),
@@ -119,7 +120,7 @@ object GodWarsBosses {
         ),
         GwdBoss(
             key = "npc.commander_zilyana", name = "Commander Zilyana",
-            lair = Tile(2907, 5266, 2),
+            lair = Tile(2897, 5300, 2), // Saradomin encampment centre (cache-verified; old tile was ~34 tiles south, in solid void)
             hp = 255, att = 280, str = 300, def = 300, mag = 300, rng = 1,
             attackSpeed = 4, maxHit = 31, approach = 2, style1 = CombatClass.MELEE, style2 = CombatClass.MAGIC, bossPoints = 35,
             bodyguards = listOf("npc.starlight", "npc.growler", "npc.bree"),
