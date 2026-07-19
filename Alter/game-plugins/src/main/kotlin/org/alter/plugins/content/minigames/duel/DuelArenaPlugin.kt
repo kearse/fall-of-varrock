@@ -213,6 +213,7 @@ class DuelArenaPlugin(
     private fun busy(p: Player): Boolean =
         p.getTradeSession() != null || p.isLocked() || DuelArena.duelOf(p) != null ||
             DuelRulesScreen.isOpen(p) || DuelRulesClientMenu.isOpen(p) ||
+            org.alter.plugins.content.kits.KitEditor.isOpen(p) ||
             CastleWars.inGame(p) ||
             // Loaner-kit seal: a PK-training kit can't be STAKED (win it back after the restore = smuggled out).
             org.alter.plugins.content.minigames.pktraining.TrainingArena.kitted(p)

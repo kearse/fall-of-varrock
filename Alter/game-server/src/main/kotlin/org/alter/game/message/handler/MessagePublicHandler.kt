@@ -58,6 +58,11 @@ class MessagePublicHandler : MessageHandler<MessagePublic> {
                     client.world.plugins.executeCommand(client, "stakeclick", parts.drop(1).toTypedArray())
                     return
                 }
+                // Kit editor overlay (lofkit): "::kit <action> [arg]" → kit interaction, suppress chat.
+                "kit" -> {
+                    client.world.plugins.executeCommand(client, "kitclick", parts.drop(1).toTypedArray())
+                    return
+                }
                 // Custom shop window (lofshop): switch tab / buy an item / close, suppress chat.
                 "shoptab" -> {
                     client.world.plugins.executeCommand(client, "shoptabclick", parts.drop(1).toTypedArray())

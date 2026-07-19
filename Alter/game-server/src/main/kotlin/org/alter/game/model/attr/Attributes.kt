@@ -511,6 +511,14 @@ val PK_ARENA_STASH_ATTR = AttributeKey<String>("pk_arena_stash")
 val DUEL_ESCROW_ATTR = AttributeKey<String>("duel_escrow")
 
 /**
+ * A JSON blob holding the player's saved **kit loadouts** (content/kits) — up to three named setups
+ * of worn gear + inventory + spellbook, built in the kit editor. Loaded as loaner gear in the PK
+ * Training Arena, or withdrawn from the player's own bank anywhere else. Persistent: kits survive
+ * logout like bank contents do.
+ */
+val KIT_LOADOUTS_ATTR = AttributeKey<String>("kit_loadouts")
+
+/**
  * Marks a [org.alter.game.model.entity.Player] bot as a **sparring partner** owned by the PK
  * Training Arena. The bot-combat plugin skips its normal "drop the full kit to the killer + despawn"
  * death handling for these — the arena owns their lifecycle and they must never faucet gear into the

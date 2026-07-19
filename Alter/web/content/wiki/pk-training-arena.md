@@ -1,10 +1,10 @@
 ---
 title: PK Training Arena
 category: Minigames & Bosses
-summary: A Duel Arena sparring ground that teaches you to PK. Get loaned a Dharok's or NH kit (or bring your own), fight a matched bot at Easy/Medium/Hard, keep nothing, lose nothing, gain XP.
+summary: A Duel Arena sparring ground that teaches you to PK. Build any loadout in the LMS-style kit editor (or bring your own gear), fight a matched bot at Easy/Medium/Hard, keep nothing, lose nothing, gain XP.
 order: 9
-updated: 2026-07-07
-infobox: Type = Sparring ground (duel-style rounds); Location = Duel Arena; Entry = Talk to Ardan the Ripper (or `::pktrain`); Kits = Dharok's / NH / Bring-your-own; Opponent = Matched sparring bot (Easy / Medium / Hard); Keep gear = No; Death = Safe (no item loss); XP = Full; Leave = Walk out or `::unkit`
+updated: 2026-07-19
+infobox: Type = Sparring ground (duel-style rounds); Location = Duel Arena; Entry = Talk to Ardan the Ripper (or `::pktrain`); Kits = Fully editable (Dharok's / NH presets + 3 save slots) / Bring-your-own; Opponent = Matched sparring bot (Easy / Medium / Hard); Keep gear = No; Death = Safe (no item loss); XP = Full; Leave = Walk out or `::unkit`
 ---
 
 The **PK Training Arena** is a sparring ground at the **Duel Arena** built to teach the actual
@@ -17,13 +17,16 @@ no loot chests. You get a kit, you get an opponent, and you fight until you've g
 Head to the Duel Arena and talk to **Ardan the Ripper**, the battle-scarred mercenary who runs
 the grounds - or use `::pktrain` to teleport straight to him.
 
-He offers you three ways to fight:
+He offers you two ways to fight:
 
-- **Dharok's kit** - a full Dharok's set with a spec weapon and **Vengeance** ready to go.
-- **NH kit** - a tribrid switch set (melee main, mage and range switches, spec, freeze + veng runes).
+- **The kit locker** - the LMS-style **kit editor**. Start from a **Dharok's** or **NH tribrid**
+  preset, then change absolutely anything: every worn slot and all 28 inventory slots are yours to
+  edit from the armoury, with your spellbook and the bot's difficulty on the same screen. **Save**
+  up to three custom kits to your account - they're waiting on every visit (and can be loaded from
+  your own bank anywhere with `::kits`, see below).
 - **Bring your own gear** - spar in your own setup.
 
-Then you pick a **difficulty** for your opponent - and the bout runs **just like a real duel**:
+Then the bout runs **just like a real duel**:
 you're teleported onto the arena floor with your opponent standing across from you, a
 **3... 2... 1... FIGHT!** countdown, then it's live. When one of you falls, you're teleported back
 to Ardan, healed and ready. Talk to him for **another round** (same setup in one click), a new
@@ -72,3 +75,14 @@ the pit and rejoin you the moment the round ends.
 
 Start on **Easy** to get your switches clean, then move up. When you're done, just walk out of the
 arena - the gear stays with Ardan, and whatever you learned comes with you.
+
+## Loading kits from your bank (anywhere)
+
+The same saved kits do double duty outside the arena. Type `::kits` **with your bank open** and
+the kit editor appears in bank mode: pick a saved kit (or build one from your bank's items) and
+press **Load kit** - everything you're carrying is deposited, then the kit is withdrawn and
+equipped **from your own bank in one click**, exact slot layout and all.
+
+Bank mode never creates items: anything the kit lists that **isn't in your bank is skipped** and
+reported, and gear you don't meet the requirements for stays in your pack instead of being worn.
+It only works at a bank - the kit screen is a loadout tool, not a portable bank.
