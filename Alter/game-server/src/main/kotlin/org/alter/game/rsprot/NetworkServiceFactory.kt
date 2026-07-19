@@ -11,6 +11,8 @@ import net.rsprot.compression.provider.HuffmanCodecProvider
 import net.rsprot.crypto.rsa.RsaKeyPair
 import net.rsprot.protocol.api.*
 import net.rsprot.protocol.api.handlers.ExceptionHandlers
+import net.rsprot.protocol.api.handlers.INetAddressHandlers
+import net.rsprot.protocol.api.implementation.DefaultInetAddressValidator
 import net.rsprot.protocol.api.js5.Js5GroupProvider
 import net.rsprot.protocol.api.suppliers.NpcInfoSupplier
 import net.rsprot.protocol.api.suppliers.WorldEntityInfoSupplier
@@ -108,6 +110,13 @@ class NetworkServiceFactory(
         return RsModConnectionHandler(world)
     }
 
+    override fun getINetAddressHandlers(): INetAddressHandlers {
+        // rsprot's default validator caps concurrent game/JS5 connections at 10 per
+        // address. Players multi-log alts, and CGNAT/shared-household IPs stack many
+        // real players behind one address, so raise the cap well above that.
+        return INetAddressHandlers(inetAddressValidator = DefaultInetAddressValidator(MAX_CONNECTIONS_PER_ADDRESS))
+    }
+
     override fun getGameMessageConsumerRepositoryProvider(): GameMessageConsumerRepositoryProvider<Client> {
         val bldr = GameMessageConsumerRepositoryBuilder<Client>()
         bldr.addListener(DetectModifiedClient::class.java, DetectModifiedClientHandler())
@@ -184,5 +193,6 @@ class NetworkServiceFactory(
     companion object {
         private val logger = KotlinLogging.logger {}
 
+        private const val MAX_CONNECTIONS_PER_ADDRESS = 50
     }
 }
