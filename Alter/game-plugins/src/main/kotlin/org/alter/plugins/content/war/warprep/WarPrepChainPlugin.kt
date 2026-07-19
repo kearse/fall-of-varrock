@@ -36,8 +36,10 @@ class WarPrepChainPlugin(
             val s = WarPrepChain.step(player)
             if (s == WarPrepChain.Step.NONE) {
                 player.message("<col=801700>War-Prep:</col> finish the Recruit Trials first.")
+            } else if (s == WarPrepChain.Step.DONE) {
+                player.message("<col=801700>War-Prep:</col> ${s.objective}")
             } else {
-                player.message("<col=801700>War-Prep — current objective:</col> ${s.objective}")
+                player.message("<col=801700>War-Prep — current objective:</col> ${WarPrepChain.objectiveLine(player)}")
             }
         }
     }

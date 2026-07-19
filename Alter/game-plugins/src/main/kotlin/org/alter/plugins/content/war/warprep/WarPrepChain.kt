@@ -5,6 +5,7 @@ import org.alter.api.ext.clearHintArrow
 import org.alter.api.ext.message
 import org.alter.api.ext.setNpcHintArrow
 import org.alter.api.ext.setTileHintArrow
+import org.alter.game.model.attr.AttributeKey
 import org.alter.game.model.attr.WARPREP_STEP_ATTR
 import org.alter.game.model.entity.Npc
 import org.alter.game.model.entity.Player
@@ -42,6 +43,15 @@ object WarPrepChain {
     /** Drives the per-player state poll while on a tracked step (refreshes the arrow + detects Prayer). */
     val TIMER = TimerKey()
     private const val POLL_TICKS = 3
+
+    /**
+     * The objective was announced exactly once, when the step was entered — so a recruit who logged
+     * out on PRAYER came back to silence and no idea the Wizard Tower was waiting behind it. Nudge
+     * the live objective on login and again every [NUDGE_TICKS] while the step stays unfinished.
+     * Session-only countdown: a fresh login always nudges, and the timer restarts from there.
+     */
+    private const val NUDGE_TICKS = 500 // ~5 minutes
+    private val NUDGE_COUNTDOWN = AttributeKey<Int>()
 
     /** Protect from Magic unlocks at Prayer 37 — the Prayer step's target. */
     const val PRAYER_TARGET = 37
@@ -115,12 +125,28 @@ object WarPrepChain {
         advanceTo(p, Step.PRAYER)
     }
 
-    /** On login, re-arm the poll timer + refresh the arrow if on a tracked step. */
+    /** On login, re-arm the poll timer + refresh the arrow if on a tracked step, and remind the
+     *  player what they're actually meant to be doing. */
     fun resumeOnLogin(p: Player) {
         if (isTracked(step(p))) {
             p.timers[TIMER] = POLL_TICKS
             updateHintArrow(p)
+            nudge(p)
         }
+    }
+
+    /** The current objective, with live progress where the step has a measurable target. */
+    fun objectiveLine(p: Player): String {
+        val s = step(p)
+        if (s != Step.PRAYER) return s.objective
+        return "${s.objective} (Prayer ${p.getSkills().getBaseLevel(Skills.PRAYER)}/$PRAYER_TARGET)"
+    }
+
+    /** Say the objective and restart the nudge countdown. */
+    fun nudge(p: Player) {
+        p.attr[NUDGE_COUNTDOWN] = NUDGE_TICKS
+        p.message("<col=801700>War-Prep — current objective:</col> ${objectiveLine(p)}")
+        p.message("Vannaka has more for you once it's done. Check it any time with <col=ffae00>::warprep</col>.")
     }
 
     /** Steps the poll runs on — those with a live objective (progress watched and/or arrow refreshed). */
@@ -181,6 +207,9 @@ object WarPrepChain {
         if (isTracked(step(p))) {
             updateHintArrow(p)
             p.timers[TIMER] = POLL_TICKS
+            // Periodic re-nudge so a stalled recruit isn't left guessing (see NUDGE_TICKS).
+            val left = (p.attr[NUDGE_COUNTDOWN] ?: NUDGE_TICKS) - POLL_TICKS
+            if (left <= 0) nudge(p) else p.attr[NUDGE_COUNTDOWN] = left
         }
     }
 
@@ -197,8 +226,9 @@ object WarPrepChain {
             else -> {}
         }
         if (isTracked(next)) p.timers[TIMER] = POLL_TICKS
+        p.attr[NUDGE_COUNTDOWN] = NUDGE_TICKS // this announcement counts as the nudge
         if (next != Step.NONE && next != Step.DONE) {
-            p.message("<col=801700>War-Prep — next objective:</col> ${next.objective}")
+            p.message("<col=801700>War-Prep — next objective:</col> ${objectiveLine(p)}")
         }
         updateHintArrow(p)
     }

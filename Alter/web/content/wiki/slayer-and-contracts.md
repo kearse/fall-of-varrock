@@ -27,7 +27,9 @@ Vannaka also issues **gathering contracts**, independent of your combat task:
 | Raw shrimps | Fishing | 1 | 3,000 gp + 8 WE |
 | Raw trout | Fishing | 20 | 5,000 gp + 12 WE |
 
-Contracts **auto-complete as you gather** - no turn-in trip needed. The coins and War Effort land the moment you hit the quota.
+Contracts **auto-complete as you gather** - no turn-in trip needed. The coins and War Effort land the moment you hit the quota. Vannaka never hands you the same contract twice in a row (unless it's the only work your skills qualify for).
+
+**Fishing contracts:** a fishing spot normally lands the best fish your level and gear allow, so a "gather raw shrimps" contract would otherwise pay you nothing while you reel in anchovies. Taking a fishing contract now points you at the contracted fish automatically - just click a spot. Use **`::fish`** any time to pick something else; the menu pages through every fish you can currently catch, and your choice sticks across logout.
 
 ## Why do Slayer here
 

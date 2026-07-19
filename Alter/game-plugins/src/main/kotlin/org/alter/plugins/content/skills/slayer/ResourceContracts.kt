@@ -2,7 +2,9 @@ package org.alter.plugins.content.skills.slayer
 
 import org.alter.api.Skills
 import org.alter.api.ext.message
+import org.alter.game.model.attr.FISHING_PREFERENCE_ATTR
 import org.alter.game.model.attr.RESOURCE_CONTRACT_ITEM_ATTR
+import org.alter.game.model.attr.RESOURCE_CONTRACT_LAST_ATTR
 import org.alter.game.model.attr.RESOURCE_CONTRACT_LEFT_ATTR
 import org.alter.game.model.entity.Player
 import org.alter.plugins.content.economy.PointKind
@@ -104,11 +106,19 @@ object ResourceContracts {
         if (eligible.isEmpty()) return null
         // Weight toward the best tier the player has unlocked: draw from the top two tiers present.
         val topTier = eligible.maxOf { it.minTitle.ordinal }
-        val pool = eligible.filter { it.minTitle.ordinal >= topTier - 1 }
+        var pool = eligible.filter { it.minTitle.ordinal >= topTier - 1 }
+        // Never hand out the same work twice running — unless it's the only work they qualify for.
+        val last = p.attr[RESOURCE_CONTRACT_LAST_ATTR]
+        if (last != null && pool.size > 1) {
+            pool.filter { it.itemKey != last }.let { if (it.isNotEmpty()) pool = it }
+        }
         val task = pool[p.world.random(pool.size - 1)]
         val amount = p.world.random(task.amount)
         p.attr[RESOURCE_CONTRACT_ITEM_ATTR] = task.itemKey
         p.attr[RESOURCE_CONTRACT_LEFT_ATTR] = amount
+        // A stale fish pick would otherwise outrank the new contract forever (the pref persists).
+        // Point it at the contracted fish; ::fish still overrides it afterwards.
+        if (task.skillId == Skills.FISHING) p.attr[FISHING_PREFERENCE_ATTR] = task.itemKey
         return task to amount
     }
 
@@ -119,6 +129,10 @@ object ResourceContracts {
             it.minTitle.ordinal > p.title.ordinal &&
                 p.getSkills().getCurrentLevel(it.skillId) >= it.minLevel
         }
+
+    /** The RSCM item key the player is currently contracted to gather, or null. Gathering plugins
+     *  use it to steer what they produce (fishing picks the contracted fish over the best one). */
+    fun contractedKey(p: Player): String? = current(p)?.first?.itemKey
 
     /** Called by the gathering plugins as a resource item is produced. */
     fun onGather(p: Player, itemId: Int) {
@@ -135,6 +149,7 @@ object ResourceContracts {
         val task = byKey[key]
         p.attr.remove(RESOURCE_CONTRACT_ITEM_ATTR)
         p.attr[RESOURCE_CONTRACT_LEFT_ATTR] = 0
+        p.attr[RESOURCE_CONTRACT_LAST_ATTR] = key // so the next contract isn't the same work again
         if (task != null) {
             val coins = task.coinReward * GENEROSITY_MULT
             val we = task.weReward * GENEROSITY_MULT
