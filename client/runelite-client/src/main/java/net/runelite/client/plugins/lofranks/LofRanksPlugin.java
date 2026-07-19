@@ -20,6 +20,7 @@ import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.input.MouseManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
+import net.runelite.client.plugins.loftheme.LofWindows;
 import net.runelite.client.ui.overlay.OverlayManager;
 
 @PluginDescriptor(
@@ -63,6 +64,7 @@ public class LofRanksPlugin extends Plugin
 	protected void startUp()
 	{
 		overlayManager.add(overlay);
+		LofWindows.register(overlay);
 		mouseListener = new LofRanksMouseListener(this, overlay);
 		mouseManager.registerMouseListener(mouseListener);
 	}
@@ -71,6 +73,7 @@ public class LofRanksPlugin extends Plugin
 	protected void shutDown()
 	{
 		overlayManager.remove(overlay);
+		LofWindows.unregister(overlay);
 		if (mouseListener != null)
 		{
 			mouseManager.unregisterMouseListener(mouseListener);
@@ -82,6 +85,7 @@ public class LofRanksPlugin extends Plugin
 	@Subscribe
 	public void onVarbitChanged(VarbitChanged event)
 	{
+		LofWindows.onForeignSignal(event.getVarpId(), client.getVarpValue(event.getVarpId()));
 		if (event.getVarpId() != OPEN_VARP)
 		{
 			return;
@@ -93,13 +97,14 @@ public class LofRanksPlugin extends Plugin
 		}
 		final int rank = Math.min(Math.max(value - 1, 0), LofRanksData.RANKS.length - 1);
 		overlay.setCurrentRank(rank);
+		LofWindows.openExclusive(overlay);
 		overlay.setVisible(true);
 	}
 
 	/** Send the purchase to the server as a public-chat token it intercepts + suppresses. */
 	void sendBuy(int rankOrdinal)
 	{
-		final String msg = "::rank buy " + rankOrdinal;
+		final String msg = "::lofrank buy " + rankOrdinal;
 		clientThread.invokeLater(() -> client.runScript(ScriptID.CHAT_SEND, msg, 0, 0, 0, -1));
 	}
 }

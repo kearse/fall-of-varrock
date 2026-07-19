@@ -1,12 +1,13 @@
 /*
- * Fall of Varrock — the Gambler's Table (house percentile dice).
+ * Fall of Varrock — Character Style window (the on-brand makeover).
  *
- * The server pulses varp 4628: value 1 opens the table; a result pulse carries
- * bit9 flag | roll in bits 1-7 | win in bit 8. Betting sends "::dice roll <amount>" which the
- * server intercepts (MessagePublicHandler → diceclick), validates, rolls and pays.
- * Odds mirror the server: 51+ wins, pays 2x minus the 5% house cut, 100M cap.
+ * Replaces the native character-design interface (its rev-228 layout didn't match the bound
+ * component ids — misaligned, dead buttons). The window anchors LEFT of the viewport so the
+ * player's own in-world model is the live 3D preview: every arrow press sends
+ * "::lofstyle look/colour ..." (MessagePublicHandler → styleclick), the server mutates the
+ * appearance and re-syncs it instantly. Varp 4632 opens (bit 0) and carries gender (bit 1).
  */
-package net.runelite.client.plugins.lofdice;
+package net.runelite.client.plugins.lofstyle;
 
 import javax.inject.Inject;
 import net.runelite.api.Client;
@@ -21,15 +22,15 @@ import net.runelite.client.plugins.loftheme.LofWindows;
 import net.runelite.client.ui.overlay.OverlayManager;
 
 @PluginDescriptor(
-	name = "Lof Gambler's Table",
-	description = "The house dice table window.",
-	tags = {"lof", "dice", "gamble", "bet"},
+	name = "Lof Character Style",
+	description = "Aurelia's restyling window — your in-world character is the live preview.",
+	tags = {"lof", "style", "makeover", "appearance"},
 	enabledByDefault = true
 )
-public class LofDicePlugin extends Plugin
+public class LofStylePlugin extends Plugin
 {
-	/** Must match server DiceMenu.OPEN_VARP. */
-	private static final int OPEN_VARP = 4628;
+	/** Must match server StyleMenu.OPEN_VARP; bit 0 open, bit 1 female. */
+	private static final int OPEN_VARP = 4632;
 
 	@Inject
 	private Client client;
@@ -44,16 +45,16 @@ public class LofDicePlugin extends Plugin
 	private MouseManager mouseManager;
 
 	@Inject
-	private LofDiceOverlay overlay;
+	private LofStyleOverlay overlay;
 
-	private LofDiceMouseListener mouseListener;
+	private LofStyleMouseListener mouseListener;
 
 	@Override
 	protected void startUp()
 	{
 		overlayManager.add(overlay);
 		LofWindows.register(overlay);
-		mouseListener = new LofDiceMouseListener(this, overlay);
+		mouseListener = new LofStyleMouseListener(this, overlay);
 		mouseManager.registerMouseListener(mouseListener);
 	}
 
@@ -79,22 +80,32 @@ public class LofDicePlugin extends Plugin
 			return;
 		}
 		final int value = client.getVarpValue(OPEN_VARP);
-		if (value == 0)
+		if (value == 0 || (value & 1) == 0)
 		{
-			return;
+			return; // pulse falling edge never closes the window
 		}
-		if ((value & (1 << 9)) != 0)
-		{
-			// result pulse — burn the roll into the (already open) table
-			overlay.onResult((value >> 1) & 0x7F, (value & (1 << 8)) != 0);
-		}
+		overlay.setFemale((value & 2) != 0);
 		LofWindows.openExclusive(overlay);
 		overlay.setVisible(true);
 	}
 
-	void sendRoll(long amount)
+	void sendStep(boolean colour, int id, int delta)
 	{
-		final String msg = "::lofdice roll " + amount;
+		send("::lofstyle " + (colour ? "colour " : "look ") + id + " " + delta);
+	}
+
+	void sendGender(boolean female)
+	{
+		send("::lofstyle gender " + (female ? "female" : "male"));
+	}
+
+	void sendDone()
+	{
+		send("::lofstyle done");
+	}
+
+	private void send(String msg)
+	{
 		clientThread.invokeLater(() -> client.runScript(ScriptID.CHAT_SEND, msg, 0, 0, 0, -1));
 	}
 }

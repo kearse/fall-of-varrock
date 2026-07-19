@@ -23,6 +23,7 @@ import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.input.MouseManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
+import net.runelite.client.plugins.loftheme.LofWindows;
 import net.runelite.client.ui.overlay.OverlayManager;
 
 @PluginDescriptor(
@@ -61,6 +62,7 @@ public class LofForgePlugin extends Plugin
 	protected void startUp()
 	{
 		overlayManager.add(overlay);
+		LofWindows.register(overlay);
 		mouseListener = new LofForgeMouseListener(this, overlay);
 		mouseManager.registerMouseListener(mouseListener);
 	}
@@ -69,6 +71,7 @@ public class LofForgePlugin extends Plugin
 	protected void shutDown()
 	{
 		overlayManager.remove(overlay);
+		LofWindows.unregister(overlay);
 		if (mouseListener != null)
 		{
 			mouseManager.unregisterMouseListener(mouseListener);
@@ -80,8 +83,10 @@ public class LofForgePlugin extends Plugin
 	@Subscribe
 	public void onVarbitChanged(VarbitChanged event)
 	{
+		LofWindows.onForeignSignal(event.getVarpId(), client.getVarpValue(event.getVarpId()));
 		if (event.getVarpId() == OPEN_VARP && client.getVarpValue(OPEN_VARP) != 0)
 		{
+			LofWindows.openExclusive(overlay);
 			overlay.setVisible(true);
 		}
 	}
@@ -145,7 +150,7 @@ public class LofForgePlugin extends Plugin
 
 	void sendForge(int index)
 	{
-		final String msg = "::forge make " + index;
+		final String msg = "::lofforge make " + index;
 		clientThread.invokeLater(() -> client.runScript(ScriptID.CHAT_SEND, msg, 0, 0, 0, -1));
 	}
 }

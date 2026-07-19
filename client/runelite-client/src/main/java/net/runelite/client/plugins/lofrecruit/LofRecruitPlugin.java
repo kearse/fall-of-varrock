@@ -21,6 +21,7 @@ import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.input.MouseManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
+import net.runelite.client.plugins.loftheme.LofWindows;
 import net.runelite.client.ui.overlay.OverlayManager;
 
 @PluginDescriptor(
@@ -64,6 +65,7 @@ public class LofRecruitPlugin extends Plugin
 	protected void startUp()
 	{
 		overlayManager.add(overlay);
+		LofWindows.register(overlay);
 		mouseListener = new LofRecruitMouseListener(this, overlay);
 		mouseManager.registerMouseListener(mouseListener);
 	}
@@ -72,6 +74,7 @@ public class LofRecruitPlugin extends Plugin
 	protected void shutDown()
 	{
 		overlayManager.remove(overlay);
+		LofWindows.unregister(overlay);
 		if (mouseListener != null)
 		{
 			mouseManager.unregisterMouseListener(mouseListener);
@@ -83,6 +86,7 @@ public class LofRecruitPlugin extends Plugin
 	@Subscribe
 	public void onVarbitChanged(VarbitChanged event)
 	{
+		LofWindows.onForeignSignal(event.getVarpId(), client.getVarpValue(event.getVarpId()));
 		if (event.getVarpId() != OPEN_VARP)
 		{
 			return;
@@ -93,20 +97,21 @@ public class LofRecruitPlugin extends Plugin
 			return; // the pulse's falling edge never closes the window (design system §8)
 		}
 		overlay.setState((value >> 1) & 0x7, (value >> 4) & 0x7, (value >> 7) & 0xF);
+		LofWindows.openExclusive(overlay);
 		overlay.setVisible(true);
 	}
 
 	/** Send the chosen muster to the server as a public-chat token it intercepts + suppresses. */
 	void sendRecruit(String style)
 	{
-		final String msg = "::zo recruit " + style;
+		final String msg = "::lofzo recruit " + style;
 		clientThread.invokeLater(() -> client.runScript(ScriptID.CHAT_SEND, msg, 0, 0, 0, -1));
 	}
 
 	/** The Regalia tab: the server opens the native Commander's Regalia shop (real item sprites). */
 	void sendRegalia()
 	{
-		final String msg = "::zo regalia";
+		final String msg = "::lofzo regalia";
 		clientThread.invokeLater(() -> client.runScript(ScriptID.CHAT_SEND, msg, 0, 0, 0, -1));
 	}
 }

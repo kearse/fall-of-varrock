@@ -31,13 +31,14 @@ import net.runelite.api.InventoryID;
 import net.runelite.api.Item;
 import net.runelite.api.ItemContainer;
 import net.runelite.client.plugins.loftheme.LofTheme;
+import net.runelite.client.plugins.loftheme.LofWindows;
 import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.overlay.Overlay;
 import net.runelite.client.ui.overlay.OverlayLayer;
 import net.runelite.client.ui.overlay.OverlayPosition;
 import net.runelite.client.util.ImageUtil;
 
-class LofRanksOverlay extends Overlay
+class LofRanksOverlay extends Overlay implements LofWindows.Window
 {
 	// hit-test result codes
 	static final int OUTSIDE = -1;
@@ -554,6 +555,19 @@ class LofRanksOverlay extends Overlay
 		}
 		g.drawImage(img, x, y, size, size, null);
 		g.setComposite(oldComposite);
+	}
+
+
+	@Override
+	public boolean isWindowVisible()
+	{
+		return visible;
+	}
+
+	@Override
+	public void hideWindow()
+	{
+		visible = false;
 	}
 
 	private Point mousePoint()

@@ -21,13 +21,14 @@ import net.runelite.api.Client;
 import net.runelite.api.GameState;
 import net.runelite.client.plugins.loftheme.LofModal;
 import net.runelite.client.plugins.loftheme.LofTheme;
+import net.runelite.client.plugins.loftheme.LofWindows;
 import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.overlay.Overlay;
 import net.runelite.client.ui.overlay.OverlayLayer;
 import net.runelite.client.ui.overlay.OverlayPosition;
 import net.runelite.client.util.ImageUtil;
 
-class LofBondsOverlay extends Overlay
+class LofBondsOverlay extends Overlay implements LofWindows.Window
 {
 	// hit-test result codes
 	static final int OUTSIDE = -1;
@@ -237,6 +238,19 @@ class LofBondsOverlay extends Overlay
 		{
 			return null;
 		}
+	}
+
+
+	@Override
+	public boolean isWindowVisible()
+	{
+		return visible;
+	}
+
+	@Override
+	public void hideWindow()
+	{
+		visible = false;
 	}
 
 	private Point mousePoint()

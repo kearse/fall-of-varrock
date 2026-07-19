@@ -37,6 +37,12 @@ class RecruitClickPlugin(
                 return@onCommand
             }
             val a = player.getCommandArgs()
+            // The token arrives as raw public chat from anywhere — keep the walk-to-Zo
+            // invariant for his storefront, like the depot/forge/dice/contract channels.
+            if (!player.tile.isWithinRadius(Sieges.LUMBRIDGE.zoTile, ZO_RADIUS)) {
+                player.message("General Zo musters soldiers at his courtyard post.")
+                return@onCommand
+            }
             when (a.getOrNull(0)?.lowercase()) {
                 "recruit" -> recruit(player, a.getOrNull(1))
                 // The window's Regalia tab: the native points shop draws the real sanguine
