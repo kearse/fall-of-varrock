@@ -368,7 +368,7 @@ class DuelArenaPlugin(
         d.a.attr.remove(DUEL_ESCROW_ATTR)
         d.b.attr.remove(DUEL_ESCROW_ATTR)
 
-        award(winner, d.stakes)
+        if (!d.exhibition) award(winner, d.stakes)
         winner.setCurrentHp(winner.getMaxHp())
         // Both fighters go back to the tiles they were standing on when the stake locked in.
         // The loser's death already dropped them at the instance's fallback exit (or the logout
@@ -376,9 +376,13 @@ class DuelArenaPlugin(
         // allocator's idle scan reclaim the instance.
         if (winner.index >= 0) winner.moveTo(d.returnTileOf(winner))
         if (loser.index >= 0) loser.moveTo(d.returnTileOf(loser))
-        winner.message("<col=007f00>You won the duel and claimed the stake!</col>")
-        if (loser.index >= 0) loser.message("<col=ff0000>You lost the duel — your stake is gone.</col>")
-        logger.info { "DUEL winner=${winner.username} loser=${loser.username} pot=${d.stakes.sumOf { it.amount.toLong() }} items" }
+        if (!d.exhibition) {
+            winner.message("<col=007f00>You won the duel and claimed the stake!</col>")
+            if (loser.index >= 0) loser.message("<col=ff0000>You lost the duel — your stake is gone.</col>")
+        }
+        logger.info { "DUEL winner=${winner.username} loser=${loser.username} exhibition=${d.exhibition} pot=${d.stakes.sumOf { it.amount.toLong() }} items" }
+        d.onResolved?.invoke(winner, loser)
+        d.onResolved = null
     }
 
     // ───────────────────────────── helpers ─────────────────────────────
@@ -408,7 +412,8 @@ class DuelArenaPlugin(
         }
     }.getOrDefault(emptyList())
 
-    private companion object {
+    // Public: the tournament runs its matches in copies of the same pit (ARENA_SOURCE/spawns).
+    companion object {
         /** Player right-click slot for "Challenge" (2..5 = Attack/Follow/Trade/Report; 6 is free). */
         const val CHALLENGE_OPTION_SLOT = 6
 

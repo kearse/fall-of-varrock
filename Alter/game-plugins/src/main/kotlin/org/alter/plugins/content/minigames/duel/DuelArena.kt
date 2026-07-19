@@ -131,7 +131,17 @@ class Duel(
     val returnA: Tile,
     /** Where [b] stood when the stakes locked in. */
     val returnB: Tile,
+    /**
+     * An exhibition duel carries no stakes and no stake messaging — the Automatic Tournament runs
+     * its matches as exhibition [Duel]s so ALL the duel machinery (countdown, sealed bubble, rule
+     * enforcement, death/logout resolution, teleport lock) applies unchanged; the tournament owns
+     * the outcome via [onResolved].
+     */
+    val exhibition: Boolean = false,
 ) {
+    /** Fired exactly once when the duel resolves: (winner, loser). Owner-content hook (tournament). */
+    var onResolved: ((Player, Player) -> Unit)? = null
+
     /** false during the 3-2-1 countdown (attacks blocked); true once "FIGHT!" is called. */
     var fighting = false
 

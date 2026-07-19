@@ -149,7 +149,8 @@ object TeleportRegistry {
 
         // ── ❤️ Events (all roadmap — dynamic timers come in Phase 4) ───────────
         soon("hp_event", "HP Event", EVENTS),
-        soon("tournament", "Automatic Tournament", EVENTS),
+        // Lands at the arena lobby — the tournament's signup/waiting spot (::tournament to enter).
+        built("tournament", "Automatic Tournament", EVENTS, Tile(3367, 3274, 0), SAFE_ZONE),
         soon("bloodlust", "Bloodlust", EVENTS),
         soon("treasure_hunt", "Treasure Hunt", EVENTS),
         soon("clan_warfare", "Clan Warfare", EVENTS),

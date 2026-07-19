@@ -519,6 +519,14 @@ val DUEL_ESCROW_ATTR = AttributeKey<String>("duel_escrow")
 val KIT_LOADOUTS_ATTR = AttributeKey<String>("kit_loadouts")
 
 /**
+ * A JSON blob holding the player's REAL inventory + equipment + spellbook + Magic level, stashed
+ * while they fight a match in the **Automatic Tournament** (content/minigames/tournament) — matches
+ * are fought in a standardized loaner kit. Persistent by design (mirrors [PK_ARENA_STASH_ATTR]):
+ * a crash mid-match restores the real gear on next login. Present == "a restore is owed".
+ */
+val TOURNEY_STASH_ATTR = AttributeKey<String>("tourney_stash")
+
+/**
  * Marks a [org.alter.game.model.entity.Player] bot as a **sparring partner** owned by the PK
  * Training Arena. The bot-combat plugin skips its normal "drop the full kit to the killer + despawn"
  * death handling for these — the arena owns their lifecycle and they must never faucet gear into the
