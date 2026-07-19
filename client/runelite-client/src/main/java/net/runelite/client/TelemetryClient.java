@@ -84,8 +84,17 @@ public class TelemetryClient
 	{
 		try
 		{
+			// listFiles() returns null when the directory does not exist -- the normal case on a
+			// fresh install, and the permanent case while this pointed at the patched .fov-home
+			// path while logback still wrote to .runelite. That threw an NPE on every startup.
+			final File[] logs = logsDir.listFiles();
+			if (logs == null)
+			{
+				return;
+			}
+
 			long yesterday = System.currentTimeMillis() - Duration.ofDays(1).toMillis();
-			for (File f : logsDir.listFiles())
+			for (File f : logs)
 			{
 				if (!f.getName().startsWith("jvm_crash_") || !f.getName().endsWith(".log") // jvm_crash_pid_12345.log
 					|| f.getName().endsWith("_r.log") // avoid sending logs multiple times
