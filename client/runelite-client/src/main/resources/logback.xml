@@ -32,12 +32,25 @@
         </encoder>
     </appender>
 
+    <!--
+      Log beside the rest of our data in ~/.fov-home, NOT ~/.runelite.
+
+      PatchClient rewrites ".runelite" to ".fov-home" when it patches the shipped jar, but
+      it can only do that to Java class constants: replaceConstant requires a u2 length
+      prefix in front of the string, which is the constant-pool format. This file is plain
+      XML, so the patcher skips it and logs used to land in ~/.runelite/logs while every
+      other path (config, saved accounts, the downloaded jar) lived in ~/.fov-home. Players
+      asked for logs found an empty .fov-home and reported that there were none.
+
+      Hardcoded rather than patched, matching the other Fall of Varrock paths that already
+      name .fov-home directly (LofAccounts, IntroVideoFetcher, LofVoteLogoCache).
+    -->
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${user.home}/.runelite/logs/client.log</file>
+        <file>${user.home}/.fov-home/logs/client.log</file>
 
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
             <!-- daily rollover -->
-            <fileNamePattern>${user.home}/.runelite/logs/client_%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <fileNamePattern>${user.home}/.fov-home/logs/client_%d{yyyy-MM-dd}.%i.log</fileNamePattern>
             <maxFileSize>10MB</maxFileSize>
             <!-- keep 30 days' worth of history -->
             <maxHistory>30</maxHistory>
