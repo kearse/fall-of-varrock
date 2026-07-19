@@ -197,7 +197,10 @@ class CombatPlugin(
         }
         if (pawn is Player) {
             pawn.setVarp(Combat.PRIORITY_PID_VARP, target.index)
-            if (!pawn.attr.has(Combat.CASTING_SPELL) && pawn.getVarbit(Combat.SELECTED_AUTOCAST_VARBIT) != 0) {
+            if (!pawn.attr.has(Combat.CASTING_SPELL) &&
+                pawn.getVarbit(Combat.SELECTED_AUTOCAST_VARBIT) != 0 &&
+                CombatConfigs.canAutocast(pawn)
+            ) {
                 val spell =
                     CombatSpell.values.firstOrNull { it.autoCastId == pawn.getVarbit(Combat.SELECTED_AUTOCAST_VARBIT) }
                 if (spell != null) {

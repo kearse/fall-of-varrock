@@ -113,6 +113,14 @@ class AttackTabPlugin(
         }
 
         /**
+         * Unarming a staff has to clear auto-cast too -- otherwise the selection
+         * survives into bare-handed combat, where nothing else would clear it.
+         */
+        onUnequipFromSlot(EquipmentType.WEAPON.id) {
+            clearStaleAutocast(player)
+        }
+
+        /**
          * Disable special attack on log-out.
          */
         onLogout {

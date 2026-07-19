@@ -3,7 +3,7 @@ title: Magic - what works and how
 category: Magic
 summary: Utility spells, curses and freezes, Vengeance, Tele Block, and where to get runes.
 order: 2
-updated: 2026-07-04
+updated: 2026-07-19
 ---
 
 Combat spells across all four books work - including sticky autocast - plus a wide set of utility magic. This page covers what's live and the details that matter.
@@ -36,6 +36,18 @@ Basic elemental and mind runes are shop-bought in the Lumbridge market. **High-t
 - **[Wizard Tower](/wiki/wizard-tower)** runs - the main rune faucet
 - The **Trading Post** (`::market`) seed stock - nature, law, death, blood, cosmic, astral at cache value
 - Monster drops (every NPC uses its real OSRS table)
+
+## Elemental staves
+
+Wielding an elemental staff is an **endless supply of its own rune** - it isn't required in your pack and it isn't consumed. Staves of air/water/earth/fire, their battlestaff and mystic versions, and the combination staves all count:
+
+| Staff | Supplies |
+| --- | --- |
+| Air / Water / Earth / Fire (staff, battlestaff, mystic) | That element |
+| Mist / Dust / Smoke | Air + water / air + earth / air + fire |
+| Mud / Lava / Steam | Water + earth, fire + earth, water + fire |
+
+**Autocast** needs a staff in your hands. Cast a combat spell on a target and it stays selected - you keep casting it until you switch weapons or unequip. Casting with a non-staff weapon still works, it's just a single cast.
 
 ## Spellbook access
 

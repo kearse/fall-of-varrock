@@ -85,7 +85,10 @@ object CombatConfigs {
 
         if (pawn is Player) {
             return when {
-                pawn.attr.has(Combat.CASTING_SPELL) && pawn.isWieldingMagicWeapon() -> CombatClass.MAGIC
+                // A spell selected by hand casts with whatever is wielded (OSRS lets you cast
+                // with a whip in hand). Only *auto*-cast is staff-gated -- see [canAutocast],
+                // which the combat loop consults before re-arming CASTING_SPELL each attack.
+                pawn.attr.has(Combat.CASTING_SPELL) -> CombatClass.MAGIC
                 pawn.hasWeaponType(WeaponType.BOW, WeaponType.CHINCHOMPA, WeaponType.CROSSBOW, WeaponType.THROWN) -> CombatClass.RANGED
                 else -> CombatClass.MELEE
             }
@@ -95,13 +98,13 @@ object CombatConfigs {
     }
 
     /**
-     * Whether the pawn is wielding a weapon capable of casting spells. Used to
-     * stop a stale auto-cast selection (CASTING_SPELL) from forcing the MAGIC
-     * combat style/class onto a melee or ranged weapon, which otherwise throws
-     * in the combat formulas and prevents any hit from landing.
+     * Whether the player is wielding a weapon that can auto-cast. Auto-cast needs a
+     * staff in OSRS, and gating it here also stops a stale auto-cast selection from
+     * re-arming CASTING_SPELL on a melee or ranged weapon -- which would force the
+     * MAGIC combat class onto it and silently prevent any hit from landing.
      */
-    private fun Player.isWieldingMagicWeapon(): Boolean =
-        hasWeaponType(WeaponType.MAGIC_STAFF, WeaponType.STAFF, WeaponType.TRIDENT)
+    fun canAutocast(player: Player): Boolean =
+        player.hasWeaponType(WeaponType.MAGIC_STAFF, WeaponType.STAFF, WeaponType.TRIDENT)
 
     fun getAttackDelay(pawn: Pawn): Int {
         if (pawn is Npc) {
@@ -311,7 +314,7 @@ object CombatConfigs {
             val style = pawn.getAttackStyle()
 
             return when {
-                pawn.attr.has(Combat.CASTING_SPELL) && pawn.isWieldingMagicWeapon() -> CombatStyle.MAGIC
+                pawn.attr.has(Combat.CASTING_SPELL) -> CombatStyle.MAGIC
 
                 pawn.hasEquipped(EquipmentType.WEAPON, "item.granite_maul") -> CombatStyle.CRUSH
 
