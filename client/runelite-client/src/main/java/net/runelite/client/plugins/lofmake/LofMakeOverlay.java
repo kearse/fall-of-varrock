@@ -86,8 +86,19 @@ class LofMakeOverlay extends Overlay implements LofWindows.Window
 	{
 		this.title = title;
 		this.recipes = rows;
-		selected = 0;
 		qtyChoice = 3;
+		// Preselect a row the player can ACTUALLY make. Row 0 (bronze) used to be selected
+		// blind, so someone carrying only iron opened the window on a dead MAKE button and
+		// clicking it did nothing.
+		selected = 0;
+		for (int i = 0; i < rows.size(); i++)
+		{
+			if (levelOk(rows.get(i)) && maxMakeable(rows.get(i)) > 0)
+			{
+				selected = i;
+				break;
+			}
+		}
 	}
 
 	void setSelected(int i)

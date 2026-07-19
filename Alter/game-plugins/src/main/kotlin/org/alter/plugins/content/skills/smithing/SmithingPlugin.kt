@@ -1,5 +1,6 @@
 package org.alter.plugins.content.skills.smithing
 
+import dev.openrune.cache.CacheManager.getObject
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.alter.api.ChatMessageType
 import org.alter.api.Skills
@@ -7,6 +8,7 @@ import org.alter.api.ext.*
 import org.alter.game.Server
 import org.alter.game.model.Tile
 import org.alter.game.model.World
+import org.alter.game.model.attr.AttributeKey
 import org.alter.game.model.entity.DynamicObject
 import org.alter.game.model.entity.Player
 import org.alter.game.model.queue.QueueTask
@@ -92,12 +94,18 @@ class SmithingPlugin(
 
         // Using any ore on the furnace opens the smelt window.
         bars.flatMap { it.ores.keys }.distinct().forEach { ore ->
-            onItemOnObj(obj = furnace, item = ore) { openFurnace(player) }
+            onItemOnObj(obj = furnace, item = ore) { openFurnace(player, stationOf(player)) }
         }
         // Using a bar on the anvil opens the smith window for that metal.
         metalByBar.keys.filter { res(it) }.forEach { bar ->
-            onItemOnObj(obj = anvil, item = bar) { openAnvil(player, bar) }
+            onItemOnObj(obj = anvil, item = bar) { openAnvil(player, bar, stationOf(player)) }
         }
+        // ...and the objects' OWN options, which is how a player actually uses them (right-click
+        // the furnace → Smelt, the anvil → Smith). Without these binds the option was inert.
+        // Guarded like MiningPlugin's "Mine": onObjOption THROWS when the cache def lacks the
+        // exact action, and a throwing init drops the WHOLE plugin.
+        bindObjOptions(furnace, "Smelt", "Smelt-ore", "Use") { openFurnace(player, stationOf(player)) }
+        bindObjOptions(anvil, "Smith", "Smith-armour") { openAnvilAuto(player, stationOf(player)) }
 
         // The window's make channel ("::make <resultId> <qty>" → makeclick). Also testable directly.
         onCommand("makeclick", description = "Making window action (client overlay channel)") {
@@ -108,10 +116,40 @@ class SmithingPlugin(
         }
     }
 
+    // ---------------------------------- binds ----------------------------------
+
+    /**
+     * Bind every [options] entry the cache def actually carries. `onObjOption(name)` THROWS when
+     * the action is missing, and a plugin whose init throws is silently dropped by the loader —
+     * so the def is checked first (same guard as MiningPlugin's "Mine").
+     */
+    private fun bindObjOptions(obj: String, vararg options: String, logic: (org.alter.game.plugin.Plugin).() -> Unit) {
+        val id = resOrNull(obj) ?: return
+        val actions = try {
+            getObject(id).actions?.filterNotNull().orEmpty()
+        } catch (e: Exception) { emptyList() }
+        val bound = options.filter { opt -> actions.any { it.equals(opt, true) } }
+        if (bound.isEmpty()) {
+            logger.warn { "smithing: object $obj ($id) has none of ${options.toList()} — options=$actions" }
+            return
+        }
+        bound.forEach { onObjOption(obj = id, option = it, logic = logic) }
+    }
+
+    /**
+     * The tile of the station being used, remembered so [make] can verify the player is still
+     * standing at it. Falls back to the cellar forge when the interaction object is unavailable.
+     */
+    private fun stationOf(p: Player): Tile {
+        val tile = try { p.getInteractingGameObj().tile } catch (e: Exception) { null }
+        return tile ?: p.attr[STATION_ATTR] ?: furnaceTile
+    }
+
     // ---------------------------------- window push ----------------------------------
 
     /** Push the smelt recipe list and pulse the window open (kind 1 = furnace). */
-    private fun openFurnace(p: Player) {
+    private fun openFurnace(p: Player, station: Tile) {
+        p.attr[STATION_ATTR] = station
         p.message("${PREFIX}H|1|Furnace|${bars.size}", ChatMessageType.CONSOLE)
         bars.forEachIndexed { i, b ->
             val sb = StringBuilder(PREFIX)
@@ -124,13 +162,31 @@ class SmithingPlugin(
         pulse(p, kind = 1)
     }
 
+    /**
+     * Clicking the anvil's own "Smith" option carries no bar, so pick the best metal the player
+     * is actually carrying (highest smithing level they can use), the way the real anvil would.
+     */
+    private fun openAnvilAuto(p: Player, station: Tile) {
+        val level = p.getSkills().getCurrentLevel(Skills.SMITHING)
+        val best = metalByBar.entries
+            .filter { res(it.key) && p.inventory.contains(getRSCM(it.key)) }
+            .filter { it.value.second <= level }
+            .maxByOrNull { it.value.second }
+        if (best == null) {
+            p.message("You have no bars you can smith here.")
+            return
+        }
+        openAnvil(p, best.key, station)
+    }
+
     /** Push the smith recipe list for [barKey]'s metal and pulse the window open (kind 2 = anvil). */
-    private fun openAnvil(p: Player, barKey: String) {
+    private fun openAnvil(p: Player, barKey: String, station: Tile) {
         val (metal, baseLevel) = metalByBar[barKey] ?: return
         if (!p.inventory.contains(getRSCM("item.hammer"))) {
             p.message("You need a hammer to work the metal.")
             return
         }
+        p.attr[STATION_ATTR] = station
         val barId = getRSCM(barKey)
         val makeable = pieces.mapNotNull { piece -> resOrNull("item.${metal}_${piece.key}")?.let { it to piece } }
         if (makeable.isEmpty()) return
@@ -158,9 +214,13 @@ class SmithingPlugin(
      * anywhere, but production only ever happens AT the furnace/anvil.
      */
     private fun make(p: Player, resultId: Int, qty: Int) {
+        // Validate against the station the window was OPENED at, not a hard-coded tile: the
+        // furnace/anvil object ids exist all over the world, so a fixed cellar tile silently
+        // refused every other forge.
+        val station = p.attr[STATION_ATTR]
         bars.firstOrNull { resOrNull(it.bar) == resultId }?.let { bar ->
-            if (!p.tile.isWithinRadius(furnaceTile, STATION_RADIUS)) {
-                p.message("You need to be at the furnace to smelt.")
+            if (station == null || !p.tile.isWithinRadius(station, STATION_RADIUS)) {
+                p.message("You need to be at a furnace to smelt.")
                 return
             }
             p.queue { smelt(this, p, bar, qty) }
@@ -170,7 +230,7 @@ class SmithingPlugin(
             val (metal, baseLevel) = metalInfo
             for (piece in pieces) {
                 if (resOrNull("item.${metal}_${piece.key}") == resultId) {
-                    if (anvilTiles.none { p.tile.isWithinRadius(it, STATION_RADIUS) }) {
+                    if (station == null || !p.tile.isWithinRadius(station, STATION_RADIUS)) {
                         p.message("You need to be at an anvil to smith.")
                         return
                     }
@@ -247,5 +307,8 @@ class SmithingPlugin(
 
         /** How close a `::make` must be to its station (the furnace block is 3x3 from its SW tile). */
         const val STATION_RADIUS = 6
+
+        /** The station tile the making window was last opened at (see [make]). */
+        val STATION_ATTR = AttributeKey<Tile>()
     }
 }
