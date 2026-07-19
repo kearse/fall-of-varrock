@@ -176,7 +176,8 @@ Reusable pieces — reach for these before inventing a new one. Metrics above.
     title ordinal + 1)** · **4619 recruit menu (packed: open|count|cap|title)** · 4620-4623 Castle Wars ·
     **4624 supply depot** · **4625 making window (payload = kind)** · **4626 war contracts** ·
     **4627 war forge** · **4628 dice (open / result: bit9 flag, roll bits 1-7, win bit 8)** ·
-    **4629 bond exchange (packed: open|tradeable|claimed)** · **4630 duel rules**.
+    **4629 bond exchange (packed: open|tradeable|claimed)** · **4630 duel rules** ·
+    **4631 mire dispenser (packed: open|data|attuned|bank|streak)**.
     (4601/4609/4616 all feed the `lofdials` dial row.)
   - *Large state* (item lists): **read the existing interface's widgets** (`client.getWidget(group,
     child)` → `getDynamicChildren()`), null-guarded. No custom packet.
@@ -223,6 +224,7 @@ Reusable pieces — reach for these before inventing a new one. Metrics above.
 | `lofforge` | Modal (recipes) | 480×400 | varp 4627 + `~LOFFORGE~` recipes + `::forge` |
 | `lofdice` | Modal (table) | 480×400 | varp 4628 (open/result) + `::dice roll` + inventory coins |
 | `lofbonds` | Modal (wallet) | 480×400 | varp 4629 (packed wallet) + `::bond` |
+| `lofmire` | Modal (loot table) | 480×400 | varp 4631 (packed) + `::mire` + inventory coins |
 | `lofduel` (rules) | Modal | 480×400 | varp 4630 + `::duel` |
 | `lofstake` | Modal (inventory-clear) | 480×400, viewport-left | read iface 335 + `::stake` |
 | `lofdials` | HUD dial row | content, ABOVE_CHATBOX_RIGHT | varps 4616 slayer · 4601 progress · 4609 supplies |
