@@ -14,6 +14,7 @@ import org.alter.game.model.entity.debugMagicSpells
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
 import org.alter.plugins.content.combat.Combat
+import org.alter.plugins.content.combat.CombatConfigs
 import org.alter.plugins.content.magic.MagicSpells
 import org.alter.plugins.content.magic.SpellMetadata
 
@@ -59,7 +60,13 @@ class CombatSpellsPlugin(
             // loop (CombatPlugin) re-applies CASTING_SPELL each attack while this varbit is
             // non-zero, and clearStaleAutocast() clears it when a non-magic weapon is equipped.
             // Result: cast once -> keep casting that spell, instead of re-clicking every tick.
-            player.setVarbit(Combat.SELECTED_AUTOCAST_VARBIT, combatSpell.autoCastId)
+            //
+            // Only staves auto-cast (OSRS rule), so with anything else wielded this stays a
+            // single manual cast: CASTING_SPELL above still routes it through the magic
+            // strategy, it just isn't re-armed on the next attack.
+            if (CombatConfigs.canAutocast(player)) {
+                player.setVarbit(Combat.SELECTED_AUTOCAST_VARBIT, combatSpell.autoCastId)
+            }
             player.attack(pawn)
         } else {
             // Not a damage spell — dispatch to the non-damaging combat-spell effects (Tele Block,
