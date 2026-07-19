@@ -34,6 +34,7 @@ import org.alter.plugins.content.interfaces.attack.AttackTab
 import org.alter.plugins.content.kits.KitArmoury
 import org.alter.plugins.content.kits.KitEditor
 import org.alter.plugins.content.kits.KitSetup
+import org.alter.plugins.content.raids.RaidInstance
 import org.alter.plugins.content.war.WarNpcNames
 import org.alter.rscm.RSCM.getRSCM
 import org.bson.Document
@@ -82,6 +83,8 @@ class PkTrainingArenaPlugin(
         var diff: Diff = Diff.MEDIUM
         var loadout: BotLoadout = BotLoadouts.CLASSIC_HYBRID
         var bot: PkBot? = null
+        /** This bout's private instanced copy of the NW pit (one per bout, like duels). */
+        var instance: RaidInstance? = null
         var fighting = false // false during the countdown; true once "FIGHT!" is called
         var countdown = 0    // arena-ticks left before the fight starts
         // The player's own respawn override, saved so the arena's EXIT-respawn can be undone for
@@ -169,8 +172,12 @@ class PkTrainingArenaPlugin(
     private fun tick(s: Session) {
         val p = s.player
         if (p.index < 0) { hardCleanup(s); return } // vanished without a clean logout
-        // Walked/teleported out of the arena → hand the kit back and drop the bot.
-        if (!ARENA.contains(p.tile)) { endBout(p); return }
+        // Left the fight? Mid-bout the player belongs in their private pit instance (the real
+        // grounds are also fine — a death drops them at EXIT_TILE a beat before endRound runs);
+        // between rounds they belong on the arena grounds. Anywhere else → kit back, bot gone.
+        val inPit = s.instance?.contains(p.tile) == true
+        val whereTheyBelong = ARENA.contains(p.tile) || (s.bot != null && inPit)
+        if (!whereTheyBelong) { endBout(p); return }
         val bot = s.bot ?: return // between rounds — waiting at the trainer
 
         // Countdown phase: the bot stands across from you, passive, until "FIGHT!".
@@ -284,13 +291,28 @@ class PkTrainingArenaPlugin(
         p.message("<col=801700>Train hard.</col> Your kit is loaned — you keep nothing. Leave the arena or ::unkit to hand it back.")
     }
 
-    /** Start one bout, duel-style: teleport in, face your opponent across the floor, countdown, fight. */
+    /** Start one bout, duel-style: teleport into a private pit, countdown, fight. */
     private fun startBout(p: Player, custom: KitSetup?, diff: Diff) {
+        // One instanced NW pit PER BOUT (mirrors the staked duels' NE-pit instances): every trainee
+        // fights in their own copy, so the whole server can train at once. autoDeallocate is OFF —
+        // the sparring bot is a real Player standing inside; endRound/endBout empty the pit and the
+        // allocator's idle scan reclaims it. Its exit tile backstops any unhandled path out.
+        val instance = RaidInstance.allocate(world, PIT_SOURCE, exitTile = EXIT_TILE, owner = p.uid, autoDeallocate = false)
+        if (instance == null) {
+            p.message("<col=801700>Every training pit is in use — give it a moment and talk to $TRAINER_NAME again.</col>")
+            // Hand back the already-applied loaner kit. On a first-ever bout there is no session
+            // yet (endBout would no-op), so restore the stash directly.
+            if (sessionOf(p) != null) endBout(p)
+            else if (p.attr[PK_ARENA_STASH_ATTR] != null) restoreLoaner(p)
+            return
+        }
+
         val s = sessionOf(p) ?: Session(p).also { sessions += it }
         s.custom = custom
         s.diff = diff
         s.loadout = botLoadout(custom, diff)
         s.bot?.let { BotManager.despawn(world, it) } // clear any existing partner before the new one
+        s.instance = instance
 
         // Respawn at the trainer while training (a death mid-bout lands you back at the exit, not
         // your home city). Loaner kits already stashed the real override; save it here for BYO.
@@ -300,11 +322,11 @@ class PkTrainingArenaPlugin(
         }
         p.attr[RESPAWN_TILE_ATTR] = EXIT_TILE.coordinate
 
-        // Into the arena, opponent across the floor — just like a real duel.
-        p.moveTo(BOUT_PLAYER_TILE)
+        // Into the private pit, opponent across the floor — just like a real duel.
+        p.moveTo(instance.translate(BOUT_PLAYER_TILE))
         p.setCurrentHp(p.getMaxHp())
         AttackTab.setEnergy(p, 100)
-        s.bot = spawnSparBot(p, s.loadout, BOUT_BOT_TILE)
+        s.bot = spawnSparBot(p, s.loadout, instance.translate(BOUT_BOT_TILE))
         s.fighting = false
         s.countdown = COUNTDOWN_STEPS
         TrainingArena.setInBout(p, true) // companions stand down while the bout runs
@@ -339,6 +361,7 @@ class PkTrainingArenaPlugin(
         s.bot?.let { if (it.index >= 0) BotManager.despawn(world, it) }
         s.bot = null
         s.fighting = false
+        s.instance = null // emptied below — the allocator's idle scan reclaims the pit
         val p = s.player
         TrainingArena.setInBout(p, false)
         if (p.index < 0) return
@@ -356,6 +379,10 @@ class PkTrainingArenaPlugin(
         s.bot?.let { BotManager.despawn(world, it) }
         sessions.remove(s)
         TrainingArena.setInBout(p, false)
+        // ::unkit (or any mid-bout end) can fire while the player still stands in the pit
+        // instance — walk them out so the pit empties and the allocator reclaims it.
+        if (p.index >= 0 && s.instance?.contains(p.tile) == true) p.moveTo(EXIT_TILE)
+        s.instance = null
         if (p.attr[PK_ARENA_STASH_ATTR] != null) {
             restoreLoaner(p) // restores the real respawn override from the stash too
         } else {
@@ -376,6 +403,7 @@ class PkTrainingArenaPlugin(
         s.bot?.let { BotManager.despawn(world, it) }
         sessions.remove(s)
         TrainingArena.setInBout(s.player, false)
+        s.instance = null // pit is empty now (bot gone, player vanished) — idle scan reclaims it
     }
 
     // ───────────────────────────── loaner kit (stash / apply / restore) ─────────────────────────────
@@ -509,10 +537,15 @@ class PkTrainingArenaPlugin(
         val TRAINER_TILE = Tile(3367, 3269, 0)
         const val TRAINER_REGION = 13363 // (3367 shr 6 shl 8) or (3269 shr 6)
 
-        // Duel-style bout in the NORTH-WEST fight pit (mapdump-verified: region 13362, pit interior
-        // x3334..3351 z3246..3258, row z3251 fully clear of walls/objects). The staked duels use the
-        // NE pit, so training and stakes never share a floor. Whoever dies sends the trainee back to
-        // EXIT_TILE beside the trainer (mapdump-verified walkable, region 13363 lobby).
+        // Bouts fight in a PRIVATE INSTANCED COPY of the NORTH-WEST pit (mapdump-verified: region
+        // 13362, pit interior x3334..3351 z3246..3258, row z3251 fully clear of walls/objects) —
+        // one instance per bout, mirroring the staked duels' NE-pit instances. PIT_SOURCE is the
+        // chunk-aligned 4x3-chunk template including the pit's enclosing walls; everything beyond
+        // the copied chunks is collision-blocked inside the instance, so nobody walks out mid-bout.
+        // Whoever dies sends the trainee back to EXIT_TILE beside the trainer (mapdump-verified
+        // walkable, region 13363 lobby) — also each instance's fallback exit tile.
+        val PIT_SOURCE = Area(3328, 3240, 3359, 3263)
+        // Spawn tiles in SOURCE coordinates — translated into the allocated instance per bout.
         val BOUT_PLAYER_TILE = Tile(3339, 3251, 0)
         val BOUT_BOT_TILE = Tile(3347, 3251, 0)
         val EXIT_TILE = Tile(3368, 3269, 0) // beside the trainer — round-end + death respawn

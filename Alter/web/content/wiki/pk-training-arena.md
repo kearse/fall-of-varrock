@@ -26,11 +26,12 @@ He offers you two ways to fight:
   your own bank anywhere with `::kits`, see below).
 - **Bring your own gear** - spar in your own setup.
 
-Then the bout runs **just like a real duel**:
-you're teleported onto the arena floor with your opponent standing across from you, a
-**3... 2... 1... FIGHT!** countdown, then it's live. When one of you falls, you're teleported back
-to Ardan, healed and ready. Talk to him for **another round** (same setup in one click), a new
-setup, or to hand the kit back.
+Then the bout runs **just like a real duel**: you're teleported into a **private copy of the
+fight pit** — every trainee gets their own, so the whole server can train at once and nobody can
+walk in on your lesson — with your opponent standing across from you, a **3... 2... 1... FIGHT!**
+countdown, then it's live. When one of you falls, you're teleported back to Ardan, healed and
+ready. Talk to him for **another round** (same setup in one click), a new setup, or to hand the
+kit back.
 
 ## The rules that make it safe
 
