@@ -253,6 +253,16 @@ class OptionsTabFirstPlugin(
         onButton(interfaceId = OptionsTab.ALL_SETTINGS_INTERFACE_ID, component = Settings.SETTINGS_CLOSE_BUTTON_ID) {
             player.closeInterface(OptionsTab.ALL_SETTINGS_INTERFACE_ID)
         }
+
+        /**
+         * The settings search box takes over the client's text-input layer. Closing the
+         * interface alone doesn't hand typing back to the chatbox, so the player is left
+         * unable to chat until they re-log. Abort the input dialog on every close path
+         * ('x' button and esc alike).
+         */
+        onInterfaceClose(OptionsTab.ALL_SETTINGS_INTERFACE_ID) {
+            player.closeInputDialog()
+        }
     }
 
 fun bind_setting(
