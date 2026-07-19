@@ -29,13 +29,10 @@ jobs:
         include:
           - os: windows-latest
             type: exe
-            out: "Fall of Varrock-1.0.0.exe"
           - os: macos-latest
             type: dmg
-            out: "Fall of Varrock-1.0.0.dmg"
           - os: ubuntu-latest
             type: app-image
-            out: "linux-app-image"
     runs-on: ${{ matrix.os }}
     steps:
       - name: Install JDK 21 (runs jpackage)
