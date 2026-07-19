@@ -293,6 +293,13 @@ public class ClientUI
 		// missed-grab state; a sidebar field the player is typing in owns focus and is left be.
 		SwingUtilities.invokeLater(this::reclaimLostFocus);
 
+		// The login screen is where a player first tries to type, so record the focus state there:
+		// it is the moment a "cannot type in username/password" report is actually about.
+		if (event.getGameState() == GameState.LOGIN_SCREEN)
+		{
+			SwingUtilities.invokeLater(() -> logFocusState("login screen"));
+		}
+
 		if (event.getGameState() != GameState.LOGGED_IN || !(client instanceof Client) || !config.usernameInTitle())
 		{
 			return;
@@ -702,6 +709,9 @@ public class ClientUI
 			frame.setResizable(!config.lockWindowSize());
 			frame.toFront();
 			requestFocus();
+			// Right after the one initial grab: a MISSING canvas here is the startup race that
+			// leaves the game unable to receive a single keystroke for the whole session.
+			logFocusState("startup");
 			log.debug("Showing frame {}", frame);
 			frame.revalidateMinimumSize();
 			// this must run after the native window border is installed on the window
@@ -1218,8 +1228,30 @@ public class ClientUI
 	{
 		if (frame != null && frame.isFocused() && frame.getFocusOwner() == null)
 		{
+			log.info("Nothing held keyboard focus; handing it back to the game.");
 			giveClientFocus();
 		}
+	}
+
+	/**
+	 * Record whether the game can receive keystrokes at all.
+	 * <p>
+	 * Keyboard input reaches the game only when its heavyweight canvas owns Swing focus; mouse
+	 * input does not need it. That asymmetry produces "I can click but not type" reports, and it
+	 * used to leave no trace whatsoever in the log, so diagnosing one cost several rounds of
+	 * asking a player to try things. Logging the state that actually decides it -- canvas exists,
+	 * canvas holds focus, and who holds it otherwise -- makes the next one readable from the log.
+	 */
+	private void logFocusState(String when)
+	{
+		final Canvas canvas = client instanceof Client ? ((Client) client).getCanvas() : null;
+		final Component owner = frame == null ? null : frame.getFocusOwner();
+		log.info("Keyboard focus [{}]: canvas={}, canvasHasFocus={}, frameFocused={}, focusOwner={}",
+			when,
+			canvas == null ? "MISSING" : "present",
+			canvas != null && canvas.isFocusOwner(),
+			frame != null && frame.isFocused(),
+			owner == null ? "none" : owner.getClass().getSimpleName());
 	}
 
 	/**
