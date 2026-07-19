@@ -31,6 +31,10 @@ import org.alter.plugins.content.bots.PkBot
 import org.alter.plugins.content.combat.SafeDeaths
 import org.alter.plugins.content.combat.getCombatTarget
 import org.alter.plugins.content.interfaces.attack.AttackTab
+import org.alter.plugins.content.kits.KitArmoury
+import org.alter.plugins.content.kits.KitEditor
+import org.alter.plugins.content.kits.KitSetup
+import org.alter.plugins.content.raids.RaidInstance
 import org.alter.plugins.content.war.WarNpcNames
 import org.alter.rscm.RSCM.getRSCM
 import org.bson.Document
@@ -41,10 +45,12 @@ private val logger = KotlinLogging.logger {}
  * **PK Training Arena** (Duel Arena) — a *sparring ground*, not Last Man Standing.
  *
  * A battle-scarred mercenary trainer stands at the Duel Arena and teaches the fundamentals of PKing
- * (1-ticking, spec timing, PID, prayer/gear switching, vengeance). Talk to him to be **loaned** a
- * full preset kit — a **Dharok's** set (with veng) or an **NH** tribrid set — or to **bring your own
- * gear**. Then he summons a **matching sparring bot** (a real [PkBot] fake-player with the full NH
- * brain) at your chosen difficulty so there is *always* someone to fight, even at zero players online.
+ * (1-ticking, spec timing, PID, prayer/gear switching, vengeance). Talk to him to open the **kit
+ * locker** — the LMS-style [KitEditor]: start from a **Dharok's** or **NH tribrid** preset, edit
+ * any slot from the armoury, save up to three custom kits — and be **loaned** the built kit; or
+ * **bring your own gear**. Then he summons a **matching sparring bot** (a real [PkBot] fake-player
+ * with the full NH brain) at your chosen difficulty so there is *always* someone to fight, even at
+ * zero players online.
  *
  * Design guarantees:
  *  - **You keep nothing.** Loaner gear is handed back the instant you leave the arena / log out / pick
@@ -67,26 +73,18 @@ class PkTrainingArenaPlugin(
     server: Server,
 ) : KotlinPlugin(r, world, server) {
 
-    /** Which preset a trainee picked. */
-    private enum class KitType { DHAROK, NH, BRING_OWN }
-
     /** Difficulty band the trainee chose for the sparring bot. */
     private enum class Diff { EASY, MEDIUM, HARD }
 
-    /** A loaner preset: worn gear + carried inventory, and whether it wants Lunar+veng set up. */
-    private class Kit(
-        val label: String,
-        val gear: Map<EquipmentType, String>,
-        val inventory: List<Pair<String, Int>>,
-        val lunarForVeng: Boolean,
-    )
-
     /** One trainee's live session — their chosen kit/difficulty and their current sparring bot. */
     private class Session(val player: Player) {
-        var kit: KitType = KitType.BRING_OWN
+        /** The loaner kit built in the kit editor, or null = bring-your-own gear. */
+        var custom: KitSetup? = null
         var diff: Diff = Diff.MEDIUM
         var loadout: BotLoadout = BotLoadouts.CLASSIC_HYBRID
         var bot: PkBot? = null
+        /** This bout's private instanced copy of the NW pit (one per bout, like duels). */
+        var instance: RaidInstance? = null
         var fighting = false // false during the countdown; true once "FIGHT!" is called
         var countdown = 0    // arena-ticks left before the fight starts
         // The player's own respawn override, saved so the arena's EXIT-respawn can be undone for
@@ -174,8 +172,12 @@ class PkTrainingArenaPlugin(
     private fun tick(s: Session) {
         val p = s.player
         if (p.index < 0) { hardCleanup(s); return } // vanished without a clean logout
-        // Walked/teleported out of the arena → hand the kit back and drop the bot.
-        if (!ARENA.contains(p.tile)) { endBout(p); return }
+        // Left the fight? Mid-bout the player belongs in their private pit instance (the real
+        // grounds are also fine — a death drops them at EXIT_TILE a beat before endRound runs);
+        // between rounds they belong on the arena grounds. Anywhere else → kit back, bot gone.
+        val inPit = s.instance?.contains(p.tile) == true
+        val whereTheyBelong = ARENA.contains(p.tile) || (s.bot != null && inPit)
+        if (!whereTheyBelong) { endBout(p); return }
         val bot = s.bot ?: return // between rounds — waiting at the trainer
 
         // Countdown phase: the bot stands across from you, passive, until "FIGHT!".
@@ -222,7 +224,7 @@ class PkTrainingArenaPlugin(
         if (s != null && s.bot == null) {
             chatNpc(p, "Back for more? Good. Same setup, or something new?", npc = id, title = TRAINER_NAME)
             when (options(p, "Another round — same setup.", "Change my setup.", "I'm done.", "Nothing.")) {
-                1 -> { startTraining(p, s.kit, s.diff); return }
+                1 -> { startTraining(p, s.custom, s.diff); return }
                 2 -> { /* fall through to the full menu below */ }
                 3 -> { endBout(p); chatNpc(p, "Wise to know when to stop. Come back when your blood's up.", npc = id, title = TRAINER_NAME); return }
                 else -> return
@@ -231,57 +233,86 @@ class PkTrainingArenaPlugin(
             chatNpc(p, "So you want to learn to PK. Good. In here nothing you touch is yours to keep, and dying costs you nothing — so stop being precious and fight.", npc = id, title = TRAINER_NAME)
         }
         when (options(p,
-            "Kit me for a Dharok's fight.",
-            "Kit me for an NH fight.",
+            "Open the kit locker.",
             "I'll bring my own gear.",
             "How does this work?",
             "Not now.",
         )) {
-            1 -> chooseDifficulty(p, KitType.DHAROK)
-            2 -> chooseDifficulty(p, KitType.NH)
-            3 -> chooseDifficulty(p, KitType.BRING_OWN)
-            4 -> {
-                chatNpc(p, "Pick a kit — Dharok's or a full NH switch set — or bring your own. I'll hand it to you and set a sparring partner on you. Beat him, die to him, doesn't matter. Learn the tempo.", npc = id, title = TRAINER_NAME)
+            1 -> openKitLocker(p)
+            2 -> chooseDifficulty(p)
+            3 -> {
+                chatNpc(p, "My kit locker has the lot — Dharok's, full NH switch sets, or build your own loadout piece by piece and save it. I hand it to you and set a sparring partner on you. Beat him, die to him, doesn't matter. Learn the tempo.", npc = id, title = TRAINER_NAME)
                 chatNpc(p, "One-tick your combos. Switch off his prayer. Time your spec. Vengeance when he specs you. When you're done, walk out — the gear stays with me.", npc = id, title = TRAINER_NAME)
             }
-            5 -> chatPlayer(p, "Maybe later.")
+            4 -> chatPlayer(p, "Maybe later.")
         }
     }
 
-    private suspend fun QueueTask.chooseDifficulty(p: Player, kit: KitType) {
+    /** Open the kit editor in TRAINING mode — "Start bout" loans the built kit and starts the fight. */
+    private fun openKitLocker(p: Player) {
+        if (KitEditor.isOpen(p)) return
+        KitEditor.open(p, KitEditor.Mode.TRAINING, onStart = { kit, diffIndex ->
+            // The editor is an overlay, so the player can wander while it's open — a bout only
+            // starts if they're still on the arena grounds (no teleport-from-anywhere entry).
+            if (!ARENA.contains(p.tile)) {
+                p.message("Come back to the arena when you're ready — $TRAINER_NAME keeps your kit warm.")
+            } else {
+                val diff = when (diffIndex) { 0 -> Diff.EASY; 2 -> Diff.HARD; else -> Diff.MEDIUM }
+                startTraining(p, kit, diff)
+            }
+        })
+    }
+
+    /** Bring-your-own path — no kit screen, just pick the sparring partner's difficulty. */
+    private suspend fun QueueTask.chooseDifficulty(p: Player) {
         val diff = when (options(p, "Easy — a beginner (won't pray, panics early).", "Medium — a solid PKer.", "Hard — a maxed sweat.", "Back.")) {
             1 -> Diff.EASY
             2 -> Diff.MEDIUM
             3 -> Diff.HARD
             else -> return
         }
-        startTraining(p, kit, diff)
+        startTraining(p, custom = null, diff = diff)
     }
 
     // ───────────────────────────── training lifecycle ─────────────────────────────
 
-    private fun startTraining(p: Player, kit: KitType, diff: Diff) {
+    private fun startTraining(p: Player, custom: KitSetup?, diff: Diff) {
         // Undo any session (BYO) respawn override BEFORE stashing a kit, so the stash captures the
         // player's REAL respawn — not the arena's exit tile from an earlier bring-your-own round.
         sessionOf(p)?.let { restoreSessionRespawn(p, it) }
-        when (kit) {
+        if (custom == null) {
             // "Bring your own" fights in real gear — if they were previously loaned a kit, give their
             // real gear back first so they aren't sparring in borrowed armour.
-            KitType.BRING_OWN -> if (p.attr[PK_ARENA_STASH_ATTR] != null) restoreLoaner(p)
-            KitType.DHAROK -> applyLoaner(p, DHAROK_KIT)
-            KitType.NH -> applyLoaner(p, NH_KIT)
+            if (p.attr[PK_ARENA_STASH_ATTR] != null) restoreLoaner(p)
+        } else {
+            applyLoaner(p, custom)
         }
-        startBout(p, kit, diff)
+        startBout(p, custom, diff)
         p.message("<col=801700>Train hard.</col> Your kit is loaned — you keep nothing. Leave the arena or ::unkit to hand it back.")
     }
 
-    /** Start one bout, duel-style: teleport in, face your opponent across the floor, countdown, fight. */
-    private fun startBout(p: Player, kit: KitType, diff: Diff) {
+    /** Start one bout, duel-style: teleport into a private pit, countdown, fight. */
+    private fun startBout(p: Player, custom: KitSetup?, diff: Diff) {
+        // One instanced NW pit PER BOUT (mirrors the staked duels' NE-pit instances): every trainee
+        // fights in their own copy, so the whole server can train at once. autoDeallocate is OFF —
+        // the sparring bot is a real Player standing inside; endRound/endBout empty the pit and the
+        // allocator's idle scan reclaims it. Its exit tile backstops any unhandled path out.
+        val instance = RaidInstance.allocate(world, PIT_SOURCE, exitTile = EXIT_TILE, owner = p.uid, autoDeallocate = false)
+        if (instance == null) {
+            p.message("<col=801700>Every training pit is in use — give it a moment and talk to $TRAINER_NAME again.</col>")
+            // Hand back the already-applied loaner kit. On a first-ever bout there is no session
+            // yet (endBout would no-op), so restore the stash directly.
+            if (sessionOf(p) != null) endBout(p)
+            else if (p.attr[PK_ARENA_STASH_ATTR] != null) restoreLoaner(p)
+            return
+        }
+
         val s = sessionOf(p) ?: Session(p).also { sessions += it }
-        s.kit = kit
+        s.custom = custom
         s.diff = diff
-        s.loadout = botLoadout(kit, diff)
+        s.loadout = botLoadout(custom, diff)
         s.bot?.let { BotManager.despawn(world, it) } // clear any existing partner before the new one
+        s.instance = instance
 
         // Respawn at the trainer while training (a death mid-bout lands you back at the exit, not
         // your home city). Loaner kits already stashed the real override; save it here for BYO.
@@ -291,11 +322,11 @@ class PkTrainingArenaPlugin(
         }
         p.attr[RESPAWN_TILE_ATTR] = EXIT_TILE.coordinate
 
-        // Into the arena, opponent across the floor — just like a real duel.
-        p.moveTo(BOUT_PLAYER_TILE)
+        // Into the private pit, opponent across the floor — just like a real duel.
+        p.moveTo(instance.translate(BOUT_PLAYER_TILE))
         p.setCurrentHp(p.getMaxHp())
         AttackTab.setEnergy(p, 100)
-        s.bot = spawnSparBot(p, s.loadout, BOUT_BOT_TILE)
+        s.bot = spawnSparBot(p, s.loadout, instance.translate(BOUT_BOT_TILE))
         s.fighting = false
         s.countdown = COUNTDOWN_STEPS
         TrainingArena.setInBout(p, true) // companions stand down while the bout runs
@@ -330,6 +361,7 @@ class PkTrainingArenaPlugin(
         s.bot?.let { if (it.index >= 0) BotManager.despawn(world, it) }
         s.bot = null
         s.fighting = false
+        s.instance = null // emptied below — the allocator's idle scan reclaims the pit
         val p = s.player
         TrainingArena.setInBout(p, false)
         if (p.index < 0) return
@@ -347,6 +379,10 @@ class PkTrainingArenaPlugin(
         s.bot?.let { BotManager.despawn(world, it) }
         sessions.remove(s)
         TrainingArena.setInBout(p, false)
+        // ::unkit (or any mid-bout end) can fire while the player still stands in the pit
+        // instance — walk them out so the pit empties and the allocator reclaims it.
+        if (p.index >= 0 && s.instance?.contains(p.tile) == true) p.moveTo(EXIT_TILE)
+        s.instance = null
         if (p.attr[PK_ARENA_STASH_ATTR] != null) {
             restoreLoaner(p) // restores the real respawn override from the stash too
         } else {
@@ -367,39 +403,38 @@ class PkTrainingArenaPlugin(
         s.bot?.let { BotManager.despawn(world, it) }
         sessions.remove(s)
         TrainingArena.setInBout(s.player, false)
+        s.instance = null // pit is empty now (bot gone, player vanished) — idle scan reclaims it
     }
 
     // ───────────────────────────── loaner kit (stash / apply / restore) ─────────────────────────────
 
     /**
-     * Dress the player in a loaner [kit]. Their REAL inventory/equipment/spellbook/respawn/Magic-level
-     * are stashed FIRST (only if not already — so switching kits mid-session doesn't stash loaner gear),
-     * so nothing is lost. Magic is boosted + the Lunar book set so anyone can practise Vengeance.
+     * Dress the player in a loaner [kit] (built in the kit editor). Their REAL inventory/equipment/
+     * spellbook/respawn/Magic-level are stashed FIRST (only if not already — so switching kits
+     * mid-session doesn't stash loaner gear), so nothing is lost. The kit's chosen spellbook is set;
+     * Lunar boosts Magic so anyone can practise Vengeance.
      */
-    private fun applyLoaner(p: Player, kit: Kit) {
+    private fun applyLoaner(p: Player, kit: KitSetup) {
         stashIfNeeded(p)
         wipeContainers(p)
-        kit.gear.forEach { (slot, name) ->
-            runCatching { p.equipment[slot.id] = Item(getRSCM(name)) }
-                .onFailure { logger.warn { "pktrain: bad gear rscm '$name': ${it.message}" } }
+        kit.gear.forEach { (slotId, item) ->
+            if (slotId < p.equipment.capacity) p.equipment[slotId] = Item(item.id, item.amount)
         }
-        var slot = 0
-        for ((name, amt) in kit.inventory) {
-            if (slot >= p.inventory.capacity) break
-            val idx = slot
-            runCatching { p.inventory[idx] = Item(getRSCM(name), amt) }
-                .onFailure { logger.warn { "pktrain: bad inventory rscm '$name': ${it.message}" } }
-            slot++
+        kit.inv.forEach { (slot, item) ->
+            if (slot < p.inventory.capacity) p.inventory[slot] = Item(item.id, item.amount)
         }
         p.calculateBonuses()
         val weapon = p.equipment[EquipmentType.WEAPON.id]
         p.setVarbit(Varbit.WEAPON_TYPE_VARBIT, if (weapon != null) weapon.getDef().weaponType else 0)
         PlayerInfo(p).syncAppearance()
-        if (kit.lunarForVeng) {
-            p.setSpellbook(Spellbook.LUNAR)
-            if (p.getSkills().getCurrentLevel(Skills.MAGIC) < VENG_MAGIC) {
-                p.getSkills().setCurrentLevel(Skills.MAGIC, VENG_MAGIC) // training affordance: veng at any level
-            }
+        val book = when (kit.book) {
+            KitSetup.BOOK_ANCIENTS -> Spellbook.ANCIENTS
+            KitSetup.BOOK_LUNAR -> Spellbook.LUNAR
+            else -> Spellbook.NORMAL
+        }
+        p.setSpellbook(book)
+        if (book == Spellbook.LUNAR && p.getSkills().getCurrentLevel(Skills.MAGIC) < VENG_MAGIC) {
+            p.getSkills().setCurrentLevel(Skills.MAGIC, VENG_MAGIC) // training affordance: veng at any level
         }
         // (The EXIT-tile respawn override is set per-bout in startBout; the stash above already
         // captured the player's real override for restore.)
@@ -468,18 +503,24 @@ class PkTrainingArenaPlugin(
 
     // ───────────────────────────── difficulty → sparring loadout ─────────────────────────────
 
-    /** Map the trainee's picked kit + difficulty to a bot loadout (reusing the tuned bot presets). */
-    private fun botLoadout(kit: KitType, diff: Diff): BotLoadout = when (kit) {
-        KitType.DHAROK -> when (diff) {
-            Diff.EASY -> BotLoadouts.DHAROK_MID.copy(usesPrayer = false, eatAt = 0.6)
-            Diff.MEDIUM -> BotLoadouts.DHAROK_MID
-            Diff.HARD -> BotLoadouts.DHAROK_DHER
-        }
-        // NH and Bring-Your-Own both face an authentic NH opponent.
-        KitType.NH, KitType.BRING_OWN -> when (diff) {
-            Diff.EASY -> BotLoadouts.CLASSIC_HYBRID.copy(usesPrayer = false, eatAt = 0.7)
-            Diff.MEDIUM -> BotLoadouts.CLASSIC_HYBRID
-            Diff.HARD -> BotLoadouts.ELITE_NH
+    /** Map the trainee's kit + difficulty to a bot loadout (reusing the tuned bot presets). */
+    private fun botLoadout(custom: KitSetup?, diff: Diff): BotLoadout {
+        // A Dharok's-axe kit gets a Dharok's opponent; everything else (NH kits, bring-your-own)
+        // faces an authentic NH opponent.
+        val dharok = custom?.gear?.get(EquipmentType.WEAPON.id)?.id ==
+            runCatching { getRSCM("item.dharoks_greataxe") }.getOrNull()
+        return if (dharok) {
+            when (diff) {
+                Diff.EASY -> BotLoadouts.DHAROK_MID.copy(usesPrayer = false, eatAt = 0.6)
+                Diff.MEDIUM -> BotLoadouts.DHAROK_MID
+                Diff.HARD -> BotLoadouts.DHAROK_DHER
+            }
+        } else {
+            when (diff) {
+                Diff.EASY -> BotLoadouts.CLASSIC_HYBRID.copy(usesPrayer = false, eatAt = 0.7)
+                Diff.MEDIUM -> BotLoadouts.CLASSIC_HYBRID
+                Diff.HARD -> BotLoadouts.ELITE_NH
+            }
         }
     }
 
@@ -496,10 +537,15 @@ class PkTrainingArenaPlugin(
         val TRAINER_TILE = Tile(3367, 3269, 0)
         const val TRAINER_REGION = 13363 // (3367 shr 6 shl 8) or (3269 shr 6)
 
-        // Duel-style bout in the NORTH-WEST fight pit (mapdump-verified: region 13362, pit interior
-        // x3334..3351 z3246..3258, row z3251 fully clear of walls/objects). The staked duels use the
-        // NE pit, so training and stakes never share a floor. Whoever dies sends the trainee back to
-        // EXIT_TILE beside the trainer (mapdump-verified walkable, region 13363 lobby).
+        // Bouts fight in a PRIVATE INSTANCED COPY of the NORTH-WEST pit (mapdump-verified: region
+        // 13362, pit interior x3334..3351 z3246..3258, row z3251 fully clear of walls/objects) —
+        // one instance per bout, mirroring the staked duels' NE-pit instances. PIT_SOURCE is the
+        // chunk-aligned 4x3-chunk template including the pit's enclosing walls; everything beyond
+        // the copied chunks is collision-blocked inside the instance, so nobody walks out mid-bout.
+        // Whoever dies sends the trainee back to EXIT_TILE beside the trainer (mapdump-verified
+        // walkable, region 13363 lobby) — also each instance's fallback exit tile.
+        val PIT_SOURCE = Area(3328, 3240, 3359, 3263)
+        // Spawn tiles in SOURCE coordinates — translated into the allocated instance per bout.
         val BOUT_PLAYER_TILE = Tile(3339, 3251, 0)
         val BOUT_BOT_TILE = Tile(3347, 3251, 0)
         val EXIT_TILE = Tile(3368, 3269, 0) // beside the trainer — round-end + death respawn
@@ -516,86 +562,7 @@ class PkTrainingArenaPlugin(
         const val COUNTDOWN_STEPS = 4  // arena-ticks to FIGHT! (prints 3... 2... 1... at ~1.2s each)
         const val VENG_MAGIC = 94      // Vengeance's Magic requirement — boosted to here while kitted
 
-        // ══════════════════════════════════════════════════════════════════════════════════════════
-        //  LOANER KITS — edit these freely. RSCM item names resolve to real cache items; a bad name is
-        //  logged and skipped, never fatal.
-        // ══════════════════════════════════════════════════════════════════════════════════════════
-
-        /**
-         * TUNE: standard Dharok's PK kit (approximated from the screenshot). Confirm/adjust the exact
-         * items with the user. Lunar book + veng runes so Vengeance works out of the box.
-         */
-        val DHAROK_KIT = Kit(
-            label = "Dharok's",
-            gear = mapOf(
-                EquipmentType.HEAD to "item.dharoks_helm",
-                EquipmentType.CAPE to "item.fire_cape",
-                EquipmentType.AMULET to "item.amulet_of_torture",
-                EquipmentType.WEAPON to "item.dharoks_greataxe",
-                EquipmentType.CHEST to "item.dharoks_platebody",
-                EquipmentType.LEGS to "item.dharoks_platelegs",
-                EquipmentType.GLOVES to "item.barrows_gloves",
-                EquipmentType.BOOTS to "item.dragon_boots",
-                EquipmentType.RING to "item.berserker_ring_i",
-            ),
-            inventory = listOf(
-                "item.super_combat_potion4" to 1,
-                "item.saradomin_brew4" to 8,
-                "item.super_restore4" to 4,
-                "item.shark" to 4,
-                "item.cooked_karambwan" to 4,
-                "item.dragon_claws" to 1,       // spec weapon
-                // Vengeance runes (Lunar): generous stacks so a lesson never runs dry.
-                "item.astral_rune" to 5000,
-                "item.death_rune" to 5000,
-                "item.earth_rune" to 5000,
-            ),
-            lunarForVeng = true,
-        )
-
-        /**
-         * TUNE: a representative NH tribrid kit — whip main worn, mage + range switches carried, dragon
-         * claws spec, brews/restores/karambwan, plus barrage + veng runes. Trim/expand to taste.
-         */
-        val NH_KIT = Kit(
-            label = "NH",
-            gear = mapOf(
-                EquipmentType.HEAD to "item.helm_of_neitiznot",
-                EquipmentType.CAPE to "item.fire_cape",
-                EquipmentType.AMULET to "item.amulet_of_torture",
-                EquipmentType.WEAPON to "item.abyssal_whip",
-                EquipmentType.CHEST to "item.fighter_torso",
-                EquipmentType.SHIELD to "item.dragon_defender",
-                EquipmentType.LEGS to "item.black_dhide_chaps",
-                EquipmentType.GLOVES to "item.barrows_gloves",
-                EquipmentType.BOOTS to "item.dragon_boots",
-                EquipmentType.RING to "item.berserker_ring",
-            ),
-            inventory = listOf(
-                // Mage switch
-                "item.mystic_hat" to 1,
-                "item.mystic_robe_top" to 1,
-                "item.mystic_robe_bottom" to 1,
-                "item.ancient_staff" to 1,
-                "item.occult_necklace" to 1,
-                // Range switch
-                "item.magic_shortbow" to 1,
-                "item.black_dhide_body" to 1,
-                "item.rune_arrow" to 500,
-                // Spec + sustain
-                "item.dragon_claws" to 1,
-                "item.saradomin_brew4" to 6,
-                "item.super_restore4" to 4,
-                "item.cooked_karambwan" to 3,
-                "item.super_combat_potion4" to 1,
-                // Runes: freeze (ice barrage) + veng
-                "item.death_rune" to 5000,
-                "item.water_rune" to 5000,
-                "item.blood_rune" to 5000,
-                "item.astral_rune" to 5000,
-                "item.earth_rune" to 5000,
-            ),
-            lunarForVeng = true,
-        )
+        // The loaner presets + curated armoury live in [KitArmoury] (content/kits), shared with the
+        // kit editor: the trainer's "kit locker" IS the editor, so what it stocks is defined there.
     }
 }

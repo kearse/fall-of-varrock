@@ -28,8 +28,11 @@ if you're the only person queued. You'll have to fight your way to the top of a 
 
 ## Build your kit
 
-Pick **"Build my kit"** at Lisa to choose your starting loadout, just like OSRS. Your picks are
-**saved between games** - set it once, tweak it any time:
+Pick **"Build my kit"** at Lisa and the **visual kit editor** opens: the category options sit on
+item tabs (click one to pick it - your current pick glows gold), and the equipment doll and
+inventory show a **live preview of exactly what you'll spawn with**, real item icons and all. Your
+picks save the moment you click them and are **kept between games** - set it once, tweak it any
+time:
 
 - **Armour style** - Melee (Neitiznot/Fighter torso/Defender), Ranged (black d'hide), Magic
   (Mystic/Occult), or Hybrid (d'hide worn, mystic switches carried).

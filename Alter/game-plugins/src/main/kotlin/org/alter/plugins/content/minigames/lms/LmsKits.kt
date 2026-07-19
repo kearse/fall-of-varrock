@@ -6,6 +6,7 @@ import org.alter.api.Spellbook
 import org.alter.game.model.attr.AttributeKey
 import org.alter.game.model.entity.Player
 import org.alter.game.model.item.Item
+import org.alter.plugins.content.kits.KitSetup
 import org.alter.rscm.RSCM.getRSCM
 import org.bson.Document
 
@@ -34,7 +35,15 @@ object LmsKits {
         val gear: Map<EquipmentType, String> = emptyMap(),
         val inv: List<Pair<String, Int>> = emptyList(),
         val spellbook: Spellbook? = null,
-    )
+        /**
+         * The item shown for this choice in the kit editor's LMS palette (MUST match the client
+         * overlay's LMS_CHOICES). Defaults to the choice's first gear/inv item; set explicitly
+         * where that would collide across choices (or where there is no item at all).
+         */
+        val rep: String? = null,
+    ) {
+        val repName: String? get() = rep ?: gear.values.firstOrNull() ?: inv.firstOrNull()?.first
+    }
 
     class Category(val key: String, val title: String, val choices: List<Choice>) {
         fun byKey(k: String?): Choice = choices.firstOrNull { it.key == k } ?: choices.first()
@@ -45,7 +54,7 @@ object LmsKits {
     val ARMOUR = Category(
         "armour", "Armour style", listOf(
             Choice(
-                "melee", "Melee (Neitiznot, Fighter torso, Defender)",
+                "melee", "Melee (Neitiznot, Fighter torso, Defender)", rep = "item.fighter_torso",
                 gear = mapOf(
                     EquipmentType.HEAD to "item.helm_of_neitiznot",
                     EquipmentType.CHEST to "item.fighter_torso",
@@ -58,7 +67,7 @@ object LmsKits {
                 ),
             ),
             Choice(
-                "ranged", "Ranged (Black d'hide)",
+                "ranged", "Ranged (Black d'hide)", rep = "item.black_dhide_body",
                 gear = mapOf(
                     EquipmentType.HEAD to "item.coif",
                     EquipmentType.CHEST to "item.black_dhide_body",
@@ -70,7 +79,7 @@ object LmsKits {
                 ),
             ),
             Choice(
-                "mage", "Magic (Mystic, Occult)",
+                "mage", "Magic (Mystic, Occult)", rep = "item.mystic_robe_top",
                 gear = mapOf(
                     EquipmentType.HEAD to "item.mystic_hat",
                     EquipmentType.CHEST to "item.mystic_robe_top",
@@ -82,7 +91,7 @@ object LmsKits {
                 ),
             ),
             Choice(
-                "hybrid", "Hybrid (d'hide + mystic switches carried)",
+                "hybrid", "Hybrid (d'hide + mystic switches carried)", rep = "item.helm_of_neitiznot",
                 gear = mapOf(
                     EquipmentType.HEAD to "item.helm_of_neitiznot",
                     EquipmentType.CHEST to "item.black_dhide_body",
@@ -124,16 +133,16 @@ object LmsKits {
     val MAGIC = Category(
         "magic", "Magic pack", listOf(
             Choice(
-                "ice", "Ice mage (Ancient book, barrage runes)",
+                "ice", "Ice mage (Ancient book, barrage runes)", rep = "item.blood_rune",
                 inv = listOf("item.death_rune" to 2000, "item.water_rune" to 4000, "item.blood_rune" to 1500),
                 spellbook = Spellbook.ANCIENTS,
             ),
             Choice(
-                "veng", "Vengeance (Lunar book, veng runes)",
+                "veng", "Vengeance (Lunar book, veng runes)", rep = "item.astral_rune",
                 inv = listOf("item.astral_rune" to 1500, "item.death_rune" to 1500, "item.earth_rune" to 3000),
                 spellbook = Spellbook.LUNAR,
             ),
-            Choice("none", "No magic (Normal book)", spellbook = Spellbook.NORMAL),
+            Choice("none", "No magic (Normal book)", spellbook = Spellbook.NORMAL, rep = "item.law_rune"),
         )
     )
 
@@ -183,6 +192,63 @@ object LmsKits {
     fun describe(p: Player): String {
         val sel = selection(p)
         return CATEGORIES.joinToString(", ") { cat -> cat.byKey(sel[cat.key]).label.substringBefore(" (") }
+    }
+
+    // ───────────────────────────── kit-editor (LMS mode) support ─────────────────────────────
+
+    /** rep item id → (category, choice), for palette clicks in the kit editor's LMS mode. */
+    private val byRepId: Map<Int, Pair<Category, Choice>> by lazy {
+        val out = HashMap<Int, Pair<Category, Choice>>()
+        CATEGORIES.forEach { cat ->
+            cat.choices.forEach { ch ->
+                ch.repName?.let { name ->
+                    runCatching { out[getRSCM(name)] = cat to ch }
+                        .onFailure { logger.warn { "lms-kit: bad rep rscm '$name': ${it.message}" } }
+                }
+            }
+        }
+        out
+    }
+
+    fun choiceByRepId(id: Int): Pair<Category, Choice>? = byRepId[id]
+
+    /** Selected choice index per category (CATEGORIES order) — packed into the editor's control varp. */
+    fun selectedIndices(p: Player): IntArray {
+        val sel = selection(p)
+        return IntArray(CATEGORIES.size) { i ->
+            val cat = CATEGORIES[i]
+            cat.choices.indexOfFirst { it.key == sel[cat.key] }.coerceAtLeast(0)
+        }
+    }
+
+    /**
+     * The player's current selection assembled as a [KitSetup] — the kit editor's live PREVIEW of
+     * what [apply] will deal out at game start (same gear slots, same inventory order, same book).
+     */
+    fun buildKit(p: Player): KitSetup {
+        val sel = selection(p)
+        val kit = KitSetup()
+        var slot = 0
+        CATEGORIES.forEach { cat ->
+            val choice = cat.byKey(sel[cat.key])
+            choice.spellbook?.let { kit.book = it.id }
+            choice.gear.forEach { (equipSlot, name) ->
+                runCatching {
+                    val amount = if (equipSlot == EquipmentType.AMMO) ARROW_COUNT else 1
+                    kit.gear[equipSlot.id] = Item(getRSCM(name), amount)
+                }.onFailure { logger.warn { "lms-kit: bad gear rscm '$name': ${it.message}" } }
+            }
+            for ((name, amt) in choice.inv) {
+                if (slot >= KitSetup.INV_SIZE) break
+                runCatching {
+                    val item = Item(getRSCM(name), amt.coerceIn(1, KitSetup.MAX_QTY))
+                    // Preview mirrors apply(): one slot per entry (apply force-sets amounts per slot).
+                    kit.inv[slot] = item
+                    slot++
+                }.onFailure { logger.warn { "lms-kit: bad inv rscm '$name': ${it.message}" } }
+            }
+        }
+        return kit
     }
 
     // ───────────────────────────── application ─────────────────────────────
