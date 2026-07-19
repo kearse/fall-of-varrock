@@ -239,7 +239,8 @@ class CastleWarsPlugin(
             if (!CastleWars.UNDERGROUND.contains(player.tile.x, player.tile.z)) return@bindObj
             val rocks = player.getInteractingGameObj()
             player.queue {
-                player.animate(625) // pickaxe swing
+                // Swing whatever pickaxe the player actually carries (625 = bronze fallback).
+                player.animate(org.alter.plugins.content.skills.GatheringTools.bestPickaxe(player).tool?.anim ?: 625)
                 wait(3)
                 runCatching { world.remove(rocks) }
                 player.message("You clear a path through the rubble!")
