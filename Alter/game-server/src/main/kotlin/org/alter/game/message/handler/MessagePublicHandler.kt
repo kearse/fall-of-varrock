@@ -88,6 +88,11 @@ class MessagePublicHandler : MessageHandler<MessagePublic> {
                     client.world.plugins.executeCommand(client, "bondclick", parts.drop(1).toTypedArray())
                     return
                 }
+                // Mire Dispenser overlay (lofmire): "::mire <attune|claim>" → dispenser action, suppress chat.
+                "mire" -> {
+                    client.world.plugins.executeCommand(client, "mireclick", parts.drop(1).toTypedArray())
+                    return
+                }
                 // Duel rules overlay (lofduel): "::duel <action>" → rules interaction, suppress chat.
                 "duel" -> {
                     client.world.plugins.executeCommand(client, "duelclick", parts.drop(1).toTypedArray())
