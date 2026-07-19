@@ -12,6 +12,7 @@ import org.alter.game.model.appearance.Colours
 import org.alter.game.model.appearance.Gender
 import org.alter.game.model.appearance.Looks
 import org.alter.game.model.attr.APPEARANCE_SET_ATTR
+import org.alter.game.model.attr.STYLE_PREVIEW_ATTR
 import org.alter.game.model.entity.Player
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
@@ -26,18 +27,35 @@ import org.alter.game.plugin.PluginRepository
  *
  * Open: varp 4632 pulse, payload bit 0 = open, bit 1 = female (re-pulsed after a gender
  * switch so the window can dim the facial-hair row). Actions: `::lofstyle ...` → `styleclick`
- * with `look <option> <delta>` / `colour <slot> <delta>` / `gender <male|female>` / `done`.
- * No proximity gate — restyling is cosmetic and self-only, and `::makeover` has always
- * worked anywhere.
+ * with `look <option> <delta>` / `colour <slot> <delta>` / `gender <male|female>` / `done` /
+ * `close`. No proximity gate — restyling is cosmetic and self-only, and `::makeover` has
+ * always worked anywhere.
+ *
+ * While the window is open the player is broadcast WITHOUT worn equipment
+ * ([STYLE_PREVIEW_ATTR]) — you edit your default skins, so the preview must show them.
+ * `done` and `close` both restore the gear; the attr is transient so a logout mid-makeover
+ * restores it too.
  */
 object StyleMenu {
     /** Overlay-open varp (docs/overlay-design-system.md §8) — pulsed to 0, never persisted. */
     const val OPEN_VARP = 4632
 
     fun open(p: Player) {
+        if (p.attr[STYLE_PREVIEW_ATTR] != true) {
+            p.attr[STYLE_PREVIEW_ATTR] = true
+            PlayerInfo(p).syncAppearance()
+        }
         val v = 1 or (if (p.appearance.gender == Gender.FEMALE) 2 else 0)
         p.setVarp(OPEN_VARP, v)
         p.queue { wait(2); p.setVarp(OPEN_VARP, 0) }
+    }
+
+    /** End the bare-skins preview and broadcast the player back in their gear. */
+    fun endPreview(p: Player) {
+        if (p.attr[STYLE_PREVIEW_ATTR] == true) {
+            p.attr.remove(STYLE_PREVIEW_ATTR)
+            PlayerInfo(p).syncAppearance()
+        }
     }
 }
 
@@ -59,8 +77,12 @@ class StyleMenuPlugin(
                 }
                 "done" -> {
                     player.attr[APPEARANCE_SET_ATTR] = true
+                    StyleMenu.endPreview(player)
                     player.message("Looking sharp — the realm will know you by it.")
                 }
+                // The window closed without confirming (✕, or another window replaced it) —
+                // the style edits already applied live; just put the gear back on.
+                "close" -> StyleMenu.endPreview(player)
             }
         }
     }

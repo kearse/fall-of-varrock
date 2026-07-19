@@ -2,10 +2,12 @@
  * Fall of Varrock — Character Style window (the on-brand makeover).
  *
  * Replaces the native character-design interface (its rev-228 layout didn't match the bound
- * component ids — misaligned, dead buttons). The window anchors LEFT of the viewport so the
- * player's own in-world model is the live 3D preview: every arrow press sends
- * "::lofstyle look/colour ..." (MessagePublicHandler → styleclick), the server mutates the
- * appearance and re-syncs it instantly. Varp 4632 opens (bit 0) and carries gender (bit 1).
+ * component ids — misaligned, dead buttons). The classic layout, on-brand: a centred modal
+ * with a see-through portrait hole in the middle — the player's own in-world model, framed by
+ * the panel, is the live 3D preview. The server hides worn gear while the window is open (you
+ * edit your default skins), and every arrow press sends "::lofstyle look/colour ..."
+ * (MessagePublicHandler → styleclick) so the model updates instantly; closing without DONE
+ * sends "::lofstyle close" so the gear comes back. Varp 4632 opens (bit 0), bit 1 = female.
  */
 package net.runelite.client.plugins.lofstyle;
 
@@ -54,6 +56,8 @@ public class LofStylePlugin extends Plugin
 	{
 		overlayManager.add(overlay);
 		LofWindows.register(overlay);
+		// any non-DONE dismissal must reach the server so it re-equips the player
+		overlay.setCloseNotifier(this::sendClose);
 		mouseListener = new LofStyleMouseListener(this, overlay);
 		mouseManager.registerMouseListener(mouseListener);
 	}
@@ -68,7 +72,8 @@ public class LofStylePlugin extends Plugin
 			mouseManager.unregisterMouseListener(mouseListener);
 			mouseListener = null;
 		}
-		overlay.setVisible(false);
+		overlay.hideWindow(); // notifies close if it was open, so the gear comes back
+		overlay.setCloseNotifier(null);
 	}
 
 	@Subscribe
@@ -102,6 +107,11 @@ public class LofStylePlugin extends Plugin
 	void sendDone()
 	{
 		send("::lofstyle done");
+	}
+
+	void sendClose()
+	{
+		send("::lofstyle close");
 	}
 
 	private void send(String msg)

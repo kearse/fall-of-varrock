@@ -51,6 +51,14 @@ val FREE_BOND_CLAIMED_ATTR = AttributeKey<String>("bond_claimed")
 val APPEARANCE_SET_ATTR = AttributeKey<Boolean>("appearance_set")
 
 /**
+ * While set, appearance syncs broadcast the player WITHOUT worn equipment — the identikit
+ * body only. Set for the duration of the Character Style window (you edit your default
+ * skins, so the preview must show them); cleared when the window closes. Transient on
+ * purpose: a logout mid-makeover must never leave a player stuck looking undressed.
+ */
+val STYLE_PREVIEW_ATTR = AttributeKey<Boolean>()
+
+/**
  * The id of the city the player is a citizen of (The War / siege content).
  * Persistent. Resolves the player's home: respawn point and bank city.
  */
