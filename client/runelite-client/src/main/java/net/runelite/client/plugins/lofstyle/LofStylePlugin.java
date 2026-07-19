@@ -13,7 +13,9 @@ package net.runelite.client.plugins.lofstyle;
 
 import javax.inject.Inject;
 import net.runelite.api.Client;
+import net.runelite.api.GameState;
 import net.runelite.api.ScriptID;
+import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.VarbitChanged;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.eventbus.Subscribe;
@@ -74,6 +76,18 @@ public class LofStylePlugin extends Plugin
 		}
 		overlay.hideWindow(); // notifies close if it was open, so the gear comes back
 		overlay.setCloseNotifier(null);
+	}
+
+	/** Logging out / hopping with the window open would leave an invisible centred click-eater
+	 *  over the login form. Drop it silently — no close send (we're not logged in, and the
+	 *  server's preview attr is transient so the gear restores itself). */
+	@Subscribe
+	public void onGameStateChanged(GameStateChanged event)
+	{
+		if (event.getGameState() == GameState.LOGIN_SCREEN || event.getGameState() == GameState.HOPPING)
+		{
+			overlay.setVisible(false);
+		}
 	}
 
 	@Subscribe
