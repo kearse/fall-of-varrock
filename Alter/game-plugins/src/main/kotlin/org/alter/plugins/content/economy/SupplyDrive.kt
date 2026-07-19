@@ -10,10 +10,15 @@ package org.alter.plugins.content.economy
  */
 object SupplyDrive {
 
+    // NB: keep this enum's order aligned with [SupplyDepot.CATEGORIES] — the client window maps
+    // the active drive to a tab by ordinal.
     enum class Category(val display: String, val wares: () -> Map<String, Int>) {
         FOOD("Cooked food", { SupplyDepot.FOOD }),
         POTIONS("Finished potions", { SupplyDepot.POTIONS }),
         BARS("Smithed bars", { SupplyDepot.BARS }),
+        ORES("Mined ores", { SupplyDepot.ORES }),
+        LOGS("Felled logs", { SupplyDepot.LOGS }),
+        RAW_FISH("Raw fish", { SupplyDepot.RAW_FISH }),
     }
 
     const val MULTIPLIER = 2

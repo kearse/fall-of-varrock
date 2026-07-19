@@ -3,10 +3,12 @@ package org.alter.plugins.content.skills.slayer
 import dev.openrune.cache.CacheManager.getNpc
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.alter.api.Skills
+import org.alter.api.ext.getCommandArgs
 import org.alter.api.ext.message
 import org.alter.api.ext.npc
 import org.alter.api.ext.openShop
 import org.alter.api.ext.player
+import org.alter.api.ext.setVarp
 import org.alter.game.Server
 import org.alter.game.model.Direction
 import org.alter.game.model.World
@@ -24,7 +26,6 @@ import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
 import org.alter.api.ext.chatNpc
 import org.alter.api.ext.chatPlayer
-import org.alter.api.ext.options
 import org.alter.plugins.content.economy.PointKind
 import org.alter.plugins.content.economy.PointsCurrency
 import org.alter.plugins.content.economy.addPoints
@@ -35,6 +36,48 @@ import org.alter.plugins.content.war.warprep.WarPrepChain
 import org.alter.rscm.RSCM.getRSCM
 
 private val logger = KotlinLogging.logger {}
+
+/**
+ * Server half of the client-drawn **War Contracts** window (`lofcontracts`): Vannaka's board —
+ * the active combat contract with its kill count, the active resource contract, the streak and
+ * the War Effort balance — replacing his five-way chat menu.
+ *
+ * State rides one `~LOFCON~` CONSOLE line (parsed + hidden client-side):
+ *   `~LOFCON~<streak>|<warEffort>|<combatName or ->|<left>|<total>|<resourceName or ->|<resLeft>|<resSkill or ->`
+ * The window opens on a varp 4626 pulse; actions come back as `::con <combat|resource|rewards>`
+ * → `conclick` (handled in [SlayerPlugin], which owns the assignment logic).
+ */
+object ContractMenu {
+    /** Overlay-open varp (docs/overlay-design-system.md §8) — pulsed to 0, never persisted. */
+    const val OPEN_VARP = 4626
+
+    private const val PREFIX = "~LOFCON~"
+
+    fun open(p: Player) {
+        push(p)
+        p.setVarp(OPEN_VARP, 1)
+        p.queue { wait(2); p.setVarp(OPEN_VARP, 0) }
+    }
+
+    /** Push the contract-board state (also called after an assignment so the window updates). */
+    fun push(p: Player) {
+        val taskKey = p.attr[SLAYER_TASK_NPC_ATTR]
+        val left = p.attr[SLAYER_TASK_LEFT_ATTR] ?: 0
+        val total = p.attr[SLAYER_TASK_TOTAL_ATTR] ?: 0
+        val combat = if (taskKey != null && left > 0) {
+            SlayerTasks.ALL.firstOrNull { it.npcName == taskKey }?.display ?: "your target"
+        } else null
+        val res = ResourceContracts.current(p)
+        val sb = StringBuilder(PREFIX)
+            .append(p.attr[SLAYER_STREAK_ATTR] ?: 0).append('|')
+            .append(p.points(PointKind.WAR_EFFORT)).append('|')
+            .append(combat ?: "-").append('|').append(if (combat != null) left else 0).append('|')
+            .append(if (combat != null) total else 0).append('|')
+            .append(res?.first?.display ?: "-").append('|').append(res?.second ?: 0).append('|')
+            .append(res?.first?.skill ?: "-")
+        p.message(sb.toString(), org.alter.api.ChatMessageType.CONSOLE)
+    }
+}
 
 /**
  * **Slayer** (content roadmap Phase 1). Turael, the starter Slayer master, lives in
@@ -85,6 +128,18 @@ class SlayerPlugin(
         onAnyNpcDeath { onKill(player = (npc.attr[KILLER_ATTR]?.get() as? Player), deadId = npc.id) }
 
         onCommand("slayer", description = "Show your Slayer task") { reportTask(player) }
+
+        onCommand("contracts", description = "Open the War Contracts window") {
+            ContractMenu.open(player)
+        }
+        // The window's action channel ("::con <action>" → conclick). Also testable directly.
+        onCommand("conclick", description = "War Contracts window action (client overlay channel)") {
+            when (player.getCommandArgs().getOrNull(0)?.lowercase()) {
+                "combat" -> player.queue { assignTask(player); ContractMenu.push(player) }
+                "resource" -> player.queue { assignResource(player); ContractMenu.push(player) }
+                "rewards" -> player.openShop(rewardShop)
+            }
+        }
     }
 
     private fun bindTalk() {
@@ -136,14 +191,9 @@ class SlayerPlugin(
         }
         if (WarPrepChain.step(p) == WarPrepChain.Step.PRAYER) warPrepPrayerNudge(p)
         if (WarPrepChain.step(p) == WarPrepChain.Step.TOWER) warPrepTowerNudge(p)
-        chatNpc(p, "After a war-contract, ${p.address}? Or here to spend your points?")
-        when (options(p, "Combat contract.", "Resource contract.", "What are my contracts?", "Reward shop.", "Nothing, thanks.")) {
-            1 -> assignTask(p)
-            2 -> assignResource(p)
-            3 -> { reportTask(p); reportResource(p) }
-            4 -> p.openShop(rewardShop)
-            5 -> chatPlayer(p, "Nothing, thanks.")
-        }
+        // Outside the quest beats, the contract board is the client-drawn War Contracts window
+        // (lofcontracts): active contracts, streak and points at a glance — no options() menu.
+        ContractMenu.open(p)
     }
 
     /** Resource (gathering) contract — the supply side of Vannaka's war-contracts (master design brief §2). */
@@ -165,12 +215,6 @@ class SlayerPlugin(
         if (ResourceContracts.richerWorkAwaits(p)) {
             chatNpc(p, "And ${p.address} — your skills are worth more than this. Buy your next rank from <col=801700>Duke Horacio</col> and I'll commission you for far richer work.")
         }
-    }
-
-    private fun reportResource(p: Player) {
-        val cur = ResourceContracts.current(p)
-        if (cur == null) p.message("You have no resource contract. Ask Vannaka for one.")
-        else p.message("Resource contract: <col=801700>${cur.second} ${cur.first.display}</col> left (${cur.first.skill}).")
     }
 
     /** Intro-quest finale: the recruit returns to Vannaka after their trials for the reward (sent to
@@ -345,6 +389,7 @@ class SlayerPlugin(
         player.addPoints(PointKind.WAR_EFFORT, reward)
         player.message("<col=801700>Combat contract complete!</col> +$reward War Effort (streak $streak, total ${player.points(PointKind.WAR_EFFORT)}).")
         RecruitTrials.onSlayerTaskComplete(player) // advances the intro quest's SLAY step on completion
+        ContractMenu.push(player) // refresh the contract board if the window is open (hidden line otherwise)
     }
 
     /** Reward shop priced in War Effort (sell-only sink). Items guarded so a missing

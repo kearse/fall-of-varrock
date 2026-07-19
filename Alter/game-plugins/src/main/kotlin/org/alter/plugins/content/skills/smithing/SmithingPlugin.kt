@@ -1,6 +1,7 @@
 package org.alter.plugins.content.skills.smithing
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import org.alter.api.ChatMessageType
 import org.alter.api.Skills
 import org.alter.api.ext.*
 import org.alter.game.Server
@@ -19,8 +20,16 @@ private val logger = KotlinLogging.logger {}
  * **Smithing** (Phase 2 / economy). Closes the mining → bars → gear chain and is a key
  * economy feeder/sink. A furnace + anvil are placed in the Lumbridge cellar beside the
  * mine + Smithing Apprentice (one underground crafting hub).
- *  - **Smelt** ore on the furnace → bars (a menu picks the bar; coal-based tiers consume coal).
- *  - **Smith** a bar on the anvil (with a hammer) → pick a piece to forge.
+ *
+ * Both stations open the client-drawn **making window** (`lofmake` — the reusable production
+ * UI: recipe rows with real item icons, level/material checks, 1/5/10/ALL quantity picker):
+ *  - **Smelt** ore on the furnace → pick a bar recipe; coal tiers consume coal.
+ *  - **Smith** a bar on the anvil (with a hammer) → pick a piece for that metal.
+ *
+ * Channels (docs/overlay-design-system.md §8): recipes ride a `~LOFMAKE~` CONSOLE push
+ * (header `H|<kind>|<title>|<n>` then one `R|<i>|resultId|level|xp10|matId:qty;...` line per
+ * recipe), the window opens on a varp 4625 pulse (value = kind), and the make comes back as
+ * `::make <resultId> <qty>` → `makeclick`.
  */
 class SmithingPlugin(
     r: PluginRepository,
@@ -81,25 +90,88 @@ class SmithingPlugin(
             if (res(anvil)) anvilTiles.forEach { world.spawn(DynamicObject(getRSCM(anvil), OBJ_TYPE, 0, it)) }
         }
 
-        // Using any ore on the furnace opens the smelt menu.
+        // Using any ore on the furnace opens the smelt window.
         bars.flatMap { it.ores.keys }.distinct().forEach { ore ->
-            onItemOnObj(obj = furnace, item = ore) { player.queue { smeltMenu(this, player) } }
+            onItemOnObj(obj = furnace, item = ore) { openFurnace(player) }
         }
-        // Using a bar on the anvil opens the smith menu for that metal.
+        // Using a bar on the anvil opens the smith window for that metal.
         metalByBar.keys.filter { res(it) }.forEach { bar ->
-            onItemOnObj(obj = anvil, item = bar) { player.queue { smithMenu(this, player, bar) } }
+            onItemOnObj(obj = anvil, item = bar) { openAnvil(player, bar) }
+        }
+
+        // The window's make channel ("::make <resultId> <qty>" → makeclick). Also testable directly.
+        onCommand("makeclick", description = "Making window action (client overlay channel)") {
+            val a = player.getCommandArgs()
+            val resultId = a.getOrNull(0)?.toIntOrNull() ?: return@onCommand
+            val qty = (a.getOrNull(1)?.toIntOrNull() ?: 1).coerceIn(1, 28 * 5)
+            make(player, resultId, qty)
         }
     }
 
-    private suspend fun QueueTask.smeltMenu(task: QueueTask, player: Player) {
-        if (bars.isEmpty()) return
-        val choice = options(player, *bars.map { it.label }.toTypedArray())
-        val bar = bars.getOrNull(choice - 1) ?: return
-        smelt(task, player, bar)
+    // ---------------------------------- window push ----------------------------------
+
+    /** Push the smelt recipe list and pulse the window open (kind 1 = furnace). */
+    private fun openFurnace(p: Player) {
+        p.message("${PREFIX}H|1|Furnace|${bars.size}", ChatMessageType.CONSOLE)
+        bars.forEachIndexed { i, b ->
+            val sb = StringBuilder(PREFIX)
+                .append("R|").append(i).append('|').append(getRSCM(b.bar)).append('|')
+                .append(b.level).append('|').append((b.xp * 10).toInt()).append('|')
+            b.ores.forEach { (ore, n) -> sb.append(getRSCM(ore)).append(':').append(n).append(';') }
+            if (b.coal > 0) sb.append(getRSCM("item.coal")).append(':').append(b.coal).append(';')
+            p.message(sb.toString(), ChatMessageType.CONSOLE)
+        }
+        pulse(p, kind = 1)
     }
 
-    private suspend fun smelt(task: QueueTask, player: Player, bar: Bar) {
-        while (true) {
+    /** Push the smith recipe list for [barKey]'s metal and pulse the window open (kind 2 = anvil). */
+    private fun openAnvil(p: Player, barKey: String) {
+        val (metal, baseLevel) = metalByBar[barKey] ?: return
+        if (!p.inventory.contains(getRSCM("item.hammer"))) {
+            p.message("You need a hammer to work the metal.")
+            return
+        }
+        val barId = getRSCM(barKey)
+        val makeable = pieces.mapNotNull { piece -> resOrNull("item.${metal}_${piece.key}")?.let { it to piece } }
+        if (makeable.isEmpty()) return
+        val title = "Anvil — ${metal.replaceFirstChar { it.uppercase() }}"
+        p.message("${PREFIX}H|2|$title|${makeable.size}", ChatMessageType.CONSOLE)
+        makeable.forEachIndexed { i, (resultId, piece) ->
+            p.message(
+                "${PREFIX}R|$i|$resultId|${baseLevel + piece.levelOffset}|${(piece.bars * BAR_SMITH_XP * 10).toInt()}|$barId:${piece.bars};",
+                ChatMessageType.CONSOLE,
+            )
+        }
+        pulse(p, kind = 2)
+    }
+
+    private fun pulse(p: Player, kind: Int) {
+        p.setVarp(OPEN_VARP, kind)
+        p.queue { wait(2); p.setVarp(OPEN_VARP, 0) }
+    }
+
+    // ---------------------------------- making ----------------------------------
+
+    /** Route a make request to the matching smelt/smith recipe by RESULT item id. */
+    private fun make(p: Player, resultId: Int, qty: Int) {
+        bars.firstOrNull { resOrNull(it.bar) == resultId }?.let { bar ->
+            p.queue { smelt(this, p, bar, qty) }
+            return
+        }
+        for ((barKey, metalInfo) in metalByBar) {
+            val (metal, baseLevel) = metalInfo
+            for (piece in pieces) {
+                if (resOrNull("item.${metal}_${piece.key}") == resultId) {
+                    p.queue { smith(this, p, barKey, metal, baseLevel, piece, qty) }
+                    return
+                }
+            }
+        }
+    }
+
+    private suspend fun smelt(task: QueueTask, player: Player, bar: Bar, qty: Int) {
+        var left = qty
+        while (left > 0) {
             if (player.getSkills().getCurrentLevel(Skills.SMITHING) < bar.level) {
                 player.message("You need a Smithing level of ${bar.level} to smelt a ${bar.label.lowercase()}.")
                 return
@@ -117,26 +189,19 @@ class SmithingPlugin(
             player.inventory.add(item = getRSCM(bar.bar), amount = 1)
             player.addXp(Skills.SMITHING, bar.xp)
             player.message("You smelt a ${bar.label.lowercase()}.")
+            left--
         }
     }
 
-    private suspend fun QueueTask.smithMenu(task: QueueTask, player: Player, bar: String) {
-        val (metal, baseLevel) = metalByBar[bar] ?: return
+    private suspend fun smith(task: QueueTask, player: Player, bar: String, metal: String, baseLevel: Int, piece: Piece, qty: Int) {
+        val result = resOrNull("item.${metal}_${piece.key}") ?: return
+        val needLevel = baseLevel + piece.levelOffset
         if (!player.inventory.contains(getRSCM("item.hammer"))) {
             player.message("You need a hammer to work the metal.")
             return
         }
-        val makeable = pieces.mapNotNull { p -> resOrNull("item.${metal}_${p.key}")?.let { p } }
-        if (makeable.isEmpty()) return
-        val choice = options(player, *makeable.map { "${metal.replaceFirstChar { c -> c.uppercase() }} ${it.label} (${it.bars} bar${if (it.bars > 1) "s" else ""})" }.toTypedArray())
-        val piece = makeable.getOrNull(choice - 1) ?: return
-        smith(task, player, bar, metal, baseLevel, piece)
-    }
-
-    private suspend fun smith(task: QueueTask, player: Player, bar: String, metal: String, baseLevel: Int, piece: Piece) {
-        val result = resOrNull("item.${metal}_${piece.key}") ?: return
-        val needLevel = baseLevel + piece.levelOffset
-        while (true) {
+        var left = qty
+        while (left > 0) {
             if (player.getSkills().getCurrentLevel(Skills.SMITHING) < needLevel) {
                 player.message("You need a Smithing level of $needLevel to make that.")
                 return
@@ -151,6 +216,7 @@ class SmithingPlugin(
             player.inventory.add(item = result, amount = 1)
             player.addXp(Skills.SMITHING, piece.bars * BAR_SMITH_XP)
             player.message("You hammer the metal into a $metal ${piece.label}.")
+            left--
         }
     }
 
@@ -162,5 +228,9 @@ class SmithingPlugin(
         const val SMELT_ANIM = 899
         const val SMITH_ANIM = 898
         const val BAR_SMITH_XP = 25.0 // smithing xp per bar used
+
+        /** Overlay-open varp (docs/overlay-design-system.md §8): pulsed value = kind (1 furnace, 2 anvil). */
+        const val OPEN_VARP = 4625
+        const val PREFIX = "~LOFMAKE~"
     }
 }

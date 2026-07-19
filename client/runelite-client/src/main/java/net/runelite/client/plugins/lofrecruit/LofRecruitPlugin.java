@@ -102,4 +102,11 @@ public class LofRecruitPlugin extends Plugin
 		final String msg = "::zo recruit " + style;
 		clientThread.invokeLater(() -> client.runScript(ScriptID.CHAT_SEND, msg, 0, 0, 0, -1));
 	}
+
+	/** The Regalia tab: the server opens the native Commander's Regalia shop (real item sprites). */
+	void sendRegalia()
+	{
+		final String msg = "::zo regalia";
+		clientThread.invokeLater(() -> client.runScript(ScriptID.CHAT_SEND, msg, 0, 0, 0, -1));
+	}
 }

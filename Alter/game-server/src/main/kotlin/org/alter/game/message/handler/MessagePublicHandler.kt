@@ -58,6 +58,36 @@ class MessagePublicHandler : MessageHandler<MessagePublic> {
                     client.world.plugins.executeCommand(client, "zoclick", parts.drop(1).toTypedArray())
                     return
                 }
+                // Supply Depot overlay (lofsupply): "::sup <cat|item|all> ..." → deposit, suppress chat.
+                "sup" -> {
+                    client.world.plugins.executeCommand(client, "supclick", parts.drop(1).toTypedArray())
+                    return
+                }
+                // Making window (lofmake): "::make <resultId> <qty>" → smelt/smith, suppress chat.
+                "make" -> {
+                    client.world.plugins.executeCommand(client, "makeclick", parts.drop(1).toTypedArray())
+                    return
+                }
+                // War Contracts overlay (lofcontracts): "::con <action>" → contracts, suppress chat.
+                "con" -> {
+                    client.world.plugins.executeCommand(client, "conclick", parts.drop(1).toTypedArray())
+                    return
+                }
+                // War Forge overlay (lofforge): "::forge make <i>" → forging, suppress chat.
+                "forge" -> {
+                    client.world.plugins.executeCommand(client, "forgeclick", parts.drop(1).toTypedArray())
+                    return
+                }
+                // Gambler's Table overlay (lofdice): "::dice roll <amount>" → bet, suppress chat.
+                "dice" -> {
+                    client.world.plugins.executeCommand(client, "diceclick", parts.drop(1).toTypedArray())
+                    return
+                }
+                // Bond Exchange overlay (lofbonds): "::bond <action>" → claim/redeem, suppress chat.
+                "bond" -> {
+                    client.world.plugins.executeCommand(client, "bondclick", parts.drop(1).toTypedArray())
+                    return
+                }
                 // Duel rules overlay (lofduel): "::duel <action>" → rules interaction, suppress chat.
                 "duel" -> {
                     client.world.plugins.executeCommand(client, "duelclick", parts.drop(1).toTypedArray())

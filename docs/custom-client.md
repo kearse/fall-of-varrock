@@ -454,7 +454,9 @@ assume the common one (`::bank`); other scam-bait words would also open the bank
 - **Varp allocations so far:** 4600 alert · 4601 war progress · 4602-4605 pk stats ·
   4606 wild level · 4607 teleport open · 4608 LMS · **4609 supplies** · 4610-4612
   companions · 4613-4615 companion status · 4616 slayer · 4617 quests ·
-  **4618 rank menu · 4619 recruit menu** · 4620-4623 Castle Wars · 4630 duel rules.
+  **4618 rank menu · 4619 recruit menu** · 4620-4623 Castle Wars ·
+  **4624 supply · 4625 make · 4626 contracts · 4627 forge · 4628 dice · 4629 bonds** ·
+  4630 duel rules.
 
 - **Cache-revision sync:** every time we move the cache revision, the client must keep
   pace. Quantify how painful this is before committing.

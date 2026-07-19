@@ -2,6 +2,7 @@ package org.alter.plugins.content.companion
 
 import org.alter.api.ext.getCommandArgs
 import org.alter.api.ext.message
+import org.alter.api.ext.openShop
 import org.alter.api.ext.player
 import org.alter.game.Server
 import org.alter.game.model.World
@@ -31,6 +32,9 @@ class RecruitClickPlugin(
             val a = player.getCommandArgs()
             when (a.getOrNull(0)?.lowercase()) {
                 "recruit" -> recruit(player, a.getOrNull(1))
+                // The window's Regalia tab: the native points shop draws the real sanguine
+                // torva sprites — no custom rendering needed.
+                "regalia" -> player.openShop("Commander's Regalia")
             }
         }
     }

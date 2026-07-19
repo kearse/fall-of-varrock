@@ -7,7 +7,6 @@ import org.alter.game.model.Direction
 import org.alter.game.model.World
 import org.alter.game.model.entity.Client
 import org.alter.game.model.entity.Player
-import org.alter.game.model.queue.QueueTask
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
 import org.alter.game.saving.formats.impl.DatabaseManager
@@ -19,6 +18,25 @@ import org.alter.rscm.RSCM.getRSCM
 import org.bson.Document
 
 private val logger = KotlinLogging.logger {}
+
+/**
+ * Server half of the client-drawn **Bond Exchange** window (`lofbonds`): the wallet (tradeable vs
+ * claimed bonds) and the two redemptions as cards, replacing the Bond Merchant's chat menu.
+ *
+ * State is one packed pulse varp: bit 0 open flag · bits 1-10 tradeable count · bits 11-20
+ * claimed count (counts clamped to 1023). Actions come back as `::bond <claim|member|donor>`
+ * → `bondclick` (handled in [BondPlugin], which owns the claim confirm + redemption invariants).
+ */
+object BondMenu {
+    /** Overlay-open varp (docs/overlay-design-system.md §8) — pulsed to 0, never persisted. */
+    const val OPEN_VARP = 4629
+
+    fun open(p: Player, tradeable: Int, claimed: Int) {
+        val v = 1 or (tradeable.coerceIn(0, 1023) shl 1) or (claimed.coerceIn(0, 1023) shl 11)
+        p.setVarp(OPEN_VARP, v)
+        p.queue { wait(2); p.setVarp(OPEN_VARP, 0) }
+    }
+}
 
 /**
  * **Bonds** — the tradeable premium currency (bond-system-spec.md, Track C #1 "build first").
@@ -53,19 +71,74 @@ class BondPlugin(
         // ---- inventory options (both defs carry a native cache "Redeem"; 13192 also "Convert").
         // Guarded binds like PotionsPlugin — a missing option/def logs instead of dropping the plugin.
         bindItemOption("item.bond", "redeem") { p -> claimDialog(p) }
-        bindItemOption("item.bond_untradeable", "redeem") { p -> p.queue { redeemMenu(p) } }
+        bindItemOption("item.bond_untradeable", "redeem") { p -> openMenu(p) }
         bindItemOption("item.bond_untradeable", "convert") { p ->
             p.message("Claimed bonds are yours alone — they can never be made tradeable again.")
         }
 
         // ---- the Bond Merchant, on the east shop row just south of the Reward Exchange.
         spawnNpc(MERCHANT, 3224, 3220, 0, 0, Direction.WEST)
-        bindVendorOptions(MERCHANT) { player.queue { redeemMenu(player) } }
+        // The merchant opens the client-drawn Bond Exchange window (lofbonds) — wallet + the two
+        // redemption cards; the permanent-claim warning is drawn, not spoken.
+        bindVendorOptions(MERCHANT) { openMenu(player) }
         onNpcSpawn(MERCHANT) { WarNpcNames.rename(npc, "Bond Merchant") }
 
         // Guaranteed-reachable fallback, same pattern as ::market / ::pkshop.
         onCommand("bonds", description = "Redeem your bonds (membership / Donor Points)") {
-            player.queue { redeemMenu(player) }
+            openMenu(player)
+        }
+
+        // The window's action channel ("::bond <action>" → bondclick). Also testable directly.
+        onCommand("bondclick", description = "Bond Exchange window action (client overlay channel)") {
+            when (player.getCommandArgs().getOrNull(0)?.lowercase()) {
+                // Claiming is permanent — it keeps its native confirm dialog before converting.
+                "claim" -> {
+                    val t = bond ?: return@onCommand
+                    if (player.inventory.getItemCount(t) <= 0) {
+                        player.message("You don't have a tradeable bond to claim.")
+                    } else {
+                        claimFromMenu(player)
+                    }
+                }
+                "member" -> {
+                    redeem(player, cost = 1, description = "30 days bronze membership") { c ->
+                        grantMembership(c, days = 30)
+                    }
+                    openMenu(player)
+                }
+                "donor" -> {
+                    redeem(player, cost = 1, description = "450 Donor Points") { c ->
+                        c.addPoints(PointKind.DONOR, DONOR_POINTS_PER_BOND)
+                        c.message("You received <col=801700>$DONOR_POINTS_PER_BOND Donor Points</col>.")
+                        true
+                    }
+                    openMenu(player)
+                }
+            }
+        }
+    }
+
+    /** Open (or refresh) the Bond Exchange window with the player's current wallet. */
+    private fun openMenu(p: Player) {
+        val tradeable = bond?.let { p.inventory.getItemCount(it) } ?: 0
+        val claimed = bondU?.let { p.inventory.getItemCount(it) } ?: 0
+        BondMenu.open(p, tradeable, claimed)
+    }
+
+    /** The window's claim path: native confirm (permanent!), then convert + refresh the window. */
+    private fun claimFromMenu(player: Player) {
+        player.queue {
+            when (options(
+                player,
+                "Claim it — I understand it becomes untradeable.",
+                "Keep it tradeable.",
+                title = "Claiming a bond is permanent!",
+            )) {
+                1 -> {
+                    claim(player, slot = 0)
+                    openMenu(player)
+                }
+            }
         }
     }
 
@@ -114,40 +187,9 @@ class BondPlugin(
 
     // ------------------------------- redemption -------------------------------
 
-    private suspend fun QueueTask.redeemMenu(p: Player) {
-        val u = bondU ?: return
-        val have = p.inventory.getItemCount(u)
-        val tradeableHeld = bond?.let { p.inventory.getItemCount(it) } ?: 0
-        when (options(
-            p,
-            "30 days of membership (1 bond)",
-            "450 Donor Points (1 bond)",
-            "What is a bond?",
-            "Nevermind",
-            title = "Bond Merchant — you hold $have claimed bond(s)",
-        )) {
-            // 1 bond = 1 MONTH (owner's call 2026-07-04 — "I hate that OSRS does 14-day bonds").
-            // Clean parity: $4.99 bond = 30d bronze = the $4.99/30d web price. One unit, one month.
-            1 -> redeem(p, cost = 1, description = "30 days bronze membership") { c ->
-                grantMembership(c, days = 30)
-            }
-            2 -> redeem(p, cost = 1, description = "450 Donor Points") { c ->
-                c.addPoints(PointKind.DONOR, DONOR_POINTS_PER_BOND)
-                c.message("You received <col=801700>$DONOR_POINTS_PER_BOND Donor Points</col>.")
-                true
-            }
-            3 -> {
-                messageBox(
-                    p,
-                    "A <col=801700>Bond</col> is premium currency. Someone bought every bond for real money on the " +
-                        "website — but bonds are <col=801700>tradeable</col>, so you can buy one from another player " +
-                        "with gold you earned in-game. Claim it, then redeem it here for membership or Donor Points. " +
-                        "You never have to pay to be a member." +
-                        if (tradeableHeld > 0) "<br><br>You hold $tradeableHeld unclaimed (tradeable) bond(s)." else "",
-                )
-            }
-        }
-    }
+    // NB: 1 bond = 1 MONTH of membership (owner's call 2026-07-04 — "I hate that OSRS does
+    // 14-day bonds"). Clean parity: $4.99 bond = 30d bronze = the $4.99/30d web price. The
+    // "what is a bond" story is printed on the Bond Exchange window itself now.
 
     /** Membership grant via the shared service; false (refund) when the store DB is down. */
     private fun grantMembership(p: Player, days: Int): Boolean {

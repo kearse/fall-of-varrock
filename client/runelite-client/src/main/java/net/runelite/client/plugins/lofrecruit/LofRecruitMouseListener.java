@@ -42,6 +42,11 @@ class LofRecruitMouseListener extends MouseAdapter
 		{
 			overlay.setVisible(false);
 		}
+		else if (hit == LofRecruitOverlay.REGALIA_TAB)
+		{
+			plugin.sendRegalia();
+			overlay.setVisible(false); // the native shop opens over the world
+		}
 		else if (hit >= LofRecruitOverlay.CARD_BASE)
 		{
 			final int style = hit - LofRecruitOverlay.CARD_BASE;
