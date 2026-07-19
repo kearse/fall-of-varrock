@@ -4,7 +4,7 @@
  * The server pushes the accepted-goods manifest over hidden ~LOFSUP~ chat lines
  * (header H|<nCats>|<driveIdx>|<mult>|<meter>|<max>|<warEffort>, then chunked
  * C|<catIdx>|<label>|<chunk>|<last>|itemId:weEach:carried;... lines) and pulses varp 4624.
- * Selling sends "::sup cat <i>" / "::sup item <id> <qty|all>" / "::sup all", which the server
+ * Selling sends "::sup cat <i>" / "::sup item <id> <qty|all>" / "::lofsup all", which the server
  * intercepts (MessagePublicHandler → supclick), deposits, and re-pushes so the window updates.
  */
 package net.runelite.client.plugins.lofsupply;
@@ -23,6 +23,7 @@ import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.input.MouseManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
+import net.runelite.client.plugins.loftheme.LofWindows;
 import net.runelite.client.ui.overlay.OverlayManager;
 
 @PluginDescriptor(
@@ -58,6 +59,7 @@ public class LofSupplyPlugin extends Plugin
 	protected void startUp()
 	{
 		overlayManager.add(overlay);
+		LofWindows.register(overlay);
 		mouseListener = new LofSupplyMouseListener(this, overlay);
 		mouseManager.registerMouseListener(mouseListener);
 	}
@@ -66,6 +68,7 @@ public class LofSupplyPlugin extends Plugin
 	protected void shutDown()
 	{
 		overlayManager.remove(overlay);
+		LofWindows.unregister(overlay);
 		if (mouseListener != null)
 		{
 			mouseManager.unregisterMouseListener(mouseListener);
@@ -77,6 +80,7 @@ public class LofSupplyPlugin extends Plugin
 	@Subscribe
 	public void onVarbitChanged(VarbitChanged event)
 	{
+		LofWindows.onForeignSignal(event.getVarpId(), client.getVarpValue(event.getVarpId()));
 		if (event.getVarpId() != OPEN_VARP)
 		{
 			return;
@@ -87,6 +91,7 @@ public class LofSupplyPlugin extends Plugin
 			{
 				overlay.resetStickyRows(); // fresh open — in-place refreshes keep their row slots
 			}
+			LofWindows.openExclusive(overlay);
 			overlay.setVisible(true);
 		}
 	}
@@ -157,17 +162,17 @@ public class LofSupplyPlugin extends Plugin
 
 	void sendCategory(int catIdx)
 	{
-		send("::sup cat " + catIdx);
+		send("::lofsup cat " + catIdx);
 	}
 
 	void sendItem(int itemId, int qty)
 	{
-		send("::sup item " + itemId + " " + (qty <= 0 ? "all" : String.valueOf(qty)));
+		send("::lofsup item " + itemId + " " + (qty <= 0 ? "all" : String.valueOf(qty)));
 	}
 
 	void sendAll()
 	{
-		send("::sup all");
+		send("::lofsup all");
 	}
 
 	private void send(String msg)

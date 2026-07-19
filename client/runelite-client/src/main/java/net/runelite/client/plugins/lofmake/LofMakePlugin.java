@@ -23,6 +23,7 @@ import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.input.MouseManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
+import net.runelite.client.plugins.loftheme.LofWindows;
 import net.runelite.client.ui.overlay.OverlayManager;
 
 @PluginDescriptor(
@@ -63,6 +64,7 @@ public class LofMakePlugin extends Plugin
 	protected void startUp()
 	{
 		overlayManager.add(overlay);
+		LofWindows.register(overlay);
 		mouseListener = new LofMakeMouseListener(this, overlay);
 		mouseManager.registerMouseListener(mouseListener);
 	}
@@ -71,6 +73,7 @@ public class LofMakePlugin extends Plugin
 	protected void shutDown()
 	{
 		overlayManager.remove(overlay);
+		LofWindows.unregister(overlay);
 		if (mouseListener != null)
 		{
 			mouseManager.unregisterMouseListener(mouseListener);
@@ -82,6 +85,7 @@ public class LofMakePlugin extends Plugin
 	@Subscribe
 	public void onVarbitChanged(VarbitChanged event)
 	{
+		LofWindows.onForeignSignal(event.getVarpId(), client.getVarpValue(event.getVarpId()));
 		if (event.getVarpId() != OPEN_VARP)
 		{
 			return;
@@ -91,6 +95,7 @@ public class LofMakePlugin extends Plugin
 		{
 			return; // pulse falling edge never closes the window
 		}
+		LofWindows.openExclusive(overlay);
 		overlay.setVisible(true);
 	}
 
@@ -169,7 +174,7 @@ public class LofMakePlugin extends Plugin
 	/** Send the make order as a public-chat token the server intercepts + suppresses. */
 	void sendMake(int resultId, int qty)
 	{
-		final String msg = "::make " + resultId + " " + qty;
+		final String msg = "::lofmake " + resultId + " " + qty;
 		clientThread.invokeLater(() -> client.runScript(ScriptID.CHAT_SEND, msg, 0, 0, 0, -1));
 	}
 }

@@ -17,7 +17,7 @@ import org.alter.game.model.shop.PurchasePolicy
 import org.alter.game.model.shop.ShopItem
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
-import org.alter.plugins.content.mechanics.appearance.AppearanceDesign
+import org.alter.plugins.content.mechanics.appearance.StyleMenu
 import org.alter.plugins.content.mechanics.shops.CoinCurrency
 import org.alter.plugins.content.mechanics.shops.ShopTabs
 import org.alter.plugins.content.mechanics.shops.bindVendorOptions
@@ -40,10 +40,12 @@ private val logger = KotlinLogging.logger {}
  *    of aesthetic clothes (shirts, robes, legwear, hats, gloves, boots) and a full rack of
  *    capes. `BUY_STOCK` so players can sell the pieces back. Pure cosmetic — no stats, no power.
  *
- * The primary makeover path is now the native character-design interface (679, live 3D model —
- * [AppearanceDesign]); the step-by-step dialogue restyle remains as a menu option and fallback
- * until the interface is confirmed rendering on the custom client. Stock and appearance pools
- * are resolved defensively — a missing cache key is skipped rather than crashing plugin init.
+ * The primary makeover path is the client-drawn Character Style window ([StyleMenu] /
+ * `lofstyle`): left-anchored so the player's own live in-world model is the 3D preview. (The
+ * native design interface 679 stays reachable via ::appearance for testing only — its rev-228
+ * layout didn't match the bound component ids.) The step-by-step dialogue restyle remains as a
+ * menu option and fallback. Stock and appearance pools are resolved defensively — a missing
+ * cache key is skipped rather than crashing plugin init.
  */
 class LumbridgeStylistPlugin(
     r: PluginRepository,
@@ -151,7 +153,7 @@ class LumbridgeStylistPlugin(
             openClothes(player)
         }
         onCommand("makeover", description = "Restyle your appearance") {
-            AppearanceDesign.open(player)
+            StyleMenu.open(player)
         }
     }
 
@@ -169,7 +171,7 @@ class LumbridgeStylistPlugin(
             // The mirror: the native character-design screen (interface 679) with the live
             // 3D player model. The step-by-step dialogue below stays as the fallback until
             // the interface is confirmed rendering on the custom client (see AppearanceDesign).
-            1 -> AppearanceDesign.open(player)
+            1 -> StyleMenu.open(player)
             2 -> {
                 say(player, "Take your time - everything's pure fashion, no combat<br>bonuses here.")
                 openClothes(player)

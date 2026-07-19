@@ -20,6 +20,7 @@ import net.runelite.client.input.MouseManager;
 import net.runelite.client.input.MouseWheelListener;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
+import net.runelite.client.plugins.loftheme.LofWindows;
 import net.runelite.client.ui.overlay.OverlayManager;
 
 @PluginDescriptor(
@@ -64,6 +65,7 @@ public class LofTeleportsPlugin extends Plugin
 	protected void startUp()
 	{
 		overlayManager.add(overlay);
+		LofWindows.register(overlay);
 		mouseListener = new LofTeleportsMouseListener(this, overlay);
 		mouseManager.registerMouseListener(mouseListener);
 		wheelListener = event ->
@@ -81,6 +83,7 @@ public class LofTeleportsPlugin extends Plugin
 	protected void shutDown()
 	{
 		overlayManager.remove(overlay);
+		LofWindows.unregister(overlay);
 		if (mouseListener != null)
 		{
 			mouseManager.unregisterMouseListener(mouseListener);
@@ -97,9 +100,11 @@ public class LofTeleportsPlugin extends Plugin
 	@Subscribe
 	public void onVarbitChanged(VarbitChanged event)
 	{
+		LofWindows.onForeignSignal(event.getVarpId(), client.getVarpValue(event.getVarpId()));
 		if (event.getVarpId() == OPEN_VARP && client.getVarpValue(OPEN_VARP) != 0 && config.enabled())
 		{
 			overlay.setActiveTab(0);
+			LofWindows.openExclusive(overlay);
 			overlay.setVisible(true);
 		}
 	}

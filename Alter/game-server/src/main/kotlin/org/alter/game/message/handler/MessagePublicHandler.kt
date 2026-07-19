@@ -38,7 +38,48 @@ class MessagePublicHandler : MessageHandler<MessagePublic> {
         val text = message.message.trim()
         if (text.startsWith("::")) {
             val parts = text.removePrefix("::").trim().split(Regex("\\s+"))
+            // NB: the vanilla gamepack SILENTLY blocks a hardcoded list of "scam-bait" :: words
+            // client-side (::bank proven; ::dice broke the Gambler's Table the same way — the
+            // client substitutes the "very silly!" line and the token never arrives). Overlay
+            // channels therefore use lof-prefixed tokens, which can never collide with Jagex's
+            // list; the short forms stay as aliases for manual testing on the custom client.
             when (parts.firstOrNull()?.lowercase()) {
+                "lofrank" -> {
+                    client.world.plugins.executeCommand(client, "rankclick", parts.drop(1).toTypedArray())
+                    return
+                }
+                "lofzo" -> {
+                    client.world.plugins.executeCommand(client, "zoclick", parts.drop(1).toTypedArray())
+                    return
+                }
+                "lofsup" -> {
+                    client.world.plugins.executeCommand(client, "supclick", parts.drop(1).toTypedArray())
+                    return
+                }
+                "lofmake" -> {
+                    client.world.plugins.executeCommand(client, "makeclick", parts.drop(1).toTypedArray())
+                    return
+                }
+                "lofcon" -> {
+                    client.world.plugins.executeCommand(client, "conclick", parts.drop(1).toTypedArray())
+                    return
+                }
+                "lofforge" -> {
+                    client.world.plugins.executeCommand(client, "forgeclick", parts.drop(1).toTypedArray())
+                    return
+                }
+                "lofdice" -> {
+                    client.world.plugins.executeCommand(client, "diceclick", parts.drop(1).toTypedArray())
+                    return
+                }
+                "lofbond" -> {
+                    client.world.plugins.executeCommand(client, "bondclick", parts.drop(1).toTypedArray())
+                    return
+                }
+                "lofstyle" -> {
+                    client.world.plugins.executeCommand(client, "styleclick", parts.drop(1).toTypedArray())
+                    return
+                }
                 "companion" -> {
                     client.world.plugins.executeCommand(client, "companion", parts.drop(1).toTypedArray())
                     return

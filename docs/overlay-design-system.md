@@ -177,8 +177,20 @@ Reusable pieces — reach for these before inventing a new one. Metrics above.
     **4624 supply depot** · **4625 making window (payload = kind)** · **4626 war contracts** ·
     **4627 war forge** · **4628 dice (open / result: bit9 flag, roll bits 1-7, win bit 8)** ·
     **4629 bond exchange (packed: open|tradeable|claimed)** · **4630 duel rules** ·
-    **4631 mire dispenser (packed: open|data|attuned|bank|streak)**.
+    **4631 mire dispenser (packed: open|data|attuned|bank|streak)** ·
+    **4632 character style (open|female)** · **4640-4679 kit editor** (control + per-slot — was
+    missing from this list; a parallel branch DID double-claim 4631 the same week — keep EVERY
+    varp here).
     (4601/4609/4616 all feed the `lofdials` dial row.)
+
+    **Windows are exclusive** (`LofWindows` in loftheme): register the overlay, call
+    `openExclusive()` before showing, and forward VarbitChanged to `onForeignSignal` — a window
+    left open would otherwise sit on ALWAYS_ON_TOP over the next window (or the kit editor) and
+    swallow its clicks.
+
+    **Command tokens MUST be lof-prefixed** (`::lofdice`, `::lofrank`, …): the vanilla gamepack
+    silently blocks a hardcoded scam-bait list of `::` words client-side (::bank proven, ::dice
+    hit us) — the token never reaches the server. `lof*` can never collide with that list.
   - *Large state* (item lists): **read the existing interface's widgets** (`client.getWidget(group,
     child)` → `getDynamicChildren()`), null-guarded. No custom packet.
   - *Bulk data via chat lines* (the commands list, companion state): send from the server as
@@ -223,8 +235,9 @@ Reusable pieces — reach for these before inventing a new one. Metrics above.
 | `lofcontracts` | Modal (board) | 480×400 | varp 4626 + `~LOFCON~` state + `::con` |
 | `lofforge` | Modal (recipes) | 480×400 | varp 4627 + `~LOFFORGE~` recipes + `::forge` |
 | `lofdice` | Modal (table) | 480×400 | varp 4628 (open/result) + `::dice roll` + inventory coins |
-| `lofbonds` | Modal (wallet) | 480×400 | varp 4629 (packed wallet) + `::bond` |
+| `lofbonds` | Modal (wallet) | 480×400 | varp 4629 (packed wallet) + `::lofbond` |
 | `lofmire` | Modal (loot table) | 480×400 | varp 4631 (packed) + `::mire` + inventory coins |
+| `lofstyle` | Modal (left-anchored) | 264×392, x=16 | varp 4632 (open|female) + `::lofstyle` — the in-world model is the preview |
 | `lofduel` (rules) | Modal | 480×400 | varp 4630 + `::duel` |
 | `lofstake` | Modal (inventory-clear) | 480×400, viewport-left | read iface 335 + `::stake` |
 | `lofdials` | HUD dial row | content, ABOVE_CHATBOX_RIGHT | varps 4616 slayer · 4601 progress · 4609 supplies |
