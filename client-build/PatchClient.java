@@ -32,6 +32,9 @@ import java.util.zip.*;
 
 public final class PatchClient {
 
+    /** Our world config — baked in as the client's default jav_config (see shaded mode). */
+    private static final String JAV_CONFIG = "https://fallofvarrock.com/client/jav_config_standalone.ws";
+
     public static void main(String[] args) throws Exception {
         if (args.length < 3) {
             System.err.println("usage: java PatchClient <injected|wrapper> <in.jar> <out.jar> [modulusHex]");
@@ -73,6 +76,12 @@ public final class PatchClient {
             boolean r = blankConstant(zip, ".runescape.com");
             System.out.println("[hostcheck] .jagex.com " + (j ? "blanked" : "absent") + ", .runescape.com " + (r ? "blanked" : "absent"));
             System.out.println("[title] " + (setRuneliteTitle(zip, "Fall of Varrock") ? "set to 'Fall of Varrock'" : "properties not found"));
+            // Point the DEFAULT jav_config at our world config. Without this the jar only
+            // works when launched with --jav_config=... (the launcher passes it); a player
+            // who double-clicks the bare fov-client.jar fell through to Jagex's live
+            // config, downloaded the real gamepack and died on jar verification
+            // ("Unable to verify jar entry: META-INF/" -> RuneLite's critical-error box).
+            System.out.println("[jav_config] " + (setJavConfig(zip, JAV_CONFIG) ? "-> " + JAV_CONFIG : "properties not found"));
             // Use our own config dir (~/.fov-home) instead of ~/.runelite, so the client
             // never reads the user's real RuneLite/Jagex account session (the "Play Now /
             // <account>" screen). Same trick RSProx uses (.runelite -> .rlcustom). Must be
@@ -153,6 +162,22 @@ public final class PatchClient {
         if (props == null) return false;
         String text = new String(props, StandardCharsets.ISO_8859_1);
         text = text.replaceAll("(?m)^runelite\\.title=.*$", "runelite.title=" + title);
+        zip.put(name, text.getBytes(StandardCharsets.ISO_8859_1));
+        return true;
+    }
+
+    /**
+     * Rewrite both jav_config lines in runelite.properties. The backup gets the same URL:
+     * RuneLite falls back to it when the primary fails, and Jagex's static config would
+     * send the client to the wrong game.
+     */
+    private static boolean setJavConfig(Map<String, byte[]> zip, String url) {
+        String name = "net/runelite/client/runelite.properties";
+        byte[] props = zip.get(name);
+        if (props == null) return false;
+        String text = new String(props, StandardCharsets.ISO_8859_1);
+        text = text.replaceAll("(?m)^runelite\\.jav_config=.*$", "runelite.jav_config=" + url);
+        text = text.replaceAll("(?m)^runelite\\.jav_config_backup=.*$", "runelite.jav_config_backup=" + url);
         zip.put(name, text.getBytes(StandardCharsets.ISO_8859_1));
         return true;
     }

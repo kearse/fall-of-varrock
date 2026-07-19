@@ -29,7 +29,19 @@ public final class FovLauncher {
     static final String JAV_CONFIG = BASE + "jav_config_standalone.ws";
     static final String MAIN_CLASS = "net.runelite.client.RuneLite";
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
+        // jpackage builds a Windows GUI app (no console): an exception escaping main
+        // makes the app vanish a second after launch with nothing on screen and nothing
+        // written down. Everything below is funnelled into a log file + an error dialog
+        // so a failed launch is always reportable.
+        try {
+            run(args);
+        } catch (Throwable t) {
+            fatal(t);
+        }
+    }
+
+    private static void run(String[] args) throws Exception {
         Path liveDir = Paths.get(System.getProperty("user.home"), ".fov-home", "client");
         Files.createDirectories(liveDir);
         Path live = liveDir.resolve(JAR_NAME);
@@ -45,7 +57,7 @@ public final class FovLauncher {
                         Files.copy(seed, live, StandardCopyOption.REPLACE_EXISTING); // seed is current — no download
                     } else {
                         Splash s = Splash.show();
-                        try { download(BASE + JAR_NAME, live); } finally { s.close(); }
+                        try { download(BASE + JAR_NAME, live, remote); } finally { s.close(); }
                     }
                 }
             }
@@ -100,17 +112,50 @@ public final class FovLauncher {
         }
     }
 
-    private static void download(String url, Path dest) throws IOException {
+    /**
+     * Download to a .part file and only promote it once it hashes to `expectSha`.
+     * Without the check a truncated or proxy-mangled body was moved into place as if
+     * it were the real client, and every later launch died loading classes out of it.
+     */
+    private static void download(String url, Path dest, String expectSha) throws Exception {
         HttpURLConnection c = (HttpURLConnection) new URL(url).openConnection();
         c.setConnectTimeout(10000);
         c.setReadTimeout(60000);
+        if (c.getResponseCode() != 200) throw new IOException("client download returned HTTP " + c.getResponseCode());
         Path tmp = dest.resolveSibling(JAR_NAME + ".part");
         try (InputStream in = c.getInputStream(); OutputStream out = Files.newOutputStream(tmp)) {
             byte[] buf = new byte[1 << 16];
             int n;
             while ((n = in.read(buf)) != -1) out.write(buf, 0, n);
         }
+        String got = sha256(tmp);
+        if (!got.equals(expectSha)) {
+            Files.deleteIfExists(tmp);
+            throw new IOException("downloaded client is corrupt (sha256 " + got + " != " + expectSha + ")");
+        }
         Files.move(tmp, dest, StandardCopyOption.REPLACE_EXISTING);
+    }
+
+    /** Last-resort reporting: write ~/.fov-home/launcher.log and show the player a dialog. */
+    private static void fatal(Throwable t) {
+        StringWriter sw = new StringWriter();
+        t.printStackTrace(new PrintWriter(sw));
+        String trace = sw.toString();
+        System.err.println(trace);
+        Path log = Paths.get(System.getProperty("user.home"), ".fov-home", "launcher.log");
+        try {
+            Files.createDirectories(log.getParent());
+            Files.write(log, trace.getBytes("UTF-8"));
+        } catch (Exception ignored) {
+        }
+        try {
+            JOptionPane.showMessageDialog(null,
+                    "Fall of Varrock could not start.\n\n" + t + "\n\nDetails were written to:\n" + log
+                            + "\n\nPlease send that file to us on Discord.",
+                    "Fall of Varrock", JOptionPane.ERROR_MESSAGE);
+        } catch (Throwable ignored) {
+        }
+        System.exit(1);
     }
 
     private static String sha256(Path p) throws Exception {
