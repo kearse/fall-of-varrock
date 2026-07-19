@@ -19,7 +19,7 @@ on:
 env:
   # Bump on every installer rollout: Windows treats a same-version reinstall
   # as already-installed and may skip files.
-  APP_VERSION: "1.0.1"
+  APP_VERSION: "1.0.2"
 
 jobs:
   package:
