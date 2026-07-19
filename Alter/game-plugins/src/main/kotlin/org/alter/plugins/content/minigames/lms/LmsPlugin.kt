@@ -115,8 +115,12 @@ class LmsPlugin(
             "How does this work?",
             "Not now.",
         )) {
-            1 -> LmsGame.join(p)
-            2 -> kitWizard(p, id)
+            1 -> {
+                // Joining wipes gear for the island — never with the kit editor still up.
+                org.alter.plugins.content.kits.KitEditor.close(p)
+                LmsGame.join(p)
+            }
+            2 -> openKitEditor(p)
             3 -> p.openShop(rewardShop)
             4 -> {
                 chatNpc(p, "You'll spawn on the island wearing the kit you've built with me — everyone fights at the same combat stats, so it's all skill. The village chests hold weapons, armour, food and runes to upgrade with.", npc = id, title = "Lisa")
@@ -127,15 +131,12 @@ class LmsPlugin(
         }
     }
 
-    /** The OSRS-style loadout builder: one pick per category, saved persistently ([LmsKits]). */
-    private suspend fun QueueTask.kitWizard(p: Player, npcId: Int) {
-        chatNpc(p, "Your kit right now: ${LmsKits.describe(p)}.", npc = npcId, title = "Lisa")
-        for (cat in LmsKits.CATEGORIES) {
-            val labels = cat.choices.map { it.label } + "Keep current"
-            val pick = options(p, *labels.toTypedArray(), title = cat.title)
-            cat.choices.getOrNull(pick - 1)?.let { LmsKits.save(p, cat.key, it.key) }
-        }
-        chatNpc(p, "Done. You'll spawn with: ${LmsKits.describe(p)}. Change it here any time.", npc = npcId, title = "Lisa")
+    /** The OSRS-style loadout builder — the kit editor in LMS mode: the palette tabs are the five
+     *  [LmsKits] categories, a click picks that bundle (persisted instantly), and the doll +
+     *  inventory preview exactly what [LmsKits.apply] will deal out at game start. */
+    private fun openKitEditor(p: Player) {
+        if (org.alter.plugins.content.kits.KitEditor.isOpen(p)) return
+        org.alter.plugins.content.kits.KitEditor.open(p, org.alter.plugins.content.kits.KitEditor.Mode.LMS)
     }
 
     // ───────────────────────────── loot crates ─────────────────────────────

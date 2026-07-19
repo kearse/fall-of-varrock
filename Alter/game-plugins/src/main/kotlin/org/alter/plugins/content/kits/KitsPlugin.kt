@@ -60,6 +60,7 @@ class KitsPlugin(
                 "d" -> args.getOrNull(1)?.toIntOrNull()?.let { KitEditor.setDiff(player, it) }
                 "start" -> KitEditor.start(player)
                 "load" -> KitEditor.load(player)
+                "done" -> KitEditor.done(player)
                 "x" -> KitEditor.close(player)
             }
         }

@@ -67,6 +67,17 @@ class LofKitOverlay extends Overlay
 
 	/** Training armoury — MUST match the server's KitArmoury pool, grouped for the tabs. */
 	private static final String[] TABS = { "Melee", "Range", "Magic", "Armour", "Supply", "Runes" };
+
+	/** LMS mode: tabs are the LmsKits categories; each tile is a choice's representative item —
+	 *  MUST match the server's LmsKits reps (order = choice order, for the selected-index bits). */
+	private static final String[] LMS_TABS = { "Armour", "Weapon", "Spec", "Magic", "Food" };
+	private static final int[][] LMS_CHOICES = {
+		{ ItemID.FIGHTER_TORSO, ItemID.BLACK_DHIDE_BODY, ItemID.MYSTIC_ROBE_TOP, ItemID.HELM_OF_NEITIZNOT },
+		{ ItemID.ABYSSAL_WHIP, ItemID.MAGIC_SHORTBOW, ItemID.ANCIENT_STAFF },
+		{ ItemID.DRAGON_DAGGER, ItemID.GRANITE_MAUL },
+		{ ItemID.BLOOD_RUNE, ItemID.ASTRAL_RUNE, ItemID.LAW_RUNE },
+		{ ItemID.SARADOMIN_BREW4, ItemID.SHARK },
+	};
 	private static final int[][] ARMOURY = {
 		{ ItemID.ABYSSAL_WHIP, ItemID.DRAGON_DAGGER, ItemID.DRAGON_CLAWS, ItemID.DHAROKS_GREATAXE, ItemID.DRAGON_DEFENDER },
 		{ ItemID.MAGIC_SHORTBOW, ItemID.RUNE_ARROW, ItemID.BLACK_DHIDE_BODY, ItemID.BLACK_DHIDE_CHAPS },
@@ -134,6 +145,11 @@ class LofKitOverlay extends Overlay
 	boolean isTraining()
 	{
 		return ((client.getVarpValue(CONTROL_VARP) >> 1) & 0x3) == 1;
+	}
+
+	boolean isLms()
+	{
+		return ((client.getVarpValue(CONTROL_VARP) >> 1) & 0x3) == 3;
 	}
 
 	int palItemIdAt(int visibleIndex)
@@ -210,29 +226,38 @@ class LofKitOverlay extends Overlay
 	int hitTest(Point p)
 	{
 		if (!isShowing()) return OUTSIDE;
+		final boolean training = isTraining(), lms = isLms();
 		final int ox = originX(), oy = originY();
 		if (!new Rectangle(ox, oy, WIN_W, WIN_H).contains(p)) return OUTSIDE;
 		if (closeRect(ox, oy).contains(p)) return CLOSE;
 		if (actionRect(ox, oy).contains(p)) return ACTION;
-		for (int i = 0; i < 2; i++) if (presetRect(ox, oy, i).contains(p)) return PRESET_BASE + i;
-		for (int i = 0; i < 3; i++)
+		if (!lms)
 		{
-			if (kitLoadRect(ox, oy, i).contains(p)) return KITLOAD_BASE + i;
-			if (kitSaveRect(ox, oy, i).contains(p)) return KITSAVE_BASE + i;
+			for (int i = 0; i < 2; i++) if (presetRect(ox, oy, i).contains(p)) return PRESET_BASE + i;
+			for (int i = 0; i < 3; i++)
+			{
+				if (kitLoadRect(ox, oy, i).contains(p)) return KITLOAD_BASE + i;
+				if (kitSaveRect(ox, oy, i).contains(p)) return KITSAVE_BASE + i;
+			}
+			// In LMS mode the doll + inventory are a read-only preview of the category picks.
+			for (int i = 0; i < EQUIP_SLOTS; i++) if (dollRect(ox, oy, i).contains(p)) return EQUIP_BASE + i;
+			for (int i = 0; i < INV_SIZE; i++) if (invRect(ox, oy, i).contains(p)) return INV_BASE + i;
+			for (int i = 0; i < 3; i++) if (bookRect(ox, oy, i).contains(p)) return BOOK_BASE + i;
 		}
-		for (int i = 0; i < EQUIP_SLOTS; i++) if (dollRect(ox, oy, i).contains(p)) return EQUIP_BASE + i;
-		for (int i = 0; i < INV_SIZE; i++) if (invRect(ox, oy, i).contains(p)) return INV_BASE + i;
-		if (isTraining())
+		if (training || lms)
 		{
-			for (int i = 0; i < TABS.length; i++) if (tabRect(ox, oy, i).contains(p)) return TAB_BASE + i;
+			final int tabs = lms ? LMS_TABS.length : TABS.length;
+			for (int i = 0; i < tabs; i++) if (tabRect(ox, oy, i).contains(p)) return TAB_BASE + i;
+		}
+		if (training)
+		{
 			for (int i = 0; i < 3; i++) if (diffRect(ox, oy, i).contains(p)) return DIFF_BASE + i;
 		}
-		else
+		if (!training && !lms)
 		{
 			if (pagePrevRect(ox, oy).contains(p)) return PAGE_PREV;
 			if (pageNextRect(ox, oy).contains(p)) return PAGE_NEXT;
 		}
-		for (int i = 0; i < 3; i++) if (bookRect(ox, oy, i).contains(p)) return BOOK_BASE + i;
 		final int[] pal = palCache;
 		for (int i = 0; i < pal.length; i++) if (palRect(ox, oy, i).contains(p)) return PAL_BASE + i;
 		return INSIDE;
@@ -240,12 +265,17 @@ class LofKitOverlay extends Overlay
 
 	// ── palette contents ──
 
-	/** The palette page currently on screen: the tab's armoury (training) or a bank page (bank mode). */
+	/** The palette page on screen: the tab's armoury (training), the tab's LMS category choices
+	 *  (LMS mode), or a bank page (bank mode). */
 	private int[] buildPalette()
 	{
 		if (isTraining())
 		{
 			return ARMOURY[Math.min(tab, ARMOURY.length - 1)];
+		}
+		if (isLms())
+		{
+			return LMS_CHOICES[Math.min(tab, LMS_CHOICES.length - 1)];
 		}
 		final ItemContainer bank = client.getItemContainer(InventoryID.BANK);
 		if (bank == null) return new int[0];
@@ -279,7 +309,9 @@ class LofKitOverlay extends Overlay
 		g.translate(-selfBounds.x, -selfBounds.y);
 
 		final int control = client.getVarpValue(CONTROL_VARP);
-		final boolean training = ((control >> 1) & 0x3) == 1;
+		final int mode = (control >> 1) & 0x3;
+		final boolean training = mode == 1;
+		final boolean lms = mode == 3;
 		final int book = (control >> 3) & 0x3;
 		final int diff = (control >> 5) & 0x3;
 		final int ox = originX(), oy = originY();
@@ -304,29 +336,41 @@ class LofKitOverlay extends Overlay
 		final Rectangle xr = closeRect(ox, oy);
 		LofTheme.shadowText(g, "✕", xr.x + 6, xr.y + 16, xr.contains(mouse) ? LofTheme.LAVA : LofTheme.TEXT_DIM);
 
-		// preset + save-slot chips
+		// preset + save-slot chips (not in LMS mode — LMS has exactly one kit, the category picks)
 		g.setFont(FontManager.getRunescapeFont());
-		final String[] presets = { "Dharok's", "NH Tribrid" };
-		for (int i = 0; i < 2; i++)
+		if (!lms)
 		{
-			chip(g, presetRect(ox, oy, i), presets[i], false, presetRect(ox, oy, i).contains(mouse));
+			final String[] presets = { "Dharok's", "NH Tribrid" };
+			for (int i = 0; i < 2; i++)
+			{
+				chip(g, presetRect(ox, oy, i), presets[i], false, presetRect(ox, oy, i).contains(mouse));
+			}
+			for (int i = 0; i < 3; i++)
+			{
+				final boolean filled = (control & (1 << (7 + i))) != 0;
+				final Rectangle lr = kitLoadRect(ox, oy, i);
+				chip(g, lr, "Kit " + (i + 1), filled, lr.contains(mouse));
+				final Rectangle sr = kitSaveRect(ox, oy, i);
+				chip(g, sr, "S", false, sr.contains(mouse));
+				if (lr.contains(mouse)) hover = filled ? "Load your saved kit " + (i + 1) : "Empty — press S to save the current setup here";
+				if (sr.contains(mouse)) hover = "Save the current setup to kit slot " + (i + 1);
+			}
 		}
-		for (int i = 0; i < 3; i++)
+		else
 		{
-			final boolean filled = (control & (1 << (7 + i))) != 0;
-			final Rectangle lr = kitLoadRect(ox, oy, i);
-			chip(g, lr, "Kit " + (i + 1), filled, lr.contains(mouse));
-			final Rectangle sr = kitSaveRect(ox, oy, i);
-			chip(g, sr, "S", false, sr.contains(mouse));
-			if (lr.contains(mouse)) hover = filled ? "Load your saved kit " + (i + 1) : "Empty — press S to save the current setup here";
-			if (sr.contains(mouse)) hover = "Save the current setup to kit slot " + (i + 1);
+			g.setFont(FontManager.getRunescapeSmallFont());
+			LofTheme.shadowText(g, "Your Last Man Standing spawn kit — pick one option per tab.",
+				ox + PAD + 2, oy + PRESET_Y + 14, LofTheme.TEXT_DIM);
+			g.setFont(FontManager.getRunescapeFont());
 		}
 
 		// section labels
 		g.setFont(FontManager.getRunescapeSmallFont());
-		LofTheme.shadowText(g, "WORN GEAR", ox + DOLL_X + 2, oy + LABEL_Y, LofTheme.GOLD_DIM);
-		LofTheme.shadowText(g, "INVENTORY", ox + INV_X + 2, oy + LABEL_Y, LofTheme.GOLD_DIM);
-		LofTheme.shadowText(g, training ? "ARMOURY — CLICK TO ADD" : "YOUR BANK — CLICK TO ADD", ox + PAL_X + 2, oy + LABEL_Y, LofTheme.GOLD_DIM);
+		LofTheme.shadowText(g, lms ? "YOU'LL WEAR" : "WORN GEAR", ox + DOLL_X + 2, oy + LABEL_Y, LofTheme.GOLD_DIM);
+		LofTheme.shadowText(g, lms ? "YOU'LL CARRY" : "INVENTORY", ox + INV_X + 2, oy + LABEL_Y, LofTheme.GOLD_DIM);
+		LofTheme.shadowText(g,
+			training ? "ARMOURY — CLICK TO ADD" : lms ? "KIT OPTIONS — ONE PER TAB" : "YOUR BANK — CLICK TO ADD",
+			ox + PAL_X + 2, oy + LABEL_Y, LofTheme.GOLD_DIM);
 
 		// worn gear paper-doll (varps 4641..4651)
 		for (int i = 0; i < EQUIP_SLOTS; i++)
@@ -334,8 +378,8 @@ class LofKitOverlay extends Overlay
 			final int packed = client.getVarpValue(SLOT_VARP_BASE + i);
 			final Rectangle rc = dollRect(ox, oy, i);
 			final boolean hov = rc.contains(mouse);
-			itemSlot(g, rc, packed, SLOTS[i], hov);
-			if (hov && (packed & 0xFFFF) != 0) hover = "Remove " + itemName(packed & 0xFFFF);
+			itemSlot(g, rc, packed, SLOTS[i], hov && !lms);
+			if (hov && !lms && (packed & 0xFFFF) != 0) hover = "Remove " + itemName(packed & 0xFFFF);
 		}
 
 		// inventory grid (varps 4652..4679)
@@ -344,30 +388,37 @@ class LofKitOverlay extends Overlay
 			final int packed = client.getVarpValue(SLOT_VARP_BASE + EQUIP_SLOTS + i);
 			final Rectangle rc = invRect(ox, oy, i);
 			final boolean hov = rc.contains(mouse);
-			itemSlot(g, rc, packed, null, hov);
-			if (hov && (packed & 0xFFFF) != 0) hover = "Remove " + itemName(packed & 0xFFFF);
+			itemSlot(g, rc, packed, null, hov && !lms);
+			if (hov && !lms && (packed & 0xFFFF) != 0) hover = "Remove " + itemName(packed & 0xFFFF);
 		}
 
-		// palette: armoury tabs (training) or the bank with paging (bank mode)
+		// palette: armoury tabs (training), category tabs (LMS), or the bank with paging (bank mode)
 		final int[] pal = buildPalette();
 		palCache = pal;
-		if (training)
+		if (training || lms)
 		{
+			final String[] tabs = lms ? LMS_TABS : TABS;
 			g.setFont(FontManager.getRunescapeSmallFont());
-			for (int i = 0; i < TABS.length; i++)
+			for (int i = 0; i < tabs.length; i++)
 			{
 				final Rectangle rc = tabRect(ox, oy, i);
-				chip(g, rc, TABS[i], i == tab, rc.contains(mouse));
+				chip(g, rc, tabs[i], i == tab, rc.contains(mouse));
 			}
 		}
+		final int lmsSelected = lms ? (control >> (10 + 2 * Math.min(tab, LMS_CHOICES.length - 1))) & 0x3 : -1;
 		for (int i = 0; i < pal.length; i++)
 		{
 			final Rectangle rc = palRect(ox, oy, i);
 			final boolean hov = rc.contains(mouse);
 			itemSlot(g, rc, pal[i] | (1 << 16), null, hov);
-			if (hov) hover = "Add " + itemName(pal[i]);
+			if (lms && i == lmsSelected)
+			{
+				g.setColor(LofTheme.GOLD);
+				g.drawRoundRect(rc.x, rc.y, rc.width - 1, rc.height - 1, 6, 6);
+			}
+			if (hov) hover = (lms ? "Pick " : "Add ") + itemName(pal[i]);
 		}
-		if (!training)
+		if (!training && !lms)
 		{
 			g.setFont(FontManager.getRunescapeSmallFont());
 			if (pal.length == 0)
@@ -379,14 +430,24 @@ class LofKitOverlay extends Overlay
 			LofTheme.shadowText(g, "Page " + (bankPage + 1), ox + PAL_X + 78, pagePrevRect(ox, oy).y + 13, LofTheme.TEXT_DIM);
 		}
 
-		// footer: spellbook, difficulty (training), action button
-		g.setFont(FontManager.getRunescapeSmallFont());
-		LofTheme.shadowText(g, "BOOK", ox + PAD, oy + WIN_H - FOOT_H + 14, LofTheme.GOLD_DIM);
-		g.setFont(FontManager.getRunescapeFont());
-		final String[] books = { "Std", "Anc", "Lun" };
-		for (int i = 0; i < 3; i++)
+		// footer: spellbook (not LMS — the magic pack owns it), difficulty (training), action button
+		if (!lms)
 		{
-			chip(g, bookRect(ox, oy, i), books[i], book == i, bookRect(ox, oy, i).contains(mouse));
+			g.setFont(FontManager.getRunescapeSmallFont());
+			LofTheme.shadowText(g, "BOOK", ox + PAD, oy + WIN_H - FOOT_H + 14, LofTheme.GOLD_DIM);
+			g.setFont(FontManager.getRunescapeFont());
+			final String[] books = { "Std", "Anc", "Lun" };
+			for (int i = 0; i < 3; i++)
+			{
+				chip(g, bookRect(ox, oy, i), books[i], book == i, bookRect(ox, oy, i).contains(mouse));
+			}
+		}
+		else
+		{
+			g.setFont(FontManager.getRunescapeSmallFont());
+			final String[] bookNames = { "Standard", "Ancients", "Lunar" };
+			LofTheme.shadowText(g, "SPELLBOOK: " + bookNames[Math.min(book, 2)] + " (set by your magic pack)",
+				ox + PAD, oy + WIN_H - FOOT_H + 14, LofTheme.GOLD_DIM);
 		}
 		if (training)
 		{
@@ -400,7 +461,8 @@ class LofKitOverlay extends Overlay
 			}
 		}
 		g.setFont(FontManager.getRunescapeBoldFont());
-		button(g, actionRect(ox, oy), training ? "Start bout" : "Load kit", LofTheme.GOLD, false, actionRect(ox, oy).contains(mouse));
+		button(g, actionRect(ox, oy), training ? "Start bout" : lms ? "Done" : "Load kit",
+			LofTheme.GOLD, false, actionRect(ox, oy).contains(mouse));
 
 		// hover hint in the title bar (OSRS-style)
 		if (hover != null)

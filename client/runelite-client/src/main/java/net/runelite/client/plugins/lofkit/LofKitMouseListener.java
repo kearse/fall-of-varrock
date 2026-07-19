@@ -44,7 +44,7 @@ class LofKitMouseListener extends MouseAdapter
 		}
 		else if (hit == LofKitOverlay.ACTION)
 		{
-			plugin.sendAction(overlay.isTraining() ? "start" : "load");
+			plugin.sendAction(overlay.isTraining() ? "start" : overlay.isLms() ? "done" : "load");
 		}
 		else if (hit == LofKitOverlay.PAGE_PREV)
 		{

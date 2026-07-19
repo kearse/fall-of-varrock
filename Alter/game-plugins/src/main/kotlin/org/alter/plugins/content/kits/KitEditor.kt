@@ -24,6 +24,11 @@ import org.alter.game.model.item.Item
  *  - [Mode.BANK] — opened at a bank. Any item id is allowed IN THE KIT (the palette is the player's
  *    own bank, client-side); loading only ever withdraws items actually present in their bank, so
  *    an arbitrary saved id is harmless. "Load kit" is handled by the plugin's bank loader.
+ *  - [Mode.LMS] — Lisa's "Build my kit". LMS keeps its category balance (ONE pick per category),
+ *    so the editor becomes a visual PICKER: the palette tabs are the five LmsKits categories, each
+ *    tile is a choice's representative item, a click selects that whole bundle (persisted at once,
+ *    like the old wizard), and the doll + inventory render a live preview of the resulting spawn
+ *    loadout. Slot clicks / presets / save slots / book / difficulty are all inert in this mode.
  */
 object KitEditor {
     const val CONTROL_VARP = 4640
@@ -37,7 +42,7 @@ object KitEditor {
         EquipmentType.BOOTS.id, EquipmentType.RING.id, EquipmentType.AMMO.id,
     )
 
-    enum class Mode { TRAINING, BANK }
+    enum class Mode { TRAINING, BANK, LMS }
 
     class Session(
         val player: Player,
@@ -64,6 +69,12 @@ object KitEditor {
         onLoad: ((KitSetup) -> Unit)? = null,
     ) {
         val s = Session(p, mode, onStart, onLoad)
+        if (mode == Mode.LMS) {
+            // LMS state lives in LmsKits (persisted selection) — the session just mirrors it.
+            sessions[p.index] = s
+            publish(s)
+            return
+        }
         s.savedKits = KitStorage.load(p)
         // Open on the last-used saved kit if there is one, else the Dharok preset — never a blank
         // screen: there is always something concrete on the doll to react to.
@@ -86,10 +97,18 @@ object KitEditor {
 
     // ── actions (routed from ::kit via KitsPlugin) ──
 
-    /** Add [itemId] — gear equips into its slot, anything else takes the first free inventory slot. */
+    /** Add [itemId] — gear equips into its slot, anything else takes the first free inventory slot.
+     *  In LMS mode a palette click is a CATEGORY PICK: the id is a choice's representative item. */
     fun addItem(p: Player, itemId: Int) {
         val s = sessions[p.index] ?: return
         if (itemId <= 0) return
+        if (s.mode == Mode.LMS) {
+            val (cat, choice) = org.alter.plugins.content.minigames.lms.LmsKits.choiceByRepId(itemId) ?: return
+            org.alter.plugins.content.minigames.lms.LmsKits.save(p, cat.key, choice.key)
+            p.message("${cat.title}: <col=007f00>${choice.label}</col>.")
+            publish(s)
+            return
+        }
         if (s.mode == Mode.TRAINING && !KitArmoury.contains(itemId)) {
             p.message("The armoury doesn't stock that."); return
         }
@@ -112,6 +131,7 @@ object KitEditor {
     /** Clear worn-slot [dollIndex] (index into [SLOT_IDS]). */
     fun clearEquip(p: Player, dollIndex: Int) {
         val s = sessions[p.index] ?: return
+        if (s.mode == Mode.LMS) return // the LMS doll is a read-only preview of the category picks
         if (dollIndex !in SLOT_IDS.indices) return
         s.kit.gear.remove(SLOT_IDS[dollIndex])
         publish(s)
@@ -120,6 +140,7 @@ object KitEditor {
     /** Clear inventory slot [slot] (0..27). */
     fun clearInv(p: Player, slot: Int) {
         val s = sessions[p.index] ?: return
+        if (s.mode == Mode.LMS) return
         if (slot !in 0 until KitSetup.INV_SIZE) return
         s.kit.inv.remove(slot)
         publish(s)
@@ -128,12 +149,14 @@ object KitEditor {
     /** Load a built-in preset: 0 = Dharok's, 1 = NH tribrid. */
     fun loadPreset(p: Player, index: Int) {
         val s = sessions[p.index] ?: return
+        if (s.mode == Mode.LMS) return
         loadInto(s, if (index == 0) KitArmoury.DHAROK else KitArmoury.NH)
         publish(s)
     }
 
     fun loadSaved(p: Player, slot: Int) {
         val s = sessions[p.index] ?: return
+        if (s.mode == Mode.LMS) return
         val kit = s.savedKits.getOrNull(slot) ?: run { p.message("That kit slot is empty — press Save to fill it."); return }
         loadInto(s, kit)
         publish(s)
@@ -141,6 +164,7 @@ object KitEditor {
 
     fun saveKit(p: Player, slot: Int) {
         val s = sessions[p.index] ?: return
+        if (s.mode == Mode.LMS) return
         if (slot !in 0 until KitStorage.SLOT_COUNT) return
         if (s.kit.isEmpty()) { p.message("There's nothing to save yet."); return }
         KitStorage.save(p, slot, s.kit)
@@ -151,6 +175,7 @@ object KitEditor {
 
     fun setBook(p: Player, book: Int) {
         val s = sessions[p.index] ?: return
+        if (s.mode == Mode.LMS) return // the magic-pack category owns the spellbook in LMS
         if (book !in 0..2) return
         s.kit.book = book
         publish(s)
@@ -174,6 +199,14 @@ object KitEditor {
         onStart(kit, diff)
     }
 
+    /** LMS mode "Done" — the picks were persisted as they were clicked; just confirm and close. */
+    fun done(p: Player) {
+        val s = sessions[p.index] ?: return
+        if (s.mode != Mode.LMS) return
+        close(p)
+        p.message("<col=007f00>Kit saved.</col> You'll spawn with it in your next Last Man Standing game.")
+    }
+
     /** Bank mode "Load kit" — hand the kit to the bank loader and close. */
     fun load(p: Player) {
         val s = sessions[p.index] ?: return
@@ -194,28 +227,36 @@ object KitEditor {
 
     /**
      * Control varp layout (must match the client overlay):
-     *   bit 0     open
-     *   bits 1-2  mode (1 = training, 2 = bank)
-     *   bits 3-4  spellbook (0 std / 1 ancients / 2 lunar)
-     *   bits 5-6  difficulty (training only)
-     *   bits 7-9  which of the three save slots hold a kit
+     *   bit 0      open
+     *   bits 1-2   mode (1 = training, 2 = bank, 3 = LMS)
+     *   bits 3-4   spellbook (0 std / 1 ancients / 2 lunar)
+     *   bits 5-6   difficulty (training only)
+     *   bits 7-9   which of the three save slots hold a kit
+     *   bits 10-19 LMS: selected choice index per category (2 bits each, LmsKits.CATEGORIES order)
      */
     private fun publish(s: Session) {
         val p = s.player
         if (p.index < 0) return
+        // LMS mode renders a preview of the persisted category picks; the other modes render s.kit.
+        val kit = if (s.mode == Mode.LMS) org.alter.plugins.content.minigames.lms.LmsKits.buildKit(p) else s.kit
         var c = 1
-        c = c or ((if (s.mode == Mode.TRAINING) 1 else 2) shl 1)
-        c = c or (s.kit.book.coerceIn(0, 2) shl 3)
+        c = c or (when (s.mode) { Mode.TRAINING -> 1; Mode.BANK -> 2; Mode.LMS -> 3 } shl 1)
+        c = c or (kit.book.coerceIn(0, 2) shl 3)
         c = c or (s.diff.coerceIn(0, 2) shl 5)
         for (i in 0 until KitStorage.SLOT_COUNT) {
             if (s.savedKits[i] != null) c = c or (1 shl (7 + i))
         }
+        if (s.mode == Mode.LMS) {
+            org.alter.plugins.content.minigames.lms.LmsKits.selectedIndices(p).forEachIndexed { i, sel ->
+                c = c or ((sel and 0x3) shl (10 + 2 * i))
+            }
+        }
         p.setVarp(CONTROL_VARP, c)
         SLOT_IDS.forEachIndexed { i, slotId ->
-            p.setVarp(SLOT_VARP_BASE + i, packItem(s.kit.gear[slotId]))
+            p.setVarp(SLOT_VARP_BASE + i, packItem(kit.gear[slotId]))
         }
         for (i in 0 until KitSetup.INV_SIZE) {
-            p.setVarp(SLOT_VARP_BASE + EQUIP_SLOTS + i, packItem(s.kit.inv[i]))
+            p.setVarp(SLOT_VARP_BASE + EQUIP_SLOTS + i, packItem(kit.inv[i]))
         }
     }
 
