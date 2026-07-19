@@ -15,8 +15,11 @@ import javax.inject.Inject;
 import net.runelite.api.ChatLineBuffer;
 import net.runelite.api.Client;
 import net.runelite.api.MessageNode;
+import net.runelite.api.Player;
 import net.runelite.api.ScriptID;
+import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.ChatMessage;
+import net.runelite.api.events.GameTick;
 import net.runelite.api.events.VarbitChanged;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.eventbus.Subscribe;
@@ -60,6 +63,9 @@ public class LofMakePlugin extends Plugin
 	private int pendingCount;
 	private final List<LofMakeOverlay.Recipe> pendingRows = new ArrayList<>();
 
+	/** Where the player stood when the window opened — walking off the station closes it. */
+	private WorldPoint anchor;
+
 	@Override
 	protected void startUp()
 	{
@@ -97,6 +103,42 @@ public class LofMakePlugin extends Plugin
 		}
 		LofWindows.openExclusive(overlay);
 		overlay.setVisible(true);
+		anchor = localTile();
+	}
+
+	/**
+	 * Walking away closes the window (the station is out of reach anyway — the server refuses a
+	 * make that isn't at the furnace/anvil, so an open window there is a lie).
+	 */
+	@Subscribe
+	public void onGameTick(GameTick event)
+	{
+		if (!overlay.isVisible())
+		{
+			anchor = null;
+			return;
+		}
+		final WorldPoint here = localTile();
+		if (here == null)
+		{
+			return;
+		}
+		if (anchor == null)
+		{
+			anchor = here;
+			return;
+		}
+		if (!here.equals(anchor))
+		{
+			overlay.setVisible(false);
+			anchor = null;
+		}
+	}
+
+	private WorldPoint localTile()
+	{
+		final Player local = client.getLocalPlayer();
+		return local == null ? null : local.getWorldLocation();
 	}
 
 	/**
