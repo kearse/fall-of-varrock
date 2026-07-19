@@ -99,7 +99,7 @@ class DailyVotePlugin(
             val url = site.urlTemplate.replace("{username}", encoded)
             val last = lastBySite[site.id] ?: 0L
             val remainingMins = ((last + VOTE_COOLDOWN_MS - now).coerceAtLeast(0L) / 60_000L).toInt()
-            player.message("${VOTE_TRIGGER_PREFIX}row|$i|${site.name}|$url|$remainingMins", ChatMessageType.CONSOLE)
+            player.message("${VOTE_TRIGGER_PREFIX}row|$i|${site.name}|$url|$remainingMins|${site.logoUrl}", ChatMessageType.CONSOLE)
         }
         player.message("${VOTE_TRIGGER_PREFIX}end", ChatMessageType.CONSOLE)
         player.message("Vote for Fall of Varrock at <col=801700>fallofvarrock.com/vote</col> — rewards are delivered automatically (or ::claimvote).")
@@ -200,16 +200,19 @@ class DailyVotePlugin(
          * The toplists streamed to the vote window. KEEP IN SYNC with the website's
          * VOTE_SITES (Alter/web/src/lib/vote.ts) — same ids (they key the cooldown
          * lookup against the `votes` collection), same order, same {username} slot.
+         * logoUrl is the site's own official vote-badge image (from their embed code);
+         * "" draws the client's lettered fallback tile until a badge URL is known.
          */
         val VOTE_SITES = listOf(
-            VoteSite("rsps-list", "RSPS-List", "https://www.rsps-list.com/index.php?a=in&u=BizzyZ&id={username}"),
-            VoteSite("rulocus", "RuLocus", "https://www.rulocus.com/top-rsps-list/fall-of-varrock/vote?callback={username}"),
-            VoteSite("moparscape", "Moparscape", "https://www.moparscape.org/rsps-list/server/fall-of-varrock?incentive={username}"),
-            VoteSite("top100arena", "Top100Arena", "https://www.top100arena.com/listing/LISTING_ID/vote?incentive={username}"),
-            VoteSite("topg", "TopG", "https://topg.org/runescape-private-servers/server-684312-{username}#vote"),
+            VoteSite("rsps-list", "RSPS-List", "https://www.rsps-list.com/index.php?a=in&u=BizzyZ&id={username}", "https://www.rsps-list.com/images/vote.jpg"),
+            VoteSite("rulocus", "RuLocus", "https://www.rulocus.com/top-rsps-list/fall-of-varrock/vote?callback={username}", ""),
+            VoteSite("moparscape", "Moparscape", "https://www.moparscape.org/rsps-list/server/fall-of-varrock?incentive={username}", ""),
+            VoteSite("top100arena", "Top100Arena", "https://www.top100arena.com/listing/LISTING_ID/vote?incentive={username}", ""),
+            VoteSite("topg", "TopG", "https://topg.org/runescape-private-servers/server-684312-{username}#vote", "https://topg.org/topg.gif"),
         )
     }
 
-    /** One toplist: web-matching id, display name, vote URL with a {username} slot. */
-    data class VoteSite(val id: String, val name: String, val urlTemplate: String)
+    /** One toplist: web-matching id, display name, vote URL with a {username} slot,
+     *  and the site's official badge-image URL ("" = none yet). */
+    data class VoteSite(val id: String, val name: String, val urlTemplate: String, val logoUrl: String)
 }
