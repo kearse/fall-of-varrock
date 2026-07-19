@@ -57,45 +57,36 @@ class RoyalSmithPlugin(
             chatNpc(p, "But my forge serves the realm's proven, ${p.address} — earn the rank of <col=801700>Knight</col> and we'll talk work.", npc = smithId, title = "Royal Smith")
             return
         }
-        when (options(p, "Melee (Bandos → Torva)", "Ranged (Armadyl → Masori)", "Magic (Ahrim's → Ancestral)", "What is war-forging?", "Farewell.")) {
-            1 -> pickPiece(p, "Melee")
-            2 -> pickPiece(p, "Ranged")
-            3 -> pickPiece(p, "Magic")
-            4 -> explain(p)
-            5 -> chatPlayer(p, "Farewell.")
-        }
+        // The recipes themselves are the client-drawn War Forge window (lofforge): base → result
+        // rows with the material checklist drawn, not spoken.
+        ForgeMenu.open(p)
     }
 
-    private suspend fun QueueTask.explain(p: Player) {
-        chatNpc(p, "Every forged piece takes the war itself: the base armour — win it or buy it — <col=801700>${WarForge.COMMENDATION_COST} Commendations</col> earned marching with the knights, <col=801700>${WarForge.RUNITE_BAR_COST} runite bars</col> from the realm's smelters, and a ${"%,d".format(WarForge.COIN_COST)} coin fee.", npc = smithId, title = "Royal Smith")
-        chatNpc(p, "Commendations are yours alone — no coin buys another soldier's service record. The finished piece, though? Sell it if you like. Somebody marched for it either way.", npc = smithId, title = "Royal Smith")
-    }
-
-    private suspend fun QueueTask.pickPiece(p: Player, style: String) {
-        val recipes = WarForge.recipesFor(style)
-        val labels = recipes.map { it.display }.toTypedArray()
-        val choice = options(p, *labels, "Back.")
-        if (choice !in 1..recipes.size) return
-        confirmForge(p, recipes[choice - 1])
-    }
-
-    private suspend fun QueueTask.confirmForge(p: Player, r: WarForge.Recipe) {
-        chatNpc(p, "A <col=801700>${r.display}</col>. The price: ${WarForge.costLine(r)}. All of it in your pack, mind.", npc = smithId, title = "Royal Smith")
-        val missing = WarForge.missingFor(p, r)
-        if (missing != null) {
-            chatNpc(p, "You're short: <col=801700>$missing</col>. Come back when you have it all.", npc = smithId, title = "Royal Smith")
+    /** The window's forge channel ("::forge make <i>" → forgeclick). Also testable directly. */
+    private fun forgeClick(p: Player, index: Int?) {
+        if (p.title.ordinal < Title.KNIGHT.ordinal) {
+            p.message("The forge serves the realm's proven — earn the rank of Knight first.")
             return
         }
-        when (options(p, "Forge the ${r.display}.", "Not yet.")) {
-            1 -> {
-                if (WarForge.forge(p, r)) {
-                    chatNpc(p, "Stand back... <col=801700>Done.</col> Wear it well, ${p.address} — the realm's fire is in it.", npc = smithId, title = "Royal Smith")
-                    Announce.broadcast(world, "<col=ffcc00>${p.username} has war-forged a ${r.display} at the Royal Smith!</col>")
-                } else {
-                    chatNpc(p, "Your pack changed while I readied the forge. Bring the full price and we'll try again.", npc = smithId, title = "Royal Smith")
-                }
-            }
-            else -> chatPlayer(p, "Not yet.")
+        val r = index?.let { WarForge.RECIPES.getOrNull(it) } ?: return
+        val missing = WarForge.missingFor(p, r)
+        if (missing != null) {
+            p.message("You're short: <col=801700>$missing</col>.")
+            return
+        }
+        if (WarForge.forge(p, r)) {
+            p.message("<col=ffcc00>Stand back... Done.</col> The realm's fire is in your ${r.display}.")
+            Announce.broadcast(world, "<col=ffcc00>${p.username} has war-forged a ${r.display} at the Royal Smith!</col>")
+            ForgeMenu.open(p) // refresh the open window's checklist
+        } else {
+            p.message("Your pack changed while the forge was readied. Bring the full price and try again.")
+        }
+    }
+
+    init {
+        onCommand("forgeclick", description = "War Forge window action (client overlay channel)") {
+            val a = player.getCommandArgs()
+            if (a.getOrNull(0)?.lowercase() == "make") forgeClick(player, a.getOrNull(1)?.toIntOrNull())
         }
     }
 }

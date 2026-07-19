@@ -42,6 +42,7 @@ class LofRecruitOverlay extends Overlay
 	static final int OUTSIDE = -1;
 	static final int INSIDE = 0;
 	static final int CLOSE = 1;
+	static final int REGALIA_TAB = 2;
 	static final int CARD_BASE = 100; // +0 melee, +1 range, +2 mage
 
 	static final String[] STYLE_TOKENS = {"melee", "range", "mage"};
@@ -68,10 +69,12 @@ class LofRecruitOverlay extends Overlay
 	private static final int TITLE_H = 38;
 	private static final int PAD = 14;
 
-	private static final int CARDS_Y = TITLE_H + 12;   // 50
-	private static final int CARD_H = 168;
+	private static final int TABS_Y = TITLE_H + 8;     // Muster | Regalia
+	private static final int TAB_H = 22;
+	private static final int CARDS_Y = TABS_Y + TAB_H + 8; // 76
+	private static final int CARD_H = 158;
 	private static final int CARD_GAP = 10;
-	private static final int STRIP_Y = CARDS_Y + CARD_H + 12;
+	private static final int STRIP_Y = CARDS_Y + CARD_H + 10;
 	private static final int STRIP_H = 34;
 
 	private final Client client;
@@ -141,6 +144,11 @@ class LofRecruitOverlay extends Overlay
 		return new Rectangle(ox + PAD + i * (w + CARD_GAP), oy + CARDS_Y, w, CARD_H);
 	}
 
+	private Rectangle tabRect(int ox, int oy, int i)
+	{
+		return new Rectangle(ox + PAD + i * 96, oy + TABS_Y, 90, TAB_H);
+	}
+
 	int hitTest(Point p)
 	{
 		if (!visible)
@@ -155,6 +163,10 @@ class LofRecruitOverlay extends Overlay
 		if (closeRect(ox, oy).contains(p))
 		{
 			return CLOSE;
+		}
+		if (tabRect(ox, oy, 1).contains(p))
+		{
+			return REGALIA_TAB;
 		}
 		if (recruitable())
 		{
@@ -212,6 +224,26 @@ class LofRecruitOverlay extends Overlay
 
 		LofTheme.panel(g, ox, oy, WIN_W, WIN_H, WIN_ARC);
 		drawHeader(g, ox, oy, mouse);
+
+		// tab strip: Muster (this window) | Regalia (opens the Commander's Regalia shop —
+		// the native shop window draws the real sanguine torva sprites)
+		g.setFont(FontManager.getRunescapeSmallFont());
+		for (int t = 0; t < 2; t++)
+		{
+			final Rectangle tr = tabRect(ox, oy, t);
+			final boolean sel = t == 0;
+			final boolean hovT = tr.contains(mouse);
+			g.setColor(sel ? LofTheme.alpha(LofTheme.EMBER, 44) : hovT ? LofTheme.ROW_HOVER : LofTheme.ROW);
+			g.fillRoundRect(tr.x, tr.y, tr.width, tr.height, 8, 8);
+			if (sel)
+			{
+				g.setColor(LofTheme.alpha(LofTheme.EMBER, 150));
+				g.drawRoundRect(tr.x, tr.y, tr.width, tr.height, 8, 8);
+			}
+			final String tl = t == 0 ? "Muster" : "Regalia";
+			LofTheme.shadowText(g, tl, tr.x + (tr.width - g.getFontMetrics().stringWidth(tl)) / 2, tr.y + 15,
+				sel ? LofTheme.GOLD : LofTheme.TEXT_DIM);
+		}
 
 		for (int i = 0; i < 3; i++)
 		{

@@ -13,7 +13,7 @@ import org.alter.game.model.shop.ShopCurrency
 import org.alter.game.model.shop.ShopItem
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
-import org.alter.plugins.content.economy.SupplyDepot
+import org.alter.plugins.content.economy.SupplyMenu
 import org.alter.plugins.content.mechanics.shops.CoinCurrency
 import org.alter.plugins.content.mechanics.shops.ItemCurrency
 import org.alter.plugins.content.mechanics.shops.ShopTabs
@@ -288,7 +288,9 @@ class WarlordsArmouryPlugin(
         // Selling 3rd age back is done straight through the Relics storefront now (buy-and-sell, no rank
         // gate) — Talk-to stays focused on the war-supply hand-in and browsing the armoury.
         when (options(player, "Hand in war supplies", "Browse the armoury", "Nevermind", title = "Quartermaster")) {
-            1 -> depositMenu(player)
+            // The hand-in is the client-drawn Supply Depot window (lofsupply): the full accepted
+            // catalogue with WE prices, per-item/per-category selling and the Supply Drive banner.
+            1 -> SupplyMenu.open(player)
             2 -> openArmoury(player)
         }
     }
@@ -302,27 +304,6 @@ class WarlordsArmouryPlugin(
         } else {
             chatNpc(player, "You've nothing finished for me yet, ${player.address}. Forge a bronze dagger at the anvil in The Mire and bring it back — follow your marker.", npc = quartermasterId, title = "Quartermaster")
         }
-    }
-
-    /** Choose a category of finished goods to hand over to the war effort. */
-    private suspend fun QueueTask.depositMenu(player: Player) {
-        chatNpc(player, "An army marches on its supplies, ${player.address}. Bring me cooked food, finished potions, smithed bars — anything to keep the front fed and armed. I'll log it as War Effort.", npc = quartermasterId, title = "Quartermaster")
-        when (options(player, "Cooked food", "Potions", "Smithed bars", "Everything I've got", "Nothing", title = "Hand in supplies")) {
-            1 -> doDeposit(player, SupplyDepot.FOOD, "cooked food")
-            2 -> doDeposit(player, SupplyDepot.POTIONS, "potions")
-            3 -> doDeposit(player, SupplyDepot.BARS, "smithed bars")
-            4 -> doDeposit(player, SupplyDepot.ALL, "supplies")
-        }
-    }
-
-    /** Run the deposit and give the player chat feedback on what the war took. */
-    private suspend fun QueueTask.doDeposit(player: Player, wares: Map<String, Int>, label: String) {
-        val (items, we) = SupplyDepot.deposit(player, wares)
-        if (items <= 0) {
-            chatNpc(player, "You've no $label on you, ${player.address}. Come back when your packs are full.", npc = quartermasterId, title = "Quartermaster")
-            return
-        }
-        chatNpc(player, "$items $label for the front — that's <col=801700>$we War Effort</col>. The realm thanks you, ${player.address}.", npc = quartermasterId, title = "Quartermaster")
     }
 
     private val quartermasterId = runCatching { getRSCM("npc.quartermaster") }.getOrDefault(-1)
