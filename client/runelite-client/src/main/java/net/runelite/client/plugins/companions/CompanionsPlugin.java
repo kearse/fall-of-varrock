@@ -20,11 +20,13 @@ import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.ChatLineBuffer;
 import net.runelite.api.ChatMessageType;
 import net.runelite.api.Client;
+import net.runelite.api.GameState;
 import net.runelite.api.MenuAction;
 import net.runelite.api.MenuEntry;
 import net.runelite.api.MessageNode;
 import net.runelite.api.ScriptID;
 import net.runelite.api.events.ChatMessage;
+import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.MenuEntryAdded;
 import net.runelite.api.events.MenuOpened;
 import net.runelite.api.widgets.ComponentID;
@@ -152,6 +154,31 @@ public class CompanionsPlugin extends Plugin
 				.setTarget("<col=ffae00>Sir " + nm + "</col>")
 				.setType(MenuAction.RUNELITE)
 				.onClick(me -> actions.equip(fSlot, fItemId));
+		}
+	}
+
+	/**
+	 * Wipe the panel and all cached state whenever the local player leaves the world (logout to the
+	 * login screen, world hop, or a dropped connection). The panel is driven purely by the server's
+	 * ~LOFCMP~ feed, which is only sent to accounts that field companions — so without this a companion
+	 * roster from a PREVIOUS account (an account switch on the same client) would linger on-screen until
+	 * something happened to send a fresh snapshot. Clearing on the state change guarantees a clean slate.
+	 */
+	@Subscribe
+	public void onGameStateChanged(GameStateChanged event)
+	{
+		final GameState s = event.getGameState();
+		if (s == GameState.LOGIN_SCREEN || s == GameState.HOPPING || s == GameState.CONNECTION_LOST)
+		{
+			accRows.clear();
+			accIdx.clear();
+			accGear.clear();
+			Arrays.fill(companionIndices, -1);
+			Arrays.fill(companionNames, null);
+			if (panel != null)
+			{
+				panel.update(new ArrayList<>());
+			}
 		}
 	}
 
