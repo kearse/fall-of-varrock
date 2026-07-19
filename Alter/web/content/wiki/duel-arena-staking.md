@@ -1,30 +1,35 @@
 ---
-title: Duel Arena - Staking
+title: Duelling & Staking
 category: Minigames & Bosses
-summary: The classic stake-your-items duel. Challenge a player, set the rules, both put up items and coins, fight to the death - the winner takes the whole pot. Escrowed and crash-safe, so it can't be scammed.
+summary: The classic stake-your-items duel. Challenge a player anywhere in a safe zone, set the rules, both put up items and coins, then get whisked to a private arena and fight to the death - the winner takes the whole pot. Escrowed and crash-safe, so it can't be scammed.
 order: 8
-updated: 2026-07-06
-infobox: Type = Player-vs-player staking; Location = Duel Arena; Start = Right-click a player → Challenge; Rules = No prayer / food / drinks / movement / style limits; Stake = Items + coins (both sides); Payout = Winner takes both stakes; Personal gear = Never at risk; Forfeit/Logout = You lose your stake
+updated: 2026-07-19
+infobox: Type = Player-vs-player staking; Location = Anywhere in a safe zone (fight happens in a private arena); Start = Right-click a player → Challenge; Rules = No prayer / food / drinks / movement / style limits; Stake = Items + coins (both sides); Payout = Winner takes both stakes; Personal gear = Never at risk; Forfeit/Logout = You lose your stake
 ---
 
-The **Duel Arena** is where you back yourself with your bank. Challenge another player, both of you
-put up a stake - items, coins, whatever you dare - and fight to the death. **The winner takes the
-whole pot.** This is the old-school stake, and it doesn't hold back.
+**Duelling** is where you back yourself with your bank. Challenge another player - at the bank, in
+the square, anywhere safe - both of you put up a stake - items, coins, whatever you dare - and fight
+to the death. **The winner takes the whole pot.** This is the old-school stake, and it doesn't hold
+back.
 
-It shares the arena with the [PK Training Arena](/wiki/pk-training-arena): train there until you're
-sharp, then stake here.
+You don't travel to an arena any more: the moment both stakes lock in, you're both **teleported into
+a private copy of the arena pit**, and when it's over you're dropped **right back where you were
+standing**. Every duel gets its own arena, so any number of fights can run at once. Want to sharpen
+up first? The [PK Training Arena](/wiki/pk-training-arena) is still the place to practise.
 
 ## How a stake works
 
-1. **Challenge** - right-click another player at the Duel Arena and choose **Challenge**. When they
-   challenge you back, you pick the **rules**.
+1. **Challenge** - right-click another player anywhere in a safe zone and choose **Challenge**.
+   They get a clickable challenge in their chatbox, just like a trade request - when they accept
+   it, you pick the **rules**.
 2. **Set the rules** - choose how the fight is fought (see below).
 3. **Put up your stake** - add items and coins exactly like a trade. Both sides see each other's
    stake and its total value.
 4. **Confirm** - a second screen shows both locked stakes. Accept it and the fight is on.
-5. **Fight to the death** - you're teleported in, a short countdown, then it's live. First to fall
-   loses.
-6. **Payout** - the winner receives **both stakes** (banked if their inventory is full).
+5. **Fight to the death** - you're both teleported into your own private arena, a short countdown,
+   then it's live. First to fall loses.
+6. **Payout** - the winner receives **both stakes** (banked if their inventory is full), and both
+   fighters are teleported back to where they accepted the duel.
 
 ## It can't be scammed
 
@@ -74,9 +79,11 @@ Banned gear is stripped off before the fight and can't be re-equipped during it.
 Always in effect:
 
 - **Forfeit or log out during a fight and you lose your stake** to your opponent. Don't run.
-- **The duel is sealed** - outsiders (players, bots, anyone) can't touch either fighter while it runs.
+- **No teleporting out** - the arena is sealed until someone falls.
+- **The duel is sealed** - outsiders (players, bots, anyone) can't touch either fighter; your
+  private arena means nobody can even walk in.
 - **You can't stake a training bot** - bots are for practice, players are for stakes.
-- You can only challenge someone **inside the Duel Arena**.
+- You can only challenge someone **in a safe zone** - in the wilderness, you just attack them.
 
 ## Coming soon
 

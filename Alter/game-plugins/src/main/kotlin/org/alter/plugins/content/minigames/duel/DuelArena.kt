@@ -1,16 +1,18 @@
 package org.alter.plugins.content.minigames.duel
 
+import org.alter.game.model.Tile
 import org.alter.game.model.World
 import org.alter.game.model.entity.Player
 import org.alter.game.model.item.Item
 import org.alter.plugins.content.companion.Companion as CompanionPawn
 import org.alter.plugins.content.companion.CompanionRegistry
+import org.alter.plugins.content.raids.RaidInstance
 
 /**
  * Live-duel registry. Kept as a top-level object (not plugin state) so [org.alter.plugins.content.combat.Combat]
  * can consult it statically: `canEngage` unlocks player-vs-player for exactly the two sides of an
- * in-progress staked duel, so they can fight in the (safe, non-wilderness) Duel Arena while everyone
- * else stays gated. Driven by [DuelArenaPlugin].
+ * in-progress staked duel, so they can fight inside their private (safe, instanced) arena copy while
+ * everyone else stays gated. Driven by [DuelArenaPlugin].
  */
 object DuelArena {
 
@@ -113,7 +115,7 @@ class DuelRules(
     }
 }
 
-/** One live duel: the two combatants, their escrowed stakes, and the fight phase. */
+/** One live duel: the two combatants, their escrowed stakes, their private arena, and the fight phase. */
 class Duel(
     val a: Player,
     val b: Player,
@@ -123,6 +125,12 @@ class Duel(
     val stakeB: List<Item>,
     /** The agreed rule set enforced for the fight. */
     val rules: DuelRules = DuelRules(),
+    /** This duel's private instanced copy of the arena pit (one per duel; torn down when it empties). */
+    val instance: RaidInstance,
+    /** Where [a] stood when the stakes locked in — returned there when the duel resolves. */
+    val returnA: Tile,
+    /** Where [b] stood when the stakes locked in. */
+    val returnB: Tile,
 ) {
     /** false during the 3-2-1 countdown (attacks blocked); true once "FIGHT!" is called. */
     var fighting = false
@@ -139,5 +147,6 @@ class Duel(
 
     fun has(p: Player): Boolean = a === p || b === p
     fun opponentOf(p: Player): Player = if (a === p) b else a
+    fun returnTileOf(p: Player): Tile = if (a === p) returnA else returnB
     val stakes: List<Item> get() = stakeA + stakeB
 }

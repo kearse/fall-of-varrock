@@ -21,7 +21,7 @@ import org.alter.game.model.timer.TimerKey
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
 import org.alter.plugins.content.bots.PkBot
-import org.alter.plugins.content.combat.SafeDeaths
+import org.alter.plugins.content.combat.PvpZones
 // Aliased: this class has its own `companion object`, which would shadow a bare Companion import
 // (the always-false `is Companion` bug from BotCombatPlugin). The alias is unambiguous.
 import org.alter.plugins.content.companion.Companion as CompanionPawn
@@ -30,6 +30,8 @@ import org.alter.plugins.content.mechanics.trading.TRADE_SESSION_ATTR
 import org.alter.plugins.content.mechanics.trading.getTradeSession
 import org.alter.plugins.content.mechanics.trading.impl.StakeHook
 import org.alter.plugins.content.mechanics.trading.impl.TradeSession
+import org.alter.plugins.content.minigames.castlewars.CastleWars
+import org.alter.plugins.content.raids.RaidInstance
 import org.alter.rscm.RSCM.getRSCM
 import org.bson.Document
 
@@ -39,18 +41,21 @@ private val logger = KotlinLogging.logger {}
 val DUEL_REQUESTS_ATTR = AttributeKey<MutableSet<Player>>()
 
 /**
- * **Duel Arena — classic staking.** The old-school "risk it all" duel: right-click **Challenge** a
- * player, both put up items + coins on the stake screen (the trade UI, re-labelled), confirm, then
- * fight to the death — **the winner takes both stakes**.
+ * **Duelling — classic staking, challenge anywhere.** The old-school "risk it all" duel: right-click
+ * **Challenge** a player in any safe zone, both put up items + coins on the stake screen (the trade
+ * UI, re-labelled), confirm, then fight to the death — **the winner takes both stakes**.
  *
- * Sits alongside the [org.alter.plugins.content.minigames.pktraining.PkTrainingArenaPlugin] training
- * grounds at the same Duel Arena — training teaches you, staking is where you cash it in.
+ * The fight itself happens in a **private instanced copy of the Duel-Arena pit** (the Wizard-Tower
+ * pattern): each duel allocates its own [RaidInstance] of [ARENA_SOURCE], so any number of duels can
+ * run at once without ever sharing a pit. When the duel resolves, both fighters are returned to the
+ * exact tiles they were challenged on. The real arena grounds still host the
+ * [org.alter.plugins.content.minigames.pktraining.PkTrainingArenaPlugin] training pits.
  *
  * Safe by construction (no scam surface):
  *  - The instant both confirm, the stakes move into **escrow** (a [Duel] object), NOT to the opponent.
  *    Nothing is exchanged by hand, so the classic "remove-item-at-the-last-second" scam can't happen —
  *    the confirm screen shows both locked stakes + their coin value.
- *  - Death here drops **no personal items** (the arena is a [SafeDeaths] zone); only the escrow moves.
+ *  - Death here drops **no personal items** (every instanced map is a safe death); only the escrow moves.
  *  - **Crash-safe:** each player's own stake is persisted to [DUEL_ESCROW_ATTR]; if the JVM dies
  *    mid-duel the duel is voided and every stake is refunded on next login. Staked wealth can't vanish.
  *  - Forfeit / logout mid-fight = you lose the stake to your opponent.
@@ -66,8 +71,8 @@ class DuelArenaPlugin(
     private val duelTimer = TimerKey()
 
     init {
-        // Duel deaths are safe (personal items kept; only the escrow moves).
-        SafeDeaths.register(DUEL_AREA)
+        // Duel deaths are safe by construction: fights happen inside an instanced map, and
+        // SafeDeaths treats every instanced-map tile as a safe death (personal items kept).
 
         onLogin {
             player.attr[DUEL_REQUESTS_ATTR] = HashSet()
@@ -120,7 +125,9 @@ class DuelArenaPlugin(
                     DuelArena.duelOf(owner)?.let { d -> if (d.fighting) d.benched += comp }
                 }
             }
-            DuelArena.duelOf(player)?.let { d -> if (d.fighting) resolve(d, loser = player) }
+            // A principal's death resolves the duel in ANY phase — a countdown death (lingering
+            // poison etc.) must not leave the duel hanging with one fighter gone.
+            DuelArena.duelOf(player)?.let { d -> resolve(d, loser = player) }
         }
 
         // Logging out mid-duel forfeits the stake to the opponent (a pre-fight stake screen is
@@ -162,8 +169,17 @@ class DuelArenaPlugin(
     private fun challenge(player: Player, target: Player) {
         if (target === player) return
         if (target is PkBot) { player.message("You can't stake against a training bot."); return }
-        if (!DUEL_AREA.contains(player.tile) || !DUEL_AREA.contains(target.tile)) {
-            player.message("You can only challenge someone at the Duel Arena.")
+        // Challenges are a safe-zone thing: in the wilderness you just attack them.
+        if (!PvpZones.isSafe(player.tile) || !PvpZones.isSafe(target.tile)) {
+            player.message("You can't arrange a duel in the wilderness.")
+            return
+        }
+        // No arranging duels from inside other content's instances (Wizard Tower, LMS, raids...) —
+        // the accept teleport would rip a player out of that content mid-run.
+        if (player.world.instanceAllocator.getMap(player.tile) != null ||
+            player.world.instanceAllocator.getMap(target.tile) != null
+        ) {
+            player.message("You can't arrange a duel from in here.")
             return
         }
         if (busy(player)) { player.message("You're busy at the moment."); return }
@@ -197,13 +213,14 @@ class DuelArenaPlugin(
     private fun busy(p: Player): Boolean =
         p.getTradeSession() != null || p.isLocked() || DuelArena.duelOf(p) != null ||
             DuelRulesScreen.isOpen(p) || DuelRulesClientMenu.isOpen(p) ||
+            CastleWars.inGame(p) ||
             // Loaner-kit seal: a PK-training kit can't be STAKED (win it back after the restore = smuggled out).
             org.alter.plugins.content.minigames.pktraining.TrainingArena.kitted(p)
 
     /** Let the challenger pick the rules over two quick menus, then open the stake screen under them.
      *  (Phase 3 replaces these menus with the faithful clickable rules grid.) */
     private suspend fun QueueTask.pickRulesThenStake(player: Player, target: Player) {
-        if (busy(target) || !DUEL_AREA.contains(target.tile)) { player.message("${target.username} is no longer available."); return }
+        if (busy(target) || !PvpZones.isSafe(target.tile)) { player.message("${target.username} is no longer available."); return }
 
         // Menu 1 — supplies & movement.
         val supplies = options(player,
@@ -286,9 +303,22 @@ class DuelArenaPlugin(
 
     // ───────────────────────────── duel lifecycle ─────────────────────────────
 
-    /** Both stakes are locked in (escrow) — start the duel. */
+    /** Both stakes are locked in (escrow) — allocate a private arena copy and start the duel. */
     private fun begin(a: Player, stakeA: List<Item>, b: Player, stakeB: List<Item>, rules: DuelRules) {
-        val duel = Duel(a, b, stakeA, stakeB, rules)
+        // One instanced pit PER DUEL (the Wizard-Tower pattern) — the whole server can duel at
+        // once without ever sharing an arena. autoDeallocate is OFF because the "owner" is just
+        // one of the fighters: their death/logout must not evict the opponent mid-payout. resolve()
+        // empties the pit, and the allocator's idle scan then tears it down.
+        val instance = RaidInstance.allocate(world, ARENA_SOURCE, exitTile = FALLBACK_EXIT, owner = a.uid, autoDeallocate = false)
+        if (instance == null) {
+            // Instance space exhausted — hand both stakes straight back; nothing was risked.
+            award(a, stakeA)
+            award(b, stakeB)
+            listOf(a, b).forEach { it.message("<col=801700>Every arena is in use right now — your stake has been returned.</col>") }
+            return
+        }
+
+        val duel = Duel(a, b, stakeA, stakeB, rules, instance = instance, returnA = a.tile, returnB = b.tile)
         duel.countdown = COUNTDOWN_TICKS
         DuelArena.active += duel
 
@@ -296,8 +326,8 @@ class DuelArenaPlugin(
         a.attr[DUEL_ESCROW_ATTR] = escrowBlob(stakeA)
         b.attr[DUEL_ESCROW_ATTR] = escrowBlob(stakeB)
 
-        a.moveTo(RED_SPAWN)
-        b.moveTo(BLUE_SPAWN)
+        a.moveTo(instance.translate(RED_SPAWN))
+        b.moveTo(instance.translate(BLUE_SPAWN))
         // Enforce gear rules up front — force off anything the rules disallow before the fight.
         stripDisallowed(a, rules)
         stripDisallowed(b, rules)
@@ -339,7 +369,12 @@ class DuelArenaPlugin(
 
         award(winner, d.stakes)
         winner.setCurrentHp(winner.getMaxHp())
-        if (winner.index >= 0) winner.moveTo(EXIT_TILE)
+        // Both fighters go back to the tiles they were standing on when the stake locked in.
+        // The loser's death already dropped them at the instance's fallback exit (or the logout
+        // path moved them there) — this override lands them home; emptying the pit also lets the
+        // allocator's idle scan reclaim the instance.
+        if (winner.index >= 0) winner.moveTo(d.returnTileOf(winner))
+        if (loser.index >= 0) loser.moveTo(d.returnTileOf(loser))
         winner.message("<col=007f00>You won the duel and claimed the stake!</col>")
         if (loser.index >= 0) loser.message("<col=ff0000>You lost the duel — your stake is gone.</col>")
         logger.info { "DUEL winner=${winner.username} loser=${loser.username} pot=${d.stakes.sumOf { it.amount.toLong() }} items" }
@@ -378,13 +413,17 @@ class DuelArenaPlugin(
 
         const val COUNTDOWN_TICKS = 3
 
-        // The Duel-Arena grounds (mirrors the training arena's box); duels are safe here.
-        val DUEL_AREA = Area(3330, 3242, 3396, 3296)
-        // Staked duels fight in the NORTH-EAST pit (mapdump-verified: region 13362, pit interior
-        // x3370..3389 z3246..3258, row z3251 fully clear — the OLD tiles at z3272 were in the lobby
-        // building, and (3374,3272) sat ON a solid object). Training uses the NW pit; no overlap.
+        // Source of each duel's private arena copy: the NORTH-EAST Duel-Arena pit (mapdump-verified:
+        // region 13362, pit interior x3370..3389 z3246..3258, row z3251 fully clear). Chunk-aligned
+        // 3x3-chunk box so the pit's enclosing walls are copied with it — inside the instance the
+        // walls (and the void beyond them) keep the fighters in the pit.
+        val ARENA_SOURCE = Area(3368, 3240, 3391, 3263)
+        // Spawn tiles in SOURCE coordinates — translated into the allocated instance per duel.
         val RED_SPAWN = Tile(3374, 3251, 0)
         val BLUE_SPAWN = Tile(3382, 3251, 0)
-        val EXIT_TILE = Tile(3367, 3274, 0) // lobby, near the trainer (mapdump-verified walkable)
+        // The instance's exit tile: the old arena lobby, near the trainer (mapdump-verified
+        // walkable). Only a fallback — resolve() sends both fighters back to their return tiles;
+        // this catches the odd path (death/logout placement, allocator teardown sweep).
+        val FALLBACK_EXIT = Tile(3367, 3274, 0)
     }
 }
