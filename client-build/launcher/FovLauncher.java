@@ -104,11 +104,16 @@ public final class FovLauncher {
         HttpURLConnection c = (HttpURLConnection) new URL(url).openConnection();
         c.setConnectTimeout(10000);
         c.setReadTimeout(60000);
-        Path tmp = dest.resolveSibling(JAR_NAME + ".part");
+        // Per-process temp name: players open multiple clients, and two launchers
+        // updating at once must not interleave writes into one .part file.
+        Path tmp = dest.resolveSibling(JAR_NAME + ".part." + ProcessHandle.current().pid());
         try (InputStream in = c.getInputStream(); OutputStream out = Files.newOutputStream(tmp)) {
             byte[] buf = new byte[1 << 16];
             int n;
             while ((n = in.read(buf)) != -1) out.write(buf, 0, n);
+        } catch (IOException | RuntimeException e) {
+            try { Files.deleteIfExists(tmp); } catch (IOException ignored) {}
+            throw e;
         }
         Files.move(tmp, dest, StandardCopyOption.REPLACE_EXISTING);
     }
