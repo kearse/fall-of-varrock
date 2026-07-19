@@ -122,7 +122,20 @@ jobs:
           # (space-free flags only — EXTRA is intentionally unquoted below)
           EXTRA=""
           if [ "${{ matrix.os }}" = "windows-latest" ]; then
-            EXTRA="--win-shortcut --win-menu --win-menu-group FallOfVarrock --win-per-user-install --win-dir-chooser --win-help-url https://fallofvarrock.com"
+            # Brand the WiX dialogs. jpackage ships no banner/sidebar bitmaps, so without
+            # this the wizard shows WiX's stock red-disk art and reads as sketchy to
+            # players. Overriding main.wxs is the only way in: overrides.wxi is spliced in
+            # outside <Product> (preprocessor defines only) and JpUI is generated in Java.
+            mkdir -p wixres
+            cp client-build/installer/banner.bmp client-build/installer/dialog.bmp wixres/
+            # WiX resolves relative WixVariable paths unpredictably, so bake in an absolute
+            # one. pwd -W gives a Windows path with forward slashes, which WiX accepts.
+            ART="$(pwd -W)/wixres"
+            # Fail loudly rather than hand WiX a broken path and get the red disk back.
+            case "$ART" in [A-Za-z]:/*) ;; *) echo "unexpected art path: $ART"; exit 1 ;; esac
+            sed "s|@FOV_ART_DIR@|$ART|g" client-build/installer/main.wxs > wixres/main.wxs
+            if grep -q '@FOV_ART_DIR@' wixres/main.wxs; then echo "art path substitution failed"; exit 1; fi
+            EXTRA="--resource-dir wixres --win-shortcut --win-menu --win-menu-group FallOfVarrock --win-per-user-install --win-dir-chooser --win-help-url https://fallofvarrock.com"
           fi
           "$JPACKAGE" \
             --type ${{ matrix.type }} \
