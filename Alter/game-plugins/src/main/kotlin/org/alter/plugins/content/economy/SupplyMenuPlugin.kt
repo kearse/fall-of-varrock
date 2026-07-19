@@ -77,8 +77,14 @@ class SupplyMenuPlugin(
     init {
         // NB: named ::depot, NOT ::supply — CampaignCommandPlugin already owns ::supply (the
         // realm-stores readout) and PluginRepository throws on duplicate command binds.
+        // Gated like the actions inside: a window whose every button would answer "go to the
+        // post" shouldn't open in the first place.
         onCommand("depot", description = "Open the Supply Depot window") {
-            SupplyMenu.open(player)
+            if (QUARTERMASTER_POSTS.none { player.tile.isWithinRadius(it, POST_RADIUS) }) {
+                player.message("The Quartermaster takes supplies at his post — find him at the shop hub or in The Mire.")
+            } else {
+                SupplyMenu.open(player)
+            }
         }
         // The overlay's action channel ("::sup ..." → supclick). Also testable directly.
         onCommand("supclick", description = "Supply Depot window action (client overlay channel)") {

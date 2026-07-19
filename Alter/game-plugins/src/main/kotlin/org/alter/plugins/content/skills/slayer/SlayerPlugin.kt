@@ -148,7 +148,13 @@ class SlayerPlugin(
             ContractMenu.open(player)
         }
         // The window's action channel ("::con <action>" → conclick). Also testable directly.
+        // Viewing (::contracts) works anywhere; ACTIONS keep the walk-to-Vannaka invariant —
+        // the token arrives as raw public chat from any tile, like every overlay channel.
         onCommand("conclick", description = "War Contracts window action (client overlay channel)") {
+            if (!player.tile.isWithinRadius(org.alter.game.model.Tile(masterTile.first, masterTile.second, masterTile.third), MASTER_RADIUS)) {
+                player.message("Vannaka signs contracts at his post, south of the shop hub.")
+                return@onCommand
+            }
             when (player.getCommandArgs().getOrNull(0)?.lowercase()) {
                 "combat" -> player.queue { assignTask(player); ContractMenu.push(player) }
                 "resource" -> player.queue { assignResource(player); ContractMenu.push(player) }
@@ -436,6 +442,7 @@ class SlayerPlugin(
         try { getNpc(npcId).name.lowercase().trim() } catch (e: Exception) { null }
 
     private companion object {
+        const val MASTER_RADIUS = 10 // how close a ::con action must be to Vannaka's post
         const val WAR_EFFORT_BASE = 8 // base War Effort for a completed combat contract
         const val STREAK_BONUS = 4 // extra War Effort per 5-contract streak milestone
         const val TUTORIAL_RAT_KEY = "npc.rat_2854" // the castle rats; their slayer task is the intro contract
