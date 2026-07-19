@@ -271,6 +271,18 @@ val RESOURCE_CONTRACT_ITEM_ATTR = AttributeKey<String>("resource_contract_item")
 val RESOURCE_CONTRACT_LEFT_ATTR = AttributeKey<Int>("resource_contract_left")
 
 /**
+ * The item key of the resource contract the player *last* finished, so the next assignment can
+ * avoid handing out the same work twice in a row. Persistent.
+ */
+val RESOURCE_CONTRACT_LAST_ATTR = AttributeKey<String>("resource_contract_last")
+
+/**
+ * The fish the player has chosen to catch (raw item RSCM key, set from the choose-fish menu or
+ * `::fish`). Kept across logout so a deliberate pick isn't lost mid-contract. Persistent.
+ */
+val FISHING_PREFERENCE_ATTR = AttributeKey<String>("fishing_preference")
+
+/**
  * **Rogue hunting** (content/war/roguehunt — story-and-grind-design §4): [ROGUE_KILLS_ATTR] is the
  * lifetime count of rogue-family kills (the human cutthroats occupying Fallen Varrock); the
  * Recruiting Sergeant pays escalating milestone bounties on it. [ROGUE_MILESTONE_PAID_ATTR] is how

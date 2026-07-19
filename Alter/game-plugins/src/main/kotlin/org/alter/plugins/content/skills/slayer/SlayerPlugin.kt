@@ -232,6 +232,10 @@ class SlayerPlugin(
         val (task, amount) = assigned
         say(p, "Resource contract: gather <col=801700>$amount ${task.display}</col> — that's ${task.skill} work. You keep what you gather; I just need it done.")
         say(p, "Coin and War Effort when it's complete. Off you go.")
+        // Fishing spots default to the best catch, which won't be the contracted one — say so.
+        if (task.skill == "Fishing") {
+            say(p, "The spots land your best catch by default. Use <col=801700>::fish</col> to pick out ${task.display} — or just click a spot; I've told the water what you're after.")
+        }
         // The faucet advertises the ladder: skills already qualify for richer rank-gated work.
         if (ResourceContracts.richerWorkAwaits(p)) {
             say(p, "And ${p.address} — your skills are worth more than this. Buy your next rank from <col=801700>Duke Horacio</col> and I'll commission you for far richer work.")

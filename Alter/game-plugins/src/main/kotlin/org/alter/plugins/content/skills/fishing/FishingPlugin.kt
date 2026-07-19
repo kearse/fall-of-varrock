@@ -8,7 +8,7 @@ import org.alter.game.Server
 import org.alter.game.model.Direction
 import org.alter.game.model.Tile
 import org.alter.game.model.World
-import org.alter.game.model.attr.AttributeKey
+import org.alter.game.model.attr.FISHING_PREFERENCE_ATTR
 import org.alter.game.model.entity.Player
 import org.alter.game.model.queue.QueueTask
 import org.alter.game.plugin.KotlinPlugin
@@ -67,8 +67,9 @@ class FishingPlugin(
         Fish("item.raw_shark", "shark", 76, 110.0, harpoon),
     ).filter { resolves(it.raw) && resolves(it.method.tool) && (it.method.bait == null || resolves(it.method.bait)) }
 
-    /** Session-only preferred catch (raw item key), set via the choose-fish menu. */
-    private val fishPref = AttributeKey<String>()
+    /** Preferred catch (raw item key), set via the choose-fish menu. Persists across logout so a
+     *  deliberate pick isn't silently lost half-way through a contract. */
+    private val fishPref = FISHING_PREFERENCE_ATTR
 
     private val spot = "npc.fishing_spot"
     private val spotTiles = listOf(
@@ -123,25 +124,42 @@ class FishingPlugin(
         }
     }
 
-    /** The catch to go for: the session pick while it stays eligible, else the best eligible. */
+    /** The catch to go for, in order: the player's explicit pick, then the fish Vannaka has them
+     *  contracted to gather, then the best eligible. Without the contract step a player at level
+     *  15+ with a net always lands anchovies and never credits a "gather raw shrimps" contract. */
     private fun target(player: Player): Fish? {
         val can = eligible(player)
         if (can.isEmpty()) return null
         val pref = player.attr[fishPref]
-        return can.firstOrNull { it.raw == pref } ?: can.maxByOrNull { it.level }
+        can.firstOrNull { it.raw == pref }?.let { return it }
+        val contracted = org.alter.plugins.content.skills.slayer.ResourceContracts.contractedKey(player)
+        can.firstOrNull { it.raw == contracted }?.let { return it }
+        return can.maxByOrNull { it.level }
     }
 
+    /** The choose-fish menu. Pages in fours so the WHOLE eligible ladder stays reachable — the old
+     *  flat `take(4)` hid everything below the top four, which is how a shrimps contract became
+     *  unfishable once anchovies/sardine/herring/trout were unlocked. */
     private suspend fun chooseFish(task: QueueTask, player: Player, autoFish: Boolean = true) {
-        val can = eligible(player)
+        val can = eligible(player).sortedByDescending { it.level }
         if (can.isEmpty()) { noGear(player); return }
-        // Highest first; cap the menu at 4 picks + Nevermind (dialog option limit).
-        val picks = can.sortedByDescending { it.level }.take(4)
-        val labels = picks.map { "${it.name.replaceFirstChar { c -> c.uppercase() }} (lvl ${it.level}, ${it.method.label})" } + "Nevermind"
-        val sel = task.options(player, *labels.toTypedArray(), title = "What would you like to fish?")
-        val fishPicked = picks.getOrNull(sel - 1) ?: return
-        player.attr[fishPref] = fishPicked.raw
-        player.message("You focus on catching <col=801700>${fishPicked.name}</col>. (Click a fishing spot to begin; the best catch resumes if this becomes unavailable.)")
-        if (autoFish) fish(task, player)
+        // The chatbox option list holds 5 rows. One page fits 4 + Nevermind; if the ladder is longer
+        // we spend a row on "More fish..." and page 3 at a time.
+        val perPage = if (can.size > 4) 3 else 4
+        val pages = (can.size + perPage - 1) / perPage
+        var page = 0
+        while (true) {
+            val picks = can.drop(page * perPage).take(perPage)
+            val labels = picks.map { "${it.name.replaceFirstChar { c -> c.uppercase() }} (lvl ${it.level}, ${it.method.label})" } +
+                (if (pages > 1) listOf("More fish...") else emptyList()) + "Nevermind"
+            val sel = task.options(player, *labels.toTypedArray(), title = "What would you like to fish?")
+            if (pages > 1 && sel == picks.size + 1) { page = (page + 1) % pages; continue } // More...
+            val fishPicked = picks.getOrNull(sel - 1) ?: return // Nevermind / closed
+            player.attr[fishPref] = fishPicked.raw
+            player.message("You focus on catching <col=801700>${fishPicked.name}</col>. (Click a fishing spot to begin; the best catch resumes if this becomes unavailable.)")
+            if (autoFish) fish(task, player)
+            return
+        }
     }
 
     private fun noGear(player: Player) {
