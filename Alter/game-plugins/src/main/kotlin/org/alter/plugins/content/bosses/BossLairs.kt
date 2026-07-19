@@ -63,7 +63,9 @@ object BossLairs {
         Lair("gwd_bandos", intArrayOf(2848, 5344, 48, 48), multi = true),
         Lair("gwd_zamorak", intArrayOf(2912, 5312, 48, 48), multi = true),
         Lair("gwd_armadyl", intArrayOf(2824, 5280, 48, 48), multi = true),
-        Lair("gwd_saradomin", intArrayOf(2896, 5248, 48, 48), multi = true),
+        // Saradomin encampment sits at z≈5285-5309 / x≈2884-2905 (cache-verified) — the old
+        // 2896,5248 box missed the room entirely, so its collision was never force-loaded.
+        Lair("gwd_saradomin", intArrayOf(2880, 5280, 48, 48), multi = true),
 
         // ── Elite / endgame bosses (G-tier) — force-load; multi where the OSRS lair is. Coords ↔ EliteBosses.
         Lair("vorkath", intArrayOf(2256, 4032, 48, 48)),
