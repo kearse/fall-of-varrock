@@ -4,6 +4,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import org.alter.api.ext.*
 import org.alter.game.Server
 import org.alter.game.model.Direction
+import org.alter.game.model.Tile
 import org.alter.game.model.World
 import org.alter.game.model.entity.Player
 import org.alter.game.plugin.KotlinPlugin
@@ -75,6 +76,12 @@ class GamblingPlugin(
 
     private fun roll(player: Player, bet: Int) {
         if (bet <= 0) return
+        // The token arrives from anywhere; the old dialogue's implicit invariant was that a bet
+        // is placed AT the table. Also defuses "type ::dice roll 10m for free coins" trolling.
+        if (!player.tile.isWithinRadius(HOST_TILE, TABLE_RADIUS)) {
+            player.message("The house only takes bets at the table — find the host at the shop hub.")
+            return
+        }
         val held = player.inventory.getItemCount(coins)
         if (bet > held) {
             player.message("You don't have that many coins.")
@@ -102,6 +109,8 @@ class GamblingPlugin(
 
     private companion object {
         const val HOST = "npc.bartender"
+        val HOST_TILE = Tile(3224, 3215, 0) // keep in sync with the spawnNpc call above
+        const val TABLE_RADIUS = 10
         const val WIN_THRESHOLD = 51 // 51..100 win = 50/50 odds; the rake is the edge
         const val RAKE = 0.05
         const val MAX_BET = 100_000_000

@@ -50,6 +50,8 @@ object WarForge {
         val coins: Int = COIN_COST,
     )
 
+    // NB: the cost line and per-style filtering that the old dialogue rendered now live in the
+    // client's War Forge window (LofForgeOverlay) — the server just pushes RECIPES via ForgeMenu.
     val RECIPES: List<Recipe> = listOf(
         Recipe("Torva platebody", "Melee", "item.bandos_chestplate", "Bandos chestplate", "item.torva_platebody"),
         Recipe("Torva platelegs", "Melee", "item.bandos_tassets", "Bandos tassets", "item.torva_platelegs"),
@@ -62,8 +64,6 @@ object WarForge {
         Recipe("Masori mask", "Ranged", "item.armadyl_helmet", "Armadyl helmet", "item.masori_mask", embers = 1, commendations = 15, bars = 10, coins = 150_000),
         Recipe("Ancestral hat", "Magic", "item.ahrims_hood", "Ahrim's hood", "item.ancestral_hat", embers = 1, commendations = 15, bars = 10, coins = 150_000),
     )
-
-    fun recipesFor(style: String): List<Recipe> = RECIPES.filter { it.style == style }
 
     private fun id(key: String): Int = getRSCM(key)
 
@@ -78,13 +78,6 @@ object WarForge {
         val left = n - added.completed
         if (left > 0) p.world.spawn(GroundItem(cid, left, p.tile, p))
         p.message("<col=ffae00>+$n Commendation${if (n == 1) "" else "s"}</col> for your service in the field.")
-    }
-
-    /** One-line cost summary for the smith's dialogue. */
-    fun costLine(r: Recipe): String = buildString {
-        append("1 ${r.baseDisplay}, ${r.commendations} Commendations, ${r.bars} runite bars")
-        if (r.embers > 0) append(", ${r.embers} Warden's ember${if (r.embers == 1) "" else "s"}")
-        append(" and ${"%,d".format(r.coins)} coins")
     }
 
     /** What's missing for [r], or null if the player carries everything. */

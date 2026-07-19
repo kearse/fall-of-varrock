@@ -4,6 +4,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import org.alter.api.ext.*
 import org.alter.game.Server
 import org.alter.game.model.Direction
+import org.alter.game.model.Tile
 import org.alter.game.model.World
 import org.alter.game.model.entity.Player
 import org.alter.game.model.queue.QueueTask
@@ -64,6 +65,12 @@ class RoyalSmithPlugin(
 
     /** The window's forge channel ("::forge make <i>" → forgeclick). Also testable directly. */
     private fun forgeClick(p: Player, index: Int?) {
+        // The token arrives from anywhere; forging consumes a BIS base + untradeable
+        // Commendations, so keep the old dialogue's invariant: it happens AT the forge.
+        if (!p.tile.isWithinRadius(SMITH_TILE, FORGE_RADIUS)) {
+            p.message("The war-forge burns beside the castle wall — bring your materials to the Royal Smith.")
+            return
+        }
         if (p.title.ordinal < Title.KNIGHT.ordinal) {
             p.message("The forge serves the realm's proven — earn the rank of Knight first.")
             return
@@ -88,5 +95,10 @@ class RoyalSmithPlugin(
             val a = player.getCommandArgs()
             if (a.getOrNull(0)?.lowercase() == "make") forgeClick(player, a.getOrNull(1)?.toIntOrNull())
         }
+    }
+
+    private companion object {
+        val SMITH_TILE = Tile(3207, 3224, 0) // keep in sync with the spawnNpc call above
+        const val FORGE_RADIUS = 10
     }
 }

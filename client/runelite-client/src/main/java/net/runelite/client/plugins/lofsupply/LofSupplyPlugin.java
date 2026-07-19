@@ -83,6 +83,10 @@ public class LofSupplyPlugin extends Plugin
 		}
 		if (client.getVarpValue(OPEN_VARP) != 0)
 		{
+			if (!overlay.isVisible())
+			{
+				overlay.resetStickyRows(); // fresh open — in-place refreshes keep their row slots
+			}
 			overlay.setVisible(true);
 		}
 	}

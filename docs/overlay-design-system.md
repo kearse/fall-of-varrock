@@ -244,6 +244,7 @@ Reusable pieces — reach for these before inventing a new one. Metrics above.
 4. State channel per §8: packed varp (document the bits + claim a free varp id in §8) **or** read an
    existing interface's widgets (null-guarded).
 5. Actions via a `::cmd` token + a server command in `MessagePublicHandler`.
-6. Antialiasing on at the top of `render`, restored before returning. `ABOVE_WIDGETS` layer.
+6. Antialiasing on at the top of `render`, restored before returning. Layer per §6: framed
+   modals on `ALWAYS_ON_TOP`, corner HUDs on `ABOVE_WIDGETS`.
 7. Never cover a control the player must click while the window is open (esp. the inventory).
 8. Add a row to the §9 catalog.

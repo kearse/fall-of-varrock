@@ -38,10 +38,19 @@ class LofForgeMouseListener extends MouseAdapter
 		}
 		else if (hit == LofForgeOverlay.FORGE)
 		{
-			final LofForgeOverlay.Recipe r = overlay.selectedRecipe();
-			if (r != null)
+			// Two-click confirm: forging consumes the base piece + untradeable Commendations.
+			if (!overlay.isArmed())
 			{
-				plugin.sendForge(r.index);
+				overlay.setArmed(true);
+			}
+			else
+			{
+				final LofForgeOverlay.Recipe r = overlay.selectedRecipe();
+				if (r != null)
+				{
+					plugin.sendForge(r.index);
+				}
+				overlay.setArmed(false);
 			}
 		}
 		else if (hit >= LofForgeOverlay.ROW_BASE)

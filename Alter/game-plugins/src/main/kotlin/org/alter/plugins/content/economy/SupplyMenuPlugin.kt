@@ -6,11 +6,13 @@ import org.alter.api.ext.message
 import org.alter.api.ext.player
 import org.alter.api.ext.setVarp
 import org.alter.game.Server
+import org.alter.game.model.Tile
 import org.alter.game.model.World
 import org.alter.game.model.entity.Player
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
 import org.alter.plugins.content.war.RealmSupply
+import org.alter.plugins.content.war.recruit.RecruitTrials
 import org.alter.rscm.RSCM.getRSCM
 
 /**
@@ -73,11 +75,23 @@ class SupplyMenuPlugin(
 ) : KotlinPlugin(r, world, server) {
 
     init {
-        onCommand("supply", description = "Open the Supply Depot window") {
+        // NB: named ::depot, NOT ::supply — CampaignCommandPlugin already owns ::supply (the
+        // realm-stores readout) and PluginRepository throws on duplicate command binds.
+        onCommand("depot", description = "Open the Supply Depot window") {
             SupplyMenu.open(player)
         }
         // The overlay's action channel ("::sup ..." → supclick). Also testable directly.
         onCommand("supclick", description = "Supply Depot window action (client overlay channel)") {
+            // The token arrives from anywhere — keep the old menu's invariants: deposits happen
+            // AT a Quartermaster post, and never before the intro-quest dagger hand-in.
+            if (QUARTERMASTER_POSTS.none { player.tile.isWithinRadius(it, POST_RADIUS) }) {
+                player.message("The Quartermaster takes supplies at his post — find him at the shop hub or in The Mire.")
+                return@onCommand
+            }
+            if (RecruitTrials.step(player) == RecruitTrials.Step.DELIVER) {
+                player.message("Hand the Quartermaster your forged bronze dagger first — that's the lesson.")
+                return@onCommand
+            }
             val a = player.getCommandArgs()
             when (a.getOrNull(0)?.lowercase()) {
                 "cat" -> a.getOrNull(1)?.toIntOrNull()?.let { i ->
@@ -87,12 +101,23 @@ class SupplyMenuPlugin(
                 }
                 "item" -> {
                     val id = a.getOrNull(1)?.toIntOrNull()
-                    val qty = a.getOrNull(2)?.let { if (it.equals("all", true)) 0 else it.toIntOrNull() } ?: 0
-                    if (id != null) report(player, SupplyDepot.depositItem(player, id, qty), "supplies")
+                    // Strict qty parse: only an explicit "all" means sell-everything; a malformed
+                    // or non-positive amount is REJECTED, never silently widened to the full stack.
+                    val rawQty = a.getOrNull(2) ?: "all"
+                    val qty = if (rawQty.equals("all", true)) 0 else rawQty.toIntOrNull()
+                    if (id != null && qty != null && (qty > 0 || qty == 0 && rawQty.equals("all", true))) {
+                        report(player, SupplyDepot.depositItem(player, id, qty), "supplies")
+                    }
                 }
                 "all" -> report(player, SupplyDepot.deposit(player, SupplyDepot.ALL), "supplies")
             }
         }
+    }
+
+    private companion object {
+        /** The Quartermaster's two posts: the shop hub and the tutorial post in The Mire crypt. */
+        val QUARTERMASTER_POSTS = listOf(Tile(3219, 3216, 0), Tile(3248, 3193, 0))
+        const val POST_RADIUS = 10
     }
 
     private fun report(p: Player, result: Pair<Int, Int>, label: String) {
