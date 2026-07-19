@@ -1,8 +1,6 @@
 package org.alter.plugins.content.skills.woodcutting
 
-import dev.openrune.cache.CacheManager.getItem
 import io.github.oshai.kotlinlogging.KotlinLogging
-import org.alter.api.EquipmentType
 import org.alter.api.Skills
 import org.alter.api.ext.*
 import org.alter.game.Server
@@ -94,8 +92,16 @@ class WoodcuttingPlugin(
     }
 
     private suspend fun chop(task: QueueTask, player: Player, obj: GameObject, tree: Tree) {
-        if (!player.hasAxe()) {
+        // Resolve the BEST axe the player carries so the chop animation matches the real tool
+        // (this used to always play the bronze swing, 879, regardless of tier).
+        val axe = org.alter.plugins.content.skills.GatheringTools.bestAxe(player)
+        if (!axe.anyHeld) {
             player.message("You need an axe to chop down this tree.")
+            return
+        }
+        val chopAnim = axe.tool?.anim
+        if (chopAnim == null) {
+            player.message("You do not have an axe which you have the Woodcutting level to use.")
             return
         }
         if (player.getSkills().getCurrentLevel(Skills.WOODCUTTING) < tree.level) {
@@ -105,7 +111,7 @@ class WoodcuttingPlugin(
         player.faceTile(obj.tile)
         val spot = player.tile
         while (player.tile == spot) {
-            player.animate(CHOP_ANIM)
+            player.animate(chopAnim)
             task.wait(tree.chopTicks)
             if (player.tile != spot) break
             if (player.inventory.isFull) {
@@ -119,21 +125,8 @@ class WoodcuttingPlugin(
         }
     }
 
-    private fun Player.hasAxe(): Boolean {
-        for (i in 0 until inventory.capacity) {
-            val item = inventory[i] ?: continue
-            if (getItem(item.id).name?.contains("axe", ignoreCase = true) == true &&
-                getItem(item.id).name?.contains("pickaxe", ignoreCase = true) != true
-            ) return true
-        }
-        val weapon = equipment[EquipmentType.WEAPON.id]
-        return weapon != null && getItem(weapon.id).name?.contains("axe", ignoreCase = true) == true &&
-            getItem(weapon.id).name?.contains("pickaxe", ignoreCase = true) != true
-    }
-
     private companion object {
         const val OBJ_TYPE = 10
-        const val CHOP_ANIM = 879 // bronze axe chop
         const val AXE_RESPAWN = 50
         val CHOP_OPTIONS = listOf("Chop down", "Chop-down", "Chop")
     }

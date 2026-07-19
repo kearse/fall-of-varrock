@@ -1,9 +1,7 @@
 package org.alter.plugins.content.skills.mining
 
-import dev.openrune.cache.CacheManager.getItem
 import dev.openrune.cache.CacheManager.getObject
 import io.github.oshai.kotlinlogging.KotlinLogging
-import org.alter.api.EquipmentType
 import org.alter.api.Skills
 import org.alter.api.ext.*
 import org.alter.game.Server
@@ -139,8 +137,15 @@ class MiningPlugin(
     }
 
     private suspend fun mine(task: QueueTask, player: Player, obj: GameObject, rock: Rock) {
-        if (!player.hasPickaxe()) {
+        // Best pickaxe carried decides the swing animation (was hardcoded to the bronze one).
+        val pick = org.alter.plugins.content.skills.GatheringTools.bestPickaxe(player)
+        if (!pick.anyHeld) {
             player.message("You need a pickaxe to mine this rock.")
+            return
+        }
+        val mineAnim = pick.tool?.anim
+        if (mineAnim == null) {
+            player.message("You do not have a pickaxe which you have the Mining level to use.")
             return
         }
         if (player.getSkills().getCurrentLevel(Skills.MINING) < rock.level) {
@@ -160,7 +165,7 @@ class MiningPlugin(
         // stops it if the player moves, so they're never frozen in place.
         val spot = player.tile
         while (player.tile == spot) {
-            player.animate(MINE_ANIM)
+            player.animate(mineAnim)
             task.wait(rock.mineTicks)
             if (player.tile != spot) break
             if (player.inventory.isFull) {
@@ -217,18 +222,8 @@ class MiningPlugin(
         logger.info { "cellar-mine: cleared $removed furniture object(s) from the cellar." }
     }
 
-    private fun Player.hasPickaxe(): Boolean {
-        for (i in 0 until inventory.capacity) {
-            val item = inventory[i] ?: continue
-            if (getItem(item.id).name?.contains("pickaxe", ignoreCase = true) == true) return true
-        }
-        val weapon = equipment[EquipmentType.WEAPON.id]
-        return weapon != null && getItem(weapon.id).name?.contains("pickaxe", ignoreCase = true) == true
-    }
-
     private companion object {
         const val OBJ_TYPE = 10 // standard interactable scenery
-        const val MINE_ANIM = 625 // pickaxe swing
         const val PICKAXE_RESPAWN = 50 // ~30s before a taken bronze pickaxe respawns
         const val LADDER_ID = 17385 // cellar exit ladder @(3209,9616) — never remove
 
