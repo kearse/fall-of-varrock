@@ -11,6 +11,7 @@ import org.alter.game.Server
 import org.alter.game.model.Area
 import org.alter.game.model.Tile
 import org.alter.game.model.World
+import org.alter.game.model.combat.NpcAnims
 import org.alter.game.model.combat.NpcCombatDef
 import org.alter.game.model.entity.Npc
 import org.alter.game.model.priv.Privilege
@@ -219,8 +220,16 @@ class WorldSpawnsPlugin(
                     return@removeAll false // trash tier: DEFAULT 10hp def is close enough
                 }
                 if (registered.add(rec.id) && !repo.npcCombatDefs.containsKey(rec.id)) {
-                    val deathAnim = if (def.standAnim > 0) def.standAnim else FALLBACK_DEATH
-                    repo.npcCombatDefs[rec.id] = NpcCombatDef.DEFAULT.copy(
+                    // Every one of these monsters would otherwise take the DEFAULT def's animations,
+                    // which are the HUMAN ones (attack 422, block 424, death 836) — a goblin can't
+                    // play those and renders deformed. Swap in each npc's own set where it has one;
+                    // NpcAnims keeps the default when the cache offers nothing better.
+                    // deathAnim used to be def.standAnim, so monsters "died" by standing there.
+                    val base = NpcCombatDef.DEFAULT
+                    val deathAnim = NpcAnims.coerceDeath(rec.id, FALLBACK_DEATH)
+                    repo.npcCombatDefs[rec.id] = base.copy(
+                        attackAnimation = NpcAnims.coerceAttack(rec.id, base.attackAnimation),
+                        blockAnimation = NpcAnims.coerceBlock(rec.id, base.blockAnimation),
                         hitpoints = stats[0],
                         attack = stats[1],
                         strength = stats[2],
@@ -243,6 +252,30 @@ class WorldSpawnsPlugin(
         logger.info {
             "World spawns finalized: ${registered.size} combat defs registered, " +
                 "$prunedBespoke bespoke-owned + $prunedUnstatted unstatted high-level records pruned."
+        }
+        reportUnplayableAnims()
+    }
+
+    /**
+     * Name every hand-written combat def whose animations don't belong to that npc's skeleton.
+     * [NpcAnims] silently corrects them at runtime, so without this they'd never surface — and a
+     * mismatch is how the frontier hobgoblins ended up swinging with goblin animations.
+     */
+    private fun reportUnplayableAnims() {
+        val bad = repo.npcCombatDefs.entries.mapNotNull { (id, def) ->
+            val wrong = buildList {
+                if (!NpcAnims.playable(id, def.attackAnimation)) add("attack=${def.attackAnimation}")
+                if (!NpcAnims.playable(id, def.blockAnimation)) add("block=${def.blockAnimation}")
+                def.deathAnimation.filterNot { NpcAnims.playable(id, it) }.forEach { add("death=$it") }
+            }
+            if (wrong.isEmpty()) null else "npc $id '${getNpc(id).name}' ${wrong.joinToString(" ")}"
+        }
+        if (bad.isEmpty()) return
+        logger.warn {
+            "${bad.size} npc combat def(s) specify animations their model can't play (auto-corrected " +
+                "to the npc's own set — fix the def, or check with :game-server:npcDef -PnpcArgs=\"anims <id>\"):" +
+                bad.take(25).joinToString("\n  ", prefix = "\n  ") +
+                if (bad.size > 25) "\n  ...and ${bad.size - 25} more" else ""
         }
     }
 
