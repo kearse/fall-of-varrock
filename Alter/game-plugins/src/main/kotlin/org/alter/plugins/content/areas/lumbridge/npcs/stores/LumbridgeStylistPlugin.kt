@@ -17,6 +17,7 @@ import org.alter.game.model.shop.PurchasePolicy
 import org.alter.game.model.shop.ShopItem
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
+import org.alter.plugins.content.mechanics.appearance.AppearanceDesign
 import org.alter.plugins.content.mechanics.shops.CoinCurrency
 import org.alter.plugins.content.mechanics.shops.ShopTabs
 import org.alter.plugins.content.mechanics.shops.bindVendorOptions
@@ -39,9 +40,10 @@ private val logger = KotlinLogging.logger {}
  *    of aesthetic clothes (shirts, robes, legwear, hats, gloves, boots) and a full rack of
  *    capes. `BUY_STOCK` so players can sell the pieces back. Pure cosmetic — no stats, no power.
  *
- * There is no character-design interface wired in this build, so the makeover is dialogue-only:
- * robust and self-contained. Stock and appearance pools are resolved defensively — a missing
- * cache key is skipped rather than crashing plugin init.
+ * The primary makeover path is now the native character-design interface (679, live 3D model —
+ * [AppearanceDesign]); the step-by-step dialogue restyle remains as a menu option and fallback
+ * until the interface is confirmed rendering on the custom client. Stock and appearance pools
+ * are resolved defensively — a missing cache key is skipped rather than crashing plugin init.
  */
 class LumbridgeStylistPlugin(
     r: PluginRepository,
@@ -149,7 +151,7 @@ class LumbridgeStylistPlugin(
             openClothes(player)
         }
         onCommand("makeover", description = "Restyle your appearance") {
-            player.queue { restyleMenu(player) }
+            AppearanceDesign.open(player)
         }
     }
 
@@ -160,19 +162,24 @@ class LumbridgeStylistPlugin(
         when (options(player,
             "Restyle my appearance.",
             "Show me your clothes and capes.",
+            "Restyle me step by step, the old way.",
             "Who are you?",
             "Nothing, thanks.",
             title = STYLIST_NAME)) {
-            1 -> restyleMenu(player)
+            // The mirror: the native character-design screen (interface 679) with the live
+            // 3D player model. The step-by-step dialogue below stays as the fallback until
+            // the interface is confirmed rendering on the custom client (see AppearanceDesign).
+            1 -> AppearanceDesign.open(player)
             2 -> {
                 say(player, "Take your time - everything's pure fashion, no combat<br>bonuses here.")
                 openClothes(player)
             }
-            3 -> {
+            3 -> restyleMenu(player)
+            4 -> {
                 say(player, "I'm $STYLIST_NAME, Lumbridge's finest stylist. Hair, skin,<br>a whole new wardrobe - I do it all, and the restyle is<br>on the house.")
                 mainMenu(player)
             }
-            4 -> chatPlayer(player, "Nothing, thanks.")
+            5 -> chatPlayer(player, "Nothing, thanks.")
         }
     }
 

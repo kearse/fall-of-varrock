@@ -4,7 +4,6 @@ import org.alter.api.ext.*
 import org.alter.game.Server
 import org.alter.game.model.World
 import org.alter.game.model.attr.DUKE_INTRO_DONE_ATTR
-import org.alter.game.model.attr.PLAYER_TITLE_ATTR
 import org.alter.game.model.entity.Player
 import org.alter.plugins.content.war.recruit.RecruitTrials
 import org.alter.plugins.content.war.roguehunt.RogueProblem
@@ -12,7 +11,6 @@ import org.alter.plugins.content.war.warprep.WarPrepChain
 import org.alter.game.model.queue.QueueTask
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
-import org.alter.rscm.RSCM.getRSCM
 
 /**
  * **Duke Horacio** in Lumbridge Castle sells feudal ranks for coins (The War /
@@ -25,8 +23,6 @@ class DukeHoracioPlugin(
     world: World,
     server: Server,
 ) : KotlinPlugin(r, world, server) {
-
-    private val coins = getRSCM("item.coins_995")
 
     init {
         onNpcOption("npc.duke_horacio", option = "talk-to") {
@@ -94,15 +90,9 @@ class DukeHoracioPlugin(
         if (!firstMeeting) {
             chatNpc(player, "Greetings, ${player.title.display}. For the right coin, I can raise your standing in the realm.")
         }
-        if (next == null) {
-            chatNpc(player, "You already hold the highest rank in the land. There is nothing more I can grant you.")
-            return
-        }
-        when (options(player, "Become a ${next.display} (${fmt(next.cost)} coins).", "What can each rank wear?", "Not just now.")) {
-            1 -> buy(player, next)
-            2 -> ranksInfo(player)
-            3 -> chatPlayer(player, "Not just now.")
-        }
+        // Outside the quest beats, the ladder itself is the client-drawn Feudal Ranks window
+        // (lofranks): the whole ladder, costs and unlocks at a glance — no options() menu.
+        RankMenu.open(player)
     }
 
     /** First-meeting introduction: who the Duke is and how the feudal rank ladder works. Runs once. */
@@ -117,31 +107,20 @@ class DukeHoracioPlugin(
         chatNpc(player, "Mark this well: rank is <col=801700>earned</col>. No mere donation buys a title here — only coin won and deeds done. Now, let us see to your standing.")
     }
 
+    /** Dialogue wrapper over the shared [RankPurchase] transaction (used by the quest beats). */
     private suspend fun QueueTask.buy(player: Player, next: Title) {
-        val have = player.inventory.getItemCount(coins)
-        if (have < next.cost) {
-            chatNpc(player, "The rank of ${next.display} costs ${fmt(next.cost)} coins, but you carry only ${fmt(have)}. Come back when your purse is heavier.")
-            return
-        }
         val prev = player.title
-        player.inventory.remove(coins, next.cost)
-        player.attr[PLAYER_TITLE_ATTR] = next.ordinal
-        player.refreshTitledName() // stamp the new (colored, for nobles) name onto the appearance
-        chatNpc(player, "Then it is done. Arise, ${next.display}! You may now wear ${next.maxTier.display} armour.")
-        if (next.companions > prev.companions) {
-            chatNpc(player, "Your new station also entitles you to ${next.companions} soldier companion${if (next.companions > 1) "s" else ""} — General Zo in the castle courtyard will muster them.")
+        when (val r = RankPurchase.buy(player, next)) {
+            is RankPurchase.Result.Insufficient ->
+                chatNpc(player, "The rank of ${next.display} costs ${fmt(next.cost)} coins, but you carry only ${fmt(r.have)}. Come back when your purse is heavier.")
+            is RankPurchase.Result.Success -> {
+                chatNpc(player, "Then it is done. Arise, ${next.display}! You may now wear ${next.maxTier.display} armour.")
+                if (next.companions > prev.companions) {
+                    chatNpc(player, "Your new station also entitles you to ${next.companions} soldier companion${if (next.companions > 1) "s" else ""} — General Zo in the castle courtyard will muster them.")
+                }
+            }
+            else -> {} // NotNext/Maxed can't happen from the quest beats (they pass player.nextTitle)
         }
-        RecruitTrials.onBuyRank(player) // advances the intro quest's RANK step, if active
-        WarPrepChain.onRankBought(player) // closes the War-Prep chain's RANK step, if active
-        RogueProblem.begin(player)        // War-Prep's Squire rank-up opens Act II — start "The Rogue Problem"
-        RogueProblem.onRankBought(player) // closes "The Rogue Problem" RANK step once Knight is reached
-    }
-
-    private suspend fun QueueTask.ranksInfo(player: Player) {
-        chatNpc(player, "A Peasant wears bronze and iron; a Commoner, steel. A Squire wears black — and their name is spoken in colour across the realm.")
-        chatNpc(player, "A Soldier bears mithril and adamant. A Knight bears rune, and may keep a soldier companion of their own.")
-        chatNpc(player, "A Lord wears ALL armour, fields my troops, summons bosses — and commands two companions. A Minister launches war campaigns with three.")
-        chatNpc(player, "And the King launches conquests and leads the realm itself.")
     }
 
     private fun fmt(n: Int): String = "%,d".format(n)

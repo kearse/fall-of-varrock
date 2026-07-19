@@ -2,25 +2,17 @@ package org.alter.plugins.content.areas.lumbridge.npcs
 
 import org.alter.api.ext.chatNpc
 import org.alter.api.ext.chatPlayer
-import org.alter.api.ext.message
 import org.alter.api.ext.options
 import org.alter.api.ext.player
 import org.alter.game.Server
-import org.alter.game.model.Direction
 import org.alter.game.model.World
 import org.alter.game.model.entity.Player
 import org.alter.game.model.queue.QueueTask
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
-import org.alter.plugins.content.companion.CompanionRegistry
-import org.alter.plugins.content.companion.CompanionStyle
+import org.alter.plugins.content.companion.RecruitMenu
 import org.alter.plugins.content.war.Sieges
-import org.alter.plugins.content.war.Title
 import org.alter.plugins.content.war.WarState
-import org.alter.plugins.content.war.address
-import org.alter.plugins.content.war.nextTitle
-import org.alter.plugins.content.war.title
-import org.alter.rscm.RSCM.getRSCM
 
 /**
  * **General Zo** — commander of Lumbridge's defense, standing in the castle courtyard.
@@ -62,7 +54,9 @@ class GeneralZoPlugin(
         )) {
             1 -> reportStatus(player)
             2 -> gatedCommand(player)
-            3 -> gatedRecruit(player)
+            // Recruiting is the client-drawn Muster Companions window (lofrecruit): discipline
+            // cards + banner strip, with the rank gate / full-banner states drawn, not spoken.
+            3 -> RecruitMenu.open(player)
             4 -> chatPlayer(player, "Nothing for now.")
         }
     }
@@ -90,53 +84,7 @@ class GeneralZoPlugin(
             "Bold! But only a Lord of Lumbridge may command my<br>knights. Earn that title and I'll hand you the field —<br>you'll move troops where you will, even march on<br>other cities.", title = ZO)
     }
 
-    private suspend fun QueueTask.gatedRecruit(player: Player) {
-        chatPlayer(player, "I'd like to recruit troops under my banner.")
-        // The feudal rank sets the allowance: Knight fields 1 companion, Lord 2, Minister/King 3.
-        val cap = CompanionRegistry.companionCap(player)
-        if (cap == 0) {
-            val firstRank = Title.values().first { it.companions > 0 }.display
-            chatNpc(player,
-                "Coin can raise a company of your own — once you<br>hold rank enough to lead one. Rise to $firstRank first,<br>and we'll talk recruitment.", title = ZO)
-            return
-        }
-        if (CompanionRegistry.count(player) >= cap) {
-            val next = player.nextTitle
-            val hint = if (next != null && next.companions > player.title.companions) {
-                " Rise to ${next.display} and I'll<br>muster you another."
-            } else ""
-            chatNpc(player,
-                "Your banner is full, ${player.address} — a ${player.title.display} may field<br>$cap. Lead them well.$hint", title = ZO)
-            return
-        }
-        chatNpc(player,
-            "Aye, ${player.address}. A trained soldier costs ${fmt(RECRUIT_COST)}<br>coin. What discipline do you need under your banner?", title = ZO)
-        val style = when (options(player, "A melee soldier.", "A ranged soldier.", "A mage soldier.", "Never mind.", title = "Recruit a soldier")) {
-            1 -> CompanionStyle.MELEE
-            2 -> CompanionStyle.RANGE
-            3 -> CompanionStyle.MAGE
-            else -> { chatPlayer(player, "Never mind."); return }
-        }
-        val coins = getRSCM("item.coins_995")
-        if (player.inventory.getItemCount(coins) < RECRUIT_COST) {
-            chatNpc(player, "Come back when you can pay the ${fmt(RECRUIT_COST)} coin,<br>${player.address}. Soldiers don't march for free.", title = ZO)
-            return
-        }
-        player.inventory.remove(coins, RECRUIT_COST)
-        val comp = CompanionRegistry.recruit(world, player, style)
-        if (comp == null) {
-            player.inventory.add(coins, RECRUIT_COST) // refund if the muster failed
-            chatNpc(player, "No soldier could be raised just now. Try again<br>shortly.", title = ZO)
-        } else {
-            chatNpc(player,
-                "It's done. A ${style.display} fighter joins your banner —<br>you command ${CompanionRegistry.count(player)} of $cap now. Use<br><col=801700>::companion deploy</col> to send them to war.", title = ZO)
-        }
-    }
-
-    private fun fmt(n: Int): String = "%,d".format(n)
-
     private companion object {
         const val ZO = "General Zo"
-        const val RECRUIT_COST = 1_000_000 // coin to raise one companion soldier (TUNABLE)
     }
 }

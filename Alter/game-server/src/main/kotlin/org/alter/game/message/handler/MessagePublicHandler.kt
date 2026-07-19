@@ -48,6 +48,16 @@ class MessagePublicHandler : MessageHandler<MessagePublic> {
                     client.world.plugins.executeCommand(client, "tpclick", parts.drop(1).toTypedArray())
                     return
                 }
+                // Feudal Ranks overlay (lofranks): "::rank buy <ordinal>" → purchase, suppress chat.
+                "rank" -> {
+                    client.world.plugins.executeCommand(client, "rankclick", parts.drop(1).toTypedArray())
+                    return
+                }
+                // Muster Companions overlay (lofrecruit): "::zo recruit <style>" → recruit, suppress chat.
+                "zo" -> {
+                    client.world.plugins.executeCommand(client, "zoclick", parts.drop(1).toTypedArray())
+                    return
+                }
                 // Duel rules overlay (lofduel): "::duel <action>" → rules interaction, suppress chat.
                 "duel" -> {
                     client.world.plugins.executeCommand(client, "duelclick", parts.drop(1).toTypedArray())
