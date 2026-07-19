@@ -533,7 +533,14 @@ public class ClientUI
 					{
 						SwingUtilities.invokeLater(ClientUI.this::toggleSidebar);
 						mouseEvent.consume();
+						return mouseEvent;
 					}
+
+					// Clicking the game hands keyboard focus back to it. Without this, a sidebar
+					// panel that took focus (any of its text fields) keeps swallowing every
+					// keystroke -- you could not type in the login fields or the chatbox again
+					// until the whole sidebar was collapsed.
+					giveClientFocus();
 
 					return mouseEvent;
 				}
