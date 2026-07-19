@@ -237,7 +237,7 @@ Reusable pieces — reach for these before inventing a new one. Metrics above.
 | `lofdice` | Modal (table) | 480×400 | varp 4628 (open/result) + `::dice roll` + inventory coins |
 | `lofbonds` | Modal (wallet) | 480×400 | varp 4629 (packed wallet) + `::lofbond` |
 | `lofmire` | Modal (loot table) | 480×400 | varp 4631 (packed) + `::mire` + inventory coins |
-| `lofstyle` | Modal (left-anchored) | 264×392, x=16 | varp 4632 (open|female) + `::lofstyle` — the in-world model is the preview |
+| `lofstyle` | Modal (portrait cutout) | 480×420, viewport-centred | varp 4632 (open|female) + `::lofstyle` — a see-through hole in the panel centre frames the in-world model as the live preview; the server hides worn gear while open (`STYLE_PREVIEW_ATTR`) and `::lofstyle close`/`done` restores it |
 | `lofduel` (rules) | Modal | 480×400 | varp 4630 + `::duel` |
 | `lofstake` | Modal (inventory-clear) | 480×400, viewport-left | read iface 335 + `::stake` |
 | `lofdials` | HUD dial row | content, ABOVE_CHATBOX_RIGHT | varps 4616 slayer · 4601 progress · 4609 supplies |

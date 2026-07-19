@@ -1,5 +1,6 @@
 package org.alter.plugins.content.areas.lumbridge.npcs.stores
 
+import dev.openrune.cache.CacheManager
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.alter.api.ext.*
 import org.alter.game.Server
@@ -147,6 +148,19 @@ class LumbridgeStylistPlugin(
         if (!bindVendorOptions(NPC) { player.queue { mainMenu(player) } }) {
             logger.warn { "stylist: '$NPC' has no click options; use ::stylist / ::makeover." }
         }
+        // The makeover mage's right-click "Makeover" verb isn't a vendor-entry option, so
+        // bindVendorOptions leaves it dead ("Nothing interesting happens."). Bind it straight
+        // to the Character Style window — no dialogue hop. Guarded: if a cache oddity made
+        // bindVendorOptions' first-action fallback claim this verb already, a duplicate bind
+        // throws — better a dead right-click than a boot crash.
+        npcActions(NPC).filter { it.equals("makeover", ignoreCase = true) }
+            .forEach { opt ->
+                try {
+                    onNpcOption(NPC, option = opt) { StyleMenu.open(player) }
+                } catch (e: IllegalStateException) {
+                    logger.warn { "stylist: '$opt' already bound on '$NPC'; keeping the existing bind." }
+                }
+            }
 
         // Convenience openers (and a safety net if the npc can't be reached).
         onCommand("stylist", description = "Open the Lumbridge Stylist clothes shop") {
@@ -369,6 +383,11 @@ class LumbridgeStylistPlugin(
     }
 
     private fun resolveOrNull(key: String): Int? = try { getRSCM(key) } catch (e: Exception) { null }
+
+    /** The npc's cache click options, or empty when the key/def can't be resolved. */
+    private fun npcActions(npc: String): List<String> = try {
+        CacheManager.getNpc(getRSCM(npc)).actions.filterNotNull().filter { it.isNotBlank() }
+    } catch (e: Exception) { emptyList() }
 
     private companion object {
         /** Stock make-over mage id, repurposed as the courtyard stylist (renamed at runtime). */

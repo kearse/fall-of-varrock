@@ -5,6 +5,7 @@ import org.alter.game.model.AnimationSet
 import org.alter.game.model.ForcedMovement
 import org.alter.game.model.Tile
 import org.alter.game.model.appearance.Gender
+import org.alter.game.model.attr.STYLE_PREVIEW_ATTR
 import org.alter.game.model.attr.TITLED_NAME_ATTR
 import org.alter.game.model.entity.Player
 import org.alter.game.model.move.MovementType
@@ -17,11 +18,14 @@ class PlayerInfo(var player: Player) {
 
     fun syncAppearance() {
         if (player.getTransmogId() == -1) {
+            // Character Style window preview: broadcast the bare identikit — you edit your
+            // default skins, so worn gear (and its stance anims) must not cover them.
+            val hideWorn = player.attr[STYLE_PREVIEW_ATTR] == true
             for (i in 0 until 7) {
                 info.setIdentKit(i, player.appearance.getLook(i))
             }
             for (i in 0 until 12) {
-                val obj = player.equipment[i]
+                val obj = if (hideWorn) null else player.equipment[i]
                 if (obj == null) {
                     info.setWornObj(i, -1, -1, -1)
                 } else {
@@ -29,7 +33,7 @@ class PlayerInfo(var player: Player) {
                     info.setWornObj(i, obj.id, config.appearanceOverride1, config.appearanceOverride2)
                 }
             }
-            val weapon = player.equipment[3]
+            val weapon = if (hideWorn) null else player.equipment[3]
             if (weapon != null) {
                 val renderAnimationSet = CacheManager.getItem(weapon.id).renderAnimations
                 if (renderAnimationSet != null) {

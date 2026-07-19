@@ -35,7 +35,7 @@ class LofStyleMouseListener extends MouseAdapter
 		}
 		if (hit == LofStyleOverlay.CLOSE)
 		{
-			overlay.setVisible(false);
+			overlay.hideWindow(); // notifies the server so worn gear comes back
 		}
 		else if (hit == LofStyleOverlay.DONE)
 		{

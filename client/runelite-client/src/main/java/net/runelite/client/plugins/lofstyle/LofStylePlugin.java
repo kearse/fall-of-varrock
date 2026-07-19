@@ -2,16 +2,20 @@
  * Fall of Varrock — Character Style window (the on-brand makeover).
  *
  * Replaces the native character-design interface (its rev-228 layout didn't match the bound
- * component ids — misaligned, dead buttons). The window anchors LEFT of the viewport so the
- * player's own in-world model is the live 3D preview: every arrow press sends
- * "::lofstyle look/colour ..." (MessagePublicHandler → styleclick), the server mutates the
- * appearance and re-syncs it instantly. Varp 4632 opens (bit 0) and carries gender (bit 1).
+ * component ids — misaligned, dead buttons). The classic layout, on-brand: a centred modal
+ * with a see-through portrait hole in the middle — the player's own in-world model, framed by
+ * the panel, is the live 3D preview. The server hides worn gear while the window is open (you
+ * edit your default skins), and every arrow press sends "::lofstyle look/colour ..."
+ * (MessagePublicHandler → styleclick) so the model updates instantly; closing without DONE
+ * sends "::lofstyle close" so the gear comes back. Varp 4632 opens (bit 0), bit 1 = female.
  */
 package net.runelite.client.plugins.lofstyle;
 
 import javax.inject.Inject;
 import net.runelite.api.Client;
+import net.runelite.api.GameState;
 import net.runelite.api.ScriptID;
+import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.VarbitChanged;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.eventbus.Subscribe;
@@ -54,6 +58,8 @@ public class LofStylePlugin extends Plugin
 	{
 		overlayManager.add(overlay);
 		LofWindows.register(overlay);
+		// any non-DONE dismissal must reach the server so it re-equips the player
+		overlay.setCloseNotifier(this::sendClose);
 		mouseListener = new LofStyleMouseListener(this, overlay);
 		mouseManager.registerMouseListener(mouseListener);
 	}
@@ -68,7 +74,20 @@ public class LofStylePlugin extends Plugin
 			mouseManager.unregisterMouseListener(mouseListener);
 			mouseListener = null;
 		}
-		overlay.setVisible(false);
+		overlay.hideWindow(); // notifies close if it was open, so the gear comes back
+		overlay.setCloseNotifier(null);
+	}
+
+	/** Logging out / hopping with the window open would leave an invisible centred click-eater
+	 *  over the login form. Drop it silently — no close send (we're not logged in, and the
+	 *  server's preview attr is transient so the gear restores itself). */
+	@Subscribe
+	public void onGameStateChanged(GameStateChanged event)
+	{
+		if (event.getGameState() == GameState.LOGIN_SCREEN || event.getGameState() == GameState.HOPPING)
+		{
+			overlay.setVisible(false);
+		}
 	}
 
 	@Subscribe
@@ -102,6 +121,11 @@ public class LofStylePlugin extends Plugin
 	void sendDone()
 	{
 		send("::lofstyle done");
+	}
+
+	void sendClose()
+	{
+		send("::lofstyle close");
 	}
 
 	private void send(String msg)
