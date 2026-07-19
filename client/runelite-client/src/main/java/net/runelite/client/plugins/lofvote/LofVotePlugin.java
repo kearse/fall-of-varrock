@@ -11,8 +11,11 @@
  * Transport (same hard-won CONSOLE rules as lofcommands — arrival-parse once in
  * ChatMessage, display-hide with a block-only chatFilterCheck, never touch the buffers):
  *   FOV_VOTE:open|<fallback-url>
- *   FOV_VOTE:row|<order>|<name>|<url>|<cooldownMins>   (repeated)
+ *   FOV_VOTE:row|<order>|<name>|<url>|<cooldownMins>|<logoUrl>   (repeated; logoUrl optional)
  *   FOV_VOTE:end
+ *
+ * logoUrl points at the toplist's own vote-badge image; LofVoteLogoCache fetches and
+ * caches it off-thread and the window draws a lettered tile until it's available.
  *
  * Back-compat both ways:
  *  - OLD clients (the first lofvote, which knew only "open|<url>" = browse) receive the
@@ -30,7 +33,9 @@ package net.runelite.client.plugins.lofvote;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ScheduledExecutorService;
 import javax.inject.Inject;
+import okhttp3.OkHttpClient;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.ChatMessageType;
 import net.runelite.api.Client;
@@ -74,8 +79,15 @@ public class LofVotePlugin extends Plugin
 	@Inject
 	private LofVoteOverlay overlay;
 
+	@Inject
+	private OkHttpClient okHttpClient;
+
+	@Inject
+	private ScheduledExecutorService executor;
+
 	private LofVoteMouseListener mouseListener;
 	private MouseWheelListener wheelListener;
+	private LofVoteLogoCache logoCache;
 
 	/** Committed sites (what the window draws) + the buffer filled while a batch streams in.
 	 *  Both are only ever touched on the client thread, so no locking needed. */
@@ -86,6 +98,7 @@ public class LofVotePlugin extends Plugin
 	@Override
 	protected void startUp()
 	{
+		logoCache = new LofVoteLogoCache(okHttpClient, executor);
 		overlayManager.add(overlay);
 		mouseListener = new LofVoteMouseListener(this, overlay);
 		mouseManager.registerMouseListener(mouseListener);
@@ -117,6 +130,7 @@ public class LofVotePlugin extends Plugin
 		overlay.setVisible(false);
 		sites.clear();
 		buffer.clear();
+		logoCache = null;
 	}
 
 	/** Arrival-based capture: parse each line exactly once, the moment it arrives. */
@@ -172,11 +186,11 @@ public class LofVotePlugin extends Plugin
 		if ("votepanel".equalsIgnoreCase(event.getCommand()))
 		{
 			handle("open|https://fallofvarrock.com/vote");
-			handle("row|0|RSPS-List|https://fallofvarrock.com/vote|0");
-			handle("row|1|RuLocus|https://fallofvarrock.com/vote|0");
-			handle("row|2|Moparscape|https://fallofvarrock.com/vote|187");
-			handle("row|3|Top100Arena|https://fallofvarrock.com/vote|0");
-			handle("row|4|TopG|https://fallofvarrock.com/vote|719");
+			handle("row|0|RSPS-List|https://fallofvarrock.com/vote|0|https://www.rsps-list.com/images/vote.jpg");
+			handle("row|1|RuLocus|https://fallofvarrock.com/vote|0|");
+			handle("row|2|Moparscape|https://fallofvarrock.com/vote|187|");
+			handle("row|3|Top100Arena|https://fallofvarrock.com/vote|0|");
+			handle("row|4|TopG|https://fallofvarrock.com/vote|719|https://topg.org/topg.gif");
 			handle("end");
 		}
 	}
@@ -196,8 +210,8 @@ public class LofVotePlugin extends Plugin
 				break;
 			case "row":
 			{
-				// order | name | url | cooldownMins
-				final String[] f = rest.split("\\|", 4);
+				// order | name | url | cooldownMins | logoUrl(optional)
+				final String[] f = rest.split("\\|", 5);
 				if (f.length >= 3)
 				{
 					int cooldown = 0;
@@ -211,7 +225,8 @@ public class LofVotePlugin extends Plugin
 						{
 						}
 					}
-					buffer.add(new Site(f[1].trim(), f[2].trim(), cooldown));
+					final String logoUrl = f.length >= 5 ? f[4].trim() : "";
+					buffer.add(new Site(f[1].trim(), f[2].trim(), cooldown, logoUrl));
 				}
 				break;
 			}
@@ -240,7 +255,7 @@ public class LofVotePlugin extends Plugin
 		}
 		else if (!bufferFallbackUrl.isEmpty())
 		{
-			sites.add(new Site("fallofvarrock.com/vote", bufferFallbackUrl, 0));
+			sites.add(new Site("fallofvarrock.com/vote", bufferFallbackUrl, 0, ""));
 		}
 		buffer.clear();
 		if (!sites.isEmpty())
@@ -273,18 +288,28 @@ public class LofVotePlugin extends Plugin
 		return sites;
 	}
 
-	/** One toplist row: display name, ready-to-open vote URL, minutes until next vote (0 = ready). */
+	/** The toplist's badge image for {@code site}, or null while it loads / if it has none. */
+	java.awt.image.BufferedImage logoFor(Site site)
+	{
+		final LofVoteLogoCache cache = logoCache;
+		return cache == null || site.logoUrl.isEmpty() ? null : cache.get(site.logoUrl);
+	}
+
+	/** One toplist row: display name, ready-to-open vote URL, minutes until next vote
+	 *  (0 = ready), and the site's badge-image URL ("" = none, draw the lettered tile). */
 	static final class Site
 	{
 		final String name;
 		final String url;
 		final int cooldownMins;
+		final String logoUrl;
 
-		Site(String name, String url, int cooldownMins)
+		Site(String name, String url, int cooldownMins, String logoUrl)
 		{
 			this.name = name;
 			this.url = url;
 			this.cooldownMins = cooldownMins;
+			this.logoUrl = logoUrl;
 		}
 	}
 }

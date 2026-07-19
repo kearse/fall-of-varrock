@@ -1,12 +1,17 @@
 /*
  * Fall of Varrock — vote window (renderer + hit-testing).
  *
- * A centred modal listing every toplist as a clickable card: site name on the left, a
- * status pill on the right ("Vote now" in ember, or "ready in 3h 12m" dimmed while that
- * site's cooldown runs). Styled with the shared LofTheme to match the commands panel and
+ * A centred modal showing the toplists as a 3-column card grid: each card carries the
+ * site's own vote-badge image (streamed logo URL, fetched by LofVoteLogoCache; a
+ * lettered tile until it loads or when a site has none), the site name, and a green
+ * Vote button. While a site's cooldown runs the card dims and the button becomes a
+ * quiet countdown. Styled with the shared LofTheme to match the commands panel and
  * teleport portal. Clicking a card opens that site's vote page in the browser and the
  * window stays open; the X (or a click outside) closes it. Geometry lives here so the
  * mouse listener, wheel handler and renderer all agree.
+ *
+ * Sized to fit the fixed-mode viewport (~512x334): 492 wide, and the grid viewport
+ * scrolls if more sites arrive than two rows can hold.
  */
 package net.runelite.client.plugins.lofvote;
 
@@ -14,6 +19,7 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FontMetrics;
+import java.awt.GradientPaint;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Rectangle;
@@ -40,22 +46,26 @@ class LofVoteOverlay extends Overlay
 	static final int CLOSE = 1;
 	static final int ROW_BASE = 100;
 
-	// framed-modal standard (docs/overlay-design-system.md §6A), narrower than the
-	// commands window — a single list, no tab rail.
-	private static final int WIN_W = 400;
+	// framed-modal standard (docs/overlay-design-system.md §6A), sized for fixed mode.
+	private static final int WIN_W = 492;
 	private static final int WIN_ARC = 14;
 	private static final int TITLE_H = 38;
-	private static final int LIST_X = 12;
-	private static final int LIST_W = WIN_W - LIST_X * 2;
-	private static final int VP_TOP = TITLE_H + 14;
-	private static final int CARD_H = 34;
-	private static final int STEP = 40;
-	private static final int FOOTER_H = 30;
-	private static final int MAX_WIN_H = 440;
+	private static final int PAD = 12;
+	private static final int GAP = 10;
+	private static final int COLS = 3;
+	private static final int CARD_W = (WIN_W - 2 * PAD - (COLS - 1) * GAP) / COLS; // 149
+	private static final int CARD_H = 104;
+	private static final int ROW_STEP = CARD_H + GAP;
+	private static final int LOGO_W = 88;
+	private static final int LOGO_H = 40;
+	private static final int VP_TOP = TITLE_H + PAD;
+	private static final int FOOTER_H = 24;
+	private static final int MAX_GRID_ROWS_VISIBLE = 2; // fixed-mode height budget
 	private static final int SCROLLBAR_W = 5;
 
 	private static final Color CLOSE_HOVER = LofTheme.EMBER;
-	private static final Color READY_PILL = LofTheme.EMBER;
+	private static final Color GREEN = new Color(74, 164, 88);
+	private static final Color GREEN_HI = new Color(94, 190, 108);
 
 	private final Client client;
 	private final LofVotePlugin plugin;
@@ -87,24 +97,29 @@ class LofVoteOverlay extends Overlay
 		scroll = 0;
 	}
 
-	private int rowCount()
+	private int siteCount()
 	{
 		return plugin.getSites().size();
 	}
 
-	private int winH()
+	private int gridRows()
 	{
-		return Math.min(MAX_WIN_H, VP_TOP + rowCount() * STEP + FOOTER_H);
+		return (siteCount() + COLS - 1) / COLS;
 	}
 
 	private int vpH()
 	{
-		return winH() - VP_TOP - FOOTER_H;
+		return Math.min(gridRows(), MAX_GRID_ROWS_VISIBLE) * ROW_STEP - GAP;
+	}
+
+	private int winH()
+	{
+		return VP_TOP + vpH() + PAD + FOOTER_H;
 	}
 
 	private int maxScroll()
 	{
-		return Math.max(0, rowCount() * STEP - vpH());
+		return Math.max(0, gridRows() * ROW_STEP - GAP - vpH());
 	}
 
 	private int originX()
@@ -121,7 +136,7 @@ class LofVoteOverlay extends Overlay
 		return Math.max(0, (client.getCanvasHeight() - winH()) / 2);
 	}
 
-	/** Wheel scroll if the cursor is over the list; returns true if consumed. */
+	/** Wheel scroll if the cursor is over the grid; returns true if consumed. */
 	boolean handleScroll(Point p, int rotation)
 	{
 		if (!visible)
@@ -129,11 +144,11 @@ class LofVoteOverlay extends Overlay
 			return false;
 		}
 		final int ox = originX(), oy = originY();
-		if (!new Rectangle(ox + LIST_X, oy + VP_TOP, LIST_W, vpH()).contains(p))
+		if (!new Rectangle(ox + PAD, oy + VP_TOP, WIN_W - 2 * PAD, vpH()).contains(p))
 		{
 			return false;
 		}
-		scroll = clamp(scroll + rotation * STEP, 0, maxScroll());
+		scroll = clamp(scroll + rotation * ROW_STEP, 0, maxScroll());
 		return true;
 	}
 
@@ -152,19 +167,28 @@ class LofVoteOverlay extends Overlay
 		{
 			return CLOSE;
 		}
-		if (new Rectangle(ox + LIST_X, oy + VP_TOP, LIST_W, vpH()).contains(p))
+		if (new Rectangle(ox + PAD, oy + VP_TOP, WIN_W - 2 * PAD, vpH()).contains(p))
 		{
-			final int rel = p.y - (oy + VP_TOP) + scroll;
-			final int i = rel / STEP;
-			if (i >= 0 && i < rowCount() && (rel - i * STEP) <= CARD_H)
+			final int relY = p.y - (oy + VP_TOP) + scroll;
+			final int row = relY / ROW_STEP;
+			if (relY - row * ROW_STEP <= CARD_H)
 			{
-				return ROW_BASE + i;
+				final int relX = p.x - (ox + PAD);
+				final int col = relX / (CARD_W + GAP);
+				if (col < COLS && relX - col * (CARD_W + GAP) <= CARD_W)
+				{
+					final int i = row * COLS + col;
+					if (i >= 0 && i < siteCount())
+					{
+						return ROW_BASE + i;
+					}
+				}
 			}
 		}
 		return INSIDE;
 	}
 
-	/** The site of the row at {@code index}, or null if out of range. */
+	/** The site of the card at {@code index}, or null if out of range. */
 	Site siteAt(int index)
 	{
 		final List<Site> sites = plugin.getSites();
@@ -174,6 +198,15 @@ class LofVoteOverlay extends Overlay
 	private Rectangle closeRect(int ox, int oy)
 	{
 		return new Rectangle(ox + WIN_W - 30, oy + 9, 20, 20);
+	}
+
+	private Rectangle cardRect(int ox, int oy, int i)
+	{
+		final int row = i / COLS, col = i % COLS;
+		return new Rectangle(
+			ox + PAD + col * (CARD_W + GAP),
+			oy + VP_TOP + row * ROW_STEP - scroll,
+			CARD_W, CARD_H);
 	}
 
 	@Override
@@ -192,6 +225,7 @@ class LofVoteOverlay extends Overlay
 
 		final Object oldAA = g.getRenderingHint(RenderingHints.KEY_ANTIALIASING);
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
 
 		// This overlay draws at ABSOLUTE canvas coordinates. Undo any translate the renderer
 		// applied so absolute means absolute.
@@ -213,11 +247,11 @@ class LofVoteOverlay extends Overlay
 		LofTheme.emberUnderline(g, ox + 1, oy + TITLE_H - 2, WIN_W - 2);
 
 		// shield logo + title
-		final BufferedImage logo = LofTheme.logo();
+		final BufferedImage shield = LofTheme.logo();
 		int titleX = ox + 14;
-		if (logo != null)
+		if (shield != null)
 		{
-			g.drawImage(logo, ox + 12, oy + 5, 28, 28, null);
+			g.drawImage(shield, ox + 12, oy + 5, 28, 28, null);
 			titleX = ox + 46;
 		}
 		g.setFont(FontManager.getRunescapeBoldFont());
@@ -235,40 +269,18 @@ class LofVoteOverlay extends Overlay
 		g.drawLine(cr.x + cr.width - 7, cr.y + 6, cr.x + 6, cr.y + cr.height - 7);
 		g.setStroke(oldStroke);
 
-		// site cards (clipped to viewport)
+		// site cards (clipped to the grid viewport)
 		final Shape oldClip = g.getClip();
-		g.setClip(ox + LIST_X, oy + VP_TOP, LIST_W, vpH());
-		g.setFont(FontManager.getRunescapeFont());
-		final FontMetrics fm = g.getFontMetrics();
-		final int cardW = LIST_W - (maxScroll() > 0 ? SCROLLBAR_W + 4 : 0);
+		g.setClip(ox + PAD, oy + VP_TOP, WIN_W - 2 * PAD, vpH());
 		for (int i = 0; i < sites.size(); i++)
 		{
-			final int cy = oy + VP_TOP + i * STEP - scroll;
-			if (cy + CARD_H < oy + VP_TOP || cy > oy + VP_TOP + vpH())
+			final Rectangle card = cardRect(ox, oy, i);
+			if (card.y + CARD_H < oy + VP_TOP || card.y > oy + VP_TOP + vpH())
 			{
 				continue; // off-screen
 			}
-			final Site s = sites.get(i);
-			final int cx = ox + LIST_X;
-			final boolean onCooldown = s.cooldownMins > 0;
-			final boolean hov = mouse.x >= cx && mouse.x <= cx + cardW
-				&& mouse.y >= cy && mouse.y <= cy + CARD_H
-				&& mouse.y >= oy + VP_TOP && mouse.y <= oy + VP_TOP + vpH();
-
-			g.setColor(hov ? LofTheme.ROW_HOVER : LofTheme.ROW);
-			g.fillRoundRect(cx, cy, cardW, CARD_H, 8, 8);
-			if (hov)
-			{
-				g.setColor(LofTheme.alpha(LofTheme.EMBER, 150));
-				g.drawRoundRect(cx, cy, cardW, CARD_H, 8, 8);
-			}
-
-			final int ty = cy + CARD_H / 2 + 4;
-			LofTheme.shadowText(g, s.name, cx + 12, ty, onCooldown ? LofTheme.TEXT_DIM : LofTheme.GOLD);
-
-			final String pill = onCooldown ? "ready in " + fmtCooldown(s.cooldownMins) : "Vote now";
-			LofTheme.pill(g, fm, pill, cx + cardW - 10, ty,
-				onCooldown ? LofTheme.TEXT_DIM : READY_PILL);
+			drawCard(g, sites.get(i), card, card.contains(mouse)
+				&& mouse.y >= oy + VP_TOP && mouse.y <= oy + VP_TOP + vpH());
 		}
 		g.setClip(oldClip);
 
@@ -276,10 +288,10 @@ class LofVoteOverlay extends Overlay
 		final int ms = maxScroll();
 		if (ms > 0)
 		{
-			final int sbX = ox + LIST_X + LIST_W - SCROLLBAR_W;
+			final int sbX = ox + WIN_W - PAD + 3;
 			g.setColor(new Color(255, 255, 255, 14));
 			g.fillRoundRect(sbX, oy + VP_TOP, SCROLLBAR_W, vpH(), SCROLLBAR_W, SCROLLBAR_W);
-			final int content = rowCount() * STEP;
+			final int content = gridRows() * ROW_STEP - GAP;
 			final int thumbH = Math.max(24, vpH() * vpH() / content);
 			final int thumbY = oy + VP_TOP + (vpH() - thumbH) * scroll / ms;
 			g.setColor(LofTheme.alpha(LofTheme.EMBER, 190));
@@ -290,10 +302,86 @@ class LofVoteOverlay extends Overlay
 		g.setFont(FontManager.getRunescapeSmallFont());
 		final String hint = "Each vote opens in your browser — rewards are delivered automatically.";
 		final FontMetrics hintFm = g.getFontMetrics();
-		LofTheme.shadowText(g, hint, ox + (WIN_W - hintFm.stringWidth(hint)) / 2, oy + winH - 11, LofTheme.TEXT_DIM);
+		LofTheme.shadowText(g, hint, ox + (WIN_W - hintFm.stringWidth(hint)) / 2, oy + winH - 9, LofTheme.TEXT_DIM);
 
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, oldAA == null ? RenderingHints.VALUE_ANTIALIAS_DEFAULT : oldAA);
 		return new Dimension(WIN_W, winH);
+	}
+
+	private void drawCard(Graphics2D g, Site s, Rectangle card, boolean hov)
+	{
+		final boolean onCooldown = s.cooldownMins > 0;
+
+		g.setColor(hov ? LofTheme.ROW_HOVER : LofTheme.ROW);
+		g.fillRoundRect(card.x, card.y, card.width, card.height, 10, 10);
+		if (hov)
+		{
+			g.setColor(LofTheme.alpha(LofTheme.EMBER, 150));
+			g.drawRoundRect(card.x, card.y, card.width, card.height, 10, 10);
+		}
+
+		// badge image, letterboxed into LOGO_WxLOGO_H; lettered tile until it loads
+		final int lx = card.x + (card.width - LOGO_W) / 2;
+		final int ly = card.y + 10;
+		final BufferedImage logo = plugin.logoFor(s);
+		final java.awt.Composite oldComposite = g.getComposite();
+		if (onCooldown)
+		{
+			g.setComposite(java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 0.45f));
+		}
+		if (logo != null)
+		{
+			final double scale = Math.min((double) LOGO_W / logo.getWidth(), (double) LOGO_H / logo.getHeight());
+			final int dw = Math.max(1, (int) Math.round(logo.getWidth() * scale));
+			final int dh = Math.max(1, (int) Math.round(logo.getHeight() * scale));
+			g.drawImage(logo, lx + (LOGO_W - dw) / 2, ly + (LOGO_H - dh) / 2, dw, dh, null);
+		}
+		else
+		{
+			g.setColor(new Color(255, 255, 255, 16));
+			g.fillRoundRect(lx, ly, LOGO_W, LOGO_H, 6, 6);
+			g.setColor(LofTheme.alpha(LofTheme.GOLD_DIM, 120));
+			g.drawRoundRect(lx, ly, LOGO_W, LOGO_H, 6, 6);
+			g.setFont(FontManager.getRunescapeSmallFont());
+			final String tile = s.name.length() > 10 ? s.name.substring(0, 10) : s.name;
+			final FontMetrics tfm = g.getFontMetrics();
+			LofTheme.shadowText(g, tile, lx + (LOGO_W - tfm.stringWidth(tile)) / 2, ly + LOGO_H / 2 + 4,
+				LofTheme.GOLD_DIM);
+		}
+		g.setComposite(oldComposite);
+
+		// site name
+		g.setFont(FontManager.getRunescapeFont());
+		final FontMetrics fm = g.getFontMetrics();
+		LofTheme.shadowText(g, ellipsise(fm, s.name, card.width - 16),
+			card.x + (card.width - Math.min(fm.stringWidth(s.name), card.width - 16)) / 2,
+			card.y + 68, onCooldown ? LofTheme.TEXT_DIM : LofTheme.TEXT);
+
+		// button: green "Vote" when ready, quiet countdown while on cooldown
+		final Rectangle btn = new Rectangle(card.x + 10, card.y + 76, card.width - 20, 20);
+		if (onCooldown)
+		{
+			g.setColor(new Color(255, 255, 255, 14));
+			g.fillRoundRect(btn.x, btn.y, btn.width, btn.height, 7, 7);
+			g.setColor(new Color(255, 255, 255, 20));
+			g.drawRoundRect(btn.x, btn.y, btn.width, btn.height, 7, 7);
+			final String label = fmtCooldown(s.cooldownMins);
+			LofTheme.shadowText(g, label, btn.x + (btn.width - fm.stringWidth(label)) / 2, btn.y + 15,
+				LofTheme.TEXT_DIM);
+		}
+		else
+		{
+			final java.awt.Paint oldPaint = g.getPaint();
+			g.setPaint(new GradientPaint(btn.x, btn.y, hov ? GREEN_HI : GREEN, btn.x, btn.y + btn.height,
+				hov ? GREEN : new Color(56, 128, 68)));
+			g.fillRoundRect(btn.x, btn.y, btn.width, btn.height, 7, 7);
+			g.setPaint(oldPaint);
+			g.setColor(new Color(255, 255, 255, 60));
+			g.drawLine(btn.x + 4, btn.y + 1, btn.x + btn.width - 5, btn.y + 1);
+			final String label = "Vote";
+			LofTheme.shadowText(g, label, btn.x + (btn.width - fm.stringWidth(label)) / 2, btn.y + 15,
+				Color.WHITE);
+		}
 	}
 
 	/** 187 → "3h 7m", 45 → "45m". */
@@ -301,6 +389,26 @@ class LofVoteOverlay extends Overlay
 	{
 		final int h = mins / 60, m = mins % 60;
 		return h > 0 ? h + "h " + m + "m" : m + "m";
+	}
+
+	/** Truncate text with a trailing "…" so it fits within maxW pixels. */
+	private static String ellipsise(FontMetrics fm, String text, int maxW)
+	{
+		if (maxW <= 0)
+		{
+			return "";
+		}
+		if (fm.stringWidth(text) <= maxW)
+		{
+			return text;
+		}
+		final int ellW = fm.stringWidth("…");
+		int end = text.length();
+		while (end > 0 && fm.stringWidth(text.substring(0, end)) + ellW > maxW)
+		{
+			end--;
+		}
+		return text.substring(0, end).stripTrailing() + "…";
 	}
 
 	private Point mousePoint()
