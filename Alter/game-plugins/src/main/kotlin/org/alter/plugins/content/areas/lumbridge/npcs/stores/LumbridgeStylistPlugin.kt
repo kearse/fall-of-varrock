@@ -150,9 +150,17 @@ class LumbridgeStylistPlugin(
         }
         // The makeover mage's right-click "Makeover" verb isn't a vendor-entry option, so
         // bindVendorOptions leaves it dead ("Nothing interesting happens."). Bind it straight
-        // to the Character Style window — no dialogue hop.
+        // to the Character Style window — no dialogue hop. Guarded: if a cache oddity made
+        // bindVendorOptions' first-action fallback claim this verb already, a duplicate bind
+        // throws — better a dead right-click than a boot crash.
         npcActions(NPC).filter { it.equals("makeover", ignoreCase = true) }
-            .forEach { opt -> onNpcOption(NPC, option = opt) { StyleMenu.open(player) } }
+            .forEach { opt ->
+                try {
+                    onNpcOption(NPC, option = opt) { StyleMenu.open(player) }
+                } catch (e: IllegalStateException) {
+                    logger.warn { "stylist: '$opt' already bound on '$NPC'; keeping the existing bind." }
+                }
+            }
 
         // Convenience openers (and a safety net if the npc can't be reached).
         onCommand("stylist", description = "Open the Lumbridge Stylist clothes shop") {
