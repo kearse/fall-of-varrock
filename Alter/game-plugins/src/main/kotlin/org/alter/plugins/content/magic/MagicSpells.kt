@@ -3,7 +3,9 @@ package org.alter.plugins.content.magic
 import dev.openrune.cache.CacheManager.getEnum
 import dev.openrune.cache.CacheManager.getItem
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
+import org.alter.api.EquipmentType
 import org.alter.api.Skills
+import org.alter.api.ext.getEquipment
 import org.alter.api.ext.getSpellbook
 import org.alter.api.ext.getVarbit
 import org.alter.api.ext.message
@@ -49,6 +51,67 @@ object MagicSpells {
             "item.zamorak_staff",
         )
 
+    /**
+     * Elemental staves supply an endless amount of their own element while wielded:
+     * the rune is neither required to cast nor consumed. Combination staves supply
+     * both of their elements. Keyed by rscm name -- [getRSCM] throws on an unknown
+     * name, so a bad entry fails at first cast rather than silently granting nothing.
+     */
+    private val STAFF_RUNE_SOURCES: Map<String, Array<String>> =
+        mapOf(
+            // Air
+            "item.staff_of_air" to arrayOf("item.air_rune"),
+            "item.air_battlestaff" to arrayOf("item.air_rune"),
+            "item.mystic_air_staff" to arrayOf("item.air_rune"),
+            // Water
+            "item.staff_of_water" to arrayOf("item.water_rune"),
+            "item.water_battlestaff" to arrayOf("item.water_rune"),
+            "item.mystic_water_staff" to arrayOf("item.water_rune"),
+            // Earth
+            "item.staff_of_earth" to arrayOf("item.earth_rune"),
+            "item.earth_battlestaff" to arrayOf("item.earth_rune"),
+            "item.mystic_earth_staff" to arrayOf("item.earth_rune"),
+            // Fire
+            "item.staff_of_fire" to arrayOf("item.fire_rune"),
+            "item.fire_battlestaff" to arrayOf("item.fire_rune"),
+            "item.mystic_fire_staff" to arrayOf("item.fire_rune"),
+            // Combination staves.
+            "item.lava_battlestaff" to arrayOf("item.fire_rune", "item.earth_rune"),
+            "item.lava_battlestaff_21198" to arrayOf("item.fire_rune", "item.earth_rune"),
+            "item.mystic_lava_staff" to arrayOf("item.fire_rune", "item.earth_rune"),
+            "item.mystic_lava_staff_21200" to arrayOf("item.fire_rune", "item.earth_rune"),
+            "item.mud_battlestaff" to arrayOf("item.water_rune", "item.earth_rune"),
+            "item.mystic_mud_staff" to arrayOf("item.water_rune", "item.earth_rune"),
+            "item.steam_battlestaff" to arrayOf("item.water_rune", "item.fire_rune"),
+            "item.steam_battlestaff_12795" to arrayOf("item.water_rune", "item.fire_rune"),
+            "item.mystic_steam_staff" to arrayOf("item.water_rune", "item.fire_rune"),
+            "item.mystic_steam_staff_12796" to arrayOf("item.water_rune", "item.fire_rune"),
+            "item.smoke_battlestaff" to arrayOf("item.air_rune", "item.fire_rune"),
+            "item.mystic_smoke_staff" to arrayOf("item.air_rune", "item.fire_rune"),
+            "item.mist_battlestaff" to arrayOf("item.air_rune", "item.water_rune"),
+            "item.mystic_mist_staff" to arrayOf("item.air_rune", "item.water_rune"),
+            "item.dust_battlestaff" to arrayOf("item.air_rune", "item.earth_rune"),
+            "item.mystic_dust_staff" to arrayOf("item.air_rune", "item.earth_rune"),
+        )
+
+    private val staffRunes: Map<Int, Set<Int>> by lazy {
+        STAFF_RUNE_SOURCES.entries.associate { (staff, runes) ->
+            getRSCM(staff) to runes.map { getRSCM(it) }.toSet()
+        }
+    }
+
+    /**
+     * Whether the weapon the player is wielding makes [runeId] free -- an air staff
+     * covers the air runes of every spell, and so on.
+     */
+    fun suppliesRune(
+        p: Player,
+        runeId: Int,
+    ): Boolean {
+        val weapon = p.getEquipment(EquipmentType.WEAPON) ?: return false
+        return staffRunes[weapon.id]?.contains(runeId) == true
+    }
+
     private val metadata = Int2ObjectOpenHashMap<SpellMetadata>()
 
     fun getMetadata(spellId: Int): SpellMetadata? = metadata[spellId]
@@ -75,6 +138,9 @@ object MagicSpells {
         }
         if (p.getVarbit(INF_RUNES_VARBIT) == 0) {
             for (item in items) {
+                if (suppliesRune(p, item.id)) {
+                    continue
+                }
                 if (p.inventory.getItemCount(item.id) < item.amount && p.equipment.getItemCount(item.id) < item.amount) {
                     p.message("You do not have enough ${item.getDef().name}s to cast this spell.")
                     return false
@@ -94,6 +160,13 @@ object MagicSpells {
                  * Do not remove staff item requirements.
                  */
                 if (item.id in getRSCM(STAFF_ITEMS)) {
+                    continue
+                }
+                /*
+                 * An elemental staff is an endless supply of its own rune -- don't
+                 * charge the player for what the staff provides.
+                 */
+                if (suppliesRune(p, item.id)) {
                     continue
                 }
                 p.inventory.remove(item)
