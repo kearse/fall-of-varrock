@@ -21,6 +21,7 @@ import org.alter.game.model.queue.QueueTask
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
 import org.alter.plugins.content.combat.specialattack.SpecialAttacks
+import org.alter.plugins.content.combat.strategy.MeleeCombatStrategy
 import org.alter.plugins.content.combat.strategy.magic.CombatSpell
 import org.alter.plugins.content.interfaces.attack.AttackTab
 import java.util.*
@@ -152,11 +153,28 @@ class CombatPlugin(
                 }
             }
         }
-        if (!overlapping && pawn.tile.getDistance(target.tile) <= attackRange + target.getSize()) {
-            // Distance alone isn't enough for ranged/magic: a projectile must also have line of
-            // sight, or attackers (players, companions, bots, ranged npcs) shoot straight through
-            // walls. Melee (short range) keeps relying on reachStrategy's adjacency check above.
-            if (attackRange <= 2 || world.lineValidator.rayCast(pawn.tile, target.tile, projectile = true)) {
+        if (!overlapping && !reached) {
+            // This is the fallback that decides "close enough to swing" when reachStrategy says no.
+            // It used to hand melee a free pass: euclidean getDistance() rounds a diagonal step up
+            // to 2, the bound was `attackRange + size` (one tile too generous), and the LOS check
+            // was skipped outright for anything with range <= 2 — so melee landed from several
+            // tiles away and straight through walls and fences.
+            //
+            // Melee gets NO fallback at all: reachStrategy above is the sole authority on melee
+            // reach, and it already enforces true adjacency plus the wall/fence collision flags.
+            // Halberds (range 2) reach one tile further, and still can't swing through anything
+            // that blocks walking. Only ranged/magic may span the gap, and they must hold
+            // projectile line of sight to do it.
+            //
+            // Range is Chebyshev — tiles, counting a diagonal as one step — which is what OSRS
+            // uses and what isWithinRadius (the metric everywhere else in combat) already applies.
+            // getDistance() is euclidean, so it both over-reached melee and made ranged attacks
+            // shorter on the diagonal than straight on.
+            val melee = strategy === MeleeCombatStrategy
+            val reach = attackRange + target.getSize() - 1
+            val inRange = (!melee || attackRange > 1) &&
+                pawn.tile.getChebyshevDistance(target.tile) <= reach
+            if (inRange && world.lineValidator.rayCast(pawn.tile, target.tile, projectile = !melee)) {
                 reached = true
                 pawn.stopMovement()
             }

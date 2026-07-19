@@ -5,6 +5,7 @@ import org.alter.game.action.NpcDeathAction.reset
 import org.alter.game.info.NpcInfo
 import org.alter.game.model.LockState
 import org.alter.game.model.attr.KILLER_ATTR
+import org.alter.game.model.combat.NpcAnims
 import org.alter.game.model.entity.AreaSound
 import org.alter.game.model.entity.Npc
 import org.alter.game.model.entity.Pawn
@@ -38,7 +39,11 @@ object NpcDeathAction {
 
     suspend fun QueueTask.death(npc: Npc) {
         val world = npc.world
+        // Coerce to animations this npc's skeleton can actually play — the DEFAULT def's 836 is a
+        // human death, and a monster given it collapses into a deformed heap. See [NpcAnims].
         val deathAnimation = npc.combatDef.deathAnimation
+            .map { NpcAnims.coerceDeath(npc.id, it) }
+            .filter { it != -1 }
         val deathSound = npc.combatDef.defaultDeathSound
         val respawnDelay = npc.combatDef.respawnDelay
         var killer: Pawn? = null

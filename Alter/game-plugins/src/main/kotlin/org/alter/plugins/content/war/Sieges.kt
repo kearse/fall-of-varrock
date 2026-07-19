@@ -28,9 +28,11 @@ object Sieges {
         attackAnimation = 407,
     )
     // Shock-troop goblins (hobgoblins) — fiercer than the rabble, still low-damage but tankier.
+    // Animations are the HOBGOBLIN's (frame archive 425), not the goblin set above (archive 1576):
+    // a hobgoblin is rigged to a different skeleton and deforms when given goblin animations.
     private val goblinEliteDef = NpcCombatDef.DEFAULT.copy(
         attack = 65, strength = 32, defence = 45, hitpoints = 140,
-        attackAnimation = 6184, blockAnimation = 6183, deathAnimation = listOf(6182),
+        attackAnimation = 164, blockAnimation = 165, deathAnimation = listOf(167),
         aggressiveRadius = 12, aggroTargetDelay = 8, aggressiveTimer = 200,
     )
     // General Zo — the defended VIP. Tanky so reaching him is a real fight (the knights buy

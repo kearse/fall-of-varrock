@@ -40,12 +40,13 @@ private const val VOID_KNIGHT = 1755
 fun main(args: Array<String>) {
     when (args.getOrNull(0)?.lowercase() ?: "inspect") {
         "inspect" -> inspect(args.drop(1).mapNotNull { it.toIntOrNull() })
+        "anims" -> anims(args.drop(1).mapNotNull { it.toIntOrNull() })
         // NOTE: slot 2 (actions[1]) is left null on purpose — the engine hardwires the second
         // npc menu slot to the ATTACK pathway (players got "You can't attack this npc." when
         // "Solo game" sat there). Slots 3/4 route as normal string-matched options.
         "wizardknight" -> setActions(VOID_KNIGHT, listOf("Talk-to", null, "Solo game", "Multi game", null))
         "restore" -> restore(args.getOrNull(1)?.toIntOrNull() ?: run { println("restore <id>"); return })
-        else -> println("usage: inspect <id...> | wizardknight | restore <id>")
+        else -> println("usage: inspect <id...> | anims <id...> | wizardknight | restore <id>")
     }
 }
 
@@ -60,6 +61,53 @@ private fun describe(id: Int): String {
 private fun inspect(ids: List<Int>) {
     initCache()
     ids.forEach { println(describe(it)) }
+}
+
+/**
+ * List every animation an npc's model can actually PLAY.
+ *
+ * A sequence's frame ids pack the **frame archive** (the skeleton the frames were authored
+ * against) into their high 16 bits, so two sequences sharing a frame archive drive the same
+ * skeleton. Playing an animation from a foreign archive is what makes an npc contort or freeze —
+ * the goblins were being given animation 422, the human unarmed punch.
+ *
+ * So: take the npc's own stand/walk anims, read their frame archive, and print every sequence in
+ * the cache built on that same archive. Those — and only those — are safe attack/block/death
+ * animations for that npc.
+ *
+ *   gradlew :game-server:npcDef -PnpcArgs="anims 655"
+ */
+private fun anims(ids: List<Int>) {
+    initCache()
+    val seqs = CacheManager.getAnims()
+    fun archiveOf(seq: Int): Int? = seqs[seq]?.frameIDs?.firstOrNull()?.ushr(16)
+
+    ids.forEach { id ->
+        val def = CacheManager.getNpcOrDefault(id)
+        val archives = listOfNotNull(archiveOf(def.standAnim), archiveOf(def.walkAnim)).toSet()
+        val resolved = org.alter.game.model.combat.NpcAnims.resolve(id)
+        println(
+            "npc $id '${def.name}' standAnim=${def.standAnim} walkAnim=${def.walkAnim} " +
+                "frameArchives=$archives -> RESOLVED attack=${resolved.attack} block=${resolved.block} death=${resolved.death}"
+        )
+        if (archives.isEmpty()) {
+            println("  (no frame archive — this npc has no usable animations)")
+            return@forEach
+        }
+        seqs.keys.sorted().forEach { seq ->
+            if (archiveOf(seq) in archives) {
+                val s = seqs[seq]!!
+                val frames = s.frameIDs?.size ?: 0
+                val ticks = s.frameDelays?.sum() ?: 0
+                val tag = when (seq) {
+                    def.standAnim -> " <- stand"
+                    def.walkAnim -> " <- walk"
+                    else -> ""
+                }
+                println("  anim $seq: frames=$frames delayTotal=$ticks loops=${s.maxLoops}$tag")
+            }
+        }
+    }
 }
 
 private fun setActions(id: Int, actions: List<String?>) {

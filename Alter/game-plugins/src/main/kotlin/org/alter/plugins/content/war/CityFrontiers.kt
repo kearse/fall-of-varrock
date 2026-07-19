@@ -155,12 +155,14 @@ object CityFrontiers {
         aggressiveRadius = 6, aggroTargetDelay = 4, aggressiveTimer = 2000,
     )
 
-    /** Mid line. Hobgoblin animations (6189/6191/6190 — NOT the goblin set, which looks
-     *  broken on the hobgoblin model). */
+    /** Mid line. The hobgoblin's OWN animations: it is rigged to frame archive 425 (animations
+     *  162-167), not the goblin's archive 1576. 6189/6191/6190 used to be set here, which are
+     *  goblin animations — the exact skeleton mismatch the comment was trying to avoid. Confirm
+     *  any replacement with `gradlew :game-server:npcDef -PnpcArgs="anims 132"`. */
     private val HOBGOBLIN_DEF = NpcCombatDef.DEFAULT.copy(
         attack = 24, strength = 24, defence = 18, hitpoints = 29,
         attackSpeed = 5,
-        attackAnimation = 6189, blockAnimation = 6191, deathAnimation = listOf(6190),
+        attackAnimation = 164, blockAnimation = 165, deathAnimation = listOf(167),
         aggressiveRadius = 6, aggroTargetDelay = 8, aggressiveTimer = 200,
     )
 

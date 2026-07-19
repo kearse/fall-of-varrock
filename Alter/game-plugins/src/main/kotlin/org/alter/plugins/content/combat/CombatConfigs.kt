@@ -126,7 +126,10 @@ object CombatConfigs {
 
     fun getAttackAnimation(pawn: Pawn): Int {
         if (pawn is Npc) {
-            return pawn.combatDef.attackAnimation
+            // Never hand an npc an animation built for a different skeleton — it renders as a
+            // contorted or frozen model. The DEFAULT def falls back to 422 (the human unarmed
+            // punch), which every world-spawn monster inherits, so this is the common case.
+            return NpcAnims.coerceAttack(pawn.id, pawn.combatDef.attackAnimation)
         }
 
         if (pawn is Player) {
@@ -169,7 +172,7 @@ object CombatConfigs {
 
     fun getBlockAnimation(pawn: Pawn): Int {
         if (pawn is Npc) {
-            return pawn.combatDef.blockAnimation
+            return NpcAnims.coerceBlock(pawn.id, pawn.combatDef.blockAnimation)
         }
 
         if (pawn is Player) {
