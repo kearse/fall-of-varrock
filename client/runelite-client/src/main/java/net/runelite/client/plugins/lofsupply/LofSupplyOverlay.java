@@ -149,7 +149,11 @@ class LofSupplyOverlay extends Overlay
 		return activeTab >= 0 && activeTab < cats.size() ? cats.get(activeTab) : null;
 	}
 
-	/** Rows shown for the active tab: carried items only, capped at [MAX_ROWS]. */
+	/**
+	 * Rows shown for the active tab, capped at [MAX_ROWS]. Row ORDER is sticky per tab: once an
+	 * item earns a row it keeps that slot (dim, chip-less) after selling out, so a manifest
+	 * re-push never shifts the rows under a player's cursor mid-clicking (mis-sell guard).
+	 */
 	List<Entry> carriedRows()
 	{
 		final Cat cat = active();
@@ -157,19 +161,45 @@ class LofSupplyOverlay extends Overlay
 		{
 			return new ArrayList<>();
 		}
+		final java.util.LinkedHashSet<Integer> sticky =
+			stickyByTab.computeIfAbsent(activeTab, k -> new java.util.LinkedHashSet<>());
 		final List<Entry> out = new ArrayList<>();
-		for (Entry e : cat.entries)
+		for (int id : sticky)
 		{
-			if (e.carried > 0)
+			for (Entry e : cat.entries)
 			{
-				out.add(e);
-				if (out.size() >= MAX_ROWS)
+				if (e.id == id)
 				{
+					out.add(e);
 					break;
 				}
 			}
+			if (out.size() >= MAX_ROWS)
+			{
+				return out;
+			}
+		}
+		for (Entry e : cat.entries)
+		{
+			if (out.size() >= MAX_ROWS)
+			{
+				break;
+			}
+			if (e.carried > 0 && !sticky.contains(e.id))
+			{
+				out.add(e);
+				sticky.add(e.id);
+			}
 		}
 		return out;
+	}
+
+	private final java.util.Map<Integer, java.util.LinkedHashSet<Integer>> stickyByTab = new java.util.HashMap<>();
+
+	/** Forget sticky row slots — called when the window opens fresh (not on in-place refreshes). */
+	void resetStickyRows()
+	{
+		stickyByTab.clear();
 	}
 
 	private long tabWorth()
@@ -251,9 +281,13 @@ class LofSupplyOverlay extends Overlay
 				return TAB_BASE + i;
 			}
 		}
-		final int rows = carriedRows().size();
-		for (int r = 0; r < rows; r++)
+		final List<Entry> rowList = carriedRows();
+		for (int r = 0; r < rowList.size(); r++)
 		{
+			if (rowList.get(r).carried <= 0)
+			{
+				continue; // sold-out sticky row — chips are gone, the slot is inert
+			}
 			for (int c = 0; c < 3; c++)
 			{
 				if (chipRect(ox, oy, r, c).contains(p))
@@ -354,6 +388,15 @@ class LofSupplyOverlay extends Overlay
 			{
 				final Entry e = rows.get(i);
 				final Rectangle rr = rowRect(ox, oy, i);
+				if (e.carried <= 0)
+				{
+					// sold-out sticky slot: keeps its place (no row shift under the cursor), inert
+					g.setColor(LofTheme.ROW);
+					g.fillRoundRect(rr.x, rr.y, rr.width, rr.height, 8, 8);
+					drawItem(g, rr.x + 4, rr.y + 2, e.id, 26, 23);
+					LofTheme.shadowText(g, itemName(e.id) + " — handed in", rr.x + 36, rr.y + 17, LofTheme.TEXT_DIM);
+					continue;
+				}
 				g.setColor(rr.contains(mouse) ? LofTheme.ROW_HOVER : LofTheme.ROW);
 				g.fillRoundRect(rr.x, rr.y, rr.width, rr.height, 8, 8);
 				drawItem(g, rr.x + 4, rr.y + 2, e.id, 26, 23);

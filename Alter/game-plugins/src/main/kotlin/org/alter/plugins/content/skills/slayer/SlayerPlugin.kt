@@ -101,6 +101,14 @@ class SlayerPlugin(
     private val masterTile = Triple(3219, 3215, 0) // end-game cluster south of the shop hub
     private val rewardShop = "War Rewards"
 
+    /** Resolved master id, passed to every dialogue line explicitly: the contract window's
+     *  `::con` actions run WITHOUT an interacting npc (the default chatNpc resolution throws). */
+    private val masterId: Int by lazy { resolveId(master) }
+
+    /** Vannaka line with the head/name forced, safe from any entry point (window or Talk-to). */
+    private suspend fun QueueTask.say(p: Player, message: String) =
+        chatNpc(p, message, npc = masterId, title = "Vannaka")
+
     /** Tasks whose npc actually exists in the cache, keyed by RSCM npc key. */
     private val tasks: Map<String, SlayerTask> = SlayerTasks.ALL
         .filter { resolves(it.npcName) }
@@ -127,7 +135,14 @@ class SlayerPlugin(
         // killers and untasked players bail immediately).
         onAnyNpcDeath { onKill(player = (npc.attr[KILLER_ATTR]?.get() as? Player), deadId = npc.id) }
 
-        onCommand("slayer", description = "Show your Slayer task") { reportTask(player) }
+        onCommand("slayer", description = "Show your Slayer task") {
+            reportTask(player)
+            // Text fallback for the resource contract too — the window is custom-client-only.
+            val res = ResourceContracts.current(player)
+            if (res != null) {
+                player.message("Resource contract: <col=801700>${res.second} ${res.first.display}</col> left (${res.first.skill}).")
+            }
+        }
 
         onCommand("contracts", description = "Open the War Contracts window") {
             ContractMenu.open(player)
@@ -200,32 +215,32 @@ class SlayerPlugin(
     private suspend fun QueueTask.assignResource(p: Player) {
         val existing = ResourceContracts.current(p)
         if (existing != null) {
-            chatNpc(p, "You've still <col=801700>${existing.second} ${existing.first.display}</col> to gather. Bring it in.")
+            say(p, "You've still <col=801700>${existing.second} ${existing.first.display}</col> to gather. Bring it in.")
             return
         }
         val assigned = ResourceContracts.assign(p)
         if (assigned == null) {
-            chatNpc(p, "Nothing I can set you to right now — raise a gathering skill or two and come back.")
+            say(p, "Nothing I can set you to right now — raise a gathering skill or two and come back.")
             return
         }
         val (task, amount) = assigned
-        chatNpc(p, "Resource contract: gather <col=801700>$amount ${task.display}</col> — that's ${task.skill} work. You keep what you gather; I just need it done.")
-        chatNpc(p, "Coin and War Effort when it's complete. Off you go.")
+        say(p, "Resource contract: gather <col=801700>$amount ${task.display}</col> — that's ${task.skill} work. You keep what you gather; I just need it done.")
+        say(p, "Coin and War Effort when it's complete. Off you go.")
         // The faucet advertises the ladder: skills already qualify for richer rank-gated work.
         if (ResourceContracts.richerWorkAwaits(p)) {
-            chatNpc(p, "And ${p.address} — your skills are worth more than this. Buy your next rank from <col=801700>Duke Horacio</col> and I'll commission you for far richer work.")
+            say(p, "And ${p.address} — your skills are worth more than this. Buy your next rank from <col=801700>Duke Horacio</col> and I'll commission you for far richer work.")
         }
     }
 
     /** Intro-quest finale: the recruit returns to Vannaka after their trials for the reward (sent to
      *  the bank) and their first real, post-tutorial assignment. */
     private suspend fun QueueTask.recruitFinale(p: Player) {
-        chatNpc(p, "Back already — and the contract done. You've passed every trial the realm set you, recruit.")
-        chatNpc(p, "Here's your reward. I've sent it to your bank, so your pack stays clear for the fights ahead.")
+        say(p, "Back already — and the contract done. You've passed every trial the realm set you, recruit.")
+        say(p, "Here's your reward. I've sent it to your bank, so your pack stays clear for the fights ahead.")
         RecruitTrials.grantFinalReward(p) // steel finish + supplies to bank + completes the trials (War Effort)
-        chatNpc(p, "From here, war-contracts are a steady trade. Come to me any time and pick your work: a <col=801700>combat contract</col> or a <col=801700>resource contract</col>.")
-        chatNpc(p, "Combat sharpens your blade; resource contracts will walk you through every gathering skill the realm needs — mining, woodcutting, fishing and more. Either way, you're paid.")
-        chatNpc(p, "Clear a contract, come back for your pay and the next. Here's your first proper one.")
+        say(p, "From here, war-contracts are a steady trade. Come to me any time and pick your work: a <col=801700>combat contract</col> or a <col=801700>resource contract</col>.")
+        say(p, "Combat sharpens your blade; resource contracts will walk you through every gathering skill the realm needs — mining, woodcutting, fishing and more. Either way, you're paid.")
+        say(p, "Clear a contract, come back for your pay and the next. Here's your first proper one.")
         assignTask(p) // step is DONE now → a normal random contract, not the tutorial rats
         // Kick straight into the War-Prep chain: Quest 1 is Magic.
         warPrepMagicIntro(p)
@@ -235,10 +250,10 @@ class SlayerPlugin(
      *  raids, starting with Prayer/Protect-from-Magic. [WarPrepChain.begin] gifts the dragon bones and
      *  sets the church-altar objective. */
     private suspend fun QueueTask.warPrepMagicIntro(p: Player) {
-        chatNpc(p, "One last thing, ${p.address}. Contracts keep you sharp, but a raider needs more than a blade — you'll need <col=801700>magic</col>, and the nerve to stand in front of it.")
-        chatNpc(p, "The front's mages will melt a man who can't pray. So first, train your <col=801700>Prayer to ${WarPrepChain.PRAYER_TARGET}</col> — that's when you can call on <col=801700>Protect from Magic</col>. Here, take these.")
+        say(p, "One last thing, ${p.address}. Contracts keep you sharp, but a raider needs more than a blade — you'll need <col=801700>magic</col>, and the nerve to stand in front of it.")
+        say(p, "The front's mages will melt a man who can't pray. So first, train your <col=801700>Prayer to ${WarPrepChain.PRAYER_TARGET}</col> — that's when you can call on <col=801700>Protect from Magic</col>. Here, take these.")
         WarPrepChain.begin(p) // gifts the dragon bones + sets the PRAYER objective/arrow
-        chatNpc(p, "Dragon bones — <col=801700>offer</col> them on the <col=801700>church altar</col> in Lumbridge, far faster than burying. Follow the marker, and come back to me once Protect from Magic is yours.")
+        say(p, "Dragon bones — <col=801700>offer</col> them on the <col=801700>church altar</col> in Lumbridge, far faster than burying. Follow the marker, and come back to me once Protect from Magic is yours.")
     }
 
     /** PRAYER step nudge: keep them at the altar; top up bones if they ran dry (bounded — see
@@ -246,53 +261,53 @@ class SlayerPlugin(
     private suspend fun QueueTask.warPrepPrayerNudge(p: Player) {
         when (WarPrepChain.topUpBones(p)) {
             WarPrepChain.TopUp.BONES ->
-                chatNpc(p, "Out of bones already? Here's more — and mind them this time, they don't grow back. Offer them at the <col=801700>church altar</col> until your Prayer reaches <col=801700>${WarPrepChain.PRAYER_TARGET}</col>.")
+                say(p, "Out of bones already? Here's more — and mind them this time, they don't grow back. Offer them at the <col=801700>church altar</col> until your Prayer reaches <col=801700>${WarPrepChain.PRAYER_TARGET}</col>.")
             WarPrepChain.TopUp.DRILLED -> {
-                chatNpc(p, "Lost ANOTHER stack? I'm not made of dragon bones, recruit. Kneel — we'll do this the army way.")
-                chatNpc(p, "Vannaka drills the litany into you until your knees ache. Your <col=801700>Prayer</col> rises to <col=801700>${WarPrepChain.PRAYER_TARGET}</col>.")
+                say(p, "Lost ANOTHER stack? I'm not made of dragon bones, recruit. Kneel — we'll do this the army way.")
+                say(p, "Vannaka drills the litany into you until your knees ache. Your <col=801700>Prayer</col> rises to <col=801700>${WarPrepChain.PRAYER_TARGET}</col>.")
             }
             WarPrepChain.TopUp.NOT_NEEDED ->
-                chatNpc(p, "Train your Prayer to <col=801700>${WarPrepChain.PRAYER_TARGET}</col> at the church altar — offer those dragon bones on it. Then you can pray Protect from Magic, and you'll need it in the tower.")
+                say(p, "Train your Prayer to <col=801700>${WarPrepChain.PRAYER_TARGET}</col> at the church altar — offer those dragon bones on it. Then you can pray Protect from Magic, and you'll need it in the tower.")
         }
     }
 
     /** GEAR step: Prayer's ready — arm the recruit for the Wizard Tower and send them to the
      *  Void Knight who runs the assaults. */
     private suspend fun QueueTask.warPrepArm(p: Player) {
-        chatNpc(p, "Prayer trained and Protect from Magic ready — good. You'll not walk into a tower of mages unarmed, though.")
+        say(p, "Prayer trained and Protect from Magic ready — good. You'll not walk into a tower of mages unarmed, though.")
         WarPrepChain.armForTower(p) // staff + robes + runes + noted prayer potions
-        chatNpc(p, "Take this staff, these robes, and a proper stock of runes — <col=801700>air, water, earth and fire</col> by the hundreds, plus the combat runes. And a crate of <col=801700>prayer potions</col>, noted — sip them and <col=801700>Protect from Magic</col> never drops.")
-        chatNpc(p, "The <col=801700>Wizard Tower</col> stands south-west, across the river. A <col=801700>Void Knight</col> holds the bridge to it — speak to him and he'll send you in. Fight up floor by floor and take the <col=801700>grimoire</col> from the Archmage at the top.")
-        chatNpc(p, "Follow the marker to the Void Knight — and come back to me once the grimoire's power is yours.")
+        say(p, "Take this staff, these robes, and a proper stock of runes — <col=801700>air, water, earth and fire</col> by the hundreds, plus the combat runes. And a crate of <col=801700>prayer potions</col>, noted — sip them and <col=801700>Protect from Magic</col> never drops.")
+        say(p, "The <col=801700>Wizard Tower</col> stands south-west, across the river. A <col=801700>Void Knight</col> holds the bridge to it — speak to him and he'll send you in. Fight up floor by floor and take the <col=801700>grimoire</col> from the Archmage at the top.")
+        say(p, "Follow the marker to the Void Knight — and come back to me once the grimoire's power is yours.")
         WarPrepChain.onArmedForTower(p) // advance to TOWER
     }
 
     /** TOWER step nudge. */
     private suspend fun QueueTask.warPrepTowerNudge(p: Player) {
-        chatNpc(p, "The grimoire won't fetch itself, ${p.address}. Follow the marker to the <col=801700>Void Knight</col> at the Wizard Tower bridge — he'll send you in. Clear it floor by floor and take it from the Archmage.")
+        say(p, "The grimoire won't fetch itself, ${p.address}. Follow the marker to the <col=801700>Void Knight</col> at the Wizard Tower bridge — he'll send you in. Clear it floor by floor and take it from the Archmage.")
     }
 
     /** RETURN step: back from the tower with the grimoire — Vannaka's debrief pays the rank purse
      *  and sends the recruit to Duke Horacio to buy the next rank (the chain's final beat). */
     private suspend fun QueueTask.warPrepDebrief(p: Player) {
-        chatNpc(p, "Back — and I can smell the scorched robes from here. The grimoire's power is yours, ${p.address}: every spellbook the realm knows, at your call.")
-        chatNpc(p, "Keep the tower in mind, too. The Void Knight will send you back in whenever you like, and those mages bleed <col=801700>runes</col> — there's no finer place to farm them.")
-        chatNpc(p, "And the realm pays for a tower taken. Here — <col=801700>${"%,d".format(WarPrepChain.RANK_REWARD_COINS)} coins</col>, a purse fit for your next <col=801700>rank</col>.")
+        say(p, "Back — and I can smell the scorched robes from here. The grimoire's power is yours, ${p.address}: every spellbook the realm knows, at your call.")
+        say(p, "Keep the tower in mind, too. The Void Knight will send you back in whenever you like, and those mages bleed <col=801700>runes</col> — there's no finer place to farm them.")
+        say(p, "And the realm pays for a tower taken. Here — <col=801700>${"%,d".format(WarPrepChain.RANK_REWARD_COINS)} coins</col>, a purse fit for your next <col=801700>rank</col>.")
         WarPrepChain.onReportedToVannaka(p) // RETURN → RANK: pays the purse + arrows to the Duke
-        chatNpc(p, "Take it to <col=801700>Duke Horacio</col> and have him raise you — a higher rank means <col=801700>heavier armour</col> on your back. Follow the marker; you've earned this one.")
+        say(p, "Take it to <col=801700>Duke Horacio</col> and have him raise you — a higher rank means <col=801700>heavier armour</col> on your back. Follow the marker; you've earned this one.")
     }
 
     /** Intro-quest: the recruit reports back to Vannaka after the rats — Vannaka rewards the combat
      *  contract (a steel platebody) and hands out the supply (mining) contract. */
     private suspend fun QueueTask.recruitMiningBrief(p: Player) {
-        chatNpc(p, "Rats cleared — good work. Now hear this: my contracts aren't all blood and steel.")
+        say(p, "Rats cleared — good work. Now hear this: my contracts aren't all blood and steel.")
         chatPlayer(p, "What else is there?")
-        chatNpc(p, "<col=801700>Resource contracts.</col> The war runs on raw materials as much as it does on soldiers, so I hand out gathering work too — ore, logs, fish, whatever the realm's short on. Same pay: coin and War Effort.")
+        say(p, "<col=801700>Resource contracts.</col> The war runs on raw materials as much as it does on soldiers, so I hand out gathering work too — ore, logs, fish, whatever the realm's short on. Same pay: coin and War Effort.")
         chatPlayer(p, "What does the realm need ore for?")
-        chatNpc(p, "The <col=801700>war</col>, soldier. Supplies arm the campaigns — and when we march on a city like Varrock, everyone who fed the war takes a cut of everything we drag out of it. Their rune, their riches, split among those who supplied and fought.")
-        chatNpc(p, "That's how a soldier gets rich here. You're not ready to march yet... but you will be. For now — feed the war and earn your place.")
-        chatNpc(p, "Here's your first resource contract: get to <col=801700>The Mire</col> — our skilling grounds south-east of the castle. Mine copper and tin, smelt a <col=801700>bronze bar</col> at the furnace, then hammer it into a <col=801700>bronze dagger</col> at the anvil.")
-        chatNpc(p, "Hand that finished dagger to the <col=801700>Quartermaster</col> there — the Supply Officer. That's how supplies really reach the front: gathered, worked, then turned in. Then report back to me. Follow the marker.")
+        say(p, "The <col=801700>war</col>, soldier. Supplies arm the campaigns — and when we march on a city like Varrock, everyone who fed the war takes a cut of everything we drag out of it. Their rune, their riches, split among those who supplied and fought.")
+        say(p, "That's how a soldier gets rich here. You're not ready to march yet... but you will be. For now — feed the war and earn your place.")
+        say(p, "Here's your first resource contract: get to <col=801700>The Mire</col> — our skilling grounds south-east of the castle. Mine copper and tin, smelt a <col=801700>bronze bar</col> at the furnace, then hammer it into a <col=801700>bronze dagger</col> at the anvil.")
+        say(p, "Hand that finished dagger to the <col=801700>Quartermaster</col> there — the Supply Officer. That's how supplies really reach the front: gathered, worked, then turned in. Then report back to me. Follow the marker.")
         RecruitTrials.onMiningAssigned(p) // steel platebody + tools reward, advance to the mining step
     }
 
@@ -300,13 +315,13 @@ class SlayerPlugin(
     private suspend fun QueueTask.ensureIntro(p: Player) {
         if (p.attr[SLAYER_INTRO_DONE_ATTR] == true) return
         p.attr[SLAYER_INTRO_DONE_ATTR] = true
-        chatNpc(p, "So you're the recruit the Sergeant sent down. I'm Vannaka — I hand out the war-contracts.")
+        say(p, "So you're the recruit the Sergeant sent down. I'm Vannaka — I hand out the war-contracts.")
         chatPlayer(p, "War-contracts?")
-        chatNpc(p, "Slayer work, soldier. The realm needs certain beasts killed, so I'll assign you a target and a number to put down. It keeps the frontier and the supply roads in check.")
-        chatNpc(p, "Fulfil a contract and you're paid in <col=801700>War Effort</col> — the realm's coin of contribution. Combat work, gathering work, it all earns it.")
-        chatNpc(p, "Spend War Effort at my reward shop yonder — better food, potions, gear. And the more you earn each day, the greater your edge in XP and drops.")
-        chatNpc(p, "Run contracts back to back without slacking and your streak pays a bonus. The tougher the contract the better the pay — but the hardest are reserved for higher ranks.")
-        chatNpc(p, "Enough talk. Let's find you a contract.")
+        say(p, "Slayer work, soldier. The realm needs certain beasts killed, so I'll assign you a target and a number to put down. It keeps the frontier and the supply roads in check.")
+        say(p, "Fulfil a contract and you're paid in <col=801700>War Effort</col> — the realm's coin of contribution. Combat work, gathering work, it all earns it.")
+        say(p, "Spend War Effort at my reward shop yonder — better food, potions, gear. And the more you earn each day, the greater your edge in XP and drops.")
+        say(p, "Run contracts back to back without slacking and your streak pays a bonus. The tougher the contract the better the pay — but the hardest are reserved for higher ranks.")
+        say(p, "Enough talk. Let's find you a contract.")
     }
 
     private suspend fun QueueTask.assignTask(p: Player) {
@@ -324,7 +339,7 @@ class SlayerPlugin(
         val left = p.attr[SLAYER_TASK_LEFT_ATTR] ?: 0
         if (current != null && left > 0) {
             val name = tasks[current]?.display ?: "your current task"
-            chatNpc(p, "You still have $left $name to slay. Get going!")
+            say(p, "You still have $left $name to slay. Get going!")
             return
         }
         // Intro quest: a fixed, gentle first contract — 5 of the small rats around the castle.
@@ -334,13 +349,13 @@ class SlayerPlugin(
                 p.attr[SLAYER_TASK_NPC_ATTR] = rat.npcName
                 p.attr[SLAYER_TASK_LEFT_ATTR] = TUTORIAL_RAT_COUNT
                 p.attr[SLAYER_TASK_TOTAL_ATTR] = TUTORIAL_RAT_COUNT
-                chatNpc(p, "For your first contract, something simple: kill <col=801700>$TUTORIAL_RAT_COUNT ${rat.display}</col>. They scurry about just outside, around the castle. Off you go.")
+                say(p, "For your first contract, something simple: kill <col=801700>$TUTORIAL_RAT_COUNT ${rat.display}</col>. They scurry about just outside, around the castle. Off you go.")
                 return
             }
         }
         val eligible = tasks.values.filter { p.combatLevel >= it.minCombat }
         if (eligible.isEmpty()) {
-            chatNpc(p, "I've nothing for you right now.")
+            say(p, "I've nothing for you right now.")
             return
         }
         val task = eligible[world.random(eligible.size - 1)]
@@ -348,7 +363,7 @@ class SlayerPlugin(
         p.attr[SLAYER_TASK_NPC_ATTR] = task.npcName
         p.attr[SLAYER_TASK_LEFT_ATTR] = amount
         p.attr[SLAYER_TASK_TOTAL_ATTR] = amount
-        chatNpc(p, "Your task: slay <col=801700>$amount ${task.display}</col>. Good hunting.")
+        say(p, "Your task: slay <col=801700>$amount ${task.display}</col>. Good hunting.")
     }
 
     private fun reportTask(p: Player) {

@@ -152,9 +152,17 @@ class SmithingPlugin(
 
     // ---------------------------------- making ----------------------------------
 
-    /** Route a make request to the matching smelt/smith recipe by RESULT item id. */
+    /**
+     * Route a make request to the matching smelt/smith recipe by RESULT item id. The station
+     * check keeps the old onItemOnObj invariant: `::make` arrives as a raw chat token from
+     * anywhere, but production only ever happens AT the furnace/anvil.
+     */
     private fun make(p: Player, resultId: Int, qty: Int) {
         bars.firstOrNull { resOrNull(it.bar) == resultId }?.let { bar ->
+            if (!p.tile.isWithinRadius(furnaceTile, STATION_RADIUS)) {
+                p.message("You need to be at the furnace to smelt.")
+                return
+            }
             p.queue { smelt(this, p, bar, qty) }
             return
         }
@@ -162,6 +170,10 @@ class SmithingPlugin(
             val (metal, baseLevel) = metalInfo
             for (piece in pieces) {
                 if (resOrNull("item.${metal}_${piece.key}") == resultId) {
+                    if (anvilTiles.none { p.tile.isWithinRadius(it, STATION_RADIUS) }) {
+                        p.message("You need to be at an anvil to smith.")
+                        return
+                    }
                     p.queue { smith(this, p, barKey, metal, baseLevel, piece, qty) }
                     return
                 }
@@ -232,5 +244,8 @@ class SmithingPlugin(
         /** Overlay-open varp (docs/overlay-design-system.md §8): pulsed value = kind (1 furnace, 2 anvil). */
         const val OPEN_VARP = 4625
         const val PREFIX = "~LOFMAKE~"
+
+        /** How close a `::make` must be to its station (the furnace block is 3x3 from its SW tile). */
+        const val STATION_RADIUS = 6
     }
 }

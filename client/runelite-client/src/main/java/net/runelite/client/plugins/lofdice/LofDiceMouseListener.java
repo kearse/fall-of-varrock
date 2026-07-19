@@ -38,6 +38,7 @@ class LofDiceMouseListener extends MouseAdapter
 		}
 		else if (hit == LofDiceOverlay.ROLL)
 		{
+			overlay.onRollSent();
 			plugin.sendRoll(overlay.getStake());
 		}
 		else if (hit >= LofDiceOverlay.CHIP_BASE)

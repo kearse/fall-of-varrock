@@ -55,6 +55,7 @@ class LofDiceOverlay extends Overlay
 
 	private boolean visible;
 	private long stake;
+	private long stakeAtRoll; // snapshot when ROLL is sent — chips clicked mid-flight must not skew the banner
 	private int lastRoll = -1;
 	private boolean lastWin;
 	private long lastPayout;
@@ -107,11 +108,17 @@ class LofDiceOverlay extends Overlay
 		stake = Math.max(0, Math.min(stake, MAX_BET));
 	}
 
+	/** Called by the mouse listener the moment a roll is sent, before the round trip. */
+	void onRollSent()
+	{
+		stakeAtRoll = stake;
+	}
+
 	void onResult(int roll, boolean win)
 	{
 		lastRoll = roll;
 		lastWin = win;
-		lastPayout = win ? (long) (stake * 2L * (1.0 - RAKE)) : 0;
+		lastPayout = win ? (long) (stakeAtRoll * 2L * (1.0 - RAKE)) : 0;
 		history.addFirst(new int[]{roll, win ? 1 : 0});
 		while (history.size() > 8)
 		{

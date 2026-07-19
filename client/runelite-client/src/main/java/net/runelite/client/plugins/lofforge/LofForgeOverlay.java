@@ -71,6 +71,9 @@ class LofForgeOverlay extends Overlay
 	private int activeTab;
 	private int selected;
 
+	/** Two-click confirm: forging consumes a BIS base — the first click arms, the second sends. */
+	private boolean armed;
+
 	@Inject
 	private LofForgeOverlay(Client client, ItemManager itemManager)
 	{
@@ -88,6 +91,17 @@ class LofForgeOverlay extends Overlay
 	void setVisible(boolean v)
 	{
 		visible = v;
+		armed = false;
+	}
+
+	boolean isArmed()
+	{
+		return armed;
+	}
+
+	void setArmed(boolean v)
+	{
+		armed = v;
 	}
 
 	void setCurrencies(int commId, int emberId, int barId, int coinId,
@@ -115,6 +129,7 @@ class LofForgeOverlay extends Overlay
 		{
 			activeTab = t;
 			selected = 0;
+			armed = false;
 		}
 	}
 
@@ -143,6 +158,7 @@ class LofForgeOverlay extends Overlay
 		if (i >= 0 && i < tabRecipes().size())
 		{
 			selected = i;
+			armed = false;
 		}
 	}
 
@@ -291,9 +307,12 @@ class LofForgeOverlay extends Overlay
 		}
 
 		g.setFont(FontManager.getRunescapeSmallFont());
-		LofTheme.shadowText(g, "A success is announced to the whole realm.", ox + LofModal.PAD, oy + LofModal.H - 22, LofTheme.TEXT_DIM);
+		LofTheme.shadowText(g, armed ? "This consumes the base piece and materials — click again to commit."
+			: "A success is announced to the whole realm.", ox + LofModal.PAD, oy + LofModal.H - 22,
+			armed ? LofTheme.LAVA : LofTheme.TEXT_DIM);
 		final boolean can = satisfied(sel);
-		LofModal.button(g, forgeRect(ox, oy), "FORGE IT", LofTheme.GOLD, can, forgeRect(ox, oy).contains(mouse));
+		LofModal.button(g, forgeRect(ox, oy), armed ? "CONFIRM — FORGE IT" : "FORGE IT",
+			armed ? LofTheme.LAVA : LofTheme.GOLD, can, forgeRect(ox, oy).contains(mouse));
 
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, oldAA == null ? RenderingHints.VALUE_ANTIALIAS_DEFAULT : oldAA);
 		return new Dimension(LofModal.W, LofModal.H);
