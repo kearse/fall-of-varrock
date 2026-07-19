@@ -286,6 +286,13 @@ public class ClientUI
 	@Subscribe
 	private void onGameStateChanged(final GameStateChanged event)
 	{
+		// The canvas is built on the client's own thread, so it can still be null when show()
+		// makes its one initial focus grab -- that grab then silently does nothing and the game
+		// never receives a keystroke all session (the player cannot type in the login fields or
+		// the chatbox). Retry whenever nothing at all holds focus, which is only ever that
+		// missed-grab state; a sidebar field the player is typing in owns focus and is left be.
+		SwingUtilities.invokeLater(this::reclaimLostFocus);
+
 		if (event.getGameState() != GameState.LOGGED_IN || !(client instanceof Client) || !config.usernameInTitle())
 		{
 			return;
@@ -774,6 +781,11 @@ public class ClientUI
 			}
 		}
 
+		// Last resort for the same missed focus grab: a keystroke arriving at the window with no
+		// focus owner means the game never got focus, so heal it here rather than make the player
+		// discover that toggling the sidebar is what fixes typing.
+		reclaimLostFocus();
+
 		return false;
 	}
 
@@ -1198,7 +1210,25 @@ public class ClientUI
 		}
 	}
 
-	private void giveClientFocus()
+	/**
+	 * Hand focus back to the game when nothing in the window owns it. Deliberately narrow: any
+	 * real focus owner -- a sidebar text field above all -- keeps what it has.
+	 */
+	private void reclaimLostFocus()
+	{
+		if (frame != null && frame.isFocused() && frame.getFocusOwner() == null)
+		{
+			giveClientFocus();
+		}
+	}
+
+	/**
+	 * Hand keyboard focus to the game canvas. Called on every canvas mouse press from
+	 * {@link net.runelite.client.callback.Hooks}: clicking the game is what takes focus back off
+	 * a sidebar panel that grabbed it, and it must run from there rather than from a mouse
+	 * listener here, because MouseManager stops dispatching at the first listener that consumes.
+	 */
+	public void giveClientFocus()
 	{
 		if (client instanceof Client)
 		{

@@ -302,6 +302,13 @@ public class Hooks implements Callbacks
 	@Override
 	public MouseEvent mousePressed(MouseEvent mouseEvent)
 	{
+		// Clicking the game takes keyboard focus back. A sidebar panel's text field otherwise
+		// keeps focus and swallows every keystroke -- no typing in the login fields or the
+		// chatbox until the whole sidebar is collapsed. This has to happen here rather than in a
+		// MouseManager listener: dispatch stops at the first listener that consumes, and the
+		// login screen consumes its own field clicks.
+		clientUi.giveClientFocus();
+
 		return mouseManager.processMousePressed(mouseEvent);
 	}
 
