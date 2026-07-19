@@ -115,10 +115,17 @@ jobs:
           # Per-OS install options. On Windows the missing bit before was shortcuts:
           # without --win-shortcut/--win-menu the setup installs silently with nothing
           # to launch. --win-per-user-install avoids the admin/UAC prompt.
+          #
+          # --win-dir-chooser is what makes the install VISIBLE. Without it jpackage
+          # produces a wizard-less installer: measured on a clean machine, the window
+          # flashes and then nothing happens for ~15 seconds before 208MB lands and the
+          # process exits, with no progress UI and no app launch at the end. Players
+          # read that as "the installer disappeared" and reported the client as broken.
+          # The dir-chooser adds a real Next/Install/Finish wizard with a progress bar.
           # (space-free flags only — EXTRA is intentionally unquoted below)
           EXTRA=""
           if [ "${{ matrix.os }}" = "windows-latest" ]; then
-            EXTRA="--win-shortcut --win-menu --win-menu-group FallOfVarrock --win-per-user-install --win-help-url https://fallofvarrock.com"
+            EXTRA="--win-shortcut --win-menu --win-menu-group FallOfVarrock --win-per-user-install --win-dir-chooser --win-help-url https://fallofvarrock.com"
           fi
           "$JPACKAGE" \
             --type ${{ matrix.type }} \
