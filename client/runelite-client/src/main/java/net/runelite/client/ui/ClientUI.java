@@ -540,14 +540,7 @@ public class ClientUI
 					{
 						SwingUtilities.invokeLater(ClientUI.this::toggleSidebar);
 						mouseEvent.consume();
-						return mouseEvent;
 					}
-
-					// Clicking the game hands keyboard focus back to it. Without this, a sidebar
-					// panel that took focus (any of its text fields) keeps swallowing every
-					// keystroke -- you could not type in the login fields or the chatbox again
-					// until the whole sidebar was collapsed.
-					giveClientFocus();
 
 					return mouseEvent;
 				}
@@ -1229,7 +1222,13 @@ public class ClientUI
 		}
 	}
 
-	private void giveClientFocus()
+	/**
+	 * Hand keyboard focus to the game canvas. Called on every canvas mouse press from
+	 * {@link net.runelite.client.callback.Hooks}: clicking the game is what takes focus back off
+	 * a sidebar panel that grabbed it, and it must run from there rather than from a mouse
+	 * listener here, because MouseManager stops dispatching at the first listener that consumes.
+	 */
+	public void giveClientFocus()
 	{
 		if (client instanceof Client)
 		{
