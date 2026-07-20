@@ -172,15 +172,18 @@ object Campaigns {
      * ([CityFrontiers.FALADOR]) defends it street by street, and the reconquest [Districts] track the
      * push. Falador is march-only — commanders `::campaign`/`::conquest` demon-held Varrock instead.
      *
-     * Route = the Lumbridge→Draynor→Falador road, best-effort waypoints down-sampled every ~8-10 tiles
-     * (each snapped to walkable land + self-healing via the march unstick). TUNABLE — re-record in-game
-     * with `::recroute` for a pixel-accurate column path, exactly as the Varrock route was produced.
+     * Route = the Lumbridge→Draynor→Falador road. The column musters in the castle courtyard and leaves
+     * **north out of the front, around the keep** — the old route cut straight west at z≈3223, through the
+     * castle building (x3204-3211), where the troops jammed on the wall and teleport-unstuck "out of the
+     * wall". It then follows the Draynor road west and climbs north *above* Draynor to the Falador east
+     * gate. Best-effort waypoints (each snapped to walkable land + self-healing via the march unstick).
+     * TUNABLE — re-record in-game with `::recroute` for a pixel-accurate column path.
      */
     val FALADOR = CampaignOp(
         cityKey = "falador",
         cityId = 3,
         displayName = "Falador",
-        stagingTile = Tile(3222, 3220, 0),   // muster west of Lumbridge castle, at the road head
+        stagingTile = Tile(3222, 3220, 0),   // muster in the Lumbridge castle courtyard
         objectiveTile = Tile(3040, 3340, 0), // the Falador east-gate mouth (district approaches branch here)
         // Must span the Falador box + its eastern approach so every kill/participation registers.
         battleArea = Area(2938, 3290, 3066, 3406),
@@ -188,12 +191,20 @@ object Campaigns {
         alliedDef = ALLIED_DEF,
         timeoutTicks = 600, // a march is smaller than a conquest; ~12 min cap on the cross-country push
         route = listOf(
-            Tile(3222, 3220, 0), Tile(3214, 3223, 0), Tile(3208, 3227, 0), // west off the castle, over the Lum
-            Tile(3200, 3229, 0), Tile(3190, 3231, 0), Tile(3180, 3233, 0), Tile(3170, 3236, 0),
+            // Leave NORTH out of the courtyard and round the keep — the old route ran due west at
+            // z~3223 straight through the castle building (x3204-3211), where the column jammed on the
+            // wall and teleport-unstuck "out of the wall". Short hops on open ground (the march snapper
+            // only heals within 5 tiles), then onto the westbound Draynor road.
+            Tile(3222, 3220, 0),                     // muster: Lumbridge castle courtyard
+            Tile(3222, 3228, 0),                     // north out of the courtyard, clear of the keep
+            Tile(3216, 3233, 0),                     // onto the path north of the keep (by the general store)
+            Tile(3208, 3233, 0),                     // west, north of the castle building — no wall cut
+            Tile(3200, 3231, 0),                     // drop onto the Draynor road, clear of Lumbridge
+            Tile(3190, 3231, 0), Tile(3180, 3233, 0), Tile(3170, 3236, 0),
             Tile(3160, 3238, 0), Tile(3150, 3241, 0), Tile(3140, 3244, 0), Tile(3130, 3246, 0),
-            Tile(3120, 3248, 0), Tile(3110, 3249, 0), Tile(3101, 3251, 0), // the Draynor road
+            Tile(3120, 3248, 0), Tile(3110, 3249, 0), Tile(3101, 3251, 0), // the Draynor road, west
             Tile(3097, 3259, 0), Tile(3096, 3268, 0), Tile(3097, 3278, 0), Tile(3099, 3288, 0),
-            Tile(3100, 3298, 0), Tile(3096, 3307, 0), Tile(3088, 3314, 0), // turn north-west for Falador
+            Tile(3100, 3298, 0), Tile(3096, 3307, 0), Tile(3088, 3314, 0), // turn north-west, above Draynor
             Tile(3079, 3320, 0), Tile(3069, 3325, 0), Tile(3060, 3330, 0), Tile(3052, 3335, 0),
             Tile(3047, 3338, 0), Tile(3040, 3340, 0), // arrive at the Falador east gate — the city mouth
         ),
