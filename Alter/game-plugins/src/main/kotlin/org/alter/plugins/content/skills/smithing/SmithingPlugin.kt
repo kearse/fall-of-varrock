@@ -112,6 +112,8 @@ class SmithingPlugin(
             val a = player.getCommandArgs()
             val resultId = a.getOrNull(0)?.toIntOrNull() ?: return@onCommand
             val qty = (a.getOrNull(1)?.toIntOrNull() ?: 1).coerceIn(1, 28 * 5)
+            // The whole ::-routed command path is otherwise silent; log so a dead MAKE button leaves a trace.
+            logger.info { "smithing: makeclick result=$resultId qty=$qty station=${player.attr[STATION_ATTR]} at=${player.tile}" }
             make(player, resultId, qty)
         }
     }
@@ -138,11 +140,18 @@ class SmithingPlugin(
 
     /**
      * The tile of the station being used, remembered so [make] can verify the player is still
-     * standing at it. Falls back to the cellar forge when the interaction object is unavailable.
+     * standing at it. Falls back to the player's OWN tile when the interaction object can't be
+     * resolved — never to a hard-coded forge. The interacting object is a WeakReference
+     * ([org.alter.api.ext.getInteractingGameObj]) that doesn't always resolve at open time
+     * (e.g. the Mire furnace at 3237,3192), and the old cellar fallback (3208,9620) then put the
+     * station ~6400 tiles away, so [make]'s radius check rejected a player standing at the very
+     * furnace they'd just opened ("You need to be at a furnace to smelt."). The window only opens
+     * AT a station and closes on walk, so the player's own tile is always adjacent to it — the
+     * radius check then passes at any furnace/anvil in the world.
      */
     private fun stationOf(p: Player): Tile {
         val tile = try { p.getInteractingGameObj().tile } catch (e: Exception) { null }
-        return tile ?: p.attr[STATION_ATTR] ?: furnaceTile
+        return tile ?: p.attr[STATION_ATTR] ?: p.tile
     }
 
     // ---------------------------------- window push ----------------------------------
@@ -239,6 +248,9 @@ class SmithingPlugin(
                 }
             }
         }
+        // No bar or smithable piece matched the requested result id: never a silent no-op.
+        logger.warn { "smithing: make() no recipe for result=$resultId (qty=$qty)" }
+        p.message("You can't make that here.")
     }
 
     private suspend fun smelt(task: QueueTask, player: Player, bar: Bar, qty: Int) {
