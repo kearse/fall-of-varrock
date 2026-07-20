@@ -9,6 +9,7 @@
 #   server.sh logs [service]       last 200 lines (TAIL=500 server.sh logs game)
 #   server.sh inspect-save <user>  READ-ONLY: dump a player's on-disk save files
 #   server.sh reset-save <user>    move a corrupt save aside (reversible; never deletes)
+#   server.sh inspect-route [user] READ-ONLY: dump a recorded ::recroute march path
 #
 # Services: game web discord-bot forum caddy mongo (omit = whole stack).
 #
@@ -123,12 +124,59 @@ case "$cmd" in
       fi
     ' sh "$lc" "$ts"
     ;;
+  inspect-route)
+    # READ-ONLY. Dump a recorded march route (::recroute) so the walked
+    # waypoints can be retrieved without SSH. The recorder writes
+    # data/mapdump/route_<player>.txt relative to the game's working dir,
+    # which is INSIDE the game container (/app/data/mapdump) — that path is
+    # NOT a host bind mount (unlike saves), so read it through the running
+    # container, the same way reset-save does. With no user, dumps every
+    # recorded route. loginUsername case is preserved in the filename, so
+    # match case-insensitively.
+    #
+    # NOTE: mapdump lives in the container's writable layer, so the file
+    # survives a `restart` but a `redeploy`/recreate wipes it — grab it first.
+    user="${1:-}"
+    compose exec -T game sh -c '
+      set -eu
+      dir=/app/data/mapdump
+      want=$1
+      if [ ! -d "$dir" ]; then
+        echo "no mapdump dir on this container ($dir) — nothing recorded here."
+        exit 0
+      fi
+      n=0
+      for f in "$dir"/route_*.txt; do
+        [ -e "$f" ] || continue
+        base=$(basename "$f")
+        if [ -n "$want" ]; then
+          lcf=$(printf "%s" "$base" | tr "[:upper:]" "[:lower:]")
+          lcw=$(printf "route_%s.txt" "$want" | tr "[:upper:]" "[:lower:]")
+          [ "$lcf" = "$lcw" ] || continue
+        fi
+        n=$((n + 1))
+        size=$(wc -c < "$f" | tr -d " ")
+        lines=$(wc -l < "$f" | tr -d " ")
+        echo "===== $base  (${size} bytes, ${lines} lines) ====="
+        cat "$f"
+        echo "===== end $base ====="
+      done
+      if [ "$n" -eq 0 ]; then
+        if [ -n "$want" ]; then
+          echo "no recorded route for \"$want\" (looked for route_$want.txt, any case)."
+        else
+          echo "no recorded routes found in $dir."
+        fi
+        echo "files present:"; ls -la "$dir" 2>/dev/null || true
+      fi
+    ' sh "$user"
+    ;;
   help)
-    sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//'
+    sed -n '2,18p' "$0" | sed 's/^# \{0,1\}//'
     ;;
   *)
     echo "unknown command: $cmd" >&2
-    sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//' >&2
+    sed -n '2,18p' "$0" | sed 's/^# \{0,1\}//' >&2
     exit 1
     ;;
 esac
