@@ -126,51 +126,53 @@ case "$cmd" in
     ;;
   inspect-route)
     # READ-ONLY. Retrieve a recorded march route (::recroute) without SSH, from
-    # BOTH places the recorder leaves it — because in prod the file often never
-    # lands:
+    # every place it can be:
     #
-    #   (1) the on-disk file data/mapdump/route_<player>.txt, written relative to
-    #       the game's working dir (/app/data/mapdump INSIDE the game container).
-    #       That path is NOT a host bind mount — only /app/data/saves is writable
-    #       — so the recorder's file write is usually swallowed and no file lands.
+    #   (1) route file(s) on disk, checked in TWO dirs (the game's WORKDIR is
+    #       /app/bin, so paths resolve from there):
+    #         /app/data/saves/mapdump   the persistent, host-bind-mounted location
+    #                                   the recorder writes to (../data/saves/...),
+    #                                   = /opt/kol/runtime/saves/mapdump; survives
+    #                                   redeploys.
+    #         /app/bin/data/mapdump     the LEGACY cwd-relative location used before
+    #                                   the write path was fixed; in the container's
+    #                                   throwaway layer, so a restart keeps it but a
+    #                                   redeploy wipes it.
     #   (2) the game log. finish() logs every down-sampled waypoint as
     #       "RECROUTE-WP Tile(x, z, 0)," (and the live trail as "RECLIVE <user>
-    #       x,z,h") BEFORE it attempts the file, unconditionally — so the route is
-    #       still in the container log even when the file write failed, as long as
-    #       this is the same container that did the walk (a redeploy rotates the
-    #       log away with the old container).
+    #       x,z,h") BEFORE it writes the file — so the route is in the log too, as
+    #       long as this is the same container that did the walk (a redeploy
+    #       rotates the log away with the old container).
     #
     # With no user, dumps every route file / all RECROUTE lines. loginUsername
     # case is preserved, so file matching is case-insensitive.
     user="${1:-}"
 
-    echo "== (1) on-disk route file(s) in the game container =="
+    echo "== (1) route file(s) on disk (persistent saves mount + legacy layer) =="
     compose exec -T game sh -c '
       set -eu
-      dir=/app/data/mapdump
       want=$1
-      if [ ! -d "$dir" ]; then
-        echo "no mapdump dir ($dir) — no file persisted (expected in prod; see the log below)."
-        exit 0
-      fi
-      n=0
-      for f in "$dir"/route_*.txt; do
-        [ -e "$f" ] || continue
-        base=$(basename "$f")
-        if [ -n "$want" ]; then
-          lcf=$(printf "%s" "$base" | tr "[:upper:]" "[:lower:]")
-          lcw=$(printf "route_%s.txt" "$want" | tr "[:upper:]" "[:lower:]")
-          [ "$lcf" = "$lcw" ] || continue
-        fi
-        n=$((n + 1))
-        size=$(wc -c < "$f" | tr -d " ")
-        lines=$(wc -l < "$f" | tr -d " ")
-        echo "===== $base  (${size} bytes, ${lines} lines) ====="
-        cat "$f"
-        echo "===== end $base ====="
+      found=0
+      for dir in /app/data/saves/mapdump /app/bin/data/mapdump; do
+        [ -d "$dir" ] || continue
+        for f in "$dir"/route_*.txt; do
+          [ -e "$f" ] || continue
+          base=$(basename "$f")
+          if [ -n "$want" ]; then
+            lcf=$(printf "%s" "$base" | tr "[:upper:]" "[:lower:]")
+            lcw=$(printf "route_%s.txt" "$want" | tr "[:upper:]" "[:lower:]")
+            [ "$lcf" = "$lcw" ] || continue
+          fi
+          found=1
+          size=$(wc -c < "$f" | tr -d " ")
+          lines=$(wc -l < "$f" | tr -d " ")
+          echo "===== $dir/$base  (${size} bytes, ${lines} lines) ====="
+          cat "$f"
+          echo "===== end $base ====="
+        done
       done
-      [ "$n" -eq 0 ] && echo "no route file for \"${want:-<any>}\" in $dir."
-    ' sh "$user" || echo "(could not read the container mapdump dir)"
+      [ "$found" -eq 0 ] && echo "no route file on disk for \"${want:-<any>}\" (checked saves/mapdump + legacy bin/data/mapdump)."
+    ' sh "$user" || echo "(could not read the container route dirs)"
 
     echo
     echo "== (2) recorded waypoints from the game log (RECROUTE-WP = paste-ready) =="

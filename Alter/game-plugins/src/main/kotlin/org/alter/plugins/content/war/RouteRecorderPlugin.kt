@@ -22,9 +22,14 @@ private val logger = KotlinLogging.logger {}
  * verbatim as a campaign march route ([CampaignOp.route]), instead of guessing waypoints off the map.
  *
  *  - `::recroute start` — begin sampling your tile every game tick (deduped to one entry per tile).
- *  - `::recroute stop`  — stop, write the raw path to `data/mapdump/route_<name>.txt`, and LOG a
- *                         down-sampled waypoint list as paste-ready `Tile(x, z, 0),` lines.
+ *  - `::recroute stop`  — stop, write the raw path to `../data/saves/mapdump/route_<name>.txt`, and
+ *                         LOG a down-sampled waypoint list as paste-ready `Tile(x, z, 0),` lines.
  *  - `::recroute clear` — discard the current recording.
+ *
+ * The file lives under the **saves** directory on purpose: that is the one game-data path mounted to
+ * writable, persistent storage in production (`../data/saves` → the host `saves` bind mount), so a
+ * recording survives a container redeploy and can be read back off disk. Writing it cwd-relative
+ * (`data/mapdump`) instead landed it in the container's throwaway layer under `bin/`.
  *
  * Walk the path you want the army to take (Lumbridge muster → over the bridge → into Varrock), then
  * read the `RECROUTE-WP` lines out of the server log and drop them into the op's `route`.
@@ -96,7 +101,9 @@ class RouteRecorderPlugin(
         runCatching {
             val sb = StringBuilder("# Walked route for $username: ${raw.size} raw tiles\n")
             raw.forEach { sb.append(it.x).append(',').append(it.z).append('\n') }
-            val f = File("data/mapdump/route_$username.txt")
+            // Write under ../data/saves — the only writable, host-mounted, redeploy-surviving
+            // game-data path in prod (WORKDIR is bin/, so this resolves next to the save files).
+            val f = File("../data/saves/mapdump/route_$username.txt")
             f.parentFile?.mkdirs()
             f.writeText(sb.toString())
             logger.info { "RECROUTE wrote raw path to ${f.absolutePath}" }
