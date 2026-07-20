@@ -38,15 +38,17 @@ class FishingPlugin(
     server: Server,
 ) : KotlinPlugin(r, world, server) {
 
-    /** A fishing method: the tool it needs and (for rods) the bait consumed per catch. */
-    private data class Method(val label: String, val tool: String, val bait: String? = null, val verb: String)
+    /** A fishing method: the tool it needs, (for rods) the bait consumed per catch, and the animation
+     *  that tool plays. The loop used to hard-play the net cast (621) for everything, so harpooning or
+     *  potting a lobster still mimed casting a net — the fishing analog of the gathering-tool anim fix. */
+    private data class Method(val label: String, val tool: String, val bait: String? = null, val verb: String, val anim: Int)
 
-    private val net = Method("Small net", "item.small_fishing_net", verb = "You cast out your net...")
-    private val baitRod = Method("Bait rod", "item.fishing_rod", "item.fishing_bait", "You bait your hook and cast...")
-    private val flyRod = Method("Fly rod", "item.fly_fishing_rod", "item.feather", "You whip out your fly rod and cast...")
-    private val cage = Method("Lobster cage", "item.lobster_pot", verb = "You lower the cage...")
-    private val harpoon = Method("Harpoon", "item.harpoon", verb = "You ready your harpoon...")
-    private val bigNet = Method("Big net", "item.big_fishing_net", verb = "You cast out the big net...")
+    private val net = Method("Small net", "item.small_fishing_net", verb = "You cast out your net...", anim = ANIM_NET)
+    private val baitRod = Method("Bait rod", "item.fishing_rod", "item.fishing_bait", "You bait your hook and cast...", anim = ANIM_ROD)
+    private val flyRod = Method("Fly rod", "item.fly_fishing_rod", "item.feather", "You whip out your fly rod and cast...", anim = ANIM_ROD)
+    private val cage = Method("Lobster cage", "item.lobster_pot", verb = "You lower the cage...", anim = ANIM_CAGE)
+    private val harpoon = Method("Harpoon", "item.harpoon", verb = "You ready your harpoon...", anim = ANIM_HARPOON)
+    private val bigNet = Method("Big net", "item.big_fishing_net", verb = "You cast out the big net...", anim = ANIM_BIG_NET)
 
     private data class Fish(val raw: String, val name: String, val level: Int, val xp: Double, val method: Method)
 
@@ -175,7 +177,7 @@ class FishingPlugin(
                 break
             }
             val catch = target(player) ?: run { noGear(player); return }
-            player.animate(FISH_ANIM)
+            player.animate(catch.method.anim)
             player.message(catch.method.verb)
             task.wait(CATCH_TICKS)
             if (player.tile != standing) break
@@ -194,7 +196,12 @@ class FishingPlugin(
     private fun resolves(key: String): Boolean = try { getRSCM(key); true } catch (e: Exception) { false }
 
     private companion object {
-        const val FISH_ANIM = 621 // net cast / fishing motion
+        // Per-tool fishing animations (were all hard-played as the net cast, 621).
+        const val ANIM_NET = 621     // small net
+        const val ANIM_BIG_NET = 620 // big net
+        const val ANIM_ROD = 622     // bait & fly rods
+        const val ANIM_CAGE = 619    // lobster pot
+        const val ANIM_HARPOON = 618 // harpoon
         const val CATCH_TICKS = 4
     }
 }
