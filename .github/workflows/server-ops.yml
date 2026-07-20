@@ -12,6 +12,8 @@ name: Server Ops
 #
 #   inspect-save  READ-ONLY: dump a player's on-disk save files (set "player")
 #   reset-save    move a player's corrupt save aside, reversibly (set "player")
+#   inspect-route READ-ONLY: dump a recorded ::recroute march path ("player" = the
+#                 recorder; blank = every recorded route)
 #
 # This never builds images. To rebuild from source, run the Deploy workflow
 # (or just push to main).
@@ -24,7 +26,7 @@ on:
         type: choice
         required: true
         default: restart
-        options: [restart, redeploy, stop, start, status, logs, inspect-save, reset-save]
+        options: [restart, redeploy, stop, start, status, logs, inspect-save, reset-save, inspect-route]
       service:
         description: "Which service (all = whole stack)"
         type: choice
@@ -32,7 +34,7 @@ on:
         default: all
         options: [all, game, web, discord-bot, forum, caddy, mongo]
       player:
-        description: "Player name — required for inspect-save / reset-save only"
+        description: "Player name — required for inspect-save / reset-save; optional for inspect-route (blank = all)"
         type: string
         required: false
         default: ""
@@ -73,6 +75,15 @@ jobs:
             inspect-save|reset-save)
               if ! printf '%s' "$PLAYER" | grep -qE '^[A-Za-z0-9_]+$'; then
                 echo "The '$ACTION' action requires a valid 'player' name (letters, digits, underscore)." >&2
+                exit 1
+              fi
+              ARGS="$PLAYER"
+              ;;
+            inspect-route)
+              # player is OPTIONAL here (blank = dump every recorded route);
+              # validate it only when one is given so it can't inject anything.
+              if [ -n "$PLAYER" ] && ! printf '%s' "$PLAYER" | grep -qE '^[A-Za-z0-9_]+$'; then
+                echo "The 'player' name for inspect-route must be letters, digits, underscore (or blank for all)." >&2
                 exit 1
               fi
               ARGS="$PLAYER"
