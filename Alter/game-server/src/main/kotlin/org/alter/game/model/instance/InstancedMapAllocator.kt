@@ -6,6 +6,7 @@ import org.alter.game.model.EntityType
 import org.alter.game.model.Tile
 import org.alter.game.model.World
 import org.alter.game.model.collision.block
+import org.alter.game.model.collision.set
 import org.alter.game.model.entity.DynamicObject
 import org.alter.game.model.entity.GameObject
 import org.alter.game.model.entity.Player
@@ -197,6 +198,21 @@ class InstancedMapAllocator {
                     // zone that never receives a collision write — empty grass, interiors with
                     // no locs — would otherwise silently fail every raycast/step in the instance.
                     world.collision.allocateIfAbsent(baseTile.x, baseTile.z, chunkH)
+
+                    // The slot may be reused from a torn-down instance (removeCollision only frees
+                    // the diagonal columns), so this chunk column can still hold that instance's
+                    // copied DynamicObjects and OR'd collision flags. Reset the exact chunk+height
+                    // being reclaimed so the new occupant never inherits foreign geometry; this
+                    // only touches chunks this allocation is about to (re)populate below.
+                    newChunk.getEntities<DynamicObject>(EntityType.DYNAMIC_OBJECT)
+                        .filter { it.tile.height == chunkH }
+                        .forEach { stale -> newChunk.removeEntity(world, stale, stale.tile) }
+
+                    for (lx in 0 until Chunk.CHUNK_SIZE) {
+                        for (lz in 0 until Chunk.CHUNK_SIZE) {
+                            world.collision[baseTile.transform(lx, lz)] = 0
+                        }
+                    }
 
                     if (chunk != null) {
                         val copyTile = Tile.fromRotatedHash(chunk.packed)
