@@ -80,7 +80,57 @@ class MessagePublicHandler : MessageHandler<MessagePublic> {
                     client.world.plugins.executeCommand(client, "styleclick", parts.drop(1).toTypedArray())
                     return
                 }
-                "companion" -> {
+                "loftp" -> {
+                    client.world.plugins.executeCommand(client, "tpclick", parts.drop(1).toTypedArray())
+                    return
+                }
+                "lofmire" -> {
+                    client.world.plugins.executeCommand(client, "mireclick", parts.drop(1).toTypedArray())
+                    return
+                }
+                "lofduel" -> {
+                    client.world.plugins.executeCommand(client, "duelclick", parts.drop(1).toTypedArray())
+                    return
+                }
+                "lofstake" -> {
+                    client.world.plugins.executeCommand(client, "stakeclick", parts.drop(1).toTypedArray())
+                    return
+                }
+                "lofkit" -> {
+                    client.world.plugins.executeCommand(client, "kitclick", parts.drop(1).toTypedArray())
+                    return
+                }
+                "lofspoils" -> {
+                    client.world.plugins.executeCommand(client, "spoilsclick", parts.drop(1).toTypedArray())
+                    return
+                }
+                "lofshoptab" -> {
+                    client.world.plugins.executeCommand(client, "shoptabclick", parts.drop(1).toTypedArray())
+                    return
+                }
+                "lofshopbuy" -> {
+                    client.world.plugins.executeCommand(client, "shopbuyclick", parts.drop(1).toTypedArray())
+                    return
+                }
+                "lofshopval" -> {
+                    client.world.plugins.executeCommand(client, "shopvalclick", parts.drop(1).toTypedArray())
+                    return
+                }
+                "lofshopexamine" -> {
+                    client.world.plugins.executeCommand(client, "shopexamineclick", parts.drop(1).toTypedArray())
+                    return
+                }
+                "lofshopclose" -> {
+                    client.world.plugins.executeCommand(client, "shopcloseclick", parts.drop(1).toTypedArray())
+                    return
+                }
+                // Quest journal panel: flip the server's guidance arrows. Had NO branch at all, so
+                // the token was broadcast as public chat instead of running the command.
+                "lofquestguide", "questguide" -> {
+                    client.world.plugins.executeCommand(client, "questguide", parts.drop(1).toTypedArray())
+                    return
+                }
+                "lofcompanion", "companion" -> {
                     client.world.plugins.executeCommand(client, "companion", parts.drop(1).toTypedArray())
                     return
                 }

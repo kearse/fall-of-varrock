@@ -20,7 +20,7 @@
  *   FOV_SPOILS:close                         (server-driven close — the stash emptied)
  *
  * Clicks go back as public-chat tokens the server intercepts + suppresses:
- *   "::spoils bankall"  "::spoils takeall"  "::spoils take &lt;index&gt;"
+ *   "::lofspoils bankall"  "::lofspoils takeall"  "::lofspoils take &lt;index&gt;"
  */
 package net.runelite.client.plugins.lofwarspoils;
 
@@ -258,17 +258,17 @@ public class LofWarSpoilsPlugin extends Plugin
 
 	void bankAll()
 	{
-		send("::spoils bankall");
+		send("::lofspoils bankall");
 	}
 
 	void takeAll()
 	{
-		send("::spoils takeall");
+		send("::lofspoils takeall");
 	}
 
 	void take(int index)
 	{
-		send("::spoils take " + index);
+		send("::lofspoils take " + index);
 	}
 
 	private void send(String msg)

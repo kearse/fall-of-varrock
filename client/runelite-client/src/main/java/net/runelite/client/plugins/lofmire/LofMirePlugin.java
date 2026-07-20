@@ -105,7 +105,7 @@ public class LofMirePlugin extends Plugin
 	/** Send a dispenser action to the server as a public-chat token it intercepts + suppresses. */
 	void sendMire(String action)
 	{
-		final String msg = "::mire " + action;
+		final String msg = "::lofmire " + action;
 		clientThread.invokeLater(() -> client.runScript(ScriptID.CHAT_SEND, msg, 0, 0, 0, -1));
 	}
 }

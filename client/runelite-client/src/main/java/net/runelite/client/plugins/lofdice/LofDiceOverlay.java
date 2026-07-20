@@ -100,7 +100,8 @@ class LofDiceOverlay extends Overlay implements LofWindows.Window
 		}
 		else if (chip == 5)
 		{
-			stake = Math.min(LofModal.carried(client, LofModal.COINS_ID), MAX_BET);
+			// ALL IN — cached count; applyChip runs on the mouse thread.
+			stake = Math.min(coinsCached, MAX_BET);
 		}
 		else
 		{
@@ -127,9 +128,15 @@ class LofDiceOverlay extends Overlay implements LofWindows.Window
 		}
 	}
 
+	// Coins carried, sampled on the CLIENT thread by render(). Reading the inventory container off
+	// the client thread returns null (→ 0 coins), which made canRoll() false, so hitTest answered
+	// INSIDE and the ROLL click was swallowed while the button was drawn lit. The click path must
+	// read ONLY this cached value. Same fix, same reason, as LofShopTabsOverlay's cached showing.
+	private volatile long coinsCached;
+
 	private boolean canRoll()
 	{
-		return stake > 0 && stake <= LofModal.carried(client, LofModal.COINS_ID);
+		return stake > 0 && stake <= coinsCached;
 	}
 
 	private Rectangle chipRect(int ox, int oy, int i)
@@ -279,6 +286,7 @@ class LofDiceOverlay extends Overlay implements LofWindows.Window
 
 		// footer
 		final long coins = LofModal.carried(client, LofModal.COINS_ID);
+		coinsCached = coins; // publish for the mouse thread before canRoll() is consulted
 		LofTheme.shadowText(g, "Coins carried: " + LofModal.fmt(coins), ox + LofModal.PAD, oy + LofModal.H - 22, LofTheme.TEXT_DIM);
 		LofModal.button(g, rollRect(ox, oy), stake > 0 ? "ROLL THE DIE — " + LofModal.fmt(stake) : "ROLL THE DIE",
 			LofTheme.EMBER, canRoll(), rollRect(ox, oy).contains(mouse));

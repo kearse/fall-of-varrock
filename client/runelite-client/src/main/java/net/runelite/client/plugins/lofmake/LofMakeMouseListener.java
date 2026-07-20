@@ -41,7 +41,7 @@ class LofMakeMouseListener extends MouseAdapter
 		else if (hit == LofMakeOverlay.MAKE)
 		{
 			final LofMakeOverlay.Recipe r = overlay.selectedRecipe();
-			final int qty = overlay.chosenQty();
+			final int qty = overlay.cachedQty(); // cached on the client thread — never read state here
 			if (r != null && qty > 0)
 			{
 				plugin.sendMake(r.resultId, qty);

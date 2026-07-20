@@ -67,6 +67,16 @@ class LofMakeOverlay extends Overlay implements LofWindows.Window
 	private int selected;
 	private int qtyChoice = 3; // default ALL
 
+	// Computed on the CLIENT thread during render() and read by the mouse thread. Reading the
+	// inventory container (and skill levels) off the client thread returns null/stale, so the
+	// gate would fail and hitTest would answer INSIDE instead of MAKE — the click was then
+	// swallowed and the button looked dead even though it had rendered lit. Same fix, and same
+	// reason, as LofShopTabsOverlay's cached showing/winRect. The click path must NEVER touch
+	// client state directly.
+	private volatile boolean canMakeCached;
+	private volatile int qtyCached;
+	private volatile int oxCached, oyCached;
+
 	@Inject
 	private LofMakeOverlay(Client client, ItemManager itemManager)
 	{
@@ -126,8 +136,14 @@ class LofMakeOverlay extends Overlay implements LofWindows.Window
 		return selected >= 0 && selected < recipes.size() ? recipes.get(selected) : null;
 	}
 
-	/** The chosen quantity resolved against what's actually makeable. */
-	int chosenQty()
+	/** Cached — safe to call from the mouse thread (see the field note). */
+	int cachedQty()
+	{
+		return qtyCached;
+	}
+
+	/** The chosen quantity resolved against what's actually makeable. Client thread only. */
+	private int chosenQty()
 	{
 		final Recipe r = selectedRecipe();
 		if (r == null)
@@ -181,7 +197,7 @@ class LofMakeOverlay extends Overlay implements LofWindows.Window
 		{
 			return OUTSIDE;
 		}
-		final int ox = LofModal.originX(client), oy = LofModal.originY(client);
+		final int ox = oxCached, oy = oyCached; // cached on the client thread by render()
 		if (!new Rectangle(ox, oy, LofModal.W, LofModal.H).contains(p))
 		{
 			return OUTSIDE;
@@ -199,10 +215,10 @@ class LofMakeOverlay extends Overlay implements LofWindows.Window
 				return QTY_BASE + i;
 			}
 		}
-		final Recipe r = selectedRecipe();
-		if (r != null && levelOk(r) && chosenQty() > 0 && makeRect(ox, oy).contains(p))
+		if (makeRect(ox, oy).contains(p))
 		{
-			return MAKE;
+			// Cached gate (client thread) — never re-read the inventory here.
+			return canMakeCached ? MAKE : INSIDE;
 		}
 		for (int i = 0; i < shownRows(); i++)
 		{
@@ -228,6 +244,8 @@ class LofMakeOverlay extends Overlay implements LofWindows.Window
 		g.translate(-selfBounds.x, -selfBounds.y);
 
 		final int ox = LofModal.originX(client), oy = LofModal.originY(client);
+		oxCached = ox;
+		oyCached = oy;
 		final Point mouse = mousePoint();
 		final String sub = "Smithing " + client.getBoostedSkillLevel(Skill.SMITHING);
 		LofModal.frame(g, ox, oy, title, sub, mouse);
@@ -272,8 +290,13 @@ class LofMakeOverlay extends Overlay implements LofWindows.Window
 			final String label = QTY_OPTIONS[i] < 0 ? "ALL" : String.valueOf(QTY_OPTIONS[i]);
 			LofModal.button(g, qr, label, on ? LofTheme.GOLD : LofTheme.GOLD_DIM, true, qr.contains(mouse) || on);
 		}
-		final boolean canMake = sel != null && levelOk(sel) && chosenQty() > 0;
-		final String makeLabel = canMake ? "MAKE " + chosenQty() : "MAKE";
+		// Publish the gate for the mouse thread in the same pass that draws it, so the button can
+		// never look enabled while the click path disagrees.
+		final int qty = sel == null ? 0 : chosenQty();
+		final boolean canMake = sel != null && levelOk(sel) && qty > 0;
+		qtyCached = qty;
+		canMakeCached = canMake;
+		final String makeLabel = canMake ? "MAKE " + qty : "MAKE";
 		LofModal.button(g, makeRect(ox, oy), makeLabel, LofTheme.GOLD, canMake, makeRect(ox, oy).contains(mouse));
 
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, oldAA == null ? RenderingHints.VALUE_ANTIALIAS_DEFAULT : oldAA);
