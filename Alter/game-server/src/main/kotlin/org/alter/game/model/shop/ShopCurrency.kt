@@ -73,4 +73,24 @@ interface ShopCurrency {
      * The player's current spendable balance in this currency, for the shop window header.
      */
     fun balance(p: Player): Int = 0
+
+    /**
+     * True for storefronts that only BUY (the Quartermaster's Supply Depot): the shelf is a
+     * catalogue of what's accepted and the price is what the shop pays. The custom client window
+     * draws hand-in options instead of buy options when this is set.
+     */
+    fun sellOnly(): Boolean = false
+
+    /**
+     * Hand [amt] of [itemId] from the player's inventory to a [sellOnly] shop (amt <= 0 means
+     * everything carried). This is the shelf-cell path — the inventory right-click path is
+     * [buyFromPlayer]. No-op for ordinary shops.
+     */
+    fun handIn(
+        p: Player,
+        shop: Shop,
+        itemId: Int,
+        amt: Int,
+    ) {
+    }
 }

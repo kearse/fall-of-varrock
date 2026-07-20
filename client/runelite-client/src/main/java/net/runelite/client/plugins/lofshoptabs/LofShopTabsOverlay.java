@@ -45,9 +45,12 @@ class LofShopTabsOverlay extends Overlay
 	static final int TAB_BASE = 100;   // + tab index
 	static final int ITEM_BASE = 1000; // + grid index
 
-	// Our own right-click menu (drawn on top of the window so it can't hide behind it). Item-buy
-	// rows carry the item name; Buy X prompts for an amount. Indices map to LofShopTabsPlugin.menuAction.
+	// Our own right-click menu (drawn on top of the window so it can't hide behind it). Item rows
+	// carry the item name; the X option prompts for an amount. Indices map to
+	// LofShopTabsPlugin.menuAction — the two arrays MUST stay index-aligned.
 	static final String[] MENU_OPTS = {"Value", "Buy 1", "Buy 10", "Buy 100", "Buy X", "Examine", "Cancel"};
+	/** Sell-only storefronts (the Supply Depot): the shelf is what the shop takes, so you hand in. */
+	static final String[] SELL_MENU_OPTS = {"Value", "Hand in 1", "Hand in 10", "Hand in All", "Hand in X", "Examine", "Cancel"};
 	private static final int MENU_W = 240;
 	private static final int MENU_HEADER_H = 16;
 	private static final int MENU_ROW_H = 15;
@@ -386,10 +389,22 @@ class LofShopTabsOverlay extends Overlay
 		}
 		g.setFont(FontManager.getRunescapeBoldFont());
 		LofTheme.shadowText(g, plugin.getShopName(), titleX, w.y + 20, LofTheme.GOLD);
+		final int nameEnd = titleX + g.getFontMetrics().stringWidth(plugin.getShopName());
 
 		// balance
 		g.setFont(FontManager.getRunescapeSmallFont());
 		final String bal = fmt(plugin.getBalance()) + " " + plugin.getCurrencyLabel();
+		// Sell-only store: say so, so nobody hunts for a Buy option. Drawn only when it fits
+		// between the shop name and the balance readout.
+		if (plugin.isSellOnly())
+		{
+			final String hint = "· hand in for " + plugin.getCurrencyLabel();
+			final int balW = g.getFontMetrics().stringWidth(bal);
+			if (nameEnd + 8 + g.getFontMetrics().stringWidth(hint) < w.x + w.width - 30 - balW - 8)
+			{
+				LofTheme.shadowText(g, hint, nameEnd + 8, w.y + 19, LofTheme.TEXT_DIM);
+			}
+		}
 		LofTheme.shadowText(g, bal, w.x + w.width - 30 - g.getFontMetrics().stringWidth(bal), w.y + 19, LofTheme.TEXT_DIM);
 
 		// close
@@ -545,7 +560,8 @@ class LofShopTabsOverlay extends Overlay
 		LofTheme.shadowText(g, "Choose Option", box.x + 4, box.y + 12, LofTheme.GOLD);
 
 		final String name = plugin.itemName(menuGridIndex);
-		for (int i = 0; i < MENU_OPTS.length; i++)
+		final String[] opts = plugin.isSellOnly() ? SELL_MENU_OPTS : MENU_OPTS;
+		for (int i = 0; i < opts.length; i++)
 		{
 			final int ry = box.y + MENU_HEADER_H + i * MENU_ROW_H;
 			final boolean hov = mouse.y >= ry && mouse.y < ry + MENU_ROW_H && mouse.x >= box.x && mouse.x < box.x + box.width;
@@ -554,10 +570,10 @@ class LofShopTabsOverlay extends Overlay
 				g.setColor(LofTheme.alpha(LofTheme.EMBER, 70));
 				g.fillRect(box.x + 1, ry, box.width - 2, MENU_ROW_H);
 			}
-			final String opt = MENU_OPTS[i];
+			final String opt = opts[i];
 			LofTheme.shadowText(g, opt, box.x + 4, ry + 12, LofTheme.TEXT);
 			// item name in orange after buy/value/examine rows (not Cancel)
-			if (i < MENU_OPTS.length - 1 && !name.isEmpty())
+			if (i < opts.length - 1 && !name.isEmpty())
 			{
 				final int ox = box.x + 4 + g.getFontMetrics().stringWidth(opt) + 5;
 				LofTheme.shadowText(g, name, ox, ry + 12, LofTheme.LAVA);

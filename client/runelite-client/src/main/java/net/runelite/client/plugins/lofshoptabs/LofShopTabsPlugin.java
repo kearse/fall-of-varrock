@@ -12,14 +12,20 @@
  * lofcommands rules apply — never parse in chatFilterCheck, never remove chat lines.
  *
  * Wire format:
- *   FOV_SHOP:shop|<name>|<currencyLabel>|<balance>     (batch start; resets state)
+ *   FOV_SHOP:shop|<name>|<currencyLabel>|<balance>|<mode>  (batch start; resets state; mode buy|sell)
  *   FOV_SHOP:item|<slot>|<itemId>|<qty>|<price>        (repeated)
  *   FOV_SHOP:shopend                                   (commit the grid)
  *   FOV_SHOP:tabs|<sel>|<label0>~<icon0>|<label1>~<icon1>|...   (tabbed vendors only)
+ *   FOV_SHOP:bal|<balance>                             (header balance only — keeps the tab rail)
  *   FOV_SHOP:clear                                     (shop fully closed)
  *
+ * SELL-ONLY stores (the Quartermaster's Supply Depot) send mode=sell: the shelf is a catalogue of
+ * what the shop TAKES and each price is what it pays, so the right-click menu offers hand-ins
+ * instead of buys. Selling from the inventory stays native either way (right-click an item).
+ *
  * Clicks go back as public-chat tokens the server intercepts + suppresses:
- *   "::lofshoptab <i>"  "::lofshopbuy <slot> <amount>"  "::lofshopclose"
+ *   "::lofshoptab <i>"  "::lofshopbuy <slot> <amount>"  "::lofshopsell <slot> <amount|all>"
+ *   "::lofshopclose"
  */
 package net.runelite.client.plugins.lofshoptabs;
 
@@ -88,6 +94,8 @@ public class LofShopTabsPlugin extends Plugin
 	private String shopName = "";
 	private String currencyLabel = "coins";
 	private int balance;
+	/** Sell-only storefront: the shelf is what the shop BUYS, priced at what it pays. */
+	private boolean sellOnly;
 	private final List<Item> items = new ArrayList<>();
 	private final List<Tab> tabs = new ArrayList<>();
 	private int selectedTab;
@@ -96,6 +104,7 @@ public class LofShopTabsPlugin extends Plugin
 	private String bufName = "";
 	private String bufLabel = "coins";
 	private int bufBalance;
+	private boolean bufSellOnly;
 	private final List<Item> bufItems = new ArrayList<>();
 
 	/** One stock line: the shop slot, the item + quantity, and the buy price. */
@@ -196,6 +205,7 @@ public class LofShopTabsPlugin extends Plugin
 			shopName = bufName;
 			currencyLabel = bufLabel;
 			balance = bufBalance;
+			sellOnly = bufSellOnly;
 			items.clear();
 			items.addAll(bufItems);
 			overlay.resetScroll();
@@ -210,16 +220,23 @@ public class LofShopTabsPlugin extends Plugin
 		{
 			case "shop":
 			{
-				// shop|name|label|balance — a fresh store: drop any prior vendor's tabs (a tabbed
+				// shop|name|label|balance|mode — a fresh store: drop any prior vendor's tabs (a tabbed
 				// vendor re-sends its "tabs" line right after; a single-shop vendor sends none, so
 				// its window correctly shows no rail instead of the previous vendor's stale tabs).
-				final String[] f = rest.split("\\|", 3);
+				final String[] f = rest.split("\\|", 4);
 				bufName = f.length > 0 ? f[0] : "";
 				bufLabel = f.length > 1 ? f[1] : "coins";
 				bufBalance = f.length > 2 ? parseInt(f[2], 0) : 0;
+				bufSellOnly = f.length > 3 && "sell".equals(f[3].trim());
 				bufItems.clear();
 				tabs.clear();
 				selectedTab = 0;
+				break;
+			}
+			case "bal":
+			{
+				// bal|balance — a hand-in changed the balance; the grid and tab rail stay untouched.
+				balance = parseInt(rest, balance);
 				break;
 			}
 			case "item":
@@ -347,7 +364,8 @@ public class LofShopTabsPlugin extends Plugin
 
 	/**
 	 * Act on a click in our own drawn right-click menu (see LofShopTabsOverlay.MENU_OPTS):
-	 * Value / Buy 1 / Buy 10 / Buy 100 / Buy X / Examine / Cancel.
+	 * Value / Buy 1 / Buy 10 / Buy 100 / Buy X / Examine / Cancel — or, at a sell-only store,
+	 * Value / Hand in 1 / Hand in 10 / Hand in All / Hand in X / Examine / Cancel.
 	 */
 	void menuAction(int gridIndex, int opt)
 	{
@@ -356,6 +374,33 @@ public class LofShopTabsPlugin extends Plugin
 			return;
 		}
 		final int slot = items.get(gridIndex).slot;
+		if (sellOnly)
+		{
+			switch (opt)
+			{
+				case 0: // Value
+					send("::lofshopval " + slot);
+					break;
+				case 1: // Hand in 1
+					send("::lofshopsell " + slot + " 1");
+					break;
+				case 2: // Hand in 10
+					send("::lofshopsell " + slot + " 10");
+					break;
+				case 3: // Hand in All
+					send("::lofshopsell " + slot + " all");
+					break;
+				case 4: // Hand in X — prompt for an amount
+					promptAmount(slot, true);
+					break;
+				case 5: // Examine
+					send("::lofshopexamine " + slot);
+					break;
+				default: // Cancel
+					break;
+			}
+			return;
+		}
 		switch (opt)
 		{
 			case 0: // Value
@@ -371,7 +416,7 @@ public class LofShopTabsPlugin extends Plugin
 				send("::lofshopbuy " + slot + " 100");
 				break;
 			case 4: // Buy X — prompt for an amount
-				promptBuyX(slot);
+				promptAmount(slot, false);
 				break;
 			case 5: // Examine
 				send("::lofshopexamine " + slot);
@@ -381,7 +426,7 @@ public class LofShopTabsPlugin extends Plugin
 		}
 	}
 
-	private void promptBuyX(int slot)
+	private void promptAmount(int slot, boolean sell)
 	{
 		clientThread.invokeLater(() ->
 			chatboxPanelManager.openTextInput("Enter amount:")
@@ -392,7 +437,7 @@ public class LofShopTabsPlugin extends Plugin
 						final int amt = Integer.parseInt(input.trim().replaceAll("[^0-9]", ""));
 						if (amt > 0)
 						{
-							send("::lofshopbuy " + slot + " " + amt);
+							send((sell ? "::lofshopsell " : "::lofshopbuy ") + slot + " " + amt);
 						}
 					}
 					catch (NumberFormatException ignored)
@@ -429,6 +474,7 @@ public class LofShopTabsPlugin extends Plugin
 	private void reset()
 	{
 		shopName = "";
+		sellOnly = false;
 		items.clear();
 		tabs.clear();
 		selectedTab = 0;
@@ -464,6 +510,11 @@ public class LofShopTabsPlugin extends Plugin
 	int getBalance()
 	{
 		return balance;
+	}
+
+	boolean isSellOnly()
+	{
+		return sellOnly;
 	}
 
 	List<Item> getItems()

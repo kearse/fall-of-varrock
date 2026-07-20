@@ -245,7 +245,7 @@ Reusable pieces — reach for these before inventing a new one. Metrics above.
 | `lofteleports` | Modal (tabbed) | 480×400 * | varp 4607 open + `::tp` |
 | `lofranks` | Modal (progression) | 480×400 | varp 4618 (rank payload) + `::rank buy` + inventory coins |
 | `lofrecruit` | Modal (cards + tabs) | 480×400 | varp 4619 (packed) + 4613-4615 roster + `::zo recruit/regalia` |
-| `lofsupply` | Modal (store tabs) | 480×400 | varp 4624 + `~LOFSUP~` manifest + `::sup` |
+| `lofshoptabs` | Modal (store) | anchored over native iface 300 | `FOV_SHOP:` stock/tabs/balance stream + `::lofshopbuy` / `::lofshopsell` (sell-only stores, e.g. the Quartermaster's Supply Depot) |
 | `lofmake` | Modal (recipes) | 480×400 | varp 4625 (kind) + `~LOFMAKE~` recipes + `::make` |
 | `lofcontracts` | Modal (board) | 480×400 | varp 4626 + `~LOFCON~` state + `::con` |
 | `lofforge` | Modal (recipes) | 480×400 | varp 4627 + `~LOFFORGE~` recipes + `::forge` |

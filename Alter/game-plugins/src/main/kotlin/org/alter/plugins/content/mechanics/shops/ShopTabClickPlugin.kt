@@ -15,6 +15,7 @@ import org.alter.game.plugin.PluginRepository
  * that `MessagePublicHandler` routes here:
  *   - `::shoptab <index>`         → switch storefront tab ([ShopTabs.switch])
  *   - `::shopbuy <slot> <amount>` → buy from the open shop (reuses the native buy path)
+ *   - `::shopsell <slot> <amt>`   → hand an item in at a SELL-ONLY shop (the Supply Depot)
  *   - `::shopclose`               → close the shop window
  *
  * Buy is validated exactly like the native interface: it goes through the open shop's currency,
@@ -41,6 +42,20 @@ class ShopTabClickPlugin(
             if (slot !in shop.items.indices) return@onCommand
             if (shop.items[slot] == null) return@onCommand
             shop.currency.sellToPlayer(player, shop, slot, amount)
+        }
+
+        // Sell-only storefronts (the Quartermaster's Supply Depot): hand in from a shelf cell.
+        // The amount is "all" or a positive count; the currency does the acceptance/gating checks.
+        onCommand("shopsellclick", description = "Hand an item in at a sell-only shop (client overlay channel)") {
+            val a = player.getCommandArgs()
+            val slot = a.getOrNull(0)?.toIntOrNull() ?: return@onCommand
+            val raw = a.getOrNull(1) ?: "1"
+            val amount = if (raw.equals("all", true)) 0 else raw.toIntOrNull()?.takeIf { it > 0 } ?: return@onCommand
+            val shop = player.attr[CURRENT_SHOP_ATTR] ?: return@onCommand
+            if (!shop.currency.sellOnly()) return@onCommand
+            if (slot !in shop.items.indices) return@onCommand
+            val shopItem = shop.items[slot] ?: return@onCommand
+            shop.currency.handIn(player, shop, shopItem.item, amount)
         }
 
         onCommand("shopvalclick", description = "Value an item in the open shop (client overlay channel)") {

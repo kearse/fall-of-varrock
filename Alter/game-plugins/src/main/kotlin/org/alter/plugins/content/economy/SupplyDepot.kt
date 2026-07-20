@@ -1,7 +1,9 @@
 package org.alter.plugins.content.economy
 
 import org.alter.api.ext.message
+import org.alter.game.model.Tile
 import org.alter.game.model.entity.Player
+import org.alter.plugins.content.war.recruit.RecruitTrials
 import org.alter.rscm.RSCM.getRSCM
 
 /**
@@ -83,6 +85,40 @@ object SupplyDepot {
     /** Everything the Quartermaster takes. */
     val ALL: Map<String, Int> by lazy { FOOD + POTIONS + BARS + ORES + LOGS + RAW_FISH }
 
+    /** [ALL] resolved once by item id → (rscm key, base WE). The storefront prices every cell and
+     *  values every hand-in through this, so neither path re-resolves rscm keys per click. */
+    val BY_ID: Map<Int, Pair<String, Int>> by lazy {
+        ALL.entries.mapNotNull { (key, we) ->
+            runCatching { getRSCM(key) }.getOrNull()?.let { it to (key to we) }
+        }.toMap()
+    }
+
+    /** War Effort paid per unit of [itemId] right now — base value × today's [SupplyDrive]. 0 = not accepted. */
+    fun valueOf(itemId: Int): Int {
+        val (key, we) = BY_ID[itemId] ?: return 0
+        return we * SupplyDrive.multiplierFor(key)
+    }
+
+    /** The Quartermaster's two posts: the shop hub and the tutorial post in The Mire crypt. */
+    val POSTS = listOf(Tile(3219, 3216, 0), Tile(3248, 3193, 0))
+    private const val POST_RADIUS = 10
+
+    /**
+     * Can [p] hand supplies in right now? Deposits happen AT a Quartermaster post, and never before
+     * the intro-quest dagger hand-in (the teaching beat). Messages the player on refusal.
+     */
+    fun canHandIn(p: Player): Boolean {
+        if (POSTS.none { p.tile.isWithinRadius(it, POST_RADIUS) }) {
+            p.message("The Quartermaster takes supplies at his post — find him at the shop hub or in The Mire.")
+            return false
+        }
+        if (RecruitTrials.step(p) == RecruitTrials.Step.DELIVER) {
+            p.message("Hand the Quartermaster your forged bronze dagger first — that's the lesson.")
+            return false
+        }
+        return true
+    }
+
     /** Build dose-1..4 entries for a potion base, scaling the value down with the dose. */
     private fun doses(base: String, v4: Int): Map<String, Int> = mapOf(
         "${base}4" to v4,
@@ -126,15 +162,13 @@ object SupplyDepot {
      * "all carried"). Returns (items, WE) — (0, 0) if the item isn't accepted or none carried.
      */
     fun depositItem(p: Player, itemId: Int, qty: Int): Pair<Int, Int> {
-        val entry = ALL.entries.firstOrNull { (key, _) ->
-            runCatching { getRSCM(key) }.getOrNull() == itemId
-        } ?: return 0 to 0
+        val (key, value) = BY_ID[itemId] ?: return 0 to 0
         val carried = p.inventory.getItemCount(itemId)
         if (carried <= 0) return 0 to 0
         val count = if (qty <= 0) carried else minOf(qty, carried)
         p.inventory.remove(itemId, count)
-        val mult = SupplyDrive.multiplierFor(entry.key)
-        val we = count * entry.value * mult
+        val mult = SupplyDrive.multiplierFor(key)
+        val we = count * value * mult
         if (we > 0) {
             p.addPoints(PointKind.WAR_EFFORT, we)
             org.alter.plugins.content.war.RealmSupply.contribute(p.world, we)

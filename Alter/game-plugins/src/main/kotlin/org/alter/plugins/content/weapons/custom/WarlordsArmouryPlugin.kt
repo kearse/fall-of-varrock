@@ -13,7 +13,7 @@ import org.alter.game.model.shop.ShopCurrency
 import org.alter.game.model.shop.ShopItem
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
-import org.alter.plugins.content.economy.SupplyMenu
+import org.alter.plugins.content.economy.SupplyDepotShop
 import org.alter.plugins.content.mechanics.shops.CoinCurrency
 import org.alter.plugins.content.mechanics.shops.ItemCurrency
 import org.alter.plugins.content.mechanics.shops.ShopTabs
@@ -288,9 +288,9 @@ class WarlordsArmouryPlugin(
         // Selling 3rd age back is done straight through the Relics storefront now (buy-and-sell, no rank
         // gate) — Talk-to stays focused on the war-supply hand-in and browsing the armoury.
         when (options(player, "Hand in war supplies", "Browse the armoury", "Nevermind", title = "Quartermaster")) {
-            // The hand-in is the client-drawn Supply Depot window (lofsupply): the full accepted
-            // catalogue with WE prices, per-item/per-category selling and the Supply Drive banner.
-            1 -> SupplyMenu.open(player)
+            // The hand-in is the Supply Depot storefront: an ordinary tabbed shop window, sell-only —
+            // the accepted catalogue priced in the War Effort it pays (see SupplyDepotPlugin).
+            1 -> SupplyDepotShop.open(player)
             2 -> openArmoury(player)
         }
     }
