@@ -208,9 +208,24 @@ Reusable pieces — reach for these before inventing a new one. Metrics above.
     reopen); block-only there. **(3) NEVER mass-remove lines from the chat buffers**
     (`removeMessageNode` loops) — it wiped the visible chat. **(4) CONSOLE renders in this
     client's chat box** — always pair it with the display filter.
-- **Action → server:** send `"::<cmd> <args>"` via `runScript(ScriptID.CHAT_SEND, …)`; the server
+- **Action → server:** send `"::lof<cmd> <args>"` via `runScript(ScriptID.CHAT_SEND, …)`; the server
   intercepts it in `MessagePublicHandler`, runs the matching command, and suppresses the chat line.
-  Existing channels: `::tp`, `::duel`, `::stake`.
+  **Every** token is lof-prefixed (see the scam-bait note above) — `::loftp`, `::lofduel`,
+  `::lofstake`, `::lofkit`, `::lofmire`, `::lofspoils`, `::lofshopbuy`, `::lofmake`, … The server
+  keeps the bare aliases (`::tp`, `::duel`, …) so you can still drive a window by hand for testing,
+  but a client that ships one is broken: `::duel` and `::stake` are on Jagex's block list and never
+  leave the gamepack. When you add a channel, add BOTH the client token and its
+  `MessagePublicHandler` branch — a token with no branch is broadcast as public chat.
+  `ScriptID.CHAT_SEND` takes **1 string + 4 ints** (`msg, 0, 0, 0, -1`); mismatch the stacks and the
+  send silently never happens.
+- **The click path must never read client state.** `hitTest()` and the MouseListener run on the AWT
+  **mouse** thread. `client.getWidget(...)`, `client.getItemContainer(...)`, `getVarpValue`,
+  `getBoostedSkillLevel` and helpers like `LofModal.carried(...)` return **null/stale** off the
+  client thread, so an affordability/visibility gate quietly fails, `hitTest` falls through to
+  `INSIDE`, and the click is swallowed — **the button renders lit and does nothing**. This has now
+  bitten us three times (shop window, then the whole smelt/rank/kit/duel/stake/dice/mire/recruit
+  set). The rule: compute every gate on the client thread inside `render()`, store it in a
+  `volatile` field, and have the click path read **only** those fields. Window origin included.
 - **Absolute drawing (DYNAMIC overlays):** the renderer `translate()`s every overlay by its computed
   location — including a **saved drag offset** if the overlay was ever movable (offsets persist in
   config across builds). Any overlay that draws at absolute canvas coordinates MUST undo that first:

@@ -85,7 +85,20 @@ class LofDuelOverlay extends Overlay
 		setLayer(OverlayLayer.ALWAYS_ON_TOP);
 	}
 
+	// Computed on the CLIENT thread during render() and read by the mouse thread. Reading client
+	// state off the client thread returns stale values, so isShowing() could answer false and
+	// hitTest returned OUTSIDE — every button in the window went dead. The click path must read
+	// ONLY this cached value. Same fix, same reason, as LofShopTabsOverlay's cached showing.
+	private volatile boolean showingCached;
+
+	/** Cached — safe to call from the mouse thread (see the field note). */
 	boolean isShowing()
+	{
+		return showingCached;
+	}
+
+	/** The live client-thread check — only call from render(). */
+	private boolean computeShowing()
 	{
 		return config.enabled()
 			&& client.getGameState() == GameState.LOGGED_IN
@@ -124,7 +137,10 @@ class LofDuelOverlay extends Overlay
 	@Override
 	public Dimension render(Graphics2D g)
 	{
-		if (!isShowing()) return null;
+		// Publish the gate for the mouse thread in the same pass that draws the window.
+		final boolean showing = computeShowing();
+		showingCached = showing;
+		if (!showing) return null;
 
 		final Object oldAA = g.getRenderingHint(RenderingHints.KEY_ANTIALIASING);
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);

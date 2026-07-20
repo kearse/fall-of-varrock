@@ -74,6 +74,12 @@ class LofRanksOverlay extends Overlay implements LofWindows.Window
 	private boolean visible;
 	private int currentRank; // Title ordinal, 0..7
 
+	// Computed on the CLIENT thread during render() and read by the mouse thread. Reading the
+	// inventory container off the client thread returns null/stale, so the affordability gate
+	// failed and hitTest answered INSIDE — the BUY click was swallowed while the button was drawn
+	// lit. Same fix, same reason, as LofShopTabsOverlay's cached showing/winRect.
+	private volatile boolean canBuyCached;
+
 	/** rank_<name>.png once the generated art lands; null slots fall back to vector emblems. */
 	private final BufferedImage[] emblems = new BufferedImage[LofRanksData.RANKS.length];
 	private boolean emblemsLoaded;
@@ -163,9 +169,10 @@ class LofRanksOverlay extends Overlay implements LofWindows.Window
 		{
 			return CLOSE;
 		}
-		if (nextRank() >= 0 && affordable() && buyRect(ox, oy).contains(p))
+		if (buyRect(ox, oy).contains(p))
 		{
-			return BUY;
+			// Cached gate (client thread) — never re-read the inventory here.
+			return canBuyCached ? BUY : INSIDE;
 		}
 		return INSIDE;
 	}
@@ -187,12 +194,6 @@ class LofRanksOverlay extends Overlay implements LofWindows.Window
 			}
 		}
 		return total;
-	}
-
-	private boolean affordable()
-	{
-		final int next = nextRank();
-		return next >= 0 && coinsCarried() >= LofRanksData.RANKS[next].cost;
 	}
 
 	@Override
@@ -224,6 +225,8 @@ class LofRanksOverlay extends Overlay implements LofWindows.Window
 		final LofRanksData.Rank next = nextIdx >= 0 ? LofRanksData.RANKS[nextIdx] : null;
 		final long coins = coinsCarried();
 		final boolean canBuy = next != null && coins >= next.cost;
+		// Publish the gate for the mouse thread in the same pass that draws it.
+		canBuyCached = canBuy;
 
 		LofTheme.panel(g, ox, oy, WIN_W, WIN_H, WIN_ARC);
 		drawHeader(g, ox, oy, mouse);

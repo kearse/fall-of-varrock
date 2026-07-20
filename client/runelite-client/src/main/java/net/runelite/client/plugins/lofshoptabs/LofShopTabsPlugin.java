@@ -19,7 +19,7 @@
  *   FOV_SHOP:clear                                     (shop fully closed)
  *
  * Clicks go back as public-chat tokens the server intercepts + suppresses:
- *   "::shoptab <i>"  "::shopbuy <slot> <amount>"  "::shopclose"
+ *   "::lofshoptab <i>"  "::lofshopbuy <slot> <amount>"  "::lofshopclose"
  */
 package net.runelite.client.plugins.lofshoptabs;
 
@@ -311,7 +311,7 @@ public class LofShopTabsPlugin extends Plugin
 			return;
 		}
 		selectedTab = index;
-		send("::shoptab " + index);
+		send("::lofshoptab " + index);
 	}
 
 	/** Left-click an item (grid index): OSRS "Value" (option 1) — the server prints the price. */
@@ -319,13 +319,13 @@ public class LofShopTabsPlugin extends Plugin
 	{
 		if (index >= 0 && index < items.size())
 		{
-			send("::shopval " + items.get(index).slot);
+			send("::lofshopval " + items.get(index).slot);
 		}
 	}
 
 	void closeShop()
 	{
-		send("::shopclose");
+		send("::lofshopclose");
 	}
 
 	/** The item name for a grid cell (for the right-click menu), from the cache. */
@@ -359,22 +359,22 @@ public class LofShopTabsPlugin extends Plugin
 		switch (opt)
 		{
 			case 0: // Value
-				send("::shopval " + slot);
+				send("::lofshopval " + slot);
 				break;
 			case 1: // Buy 1
-				send("::shopbuy " + slot + " 1");
+				send("::lofshopbuy " + slot + " 1");
 				break;
 			case 2: // Buy 10
-				send("::shopbuy " + slot + " 10");
+				send("::lofshopbuy " + slot + " 10");
 				break;
 			case 3: // Buy 100
-				send("::shopbuy " + slot + " 100");
+				send("::lofshopbuy " + slot + " 100");
 				break;
 			case 4: // Buy X — prompt for an amount
 				promptBuyX(slot);
 				break;
 			case 5: // Examine
-				send("::shopexamine " + slot);
+				send("::lofshopexamine " + slot);
 				break;
 			default: // Cancel
 				break;
@@ -392,7 +392,7 @@ public class LofShopTabsPlugin extends Plugin
 						final int amt = Integer.parseInt(input.trim().replaceAll("[^0-9]", ""));
 						if (amt > 0)
 						{
-							send("::shopbuy " + slot + " " + amt);
+							send("::lofshopbuy " + slot + " " + amt);
 						}
 					}
 					catch (NumberFormatException ignored)

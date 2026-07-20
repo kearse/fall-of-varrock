@@ -181,7 +181,7 @@ public class LofQuestsPlugin extends Plugin
 	/** Panel: flip the SERVER's guidance arrows (free play) — same as typing ::questguide. */
 	void toggleServerGuidance()
 	{
-		clientThread.invokeLater(() -> client.runScript(ScriptID.CHAT_SEND, "::questguide", 0, 0, 0, -1));
+		clientThread.invokeLater(() -> client.runScript(ScriptID.CHAT_SEND, "::lofquestguide", 0, 0, 0, -1));
 	}
 
 	/** The world tile the overlays should point at right now (null = nothing to draw). */

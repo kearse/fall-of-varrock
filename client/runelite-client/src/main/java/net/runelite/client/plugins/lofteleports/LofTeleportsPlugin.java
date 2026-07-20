@@ -112,7 +112,7 @@ public class LofTeleportsPlugin extends Plugin
 	/** Send the chosen teleport to the server as a public-chat token it intercepts + suppresses. */
 	void sendTeleport(int categoryIndex, int rowIndex)
 	{
-		final String msg = "::tp " + categoryIndex + " " + rowIndex;
+		final String msg = "::loftp " + categoryIndex + " " + rowIndex;
 		clientThread.invokeLater(() -> client.runScript(ScriptID.CHAT_SEND, msg, 0, 0, 0, -1));
 	}
 }

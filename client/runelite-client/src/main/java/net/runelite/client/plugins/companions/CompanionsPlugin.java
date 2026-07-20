@@ -78,15 +78,15 @@ public class CompanionsPlugin extends Plugin
 
 	private final CompanionsPanel.Actions actions = new CompanionsPanel.Actions()
 	{
-		public void order(String arg) { send("::companion " + arg); }
-		public void equip(int slot, int itemId) { send("::companion equip " + (slot + 1) + " " + itemId); }
-		public void unequip(int slot, int equipSlot) { send("::companion unequip " + (slot + 1) + " " + equipSlot); }
-		public void style(int slot, int style) { send("::companion style " + (slot + 1) + " " + style); }
-		public void spell(int slot, String spellName) { send("::companion spell " + (slot + 1) + " " + spellName); }
-		public void retaliate(int slot) { send("::companion retaliate " + (slot + 1)); }
-		public void loot(int slot) { send("::companion loot " + (slot + 1)); }
-		public void rename(int slot, String name) { send("::companion rename " + (slot + 1) + " " + name); }
-		public void requestGear(int slot, int equipSlot) { send("::companion gear " + (slot + 1) + " " + equipSlot); }
+		public void order(String arg) { send("::lofcompanion " + arg); }
+		public void equip(int slot, int itemId) { send("::lofcompanion equip " + (slot + 1) + " " + itemId); }
+		public void unequip(int slot, int equipSlot) { send("::lofcompanion unequip " + (slot + 1) + " " + equipSlot); }
+		public void style(int slot, int style) { send("::lofcompanion style " + (slot + 1) + " " + style); }
+		public void spell(int slot, String spellName) { send("::lofcompanion spell " + (slot + 1) + " " + spellName); }
+		public void retaliate(int slot) { send("::lofcompanion retaliate " + (slot + 1)); }
+		public void loot(int slot) { send("::lofcompanion loot " + (slot + 1)); }
+		public void rename(int slot, String name) { send("::lofcompanion rename " + (slot + 1) + " " + name); }
+		public void requestGear(int slot, int equipSlot) { send("::lofcompanion gear " + (slot + 1) + " " + equipSlot); }
 	};
 
 	@Override
@@ -115,7 +115,9 @@ public class CompanionsPlugin extends Plugin
 	/** Send a server command via the chat-send clientscript (handles long strings; bypasses chat typing limits). */
 	private void send(String command)
 	{
-		clientThread.invoke(() -> client.runScript(ScriptID.CHAT_SEND, command, 0, "", 0, -1));
+		// 5517 takes 1 string + 4 ints (ScriptID.CHAT_SEND / the cache script's trailer). Passing a
+		// string for the clan-target arg mismatched the stacks and the send never happened.
+		clientThread.invoke(() -> client.runScript(ScriptID.CHAT_SEND, command, 0, 0, 0, -1));
 	}
 
 	/**

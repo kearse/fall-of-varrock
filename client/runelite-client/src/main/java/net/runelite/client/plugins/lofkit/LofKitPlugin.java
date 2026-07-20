@@ -73,7 +73,7 @@ public class LofKitPlugin extends Plugin
 	/** Send a kit interaction to the server as a public-chat token it intercepts + suppresses. */
 	void sendAction(String action)
 	{
-		final String msg = "::kit " + action;
+		final String msg = "::lofkit " + action;
 		clientThread.invokeLater(() -> client.runScript(ScriptID.CHAT_SEND, msg, 0, 0, 0, -1));
 	}
 }

@@ -138,10 +138,16 @@ class LofMireOverlay extends Overlay
 		return attuned;
 	}
 
+	// Coins carried, sampled on the CLIENT thread by render(). Reading the inventory container off
+	// the client thread returns null (→ 0 coins), so actionable() was false and hitTest answered
+	// INSIDE — the ATTUNE click was swallowed while the button was drawn lit. The click path must
+	// read ONLY this cached value. Same fix, same reason, as LofShopTabsOverlay's cached showing.
+	private volatile long coinsCached;
+
 	/** The footer button only takes clicks when its action could actually go through. */
 	boolean actionable()
 	{
-		return attuned ? bank > 0 : coinsCarried() >= ATTUNE_FEE;
+		return attuned ? bank > 0 : coinsCached >= ATTUNE_FEE;
 	}
 
 	/** Mirror of server MireDispenser.multiplier — ×1 → ×5 linearly, capped at STREAK_CAP laps. */
@@ -219,6 +225,8 @@ class LofMireOverlay extends Overlay
 		{
 			return null;
 		}
+
+		coinsCached = coinsCarried(); // publish for the mouse thread (actionable())
 
 		final Object oldAA = g.getRenderingHint(RenderingHints.KEY_ANTIALIASING);
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);

@@ -116,10 +116,16 @@ class LofRecruitOverlay extends Overlay implements LofWindows.Window
 		this.titleOrdinal = Math.min(Math.max(titleOrdinal, 0), TITLE_NAMES.length - 1);
 	}
 
+	// Coins carried, sampled on the CLIENT thread by render(). Reading the inventory container off
+	// the client thread returns null (→ 0 coins), so recruitable() was false and hitTest answered
+	// INSIDE — the recruit cards were dead while drawn lit. The click path must read ONLY this
+	// cached value. Same fix, same reason, as LofShopTabsOverlay's cached showing.
+	private volatile long coinsCached;
+
 	/** Cards accept clicks only when a muster could actually go through. */
 	boolean recruitable()
 	{
-		return cap > 0 && count < cap && coinsCarried() >= RECRUIT_COST;
+		return cap > 0 && count < cap && coinsCached >= RECRUIT_COST;
 	}
 
 	private int originX()
@@ -219,6 +225,7 @@ class LofRecruitOverlay extends Overlay implements LofWindows.Window
 		final int ox = originX(), oy = originY();
 		final Point mouse = mousePoint();
 		final long coins = coinsCarried();
+		coinsCached = coins; // publish for the mouse thread before recruitable() is consulted
 		final boolean locked = cap == 0;
 		final boolean full = cap > 0 && count >= cap;
 		final boolean active = recruitable();

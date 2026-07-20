@@ -72,7 +72,8 @@ public class LofDuelPlugin extends Plugin
 	/** Send a rules interaction to the server as a public-chat token it intercepts + suppresses. */
 	void sendAction(String action)
 	{
-		final String msg = "::duel " + action;
+		// "::duel" is on the gamepack's scam-bait block list — it never leaves the client.
+		final String msg = "::lofduel " + action;
 		clientThread.invokeLater(() -> client.runScript(ScriptID.CHAT_SEND, msg, 0, 0, 0, -1));
 	}
 }

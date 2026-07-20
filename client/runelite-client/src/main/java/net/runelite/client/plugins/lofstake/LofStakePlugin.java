@@ -72,7 +72,8 @@ public class LofStakePlugin extends Plugin
 	/** Send a stake interaction to the server as a public-chat token it intercepts + suppresses. */
 	void sendAction(String action)
 	{
-		final String msg = "::stake " + action;
+		// "::stake" is on the gamepack's scam-bait block list — it never leaves the client.
+		final String msg = "::lofstake " + action;
 		clientThread.invokeLater(() -> client.runScript(ScriptID.CHAT_SEND, msg, 0, 0, 0, -1));
 	}
 }

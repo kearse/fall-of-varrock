@@ -135,19 +135,47 @@ class LofKitOverlay extends Overlay
 		setLayer(OverlayLayer.ALWAYS_ON_TOP);
 	}
 
+	// Computed on the CLIENT thread during render() and read by the mouse thread. Reading client
+	// state off the client thread returns stale values: a bad isShowing() killed EVERY button in
+	// the window, and a bad isTraining()/isLms() made the listener send the wrong command
+	// (start / done / load). The click path must read ONLY these cached values. Same fix, same
+	// reason, as LofShopTabsOverlay's cached showing/winRect.
+	private volatile boolean showingCached;
+	private volatile boolean trainingCached;
+	private volatile boolean lmsCached;
+
+	/** Cached — safe to call from the mouse thread (see the field note). */
 	boolean isShowing()
+	{
+		return showingCached;
+	}
+
+	/** Cached — safe to call from the mouse thread (see the field note). */
+	boolean isTraining()
+	{
+		return trainingCached;
+	}
+
+	/** Cached — safe to call from the mouse thread (see the field note). */
+	boolean isLms()
+	{
+		return lmsCached;
+	}
+
+	/** The live client-thread reads — only call from render(). */
+	private boolean computeShowing()
 	{
 		return config.enabled()
 			&& client.getGameState() == GameState.LOGGED_IN
 			&& (client.getVarpValue(CONTROL_VARP) & 0x1) != 0;
 	}
 
-	boolean isTraining()
+	private boolean computeTraining()
 	{
 		return ((client.getVarpValue(CONTROL_VARP) >> 1) & 0x3) == 1;
 	}
 
-	boolean isLms()
+	private boolean computeLms()
 	{
 		return ((client.getVarpValue(CONTROL_VARP) >> 1) & 0x3) == 3;
 	}
@@ -301,7 +329,12 @@ class LofKitOverlay extends Overlay
 	@Override
 	public Dimension render(Graphics2D g)
 	{
-		if (!isShowing()) return null;
+		// Publish the gates for the mouse thread in the same pass that draws them.
+		final boolean showing = computeShowing();
+		showingCached = showing;
+		trainingCached = computeTraining();
+		lmsCached = computeLms();
+		if (!showing) return null;
 
 		final Object oldAA = g.getRenderingHint(RenderingHints.KEY_ANTIALIASING);
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
