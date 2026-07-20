@@ -1,7 +1,7 @@
 /*
  * Fall of Varrock — the making window (mouse input). Rows select, chips set quantity, MAKE sends
- * the order (window stays open — the station keeps working); clicks on the window never fall
- * through to the world.
+ * the order and dismisses the window so the player can watch themselves work (the real smithing
+ * interface does the same); clicks on the window never fall through to the world.
  */
 package net.runelite.client.plugins.lofmake;
 
@@ -45,6 +45,9 @@ class LofMakeMouseListener extends MouseAdapter
 			if (r != null && qty > 0)
 			{
 				plugin.sendMake(r.resultId, qty);
+				// Get out of the player's way: the production loop runs on the server for several
+				// ticks and they should see their character swing, not a window over the top of it.
+				overlay.setVisible(false);
 			}
 		}
 		else if (hit >= LofMakeOverlay.ROW_BASE)
