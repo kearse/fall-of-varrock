@@ -143,7 +143,13 @@ class LofTeleportsOverlay extends Overlay implements LofWindows.Window
 		{
 			final int rel = p.y - (oy + VP_TOP) + scroll;
 			final int i = rel / STEP;
-			if (i >= 0 && i < rowCount() && (rel - i * STEP) <= CARD_H) return ROW_BASE + i;
+			// Only "built" destinations are clickable — an unbuilt ("Soon") row is drawn disabled,
+			// so it must swallow the click (fall through to INSIDE) rather than fire a teleport.
+			if (i >= 0 && i < rowCount() && (rel - i * STEP) <= CARD_H
+				&& LofTeleportsData.CATEGORIES.get(activeTab).dests.get(i).built)
+			{
+				return ROW_BASE + i;
+			}
 		}
 		return INSIDE;
 	}

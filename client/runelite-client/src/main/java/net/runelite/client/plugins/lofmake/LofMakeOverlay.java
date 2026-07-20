@@ -53,6 +53,10 @@ class LofMakeOverlay extends Overlay implements LofWindows.Window
 	private static final int ROWS_Y = LofModal.TITLE_H + 10;
 	private static final int ROW_H = 34;
 	private static final int ROW_STEP = 38;
+	// Rows must never reach the status line (H-56) or the footer buttons (H-44): a recipe row
+	// drawn over the footer would both cover MAKE and — since it hit-tests first — swallow its
+	// click. ROWS_Y(48) + n*38 + ROW_H(34) <= H-56(344) → n <= 6, so at most 7 rows (0..6) fit.
+	private static final int MAX_ROWS = 7;
 
 	private final Client client;
 	private final ItemManager itemManager;
@@ -150,6 +154,12 @@ class LofMakeOverlay extends Overlay implements LofWindows.Window
 		return client.getBoostedSkillLevel(Skill.SMITHING) >= r.level;
 	}
 
+	/** How many recipe rows are actually drawn/clickable — capped so they clear the footer band. */
+	private int shownRows()
+	{
+		return Math.min(recipes.size(), MAX_ROWS);
+	}
+
 	private Rectangle rowRect(int ox, int oy, int i)
 	{
 		return new Rectangle(ox + LofModal.PAD, oy + ROWS_Y + i * ROW_STEP, LofModal.W - 2 * LofModal.PAD, ROW_H);
@@ -180,13 +190,8 @@ class LofMakeOverlay extends Overlay implements LofWindows.Window
 		{
 			return CLOSE;
 		}
-		for (int i = 0; i < recipes.size(); i++)
-		{
-			if (rowRect(ox, oy, i).contains(p))
-			{
-				return ROW_BASE + i;
-			}
-		}
+		// The footer (quantity chips + MAKE) is tested BEFORE the recipe rows so a long recipe
+		// list can never steal a click from the action buttons that share the lower panel band.
 		for (int i = 0; i < QTY_OPTIONS.length; i++)
 		{
 			if (qtyRect(ox, oy, i).contains(p))
@@ -198,6 +203,13 @@ class LofMakeOverlay extends Overlay implements LofWindows.Window
 		if (r != null && levelOk(r) && chosenQty() > 0 && makeRect(ox, oy).contains(p))
 		{
 			return MAKE;
+		}
+		for (int i = 0; i < shownRows(); i++)
+		{
+			if (rowRect(ox, oy, i).contains(p))
+			{
+				return ROW_BASE + i;
+			}
 		}
 		return INSIDE;
 	}
@@ -221,7 +233,7 @@ class LofMakeOverlay extends Overlay implements LofWindows.Window
 		LofModal.frame(g, ox, oy, title, sub, mouse);
 
 		g.setFont(FontManager.getRunescapeFont());
-		for (int i = 0; i < recipes.size(); i++)
+		for (int i = 0; i < shownRows(); i++)
 		{
 			drawRow(g, ox, oy, i, mouse);
 		}
