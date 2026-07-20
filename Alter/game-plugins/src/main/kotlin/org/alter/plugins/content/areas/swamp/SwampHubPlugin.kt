@@ -69,6 +69,30 @@ class SwampHubPlugin(
         } else {
             logger.warn { "swamp-hub: '$officer' not in cache; Supply Officer not spawned." }
         }
+        spawnUndeadCorner()
+    }
+
+    /**
+     * The Mire is a cleared graveyard, so the dead don't rest easy: a small cluster of zombies rises
+     * at the south-east fringe, by the crypt and the mines road. Reachable through the safe route with
+     * everything else in the Mire. This fills a real content gap — the Slayer roster assigns zombies,
+     * but the OSRS spawn dump has none within reach of home, so a "kill zombies" contract had nowhere
+     * to be filled. `npc.zombie` (id 26) is in the world dump, so WorldSpawnsPlugin already registers
+     * its real combat def (22 hp, aggressive within [WorldSpawns.AGGRO_RADIUS]=4); this bespoke spawn
+     * inherits it. Kills credit the Slayer task by name (see SlayerPlugin.onKill).
+     *
+     * TUNABLE: these tiles were placed against the SE fringe, clear of the skilling stations and the
+     * fishing spots so aggression never bleeds into a skiller — nudge them if any land on scenery.
+     */
+    private fun spawnUndeadCorner() {
+        if (!runCatching { getRSCM(ZOMBIE) }.isSuccess) {
+            logger.warn { "swamp-hub: '$ZOMBIE' not in cache; undead corner not spawned." }
+            return
+        }
+        UNDEAD_TILES.forEach { t ->
+            spawnNpc(ZOMBIE, x = t.x, z = t.z, height = t.height, walkRadius = 4, direction = Direction.WEST)
+        }
+        logger.info { "swamp-hub: undead corner ready (${UNDEAD_TILES.size} zombies at the SE graveyard fringe)." }
     }
 
     /** Clear the graveyard's grave-clutter so the yard reads as a clean war-supply workshop: removes ALL
@@ -146,5 +170,15 @@ class SwampHubPlugin(
          *  the house (x<=3237) intact; extends to z3202 + x3254 to clear the gravestones and the dead
          *  tree (id 1282 @ 3253,3197) on the east tree line. */
         val YARD = Area(3238, 3188, 3254, 3203)
+
+        /** Slayer-roster zombie (id 26); in the world dump, so its combat def is already registered. */
+        const val ZOMBIE = "npc.zombie"
+
+        /** Where the undead rise — the SE graveyard fringe, just SOUTH of the [YARD] box (z<3188) on the
+         *  mines road, clear of the east dead tree (3253,3197) and every skilling station. TUNABLE. */
+        val UNDEAD_TILES = listOf(
+            Tile(3249, 3185, 0), Tile(3251, 3186, 0), Tile(3250, 3183, 0),
+            Tile(3252, 3185, 0), Tile(3248, 3184, 0),
+        )
     }
 }
