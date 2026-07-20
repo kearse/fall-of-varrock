@@ -12,14 +12,20 @@ first login (NEW_ACCOUNT_ATTR)                     ~/.fov-home/client/intro/intr
         │                                                       ▲  ETag-validated
         ▼                                                       │  download on client start
 IntroVideoPlugin (server)  ──BROADCAST "FOV_INTRO:play"──►  lofintro (client fork)
-  sets intro_video_seen                                      plays full-screen, modal,
-  persistent attr                                            always-on-top, no skip
+  marks intro_video_pending,                                 plays full-screen, modal,
+  clears it once delivered                                   always-on-top, no skip
 ```
 
 - **Server** — `Alter/game-plugins/.../content/mechanics/introvideo/IntroVideoPlugin.kt`.
-  Fires only when `NEW_ACCOUNT_ATTR == true` (brand-new save) and the persistent
-  `intro_video_seen` attribute isn't set; sets the attribute immediately so it is
-  once-per-account forever. Existing accounts never qualify.
+  A brand-new account (`NEW_ACCOUNT_ATTR == true`) is marked with the persistent
+  `intro_video_pending` attribute. While pending and not yet seen, the trigger is
+  (re)sent on **every** login, and `intro_video_seen` is set only once the broadcast
+  has actually gone out to an online client — so a first login that fails to deliver
+  (fresh client not listening yet, or an early disconnect) is retried on the next
+  login instead of being lost. `NEW_ACCOUNT_ATTR` is session-only and true for just
+  the one creation login, which is why the durable `intro_video_pending` flag carries
+  the intent across logins. Existing (pre-intro) accounts are never marked pending, so
+  they never retroactively see it.
 - **Client** — `client/runelite-client/.../plugins/lofintro/` (hidden plugin, always on,
   so players can't disable it to skip the intro). Catches the trigger line, rewrites it
   in the chatbox to a welcome message, and plays the video via JavaFX Media (H.264/AAC),
