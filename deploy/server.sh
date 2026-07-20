@@ -125,24 +125,32 @@ case "$cmd" in
     ' sh "$lc" "$ts"
     ;;
   inspect-route)
-    # READ-ONLY. Dump a recorded march route (::recroute) so the walked
-    # waypoints can be retrieved without SSH. The recorder writes
-    # data/mapdump/route_<player>.txt relative to the game's working dir,
-    # which is INSIDE the game container (/app/data/mapdump) — that path is
-    # NOT a host bind mount (unlike saves), so read it through the running
-    # container, the same way reset-save does. With no user, dumps every
-    # recorded route. loginUsername case is preserved in the filename, so
-    # match case-insensitively.
+    # READ-ONLY. Retrieve a recorded march route (::recroute) without SSH, from
+    # BOTH places the recorder leaves it — because in prod the file often never
+    # lands:
     #
-    # NOTE: mapdump lives in the container's writable layer, so the file
-    # survives a `restart` but a `redeploy`/recreate wipes it — grab it first.
+    #   (1) the on-disk file data/mapdump/route_<player>.txt, written relative to
+    #       the game's working dir (/app/data/mapdump INSIDE the game container).
+    #       That path is NOT a host bind mount — only /app/data/saves is writable
+    #       — so the recorder's file write is usually swallowed and no file lands.
+    #   (2) the game log. finish() logs every down-sampled waypoint as
+    #       "RECROUTE-WP Tile(x, z, 0)," (and the live trail as "RECLIVE <user>
+    #       x,z,h") BEFORE it attempts the file, unconditionally — so the route is
+    #       still in the container log even when the file write failed, as long as
+    #       this is the same container that did the walk (a redeploy rotates the
+    #       log away with the old container).
+    #
+    # With no user, dumps every route file / all RECROUTE lines. loginUsername
+    # case is preserved, so file matching is case-insensitive.
     user="${1:-}"
+
+    echo "== (1) on-disk route file(s) in the game container =="
     compose exec -T game sh -c '
       set -eu
       dir=/app/data/mapdump
       want=$1
       if [ ! -d "$dir" ]; then
-        echo "no mapdump dir on this container ($dir) — nothing recorded here."
+        echo "no mapdump dir ($dir) — no file persisted (expected in prod; see the log below)."
         exit 0
       fi
       n=0
@@ -161,15 +169,32 @@ case "$cmd" in
         cat "$f"
         echo "===== end $base ====="
       done
-      if [ "$n" -eq 0 ]; then
-        if [ -n "$want" ]; then
-          echo "no recorded route for \"$want\" (looked for route_$want.txt, any case)."
-        else
-          echo "no recorded routes found in $dir."
-        fi
-        echo "files present:"; ls -la "$dir" 2>/dev/null || true
-      fi
-    ' sh "$user"
+      [ "$n" -eq 0 ] && echo "no route file for \"${want:-<any>}\" in $dir."
+    ' sh "$user" || echo "(could not read the container mapdump dir)"
+
+    echo
+    echo "== (2) recorded waypoints from the game log (RECROUTE-WP = paste-ready) =="
+    echo "-- if several recordings appear, the LAST block (newest timestamps) is the latest walk --"
+    logs="$(compose logs --no-log-prefix --tail 400000 game 2>/dev/null || true)"
+    hits="$(printf '%s\n' "$logs" | grep -E 'RECROUTE( |-WP)' || true)"
+    if [ -n "$user" ]; then
+      trail="$(printf '%s\n' "$logs" | grep -E "RECLIVE $user " || true)"
+    else
+      trail="$(printf '%s\n' "$logs" | grep -E 'RECLIVE ' || true)"
+    fi
+    if [ -n "$hits" ]; then
+      printf '%s\n' "$hits"
+    else
+      echo "no RECROUTE-WP lines in the retained container log."
+      echo "=> this container has no record of the walk: it was recreated since you"
+      echo "   recorded (log rotated away with it), or the walk was on a different"
+      echo "   server. Re-run ::recroute start/stop on THIS world, then inspect-route."
+    fi
+    if [ -n "$trail" ]; then
+      echo
+      echo "-- raw walked trail (RECLIVE, one tile per line, highest fidelity) --"
+      printf '%s\n' "$trail"
+    fi
     ;;
   help)
     sed -n '2,18p' "$0" | sed 's/^# \{0,1\}//'
