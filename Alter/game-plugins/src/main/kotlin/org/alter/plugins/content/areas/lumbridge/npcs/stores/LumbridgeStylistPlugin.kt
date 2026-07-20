@@ -18,7 +18,7 @@ import org.alter.game.model.shop.PurchasePolicy
 import org.alter.game.model.shop.ShopItem
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
-import org.alter.plugins.content.mechanics.appearance.StyleMenu
+import org.alter.plugins.content.mechanics.appearance.AppearanceDesign
 import org.alter.plugins.content.mechanics.shops.CoinCurrency
 import org.alter.plugins.content.mechanics.shops.ShopTabs
 import org.alter.plugins.content.mechanics.shops.bindVendorOptions
@@ -41,12 +41,11 @@ private val logger = KotlinLogging.logger {}
  *    of aesthetic clothes (shirts, robes, legwear, hats, gloves, boots) and a full rack of
  *    capes. `BUY_STOCK` so players can sell the pieces back. Pure cosmetic — no stats, no power.
  *
- * The primary makeover path is the client-drawn Character Style window ([StyleMenu] /
- * `lofstyle`): left-anchored so the player's own live in-world model is the 3D preview. (The
- * native design interface 679 stays reachable via ::appearance for testing only — its rev-228
- * layout didn't match the bound component ids.) The step-by-step dialogue restyle remains as a
- * menu option and fallback. Stock and appearance pools are resolved defensively — a missing
- * cache key is skipped rather than crashing plugin init.
+ * The primary makeover path is the native character-design interface 679 ([AppearanceDesign]):
+ * the real OSRS design screen with the player's live 3D model rendered inside the panel (same as
+ * the "Equip Your Character" screen). The step-by-step dialogue restyle remains as a menu option
+ * and fallback. Stock and appearance pools are resolved defensively — a missing cache key is
+ * skipped rather than crashing plugin init.
  */
 class LumbridgeStylistPlugin(
     r: PluginRepository,
@@ -150,13 +149,13 @@ class LumbridgeStylistPlugin(
         }
         // The makeover mage's right-click "Makeover" verb isn't a vendor-entry option, so
         // bindVendorOptions leaves it dead ("Nothing interesting happens."). Bind it straight
-        // to the Character Style window — no dialogue hop. Guarded: if a cache oddity made
+        // to the character-design interface — no dialogue hop. Guarded: if a cache oddity made
         // bindVendorOptions' first-action fallback claim this verb already, a duplicate bind
         // throws — better a dead right-click than a boot crash.
         npcActions(NPC).filter { it.equals("makeover", ignoreCase = true) }
             .forEach { opt ->
                 try {
-                    onNpcOption(NPC, option = opt) { StyleMenu.open(player) }
+                    onNpcOption(NPC, option = opt) { AppearanceDesign.open(player) }
                 } catch (e: IllegalStateException) {
                     logger.warn { "stylist: '$opt' already bound on '$NPC'; keeping the existing bind." }
                 }
@@ -167,7 +166,7 @@ class LumbridgeStylistPlugin(
             openClothes(player)
         }
         onCommand("makeover", description = "Restyle your appearance") {
-            StyleMenu.open(player)
+            AppearanceDesign.open(player)
         }
     }
 
@@ -183,9 +182,8 @@ class LumbridgeStylistPlugin(
             "Nothing, thanks.",
             title = STYLIST_NAME)) {
             // The mirror: the native character-design screen (interface 679) with the live
-            // 3D player model. The step-by-step dialogue below stays as the fallback until
-            // the interface is confirmed rendering on the custom client (see AppearanceDesign).
-            1 -> StyleMenu.open(player)
+            // 3D player model. The step-by-step dialogue below (option 3) stays as the fallback.
+            1 -> AppearanceDesign.open(player)
             2 -> {
                 say(player, "Take your time - everything's pure fashion, no combat<br>bonuses here.")
                 openClothes(player)
