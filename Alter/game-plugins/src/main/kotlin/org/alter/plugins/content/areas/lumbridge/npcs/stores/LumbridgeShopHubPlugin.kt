@@ -417,8 +417,10 @@ class LumbridgeShopHubPlugin(
     }
 
     private companion object {
-        /** Where Zaff's "rune altar" lift drops the player (altar to be built here next pass). */
-        val RUNE_ALTAR = Tile(3220, 3233, 0)
+        /** Where Zaff's "rune altar" lift drops the player — one tile east of the fire altar the
+         *  Mire yard actually spawns (SwampHubPlugin @3238,3200), so the lift lands you AT the altar
+         *  instead of the old placeholder tile up by the castle (which just nudged you a few tiles). */
+        val RUNE_ALTAR = Tile(3239, 3200, 0)
 
         /** Vendor rscm key -> the store-type name shown to players (replaces the stock cache name).
          *  Keep the keys in sync with the spawns above. Slayer/Quartermaster/dice are NOT here —

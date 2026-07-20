@@ -39,6 +39,11 @@ class TeleportSpellsPlugin(
     // from the boot "teleport-spell unbound" log. canCast() gates by level + runes + spellbook,
     // so a keyword match a player can't cast is harmless. More specific keywords precede their
     // substrings (e.g. "west ardougne" before "ardougne") so firstOrNull short-circuits correctly.
+    /** The free Home Teleport (every spellbook has one). Level 0, no runes, and crucially **no xp** —
+     *  it must be matched before the "lumbridge" keyword below, otherwise "Lumbridge Home Teleport"
+     *  binds to the 41-xp Teleport to Lumbridge and players farm Magic xp by teleporting home. */
+    private val home = Dest("home", Tile(3222, 3218, 0), 0.0)
+
     private val dests = listOf(
         // Standard / modern.
         Dest("lumbridge", Tile(3222, 3218, 0), 41.0), // home
@@ -86,7 +91,9 @@ class TeleportSpellsPlugin(
 
         MagicSpells.getTeleportSpells().values.forEach { spell ->
             val name = spell.name.lowercase()
-            val dest = dests.firstOrNull { name.contains(it.keyword) }
+            // Home Teleport ("Lumbridge Home Teleport", "Home Teleport", …) is free and grants no xp —
+            // catch it before the keyword table so it never binds to the paid Teleport to Lumbridge.
+            val dest = if (name.contains("home")) home else dests.firstOrNull { name.contains(it.keyword) }
             if (dest != null) {
                 onButton(spell.interfaceId, spell.component) { castTeleport(player, spell, dest) }
             } else {

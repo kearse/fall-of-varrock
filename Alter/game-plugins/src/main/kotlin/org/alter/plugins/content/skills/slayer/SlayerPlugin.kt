@@ -345,14 +345,9 @@ class SlayerPlugin(
             recruitMiningBrief(p)
             return
         }
-        val current = p.attr[SLAYER_TASK_NPC_ATTR]
-        val left = p.attr[SLAYER_TASK_LEFT_ATTR] ?: 0
-        if (current != null && left > 0) {
-            val name = tasks[current]?.display ?: "your current task"
-            say(p, "You still have $left $name to slay. Get going!")
-            return
-        }
-        // Intro quest: a fixed, gentle first contract — 5 of the small rats around the castle.
+        // Intro quest: a fixed, gentle first contract — 5 of the small rats around the castle. This is
+        // checked BEFORE the "you already have a task" guard below, so a contract the recruit pulled
+        // from the window early (e.g. during the RANK step) can never skip the scripted tutorial rats.
         if (RecruitTrials.step(p) == RecruitTrials.Step.SLAY) {
             val rat = tasks[TUTORIAL_RAT_KEY]
             if (rat != null) {
@@ -362,6 +357,21 @@ class SlayerPlugin(
                 say(p, "For your first contract, something simple: kill <col=801700>$TUTORIAL_RAT_COUNT ${rat.display}</col>. They scurry about just outside, around the castle. Off you go.")
                 return
             }
+        }
+        val current = p.attr[SLAYER_TASK_NPC_ATTR]
+        val left = p.attr[SLAYER_TASK_LEFT_ATTR] ?: 0
+        if (current != null && left > 0) {
+            val name = tasks[current]?.display ?: "your current task"
+            say(p, "You still have $left $name to slay. Get going!")
+            return
+        }
+        // No free/random combat contracts until the Recruit Trials are finished: the quest hands out
+        // the scripted ones (the rats above, then the supply run). Without this a recruit could pull a
+        // random task before reaching the SLAY step, and completing it would advance the quest past the
+        // tutorial rats — the exact bypass reported. Nudge them back to their current objective instead.
+        if (RecruitTrials.inProgress(p)) {
+            say(p, "Orders first, ${p.address}. ${RecruitTrials.step(p).objective}")
+            return
         }
         val eligible = tasks.values.filter { p.combatLevel >= it.minCombat }
         if (eligible.isEmpty()) {
