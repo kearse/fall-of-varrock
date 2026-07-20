@@ -13,24 +13,33 @@ import org.alter.game.model.appearance.Colours
 import org.alter.game.model.appearance.Gender
 import org.alter.game.model.appearance.Looks
 import org.alter.game.model.attr.APPEARANCE_SET_ATTR
+import org.alter.game.model.attr.STYLE_PREVIEW_ATTR
 import org.alter.game.model.entity.Player
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
 
 /**
  * The native OSRS **character-design interface** (679) — the screen every OSRS account sees at
- * creation, showing the player's LIVE engine-rendered 3D model. Re-enabled for Fall of Varrock:
- * every arrow press mutates [Player.appearance] and re-syncs it immediately, so the preview *is*
- * the real look (design brief: "use the real one for character modifications").
+ * creation, showing the player's LIVE engine-rendered 3D model *inside* the panel (the same way
+ * the "Equip Your Character" screen, interface 84, draws the player). This is the makeover the
+ * server ships: Aurelia the Stylist's "Restyle my appearance" and `::makeover` both open it, and
+ * `::appearance` opens it directly. Every arrow press mutates [Player.appearance] and re-syncs it
+ * immediately, so the preview *is* the real look.
  *
- * Opened by Aurelia the Stylist's "Restyle my appearance" ([AppearanceDesign.open]) and the
- * `::appearance` command (the safe first-test path — this interface was disabled in this build,
- * and while STOCK cache interfaces render fine on our client, verify it opens before wiring
- * anything player-facing to it; Aurelia keeps her classic dialogue restyle as the fallback).
+ * The model rendering needs no server code — 679 is a stock cache interface with a player-model
+ * component; opening it plus [PlayerInfo.syncAppearance] is all it takes. While the window is open
+ * the player is broadcast WITHOUT worn gear ([STYLE_PREVIEW_ATTR]) so the base skins being edited
+ * are visible; closing the interface restores the gear (see the `onInterfaceClose` hook below).
  *
  * Component map (stock 679): 65/66 gender buttons, 68 confirm; body-part rows base at 10
  * (head, jaw, torso, arms, hands, legs, feet — 4 apart), colour rows base at 41 (hair, torso,
  * legs, feet, skin — 4 apart); each row's `+2` child is Previous, `+3` is Next.
+ *
+ * IMPORTANT — the ids above are a pre-rev-228 assumption and did NOT match this build's cache
+ * ("buttons misaligned and dead", commit 2e3e962). They must be re-verified against the real
+ * layout of group 679 in the shipped cache:
+ *     ./gradlew :game-server:teleportIface -PteleArgs="inspect 679"   # server stopped
+ * and corrected in the [rows]/gender/confirm ids below. The model + appearance logic already work.
  */
 object AppearanceDesign {
     const val INTERFACE_ID = 679
@@ -40,7 +49,18 @@ object AppearanceDesign {
 
     fun open(p: Player) {
         p.setVarbit(GENDER_VARBIT, if (p.appearance.gender == Gender.FEMALE) 1 else 0)
+        // Hide worn gear so the preview shows the default skins being edited; restored on close.
+        p.attr[STYLE_PREVIEW_ATTR] = true
+        PlayerInfo(p).syncAppearance()
         p.openInterface(INTERFACE_ID, InterfaceDestination.MAIN_SCREEN)
+    }
+
+    /** End the bare-skins preview and re-broadcast the player in their gear. */
+    fun endPreview(p: Player) {
+        if (p.attr[STYLE_PREVIEW_ATTR] == true) {
+            p.attr.remove(STYLE_PREVIEW_ATTR)
+            PlayerInfo(p).syncAppearance()
+        }
     }
 }
 
@@ -92,6 +112,9 @@ class AppearanceInterfacePlugin(
             onButton(AppearanceDesign.INTERFACE_ID, row.component + 2) { step(player, row, delta = -1) }
             onButton(AppearanceDesign.INTERFACE_ID, row.component + 3) { step(player, row, delta = +1) }
         }
+
+        // Any close (Confirm, the X, or another interface replacing 679) puts the gear back on.
+        onInterfaceClose(AppearanceDesign.INTERFACE_ID) { AppearanceDesign.endPreview(player) }
     }
 
     private fun step(p: Player, row: Row, delta: Int) {
