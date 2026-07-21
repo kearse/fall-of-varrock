@@ -29,6 +29,7 @@ import java.nio.file.Path
  *   gradlew :game-server:npcDef -PnpcArgs="inspect 1755"
  *   gradlew :game-server:npcDef -PnpcArgs="wizardknight"     # Void Knight 1755: Talk-to / Solo game / Multi game
  *   gradlew :game-server:npcDef -PnpcArgs="krilbodyguards"   # K'ril's 3 bodyguards: add the "Attack" option
+ *   gradlew :game-server:npcDef -PnpcArgs="kreearra"         # Kree'arra's 3 minions: add "Attack" + combat level
  *   gradlew :game-server:npcDef -PnpcArgs="restore 1755"
  */
 
@@ -44,6 +45,13 @@ private const val VOID_KNIGHT = 1755
 // in slot 2 (actions[1]) — the slot OpNpcHandler routes to client.attack — matching K'ril himself.
 private val KRIL_BODYGUARDS = listOf(3130, 3131, 3132)
 
+// Kree'arra's bodyguards (Wingman Skree / Flockleader Geerin / Flight Kilisa). Like K'ril's, their
+// cache defs lack the "Attack" menu option — but these also ship as decorative birds (absent from
+// npc_combat.json, generic "Graceful, bird-like creature." examine) with combatLevel 0, so
+// isAttackable()'s `combatLevel > 0` half would still reject them. Set BOTH the Attack option and
+// the OSRS combat level (id to combatLevel).
+private val KREEARRA_MINIONS = listOf(3163 to 143, 3164 to 149, 3165 to 159)
+
 fun main(args: Array<String>) {
     when (args.getOrNull(0)?.lowercase() ?: "inspect") {
         "inspect" -> inspect(args.drop(1).mapNotNull { it.toIntOrNull() })
@@ -54,8 +62,10 @@ fun main(args: Array<String>) {
         "wizardknight" -> setActions(VOID_KNIGHT, listOf("Talk-to", null, "Solo game", "Multi game", null))
         // The inverse of wizardknight: these ARE meant to be attacked, so put "Attack" in slot 2.
         "krilbodyguards" -> KRIL_BODYGUARDS.forEach { setActions(it, listOf(null, "Attack", null, null, null)) }
+        // Same as krilbodyguards, but the birds also need a combat level (see KREEARRA_MINIONS).
+        "kreearra" -> KREEARRA_MINIONS.forEach { (id, cb) -> setActions(id, listOf(null, "Attack", null, null, null), combatLevel = cb) }
         "restore" -> restore(args.getOrNull(1)?.toIntOrNull() ?: run { println("restore <id>"); return })
-        else -> println("usage: inspect <id...> | anims <id...> | wizardknight | krilbodyguards | restore <id>")
+        else -> println("usage: inspect <id...> | anims <id...> | wizardknight | krilbodyguards | kreearra | restore <id>")
     }
 }
 
@@ -119,7 +129,12 @@ private fun anims(ids: List<Int>) {
     }
 }
 
-private fun setActions(id: Int, actions: List<String?>) {
+/**
+ * Rewrite an npc's right-click [actions] in the cache, and — when [combatLevel] is given — its
+ * combat level too. Both live only in the cache def; `isAttackable()` checks the "Attack" action
+ * AND `combatLevel > 0`, so a def that ships with neither needs both set here.
+ */
+private fun setActions(id: Int, actions: List<String?>, combatLevel: Int? = null) {
     initCache()
     println("BEFORE: ${describe(id)}")
     val def = CacheManager.getNpc(id)
@@ -128,6 +143,7 @@ private fun setActions(id: Int, actions: List<String?>) {
     val beforeModels = before.models?.toList()
 
     for (i in 0 until 5) def.actions[i] = actions.getOrNull(i)
+    if (combatLevel != null) def.combatLevel = combatLevel
 
     val writer = BufferWriter(4096)
     with(NpcEncoder()) { writer.encode(def) }
@@ -157,7 +173,8 @@ private fun setActions(id: Int, actions: List<String?>) {
     println("AFTER:  ${describe(id)}")
     val ok = after.name == beforeName &&
         after.models?.toList() == beforeModels &&
-        after.actions.toList() == actions
+        after.actions.toList() == actions &&
+        (combatLevel == null || after.combatLevel == combatLevel)
     if (ok) {
         println("OK — actions updated, name/models intact. Restart the server to serve the new cache.")
     } else {
