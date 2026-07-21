@@ -18,6 +18,8 @@ import org.alter.plugins.content.mechanics.shops.CoinCurrency
 import org.alter.plugins.content.mechanics.shops.ItemCurrency
 import org.alter.plugins.content.mechanics.shops.ShopTabs
 import org.alter.plugins.content.mechanics.shops.bindVendorTalkAndTrade
+import org.alter.plugins.content.economy.grandexchange.GeCurrencyPrices
+import org.alter.plugins.content.economy.grandexchange.currencyBuyShop
 import org.alter.plugins.content.war.address
 import org.alter.plugins.content.war.recruit.RecruitTrials
 import org.alter.rscm.RSCM.getRSCM
@@ -63,6 +65,7 @@ class WarlordsArmouryPlugin(
         const val CRYSTAL = "Warlord's Armoury - Crystal Gear"
         const val CHARGED = "Warlord's Armoury - Charged & Degradable"
         const val RELICS = "Warlord's Armoury - Relics"
+        const val BUY_TICKETS = "Warlord's Armoury - Buy Tickets"
 
         /** Relics shelf markup over the old career base: buy = base × 3, buy-back = base (× 1). */
         const val RELIC_BUY_MULT = 3
@@ -243,6 +246,8 @@ class WarlordsArmouryPlugin(
         shopWith(RELICS, bossTickets(), relicStock, PurchasePolicy.BUY_STOCK) { (it / RELIC_BUY_MULT).coerceAtLeast(1) }
         // The mid-game coin sink.
         shopWith(BARROWS, CoinCurrency(), barrowsStock)
+        // Buy Boss Tickets for coins — sets the coin ceiling on everything this vendor sells.
+        currencyBuyShop(BUY_TICKETS, "item.boss_ticket", GeCurrencyPrices.BOSS_TICKET)
 
         // Quartermaster vendor — end-game cluster just south of the shop hub's west column.
         // Gear OUT (the armoury), supplies IN (the §3B war-supply sink).
@@ -273,6 +278,7 @@ class WarlordsArmouryPlugin(
         ShopTabs.Tab("Crystal", CRYSTAL, icon = "item.crystal_body"),
         ShopTabs.Tab("Charged", CHARGED, icon = "item.toxic_blowpipe"),
         ShopTabs.Tab("Relics", RELICS, icon = "item._3rd_age_platebody"),
+        ShopTabs.Tab("Buy Tickets", BUY_TICKETS, icon = "item.boss_ticket"),
     )
 
     // ----------------------------- §3B war-supply sink -----------------------------

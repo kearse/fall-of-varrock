@@ -13,6 +13,8 @@ import org.alter.game.model.shop.ShopItem
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
 import org.alter.plugins.content.bots.PkBot
+import org.alter.plugins.content.economy.grandexchange.GeCurrencyPrices
+import org.alter.plugins.content.economy.grandexchange.currencyBuyShop
 import org.alter.plugins.content.mechanics.shops.ItemCurrency
 import org.alter.plugins.content.mechanics.shops.ShopTabs
 import org.alter.plugins.content.mechanics.shops.bindVendorOptions
@@ -106,6 +108,8 @@ class PkRewardsPlugin(
         shopOf(SPEC_WEAPONS, specWares)
         shopOf(WILDY_SETS, wildySetWares)
         shopOf(REVENANT, revenantWares)
+        // Buy Blood Money for coins — sets the coin ceiling on the PvP gear this vendor sells.
+        currencyBuyShop(BUY_BM, "item.blood_money", GeCurrencyPrices.BLOOD_MONEY)
 
         spawnNpc(TRADER, 3224, 3216, 0, 0, Direction.WEST) // end-game/PK cluster, south of the hub's east column
         bindTrader(TRADER)
@@ -136,6 +140,7 @@ class PkRewardsPlugin(
         ShopTabs.Tab("Spec weapons", SPEC_WEAPONS, icon = "item.armadyl_godsword"),
         ShopTabs.Tab("Wildy sets", WILDY_SETS, icon = "item.vestas_longsword"),
         ShopTabs.Tab("Revenant", REVENANT, icon = "item.craws_bow"),
+        ShopTabs.Tab("Buy Blood Money", BUY_BM, icon = "item.blood_money"),
     )
 
     private fun shopOf(name: String, wares: List<Ware>) {
@@ -160,6 +165,7 @@ class PkRewardsPlugin(
         const val SPEC_WEAPONS = "PK Rewards - Spec Weapons"
         const val WILDY_SETS = "PK Rewards - Wilderness Sets"
         const val REVENANT = "PK Rewards - Revenant Weapons"
+        const val BUY_BM = "PK Rewards - Buy Blood Money"
         const val TRADER = "npc.emblem_trader"
         const val STOCK = 100
         const val BM_BASE = 25

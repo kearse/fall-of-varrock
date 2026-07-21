@@ -199,10 +199,10 @@ object GrandExchange {
         commodityCeiling(itemId)?.let { (it * 0.85).toInt().coerceAtLeast(1) }
 
     /**
-     * TODO(part-a-wire): return true only for coin-store commodities + Trading Post seeds (generalise
-     * `TradingPostPlugin.seedKeys`), so special-currency gear stays player-listed. Stubbed false.
+     * Backstop only the coin-store commodities ([GrandExchangeCommodities]); special-currency gear
+     * and everything else stays player-listed with no NPC floor.
      */
-    private fun isBackstopped(itemId: Int): Boolean = false
+    private fun isBackstopped(itemId: Int): Boolean = GrandExchangeCommodities.isCommodity(itemId)
 
     /** Items never allowed on the GE (bonds; extend with `tradeable_on_ge=false` later). */
     private val EXCLUDED: Set<Int> = listOf("item.bond", "item.bond_untradeable")

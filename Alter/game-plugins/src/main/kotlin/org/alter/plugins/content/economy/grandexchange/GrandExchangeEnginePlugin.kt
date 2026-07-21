@@ -38,6 +38,7 @@ class GrandExchangeEnginePlugin(
         val matchTimer = TimerKey()
         onWorldInit {
             GrandExchange.load()
+            GrandExchange.backstopEnabled = true // NPC floors/ceilings for the commodity allowlist
             world.timers[matchTimer] = MATCH_INTERVAL
         }
         onTimer(matchTimer) {

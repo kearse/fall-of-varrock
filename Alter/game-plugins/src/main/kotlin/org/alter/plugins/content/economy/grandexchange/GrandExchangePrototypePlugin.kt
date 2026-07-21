@@ -39,10 +39,13 @@ class GrandExchangePrototypePlugin(
             GrandExchangeInterface.searchForOffer(player, buy = true)
         }
 
-        // Component-discovery harness: log clicks across the GE board's top-level components so the
-        // rev-228 comp/op/slot ids can be mapped in-game (the method used to wire the Loot Chest at 742).
+        // Component-discovery harness: log clicks across the GE board's components so the rev-228
+        // comp/op/slot ids can be mapped in-game (the method used to wire the Loot Chest at 742).
+        // Widened to 0..200: the buy/sell slot buttons + Confirm sit well above the first 40 comps
+        // (many slot clicks are handled client-side by the GE scripts and never reach the server —
+        // the Confirm button is the one that must fire a server event for us to read the offer).
         val iface = GrandExchangeInterface.IFACE
-        for (comp in 0..40) {
+        for (comp in 0..200) {
             onButton(iface, comp) {
                 GrandExchangeInterface.debugClick(player, comp, player.getInteractingOption(), player.getInteractingSlot())
             }

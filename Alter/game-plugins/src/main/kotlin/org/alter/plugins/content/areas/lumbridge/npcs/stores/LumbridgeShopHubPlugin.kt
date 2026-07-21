@@ -18,6 +18,8 @@ import org.alter.plugins.content.mechanics.shops.ItemCurrency
 import org.alter.plugins.content.mechanics.shops.ShopTabs
 import org.alter.plugins.content.mechanics.shops.bindVendorOptions
 import org.alter.plugins.content.mechanics.shops.bindVendorTalkAndTrade
+import org.alter.plugins.content.economy.grandexchange.GeCurrencyPrices
+import org.alter.plugins.content.economy.grandexchange.currencyBuyShop
 import org.alter.plugins.content.war.ApprenticeArmoury
 import org.alter.plugins.content.war.WarNpcNames
 import org.alter.plugins.content.war.WarServices
@@ -363,6 +365,8 @@ class LumbridgeShopHubPlugin(
         coinShop(CONSTRUCTION, PurchasePolicy.BUY_NONE, constructionStock)
         ticketShop(BOSS_REWARDS, "item.boss_ticket", "Boss Ticket", "Boss Tickets", bossRewardStock)
         ticketShop(VOTE_REWARDS, "item.vote_ticket", "Vote Ticket", "Vote Tickets", voteRewardStock)
+        // Buy Vote Tickets for coins — sets the coin ceiling on the vote-reward gear.
+        currencyBuyShop(BUY_VOTE, "item.vote_ticket", GeCurrencyPrices.VOTE_TICKET)
 
         // Two facing rows in the open courtyard pocket east of the castle's east wall
         // (the wall is x=3217 — NOT walkable; players walk the aisle x3220-3223 between
@@ -400,7 +404,8 @@ class LumbridgeShopHubPlugin(
         singleVendor("npc.sawmill_operator", 3224, 3222, Direction.WEST, CONSTRUCTION) // planks/nails
         tabVendor("npc.valaine", 3224, 3221, Direction.WEST,                         // boss/vote tickets
             ShopTabs.Tab("Boss rewards", BOSS_REWARDS, icon = "item.boss_ticket"),
-            ShopTabs.Tab("Vote rewards", VOTE_REWARDS, icon = "item.vote_ticket"))
+            ShopTabs.Tab("Vote rewards", VOTE_REWARDS, icon = "item.vote_ticket"),
+            ShopTabs.Tab("Buy Vote Tickets", BUY_VOTE, icon = "item.vote_ticket"))
 
         // End-game / war cluster sits just south of the west column (Quartermaster @ 3219,3216,
         // Slayer Master @ 3219,3215) and the Dice host @ 3224,3215 — spawned by their own plugins.
@@ -458,5 +463,6 @@ class LumbridgeShopHubPlugin(
         const val CONSTRUCTION = "Lumbridge Construction Supplies"
         const val BOSS_REWARDS = "Lumbridge Boss Rewards"
         const val VOTE_REWARDS = "Lumbridge Vote Rewards"
+        const val BUY_VOTE = "Lumbridge Buy Vote Tickets"
     }
 }
