@@ -35,9 +35,12 @@ if ($Rebuild) {
   if ($LASTEXITCODE -ne 0) { throw "Maven build failed" }
 }
 
-Write-Host "[2/4] Patching (modulus + host + title + config dir)..."
+Write-Host "[2/4] Patching (modulus + host + title + config dir + build stamp)..."
+# Build stamp shown in the window title + in-game overlay: date.shortsha of what shipped.
+$BuildId = "{0}.{1}" -f (Get-Date -Format 'yyyy-MM-dd'), (git rev-parse --short HEAD)
+Write-Host "  build id = $BuildId"
 & "$JDK17\bin\javac.exe" -d $CB "$CB\PatchClient.java"
-& "$JDK17\bin\java.exe" -cp $CB PatchClient shaded $SHADED $OUT $MODULUS
+& "$JDK17\bin\java.exe" -cp $CB PatchClient shaded $SHADED $OUT $MODULUS $BuildId
 if ($LASTEXITCODE -ne 0) { throw "PatchClient failed" }
 
 Write-Host "[3/4] Computing sha256..."

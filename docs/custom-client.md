@@ -458,6 +458,24 @@ assume the common one (`::bank`); other scam-bait words would also open the bank
   **4624 supply · 4625 make · 4626 contracts · 4627 forge · 4628 dice · 4629 bonds** ·
   4630 duel rules.
 
+## 5h. Build stamp — spotting stale installs at a glance
+
+Every shipped client is stamped with a build id (`<date>.<shortsha>`) so we can tell what a
+player is actually running — the #1 support question, since the launcher auto-updates the client
+jar but **can't update itself** (a launcher predating the 2026-07-16 classloader fix keeps loading
+the install-day seed jar no matter how many updates ship → the player is pinned to old code and
+must **reinstall**, not just reopen).
+
+- **Stamped at ship time** by `client-build/PatchClient` (shaded mode, optional 5th arg): writes
+  the id into `net/runelite/client/fov-build.properties` and into the window title
+  (`Fall of Varrock (<id>)`, visible even on the login screen). Both `ship-client.yml` and
+  `ship-client.ps1` pass `date.shortsha`. An unpatched local build reads `dev`.
+- **Shown in-game** by the `lofbuild` plugin ("Fall of Varrock Build Stamp", on by default): a
+  small "FoV <id>" pill top-left, movable/hideable like any overlay.
+- **Triage:** ask the player for the stamp (title bar or top-left). If it's older than the latest
+  shipped build even after they reopen, their launcher is the pre-fix one → have them reinstall
+  from `fallofvarrock.com/play` (the served installer has been the fixed 1.0.2 build since 07-19).
+
 - **Cache-revision sync:** every time we move the cache revision, the client must keep
   pace. Quantify how painful this is before committing.
 - **Legal framing:** project is **local-only, non-monetized** (Jagex IP/ToS). A custom
