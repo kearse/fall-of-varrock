@@ -117,6 +117,15 @@ enum LofQuest
 			"City-vs-city conquest"
 		));
 
+	/** npc.rat_2854 — the small rats around Lumbridge castle; the Recruit Trials' intro contract
+	 *  target. They're tiny, scurry all over the courtyard and never show on the minimap, so the
+	 *  quest highlights the rats themselves (see LofQuestsPlugin) rather than trusting the
+	 *  fixed-tile arrow alone, which just lands on empty ground once they wander off it. */
+	static final int CASTLE_RAT_ID = 2854;
+
+	private static final int[] CASTLE_RATS = {CASTLE_RAT_ID};
+	private static final int[] NO_NPCS = new int[0];
+
 	private final String questName;
 	private final String why;
 	/** Step ordinal that means "completed" on the server (-1 for FUTURE teaser entries). */
@@ -251,6 +260,34 @@ enum LofQuest
 			return new WorldPoint(3206, 3205, 0); // contract taken — the castle rats' corner
 		}
 		return step.getTarget();
+	}
+
+	/**
+	 * NPC ids to highlight in the scene (outline + tile) and dot on the minimap for the active step
+	 * — small, mobile targets a fixed-tile arrow can't pin down. Empty for steps with no such target.
+	 */
+	int[] currentHighlightNpcIds(Client client)
+	{
+		LofQuestStep step = currentStep(client);
+		if (step == null)
+		{
+			return NO_NPCS;
+		}
+		// War-contract step: once the contract is taken the objective is "slay the castle rats". They
+		// scurry all over the courtyard and never show on the minimap, so the fixed-tile arrow lands on
+		// empty ground — highlight the rats themselves so a new recruit can't miss them.
+		if (this == RECRUIT_TRIALS && step.getOrdinal() == 4 && LofQuestVarps.recruitContractTaken(client))
+		{
+			return CASTLE_RATS;
+		}
+		return NO_NPCS;
+	}
+
+	/** True if any quest can ever flag this npc id as an objective target — the stable membership gate
+	 *  for the NPC-overlay highlighter (the live show/hide is the render predicate's job). */
+	static boolean isObjectiveNpc(int npcId)
+	{
+		return npcId == CASTLE_RAT_ID;
 	}
 
 	/** Live progress suffix for a step row, e.g. " (3/5)" goblins or " (23/37)" Prayer. */
