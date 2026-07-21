@@ -32,6 +32,7 @@ import javax.inject.Inject;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
 import net.runelite.client.plugins.lofvote.LofVotePlugin.Site;
+import net.runelite.client.plugins.loftheme.LofModal;
 import net.runelite.client.plugins.loftheme.LofTheme;
 import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.overlay.Overlay;
@@ -122,19 +123,10 @@ class LofVoteOverlay extends Overlay
 		return Math.max(0, gridRows() * ROW_STEP - GAP - vpH());
 	}
 
-	private int originX()
-	{
-		// Centre within the game viewport, not the whole canvas, so the window clears the
-		// inventory/tab column in fixed mode (§6A).
-		final int canvasW = client.getCanvasWidth();
-		final int viewportW = client.isResized() ? canvasW : Math.min(canvasW, 512);
-		return Math.max(0, Math.min((canvasW - WIN_W) / 2, (viewportW - WIN_W) / 2));
-	}
+	// Placement single-sourced in LofModal (§6A) — this window has a content-driven height (winH()).
+	private int originX() { return LofModal.originX(client, WIN_W); }
 
-	private int originY()
-	{
-		return Math.max(0, (client.getCanvasHeight() - winH()) / 2);
-	}
+	private int originY() { return LofModal.originY(client, winH()); }
 
 	/** Wheel scroll if the cursor is over the grid; returns true if consumed. */
 	boolean handleScroll(Point p, int rotation)

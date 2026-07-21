@@ -103,17 +103,44 @@ Build every framed window the same way:
 
 Two categories. Pick the smallest that fits.
 
-### A. Framed modal — **480 × 400 standard**
-Teleport, duel rules, duel stake, and future tabbed/list/grid windows all use the **same 480×400
-frame** unless content genuinely needs more. This is the "all the overlays should be the same" size.
+### A. Framed modal — one default size, one dynamic placement
 
-- **Positioning:** centre the window in the **game viewport**, not the whole canvas — in fixed mode
-  the viewport is the left ~512px, so the window sits clear of the inventory/tab column on the right.
-  Compute `originX` so the window's right edge never crosses the inventory (`≈ min((canvasW-w)/2, …)`
-  clamped to the viewport). Windows that need the inventory clickable **while open** (the stake screen)
-  MUST keep that column clear — left/viewport-anchored, never centred over it.
+**Every framed modal is the same size and is placed by the same code.** The default is **480 × 400**
+(`LofModal.W` × `LofModal.H`) — teleport, ranks, recruit, make, forge, contracts, dice, bonds, mire,
+duel rules, and the stake screen all use it. A few windows are deliberately a different size (the
+kit editor 580×444, the character-style window 480×420, vote 492×auto, war spoils 340×320) — but they
+are the exception, and they are **placed by the same authority** as the standard ones.
+
+**Placement is single-sourced in [`LofModal`](../client/runelite-client/src/main/java/net/runelite/client/plugins/loftheme/LofModal.java)
+— never hand-roll `originX`/`originY` in an overlay again.** Each overlay's origin is one line:
+
+```java
+private int originX() { return LofModal.originX(client, WIN_W); }
+private int originY() { return LofModal.originY(client, WIN_H); }
+```
+
+(Standard-size windows can call the no-arg `LofModal.originX(client)` / `originY(client)`, or
+`LofModal.bounds(client)` for the whole rectangle.) Set `WIN_W`/`WIN_H` to `LofModal.W`/`LofModal.H`
+so a standard window inherits the default size and follows if the default ever changes.
+
+**The placement is dynamic and OSRS-faithful — it re-centres on the live canvas every frame instead
+of being pinned to one pixel spot:**
+
+- **Fixed pixel size.** Like a real OSRS interface, the window is authored at one design size and
+  does **not** rescale with resolution; it just re-centres. (Client-wide uniform scaling already
+  exists — the `stretchedmode` plugin scales *everything*, our overlays included — so we don't
+  re-implement it per window.)
+- **Horizontal:** centre in the **game viewport**, not the whole canvas. In fixed mode the world view
+  is the left ~512px (`LofModal.FIXED_VIEWPORT_W`), so the window sits clear of the inventory/tab
+  column on the right — which keeps the inventory clickable while the stake screen is open. A window
+  **wider** than the viewport (the kit editor) can't fit beside the inventory, so `LofModal` centres it
+  on the whole canvas instead. In resizable mode everything centres on the whole canvas.
+- **Vertical:** centre on the canvas height.
+- **Always clamped:** the origin is clamped so the window never runs off any edge, even on a canvas
+  smaller than the window — a too-big window pins to the top/left edge rather than centring off-screen.
 - Position with `OverlayPosition.DYNAMIC` and draw at absolute `ox/oy`; these windows are not movable
-  (they're modal to a flow).
+  (they're modal to a flow). Cache `ox/oy` on the client thread in `render()` and read only the cache
+  from the click path (§8).
 
 ### B. HUD overlay — content-sized, corner-anchored
 War dial row (supply · campaign/conquest · Slayer), alerts banner, LMS panel, announcement ticker, PK stats, CW timer.
@@ -242,7 +269,7 @@ Reusable pieces — reach for these before inventing a new one. Metrics above.
 
 | Overlay | Type | Size / anchor | State channel |
 | --- | --- | --- | --- |
-| `lofteleports` | Modal (tabbed) | 480×400 * | varp 4607 open + `::tp` |
+| `lofteleports` | Modal (tabbed) | 480×400 | varp 4607 open + `::tp` |
 | `lofranks` | Modal (progression) | 480×400 | varp 4618 (rank payload) + `::rank buy` + inventory coins |
 | `lofrecruit` | Modal (cards + tabs) | 480×400 | varp 4619 (packed) + 4613-4615 roster + `::zo recruit/regalia` |
 | `lofshoptabs` | Modal (store) | anchored over native iface 300 | `FOV_SHOP:` stock/tabs/balance stream + `::lofshopbuy` / `::lofshopsell` (sell-only stores, e.g. the Quartermaster's Supply Depot) |
@@ -262,14 +289,16 @@ Reusable pieces — reach for these before inventing a new one. Metrics above.
 | `lofpkstats` | Ticker | content, TOP_LEFT | varps 4602-4606 |
 | `lofcwtimer` | Ticker | content, ABOVE_CHATBOX_RIGHT | varps 4620-4623 |
 
-\* `lofteleports` currently ships at 560×400 (pre-standard) — align to 480×400 when next touched.
+All modals above are placed by `LofModal.originX/originY` (§6A) — the single dynamic placement
+authority. When adding one, don't reimplement the origin math; call `LofModal`.
 
 ---
 
 ## 10. New-overlay checklist
 
 1. Import `LofTheme`; use its palette, `logo()`, and helpers — no hand-rolled colours/metrics.
-2. Pick a category (§6): 480×400 framed modal, or content-sized corner HUD.
+2. Pick a category (§6): standard 480×400 framed modal, or content-sized corner HUD. Place a modal
+   with `LofModal.originX(client, WIN_W)` / `originY(client, WIN_H)` — never hand-roll the origin.
 3. Header per §5 (shield + gold title + ember underline); footer buttons Accept=gold / Decline=ember.
 4. State channel per §8: packed varp (document the bits + claim a free varp id in §8) **or** read an
    existing interface's widgets (null-guarded).

@@ -27,6 +27,7 @@ import javax.inject.Inject;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
 import net.runelite.client.game.ItemManager;
+import net.runelite.client.plugins.loftheme.LofModal;
 import net.runelite.client.plugins.loftheme.LofTheme;
 import net.runelite.client.plugins.loftheme.LofWindows;
 import net.runelite.client.ui.FontManager;
@@ -46,8 +47,8 @@ class LofTeleportsOverlay extends Overlay implements LofWindows.Window
 	// Design-system standard modal (480x400 — docs/overlay-design-system.md); viewport-anchored so
 	// the window clears the inventory/tab column in fixed mode (it used to be 560 wide, canvas-
 	// centred, which draped over the side panel once modals moved to ALWAYS_ON_TOP).
-	private static final int WIN_W = 480;
-	private static final int WIN_H = 400;
+	private static final int WIN_W = LofModal.W;
+	private static final int WIN_H = LofModal.H;
 	private static final int WIN_ARC = 14;
 	private static final int TITLE_H = 38;
 	private static final int TAB_X = 10;
@@ -106,16 +107,11 @@ class LofTeleportsOverlay extends Overlay implements LofWindows.Window
 
 	private int maxScroll() { return Math.max(0, rowCount() * STEP - VP_H); }
 
-	private int originX()
-	{
-		// Centre within the game viewport, not the whole canvas (§6A): in fixed mode the world
-		// view is the left ~512px, so this keeps the window off the inventory/tab column.
-		final int canvasW = client.getCanvasWidth();
-		final int viewportW = client.isResized() ? canvasW : Math.min(canvasW, 512);
-		return Math.max(0, Math.min((canvasW - WIN_W) / 2, (viewportW - WIN_W) / 2));
-	}
+	// Placement is single-sourced in LofModal (docs/overlay-design-system.md §6A) so every modal
+	// opens the same way: viewport-centred in fixed mode, canvas-centred when resized, clamped to fit.
+	private int originX() { return LofModal.originX(client, WIN_W); }
 
-	private int originY() { return Math.max(0, (client.getCanvasHeight() - WIN_H) / 2); }
+	private int originY() { return LofModal.originY(client, WIN_H); }
 
 	/** Wheel scroll if the cursor is over the list; returns true if consumed. */
 	boolean handleScroll(Point p, int rotation)

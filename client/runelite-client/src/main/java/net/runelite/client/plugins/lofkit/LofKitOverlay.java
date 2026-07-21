@@ -29,6 +29,7 @@ import net.runelite.api.InventoryID;
 import net.runelite.api.ItemContainer;
 import net.runelite.api.ItemID;
 import net.runelite.client.game.ItemManager;
+import net.runelite.client.plugins.loftheme.LofModal;
 import net.runelite.client.plugins.loftheme.LofTheme;
 import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.overlay.Overlay;
@@ -193,8 +194,10 @@ class LofKitOverlay extends Overlay
 
 	void pageDelta(int d) { bankPage = Math.max(0, bankPage + d); }
 
-	private int originX() { return Math.max(6, (client.getCanvasWidth() - WIN_W) / 2); }
-	private int originY() { return Math.max(0, (client.getCanvasHeight() - WIN_H) / 2); }
+	// Placement single-sourced in LofModal (§6A). The editor is wider than the fixed-mode viewport,
+	// so LofModal centres it on the whole canvas (its width can't clear the inventory column anyway).
+	private int originX() { return LofModal.originX(client, WIN_W); }
+	private int originY() { return LofModal.originY(client, WIN_H); }
 
 	// ── geometry ──
 

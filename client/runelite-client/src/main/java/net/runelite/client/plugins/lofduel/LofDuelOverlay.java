@@ -23,6 +23,7 @@ import java.awt.image.BufferedImage;
 import javax.inject.Inject;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
+import net.runelite.client.plugins.loftheme.LofModal;
 import net.runelite.client.plugins.loftheme.LofTheme;
 import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.overlay.Overlay;
@@ -57,8 +58,8 @@ class LofDuelOverlay extends Overlay
 
 	// Shared window size (design-system standard modal — matches the stake overlay). See
 	// docs/overlay-design-system.md.
-	static final int WIN_W = 480;
-	static final int WIN_H = 400;
+	static final int WIN_W = LofModal.W;
+	static final int WIN_H = LofModal.H;
 	private static final int WIN_ARC = 14;
 	private static final int TITLE_H = 38;
 	private static final int PAD = 12;
@@ -107,8 +108,9 @@ class LofDuelOverlay extends Overlay
 
 	// Centred in the game viewport (left ~516 in fixed mode) so it sits clear of the inventory
 	// column — the same anchor the stake window uses, so the two duel screens appear in one spot.
-	private int originX() { return Math.max(12, (Math.min(client.getCanvasWidth(), 516) - WIN_W) / 2); }
-	private int originY() { return Math.max(0, (client.getCanvasHeight() - WIN_H) / 2); }
+	// Placement single-sourced in LofModal (§6A) — same viewport-centred anchor as every modal.
+	private int originX() { return LofModal.originX(client, WIN_W); }
+	private int originY() { return LofModal.originY(client, WIN_H); }
 
 	private Rectangle ruleRect(int ox, int oy, int i) { return new Rectangle(ox + PAD, oy + RULE_TOP + i * RULE_H, RULE_W, RULE_H - 2); }
 	private Rectangle slotRect(int ox, int oy, int i)
