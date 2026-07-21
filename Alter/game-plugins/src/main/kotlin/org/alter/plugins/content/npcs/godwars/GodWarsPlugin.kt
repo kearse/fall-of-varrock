@@ -44,6 +44,7 @@ class GodWarsPlugin(
     init {
         for (boss in GodWarsBosses.all) {
             spawnCentred(boss.key, boss.lair.x, boss.lair.z, boss.lair.height, walkRadius = 6)
+            warnIfUnattackable(boss.key)
 
             setCombatDef(boss.key) {
                 configs {
@@ -53,6 +54,11 @@ class GodWarsPlugin(
                 aggro {
                     radius = 12
                     searchDelay = 1
+                    // GWD generals are permanently aggressive in OSRS — no 10-minute tolerance and
+                    // no combat-level cap. Without this the def falls back to the default 1000-cycle
+                    // timer, so NpcAggroPlugin.defaultAggressiveness stops the general aggroing after
+                    // ~10 min and skips higher-level players entirely. MAX_VALUE = always hostile.
+                    aggroTimer = Int.MAX_VALUE
                 }
                 stats {
                     hitpoints = boss.hp
@@ -81,12 +87,31 @@ class GodWarsPlugin(
             boss.bodyguards.forEachIndexed { i, guard ->
                 val off = BODYGUARD_OFFSETS[i % BODYGUARD_OFFSETS.size]
                 spawnCentred(guard, boss.lair.x + off.first, boss.lair.z + off.second, boss.lair.height, walkRadius = 5)
+                warnIfUnattackable(guard)
                 registerBodyguardDef(guard)
             }
 
             onNpcDeath(boss.key) {
                 val killer = npc.attr[KILLER_ATTR]?.get() as? Player ?: return@onNpcDeath
                 dropLoot(npc, killer, boss)
+            }
+        }
+    }
+
+    /**
+     * A player can only attack an npc whose **cache** definition carries an "Attack" action and a
+     * combat level — `setCombatDef` gives it stats and aggression but does NOT add the right-click
+     * "Attack" option (the client gates that on the cache def, see [OpNpcHandler]). If a GWD general
+     * or bodyguard id is missing it, the npc spawns permanently unkillable and the only symptom is a
+     * silent "nothing happens" in-game. Flag it loudly at boot so a bad id is caught here instead.
+     */
+    private fun warnIfUnattackable(npcKey: String) {
+        val def = runCatching { getNpc(getRSCM(npcKey)) }.getOrNull() ?: return
+        if (def.combatLevel <= 0 || def.actions.none { it == "Attack" }) {
+            logger.error {
+                "GWD: '$npcKey' (id ${def.id}) is NOT player-attackable " +
+                    "(combatLevel=${def.combatLevel}, actions=${def.actions.filterNotNull()}) — " +
+                    "the cache def is missing an 'Attack' option, so players can't fight it."
             }
         }
     }
@@ -102,6 +127,8 @@ class GodWarsPlugin(
                 aggro {
                     radius = 12
                     searchDelay = 1
+                    // Bodyguards share the general's permanent aggression (see the general def above).
+                    aggroTimer = Int.MAX_VALUE
                 }
                 stats {
                     hitpoints = 150
