@@ -501,19 +501,7 @@ class WarFront(
      * waypoint or hop nudged into the river / a wall / a tree is corrected to dry ground
      * rather than stranding the unit. Falls back to [t] if nothing clear is within range.
      */
-    private fun walkableNear(world: World, t: Tile): Tile {
-        if (!world.collision.isClipped(t)) return t
-        for (r in 1..SNAP_RADIUS) {
-            for (dx in -r..r) {
-                for (dz in -r..r) {
-                    if (max(abs(dx), abs(dz)) != r) continue // only the current ring's edge
-                    val c = Tile(t.x + dx, t.z + dz, t.height)
-                    if (!world.collision.isClipped(c)) return c
-                }
-            }
-        }
-        return t
-    }
+    private fun walkableNear(world: World, t: Tile): Tile = world.snapToWalkable(t, maxRadius = SNAP_RADIUS)
 
     private fun dist(a: Tile, b: Tile): Int = max(abs(a.x - b.x), abs(a.z - b.z))
 

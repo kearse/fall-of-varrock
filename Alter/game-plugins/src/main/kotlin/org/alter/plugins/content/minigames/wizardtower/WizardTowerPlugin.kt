@@ -515,15 +515,7 @@ object WizardTower {
     // ---- walkable-tile helpers (spawn on real floor, never in a wall) ----
 
     /** Nearest unclipped tile to [t] on the same level (spiral out); [t] itself if already open. */
-    private fun snapWalkable(t: Tile): Tile {
-        if (!world.collision.isClipped(t)) return t
-        for (r in 1..6) for (dx in -r..r) for (dz in -r..r) {
-            if (max(abs(dx), abs(dz)) != r) continue
-            val c = Tile(t.x + dx, t.z + dz, t.height)
-            if (!world.collision.isClipped(c)) return c
-        }
-        return t
-    }
+    private fun snapWalkable(t: Tile): Tile = world.snapToWalkable(t, maxRadius = 6)
 
     /**
      * Tiles reachable ON FOOT from [seed]: a breadth-first fill that only expands through steps

@@ -492,17 +492,7 @@ class CampaignDirector(
     }
 
     /** Nearest stand-able tile to [t] (the tile itself if clear), out to [SNAP_RADIUS]. */
-    private fun walkableNear(world: World, t: Tile): Tile {
-        if (!world.collision.isClipped(t)) return t
-        for (r in 1..SNAP_RADIUS) {
-            for (dx in -r..r) for (dz in -r..r) {
-                if (max(abs(dx), abs(dz)) != r) continue
-                val c = Tile(t.x + dx, t.z + dz, t.height)
-                if (!world.collision.isClipped(c)) return c
-            }
-        }
-        return t
-    }
+    private fun walkableNear(world: World, t: Tile): Tile = world.snapToWalkable(t, maxRadius = SNAP_RADIUS)
 
     private fun dist(a: Tile, b: Tile): Int = max(abs(a.x - b.x), abs(a.z - b.z))
 
