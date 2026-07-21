@@ -53,8 +53,11 @@ jobs:
         run: |
           MODULUS=$(grep -E '^[0-9a-f]{200,}$' Alter/MODULUS.txt | tr -d '\n')
           SHADED=$(ls client/runelite-client/target/client-*-shaded.jar)
+          # Build stamp shown in the window title + in-game overlay: date.shortsha of what shipped.
+          BUILD_ID="$(date -u +%Y-%m-%d).$(echo "${GITHUB_SHA}" | cut -c1-7)"
+          echo "build id = $BUILD_ID"
           javac -d pc client-build/PatchClient.java
-          java -cp pc PatchClient shaded "$SHADED" fov-client.jar "$MODULUS"
+          java -cp pc PatchClient shaded "$SHADED" fov-client.jar "$MODULUS" "$BUILD_ID"
           sha256sum fov-client.jar | cut -d' ' -f1 > fov-client.jar.sha256
           echo "sha256 = $(cat fov-client.jar.sha256)"
           ls -l fov-client.jar
