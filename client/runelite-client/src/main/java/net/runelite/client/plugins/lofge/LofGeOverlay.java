@@ -41,6 +41,18 @@ class LofGeOverlay extends Overlay
 	static final int SLOT_BASE = 100; // + box  → click slot body (empty = new offer, else collect)
 	static final int ABORT_BASE = 200; // + box → abort an active offer
 
+	// setup-view hit codes
+	static final int SET_TOGGLE = 10;
+	static final int SET_QMINUS = 11;
+	static final int SET_QPLUS = 12;
+	static final int SET_PMINUS = 14; // -5%
+	static final int SET_PPLUS = 15;  // +5%
+	static final int SET_PGUIDE = 16;
+	static final int SET_PCUSTOM = 17;
+	static final int SET_CONFIRM = 18;
+	static final int SET_BACK = 19;
+	static final int SET_QPRESET_BASE = 40; // + i (0..3 = 1/10/100/1000, 4 = custom)
+
 	private static final int PAD = LofModal.PAD;        // 14
 	private static final int GRID_TOP = 46;             // below the 38px title + 8
 	private static final int COL_GAP = 8;
@@ -108,6 +120,124 @@ class LofGeOverlay extends Overlay
 		return new Rectangle(ox + LofModal.W - PAD - BTN_W, oy + LofModal.H - PAD - BTN_H, BTN_W, BTN_H);
 	}
 
+	// ---- setup-view geometry -------------------------------------------------------------------
+	private static final int SU_QROW_Y = 114;
+	private static final int SU_QPRESET_Y = 146;
+	private static final int SU_PROW_Y = 184;
+	private static final int SU_ROW_H = 26;
+	private static final int SU_PRESET_H = 22;
+	private static final int STEP_W = 34;
+
+	private Rectangle suToggle(int ox, int oy)
+	{
+		return new Rectangle(ox + LofModal.W - PAD - 92, oy + 54, 92, 24);
+	}
+
+	private Rectangle suQMinus(int ox, int oy)
+	{
+		return new Rectangle(ox + PAD, oy + SU_QROW_Y, STEP_W, SU_ROW_H);
+	}
+
+	private Rectangle suQPlus(int ox, int oy)
+	{
+		return new Rectangle(ox + LofModal.W - PAD - STEP_W, oy + SU_QROW_Y, STEP_W, SU_ROW_H);
+	}
+
+	private Rectangle suQValue(int ox, int oy)
+	{
+		return new Rectangle(ox + PAD + STEP_W + 4, oy + SU_QROW_Y, LofModal.W - 2 * PAD - 2 * (STEP_W + 4), SU_ROW_H);
+	}
+
+	private Rectangle suQPreset(int ox, int oy, int i)
+	{
+		final int w = (LofModal.W - 2 * PAD - 4 * 6) / 5;
+		return new Rectangle(ox + PAD + i * (w + 6), oy + SU_QPRESET_Y, w, SU_PRESET_H);
+	}
+
+	// price row: -5%(50) value(242) +5%(50) guide(52) custom(34)
+	private Rectangle suPMinus(int ox, int oy)
+	{
+		return new Rectangle(ox + PAD, oy + SU_PROW_Y, 50, SU_ROW_H);
+	}
+
+	private Rectangle suPValue(int ox, int oy)
+	{
+		return new Rectangle(ox + PAD + 56, oy + SU_PROW_Y, 242, SU_ROW_H);
+	}
+
+	private Rectangle suPPlus(int ox, int oy)
+	{
+		return new Rectangle(ox + PAD + 304, oy + SU_PROW_Y, 50, SU_ROW_H);
+	}
+
+	private Rectangle suPGuide(int ox, int oy)
+	{
+		return new Rectangle(ox + PAD + 360, oy + SU_PROW_Y, 52, SU_ROW_H);
+	}
+
+	private Rectangle suPCustom(int ox, int oy)
+	{
+		return new Rectangle(ox + PAD + 418, oy + SU_PROW_Y, 34, SU_ROW_H);
+	}
+
+	private Rectangle suBack(int ox, int oy)
+	{
+		return new Rectangle(ox + PAD, oy + LofModal.H - PAD - 30, 120, 30);
+	}
+
+	private Rectangle suConfirm(int ox, int oy)
+	{
+		return new Rectangle(ox + LofModal.W - PAD - 200, oy + LofModal.H - PAD - 30, 200, 30);
+	}
+
+	private int hitTestSetup(int ox, int oy, Point p)
+	{
+		if (suToggle(ox, oy).contains(p))
+		{
+			return SET_TOGGLE;
+		}
+		if (suQMinus(ox, oy).contains(p))
+		{
+			return SET_QMINUS;
+		}
+		if (suQPlus(ox, oy).contains(p))
+		{
+			return SET_QPLUS;
+		}
+		for (int i = 0; i < 5; i++)
+		{
+			if (suQPreset(ox, oy, i).contains(p))
+			{
+				return SET_QPRESET_BASE + i;
+			}
+		}
+		if (suPMinus(ox, oy).contains(p))
+		{
+			return SET_PMINUS;
+		}
+		if (suPPlus(ox, oy).contains(p))
+		{
+			return SET_PPLUS;
+		}
+		if (suPGuide(ox, oy).contains(p))
+		{
+			return SET_PGUIDE;
+		}
+		if (suPCustom(ox, oy).contains(p))
+		{
+			return SET_PCUSTOM;
+		}
+		if (suBack(ox, oy).contains(p))
+		{
+			return SET_BACK;
+		}
+		if (suConfirm(ox, oy).contains(p))
+		{
+			return SET_CONFIRM;
+		}
+		return INSIDE;
+	}
+
 	int hitTest(Point p)
 	{
 		if (!visible)
@@ -122,6 +252,10 @@ class LofGeOverlay extends Overlay
 		if (LofModal.closeRect(ox, oy).contains(p))
 		{
 			return CLOSE;
+		}
+		if (plugin.getSetup() != null)
+		{
+			return hitTestSetup(ox, oy, p);
 		}
 		if (anyCollectable() && collectAllRect(ox, oy).contains(p))
 		{
@@ -177,6 +311,14 @@ class LofGeOverlay extends Overlay
 
 		final int ox = originX(), oy = originY();
 		final Point mouse = mousePoint();
+
+		final LofGePlugin.Setup setup = plugin.getSetup();
+		if (setup != null)
+		{
+			drawSetup(g, ox, oy, mouse, setup);
+			g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, oldAA == null ? RenderingHints.VALUE_ANTIALIAS_DEFAULT : oldAA);
+			return new Dimension(LofModal.W, LofModal.H);
+		}
 
 		LofModal.frame(g, ox, oy, "Grand Exchange", LofModal.fmt(plugin.getCoins()) + " gp", mouse);
 
@@ -295,6 +437,70 @@ class LofGeOverlay extends Overlay
 		// collect-all button (bottom-right)
 		final Rectangle br = collectAllRect(ox, oy);
 		LofModal.button(g, br, "Collect all", LofTheme.EMBER, any, br.contains(mouse));
+	}
+
+	private void drawSetup(Graphics2D g, int ox, int oy, Point mouse, LofGePlugin.Setup s)
+	{
+		LofModal.frame(g, ox, oy, "Grand Exchange", s.buy ? "Buy offer" : "Sell offer", mouse);
+
+		// item header
+		final BufferedImage img = s.item > 0 ? itemManager.getImage(s.item) : null;
+		if (img != null)
+		{
+			g.drawImage(img, ox + PAD, oy + 52, null);
+		}
+		g.setFont(FontManager.getRunescapeBoldFont());
+		LofTheme.shadowText(g, fit(g.getFontMetrics(), itemName(s.item), 260), ox + PAD + 44, oy + 66, LofTheme.TEXT);
+		g.setFont(FontManager.getRunescapeSmallFont());
+		final String band = s.banded()
+			? ("Guide " + LofModal.fmt(s.guide) + " gp · band " + LofModal.fmt(s.floor) + "–" + LofModal.fmt(s.ceil))
+			: ("Guide " + LofModal.fmt(s.guide) + " gp · player-listed (no band)");
+		LofTheme.shadowText(g, band, ox + PAD + 44, oy + 84, s.banded() ? LofTheme.TEXT_DIM : LofTheme.GOLD_DIM);
+
+		// buy/sell toggle
+		final Rectangle tg = suToggle(ox, oy);
+		LofModal.button(g, tg, s.buy ? "BUY ▲" : "SELL ▼", s.buy ? LofTheme.LAVA : LofTheme.GOLD, true, tg.contains(mouse));
+
+		// quantity
+		g.setFont(FontManager.getRunescapeSmallFont());
+		LofTheme.shadowText(g, "QUANTITY", ox + PAD, oy + SU_QROW_Y - 6, LofTheme.GOLD_DIM);
+		LofModal.button(g, suQMinus(ox, oy), "−", LofTheme.EMBER, true, suQMinus(ox, oy).contains(mouse));
+		drawValueBox(g, suQValue(ox, oy), LofModal.fmt(s.qty));
+		LofModal.button(g, suQPlus(ox, oy), "+", LofTheme.EMBER, true, suQPlus(ox, oy).contains(mouse));
+		final String[] presets = {"1", "10", "100", "1k", "X"};
+		for (int i = 0; i < 5; i++)
+		{
+			final Rectangle pr = suQPreset(ox, oy, i);
+			LofModal.button(g, pr, presets[i], LofTheme.GOLD_DIM, true, pr.contains(mouse));
+		}
+
+		// price
+		LofTheme.shadowText(g, "PRICE PER ITEM", ox + PAD, oy + SU_PROW_Y - 6, LofTheme.GOLD_DIM);
+		LofModal.button(g, suPMinus(ox, oy), "-5%", LofTheme.EMBER, true, suPMinus(ox, oy).contains(mouse));
+		drawValueBox(g, suPValue(ox, oy), LofModal.fmt(s.price) + " gp");
+		LofModal.button(g, suPPlus(ox, oy), "+5%", LofTheme.EMBER, true, suPPlus(ox, oy).contains(mouse));
+		LofModal.button(g, suPGuide(ox, oy), "guide", LofTheme.GOLD_DIM, true, suPGuide(ox, oy).contains(mouse));
+		LofModal.button(g, suPCustom(ox, oy), "X", LofTheme.GOLD_DIM, true, suPCustom(ox, oy).contains(mouse));
+
+		// total
+		g.setFont(FontManager.getRunescapeFont());
+		LofTheme.shadowText(g, "Total  " + LofModal.fmt(s.total()) + " gp", ox + PAD, oy + 236, LofTheme.TEXT);
+
+		// footer
+		LofModal.button(g, suBack(ox, oy), "‹ Back", LofTheme.GOLD_DIM, true, suBack(ox, oy).contains(mouse));
+		LofModal.button(g, suConfirm(ox, oy), s.buy ? "Confirm buy offer" : "Confirm sell offer",
+			LofTheme.EMBER, true, suConfirm(ox, oy).contains(mouse));
+	}
+
+	private void drawValueBox(Graphics2D g, Rectangle r, String text)
+	{
+		g.setColor(new Color(14, 10, 8));
+		g.fillRoundRect(r.x, r.y, r.width, r.height, 6, 6);
+		g.setColor(LofTheme.alpha(Color.BLACK, 200));
+		g.drawRoundRect(r.x, r.y, r.width - 1, r.height - 1, 6, 6);
+		g.setFont(FontManager.getRunescapeFont());
+		final FontMetrics fm = g.getFontMetrics();
+		LofTheme.shadowText(g, text, r.x + (r.width - fm.stringWidth(text)) / 2, r.y + r.height / 2 + 5, LofTheme.TEXT);
 	}
 
 	private String itemName(int id)
