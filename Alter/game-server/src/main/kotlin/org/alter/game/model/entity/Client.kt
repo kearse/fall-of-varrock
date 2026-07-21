@@ -95,6 +95,14 @@ class Client(world: World) : Player(world) {
         session?.processIncomingPackets(this)
     }
 
+    /**
+     * A client can only be written to once [session] has been attached (which happens just
+     * before login). Every write below funnels through `session?.queue`, so a write made before
+     * that point is discarded without a trace — and callers that clear a dirty flag on write
+     * (the varp/skill flush in [Player.cycle]) would never retry it.
+     */
+    override val canReceiveMessages: Boolean get() = session != null
+
     private var rebuildNormalMessageWritten = false
     private val pendingMessages = mutableListOf<OutgoingGameMessage>()
 

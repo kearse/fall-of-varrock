@@ -1,5 +1,6 @@
 package org.alter.game.model.entity
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CoroutineScope
 import org.alter.game.action.NpcDeathAction
 import org.alter.game.action.PlayerDeathAction
@@ -272,87 +273,116 @@ abstract class Pawn(val world: World) : Entity() {
      */
     fun hitsCycle() {
         val hitIterator = pendingHits.iterator()
-        iterator@ while (hitIterator.hasNext()) {
+        while (hitIterator.hasNext()) {
             if (isDead()) {
                 break
             }
             val hit = hitIterator.next()
-            if (lock.delaysDamage()) {
-                /**
-                 * @TODO Need to confirm that this block is true.
-                 */
-                hit.damageDelay = Math.max(0, hit.damageDelay - 1)
-                continue
-            }
-            if (!hit.cancelCondition()) {
-                for (hitmark in hit.hitmarks) {
-                    val hp = getCurrentHp()
-                    if (hitmark.damage > hp) {
-                        hitmark.damage = hp
-                    }
-                    if (entityType.isNpc) {
-                        val npc = this as Npc
-                        NpcInfo(npc).addHitMark(
-                            sourceIndex = hitmark.attackerIndex,
-                            selfType = hitmark.type,
-                            value = hitmark.damage,
-                            delay = hit.clientDelay,
-                        )
-                        NpcInfo(npc).addHeadBar(
-                            sourceIndex = hitmark.attackerIndex,
-                            selfType = 0,
-                            startFill = calculateFill(
-                                (((this.getCurrentHp().toDouble() - hitmark.damage) / this.getMaxHp()
-                                    .toDouble()) * 100), 30
-                            )
-                        )
-                    } else if (entityType.isPlayer) {
-                        val player = this as Player
-                        player.avatar.extendedInfo.addHitMark(
-                            sourceIndex = hitmark.attackerIndex,
-                            selfType = hitmark.type,
-                            value = hitmark.damage,
-                            delay = hit.clientDelay,
-                        )
-                        player.avatar.extendedInfo.addHeadBar(
-                            sourceIndex = hitmark.attackerIndex,
-                            selfType = 0,
-                            startFill = calculateFill(
-                                (((this.getCurrentHp().toDouble() - hitmark.damage) / this.getMaxHp()
-                                    .toDouble()) * 100), 30
-                            )
-                        )
-                    }
-
-                    /*
-                     * Only lower the pawn's hp if they do not have infinite
-                     * health enabled.
-                     */
-                    if (INFINITE_VARS_STORAGE.get(this, InfiniteVarsType.HP) == 0) {
-                        setCurrentHp(hp - hitmark.damage)
-                    }
-                    /*
-                     * If the pawn has less than or equal to 0 health,
-                     * terminate all queues and begin the death logic.
-                     */
-                    if (getCurrentHp() <= 0) {
-                        hit.actions.forEach { action -> action(hit) }
-                        if (entityType.isPlayer) {
-                            executePlugin(PlayerDeathAction.deathPlugin)
-                        } else {
-                            executePlugin(NpcDeathAction.deathPlugin)
-                        }
-                        hitIterator.remove()
-                        break@iterator
-                    }
+            /*
+             * A hit that throws while being applied never reaches the removal at the end of
+             * applyHit, so it stays in [pendingHits] and throws again on every subsequent
+             * cycle — permanently aborting the rest of this pawn's cycle, which for a player
+             * means their varps and stats stop being sent. Drop the offending hit and carry
+             * on; losing one hitsplat beats wedging the pawn for the rest of the session.
+             */
+            val died =
+                try {
+                    applyHit(hit, hitIterator)
+                } catch (e: Exception) {
+                    logger.error(e) { "Failed to apply a pending hit on '$this' (hit discarded)." }
+                    hitIterator.remove()
+                    false
                 }
-                hit.actions.forEach { action -> action(hit) }
-                hitIterator.remove()
+            if (died) {
+                break
             }
         }
         if (isDead() && pendingHits.isNotEmpty()) {
             pendingHits.clear()
         }
+    }
+
+    /**
+     * Apply a single [hit], removing it from [pendingHits] once resolved. Returns true if the
+     * pawn died on this hit and no further pending hits should be processed this cycle.
+     */
+    private fun applyHit(
+        hit: Hit,
+        hitIterator: MutableIterator<Hit>,
+    ): Boolean {
+        if (lock.delaysDamage()) {
+            /**
+             * @TODO Need to confirm that this block is true.
+             */
+            hit.damageDelay = Math.max(0, hit.damageDelay - 1)
+            return false
+        }
+        if (!hit.cancelCondition()) {
+            for (hitmark in hit.hitmarks) {
+                val hp = getCurrentHp()
+                if (hitmark.damage > hp) {
+                    hitmark.damage = hp
+                }
+                if (entityType.isNpc) {
+                    val npc = this as Npc
+                    NpcInfo(npc).addHitMark(
+                        sourceIndex = hitmark.attackerIndex,
+                        selfType = hitmark.type,
+                        value = hitmark.damage,
+                        delay = hit.clientDelay,
+                    )
+                    NpcInfo(npc).addHeadBar(
+                        sourceIndex = hitmark.attackerIndex,
+                        selfType = 0,
+                        startFill = calculateFill(
+                            (((this.getCurrentHp().toDouble() - hitmark.damage) / this.getMaxHp()
+                                .toDouble()) * 100), 30
+                        )
+                    )
+                } else if (entityType.isPlayer) {
+                    val player = this as Player
+                    player.avatar.extendedInfo.addHitMark(
+                        sourceIndex = hitmark.attackerIndex,
+                        selfType = hitmark.type,
+                        value = hitmark.damage,
+                        delay = hit.clientDelay,
+                    )
+                    player.avatar.extendedInfo.addHeadBar(
+                        sourceIndex = hitmark.attackerIndex,
+                        selfType = 0,
+                        startFill = calculateFill(
+                            (((this.getCurrentHp().toDouble() - hitmark.damage) / this.getMaxHp()
+                                .toDouble()) * 100), 30
+                        )
+                    )
+                }
+
+                /*
+                 * Only lower the pawn's hp if they do not have infinite
+                 * health enabled.
+                 */
+                if (INFINITE_VARS_STORAGE.get(this, InfiniteVarsType.HP) == 0) {
+                    setCurrentHp(hp - hitmark.damage)
+                }
+                /*
+                 * If the pawn has less than or equal to 0 health,
+                 * terminate all queues and begin the death logic.
+                 */
+                if (getCurrentHp() <= 0) {
+                    hit.actions.forEach { action -> action(hit) }
+                    if (entityType.isPlayer) {
+                        executePlugin(PlayerDeathAction.deathPlugin)
+                    } else {
+                        executePlugin(NpcDeathAction.deathPlugin)
+                    }
+                    hitIterator.remove()
+                    return true
+                }
+            }
+            hit.actions.forEach { action -> action(hit) }
+            hitIterator.remove()
+        }
+        return false
     }
 
     fun calculateFill(percentage: Double, width: Int): Int {
@@ -568,6 +598,8 @@ abstract class Pawn(val world: World) : Entity() {
     }
 
     companion object {
+        private val logger = KotlinLogging.logger {}
+
         val EMPTY_TILE_DEQUE = ArrayList<RouteCoordinates>()
     }
 

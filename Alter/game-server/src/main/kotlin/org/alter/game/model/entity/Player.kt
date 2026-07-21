@@ -2,6 +2,7 @@ package org.alter.game.model.entity
 
 import dev.openrune.cache.CacheManager.varpSize
 import gg.rsmod.util.toStringHelper
+import io.github.oshai.kotlinlogging.KotlinLogging
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
 import net.rsprot.protocol.api.Session
 import net.rsprot.protocol.game.outgoing.info.npcinfo.NpcInfo
@@ -239,6 +240,27 @@ open class Player(world: World) : Pawn(world) {
      * conditions if any logic may modify other [Pawn]s.
      */
     override fun cycle() {
+        /*
+         * The varp/skill flush at the tail of this cycle is the ONLY path by which a client
+         * ever learns its stats, its orbs, and every varbit-driven bit of UI state. It used to
+         * be reachable only if everything above it succeeded, and PlayerCycleTask swallows a
+         * failing cycle per-player — so a single player whose data threw somewhere in the
+         * middle of this method (a cache-missing item in calculateWeight, a wedged pending hit)
+         * silently never received a varp or an UpdateStat again. Their client sits on its
+         * defaults: every skill 0, total level 0, and varbit 8119 (CHATBOX_UNLOCKED) reading 0,
+         * which renders "You must set a name before you can chat."
+         *
+         * So: the rest of the cycle is isolated, and the flush always runs.
+         */
+        try {
+            cycleBody()
+        } catch (e: Exception) {
+            logger.error(e) { "Player cycle body failed for '$username' (client state still flushed)." }
+        }
+        flushClientState()
+    }
+
+    private fun cycleBody() {
         var calculateWeight = false
         var calculateBonuses = false
 
@@ -339,32 +361,74 @@ open class Player(world: World) : Pawn(world) {
         }
 
         hitsCycle()
+    }
 
-        for (i in 0 until varps.maxVarps) {
-            if (varps.isDirty(i)) {
-                val varp = varps[i]
-                val message =
-                    when {
-                        varp.state in -Byte.MAX_VALUE..Byte.MAX_VALUE -> VarpSmall(varp.id, varp.state)
-                        else -> VarpLarge(varp.id, varp.state)
-                    }
-                write(message)
-            }
+    /**
+     * Push every dirty varp and skill to the client.
+     *
+     * Runs unconditionally at the end of every [cycle], outside the rest of the cycle's error
+     * handling, because a player who misses this is left permanently desynced with no path
+     * back: the dirty flags are cleared on write, so a value that fails to go out is never
+     * re-sent.
+     *
+     * For the same reason it is skipped entirely — leaving the flags dirty for a later cycle —
+     * while the client cannot actually receive messages ([canReceiveMessages]). Writing into a
+     * null session drops the packet silently, and clearing the flag on top of that is what
+     * turns a momentary gap into a permanent one.
+     */
+    private fun flushClientState() {
+        if (!canReceiveMessages) {
+            return
         }
-        varps.clean()
-
-        for (i in 0 until getSkills().maxSkills) {
-            if (getSkills().isDirty(i)) {
-                write(
-                    UpdateStat(
-                        stat = i,
-                        currentLevel = getSkills().getCurrentLevel(i),
-                        invisibleBoostedLevel = getSkills().getCurrentLevel(i),
-                        experience = getSkills().getCurrentXp(i).toInt(),
-                    ),
-                )
-                getSkills().clean(i)
+        try {
+            for (i in 0 until varps.maxVarps) {
+                if (varps.isDirty(i)) {
+                    val varp = varps[i]
+                    val message =
+                        when {
+                            varp.state in -Byte.MAX_VALUE..Byte.MAX_VALUE -> VarpSmall(varp.id, varp.state)
+                            else -> VarpLarge(varp.id, varp.state)
+                        }
+                    write(message)
+                }
             }
+            varps.clean()
+
+            for (i in 0 until getSkills().maxSkills) {
+                if (getSkills().isDirty(i)) {
+                    write(
+                        UpdateStat(
+                            stat = i,
+                            currentLevel = getSkills().getCurrentLevel(i),
+                            invisibleBoostedLevel = getSkills().getCurrentLevel(i),
+                            experience = getSkills().getCurrentXp(i).toInt(),
+                        ),
+                    )
+                    getSkills().clean(i)
+                }
+            }
+        } catch (e: Exception) {
+            logger.error(e) { "Failed to flush varps/skills for '$username'." }
+        }
+    }
+
+    /**
+     * Whether writes to this player actually reach a client. Always true for a plain [Player]
+     * (clientless bots discard writes harmlessly by design); [Client] overrides it to report
+     * whether a session has been attached yet.
+     */
+    open val canReceiveMessages: Boolean get() = true
+
+    /**
+     * Re-send this player's entire varp and skill state on the next cycle. Recovery hatch for
+     * a client that has drifted out of sync (see the `::resync` command).
+     */
+    fun markClientStateDirty() {
+        for (i in 0 until varps.maxVarps) {
+            varps.setState(i, varps.getState(i))
+        }
+        for (i in 0 until getSkills().maxSkills) {
+            getSkills().dirty[i] = true
         }
     }
 
@@ -619,6 +683,8 @@ open class Player(world: World) : Pawn(world) {
             .toString()
 
     companion object {
+        private val logger = KotlinLogging.logger {}
+
         /**
          * How many tiles a player can 'see' at a time, normally.
          */
