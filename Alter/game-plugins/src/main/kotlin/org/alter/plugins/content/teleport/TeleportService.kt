@@ -2,6 +2,7 @@ package org.alter.plugins.content.teleport
 
 import org.alter.api.ext.message
 import org.alter.game.model.attr.AttributeKey
+import org.alter.game.model.collision.isClipped
 import org.alter.game.model.entity.Player
 import org.alter.plugins.content.magic.canTeleport
 import org.alter.plugins.content.magic.teleport
@@ -27,6 +28,9 @@ object TeleportService {
     const val RECENT_LIMIT = 3
     const val POPULAR_LIMIT = 5
 
+    /** Ring radius searched for open floor when a destination tile is walk-blocked. */
+    private const val SNAP_RADIUS = 2
+
     /** Server-wide lifetime use count per destination key (drives Popular Now). */
     private val usage = HashMap<String, Int>()
 
@@ -42,10 +46,22 @@ object TeleportService {
         }
         if (!player.canTeleport(dest.teleType)) return false
 
-        player.teleport(dest.dest, dest.teleType)
+        player.teleport(landingTile(player, dest), dest.teleType)
         recordUse(player, dest)
         return true
     }
+
+    /**
+     * The tile the player actually lands on. Normally the destination's own tile, but if that
+     * square is walk-blocked (e.g. a boss lair tile that sits inside a wall — the Hydra landed
+     * the player in the cliff and acid-killed them), snap to the nearest open floor so the
+     * teleport never strands the player in a wall. Falls back to the raw tile when nothing open
+     * is found nearby (e.g. a far region whose collision isn't loaded), i.e. prior behaviour.
+     */
+    private fun landingTile(player: Player, dest: TeleportDestination) =
+        if (player.world.collision.isClipped(dest.dest))
+            player.world.findRandomTileAround(dest.dest, SNAP_RADIUS) ?: dest.dest
+        else dest.dest
 
     /** Convenience: teleport by destination key (no-op + false if unknown). */
     fun teleport(player: Player, key: String): Boolean {
