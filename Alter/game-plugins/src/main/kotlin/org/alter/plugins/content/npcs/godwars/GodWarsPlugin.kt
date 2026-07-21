@@ -7,6 +7,7 @@ import org.alter.api.dsl.setCombatDef
 import org.alter.api.ext.message
 import org.alter.api.ext.npc
 import org.alter.game.Server
+import org.alter.game.model.Tile
 import org.alter.game.model.World
 import org.alter.game.model.attr.KILLER_ATTR
 import org.alter.game.model.entity.GroundItem
@@ -28,6 +29,12 @@ private val logger = KotlinLogging.logger {}
  * Log + broadcast (the KBD shape). Bodyguards use simple melee defs + the default combat
  * strategy; the general's dual-style rotation lives in [GodWarsCombatPlugin].
  *
+ * **Bodyguards respawn *with* the general, not on their own timer.** They're placed once at boot,
+ * but their combat def has `respawnDelay = 0`, so a killed bodyguard is removed and stays gone —
+ * the engine never resurrects it independently. Instead [onNpcSpawn] on the general fires whenever
+ * the general (re)spawns and re-spawns its three bodyguards ([spawnBodyguards]). This stops the
+ * minions reappearing before the general's ~90s respawn (the client's top-left Boss-timer estimate).
+ *
  * **Deferred:** the killcount door (you currently spawn straight into the room), and the
  * bodyguards' true individual styles (Steelwill mage / Grimspike ranged, etc.).
  */
@@ -40,6 +47,10 @@ class GodWarsPlugin(
     // Declared BEFORE init: Kotlin runs property initializers and init blocks in source order,
     // and init calls registerBodyguardDef() which reads this set.
     private val definedGuards = HashSet<String>()
+
+    // General ids whose *first* spawn (boot) has been seen. The boot spawn is already covered by
+    // the static bodyguard placement below, so only later spawns (respawns) trigger a re-spawn.
+    private val bootedGenerals = HashSet<Int>()
 
     init {
         for (boss in GodWarsBosses.all) {
@@ -83,12 +94,22 @@ class GodWarsPlugin(
                 }
             }
 
-            // Bodyguards: spread around the general; one shared simple melee def each.
+            // Bodyguards: spread around the general; one shared simple melee def each. Placed once
+            // at boot; their def carries respawnDelay = 0 so a kill removes them for good — they
+            // only return when the general does (see the onNpcSpawn hook below).
             boss.bodyguards.forEachIndexed { i, guard ->
                 val off = BODYGUARD_OFFSETS[i % BODYGUARD_OFFSETS.size]
                 spawnCentred(guard, boss.lair.x + off.first, boss.lair.z + off.second, boss.lair.height, walkRadius = 5)
                 warnIfUnattackable(guard)
                 registerBodyguardDef(guard)
+            }
+
+            // Tie the bodyguards' lifecycle to the general: this fires at boot (skipped — the static
+            // placement above already covers it) and on every general respawn (brings them back).
+            val generalId = getRSCM(boss.key)
+            onNpcSpawn(boss.key) {
+                if (bootedGenerals.add(generalId)) return@onNpcSpawn
+                spawnBodyguards(boss)
             }
 
             onNpcDeath(boss.key) {
@@ -104,6 +125,9 @@ class GodWarsPlugin(
      * "Attack" option (the client gates that on the cache def, see [OpNpcHandler]). If a GWD general
      * or bodyguard id is missing it, the npc spawns permanently unkillable and the only symptom is a
      * silent "nothing happens" in-game. Flag it loudly at boot so a bad id is caught here instead.
+     *
+     * The bodyguards ship without it — apply `gradlew :game-server:npcDef -PnpcArgs="krilbodyguards"`
+     * against the cache (see [org.alter.tools.npcdef]) and restart to silence this for them.
      */
     private fun warnIfUnattackable(npcKey: String) {
         val def = runCatching { getNpc(getRSCM(npcKey)) }.getOrNull() ?: return
@@ -116,13 +140,49 @@ class GodWarsPlugin(
         }
     }
 
+    /**
+     * Re-spawn a general's three bodyguards at their throne-room offsets. Any survivors from the
+     * previous set (e.g. if the general was somehow killed before its guards) are cleared first, so
+     * exactly three return. Spawned with `respawns = false`: they never self-respawn — a fresh trio
+     * appears only on the next general respawn. Placement mirrors [spawnCentred] (footprint centred
+     * on the offset tile) so a respawned bodyguard lands exactly where the boot spawn put it.
+     */
+    private fun spawnBodyguards(boss: GodWarsBosses.GwdBoss) {
+        val guardIds = boss.bodyguards.mapNotNull { runCatching { getRSCM(it) }.getOrNull() }.toSet()
+        val survivors = ArrayList<Npc>()
+        world.npcs.forEach { n ->
+            if (n.id in guardIds && n.tile.height == boss.lair.height &&
+                Math.abs(n.tile.x - boss.lair.x) <= GUARD_RESET_RADIUS &&
+                Math.abs(n.tile.z - boss.lair.z) <= GUARD_RESET_RADIUS
+            ) {
+                survivors += n
+            }
+        }
+        survivors.forEach { world.remove(it) }
+
+        boss.bodyguards.forEachIndexed { i, guard ->
+            val off = BODYGUARD_OFFSETS[i % BODYGUARD_OFFSETS.size]
+            val id = runCatching { getRSCM(guard) }.getOrNull() ?: return@forEachIndexed
+            val half = (runCatching { getNpc(id).size }.getOrNull()?.takeIf { it > 0 } ?: 1) shr 1
+            val cx = boss.lair.x + off.first
+            val cz = boss.lair.z + off.second
+            val n = Npc(id, Tile(cx - half, cz - half, boss.lair.height), world)
+            n.respawns = false
+            n.walkRadius = 5
+            world.spawn(n)
+            n.setActive(true)
+        }
+    }
+
     private fun registerBodyguardDef(guard: String) {
         if (!definedGuards.add(guard)) return // one def per npc id
         runCatching {
             setCombatDef(guard) {
                 configs {
                     attackSpeed = 4
-                    respawnDelay = RESPAWN_DELAY
+                    // 0 = no engine respawn: a killed bodyguard is removed and only returns when its
+                    // general respawns (via the onNpcSpawn hook), never on its own faster timer.
+                    respawnDelay = 0
                 }
                 aggro {
                     radius = 12
@@ -197,8 +257,13 @@ class GodWarsPlugin(
     }
 
     private companion object {
-        const val RESPAWN_DELAY = 100
+        // 150 ticks = 90s, matching OSRS and the client's top-left Boss-timer estimate for the GWD
+        // generals (RuneLite bosstimer/Boss.java). The bodyguards inherit this cadence because they
+        // respawn with the general rather than on their own timer.
+        const val RESPAWN_DELAY = 150
         const val FALLBACK_DEATH = 836 // generic death animation
         val BODYGUARD_OFFSETS = listOf(2 to 2, -2 to 2, 2 to -2)
+        // Radius around the lair within which stale bodyguards are cleared before a fresh trio spawns.
+        const val GUARD_RESET_RADIUS = 12
     }
 }
