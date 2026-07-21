@@ -12,6 +12,7 @@ import org.alter.game.model.entity.Player
 import org.alter.game.model.queue.QueueTask
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
+import org.alter.plugins.content.mechanics.appearance.AppearanceDesign
 import org.alter.plugins.content.war.address
 import org.alter.plugins.content.war.roguehunt.RogueHunt
 import org.alter.plugins.content.war.roguehunt.RogueProblem
@@ -141,7 +142,11 @@ class RecruitTrialsPlugin(
                 chatNpc(p, "Goblins have slipped through our back defences into the woods behind the city. With the army at the front, you're the LAST line of defence between them and our people.", npc = s, title = "Recruiting Sergeant")
                 chatPlayer(p, "What do you need me to do?")
                 chatNpc(p, "Get into the back woods and kill ${RecruitTrials.GOBLIN_GOAL} of them — follow the marker. Hold that line and the city stands. Then report straight back to me.", npc = s, title = "Recruiting Sergeant")
-                RecruitTrials.advanceTo(p, RecruitTrials.Step.FIGHT)
+                chatNpc(p, "But first — every soldier goes on the muster roll. Hold still while the quartermaster takes down your likeness, then we'll get you to the front.", npc = s, title = "Recruiting Sergeant")
+                // Character customization pops up now; clicking Confirm musters the recruit into the
+                // Trials proper (advances to FIGHT). Opening the screen last means the flow reads as
+                // intro video → Sergeant's dialogue → customization → the goblin-clearing trial.
+                AppearanceDesign.open(p) { RecruitTrials.advanceTo(p, RecruitTrials.Step.FIGHT) }
             }
             RecruitTrials.Step.FIGHT -> {
                 val kills = p.attr[org.alter.game.model.attr.RECRUIT_GOBLIN_KILLS_ATTR] ?: 0
