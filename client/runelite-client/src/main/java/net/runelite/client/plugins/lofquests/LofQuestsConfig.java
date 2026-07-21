@@ -56,6 +56,18 @@ public interface LofQuestsConfig extends Config
 		return true;
 	}
 
+	@ConfigItem(
+		keyName = "highlightObjectiveNpcs",
+		name = "Highlight objective creatures",
+		description = "Outline the tracked objective's target creatures in the scene and dot them on the "
+			+ "minimap (e.g. the castle rats) so small, wandering targets are easy to find",
+		position = 6
+	)
+	default boolean highlightObjectiveNpcs()
+	{
+		return true;
+	}
+
 	@Alpha
 	@ConfigItem(
 		keyName = "arrowColor",

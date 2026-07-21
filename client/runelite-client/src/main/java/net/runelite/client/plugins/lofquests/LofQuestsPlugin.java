@@ -15,11 +15,13 @@ package net.runelite.client.plugins.lofquests;
 
 import com.google.inject.Provides;
 import java.awt.image.BufferedImage;
+import java.util.function.Function;
 import javax.inject.Inject;
 import javax.swing.SwingUtilities;
 import lombok.Getter;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
+import net.runelite.api.NPC;
 import net.runelite.api.ScriptID;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.GameStateChanged;
@@ -27,6 +29,8 @@ import net.runelite.api.events.VarbitChanged;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
+import net.runelite.client.game.npcoverlay.HighlightedNpc;
+import net.runelite.client.game.npcoverlay.NpcOverlayService;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.ClientToolbar;
@@ -63,8 +67,14 @@ public class LofQuestsPlugin extends Plugin
 	@Inject
 	private LofQuestsConfig config;
 
+	@Inject
+	private NpcOverlayService npcOverlayService;
+
 	private LofQuestsPanel panel;
 	private NavigationButton navButton;
+
+	/** Highlighter registered with the shared NPC-overlay service; kept so we can unregister it. */
+	private final Function<NPC, HighlightedNpc> objectiveHighlighter = this::highlightObjectiveNpc;
 
 	/** The quest the player chose to guide toward (null = nothing tracked). */
 	@Getter
@@ -95,6 +105,8 @@ public class LofQuestsPlugin extends Plugin
 			.build();
 		clientToolbar.addNavigation(navButton);
 
+		npcOverlayService.registerHighlighter(objectiveHighlighter);
+
 		refresh();
 	}
 
@@ -103,6 +115,7 @@ public class LofQuestsPlugin extends Plugin
 	{
 		overlayManager.remove(worldOverlay);
 		overlayManager.remove(minimapOverlay);
+		npcOverlayService.unregisterHighlighter(objectiveHighlighter);
 		clientToolbar.removeNavigation(navButton);
 		trackedQuest = null;
 	}
@@ -197,5 +210,53 @@ public class LofQuestsPlugin extends Plugin
 			return null;
 		}
 		return trackedQuest.currentTarget(client);
+	}
+
+	/**
+	 * Highlighter for the shared NPC-overlay service. Returns a highlight for any NPC a quest could
+	 * ever flag as a target (a stable membership gate — the rat is captured on spawn regardless of
+	 * quest state); the live show/hide is deferred to the {@link #highlightsNpc} render predicate so
+	 * the outline appears only while that objective is actually active.
+	 */
+	private HighlightedNpc highlightObjectiveNpc(NPC npc)
+	{
+		if (!LofQuest.isObjectiveNpc(npc.getId()))
+		{
+			return null;
+		}
+		return HighlightedNpc.builder()
+			.npc(npc)
+			.highlightColor(config.arrowColor())
+			.outline(true)
+			.tile(true)
+			.render(n -> highlightsNpc(n.getId()))
+			.build();
+	}
+
+	/**
+	 * Whether the tracked quest wants [npcId] highlighted right now. Same gating as the guidance
+	 * arrow (logged in, a quest is tracked, not muted for free play) plus the feature's own toggle.
+	 */
+	private boolean highlightsNpc(int npcId)
+	{
+		if (!config.highlightObjectiveNpcs()
+			|| client.getGameState() != GameState.LOGGED_IN
+			|| LofQuestVarps.guideMuted(client))
+		{
+			return false;
+		}
+		LofQuest quest = trackedQuest;
+		if (quest == null)
+		{
+			return false;
+		}
+		for (int id : quest.currentHighlightNpcIds(client))
+		{
+			if (id == npcId)
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 }
