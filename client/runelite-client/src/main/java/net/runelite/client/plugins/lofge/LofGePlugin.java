@@ -417,7 +417,10 @@ public class LofGePlugin extends Plugin implements LofWindows.Window
 	{
 		clientThread.invokeLater(() ->
 			chatboxPanelManager.openTextInput("Quantity:")
-				.onDone(input -> setupSetQty(parseAmount(input)))
+				.onDone((String input) ->
+				{
+					setupSetQty(parseAmount(input));
+				})
 				.build());
 	}
 
@@ -425,7 +428,10 @@ public class LofGePlugin extends Plugin implements LofWindows.Window
 	{
 		clientThread.invokeLater(() ->
 			chatboxPanelManager.openTextInput("Price per item:")
-				.onDone(input -> setupSetPrice(parseAmount(input)))
+				.onDone((String input) ->
+				{
+					setupSetPrice(parseAmount(input));
+				})
 				.build());
 	}
 
