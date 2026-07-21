@@ -14,10 +14,15 @@ import org.alter.game.model.attr.MIRE_RUN_PAID_ATTR
 import org.alter.game.model.entity.DynamicObject
 import org.alter.game.model.entity.GroundItem
 import org.alter.game.model.entity.Player
+import org.alter.game.model.move.MovementQueue
+import org.alter.game.model.move.hasMoveDestination
+import org.alter.game.model.move.walkRoute
 import org.alter.game.model.queue.QueueTask
+import org.alter.game.model.queue.TaskPriority
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
 import org.alter.rscm.RSCM.getRSCM
+import org.rsmod.routefinder.collision.CollisionStrategy
 import kotlin.math.abs
 
 private val logger = KotlinLogging.logger {}
@@ -105,6 +110,15 @@ object MireDispenser {
  * the def wins, and an obstacle whose def has none of them is logged and **dropped from the lap**
  * (the course shortens instead of dead-ending mid-lap). moveTo/forceMove carries the player, so
  * water dests don't need to be walkable; every new obstacle sits on a leg players already walk.
+ *
+ * **AFK laps (2026-07-21).** Clicking the FIRST obstacle (the log by the dispenser) starts a
+ * hands-off run: [runLaps] auto-runs the bank between obstacles ([walkToObstacle]) and glides each
+ * obstacle ([crossObstacle]), looping laps forever until the player clicks to walk away (which
+ * fires `interruptQueues()` → the WEAK task's [QueueTask.terminate]) or logs out. Clicking any of
+ * obstacles 2-9 directly still does a single crossing for manual play. The crossing itself is a
+ * SINGLE [Player.forceMove] per obstacle (entry→exit) — the old per-hop chain re-issued a teleport
+ * mid-glide every hop, which snapped the avatar forward/back/forward; one glide (the same shape the
+ * wilderness ditch uses) renders clean and smooth.
  */
 class AgilityPlugin(
     r: PluginRepository,
@@ -156,6 +170,9 @@ class AgilityPlugin(
      */
     private val live = ArrayList<Obstacle>()
 
+    /** Set while a hands-off lap run is in progress; blocks duplicate loops and drives cleanup. */
+    private val AFK_ACTIVE = AttributeKey<Boolean>()
+
     /** Extra stepping-stone dressing on the water (visual only — obstacle 2 owns the clicks). */
     private val stoneDressing = listOf(Tile(3226, 3166, 0), Tile(3226, 3164, 0))
 
@@ -190,7 +207,12 @@ class AgilityPlugin(
                         when {
                             isCoursePlacement(o, clicked) -> {
                                 val idx = live.indexOf(o)
-                                if (idx >= 0) player.queue { traverse(this, player, idx, o) }
+                                when {
+                                    // Only the first obstacle kicks off continuous AFK laps; the
+                                    // rest are single crossings for anyone walking it by hand.
+                                    idx == 0 -> player.queue(TaskPriority.WEAK) { runLaps(this, player) }
+                                    idx > 0 -> player.queue { singleCross(this, player, idx, o) }
+                                }
                             }
                             o.objId == STONE_ID -> player.queue { stoneHop(this, player, clicked) }
                             else -> player.message("Nothing interesting happens.")
@@ -239,29 +261,75 @@ class AgilityPlugin(
             player.attr.remove(MireDispenser.LAP_STREAK)
             player.attr.remove(MireDispenser.LAP_BANK)
             player.attr.remove(MireDispenser.LAP_STEP)
+            player.attr.remove(AFK_ACTIVE)
         }
     }
 
-    private suspend fun traverse(task: QueueTask, player: Player, idx: Int, o: Obstacle) {
-        // Lock + reset the walk-to interaction so the repositions stick (see Player.teleport).
-        player.lock = LockState.FULL
-        player.resetInteractions()
-        player.faceTile(o.tile)
-        // Animated forced-movement glide per hop (ditch-style) — a bare moveTo reads as a
-        // teleport-blink and made the course feel broken. Stones re-fire the jump per stone;
-        // logs/ropes hold the balance-walk across the whole span.
-        var from = player.tile
-        for (hop in o.hops) {
-            if (o.anim > 0) player.animate(o.anim)
-            val dist = maxOf(abs(hop.x - from.x), abs(hop.z - from.z)).coerceAtLeast(1)
-            val dur = (30 * dist).coerceIn(30, 240)
-            player.forceMove(task, ForcedMovement.of(from, hop, dur / 2, dur, dirAngle(from, hop)))
-            from = hop
+    /**
+     * Hands-off lap runner. Started by clicking the first obstacle (the player is already stood
+     * adjacent to it — `ObjectPathAction` walked them there before this fires — so the first pass
+     * crosses immediately). Runs as a WEAK queue task, so the moment the player clicks to walk
+     * away the engine's `interruptQueues()` terminates it (→ [QueueTask.terminate] → [stopAfk]).
+     */
+    private suspend fun runLaps(task: QueueTask, player: Player) {
+        if (live.isEmpty() || player.attr[AFK_ACTIVE] == true) return
+        player.attr[AFK_ACTIVE] = true
+        task.terminateAction = { stopAfk(player) } // fires on click-away / any interruptQueues()
+        var idx = 0
+        try {
+            while (true) {
+                crossObstacle(task, player, live[idx])
+                awardAndAdvance(player, idx)
+                val next = (idx + 1) % live.size
+                // Run the bank to the next obstacle. walkRoute (not walkTo) so we don't terminate
+                // our own task. A failed/stuck approach ends the run cleanly instead of gliding
+                // the player across the map from wherever they got stranded.
+                if (!walkToObstacle(task, player, live[next])) break
+                idx = next
+            }
+        } finally {
+            stopAfk(player) // covers the break above and an unwind on logout
         }
-        player.animate(-1)
-        player.unlock()
-        player.addXp(Skills.AGILITY, o.xp)
+    }
 
+    /** A single manual crossing (obstacles 2-9), for players walking the course by hand. */
+    private suspend fun singleCross(task: QueueTask, player: Player, idx: Int, o: Obstacle) {
+        crossObstacle(task, player, o)
+        awardAndAdvance(player, idx)
+    }
+
+    /** Idempotent — safe to call from both [QueueTask.terminate] and the `finally` unwind. */
+    private fun stopAfk(player: Player) {
+        if (player.attr[AFK_ACTIVE] != true) return
+        player.attr[AFK_ACTIVE] = false
+        player.animate(-1)
+        if (player.lock != LockState.NONE) player.unlock()
+        // LAP_STEP / streak are left intact so a re-click resumes the lap where it left off.
+    }
+
+    /**
+     * One clean glide across a single obstacle: entry (the player's ACTUAL tile) → exit
+     * (`o.hops.last()`), a SINGLE [Player.forceMove] with one animation. The old code chained a
+     * forceMove per hop, and each hop's `moveTo` re-issued a teleport while the previous hop's
+     * exact-move was still rendering — that mid-glide teleport is what snapped the avatar
+     * forward/back/forward. One glide (like [org.alter.plugins.content.objects.ditch] does) is
+     * smooth. `forceMove` owns the lock (DELAY_ACTIONS → NONE), which also makes the cross atomic.
+     */
+    private suspend fun crossObstacle(task: QueueTask, player: Player, o: Obstacle) {
+        val exit = o.hops.last()
+        val from = player.tile
+        player.faceTile(exit)
+        val dist = maxOf(abs(exit.x - from.x), abs(exit.z - from.z)).coerceAtLeast(1)
+        val dur = (30 * dist).coerceIn(30, 240) // delay2, in ~20ms client cycles
+        if (o.anim > 0) player.animate(o.anim)
+        player.forceMove(task, ForcedMovement.of(from, exit, clientDuration1 = 0, clientDuration2 = dur, directionAngle = dirAngle(from, exit)))
+        player.animate(-1)
+    }
+
+    /** Award the obstacle's xp and advance the lap step (banking a lap on the wrap). */
+    private fun awardAndAdvance(player: Player, idx: Int) {
+        val o = live[idx]
+        player.addXp(Skills.AGILITY, o.xp)
         val expected = player.attr[MireDispenser.LAP_STEP] ?: 0
         if (idx == expected) {
             val next = idx + 1
@@ -274,6 +342,37 @@ class AgilityPlugin(
         } else {
             player.attr[MireDispenser.LAP_STEP] = idx + 1 // resync from where they actually are
         }
+    }
+
+    /**
+     * Auto-run the bank to the next obstacle and report whether we actually got there. Routes to
+     * the obstacle's object the same way a manual click does (the full route-finder overload, which
+     * stops on the adjacent WALKABLE tile — never the water the obstacle sits on), so no fragile
+     * per-obstacle approach tiles are needed. Draining the movement queue before returning also
+     * guarantees the following [crossObstacle] never issues its teleport while a walk step is still
+     * pending (the one thing that would re-introduce a snap).
+     */
+    private suspend fun walkToObstacle(task: QueueTask, player: Player, o: Obstacle): Boolean {
+        val obj = world.getObject(o.tile, o.objType) ?: return false
+        val def = obj.getDef()
+        val route = world.smartRouteFinder.findRoute(
+            level = player.tile.height,
+            srcX = player.tile.x,
+            srcZ = player.tile.z,
+            destX = o.tile.x,
+            destZ = o.tile.z,
+            destWidth = def.sizeX,
+            destLength = def.sizeY,
+            srcSize = 1,
+            collision = CollisionStrategy.Normal,
+            locAngle = o.rot,
+            locShape = o.objType,
+            blockAccessFlags = def.clipMask,
+        )
+        player.walkRoute(route, MovementQueue.StepType.NORMAL)
+        var cycles = 0
+        while (player.hasMoveDestination() && cycles++ < ARRIVE_GUARD) task.wait(1)
+        return route.success && player.tile.isWithinRadius(o.tile, 2)
     }
 
     private fun completeLap(player: Player) {
@@ -433,6 +532,9 @@ class AgilityPlugin(
         const val LAP_BONUS = 200.0  // raised from 120 with the 5→9-obstacle expansion
         const val DISPENSER_ID = 3581 // Ticket Dispenser — action "Tag" (objCheck-verified)
         const val STONE_ID = 4411     // Stepping stone dressing on the crossing
+        // Max game cycles to wait for an auto-walk between obstacles to arrive (~15s) — a bad or
+        // unreachable route can never spin the lap loop forever.
+        const val ARRIVE_GUARD = 25
         // Canonical OSRS agility anims. The first four are verified in the rev-228 cache (same set
         // as the shortcut plugin); swing/bars/ledge are the canonical family ids picked without a
         // local cache — a wrong id plays no animation but never breaks the crossing.
