@@ -3,6 +3,8 @@ package org.alter.plugins.content.economy.grandexchange
 import dev.openrune.cache.CacheManager.getNpc
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.alter.api.ext.getCommandArgs
+import org.alter.api.ext.inputInt
+import org.alter.api.ext.options
 import org.alter.api.ext.player
 import org.alter.api.ext.searchItemInput
 import org.alter.game.Server
@@ -43,18 +45,30 @@ class GrandExchangeClickPlugin(
         bindClerk(CLERK)
         onCommand("ge", description = "Open the Grand Exchange") { GrandExchangeWindow.stream(player) }
 
-        onCommand("genewclick", description = "GE window: pick an item for a new offer") {
-            val a = player.getCommandArgs()
-            val box = a.getOrNull(0)?.toIntOrNull() ?: return@onCommand
-            val buy = (a.getOrNull(1)?.toIntOrNull() ?: 1) != 0
+        // New offer: the reliable native flow (Buy/Sell dialog → the ::item search → two number
+        // entries), then create + re-stream the board. (A drawn in-window setup box is a v2 polish.)
+        onCommand("genewclick", description = "GE window: create a new offer in a slot") {
+            val box = player.getCommandArgs().getOrNull(0)?.toIntOrNull() ?: return@onCommand
+            if (box !in 0 until GrandExchange.SLOTS) return@onCommand
             player.queue {
-                val item = searchItemInput(player, if (buy) "Buy which item?" else "Sell which item?")
+                val mode = options(player, "Buy", "Sell", title = "New Grand Exchange offer")
+                val buy = mode == 1
+                if (mode != 1 && mode != 2) return@queue
+                val item = searchItemInput(player, "Search for an item")
                 if (item <= 0) return@queue
-                GrandExchangeWindow.sendSetup(player, box, buy, item)
+                val guide = GrandExchange.guidePrice(item)
+                val qty = inputInt(player, "Quantity")
+                if (qty <= 0) return@queue
+                val price = inputInt(player, "Price per item (guide $guide gp)")
+                if (price <= 0) return@queue
+                if (buy) GrandExchange.createBuy(player, box, item, price, qty)
+                else GrandExchange.createSell(player, box, item, price, qty)
+                GrandExchangeWindow.stream(player)
             }
         }
 
-        onCommand("geconfirmclick", description = "GE window: place an offer") {
+        // Direct-create path (kept for a future drawn setup box): item/price/qty supplied by the client.
+        onCommand("geconfirmclick", description = "GE window: place an offer with supplied values") {
             val a = player.getCommandArgs()
             val box = a.getOrNull(0)?.toIntOrNull() ?: return@onCommand
             val buy = (a.getOrNull(1)?.toIntOrNull() ?: 1) != 0
