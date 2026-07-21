@@ -783,7 +783,24 @@ class ItemContainer(val key: ContainerKey) : Iterable<Item?> {
         index: Int,
         item: Item?,
     ) {
-        items[index] = item
+        // A non-positive stack is always corruption: no legitimate path stores an item with
+        // amount <= 0 (remove() nulls a slot the instant it reaches 0, and the bank keeps no
+        // amount-0 placeholders). Such a stack is rejected by rsprot at render time, which used
+        // to throw inside Player.cycle() every tick and permanently desync the owner (all stats
+        // 0, chatbox locked). This is the single write chokepoint every mutation routes through
+        // — add(), swap(), shift(), removeAll(), the copy constructor and the save-load path
+        // (container[slot] = item) — so coercing a bad stack to an empty slot here means no code
+        // path can persist one, and a corrupt stack already on disk self-heals on the next load.
+        val safe =
+            if (item != null && item.amount <= 0) {
+                logger.warn {
+                    "Dropped a non-positive stack in container '${key.name}' slot $index: id=${item.id} amount=${item.amount}"
+                }
+                null
+            } else {
+                item
+            }
+        items[index] = safe
         dirty = true
     }
 
