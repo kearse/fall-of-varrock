@@ -28,6 +28,7 @@ import java.nio.file.Path
  * Run (workingDir = repo root = the Alter project dir):
  *   gradlew :game-server:npcDef -PnpcArgs="inspect 1755"
  *   gradlew :game-server:npcDef -PnpcArgs="wizardknight"     # Void Knight 1755: Talk-to / Solo game / Multi game
+ *   gradlew :game-server:npcDef -PnpcArgs="krilbodyguards"   # K'ril's 3 bodyguards: add the "Attack" option
  *   gradlew :game-server:npcDef -PnpcArgs="restore 1755"
  */
 
@@ -37,6 +38,12 @@ private const val REVISION = 228
 
 private const val VOID_KNIGHT = 1755
 
+// K'ril Tsutsaroth's bodyguards (Tstanon Karlak / Zakl'n Gritch / Balfrug Kreeyath). Their cache
+// defs lack the "Attack" menu option, so Combat.canEngage's `def.isAttackable()` check rejects them
+// ("You can't attack this npc.") even though the server registers a full combat def. Put "Attack"
+// in slot 2 (actions[1]) — the slot OpNpcHandler routes to client.attack — matching K'ril himself.
+private val KRIL_BODYGUARDS = listOf(3130, 3131, 3132)
+
 fun main(args: Array<String>) {
     when (args.getOrNull(0)?.lowercase() ?: "inspect") {
         "inspect" -> inspect(args.drop(1).mapNotNull { it.toIntOrNull() })
@@ -45,8 +52,10 @@ fun main(args: Array<String>) {
         // npc menu slot to the ATTACK pathway (players got "You can't attack this npc." when
         // "Solo game" sat there). Slots 3/4 route as normal string-matched options.
         "wizardknight" -> setActions(VOID_KNIGHT, listOf("Talk-to", null, "Solo game", "Multi game", null))
+        // The inverse of wizardknight: these ARE meant to be attacked, so put "Attack" in slot 2.
+        "krilbodyguards" -> KRIL_BODYGUARDS.forEach { setActions(it, listOf(null, "Attack", null, null, null)) }
         "restore" -> restore(args.getOrNull(1)?.toIntOrNull() ?: run { println("restore <id>"); return })
-        else -> println("usage: inspect <id...> | anims <id...> | wizardknight | restore <id>")
+        else -> println("usage: inspect <id...> | anims <id...> | wizardknight | krilbodyguards | restore <id>")
     }
 }
 
