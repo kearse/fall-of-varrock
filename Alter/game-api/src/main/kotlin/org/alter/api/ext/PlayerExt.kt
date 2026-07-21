@@ -97,7 +97,8 @@ private fun Player.showShop(s: org.alter.game.model.shop.Shop) {
  * come from the shop entry's sellPrice, falling back to the currency's default sell price.
  */
 private fun Player.streamShopToClient(s: org.alter.game.model.shop.Shop) {
-    message("FOV_SHOP:shop|${s.name}|${s.currency.label()}|${s.currency.balance(this)}", ChatMessageType.GAME_MESSAGE)
+    val mode = if (s.currency.sellOnly()) "sell" else "buy"
+    message("FOV_SHOP:shop|${s.name}|${s.currency.label()}|${s.currency.balance(this)}|$mode", ChatMessageType.GAME_MESSAGE)
     s.items.forEachIndexed { slot, item ->
         if (item != null) {
             val price = item.sellPrice ?: s.currency.getSellPrice(world, item.item)
@@ -105,6 +106,16 @@ private fun Player.streamShopToClient(s: org.alter.game.model.shop.Shop) {
         }
     }
     message("FOV_SHOP:shopend", ChatMessageType.GAME_MESSAGE)
+}
+
+/**
+ * Update ONLY the open shop window's balance readout (after a hand-in at a sell-only storefront).
+ * Deliberately not a full re-stream: a fresh `shop|` line resets the client's tab rail, so
+ * re-streaming a tabbed storefront mid-session would drop its tabs.
+ */
+fun Player.refreshShopBalance() {
+    val s = attr[CURRENT_SHOP_ATTR] ?: return
+    message("FOV_SHOP:bal|${s.currency.balance(this)}", ChatMessageType.GAME_MESSAGE)
 }
 
 fun Player.message(

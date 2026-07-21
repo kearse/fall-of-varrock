@@ -52,10 +52,6 @@ class MessagePublicHandler : MessageHandler<MessagePublic> {
                     client.world.plugins.executeCommand(client, "zoclick", parts.drop(1).toTypedArray())
                     return
                 }
-                "lofsup" -> {
-                    client.world.plugins.executeCommand(client, "supclick", parts.drop(1).toTypedArray())
-                    return
-                }
                 "lofmake" -> {
                     client.world.plugins.executeCommand(client, "makeclick", parts.drop(1).toTypedArray())
                     return
@@ -112,6 +108,10 @@ class MessagePublicHandler : MessageHandler<MessagePublic> {
                     client.world.plugins.executeCommand(client, "shopbuyclick", parts.drop(1).toTypedArray())
                     return
                 }
+                "lofshopsell" -> {
+                    client.world.plugins.executeCommand(client, "shopsellclick", parts.drop(1).toTypedArray())
+                    return
+                }
                 "lofshopval" -> {
                     client.world.plugins.executeCommand(client, "shopvalclick", parts.drop(1).toTypedArray())
                     return
@@ -147,11 +147,6 @@ class MessagePublicHandler : MessageHandler<MessagePublic> {
                 // Muster Companions overlay (lofrecruit): "::zo recruit <style>" → recruit, suppress chat.
                 "zo" -> {
                     client.world.plugins.executeCommand(client, "zoclick", parts.drop(1).toTypedArray())
-                    return
-                }
-                // Supply Depot overlay (lofsupply): "::sup <cat|item|all> ..." → deposit, suppress chat.
-                "sup" -> {
-                    client.world.plugins.executeCommand(client, "supclick", parts.drop(1).toTypedArray())
                     return
                 }
                 // Making window (lofmake): "::make <resultId> <qty>" → smelt/smith, suppress chat.
@@ -206,6 +201,11 @@ class MessagePublicHandler : MessageHandler<MessagePublic> {
                 }
                 "shopbuy" -> {
                     client.world.plugins.executeCommand(client, "shopbuyclick", parts.drop(1).toTypedArray())
+                    return
+                }
+                // Sell-only storefronts (the Supply Depot): "::shopsell <slot> <amt|all>" → hand in.
+                "shopsell" -> {
+                    client.world.plugins.executeCommand(client, "shopsellclick", parts.drop(1).toTypedArray())
                     return
                 }
                 "shopval" -> {
