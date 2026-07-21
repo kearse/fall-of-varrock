@@ -202,9 +202,12 @@ object EliteBosses {
             ),
         ),
         // Grotesque Guardians — Dusk (melee) + Dawn (ranged) spawn together; loot on each kill.
+        // Roof arena is at plane 3 (the Slayer Tower's rooftop, above its 0/1/2 floors) — the
+        // cache holds the roof scenery (display/death-chest/watch markers) up here, not at plane 0.
+        // Plane 3 is best-known OSRS; x/z already match the roof — TUNE the exact tile in-game.
         EliteBoss(
             key = "npc.dusk", name = "Dusk",
-            lair = Tile(3413, 3537, 0), walkRadius = 5,
+            lair = Tile(3413, 3537, 3), walkRadius = 5,
             hp = 600, att = 220, str = 280, def = 200, mag = 1, rng = 1,
             attackSpeed = 4, maxHit = 25, approach = 2, bossPoints = 30, slayerReq = 75, slayerXp = 600.0, multi = true,
             loot = DropTable(
@@ -226,7 +229,7 @@ object EliteBosses {
         ),
         EliteBoss(
             key = "npc.dawn", name = "Dawn",
-            lair = Tile(3417, 3537, 0), walkRadius = 5,
+            lair = Tile(3417, 3537, 3), walkRadius = 5,
             hp = 600, att = 1, str = 1, def = 200, mag = 200, rng = 250,
             attackSpeed = 4, maxHit = 22, approach = 8, bossPoints = 30, slayerReq = 75, slayerXp = 600.0, multi = true,
             loot = DropTable(
