@@ -140,7 +140,12 @@ object EliteBosses {
         ),
         EliteBoss(
             key = "npc.abyssal_sire", name = "Abyssal Sire",
-            lair = Tile(2970, 4384, 0), walkRadius = 5,
+            // Real Abyssal Nexus SW chamber (region 11850). The old (2970, 4384, 0) sat on the empty
+            // plane 0 of region 11844 — the Corporeal Beast's cave (whose lair CorpBeastPlugin now
+            // occupies on plane 2). That plane-0 map is void: it rendered black and clipped every
+            // tile, so the player spawned on the boss with no walkable tile and couldn't move.
+            // Region per RuneLite DiscordGameEventType (Sire = 11851/11850/12363/12362). TUNE in-game.
+            lair = Tile(2971, 4766, 0), walkRadius = 5,
             hp = 400, att = 180, str = 180, def = 150, mag = 200, rng = 1,
             attackSpeed = 4, maxHit = 22, approach = 2, bossPoints = 35, slayerReq = 85, slayerXp = 400.0, multi = true,
             loot = DropTable(

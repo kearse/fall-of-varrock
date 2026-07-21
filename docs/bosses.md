@@ -162,7 +162,7 @@ Single-NPC instanced or lair fights. Build in roughly this order:
 | Giant Mole | `npc.giant_mole` | Falador mole lair (1760, 5164) | 255 | Melee; **burrows + relocates** in the tunnel network. |
 | Dagannoth Kings | `npc.dagannoth_rex/prime/supreme` | Waterbirth (2900, 4449) | 255 ea | 3 kings, one per style (Rex melee, Prime mage, Supreme range); multi. |
 | Kalphite Queen | `npc.kalphite_queen` | (3508, 9494) lair | 255×2 | **2 phases**: phase 1 range/mage flying, phase 2 melee crawler; pray the active style. |
-| Abyssal Sire | `npc.abyssal_sire` | (2970, 4384) | 400 | Stun phase, **respiratory tentacles**, miasma pools, spawns. Slayer 85. Complex — later in phase. |
+| Abyssal Sire | `npc.abyssal_sire` | (2971, 4766) Abyssal Nexus SW chamber (region 11850) | 400 | Stun phase, **respiratory tentacles**, miasma pools, spawns. Slayer 85. Complex — later in phase. |
 | Thermonuclear Smoke Devil | `npc.thermonuclear_smoke_devil` | (2380, 9452) | 240 | Ranged smoke; AoE; Slayer 93. |
 | Sarachnis | `npc.sarachnis` | (1923, 9921) | 460 | Melee + ranged web; spiderlings. |
 

@@ -88,7 +88,10 @@ object TeleportRegistry {
         // Land a few tiles south of the lair origin (2117,5645) so the player arrives at the arena
         // edge rather than on top of the large boss; Pawn.teleport snaps this off any wall tile.
         built("phantom_muspah", "Phantom Muspah", BOSSES, Tile(2117, 5639, 0), HOSTILE),
-        built("abyssal_sire", "Abyssal Sire", BOSSES, Tile(2970, 4384, 0), HOSTILE),
+        // Real Abyssal Nexus SW chamber; land a few tiles off the spawn (2971,4766) so the player
+        // arrives at the chamber edge, not on the boss. Old (2970,4384,0) was the Corp cave's void
+        // plane 0 — a black, unwalkable map. Pawn.teleport snaps this off any wall tile.
+        built("abyssal_sire", "Abyssal Sire", BOSSES, Tile(2967, 4762, 0), HOSTILE),
         built("grotesque_guardians", "Grotesque Guardians", BOSSES, Tile(3413, 3537, 3), HOSTILE), // Slayer Tower roof (plane 3) — lands on Dusk's tile
         // Phase F — God Wars Dungeon generals (real throne rooms; see GodWarsBosses).
         built("gwd_graardor", "General Graardor", BOSSES, Tile(2870, 5362, 2), HOSTILE),
