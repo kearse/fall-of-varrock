@@ -31,20 +31,27 @@ import org.alter.game.plugin.PluginRepository
  * the player is broadcast WITHOUT worn gear ([STYLE_PREVIEW_ATTR]) so the base skins being edited
  * are visible; closing the interface restores the gear (see the `onInterfaceClose` hook below).
  *
- * Component map (stock 679): 65/66 gender buttons, 68 confirm; body-part rows base at 10
- * (head, jaw, torso, arms, hands, legs, feet — 4 apart), colour rows base at 41 (hair, torso,
- * legs, feet, skin — 4 apart); each row's `+2` child is Previous, `+3` is Next.
+ * Component map (group 679 = `player_design`, taken from this build's decoded cache and confirmed by
+ * in-game testing). Each editable row exposes two ADJACENT arrow buttons — LEFT (Previous) then RIGHT
+ * (Next), i.e. `left`, `left+1`. Body-part rows start at head 15/16 and step by 4 (jaw 19/20, torso
+ * 23/24, arms 27/28, hands 31/32, legs 35/36, feet 39/40); colour rows start at hair 46/47 and step by
+ * 4 (torso 50/51, legs 54/55, feet 58/59, skin 62/63). Body-type buttons: 68 (Type A) / 69 (Type B);
+ * Confirm: 74. The pronoun controls (dropdown 72, button container 78) are purely cosmetic and have no
+ * counterpart in the engine's [Appearance] (which models gender only), so they're intentionally left
+ * unhandled.
  *
- * IMPORTANT — the ids above are a pre-rev-228 assumption and did NOT match this build's cache
- * ("buttons misaligned and dead", commit 2e3e962). They must be re-verified against the real
- * layout of group 679 in the shipped cache:
+ * NOTE — the original ids here were a pre-rev-228 assumption (rows at base 10/41, arrows at `+2`/`+3`,
+ * gender 65/66, confirm 68) and did NOT match this build's cache ("buttons misaligned and dead", commit
+ * 2e3e962): every left arrow hit an unbound id (dead) while every right arrow fell through onto the NEXT
+ * row's handler (e.g. the head row's Next changed facial hair), and the old "confirm" id 68 was really
+ * the Type-A body button, so switching body type just closed the window. If a future cache re-jigs the
+ * group, re-verify with:
  *     ./gradlew :game-server:teleportIface -PteleArgs="inspect 679"   # server stopped
- * and corrected in the [rows]/gender/confirm ids below. The model + appearance logic already work.
  */
 object AppearanceDesign {
     const val INTERFACE_ID = 679
 
-    /** Stock varbit the interface uses to highlight the selected gender button. */
+    /** Stock varbit the interface uses to highlight the selected body-type button (A/B). */
     const val GENDER_VARBIT = 11697
 
     fun open(p: Player) {
@@ -70,28 +77,31 @@ class AppearanceInterfacePlugin(
     server: Server,
 ) : KotlinPlugin(r, world, server) {
 
-    /** One editable row of the interface: either a body-part look or a colour slot. */
-    private sealed class Row(val component: Int) {
+    /**
+     * One editable row of the interface: either a body-part look or a colour slot. [leftArrow] is the
+     * component id of the row's LEFT (Previous) arrow; the RIGHT (Next) arrow is always [leftArrow] + 1.
+     */
+    private sealed class Row(val leftArrow: Int) {
         /** [option] is the [Appearance.getLook] option code (0=HEAD … 6=FEET). */
-        class Look(component: Int, val option: Int) : Row(component)
+        class Look(leftArrow: Int, val option: Int) : Row(leftArrow)
 
         /** [slot] indexes [Appearance].colors: [hair, torso, legs, feet, skin]. */
-        class Colour(component: Int, val slot: Int) : Row(component)
+        class Colour(leftArrow: Int, val slot: Int) : Row(leftArrow)
     }
 
     private val rows: List<Row> = listOf(
-        Row.Look(component = 10, option = 0), // head
-        Row.Look(component = 14, option = 1), // jaw (male only)
-        Row.Look(component = 18, option = 2), // torso
-        Row.Look(component = 22, option = 3), // arms
-        Row.Look(component = 26, option = 4), // hands
-        Row.Look(component = 30, option = 5), // legs
-        Row.Look(component = 34, option = 6), // feet
-        Row.Colour(component = 41, slot = 0), // hair colour
-        Row.Colour(component = 45, slot = 1), // torso colour
-        Row.Colour(component = 49, slot = 2), // legs colour
-        Row.Colour(component = 53, slot = 3), // feet colour
-        Row.Colour(component = 57, slot = 4), // skin colour
+        Row.Look(leftArrow = 15, option = 0), // head / hairstyle
+        Row.Look(leftArrow = 19, option = 1), // jaw / facial hair (Type A only)
+        Row.Look(leftArrow = 23, option = 2), // torso / shirt
+        Row.Look(leftArrow = 27, option = 3), // arms
+        Row.Look(leftArrow = 31, option = 4), // hands
+        Row.Look(leftArrow = 35, option = 5), // legs
+        Row.Look(leftArrow = 39, option = 6), // feet
+        Row.Colour(leftArrow = 46, slot = 0), // hair colour
+        Row.Colour(leftArrow = 50, slot = 1), // torso colour
+        Row.Colour(leftArrow = 54, slot = 2), // legs colour
+        Row.Colour(leftArrow = 58, slot = 3), // feet colour
+        Row.Colour(leftArrow = 62, slot = 4), // skin colour
     )
 
     init {
@@ -99,18 +109,19 @@ class AppearanceInterfacePlugin(
             AppearanceDesign.open(player)
         }
 
-        onButton(AppearanceDesign.INTERFACE_ID, 65) { setGender(player, Gender.MALE) }
-        onButton(AppearanceDesign.INTERFACE_ID, 66) { setGender(player, Gender.FEMALE) }
+        // Body-type buttons (Type A ≈ male model, Type B ≈ female model).
+        onButton(AppearanceDesign.INTERFACE_ID, 68) { setGender(player, Gender.MALE) }
+        onButton(AppearanceDesign.INTERFACE_ID, 69) { setGender(player, Gender.FEMALE) }
 
-        onButton(AppearanceDesign.INTERFACE_ID, 68) {
+        onButton(AppearanceDesign.INTERFACE_ID, 74) {
             player.attr[APPEARANCE_SET_ATTR] = true
             player.closeInterface(AppearanceDesign.INTERFACE_ID)
             player.unlock() // no-op unless a (future) first-login flow locked the player
         }
 
         rows.forEach { row ->
-            onButton(AppearanceDesign.INTERFACE_ID, row.component + 2) { step(player, row, delta = -1) }
-            onButton(AppearanceDesign.INTERFACE_ID, row.component + 3) { step(player, row, delta = +1) }
+            onButton(AppearanceDesign.INTERFACE_ID, row.leftArrow) { step(player, row, delta = -1) }
+            onButton(AppearanceDesign.INTERFACE_ID, row.leftArrow + 1) { step(player, row, delta = +1) }
         }
 
         // Any close (Confirm, the X, or another interface replacing 679) puts the gear back on.
