@@ -3,7 +3,7 @@ title: Shops directory - every store, every price
 category: Economy & Trading
 summary: The complete vendor reference - every shop in the realm, where it stands, what it stocks and what it costs.
 order: 2
-updated: 2026-07-13
+updated: 2026-07-21
 infobox: Type = Shop reference; Location = Lumbridge courtyard market; Getting there = Teleport portal, "Market / Shops"; Currencies = Coins, Boss Tickets, Vote Tickets, Blood Money, points
 ---
 
@@ -61,7 +61,7 @@ Planks (regular, oak, teak, mahogany), nails, bolts of cloth, saw, hammer, soft 
 
 ### Rewards Shop (Valaine)
 
-Two tabs, two ticket currencies - both tickets are **tradeable items**, so you can buy them off other players.
+Two reward tabs, two ticket currencies - both tickets are **tradeable items**, so you can buy them off other players. A third **Buy Vote Tickets** tab sells Vote Tickets for **2,000 gp each** (no buyback) - the coin ceiling on the gilded/cosmetic vote rewards.
 
 | Boss rewards | Boss Tickets |
 | --- | --- |
@@ -100,6 +100,8 @@ The serious money stands at the **south end of the market**.
 ### The Warlord's Armoury (Quartermaster)
 
 The PvM gear chase. The **Quartermaster** trades in **Boss Tickets** (earned from every boss kill - see [bosses overview](/wiki/bosses-overview)) across six ticket tabs, plus a coins-only Barrows wing. Talk-to still takes [war-supply hand-ins](/wiki/supplying-the-war).
+
+A **Buy Tickets** tab sells Boss Tickets for **1,000 gp each** (he never buys them back). That's the coin *ceiling* on everything here - you can always earn tickets by bossing, or buy your way in with gold; a 2,500-ticket weapon is capped at ~2.5M gp, a 12,000-ticket megarare at ~12M. Prices rise as the economy grows.
 
 **Weapons** (Boss Tickets):
 
@@ -172,7 +174,7 @@ The Bandos and Armadyl pieces here exist to feed the [Royal Smith's war-forge](/
 
 ### PK Rewards (Emblem Trader)
 
-The PvP gear chase, paid in **Blood Money** - earned only from killing **real players** (25 + 3 per combat level of the victim; [PK bots](/wiki/pk-bots-and-highwaymen) pay none). Also opens with `::pkshop`. Four tabs; full detail in [PK rewards & stats](/wiki/pk-rewards-and-stats).
+The PvP gear chase, paid in **Blood Money** - earned only from killing **real players** (25 + 3 per combat level of the victim; [PK bots](/wiki/pk-bots-and-highwaymen) pay none). Also opens with `::pkshop`. Four gear tabs; full detail in [PK rewards & stats](/wiki/pk-rewards-and-stats). A fifth **Buy Blood Money** tab sells Blood Money for **800 gp each** (no buyback) - the coin ceiling on the PvP gear (a 3,000 BM whip caps at ~2.4M gp, a 15,000 BM godsword at ~12M).
 
 **Supplies**: shark 5, prayer potion(4) 20, ranging potion(4) 25, super restore(4) 30, saradomin brew(4) 35, super combat(4) 40.
 
