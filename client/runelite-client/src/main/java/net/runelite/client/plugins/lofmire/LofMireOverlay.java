@@ -32,6 +32,7 @@ import net.runelite.api.Item;
 import net.runelite.api.ItemContainer;
 import net.runelite.api.ItemID;
 import net.runelite.client.game.ItemManager;
+import net.runelite.client.plugins.loftheme.LofModal;
 import net.runelite.client.plugins.loftheme.LofTheme;
 import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.overlay.Overlay;
@@ -83,8 +84,8 @@ class LofMireOverlay extends Overlay
 	private static final int COINS_ID = 995;
 
 	// Design-system standard modal (480x400 — docs/overlay-design-system.md §6A).
-	private static final int WIN_W = 480;
-	private static final int WIN_H = 400;
+	private static final int WIN_W = LofModal.W;
+	private static final int WIN_H = LofModal.H;
 	private static final int WIN_ARC = 14;
 	private static final int TITLE_H = 38;
 	private static final int PAD = 14;
@@ -93,7 +94,7 @@ class LofMireOverlay extends Overlay
 	private static final int STATS_H = 56;
 	private static final int LOOT_LABEL_Y = STATS_Y + STATS_H + 20; // baseline of the section label
 	private static final int LOOT_Y = LOOT_LABEL_Y + 8;
-	private static final int ROW_H = 25;
+	private static final int ROW_H = 20; // loot rows: tightened so the fixed 7-row table fits the short window
 	private static final int BTN_W = 130;
 	private static final int BTN_H = 32;
 
@@ -156,17 +157,10 @@ class LofMireOverlay extends Overlay
 		return 1.0 + (Math.max(Math.min(streak, STREAK_CAP), 1) - 1) * 4.0 / (STREAK_CAP - 1);
 	}
 
-	private int originX()
-	{
-		final int canvasW = client.getCanvasWidth();
-		final int viewportW = client.isResized() ? canvasW : Math.min(canvasW, 512);
-		return Math.max(0, Math.min((canvasW - WIN_W) / 2, (viewportW - WIN_W) / 2));
-	}
+	// Placement single-sourced in LofModal (§6A) — same anchor as every modal.
+	private int originX() { return LofModal.originX(client, WIN_W); }
 
-	private int originY()
-	{
-		return Math.max(0, (client.getCanvasHeight() - WIN_H) / 2);
-	}
+	private int originY() { return LofModal.originY(client, WIN_H); }
 
 	private Rectangle closeRect(int ox, int oy)
 	{

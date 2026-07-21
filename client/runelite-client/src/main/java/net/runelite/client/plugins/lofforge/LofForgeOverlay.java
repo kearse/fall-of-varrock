@@ -15,6 +15,7 @@ import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
+import java.awt.Shape;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
@@ -61,6 +62,12 @@ class LofForgeOverlay extends Overlay implements LofWindows.Window
 	private static final int ROW_H = 34;
 	private static final int ROW_STEP = 38;
 	private static final int CHECK_H = 96;
+	// The recipe list scrolls inside a clipped viewport; the material checklist is pinned at a fixed
+	// spot above the footer (not floated under the rows), so the window fits the short standard height.
+	private static final int LIST_TOP = ROWS_Y;                             // 78
+	private static final int CHECK_Y = LofModal.H - 12 - 32 - 8 - CHECK_H;  // fixed, above the footer
+	private static final int LIST_BOTTOM = CHECK_Y - 6;
+	private static final int LIST_H = LIST_BOTTOM - LIST_TOP;
 
 	private final Client client;
 	private final ItemManager itemManager;
@@ -71,6 +78,7 @@ class LofForgeOverlay extends Overlay implements LofWindows.Window
 	private int commHave, embersHave, barsHave, coinsHave;
 	private int activeTab;
 	private int selected;
+	private int scroll; // px — recipe-list scroll offset
 
 	/** Two-click confirm: forging consumes a BIS base — the first click arms, the second sends. */
 	private boolean armed;
@@ -122,6 +130,7 @@ class LofForgeOverlay extends Overlay implements LofWindows.Window
 	{
 		recipes = rows;
 		selected = 0;
+		scroll = 0;
 		// A re-push mid-confirm must disarm: selection resets to row 0, and an armed second
 		// click would otherwise forge the WRONG recipe — the exact mis-commit the confirm guards.
 		armed = false;
@@ -133,6 +142,7 @@ class LofForgeOverlay extends Overlay implements LofWindows.Window
 		{
 			activeTab = t;
 			selected = 0;
+			scroll = 0;
 			armed = false;
 		}
 	}
@@ -179,7 +189,27 @@ class LofForgeOverlay extends Overlay implements LofWindows.Window
 
 	private Rectangle rowRect(int ox, int oy, int i)
 	{
-		return new Rectangle(ox + LofModal.PAD, oy + ROWS_Y + i * ROW_STEP, LofModal.W - 2 * LofModal.PAD, ROW_H);
+		return new Rectangle(ox + LofModal.PAD, oy + LIST_TOP + i * ROW_STEP - scroll, LofModal.W - 2 * LofModal.PAD, ROW_H);
+	}
+
+	private Rectangle listRect(int ox, int oy)
+	{
+		return new Rectangle(ox + LofModal.PAD, oy + LIST_TOP, LofModal.W - 2 * LofModal.PAD, LIST_H);
+	}
+
+	boolean handleScroll(Point p, int rotation)
+	{
+		if (!visible)
+		{
+			return false;
+		}
+		final int ox = LofModal.originX(client), oy = LofModal.originY(client);
+		if (!listRect(ox, oy).contains(p))
+		{
+			return false;
+		}
+		scroll = LofModal.clampScroll(scroll + rotation * ROW_STEP, tabRecipes().size() * ROW_STEP, LIST_H);
+		return true;
 	}
 
 	private Rectangle forgeRect(int ox, int oy)
@@ -209,10 +239,12 @@ class LofForgeOverlay extends Overlay implements LofWindows.Window
 				return TAB_BASE + i;
 			}
 		}
-		final int rows = tabRecipes().size();
-		for (int i = 0; i < rows; i++)
+		// Rows gated to the clipped list viewport so a scrolled-out row can't take a click.
+		if (listRect(ox, oy).contains(p))
 		{
-			if (rowRect(ox, oy, i).contains(p))
+			final int rel = p.y - (oy + LIST_TOP) + scroll;
+			final int i = rel / ROW_STEP;
+			if (i >= 0 && i < tabRecipes().size() && (rel - i * ROW_STEP) <= ROW_H)
 			{
 				return ROW_BASE + i;
 			}
@@ -259,12 +291,20 @@ class LofForgeOverlay extends Overlay implements LofWindows.Window
 				sel ? LofTheme.GOLD : LofTheme.TEXT_DIM);
 		}
 
-		// recipe rows: base sprite ➜ result sprite, cost summary on the right
+		// recipe rows: base sprite ➜ result sprite, cost summary on the right (scrolls in a clip)
 		final List<Recipe> tab = tabRecipes();
+		final int contentH = tab.size() * ROW_STEP;
+		scroll = LofModal.clampScroll(scroll, contentH, LIST_H);
+		final Shape listClip = g.getClip();
+		g.setClip(ox + LofModal.PAD, oy + LIST_TOP, LofModal.W - 2 * LofModal.PAD, LIST_H);
 		for (int i = 0; i < tab.size(); i++)
 		{
 			final Recipe r = tab.get(i);
 			final Rectangle rr = rowRect(ox, oy, i);
+			if (rr.y + ROW_H < oy + LIST_TOP || rr.y > oy + LIST_TOP + LIST_H)
+			{
+				continue; // scrolled out of the viewport
+			}
 			final boolean sel = i == selected;
 			final boolean hov = rr.contains(mouse);
 			g.setColor(sel ? LofTheme.alpha(LofTheme.GOLD, 20) : hov ? LofTheme.ROW_HOVER : LofTheme.ROW);
@@ -285,12 +325,14 @@ class LofForgeOverlay extends Overlay implements LofWindows.Window
 			final FontMetrics fm = g.getFontMetrics();
 			LofTheme.shadowText(g, cost, rr.x + rr.width - 10 - fm.stringWidth(cost), rr.y + 22, LofTheme.TEXT_DIM);
 		}
+		g.setClip(listClip);
+		LofModal.scrollbar(g, ox + LofModal.W - 10, oy + LIST_TOP, LIST_H, contentH, scroll);
 
 		// material checklist for the selected recipe
 		final Recipe sel = selectedRecipe();
 		if (sel != null)
 		{
-			final int cy = oy + ROWS_Y + Math.max(tab.size(), 1) * ROW_STEP + 4;
+			final int cy = oy + CHECK_Y; // pinned above the footer, independent of the scrolled list
 			final Rectangle cr = new Rectangle(ox + LofModal.PAD, cy, LofModal.W - 2 * LofModal.PAD, CHECK_H);
 			g.setColor(new Color(0, 0, 0, 80));
 			g.fillRoundRect(cr.x, cr.y, cr.width, cr.height, 10, 10);

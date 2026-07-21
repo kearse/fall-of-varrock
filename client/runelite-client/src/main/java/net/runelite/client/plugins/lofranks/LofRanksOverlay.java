@@ -30,6 +30,7 @@ import net.runelite.api.GameState;
 import net.runelite.api.InventoryID;
 import net.runelite.api.Item;
 import net.runelite.api.ItemContainer;
+import net.runelite.client.plugins.loftheme.LofModal;
 import net.runelite.client.plugins.loftheme.LofTheme;
 import net.runelite.client.plugins.loftheme.LofWindows;
 import net.runelite.client.ui.FontManager;
@@ -47,8 +48,8 @@ class LofRanksOverlay extends Overlay implements LofWindows.Window
 	static final int BUY = 2;
 
 	// Design-system standard modal (480x400 — docs/overlay-design-system.md §6A).
-	private static final int WIN_W = 480;
-	private static final int WIN_H = 400;
+	private static final int WIN_W = LofModal.W;
+	private static final int WIN_H = LofModal.H;
 	private static final int WIN_ARC = 14;
 	private static final int TITLE_H = 38;
 	private static final int PAD = 14;
@@ -122,18 +123,10 @@ class LofRanksOverlay extends Overlay implements LofWindows.Window
 		return currentRank + 1 < LofRanksData.RANKS.length ? currentRank + 1 : -1;
 	}
 
-	private int originX()
-	{
-		// Centre within the game viewport, not the whole canvas (§6A).
-		final int canvasW = client.getCanvasWidth();
-		final int viewportW = client.isResized() ? canvasW : Math.min(canvasW, 512);
-		return Math.max(0, Math.min((canvasW - WIN_W) / 2, (viewportW - WIN_W) / 2));
-	}
+	// Placement single-sourced in LofModal (§6A) — same anchor as every modal.
+	private int originX() { return LofModal.originX(client, WIN_W); }
 
-	private int originY()
-	{
-		return Math.max(0, (client.getCanvasHeight() - WIN_H) / 2);
-	}
+	private int originY() { return LofModal.originY(client, WIN_H); }
 
 	private Rectangle closeRect(int ox, int oy)
 	{

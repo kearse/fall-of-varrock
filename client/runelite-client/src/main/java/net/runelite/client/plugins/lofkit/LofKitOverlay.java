@@ -29,6 +29,7 @@ import net.runelite.api.InventoryID;
 import net.runelite.api.ItemContainer;
 import net.runelite.api.ItemID;
 import net.runelite.client.game.ItemManager;
+import net.runelite.client.plugins.loftheme.LofModal;
 import net.runelite.client.plugins.loftheme.LofTheme;
 import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.overlay.Overlay;
@@ -91,28 +92,32 @@ class LofKitOverlay extends Overlay
 
 	// Window geometry. Wider than the duel modal (three columns); in fixed mode it overlaps the
 	// inventory column — acceptable, the kit IS your inventory while this screen is up.
-	static final int WIN_W = 580;
-	static final int WIN_H = 444;
+	// Fits the fixed-mode viewport (512×334): 512 wide × 324 tall, so the editor sits centred in the
+	// game viewport and clears the chat like the standard modals. Slots are smaller than before and the
+	// item icons are drawn scaled-to-slot (itemSlot) so the 7-row inventory + palette still fit.
+	static final int WIN_W = 512;
+	static final int WIN_H = 324;
 	private static final int WIN_ARC = 14;
 	private static final int TITLE_H = 38;
 	private static final int PAD = 12;
-	private static final int PRESET_Y = TITLE_H + 8;
-	private static final int PRESET_H = 22;
-	private static final int LABEL_Y = TITLE_H + 50;
-	private static final int COLS_TOP = TITLE_H + 58;
+	private static final int PRESET_Y = TITLE_H + 6;
+	private static final int PRESET_H = 20;
+	private static final int LABEL_Y = TITLE_H + 34;
+	private static final int COLS_TOP = TITLE_H + 40;
+	private static final int COL_GAP = 30; // spacing between the doll / inventory / palette columns
 	private static final int DOLL_X = PAD;
-	private static final int DOLL_SZ = 44;
-	private static final int DOLL_GAP = 6;
-	private static final int INV_X = PAD + 3 * (DOLL_SZ + DOLL_GAP) + 12;
-	private static final int INV_SZ = 40;
-	private static final int INV_GAP = 4;
-	private static final int PAL_X = INV_X + 4 * (INV_SZ + INV_GAP) + 12;
-	private static final int PAL_SZ = 40;
+	private static final int DOLL_SZ = 34;
+	private static final int DOLL_GAP = 4;
+	private static final int INV_X = PAD + 3 * (DOLL_SZ + DOLL_GAP) + COL_GAP;
+	private static final int INV_SZ = 28;
+	private static final int INV_GAP = 2;
+	private static final int PAL_X = INV_X + 4 * (INV_SZ + INV_GAP) + COL_GAP;
+	private static final int PAL_SZ = 30;
 	private static final int PAL_GAP = 2;
 	private static final int PAL_COLS = 5;
 	private static final int PAL_ROWS = 4;
-	private static final int TAB_H = 18;
-	private static final int FOOT_H = 34;
+	private static final int TAB_H = 15;
+	private static final int FOOT_H = 30;
 	private static final int CHIP_H = 20;
 
 	private final Client client;
@@ -193,8 +198,10 @@ class LofKitOverlay extends Overlay
 
 	void pageDelta(int d) { bankPage = Math.max(0, bankPage + d); }
 
-	private int originX() { return Math.max(6, (client.getCanvasWidth() - WIN_W) / 2); }
-	private int originY() { return Math.max(0, (client.getCanvasHeight() - WIN_H) / 2); }
+	// Placement single-sourced in LofModal (§6A). The editor is wider than the fixed-mode viewport,
+	// so LofModal centres it on the whole canvas (its width can't clear the inventory column anyway).
+	private int originX() { return LofModal.originX(client, WIN_W); }
+	private int originY() { return LofModal.originY(client, WIN_H); }
 
 	// ── geometry ──
 
@@ -232,7 +239,7 @@ class LofKitOverlay extends Overlay
 
 	private Rectangle tabRect(int ox, int oy, int i)
 	{
-		return new Rectangle(ox + PAL_X + (i % 3) * 70, oy + COLS_TOP + (i / 3) * (TAB_H + 2), 66, TAB_H);
+		return new Rectangle(ox + PAL_X + (i % 3) * 60, oy + COLS_TOP + (i / 3) * (TAB_H + 2), 54, TAB_H);
 	}
 
 	private int palTop(int oy) { return oy + COLS_TOP + 2 * (TAB_H + 2) + 6; }
@@ -245,10 +252,10 @@ class LofKitOverlay extends Overlay
 	}
 
 	private Rectangle pagePrevRect(int ox, int oy) { return new Rectangle(ox + PAL_X, palTop(oy) + PAL_ROWS * (PAL_SZ + PAL_GAP) + 4, 30, 18); }
-	private Rectangle pageNextRect(int ox, int oy) { return new Rectangle(ox + PAL_X + 178, palTop(oy) + PAL_ROWS * (PAL_SZ + PAL_GAP) + 4, 30, 18); }
+	private Rectangle pageNextRect(int ox, int oy) { return new Rectangle(ox + PAL_X + 150, palTop(oy) + PAL_ROWS * (PAL_SZ + PAL_GAP) + 4, 30, 18); }
 
-	private Rectangle bookRect(int ox, int oy, int i) { return new Rectangle(ox + PAD + 64 + i * 52, oy + WIN_H - FOOT_H, 48, CHIP_H); }
-	private Rectangle diffRect(int ox, int oy, int i) { return new Rectangle(ox + PAD + 288 + i * 46, oy + WIN_H - FOOT_H, 42, CHIP_H); }
+	private Rectangle bookRect(int ox, int oy, int i) { return new Rectangle(ox + PAD + 50 + i * 44, oy + WIN_H - FOOT_H, 40, CHIP_H); }
+	private Rectangle diffRect(int ox, int oy, int i) { return new Rectangle(ox + PAD + 226 + i * 40, oy + WIN_H - FOOT_H, 36, CHIP_H); }
 	private Rectangle actionRect(int ox, int oy) { return new Rectangle(ox + WIN_W - PAD - 108, oy + WIN_H - FOOT_H - 4, 108, 28); }
 
 	int hitTest(Point p)
@@ -485,7 +492,7 @@ class LofKitOverlay extends Overlay
 		if (training)
 		{
 			g.setFont(FontManager.getRunescapeSmallFont());
-			LofTheme.shadowText(g, "BOT", ox + PAD + 258, oy + WIN_H - FOOT_H + 14, LofTheme.GOLD_DIM);
+			LofTheme.shadowText(g, "BOT", ox + PAD + 196, oy + WIN_H - FOOT_H + 14, LofTheme.GOLD_DIM);
 			g.setFont(FontManager.getRunescapeFont());
 			final String[] diffs = { "Easy", "Med", "Hard" };
 			for (int i = 0; i < 3; i++)
@@ -522,7 +529,8 @@ class LofKitOverlay extends Overlay
 			final BufferedImage img = itemManager.getImage(id, qty, qty > 1);
 			if (img != null)
 			{
-				g.drawImage(img, rc.x + (rc.width - 32) / 2, rc.y + (rc.height - 32) / 2, null);
+				// Scale the 32px sprite to the (smaller) slot so the icon fills it without spilling.
+				g.drawImage(img, rc.x + 2, rc.y + 2, rc.width - 4, rc.height - 4, null);
 			}
 		}
 		else if (emptyLabel != null)

@@ -24,6 +24,7 @@ import net.runelite.api.events.VarbitChanged;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.input.MouseManager;
+import net.runelite.client.input.MouseWheelListener;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.plugins.loftheme.LofWindows;
@@ -57,6 +58,7 @@ public class LofMakePlugin extends Plugin
 	private LofMakeOverlay overlay;
 
 	private LofMakeMouseListener mouseListener;
+	private MouseWheelListener wheelListener;
 
 	/** Accumulator for an incoming recipe list (header resets it; rows fill it). */
 	private String pendingTitle = "";
@@ -73,6 +75,15 @@ public class LofMakePlugin extends Plugin
 		LofWindows.register(overlay);
 		mouseListener = new LofMakeMouseListener(this, overlay);
 		mouseManager.registerMouseListener(mouseListener);
+		wheelListener = event ->
+		{
+			if (overlay.handleScroll(event.getPoint(), event.getWheelRotation()))
+			{
+				event.consume();
+			}
+			return event;
+		};
+		mouseManager.registerMouseWheelListener(wheelListener);
 	}
 
 	@Override
@@ -84,6 +95,11 @@ public class LofMakePlugin extends Plugin
 		{
 			mouseManager.unregisterMouseListener(mouseListener);
 			mouseListener = null;
+		}
+		if (wheelListener != null)
+		{
+			mouseManager.unregisterMouseWheelListener(wheelListener);
+			wheelListener = null;
 		}
 		overlay.setVisible(false);
 	}

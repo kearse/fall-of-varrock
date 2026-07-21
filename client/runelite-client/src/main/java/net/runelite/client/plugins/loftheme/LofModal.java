@@ -25,11 +25,24 @@ import net.runelite.client.ui.FontManager;
 
 public final class LofModal
 {
+	/** The one default window size every standard modal uses (docs/overlay-design-system.md §6A).
+	 *  Height fits inside the fixed-mode world view ({@link #FIXED_VIEWPORT_H}) so the window sits
+	 *  centred in the game viewport, clear of the chat box — the way a default OSRS interface does. */
 	public static final int W = 480;
-	public static final int H = 400;
+	public static final int H = 324;
 	public static final int ARC = 14;
 	public static final int TITLE_H = 38;
 	public static final int PAD = 14;
+
+	/**
+	 * The vanilla fixed-mode world view (the game renders at 765×503; the world sits in the top-left
+	 * 512×334). We centre windows inside this so they clear the inventory/tab column in fixed mode.
+	 */
+	public static final int FIXED_VIEWPORT_W = 512;
+	public static final int FIXED_VIEWPORT_H = 334;
+
+	/** Bottom band kept clear for the chat box, so a centred window never covers the chat (§6A). */
+	public static final int CHATBOX_RESERVE = 165;
 
 	public static final int COINS_ID = 995; // item.coins_995
 
@@ -37,17 +50,68 @@ public final class LofModal
 	{
 	}
 
-	/** Centre within the game viewport, not the whole canvas (§6A). */
+	// ---------------------------------------------------------------------------------------------
+	// Placement — the single source of truth for where a lof modal opens (§6A). Every framed window
+	// routes through here so the client places all of them the same way. The behaviour is OSRS-
+	// faithful and *dynamic*: fixed pixel size, re-centred on the live canvas each frame, and clamped
+	// so it never runs off any edge — the same way vanilla interfaces re-centre without rescaling.
+	// ---------------------------------------------------------------------------------------------
+
+	/** Origin X for a standard {@link #W}-wide window. */
 	public static int originX(Client client)
 	{
-		final int canvasW = client.getCanvasWidth();
-		final int viewportW = client.isResized() ? canvasW : Math.min(canvasW, 512);
-		return Math.max(0, Math.min((canvasW - W) / 2, (viewportW - W) / 2));
+		return originX(client, W);
 	}
 
+	/** Origin Y for a standard {@link #H}-tall window. */
 	public static int originY(Client client)
 	{
-		return Math.max(0, (client.getCanvasHeight() - H) / 2);
+		return originY(client, H);
+	}
+
+	/**
+	 * Centre a window {@code w} wide. In fixed mode keep it inside the ~512px world view so it clears
+	 * the inventory/tab column; in resizable mode centre on the whole canvas. A window wider than the
+	 * viewport (e.g. the kit editor) can't fit beside the inventory, so it centres on the full canvas
+	 * instead. Always clamped so it never runs off either edge, even on a canvas narrower than {@code w}.
+	 */
+	public static int originX(Client client, int w)
+	{
+		final int canvasW = client.getCanvasWidth();
+		final int viewportW = client.isResized() ? canvasW : Math.min(canvasW, FIXED_VIEWPORT_W);
+		final int frame = w <= viewportW ? viewportW : canvasW;
+		return clamp((frame - w) / 2, canvasW, w);
+	}
+
+	/**
+	 * Centre a window {@code h} tall in the game viewport — the play area above the chat box — the way
+	 * a default OSRS interface sits. In fixed mode the viewport is the {@link #FIXED_VIEWPORT_H}px world
+	 * view; in resizable mode it's the canvas minus the chat band ({@link #CHATBOX_RESERVE}). A window
+	 * that fits centres cleanly and clear of the chat; a window taller than the viewport (a big editor
+	 * on a short canvas) pins to the top. Clamped so it never clips an edge.
+	 */
+	public static int originY(Client client, int h)
+	{
+		final int canvasH = client.getCanvasHeight();
+		final int viewportH = client.isResized() ? (canvasH - CHATBOX_RESERVE) : FIXED_VIEWPORT_H;
+		return clamp((viewportH - h) / 2, canvasH, h);
+	}
+
+	/** The placement rectangle of a standard {@link #W}×{@link #H} window on the current canvas. */
+	public static Rectangle bounds(Client client)
+	{
+		return new Rectangle(originX(client), originY(client), W, H);
+	}
+
+	/** Clamp {@code pos} so a run of length {@code size} stays within {@code [0, extent]}; a run
+	 *  bigger than the extent pins to the top/left edge rather than centring off-screen. */
+	private static int clamp(int pos, int extent, int size)
+	{
+		if (size >= extent)
+		{
+			return 0;
+		}
+		return Math.max(0, Math.min(pos, extent - size));
 	}
 
 	public static Rectangle closeRect(int ox, int oy)
@@ -92,6 +156,36 @@ public final class LofModal
 		g.drawLine(cr.x + 6, cr.y + 6, cr.x + cr.width - 7, cr.y + cr.height - 7);
 		g.drawLine(cr.x + cr.width - 7, cr.y + 6, cr.x + 6, cr.y + cr.height - 7);
 		g.setStroke(oldStroke);
+	}
+
+	// ---------------------------------------------------------------------------------------------
+	// Scrolling — a modal whose content is taller than the window scrolls its list region instead of
+	// growing (so the window still fits the game viewport, §6A). Shared so every scrolling modal looks
+	// and behaves the same; mirrors the teleport list. contentH = total content px, viewH = the
+	// visible list-region height.
+	// ---------------------------------------------------------------------------------------------
+
+	/** Clamp a pixel scroll offset to {@code [0, contentH - viewH]} (0 when everything fits). */
+	public static int clampScroll(int scroll, int contentH, int viewH)
+	{
+		return Math.max(0, Math.min(scroll, Math.max(0, contentH - viewH)));
+	}
+
+	/** Draw the standard 5px ember scroll thumb on a faint track at the right edge of a list region.
+	 *  No-op when the content fits (nothing to scroll). */
+	public static void scrollbar(Graphics2D g, int x, int yTop, int viewH, int contentH, int scroll)
+	{
+		if (contentH <= viewH)
+		{
+			return;
+		}
+		g.setColor(LofTheme.alpha(Color.WHITE, 14));
+		g.fillRoundRect(x, yTop, 5, viewH, 5, 5);
+		final int max = contentH - viewH;
+		final int thumbH = Math.max(24, (int) ((long) viewH * viewH / contentH));
+		final int thumbY = yTop + (viewH - thumbH) * clampScroll(scroll, contentH, viewH) / max;
+		g.setColor(LofTheme.alpha(LofTheme.EMBER, 190));
+		g.fillRoundRect(x, thumbY, 5, thumbH, 5, 5);
 	}
 
 	/** Standard footer button (§5): accent-coloured when enabled, dim + inert when not. */

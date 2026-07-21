@@ -68,8 +68,8 @@ class LofStyleOverlay extends Overlay implements LofWindows.Window
 	};
 	static final int LEFT_ROWS = 7; // rows [0,LEFT_ROWS) draw left, the rest right
 
-	private static final int WIN_W = 480;
-	private static final int WIN_H = 420;
+	private static final int WIN_W = LofModal.W;
+	private static final int WIN_H = 420; // taller than the standard modal to frame the character model
 	private static final int ARC = 14;
 	private static final int TITLE_H = 38;
 	private static final int PAD = 14;

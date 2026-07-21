@@ -25,6 +25,7 @@ import javax.inject.Inject;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
 import net.runelite.client.game.ItemManager;
+import net.runelite.client.plugins.loftheme.LofModal;
 import net.runelite.client.plugins.loftheme.LofTheme;
 import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.overlay.Overlay;
@@ -101,17 +102,10 @@ class LofWarSpoilsOverlay extends Overlay
 		return Math.max(0, rowCount() * ROW_STEP - VP_H);
 	}
 
-	private int originX()
-	{
-		final int canvasW = client.getCanvasWidth();
-		final int viewportW = client.isResized() ? canvasW : Math.min(canvasW, 512);
-		return Math.max(0, Math.min((canvasW - WIN_W) / 2, (viewportW - WIN_W) / 2));
-	}
+	// Placement single-sourced in LofModal (§6A) — same anchor as every modal.
+	private int originX() { return LofModal.originX(client, WIN_W); }
 
-	private int originY()
-	{
-		return Math.max(0, (client.getCanvasHeight() - WIN_H) / 2);
-	}
+	private int originY() { return LofModal.originY(client, WIN_H); }
 
 	/** Wheel scroll if the cursor is over the list; returns true if consumed. */
 	boolean handleScroll(Point p, int rotation)

@@ -21,6 +21,7 @@ import net.runelite.api.events.VarbitChanged;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.input.MouseManager;
+import net.runelite.client.input.MouseWheelListener;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.plugins.loftheme.LofWindows;
@@ -54,6 +55,7 @@ public class LofForgePlugin extends Plugin
 	private LofForgeOverlay overlay;
 
 	private LofForgeMouseListener mouseListener;
+	private MouseWheelListener wheelListener;
 
 	private final List<LofForgeOverlay.Recipe> pendingRows = new ArrayList<>();
 	private int pendingCount;
@@ -65,6 +67,15 @@ public class LofForgePlugin extends Plugin
 		LofWindows.register(overlay);
 		mouseListener = new LofForgeMouseListener(this, overlay);
 		mouseManager.registerMouseListener(mouseListener);
+		wheelListener = event ->
+		{
+			if (overlay.handleScroll(event.getPoint(), event.getWheelRotation()))
+			{
+				event.consume();
+			}
+			return event;
+		};
+		mouseManager.registerMouseWheelListener(wheelListener);
 	}
 
 	@Override
@@ -76,6 +87,11 @@ public class LofForgePlugin extends Plugin
 		{
 			mouseManager.unregisterMouseListener(mouseListener);
 			mouseListener = null;
+		}
+		if (wheelListener != null)
+		{
+			mouseManager.unregisterMouseWheelListener(wheelListener);
+			wheelListener = null;
 		}
 		overlay.setVisible(false);
 	}
