@@ -52,6 +52,16 @@ class LofDiceOverlay extends Overlay implements LofWindows.Window
 	private static final int STAKE_Y = CHIPS_Y + 34;
 	private static final int HIST_Y = STAKE_Y + 44;
 
+	// Roll animation. The die tumbles the instant ROLL is pressed and keeps tumbling until the
+	// server's result arrives; it then decelerates and lands exactly on the rolled number, so the
+	// face the player watched stop IS the outcome. The win/lose banner and the history rail are held
+	// back until it lands (PH_IDLE) — committing them on arrival would spoil the roll before the
+	// die settles.
+	private static final int PH_IDLE = 0, PH_SPIN = 1, PH_SETTLE = 2;
+	private static final long MIN_SPIN_NANOS = 600_000_000L; // tumble at least this long, even on an instant result
+	private static final long SETTLE_NANOS = 780_000_000L;   // deceleration + landing
+	private static final long LOCK_NANOS = 150_000_000L;     // final stretch of the settle: face locked to the result
+
 	private final Client client;
 
 	private boolean visible;
@@ -61,6 +71,17 @@ class LofDiceOverlay extends Overlay implements LofWindows.Window
 	private boolean lastWin;
 	private long lastPayout;
 	private final Deque<int[]> history = new ArrayDeque<>(); // {roll, win}
+
+	// animation state — mutated by onRollSent (mouse thread) and render/onResult (client thread)
+	private volatile int phase = PH_IDLE;
+	private volatile long spinStartNanos;   // published by onRollSent; render reseeds when it changes
+	private volatile int pendingRoll = -1;  // the real result, awaiting the landing frame
+	private boolean pendingWin;
+	private long settleStartNanos;
+	private long renderedSpinStart;         // last spinStartNanos render initialised — detects a fresh press
+	private int spinFace = 50;              // the tumbling face currently drawn
+	private long lastFaceChangeNanos;
+	private long rngState = 0x9E3779B97F4A7C15L;
 
 	private BufferedImage tankards;
 	private boolean iconLoaded;
@@ -114,18 +135,111 @@ class LofDiceOverlay extends Overlay implements LofWindows.Window
 	void onRollSent()
 	{
 		stakeAtRoll = stake;
+		// Kick off the tumble. Publish the timing/pending fields before phase so render sees a
+		// consistent snapshot across the mouse→client thread hop (phase is the volatile barrier).
+		pendingRoll = -1;
+		spinStartNanos = System.nanoTime();
+		phase = PH_SPIN;
 	}
 
 	void onResult(int roll, boolean win)
 	{
-		lastRoll = roll;
-		lastWin = win;
-		lastPayout = win ? (long) (stakeAtRoll * 2L * (1.0 - RAKE)) : 0;
-		history.addFirst(new int[]{roll, win ? 1 : 0});
+		pendingWin = win;
+		// If the player rolled from this window we're already tumbling; just hand the die its target
+		// and let render decelerate onto it. If a result somehow arrives cold (no local press), start
+		// a settle here so it still animates rather than snapping.
+		if (phase == PH_IDLE)
+		{
+			spinStartNanos = System.nanoTime();
+			settleStartNanos = spinStartNanos;
+			phase = PH_SETTLE;
+		}
+		pendingRoll = roll;
+	}
+
+	/** Land the roll: commit the banner + history. Called from render on the final settle frame. */
+	private void commitResult()
+	{
+		lastRoll = pendingRoll;
+		lastWin = pendingWin;
+		lastPayout = lastWin ? (long) (stakeAtRoll * 2L * (1.0 - RAKE)) : 0;
+		history.addFirst(new int[]{lastRoll, lastWin ? 1 : 0});
 		while (history.size() > 8)
 		{
 			history.removeLast();
 		}
+		pendingRoll = -1;
+		phase = PH_IDLE;
+	}
+
+	private int nextFace()
+	{
+		long x = rngState;
+		x ^= x << 13;
+		x ^= x >>> 7;
+		x ^= x << 17;
+		rngState = x;
+		return 1 + (int) ((x >>> 1) % 100); // 1..100, matching the percentile die
+	}
+
+	/**
+	 * Advance the tumble/settle state machine for this frame. Returns the face to draw (1..100 while
+	 * animating, the settled roll or -1 when idle). Runs entirely on the client (render) thread.
+	 */
+	private int advanceAnimation(long now)
+	{
+		if (phase == PH_IDLE)
+		{
+			return lastRoll;
+		}
+		// A fresh ROLL press: reseed so this tumble differs from the last, and force an immediate face.
+		if (spinStartNanos != renderedSpinStart)
+		{
+			renderedSpinStart = spinStartNanos;
+			rngState ^= spinStartNanos | 1L;
+			lastFaceChangeNanos = 0;
+			spinFace = nextFace();
+		}
+		if (phase == PH_SPIN)
+		{
+			// Once the result is in hand and we've tumbled long enough, begin the landing.
+			if (pendingRoll >= 0 && now - spinStartNanos >= MIN_SPIN_NANOS)
+			{
+				phase = PH_SETTLE;
+				settleStartNanos = now;
+			}
+			else
+			{
+				if (now - lastFaceChangeNanos >= 55_000_000L) // brisk, constant tumble
+				{
+					lastFaceChangeNanos = now;
+					spinFace = nextFace();
+				}
+				return spinFace;
+			}
+		}
+		// PH_SETTLE — ease out: the interval between faces grows, then the face locks to the result.
+		final long t = now - settleStartNanos;
+		if (t >= SETTLE_NANOS)
+		{
+			commitResult();
+			return lastRoll;
+		}
+		if (SETTLE_NANOS - t <= LOCK_NANOS)
+		{
+			spinFace = pendingRoll; // land cleanly on the real number
+		}
+		else
+		{
+			final double p = (double) t / SETTLE_NANOS;
+			final long interval = (long) ((55.0 + p * p * 210.0) * 1_000_000L);
+			if (now - lastFaceChangeNanos >= interval)
+			{
+				lastFaceChangeNanos = now;
+				spinFace = nextFace();
+			}
+		}
+		return spinFace;
 	}
 
 	// Coins carried, sampled on the CLIENT thread by render(). Reading the inventory container off
@@ -136,7 +250,7 @@ class LofDiceOverlay extends Overlay implements LofWindows.Window
 
 	private boolean canRoll()
 	{
-		return stake > 0 && stake <= coinsCached;
+		return phase == PH_IDLE && stake > 0 && stake <= coinsCached;
 	}
 
 	private Rectangle chipRect(int ox, int oy, int i)
@@ -206,20 +320,28 @@ class LofDiceOverlay extends Overlay implements LofWindows.Window
 		final Point mouse = mousePoint();
 		LofModal.frame(g, ox, oy, "The Gambler's Table", "roll 51+ to win", mouse);
 
+		// drive the roll animation for this frame
+		final long now = System.nanoTime();
+		final int animFace = advanceAnimation(now);
+		final boolean rolling = phase != PH_IDLE;
+
 		// the die
 		final int dx = ox + LofModal.PAD + 4, dy = oy + DIE_Y;
+		// a gentle vertical bob + border that flickers ember→lava sells the tumble
+		final int bob = rolling ? (int) Math.round(2.5 * Math.sin(now / 38_000_000.0)) : 0;
 		g.setColor(new Color(18, 13, 11));
 		g.fillRoundRect(dx, dy, DIE_SIZE, DIE_SIZE, 16, 16);
 		final Stroke oldStroke = g.getStroke();
-		g.setStroke(new BasicStroke(2f));
-		g.setColor(LofTheme.EMBER);
+		g.setStroke(new BasicStroke(rolling ? 2.6f : 2f));
+		g.setColor(rolling && ((now / 90_000_000L) & 1L) == 0L ? LofTheme.LAVA : LofTheme.EMBER);
 		g.drawRoundRect(dx, dy, DIE_SIZE, DIE_SIZE, 16, 16);
 		g.setStroke(oldStroke);
 		final Font dieFont = FontManager.getRunescapeBoldFont().deriveFont(34f);
 		g.setFont(dieFont);
-		final String face = lastRoll >= 0 ? String.valueOf(lastRoll) : "?";
+		final String face = rolling ? String.valueOf(animFace) : (lastRoll >= 0 ? String.valueOf(lastRoll) : "?");
 		final FontMetrics dfm = g.getFontMetrics();
-		LofTheme.shadowText(g, face, dx + (DIE_SIZE - dfm.stringWidth(face)) / 2, dy + DIE_SIZE / 2 + 12, LofTheme.GOLD);
+		LofTheme.shadowText(g, face, dx + (DIE_SIZE - dfm.stringWidth(face)) / 2, dy + DIE_SIZE / 2 + 12 + bob,
+			rolling ? LofTheme.LAVA : LofTheme.GOLD);
 
 		if (tankards != null)
 		{
@@ -229,7 +351,12 @@ class LofDiceOverlay extends Overlay implements LofWindows.Window
 		// result banner + odds
 		g.setFont(FontManager.getRunescapeFont());
 		final int tx = dx + DIE_SIZE + 70;
-		if (lastRoll >= 0)
+		if (rolling)
+		{
+			// held back until the die lands so the banner never spoils the roll
+			LofTheme.shadowText(g, "The die tumbles" + dots(now), tx, dy + 18, LofTheme.GOLD);
+		}
+		else if (lastRoll >= 0)
 		{
 			if (lastWin)
 			{
@@ -288,8 +415,9 @@ class LofDiceOverlay extends Overlay implements LofWindows.Window
 		final long coins = LofModal.carried(client, LofModal.COINS_ID);
 		coinsCached = coins; // publish for the mouse thread before canRoll() is consulted
 		LofTheme.shadowText(g, "Coins carried: " + LofModal.fmt(coins), ox + LofModal.PAD, oy + LofModal.H - 22, LofTheme.TEXT_DIM);
-		LofModal.button(g, rollRect(ox, oy), stake > 0 ? "ROLL THE DIE — " + LofModal.fmt(stake) : "ROLL THE DIE",
-			LofTheme.EMBER, canRoll(), rollRect(ox, oy).contains(mouse));
+		final String rollLabel = rolling ? "ROLLING" + dots(now)
+			: (stake > 0 ? "ROLL THE DIE — " + LofModal.fmt(stake) : "ROLL THE DIE");
+		LofModal.button(g, rollRect(ox, oy), rollLabel, LofTheme.EMBER, canRoll(), rollRect(ox, oy).contains(mouse));
 
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, oldAA == null ? RenderingHints.VALUE_ANTIALIAS_DEFAULT : oldAA);
 		return new Dimension(LofModal.W, LofModal.H);
@@ -306,6 +434,13 @@ class LofDiceOverlay extends Overlay implements LofWindows.Window
 	public void hideWindow()
 	{
 		visible = false;
+	}
+
+	/** A 0–3 dot ellipsis that ticks with wall-clock time, for the "tumbling" / "rolling" text. */
+	private static String dots(long now)
+	{
+		final int n = (int) ((now / 250_000_000L) % 4L);
+		return n == 0 ? "" : n == 1 ? "." : n == 2 ? ".." : "...";
 	}
 
 	private Point mousePoint()
