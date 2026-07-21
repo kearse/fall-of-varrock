@@ -28,7 +28,7 @@ class ConstructionPlugin(
 ) : KotlinPlugin(r, world, server) {
 
     private val bench = "object.workbench"
-    private val benchTile = Tile(3242, 3194, 0) // relocated into the Mire working yard (graveyard hub)
+    private val benchTile = Tile(3245, 3202, 0) // by the church side, 4 tiles east of the spinning wheel (3241,3202)
 
     private data class Furniture(val name: String, val planks: Int, val level: Int, val xp: Double)
 
