@@ -1,11 +1,13 @@
 package org.alter.plugins.content.npcs.corp
 
+import dev.openrune.cache.CacheManager.getItem
 import org.alter.api.*
 import org.alter.api.dsl.*
 import org.alter.api.ext.*
 import org.alter.game.*
 import org.alter.game.model.*
 import org.alter.game.model.attr.AttributeKey
+import org.alter.game.model.attr.KILLER_ATTR
 import org.alter.game.model.combat.AttackStyle
 import org.alter.game.model.combat.CombatClass
 import org.alter.game.model.combat.CombatStyle
@@ -13,17 +15,33 @@ import org.alter.game.model.entity.*
 import org.alter.game.model.queue.*
 import org.alter.game.plugin.*
 import org.alter.plugins.content.announce.Announce
+import org.alter.plugins.content.bosses.CollectionLog
+import org.alter.plugins.content.bosses.DropEntry
+import org.alter.plugins.content.bosses.DropTable
 import org.alter.plugins.content.combat.*
 import org.alter.plugins.content.combat.formula.DragonfireFormula
 import org.alter.plugins.content.combat.formula.MagicCombatFormula
 import org.alter.plugins.content.combat.formula.MeleeCombatFormula
 import org.alter.plugins.content.combat.strategy.RangedCombatStrategy
+import org.alter.plugins.content.economy.PointKind
+import org.alter.plugins.content.economy.awardTickets
+import org.alter.plugins.content.war.boss.BossScheduler
+import org.alter.rscm.RSCM.getRSCM
 
 /**
- * Bespoke combat AI for the **Corporeal Beast** city world boss (see
- * [org.alter.plugins.content.war.boss.BossRegistry]). The boss npc is spawned dynamically by
- * [org.alter.plugins.content.war.boss.BossScheduler]; this plugin only registers its combat
- * definition (attack speed / bonuses / aggro / block+death anims) and its attack AI.
+ * Bespoke combat AI **and lifecycle** for the **Corporeal Beast**, which exists in two forms
+ * sharing one npc id:
+ *  - a **permanent lair spawn** at its cave (always available, respawns on a timer, drops its own
+ *    table on the corpse — see [LAIR_LOOT]); and
+ *  - an occasional **Lumbridge world-boss event** spawned by
+ *    [org.alter.plugins.content.war.boss.BossScheduler], whose spoils are split by damage
+ *    contribution ([org.alter.plugins.content.war.boss.BossLoot]) and whose avatar-tier uniques
+ *    roll at boosted odds ([org.alter.plugins.content.war.boss.BossRegistry.eventUniqueMultiplier]).
+ *
+ * This plugin registers the shared combat definition (attack speed / bonuses / aggro / anims) and
+ * attack AI, spawns the permanent lair copy, and owns the **single** death handler for the npc id
+ * (only one may bind) — dispatching a tracked event kill back to [BossScheduler.onBossDeath] and
+ * otherwise dropping the lair table itself.
  *
  * `onNpcCombat` OVERRIDES the global combat logic for this npc id (see
  * `PluginRepository.executeNpcCombat`), so this fully replaces the default melee-only behaviour
@@ -51,8 +69,11 @@ class CorpBeastPlugin(
         // overrides, preserving everything set here (attack speed, bonuses, aggro, anims).
         setCombatDef("npc.corporeal_beast") {
             configs {
-                attackSpeed = 5      // slow, heavy hitter
-                respawnDelay = 0     // the scheduler owns its lifecycle, never auto-respawns
+                attackSpeed = 5             // slow, heavy hitter
+                // Positive delay => the permanent LAIR spawn respawns after each kill (World
+                // .setNpcDefaults reads this). The world-boss event instance sets respawns=false on
+                // itself after spawn (BossScheduler), so the scheduler still owns ITS lifecycle.
+                respawnDelay = LAIR_RESPAWN
             }
             aggro {
                 radius = 10
@@ -84,6 +105,41 @@ class CorpBeastPlugin(
         onNpcCombat("npc.corporeal_beast") {
             npc.queue { npc.combat(this) }
         }
+
+        // The permanent lair copy — ALWAYS present at its cave (respawns on death). This is the
+        // normal farm; the Lumbridge world boss is the separate, occasional event.
+        // NOTE (TUNE): CAVE is best-known OSRS Corporeal Beast's Cave. Verify in-game that it lands
+        // on solid floor at this plane — a wrong plane leaves the boss/loot floating (as Nex did).
+        spawnNpc("npc.corporeal_beast", CAVE.x, CAVE.z, CAVE.height, walkRadius = 5)
+
+        // The ONE death handler allowed per npc id, shared by both forms. A tracked event kill is
+        // owned by the scheduler's contribution split; otherwise it's the lair copy → drop its own
+        // table on the corpse so a normal kill actually yields loot.
+        onNpcDeath("npc.corporeal_beast") {
+            if (BossScheduler.onBossDeath(world, npc)) return@onNpcDeath
+            val killer = npc.attr[KILLER_ATTR]?.get() as? Player ?: return@onNpcDeath
+            dropLairLoot(npc, killer)
+        }
+    }
+
+    /** Roll [LAIR_LOOT] onto the corpse for the permanent cave kill (single-killer, like other PvM
+     *  bosses). Unknown cache ids are skipped so a kill never crashes on a missing item. */
+    private fun dropLairLoot(npc: Npc, killer: Player) {
+        killer.awardTickets(PointKind.BOSS, LAIR_BOSS_POINTS)
+        LAIR_LOOT.roll(world).forEach { drop ->
+            val id = runCatching { getRSCM(drop.item) }.getOrNull() ?: return@forEach
+            world.spawn(GroundItem(id, drop.amount, npc.tile, killer))
+            val name = runCatching { getItem(id).name }.getOrNull() ?: return@forEach
+            if (drop.announce) {
+                world.players.forEach {
+                    it.message("<col=ff0000>News: ${killer.username} just received <col=ffae00>$name</col> from the Corporeal Beast!</col>")
+                }
+            }
+            if (drop.log && CollectionLog.record(killer, id)) {
+                killer.message("<col=ffae00>New Collection Log slot: $name!</col>")
+            }
+        }
+        killer.message("<col=ff0000>You have slain the Corporeal Beast.</col> (+$LAIR_BOSS_POINTS Boss Tickets)")
     }
 
     private suspend fun Npc.combat(it: QueueTask) {
@@ -181,7 +237,11 @@ class CorpBeastPlugin(
         }
     }
 
-    private companion object {
+    companion object {
+        /** Shared npc id key — referenced by WorldBossPlugin to hand this plugin sole ownership
+         *  of the death handler (see the dispatch in [init]). */
+        const val NPC = "npc.corporeal_beast"
+
         // Per-npc flag so the enrage roar only fires once.
         private val ENRAGED_ATTR = AttributeKey<Boolean>()
 
@@ -204,5 +264,54 @@ class CorpBeastPlugin(
         private const val NOVA_MAX = 22
         private const val NOVA_MAX_ENRAGED = 30
         private const val NOVA_RADIUS = 1
+
+        // ── Permanent lair (always-on cave farm) ────────────────────────────────────────────
+        /** Best-known OSRS Corporeal Beast's Cave tile. TUNE: verify in-game it renders on solid
+         *  floor at this plane (a wrong plane leaves it floating in the sky, as Nex's did). */
+        private val CAVE = Tile(2966, 4383, 2)
+        private const val LAIR_RESPAWN = 50   // ~30s between lair respawns
+        private const val LAIR_BOSS_POINTS = 25
+
+        /**
+         * Corpse drop table for the permanent CAVE kill (single killer). Mirrors the world boss's
+         * value but rolls its avatar-tier uniques at BASE odds — the Lumbridge event doubles them
+         * (see [org.alter.plugins.content.war.boss.BossRegistry.eventUniqueMultiplier]). The cave is
+         * still the only faucet for the spirit-shield sigils, so a solo grind pays off.
+         */
+        private val LAIR_LOOT = DropTable(
+            // Every kill: PK supplies (always useful).
+            always = listOf(
+                DropEntry("item.blood_rune", 80, 160),
+                DropEntry("item.death_rune", 80, 160),
+                DropEntry("item.super_restore4", 2, 4),
+            ),
+            // One weighted pick: coins + solid rune/dragon gear and resources.
+            main = listOf(
+                DropEntry("item.coins_995", 20_000, 45_000, weight = 26),
+                DropEntry("item.rune_platebody", weight = 20),
+                DropEntry("item.rune_platelegs", weight = 20),
+                DropEntry("item.runite_ore", 2, 4, weight = 18),
+                DropEntry("item.dragon_bones", 10, 20, weight = 18),
+                DropEntry("item.magic_logs", 20, 40, weight = 14),
+                DropEntry("item.dragon_dagger", weight = 8),
+                DropEntry("item.dragon_platelegs", weight = 4),
+            ),
+            // Independent chase rolls — dragon pieces plus the avatar-tier uniques (sigils, blessed
+            // spirit shield, holy elixir, visage, pet) at BASE odds.
+            rare = listOf(
+                DropEntry("item.dragon_boots", 1, 1, oneInN = 25),
+                DropEntry("item.dragon_2h_sword", 1, 1, oneInN = 45),
+                DropEntry("item.dragon_full_helm", 1, 1, oneInN = 70, announce = true, log = true),
+                DropEntry("item.dragon_pickaxe", 1, 1, oneInN = 90, announce = true, log = true),
+                DropEntry("item.holy_elixir", 1, 1, oneInN = 50, log = true),
+                DropEntry("item.spirit_shield", 1, 1, oneInN = 64, log = true),
+                DropEntry("item.blessed_spirit_shield", 1, 1, oneInN = 120, announce = true, log = true),
+                DropEntry("item.arcane_sigil", 1, 1, oneInN = 150, announce = true, log = true),
+                DropEntry("item.spectral_sigil", 1, 1, oneInN = 150, announce = true, log = true),
+                DropEntry("item.elysian_sigil", 1, 1, oneInN = 150, announce = true, log = true),
+                DropEntry("item.draconic_visage", 1, 1, oneInN = 200, announce = true, log = true),
+                DropEntry("item.pet_corporeal_critter", 1, 1, oneInN = 700, announce = true, log = true),
+            ),
+        )
     }
 }

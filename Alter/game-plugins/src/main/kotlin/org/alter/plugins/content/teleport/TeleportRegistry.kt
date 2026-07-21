@@ -75,7 +75,8 @@ object TeleportRegistry {
 
         // ── 💀 Bosses ──────────────────────────────────────────────────────────
         built("kbd", "King Black Dragon", BOSSES, Tile(2273, 4685, 0), HOSTILE),         // KBD lair
-        built("corp_beast", "Corporeal Beast", BOSSES, Tile(3247, 3319, 0), HOSTILE),    // apex city world boss
+        built("corporeal_beast", "Corporeal Beast", BOSSES, Tile(2966, 4378, 2), HOSTILE), // always-on cave lair (TUNE plane)
+        built("corp_beast", "Corp Beast (Event)", BOSSES, Tile(3247, 3319, 0), HOSTILE),  // Lumbridge world-boss event arena
         soon("world_boss", "World Boss", BOSSES, HOSTILE), // rotating spawn — wire to WorldBoss later
         soon("zulrah", "Zulrah", BOSSES),
         built("barrows", "Barrows", BOSSES, Tile(3565, 3306, 0), SAFE_ZONE), // Phase B — mounds (dig to enter a crypt)

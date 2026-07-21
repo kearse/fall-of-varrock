@@ -75,6 +75,10 @@ object BossLairs {
         Lair("nex", intArrayOf(2904, 5184, 48, 48), multi = true),
         Lair("grotesque_guardians", intArrayOf(3392, 3520, 48, 48), multi = true),
 
+        // Corporeal Beast's Cave — the always-on lair spawn (CorpBeastPlugin). Multi-way; force-load
+        // so the beast paths before a player arrives. Box covers the cave region. Coords TUNE.
+        Lair("corporeal_beast", intArrayOf(2944, 4352, 64, 64), multi = true),
+
         // ── Revenant Caves (wilderness multi-NPC cave) — multi-way; force-load the interior.
         Lair("revenant_caves", intArrayOf(3200, 10112, 64, 64), multi = true),
     )

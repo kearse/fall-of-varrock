@@ -157,11 +157,17 @@ object BossScheduler {
         return npc
     }
 
-    /** Boss death entry point (called from the plugin's onNpcDeath). No-op for untracked npcs. */
-    fun onBossDeath(world: World, npc: Npc) {
-        val raid = activeBosses.remove(npc.index) ?: return
+    /**
+     * Boss death entry point (called from the plugin's onNpcDeath). Awards the contribution-split
+     * spoils and returns `true` if [npc] was a tracked world boss; returns `false` (no-op) for an
+     * untracked npc — e.g. a permanent lair spawn of the same npc id, whose plugin then handles
+     * its own loot.
+     */
+    fun onBossDeath(world: World, npc: Npc): Boolean {
+        val raid = activeBosses.remove(npc.index) ?: return false
         BossLoot.award(world, npc, raid)
         nextPassiveSpawnAt = ticks + SPAWN_COOLDOWN
+        return true
     }
 
     /** Push the boss's combat levels into `npc.stats` (the damage formula's real source) +

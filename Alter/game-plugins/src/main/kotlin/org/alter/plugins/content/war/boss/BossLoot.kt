@@ -80,10 +80,13 @@ object BossLoot {
                 def.dropTable.roll(world).forEach { grantDrop(world, player, it, def) }
             }
 
-            // The avatar-tier mega-rares: each unique rolls independently at its true 1-in-N
-            // odds for every eligible contributor. This is the only place sigils can drop.
+            // The avatar-tier mega-rares: each unique rolls independently for every eligible
+            // contributor. The world-boss (event) spawn boosts these to [eventUniqueMultiplier]×
+            // the base odds — e.g. a 1-in-150 sigil becomes 1-in-75 — the reward for turning out
+            // to the public event rather than farming the always-on cave lair.
             def.uniqueTable.forEach { uniq ->
-                if (uniq.oneInN > 0 && world.random(uniq.oneInN - 1) == 0) {
+                val odds = (uniq.oneInN / def.eventUniqueMultiplier.coerceAtLeast(1)).coerceAtLeast(1)
+                if (uniq.oneInN > 0 && world.random(odds - 1) == 0) {
                     grantUnique(world, player, uniq, def)
                 }
             }
