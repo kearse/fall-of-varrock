@@ -84,7 +84,9 @@ object TeleportRegistry {
         built("nex", "Nex", BOSSES, Tile(2924, 5202, 2), HOSTILE),
         built("vorkath", "Vorkath", BOSSES, Tile(2272, 4052, 0), HOSTILE),
         built("alchemical_hydra", "Alchemical Hydra", BOSSES, Tile(1361, 10231, 0), HOSTILE),
-        built("phantom_muspah", "Phantom Muspah", BOSSES, Tile(2117, 5645, 0), HOSTILE),
+        // Land a few tiles south of the lair origin (2117,5645) so the player arrives at the arena
+        // edge rather than on top of the large boss; Pawn.teleport snaps this off any wall tile.
+        built("phantom_muspah", "Phantom Muspah", BOSSES, Tile(2117, 5639, 0), HOSTILE),
         built("abyssal_sire", "Abyssal Sire", BOSSES, Tile(2970, 4384, 0), HOSTILE),
         built("grotesque_guardians", "Grotesque Guardians", BOSSES, Tile(3413, 3537, 0), HOSTILE),
         // Phase F — God Wars Dungeon generals (real throne rooms; see GodWarsBosses).

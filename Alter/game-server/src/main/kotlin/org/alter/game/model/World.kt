@@ -45,6 +45,8 @@ import org.rsmod.routefinder.reach.ReachStrategy
 import java.security.SecureRandom
 import java.util.*
 import java.util.concurrent.TimeUnit
+import kotlin.math.abs
+import kotlin.math.max
 
 /**
  * The game world, which stores all the entities and nodes that the world
@@ -668,6 +670,30 @@ class World(val gameContext: GameContext, val devContext: DevContext) {
             return filtered.random()
         }
         return null
+    }
+
+    /**
+     * Nearest walkable tile to [tile] on the SAME plane, searched in expanding square rings out to
+     * [maxRadius]. Returns [tile] unchanged if it's already walkable OR if nothing walkable is found
+     * (safe fallback — never null, never crosses a plane). Deterministic, unlike [findRandomTileAround],
+     * so a given teleport/spawn always resolves to the same square.
+     *
+     * This is the shared home for the "snap a pawn off a blocked tile" logic that several content
+     * plugins used to each re-implement (LMS, Wizard Tower, Castle Wars, the war fronts). It's a
+     * single-tile check (`!isClipped`), which is exactly what a 1×1 pawn needs.
+     */
+    fun snapToWalkable(tile: Tile, maxRadius: Int = 8): Tile {
+        if (!collision.isClipped(tile)) return tile
+        for (r in 1..maxRadius) {
+            for (dx in -r..r) {
+                for (dz in -r..r) {
+                    if (max(abs(dx), abs(dz)) != r) continue // only the current ring's edge
+                    val c = Tile(tile.x + dx, tile.z + dz, tile.height)
+                    if (!collision.isClipped(c)) return c
+                }
+            }
+        }
+        return tile
     }
 
     fun queue(logic: suspend QueueTask.(CoroutineScope) -> Unit) {

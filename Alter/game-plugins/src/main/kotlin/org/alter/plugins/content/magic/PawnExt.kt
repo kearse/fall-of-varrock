@@ -60,7 +60,10 @@ fun Pawn.teleport(
 
         wait(type.teleportDelay)
 
-        moveTo(endTile)
+        // Snap off any blocked/wall tile so a teleport can never drop the pawn inside geometry.
+        // This is the single funnel every teleport (portal, spellbook, item, minigame) passes
+        // through — hardening it here covers them all. No-op when the destination is already clear.
+        moveTo(world.snapToWalkable(endTile))
 
         type.endAnimation?.let {
             animate(it)
