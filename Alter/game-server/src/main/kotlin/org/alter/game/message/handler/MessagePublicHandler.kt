@@ -76,6 +76,11 @@ class MessagePublicHandler : MessageHandler<MessagePublic> {
                     client.world.plugins.executeCommand(client, "styleclick", parts.drop(1).toTypedArray())
                     return
                 }
+                // Intro video overlay (lofintro): "::lofintro done" → client reports the video finished.
+                "lofintro" -> {
+                    client.world.plugins.executeCommand(client, "introclick", parts.drop(1).toTypedArray())
+                    return
+                }
                 "loftp" -> {
                     client.world.plugins.executeCommand(client, "tpclick", parts.drop(1).toTypedArray())
                     return

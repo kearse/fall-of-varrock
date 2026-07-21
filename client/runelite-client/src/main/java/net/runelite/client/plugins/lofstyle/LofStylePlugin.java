@@ -104,6 +104,7 @@ public class LofStylePlugin extends Plugin
 			return; // pulse falling edge never closes the window
 		}
 		overlay.setFemale((value & 2) != 0);
+		overlay.setMandatory((value & 4) != 0); // first-login: no ✕, DONE reads "ENTER THE WAR", can't dismiss
 		LofWindows.openExclusive(overlay);
 		overlay.setVisible(true);
 	}

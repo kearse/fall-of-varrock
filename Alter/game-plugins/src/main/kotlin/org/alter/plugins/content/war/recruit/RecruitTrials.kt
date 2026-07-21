@@ -42,6 +42,14 @@ object RecruitTrials {
     /** Drives the SLAY/SUPPLY state poll while the recruit is on those steps. */
     val TRIAL_TIMER = TimerKey()
 
+    /**
+     * Opens the Recruiting Sergeant's welcome dialogue for a player. Assigned by
+     * [RecruitTrialsPlugin] (the dialogue is a private, suspend, QueueTask-scoped function it owns).
+     * FirstLoginFlow calls this to run the Sergeant's first-forces script once the recruit has
+     * finished the intro video and confirmed their character — the last beat of onboarding.
+     */
+    var greet: ((Player) -> Unit)? = null
+
     /** How often (ticks) the SLAY/SUPPLY poll runs. Cheap: only armed during those steps. */
     private const val POLL_TICKS = 3
 

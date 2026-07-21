@@ -8,6 +8,7 @@ import org.alter.game.GameContext
 import org.alter.game.model.PlayerUID
 import org.alter.game.model.attr.APPEARANCE_SET_ATTR
 import org.alter.game.model.attr.NEW_ACCOUNT_ATTR
+import org.alter.game.model.attr.ONBOARD_STEP_ATTR
 import org.alter.game.model.entity.Client
 import org.alter.game.saving.impl.*
 import org.alter.game.saving.formats.FormatHandler
@@ -170,6 +171,7 @@ object PlayerSaving {
     private fun configureNewPlayer(client: Client, block: LoginBlock<*>) {
         client.attr.put(NEW_ACCOUNT_ATTR, true)
         client.attr.put(APPEARANCE_SET_ATTR, false)
+        client.attr.put(ONBOARD_STEP_ATTR, 0) // start the first-login flow at step VIDEO (see FirstLoginFlow)
 
         if (block.authentication is AuthenticationType.PasswordAuthentication<*>) {
             val passwordAuth = block.authentication as AuthenticationType.PasswordAuthentication<*>
