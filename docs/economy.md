@@ -6,12 +6,17 @@
 
 ## Currencies
 - **gp** (`item.coins_995`) — main currency (inventory item).
-- **Blood Money** (`item.blood_money`) — PK currency (inventory item; exists in cache).
-- **Reward points** (persistent counters, NOT items — can't be dropped/traded/duped):
-  - Slayer points — from Slayer tasks → Slayer reward shop.
-  - Boss points — (planned) from PvM.
-  - Vote points — (planned) from voting.
-  - See `content/economy/Currencies.kt` (`PointKind`) + `PointsCurrency.kt` (sell-only reward shops).
+- **Tradeable special currencies** (inventory items — can be traded, dropped, and sold for coins
+  on the Grand Exchange, player-listed):
+  - **Blood Money** (`item.blood_money`) — PK currency.
+  - **Boss Tickets** (`item.boss_ticket`) — PvM currency (migrated from a counter to a ticket item).
+  - **Vote Tickets** (`item.vote_ticket`) — vote currency (likewise a ticket item).
+  - Each has a **coin ceiling** set by an NPC "buy for coins" tab (Quartermaster / Emblem Trader /
+    Valaine) — see the sink table + `economy/grandexchange/CurrencyExchange`. Peg: Boss Ticket
+    ≈ 1,000 gp, Blood Money ≈ 800 gp, Vote Ticket ≈ 2,000 gp (raise as the economy grows).
+- **Reward points** (persistent counters, NOT items — can't be dropped/traded/duped/GE'd):
+  - Slayer, War Effort, Prestige, Donor, LMS — spent at sell-only reward shops.
+  - See `content/economy/Currencies.kt` (`PointKind`) + `PointsCurrency.kt`.
 
 ## Faucets (sources) — current
 | Source | Output | Notes |
@@ -38,10 +43,28 @@
 | Forge / Upgrade gear | gp + rune gear + runite bars | **live** (`economy/forge/ForgePlugin`) — the marquee sink; KBD runite bars feed it |
 | High/Low Alchemy | item destroyed (gp partial faucet) | **live** (`magic/alchemy/AlchemyPlugin`) — item sink |
 | Trading Post trade margin | gp | **live** (`economy/tradingpost`) — 15% buy/sell spread, value-derived; the NPC-backstop marketplace sink |
+| Grand Exchange commodity margin | gp | **live (engine)** — 15% band (floor 85% / ceiling 100% of value) on the commodity allowlist (`grandexchange/GrandExchangeCommodities`); same sink as the Trading Post, now inside the GE offer book |
+| Buy-currency-for-coins tabs | gp | **live** (`grandexchange/CurrencyExchange`) — Boss Tickets 1,000 / Blood Money 800 / Vote Tickets 2,000 gp each; **one-way** (no NPC buyback) so it's a pure coin sink, and it sets the coin ceiling on special-currency gear |
 | PK Rewards shop (emblem trader) | Blood Money | **live** (`economy/pk`) — PK supplies (food/potions), no tradeable gear |
 | Gambling rake | gp | **live** (`economy/gambling`) — 5% house edge on dice |
 | Degradable gear charges | gp | planned (Phase 2) |
 | Consumables burned in combat | food/potions/runes/ammo | partial (combat consumes; needs supply skills) |
+
+## Grand Exchange (`content/economy/grandexchange`)
+The player-to-player offer book for coins — the evolution of the Trading Post into a real market that
+consolidates trade and lets stores set the price floors.
+- **Engine live:** 8 offer slots/player, escrow, price-time matching with partial fills, collect/cancel,
+  JSON world-save persistence. Currently driven by dev commands (`::gebuy/::gesell/::geoffers/::gecollect/
+  ::gecancel/::gematch`) — the native interface-465 offer packets are the remaining wiring.
+- **Dupe-safety (audited):** escrow leaves the player on offer creation; a match only *moves* value
+  between an offer's escrow and its collectable proceeds — a player↔player match never mints or destroys
+  coins/items. The NPC commodity backstop is the *only* faucet/sink and is gated to the allowlist.
+- **Store minimums (backstop):** commodity-allowlist items (runes, bars, ores, logs, food, herbs, mats)
+  get an NPC floor (85% of value) and ceiling (value). Gear, megarares and the currency items have **no**
+  backstop — they float on the pure player market. The allowlist excludes the deliberately premium-priced
+  items (death rune, adamant arrow, cooked swordfish) and load-bearing sinks (runite bar, dragon bones).
+- **Cross-playstyle trade routes stay open:** a PKer sells Blood Money to a PvMer for gp, etc. — the coin
+  ceiling (currency tabs above) caps those prices without hard-pegging them.
 
 ## Balance to-dos
 - Audit shop buy/sell spreads + high-alch values so gp drains as fast as it faucets.
