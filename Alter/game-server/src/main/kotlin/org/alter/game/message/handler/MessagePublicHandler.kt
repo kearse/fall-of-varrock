@@ -100,6 +100,26 @@ class MessagePublicHandler : MessageHandler<MessagePublic> {
                     client.world.plugins.executeCommand(client, "spoilsclick", parts.drop(1).toTypedArray())
                     return
                 }
+                "lofgenew" -> {
+                    client.world.plugins.executeCommand(client, "genewclick", parts.drop(1).toTypedArray())
+                    return
+                }
+                "lofgeconfirm" -> {
+                    client.world.plugins.executeCommand(client, "geconfirmclick", parts.drop(1).toTypedArray())
+                    return
+                }
+                "lofgecollect" -> {
+                    client.world.plugins.executeCommand(client, "gecollectclick", parts.drop(1).toTypedArray())
+                    return
+                }
+                "lofgecancel" -> {
+                    client.world.plugins.executeCommand(client, "gecancelclick", parts.drop(1).toTypedArray())
+                    return
+                }
+                "lofgeclose" -> {
+                    client.world.plugins.executeCommand(client, "gecloseclick", parts.drop(1).toTypedArray())
+                    return
+                }
                 "lofshoptab" -> {
                     client.world.plugins.executeCommand(client, "shoptabclick", parts.drop(1).toTypedArray())
                     return
