@@ -67,7 +67,18 @@ class GrandExchangeClickPlugin(
             }
         }
 
-        // Direct-create path (kept for a future drawn setup box): item/price/qty supplied by the client.
+        // Drawn setup box: pick an item (native search only), then open the in-window setup view.
+        onCommand("gesetupclick", description = "GE window: pick an item and open the drawn setup box") {
+            val box = player.getCommandArgs().getOrNull(0)?.toIntOrNull() ?: return@onCommand
+            if (box !in 0 until GrandExchange.SLOTS) return@onCommand
+            player.queue {
+                val item = searchItemInput(player, "Search for an item")
+                if (item <= 0) return@queue
+                GrandExchangeWindow.sendSetup(player, box, item)
+            }
+        }
+
+        // Confirm from the drawn setup box: buy/sell + item + price + qty supplied by the client.
         onCommand("geconfirmclick", description = "GE window: place an offer with supplied values") {
             val a = player.getCommandArgs()
             val box = a.getOrNull(0)?.toIntOrNull() ?: return@onCommand

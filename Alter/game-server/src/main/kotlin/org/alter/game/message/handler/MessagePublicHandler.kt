@@ -104,6 +104,10 @@ class MessagePublicHandler : MessageHandler<MessagePublic> {
                     client.world.plugins.executeCommand(client, "genewclick", parts.drop(1).toTypedArray())
                     return
                 }
+                "lofgesetup" -> {
+                    client.world.plugins.executeCommand(client, "gesetupclick", parts.drop(1).toTypedArray())
+                    return
+                }
                 "lofgeconfirm" -> {
                     client.world.plugins.executeCommand(client, "geconfirmclick", parts.drop(1).toTypedArray())
                     return

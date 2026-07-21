@@ -44,7 +44,83 @@ class LofGeMouseListener extends MouseAdapter
 		{
 			plugin.close();
 		}
-		else if (hit == LofGeOverlay.COLLECT_ALL)
+		else if (plugin.getSetup() != null)
+		{
+			handleSetup(hit);
+		}
+		else
+		{
+			handleBoard(hit);
+		}
+
+		event.consume();
+		return event;
+	}
+
+	private void handleSetup(int hit)
+	{
+		if (hit == LofGeOverlay.SET_TOGGLE)
+		{
+			plugin.setupToggleBuy();
+		}
+		else if (hit == LofGeOverlay.SET_QMINUS)
+		{
+			plugin.setupStepQty(-1);
+		}
+		else if (hit == LofGeOverlay.SET_QPLUS)
+		{
+			plugin.setupStepQty(1);
+		}
+		else if (hit == LofGeOverlay.SET_PMINUS)
+		{
+			plugin.setupStepPricePct(-5);
+		}
+		else if (hit == LofGeOverlay.SET_PPLUS)
+		{
+			plugin.setupStepPricePct(5);
+		}
+		else if (hit == LofGeOverlay.SET_PGUIDE)
+		{
+			plugin.setupPriceToGuide();
+		}
+		else if (hit == LofGeOverlay.SET_PCUSTOM)
+		{
+			plugin.promptPrice();
+		}
+		else if (hit == LofGeOverlay.SET_BACK)
+		{
+			plugin.setupBack();
+		}
+		else if (hit == LofGeOverlay.SET_CONFIRM)
+		{
+			plugin.setupConfirm();
+		}
+		else if (hit >= LofGeOverlay.SET_QPRESET_BASE)
+		{
+			switch (hit - LofGeOverlay.SET_QPRESET_BASE)
+			{
+				case 0:
+					plugin.setupSetQty(1);
+					break;
+				case 1:
+					plugin.setupSetQty(10);
+					break;
+				case 2:
+					plugin.setupSetQty(100);
+					break;
+				case 3:
+					plugin.setupSetQty(1000);
+					break;
+				default:
+					plugin.promptQty(); // custom X
+					break;
+			}
+		}
+	}
+
+	private void handleBoard(int hit)
+	{
+		if (hit == LofGeOverlay.COLLECT_ALL)
 		{
 			plugin.collectAll();
 		}
@@ -59,16 +135,13 @@ class LofGeMouseListener extends MouseAdapter
 			final LofGePlugin.Slot s = box >= 0 && box < slots.length ? slots[box] : null;
 			if (s == null || s.isEmpty())
 			{
-				plugin.newOffer(box);
+				plugin.openSetup(box);
 			}
 			else
 			{
 				plugin.collect(box);
 			}
 		}
-
-		event.consume();
-		return event;
 	}
 
 	@Override
