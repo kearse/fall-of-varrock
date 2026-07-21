@@ -4,16 +4,13 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import org.alter.api.Skills
 import org.alter.api.ext.*
 import org.alter.game.Server
-import org.alter.game.model.Direction
 import org.alter.game.model.ForcedMovement
-import org.alter.game.model.Tile
 import org.alter.game.model.World
-import org.alter.game.model.collision.isClipped
 import org.alter.game.model.entity.GameObject
 import org.alter.game.model.entity.Player
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
-import kotlin.math.abs
+import org.alter.plugins.content.skills.agility.ObstacleCrossing.Kind
 
 private val logger = KotlinLogging.logger {}
 
@@ -42,15 +39,6 @@ class AgilityShortcutPlugin(
     world: World,
     server: Server,
 ) : KotlinPlugin(r, world, server) {
-
-    /** How the player ends up relative to the obstacle. */
-    private enum class Kind {
-        /** End one tile past the obstacle's far edge (fences, walls, crevices, logs, ropes). */
-        CROSS,
-
-        /** Land on the obstacle tile itself (stepping stones — hop stone to stone). */
-        ONTO,
-    }
 
     private data class Entry(
         val id: Int,
@@ -123,64 +111,19 @@ class AgilityShortcutPlugin(
             return
         }
 
-        val dir = cardinalDir(player.tile, obj)
-        val dest = crossTile(player, obj, dir, e.kind)
+        val dir = ObstacleCrossing.cardinalDir(player.tile, obj)
+        val dest = ObstacleCrossing.crossTile(world, player.tile, obj, dir, e.kind)
 
         player.faceTile(obj.tile)
         player.queue {
             if (e.anim > 0) player.animate(e.anim)
-            val dist = chebyshev(player.tile, dest).coerceAtLeast(1)
+            val dist = ObstacleCrossing.chebyshev(player.tile, dest).coerceAtLeast(1)
             val dur2 = (30 * dist).coerceIn(30, 180)
             val movement = ForcedMovement.of(player.tile, dest, dur2 / 2, dur2, dir.angle)
             player.forceMove(this, movement)
             player.addXp(Skills.AGILITY, e.xp)
         }
     }
-
-    /** Cardinal direction from the player toward the obstacle's centre. */
-    private fun cardinalDir(from: Tile, obj: GameObject): Direction {
-        val (sx, sy) = footprint(obj)
-        val cx = obj.tile.x + (sx - 1) / 2.0
-        val cz = obj.tile.z + (sy - 1) / 2.0
-        val dx = cx - from.x
-        val dz = cz - from.z
-        return if (abs(dx) >= abs(dz)) {
-            if (dx >= 0) Direction.EAST else Direction.WEST
-        } else {
-            if (dz >= 0) Direction.NORTH else Direction.SOUTH
-        }
-    }
-
-    /** Landing tile: onto the stone, or one tile past the obstacle's far edge (clip-nudged). */
-    private fun crossTile(player: Player, obj: GameObject, dir: Direction, kind: Kind): Tile {
-        if (kind == Kind.ONTO) return obj.tile
-
-        val (sx, sy) = footprint(obj)
-        val p = player.tile
-        var end = when (dir) {
-            Direction.EAST -> Tile(obj.tile.x + sx, p.z, p.height)
-            Direction.WEST -> Tile(obj.tile.x - 1, p.z, p.height)
-            Direction.NORTH -> Tile(p.x, obj.tile.z + sy, p.height)
-            else -> Tile(p.x, obj.tile.z - 1, p.height) // SOUTH
-        }
-        // If we'd land in a wall/water, step one or two further across.
-        var tries = 0
-        while (world.collision.isClipped(end) && tries < 2) {
-            end = end.step(dir)
-            tries++
-        }
-        return end
-    }
-
-    /** Object footprint in world axes, accounting for orientation (rot 1/3 swap x/y). */
-    private fun footprint(obj: GameObject): Pair<Int, Int> {
-        val def = obj.getDef()
-        val sx = def.sizeX.coerceAtLeast(1)
-        val sy = def.sizeY.coerceAtLeast(1)
-        return if (obj.rot and 1 == 1) sy to sx else sx to sy
-    }
-
-    private fun chebyshev(a: Tile, b: Tile): Int = maxOf(abs(a.x - b.x), abs(a.z - b.z))
 
     private companion object {
         // Canonical OSRS agility-obstacle animations (all verified present in the rev-228 cache).
