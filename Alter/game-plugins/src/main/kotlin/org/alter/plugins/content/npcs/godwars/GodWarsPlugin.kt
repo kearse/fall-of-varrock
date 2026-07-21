@@ -43,7 +43,7 @@ class GodWarsPlugin(
 
     init {
         for (boss in GodWarsBosses.all) {
-            spawnNpc(boss.key, boss.lair.x, boss.lair.z, boss.lair.height, walkRadius = 6)
+            spawnCentred(boss.key, boss.lair.x, boss.lair.z, boss.lair.height, walkRadius = 6)
 
             setCombatDef(boss.key) {
                 configs {
@@ -80,7 +80,7 @@ class GodWarsPlugin(
             // Bodyguards: spread around the general; one shared simple melee def each.
             boss.bodyguards.forEachIndexed { i, guard ->
                 val off = BODYGUARD_OFFSETS[i % BODYGUARD_OFFSETS.size]
-                spawnNpc(guard, boss.lair.x + off.first, boss.lair.z + off.second, boss.lair.height, walkRadius = 5)
+                spawnCentred(guard, boss.lair.x + off.first, boss.lair.z + off.second, boss.lair.height, walkRadius = 5)
                 registerBodyguardDef(guard)
             }
 
@@ -139,6 +139,23 @@ class GodWarsPlugin(
             }
         }
         killer.message("<col=ff0000>You have slain ${boss.name}.</col> (+${boss.bossPoints} Boss Tickets)")
+    }
+
+    /**
+     * Spawn [npcKey] so its **footprint** is centred on ([cx], [cz]).
+     *
+     * An npc's spawn tile is its **south-west corner**; the body extends north-east by its cache
+     * tile size (mirrors the engine's `Pawn.getCentreTile`, `tile + size / 2`).
+     * The [GodWarsBosses] lairs are the throne-room *centres*, so placing a size-4 general's base
+     * directly on the centre tile shoves its 4×4 body 2 tiles north-east — into the room's wall
+     * (General Graardor was spawning stuck in the Bandos wall this way). Offsetting the base
+     * south-west by `size / 2` keeps the "lair = centre" contract for a body of any size, so the
+     * fix scales to every general and bodyguard without per-npc tuning.
+     */
+    private fun spawnCentred(npcKey: String, cx: Int, cz: Int, height: Int, walkRadius: Int) {
+        val size = runCatching { getNpc(getRSCM(npcKey)).size }.getOrNull()?.takeIf { it > 0 } ?: 1
+        val half = size shr 1
+        spawnNpc(npcKey, cx - half, cz - half, height, walkRadius = walkRadius)
     }
 
     /**
