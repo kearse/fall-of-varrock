@@ -28,8 +28,14 @@ class ItemPlugin(
                 val item = values[0].toInt()
                 val amount = if (values.size > 1) Math.min(Int.MAX_VALUE.toLong(), values[1].parseAmount()).toInt() else 1
                 if (item < itemSize()) {
+                    /*
+                     * Spawn the noted variant when one exists so the items stack
+                     * into a single slot, letting an admin reach the true maximum
+                     * amount instead of just filling the inventory's free slots.
+                     */
+                    val spawnId = Item(item).toNoted().id
                     val def = getItem(Item(item).toUnnoted().id)
-                    val result = player.inventory.add(item = item, amount = amount, assureFullInsertion = false)
+                    val result = player.inventory.add(item = spawnId, amount = amount, assureFullInsertion = false)
                     player.message(
                         "You have spawned <col=801700>${DecimalFormat().format(result.completed)} x ${def.name}</col></col> ($item).",
                     )
@@ -62,7 +68,12 @@ class ItemPlugin(
                 4 -> Int.MAX_VALUE
                 else -> return null
             }
-        val add = player.inventory.add(item, amount, assureFullInsertion = false)
+        /*
+         * Spawn the noted variant when one exists so the stack collapses into a
+         * single slot, allowing the "Max" option to reach the true maximum amount.
+         */
+        val spawnId = Item(item).toNoted().id
+        val add = player.inventory.add(spawnId, amount, assureFullInsertion = false)
         return Item(item, add.completed)
     }
 }
