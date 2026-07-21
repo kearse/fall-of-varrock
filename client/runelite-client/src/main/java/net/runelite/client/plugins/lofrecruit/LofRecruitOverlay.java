@@ -66,7 +66,10 @@ class LofRecruitOverlay extends Overlay implements LofWindows.Window
 
 	// Design-system standard modal (480x400 — docs/overlay-design-system.md §6A).
 	private static final int WIN_W = LofModal.W;
-	private static final int WIN_H = LofModal.H;
+	// Taller than the standard modal (content exception, like the kit editor): the three companion
+	// cards have a fixed internal layout that can't compress to 324. Still placed by LofModal.originY,
+	// so it centres in the game viewport and clears the chat on a normal resizable client.
+	private static final int WIN_H = 384;
 	private static final int WIN_ARC = 14;
 	private static final int TITLE_H = 38;
 	private static final int PAD = 14;

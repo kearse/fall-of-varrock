@@ -105,11 +105,18 @@ Two categories. Pick the smallest that fits.
 
 ### A. Framed modal — one default size, one dynamic placement
 
-**Every framed modal is the same size and is placed by the same code.** The default is **480 × 400**
-(`LofModal.W` × `LofModal.H`) — teleport, ranks, recruit, make, forge, contracts, dice, bonds, mire,
-duel rules, and the stake screen all use it. A few windows are deliberately a different size (the
-kit editor 580×444, the character-style window 480×420, vote 492×auto, war spoils 340×320) — but they
-are the exception, and they are **placed by the same authority** as the standard ones.
+**Every framed modal is the same size and is placed by the same code.** The default is **480 × 324**
+(`LofModal.W` × `LofModal.H`) — teleport, ranks, make, forge, contracts, dice, bonds, mire, duel rules,
+and the stake screen all use it. The **height fits inside the fixed-mode world view (334px)** so the
+window sits centred in the game viewport, clear of the chat box — the way a default OSRS interface
+does. A few windows are deliberately a different size (the kit editor 580×444, recruit 480×384 and the
+character-style window 480×420 — their fixed layouts can't compress to 324 — vote 492×auto, war spoils
+340×320); they're the exception, and they're **placed by the same authority** as the standard ones.
+
+**Content taller than the window scrolls — it does not grow the window.** A recipe/loot list uses a
+clipped viewport with `LofModal.clampScroll` + `LofModal.scrollbar` and a `MouseWheelListener` →
+`overlay.handleScroll(...)` in the plugin (mirror the teleport list; make and forge do this). This is
+how the short standard window holds an arbitrarily long list without covering the chat.
 
 **Placement is single-sourced in [`LofModal`](../client/runelite-client/src/main/java/net/runelite/client/plugins/loftheme/LofModal.java)
 — never hand-roll `originX`/`originY` in an overlay again.** Each overlay's origin is one line:
@@ -149,7 +156,7 @@ of being pinned to one pixel spot:**
 ### B. HUD overlay — content-sized, corner-anchored
 War dial row (supply · campaign/conquest · Slayer), alerts banner, LMS panel, announcement ticker, PK stats, CW timer.
 
-- **Sized to content**, not the 480×400 frame. Small.
+- **Sized to content**, not the 480×324 frame. Small.
 - **Snap to a corner** (`TOP_LEFT/…/ABOVE_CHATBOX_RIGHT`) and set `setMovable(true)` + `setSnappable(true)`
   so players can reposition. Exception: overlays that must track the chat box compute an **absolute
   position from the `CHATBOX_FRAME` widget** (see the announcement ticker) because `BOTTOM_LEFT`
@@ -273,19 +280,19 @@ Reusable pieces — reach for these before inventing a new one. Metrics above.
 
 | Overlay | Type | Size / anchor | State channel |
 | --- | --- | --- | --- |
-| `lofteleports` | Modal (tabbed) | 480×400 | varp 4607 open + `::tp` |
-| `lofranks` | Modal (progression) | 480×400 | varp 4618 (rank payload) + `::rank buy` + inventory coins |
-| `lofrecruit` | Modal (cards + tabs) | 480×400 | varp 4619 (packed) + 4613-4615 roster + `::zo recruit/regalia` |
+| `lofteleports` | Modal (tabbed) | 480×324 | varp 4607 open + `::tp` |
+| `lofranks` | Modal (progression) | 480×324 | varp 4618 (rank payload) + `::rank buy` + inventory coins |
+| `lofrecruit` | Modal (cards + tabs) | 480×384 * | varp 4619 (packed) + 4613-4615 roster + `::zo recruit/regalia` |
 | `lofshoptabs` | Modal (store) | anchored over native iface 300 | `FOV_SHOP:` stock/tabs/balance stream + `::lofshopbuy` / `::lofshopsell` (sell-only stores, e.g. the Quartermaster's Supply Depot) |
-| `lofmake` | Modal (recipes) | 480×400 | varp 4625 (kind) + `~LOFMAKE~` recipes + `::make` |
-| `lofcontracts` | Modal (board) | 480×400 | varp 4626 + `~LOFCON~` state + `::con` |
-| `lofforge` | Modal (recipes) | 480×400 | varp 4627 + `~LOFFORGE~` recipes + `::forge` |
-| `lofdice` | Modal (table) | 480×400 | varp 4628 (open/result) + `::dice roll` + inventory coins |
-| `lofbonds` | Modal (wallet) | 480×400 | varp 4629 (packed wallet) + `::lofbond` |
-| `lofmire` | Modal (loot table) | 480×400 | varp 4631 (packed) + `::mire` + inventory coins |
+| `lofmake` | Modal (recipes) | 480×324, scrolls | varp 4625 (kind) + `~LOFMAKE~` recipes + `::make` |
+| `lofcontracts` | Modal (board) | 480×324 | varp 4626 + `~LOFCON~` state + `::con` |
+| `lofforge` | Modal (recipes) | 480×324, scrolls | varp 4627 + `~LOFFORGE~` recipes + `::forge` |
+| `lofdice` | Modal (table) | 480×324 | varp 4628 (open/result) + `::dice roll` + inventory coins |
+| `lofbonds` | Modal (wallet) | 480×324 | varp 4629 (packed wallet) + `::lofbond` |
+| `lofmire` | Modal (loot table) | 480×324 | varp 4631 (packed) + `::mire` + inventory coins |
 | `lofstyle` | Modal (portrait cutout) | 480×420, viewport-centred | varp 4632 (open|female) + `::lofstyle` — a see-through hole in the panel centre frames the in-world model as the live preview; the server hides worn gear while open (`STYLE_PREVIEW_ATTR`) and `::lofstyle close`/`done` restores it |
-| `lofduel` (rules) | Modal | 480×400 | varp 4630 + `::duel` |
-| `lofstake` | Modal (inventory-clear) | 480×400, viewport-left | read iface 335 + `::stake` |
+| `lofduel` (rules) | Modal | 480×324 | varp 4630 + `::duel` |
+| `lofstake` | Modal (inventory-clear) | 480×324, viewport-left | read iface 335 + `::stake` |
 | `lofdials` | HUD dial row | content, ABOVE_CHATBOX_RIGHT | varps 4616 slayer · 4601 progress · 4609 supplies |
 | `lofalerts` | HUD banner | content, TOP_CENTER | plugin/varp 4600 |
 | `loflms` | HUD panel | content, TOP_RIGHT | varp 4608 |
@@ -293,15 +300,19 @@ Reusable pieces — reach for these before inventing a new one. Metrics above.
 | `lofpkstats` | Ticker | content, TOP_LEFT | varps 4602-4606 |
 | `lofcwtimer` | Ticker | content, ABOVE_CHATBOX_RIGHT | varps 4620-4623 |
 
+\* `lofrecruit` is taller than the 324 standard (its three fixed-layout companion cards can't
+compress); it's still placed by `LofModal.originY`, so it centres in the viewport like the rest.
+
 All modals above are placed by `LofModal.originX/originY` (§6A) — the single dynamic placement
-authority. When adding one, don't reimplement the origin math; call `LofModal`.
+authority. When adding one, don't reimplement the origin math; call `LofModal`. Dense list content
+scrolls (`LofModal.clampScroll`/`scrollbar` + a wheel listener) rather than growing the window.
 
 ---
 
 ## 10. New-overlay checklist
 
 1. Import `LofTheme`; use its palette, `logo()`, and helpers — no hand-rolled colours/metrics.
-2. Pick a category (§6): standard 480×400 framed modal, or content-sized corner HUD. Place a modal
+2. Pick a category (§6): standard 480×324 framed modal, or content-sized corner HUD. Place a modal
    with `LofModal.originX(client, WIN_W)` / `originY(client, WIN_H)` — never hand-roll the origin.
 3. Header per §5 (shield + gold title + ember underline); footer buttons Accept=gold / Decline=ember.
 4. State channel per §8: packed varp (document the bits + claim a free varp id in §8) **or** read an

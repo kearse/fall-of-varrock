@@ -63,12 +63,14 @@ class LofDuelOverlay extends Overlay
 	private static final int WIN_ARC = 14;
 	private static final int TITLE_H = 38;
 	private static final int PAD = 12;
-	private static final int RULE_TOP = TITLE_H + 30;
-	private static final int RULE_H = 22;
+	// Rules column + paper-doll are tightened to fit the short standard window (both must show in full —
+	// rules can't be hidden and the doll isn't a list, so this window crams rather than scrolls).
+	private static final int RULE_TOP = TITLE_H + 26;
+	private static final int RULE_H = 16;
 	private static final int RULE_W = 226;
 	private static final int DOLL_X = 288;
-	private static final int DOLL_TOP = TITLE_H + 40;
-	private static final int SLOT_SZ = 42;
+	private static final int DOLL_TOP = TITLE_H + 34;
+	private static final int SLOT_SZ = 32;
 	private static final int SLOT_GAP = 6;
 	private static final int BTN_H = 32;
 

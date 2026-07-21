@@ -15,6 +15,7 @@ import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
+import java.awt.Shape;
 import java.util.ArrayList;
 import java.util.List;
 import javax.inject.Inject;
@@ -53,10 +54,12 @@ class LofMakeOverlay extends Overlay implements LofWindows.Window
 	private static final int ROWS_Y = LofModal.TITLE_H + 10;
 	private static final int ROW_H = 34;
 	private static final int ROW_STEP = 38;
-	// Rows must never reach the status line (H-56) or the footer buttons (H-44): a recipe row
-	// drawn over the footer would both cover MAKE and — since it hit-tests first — swallow its
-	// click. ROWS_Y(48) + n*38 + ROW_H(34) <= H-56(344) → n <= 6, so at most 7 rows (0..6) fit.
-	private static final int MAX_ROWS = 7;
+	// The recipe list scrolls inside a clipped viewport (LofModal.scrollbar), so any number of recipes
+	// fits the short standard window — rows are clipped to LIST_H and never reach the status line
+	// (H-56) or footer buttons (H-44), which would otherwise cover MAKE and swallow its click.
+	private static final int LIST_TOP = ROWS_Y;                 // 48
+	private static final int LIST_BOTTOM = LofModal.H - 64;     // clear of the status line
+	private static final int LIST_H = LIST_BOTTOM - LIST_TOP;
 
 	private final Client client;
 	private final ItemManager itemManager;
@@ -66,6 +69,7 @@ class LofMakeOverlay extends Overlay implements LofWindows.Window
 	private List<Recipe> recipes = new ArrayList<>();
 	private int selected;
 	private int qtyChoice = 3; // default ALL
+	private int scroll; // px — recipe-list scroll offset
 
 	// Computed on the CLIENT thread during render() and read by the mouse thread. Reading the
 	// inventory container (and skill levels) off the client thread returns null/stale, so the
@@ -101,6 +105,7 @@ class LofMakeOverlay extends Overlay implements LofWindows.Window
 		this.title = title;
 		this.recipes = rows;
 		qtyChoice = 3;
+		scroll = 0;
 		// Preselect a row the player can ACTUALLY make. Row 0 (bronze) used to be selected
 		// blind, so someone carrying only iron opened the window on a dead MAKE button and
 		// clicking it did nothing.
@@ -171,14 +176,29 @@ class LofMakeOverlay extends Overlay implements LofWindows.Window
 	}
 
 	/** How many recipe rows are actually drawn/clickable — capped so they clear the footer band. */
-	private int shownRows()
-	{
-		return Math.min(recipes.size(), MAX_ROWS);
-	}
 
 	private Rectangle rowRect(int ox, int oy, int i)
 	{
-		return new Rectangle(ox + LofModal.PAD, oy + ROWS_Y + i * ROW_STEP, LofModal.W - 2 * LofModal.PAD, ROW_H);
+		return new Rectangle(ox + LofModal.PAD, oy + LIST_TOP + i * ROW_STEP - scroll, LofModal.W - 2 * LofModal.PAD, ROW_H);
+	}
+
+	private Rectangle listRect(int ox, int oy)
+	{
+		return new Rectangle(ox + LofModal.PAD, oy + LIST_TOP, LofModal.W - 2 * LofModal.PAD, LIST_H);
+	}
+
+	boolean handleScroll(Point p, int rotation)
+	{
+		if (!visible)
+		{
+			return false;
+		}
+		if (!listRect(oxCached, oyCached).contains(p))
+		{
+			return false;
+		}
+		scroll = LofModal.clampScroll(scroll + rotation * ROW_STEP, recipes.size() * ROW_STEP, LIST_H);
+		return true;
 	}
 
 	private Rectangle qtyRect(int ox, int oy, int i)
@@ -220,9 +240,13 @@ class LofMakeOverlay extends Overlay implements LofWindows.Window
 			// Cached gate (client thread) — never re-read the inventory here.
 			return canMakeCached ? MAKE : INSIDE;
 		}
-		for (int i = 0; i < shownRows(); i++)
+		// Rows are gated to the clipped list viewport (like the teleport list) so a row scrolled
+		// out of view — or overlapping the footer band — can never take a click.
+		if (listRect(ox, oy).contains(p))
 		{
-			if (rowRect(ox, oy, i).contains(p))
+			final int rel = p.y - (oy + LIST_TOP) + scroll;
+			final int i = rel / ROW_STEP;
+			if (i >= 0 && i < recipes.size() && (rel - i * ROW_STEP) <= ROW_H)
 			{
 				return ROW_BASE + i;
 			}
@@ -251,10 +275,21 @@ class LofMakeOverlay extends Overlay implements LofWindows.Window
 		LofModal.frame(g, ox, oy, title, sub, mouse);
 
 		g.setFont(FontManager.getRunescapeFont());
-		for (int i = 0; i < shownRows(); i++)
+		final int contentH = recipes.size() * ROW_STEP;
+		scroll = LofModal.clampScroll(scroll, contentH, LIST_H);
+		final Shape listClip = g.getClip();
+		g.setClip(ox + LofModal.PAD, oy + LIST_TOP, LofModal.W - 2 * LofModal.PAD, LIST_H);
+		for (int i = 0; i < recipes.size(); i++)
 		{
+			final int ry = oy + LIST_TOP + i * ROW_STEP - scroll;
+			if (ry + ROW_H < oy + LIST_TOP || ry > oy + LIST_TOP + LIST_H)
+			{
+				continue; // scrolled out of the viewport
+			}
 			drawRow(g, ox, oy, i, mouse);
 		}
+		g.setClip(listClip);
+		LofModal.scrollbar(g, ox + LofModal.W - 10, oy + LIST_TOP, LIST_H, contentH, scroll);
 
 		// selected recipe status line
 		final Recipe sel = selectedRecipe();

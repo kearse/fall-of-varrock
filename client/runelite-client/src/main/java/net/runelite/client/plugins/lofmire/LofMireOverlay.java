@@ -94,7 +94,7 @@ class LofMireOverlay extends Overlay
 	private static final int STATS_H = 56;
 	private static final int LOOT_LABEL_Y = STATS_Y + STATS_H + 20; // baseline of the section label
 	private static final int LOOT_Y = LOOT_LABEL_Y + 8;
-	private static final int ROW_H = 25;
+	private static final int ROW_H = 20; // loot rows: tightened so the fixed 7-row table fits the short window
 	private static final int BTN_W = 130;
 	private static final int BTN_H = 32;
 

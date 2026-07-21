@@ -25,9 +25,11 @@ import net.runelite.client.ui.FontManager;
 
 public final class LofModal
 {
-	/** The one default window size every standard modal uses (docs/overlay-design-system.md §6A). */
+	/** The one default window size every standard modal uses (docs/overlay-design-system.md §6A).
+	 *  Height fits inside the fixed-mode world view ({@link #FIXED_VIEWPORT_H}) so the window sits
+	 *  centred in the game viewport, clear of the chat box — the way a default OSRS interface does. */
 	public static final int W = 480;
-	public static final int H = 400;
+	public static final int H = 324;
 	public static final int ARC = 14;
 	public static final int TITLE_H = 38;
 	public static final int PAD = 14;
@@ -82,17 +84,17 @@ public final class LofModal
 	}
 
 	/**
-	 * Centre a window {@code h} tall in the game view, but keep its bottom edge above the chat box so
-	 * it never covers the chat — the way a default OSRS interface sits in the viewport. On a roomy
-	 * canvas this is a plain vertical centre; as the client shrinks the window rides up to stay off the
-	 * chat, and only a window taller than the room above the chat (a minimised client) reaches into
-	 * that band. Clamped so it never clips the top.
+	 * Centre a window {@code h} tall in the game viewport — the play area above the chat box — the way
+	 * a default OSRS interface sits. In fixed mode the viewport is the {@link #FIXED_VIEWPORT_H}px world
+	 * view; in resizable mode it's the canvas minus the chat band ({@link #CHATBOX_RESERVE}). A window
+	 * that fits centres cleanly and clear of the chat; a window taller than the viewport (a big editor
+	 * on a short canvas) pins to the top. Clamped so it never clips an edge.
 	 */
 	public static int originY(Client client, int h)
 	{
 		final int canvasH = client.getCanvasHeight();
-		final int aboveChat = canvasH - CHATBOX_RESERVE;
-		return clamp(Math.min((canvasH - h) / 2, aboveChat - h), canvasH, h);
+		final int viewportH = client.isResized() ? (canvasH - CHATBOX_RESERVE) : FIXED_VIEWPORT_H;
+		return clamp((viewportH - h) / 2, canvasH, h);
 	}
 
 	/** The placement rectangle of a standard {@link #W}×{@link #H} window on the current canvas. */
@@ -154,6 +156,36 @@ public final class LofModal
 		g.drawLine(cr.x + 6, cr.y + 6, cr.x + cr.width - 7, cr.y + cr.height - 7);
 		g.drawLine(cr.x + cr.width - 7, cr.y + 6, cr.x + 6, cr.y + cr.height - 7);
 		g.setStroke(oldStroke);
+	}
+
+	// ---------------------------------------------------------------------------------------------
+	// Scrolling — a modal whose content is taller than the window scrolls its list region instead of
+	// growing (so the window still fits the game viewport, §6A). Shared so every scrolling modal looks
+	// and behaves the same; mirrors the teleport list. contentH = total content px, viewH = the
+	// visible list-region height.
+	// ---------------------------------------------------------------------------------------------
+
+	/** Clamp a pixel scroll offset to {@code [0, contentH - viewH]} (0 when everything fits). */
+	public static int clampScroll(int scroll, int contentH, int viewH)
+	{
+		return Math.max(0, Math.min(scroll, Math.max(0, contentH - viewH)));
+	}
+
+	/** Draw the standard 5px ember scroll thumb on a faint track at the right edge of a list region.
+	 *  No-op when the content fits (nothing to scroll). */
+	public static void scrollbar(Graphics2D g, int x, int yTop, int viewH, int contentH, int scroll)
+	{
+		if (contentH <= viewH)
+		{
+			return;
+		}
+		g.setColor(LofTheme.alpha(Color.WHITE, 14));
+		g.fillRoundRect(x, yTop, 5, viewH, 5, 5);
+		final int max = contentH - viewH;
+		final int thumbH = Math.max(24, (int) ((long) viewH * viewH / contentH));
+		final int thumbY = yTop + (viewH - thumbH) * clampScroll(scroll, contentH, viewH) / max;
+		g.setColor(LofTheme.alpha(LofTheme.EMBER, 190));
+		g.fillRoundRect(x, thumbY, 5, thumbH, 5, 5);
 	}
 
 	/** Standard footer button (§5): accent-coloured when enabled, dim + inert when not. */
