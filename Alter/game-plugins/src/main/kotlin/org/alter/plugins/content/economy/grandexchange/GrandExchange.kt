@@ -198,6 +198,18 @@ object GrandExchange {
     private fun commodityFloor(itemId: Int): Int? =
         commodityCeiling(itemId)?.let { (it * 0.85).toInt().coerceAtLeast(1) }
 
+    // ---- display helpers for the offer window (UI reads these) ---------------------------------
+
+    /** Guide price (cache value) shown in the offer-setup box. */
+    fun guidePrice(itemId: Int): Int = runCatching { maxOf(1, getItem(itemId).cost) }.getOrDefault(1)
+
+    /** The store band `(floor, ceiling)` if [itemId] is a backstopped commodity, else null (floats). */
+    fun band(itemId: Int): Pair<Int, Int>? {
+        val ceil = commodityCeiling(itemId) ?: return null
+        val floor = commodityFloor(itemId) ?: return null
+        return floor to ceil
+    }
+
     /**
      * Backstop only the coin-store commodities ([GrandExchangeCommodities]); special-currency gear
      * and everything else stays player-listed with no NPC floor.
