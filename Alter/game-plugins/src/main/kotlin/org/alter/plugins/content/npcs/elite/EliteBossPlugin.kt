@@ -8,6 +8,7 @@ import org.alter.api.ext.npc
 import org.alter.game.Server
 import org.alter.game.model.World
 import org.alter.game.model.attr.KILLER_ATTR
+import org.alter.game.model.collision.isClipped
 import org.alter.game.model.entity.GroundItem
 import org.alter.game.model.entity.Npc
 import org.alter.game.model.entity.Player
@@ -78,6 +79,39 @@ class EliteBossPlugin(
                 val killer = npc.attr[KILLER_ATTR]?.get() as? Player ?: return@onNpcDeath
                 dropLoot(npc, killer, boss)
             }
+        }
+
+        // The deferred spawnNpc above places each boss during `spawnEntities()`, which runs BEFORE
+        // BossLairsPlugin force-loads the far-flung lair regions' collision — so a boss can't be
+        // snapped off a blocked tile at spawn time (unallocated zones read as fully clipped, so a
+        // snap there finds nothing). Correct it here at world-init, once collision is available.
+        onWorldInit { relocateClippedBosses() }
+    }
+
+    /**
+     * Force-load each lair region (idempotent with [org.alter.plugins.content.bosses.BossLairsPlugin])
+     * and, for any boss whose lair tile ended up inside a wall, replace it with an instance anchored
+     * at the nearest walkable tile. No-op for lairs that were already clear — the healthy bosses are
+     * untouched. This is what keeps the boss out of the wall without hand-tuning unverifiable coords.
+     */
+    private fun relocateClippedBosses() {
+        for (boss in EliteBosses.all) {
+            val regionId = ((boss.lair.x shr 6) shl 8) or (boss.lair.z shr 6)
+            runCatching { world.definitions.loadRegions(world, world.chunks, intArrayOf(regionId)) }
+            if (!world.collision.isClipped(boss.lair)) continue
+            val safe = world.snapToWalkable(boss.lair)
+            if (safe.sameAs(boss.lair)) continue // nothing walkable nearby — leave it as-is
+
+            val id = getRSCM(boss.key)
+            world.npcs.firstOrNull { it.id == id && it.tile.sameAs(boss.lair) }?.let { world.remove(it) }
+            world.spawn(
+                Npc(id, safe, world).apply {
+                    respawns = true
+                    walkRadius = boss.walkRadius
+                    setActive(true)
+                },
+            )
+            logger.info { "[BOSS] ${boss.name} lair ${boss.lair} was clipped — respawned at $safe." }
         }
     }
 

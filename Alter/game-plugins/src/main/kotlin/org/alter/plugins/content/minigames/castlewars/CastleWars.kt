@@ -1223,13 +1223,5 @@ object CastleWars {
         return Tile(t.x + dx, t.z + dz, t.height)
     }
 
-    fun snapWalkable(t: Tile): Tile {
-        if (!world.collision.isClipped(t)) return t
-        for (r in 1..8) for (dx in -r..r) for (dz in -r..r) {
-            if (max(abs(dx), abs(dz)) != r) continue
-            val c = Tile(t.x + dx, t.z + dz, t.height)
-            if (!world.collision.isClipped(c)) return c
-        }
-        return t
-    }
+    fun snapWalkable(t: Tile): Tile = world.snapToWalkable(t)
 }

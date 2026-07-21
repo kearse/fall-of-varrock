@@ -488,15 +488,7 @@ object LmsGame {
         return List(n) { tiles[it * tiles.size / n] }
     }
 
-    private fun snapWalkable(t: Tile): Tile {
-        if (!world.collision.isClipped(t)) return t
-        for (r in 1..8) for (dx in -r..r) for (dz in -r..r) {
-            if (max(abs(dx), abs(dz)) != r) continue
-            val c = Tile(t.x + dx, t.z + dz, t.height)
-            if (!world.collision.isClipped(c)) return c
-        }
-        return t
-    }
+    private fun snapWalkable(t: Tile): Tile = world.snapToWalkable(t)
 
     /** Walkable tiles reachable on foot from [seed], bounded to [bounds] — BFS via the step validator so
      *  it can never leak through walls or into void (the WizardTower flood-fill). BFS order = distance
