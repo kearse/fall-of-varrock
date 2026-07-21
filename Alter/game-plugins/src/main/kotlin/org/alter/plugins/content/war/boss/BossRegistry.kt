@@ -53,6 +53,10 @@ data class BossDef(
     val prestigeAward: Int = 25,
     val bossPointsPerKill: Int = 10,
     val uniqueTable: List<BossUnique> = emptyList(),
+    /** The world-boss (event) spawn rolls its [uniqueTable] at this multiple of the base odds —
+     *  e.g. 2 = twice as likely — to make rallying the public event worthwhile. The always-on
+     *  lair version (if the boss has one) keeps base odds. Applied in [BossLoot]. */
+    val eventUniqueMultiplier: Int = 1,
 ) {
     /** This boss's spawn tile in [cityId], if it rotates there. */
     fun tileIn(cityId: Int): Tile? = spawnTiles[cityId]
@@ -140,6 +144,9 @@ object BossRegistry {
             titheCut = 0.10,
             prestigeAward = 40,
             bossPointsPerKill = 25,
+            // Event bonus: the Lumbridge event spawn drops its avatar-tier uniques at 2× the base
+            // (lair) odds — the payoff for rallying the public boss over farming the cave solo.
+            eventUniqueMultiplier = 2,
             // The avatar-tier mega-rares — true independent rolls, server-announced + logged.
             uniqueTable = listOf(
                 BossUnique("item.arcane_sigil", oneInN = 150),

@@ -75,13 +75,14 @@ object TeleportRegistry {
 
         // ── 💀 Bosses ──────────────────────────────────────────────────────────
         built("kbd", "King Black Dragon", BOSSES, Tile(2273, 4685, 0), HOSTILE),         // KBD lair
-        built("corp_beast", "Corporeal Beast", BOSSES, Tile(3247, 3319, 0), HOSTILE),    // apex city world boss
+        built("corporeal_beast", "Corporeal Beast", BOSSES, Tile(2966, 4378, 2), HOSTILE), // always-on cave lair (TUNE plane)
+        built("corp_beast", "Corp Beast (Event)", BOSSES, Tile(3247, 3319, 0), HOSTILE),  // Lumbridge world-boss event arena
         soon("world_boss", "World Boss", BOSSES, HOSTILE), // rotating spawn — wire to WorldBoss later
         soon("zulrah", "Zulrah", BOSSES),
         built("barrows", "Barrows", BOSSES, Tile(3565, 3306, 0), SAFE_ZONE), // Phase B — mounds (dig to enter a crypt)
         built("kraken", "Kraken", BOSSES, Tile(2279, 10012, 0), HOSTILE),    // Phase D — Kraken Cove (Slayer 87)
         // Elite / endgame bosses (see EliteBosses).
-        built("nex", "Nex", BOSSES, Tile(2924, 5202, 2), HOSTILE),
+        built("nex", "Nex", BOSSES, Tile(2924, 5202, 0), HOSTILE), // Ancient Prison floor is plane 0 (not the plane-2 encampments)
         built("vorkath", "Vorkath", BOSSES, Tile(2272, 4052, 0), HOSTILE),
         built("alchemical_hydra", "Alchemical Hydra", BOSSES, Tile(1361, 10231, 0), HOSTILE),
         built("phantom_muspah", "Phantom Muspah", BOSSES, Tile(2117, 5645, 0), HOSTILE),
