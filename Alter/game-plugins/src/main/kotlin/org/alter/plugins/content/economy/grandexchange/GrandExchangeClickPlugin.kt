@@ -96,7 +96,7 @@ class GrandExchangeClickPlugin(
             val raw = a.getOrNull(0) ?: return@onCommand
             val toBank = a.getOrNull(1)?.equals("bank", ignoreCase = true) == true
             if (raw.equals("all", ignoreCase = true)) {
-                for (box in 0 until GrandExchange.SLOTS) GrandExchange.collect(player, box, toBank)
+                GrandExchange.collectAll(player, toBank)
             } else {
                 val box = raw.toIntOrNull() ?: return@onCommand
                 GrandExchange.collect(player, box, toBank)
