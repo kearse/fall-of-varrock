@@ -109,9 +109,10 @@ Two categories. Pick the smallest that fits.
 (`LofModal.W` × `LofModal.H`) — teleport, ranks, make, forge, contracts, dice, bonds, mire, duel rules,
 and the stake screen all use it. The **height fits inside the fixed-mode world view (334px)** so the
 window sits centred in the game viewport, clear of the chat box — the way a default OSRS interface
-does. A few windows are deliberately a different size (the kit editor 580×444, recruit 480×384 and the
-character-style window 480×420 — their fixed layouts can't compress to 324 — vote 492×auto, war spoils
-340×320); they're the exception, and they're **placed by the same authority** as the standard ones.
+does. A few windows are a different size — the kit editor is **512×324** (viewport-width, but the same
+chat-clear height); recruit 480×384 and the character-style window 480×420 have fixed layouts that
+can't compress to 324; vote is 492×auto and war spoils 340×320 — all still **placed by the same
+authority** as the standard ones.
 
 **Content taller than the window scrolls — it does not grow the window.** A recipe/loot list uses a
 clipped viewport with `LofModal.clampScroll` + `LofModal.scrollbar` and a `MouseWheelListener` →
@@ -140,8 +141,8 @@ of being pinned to one pixel spot:**
 - **Horizontal:** centre in the **game viewport**, not the whole canvas. In fixed mode the world view
   is the left ~512px (`LofModal.FIXED_VIEWPORT_W`), so the window sits clear of the inventory/tab
   column on the right — which keeps the inventory clickable while the stake screen is open. A window
-  **wider** than the viewport (the kit editor) can't fit beside the inventory, so `LofModal` centres it
-  on the whole canvas instead. In resizable mode everything centres on the whole canvas.
+  **wider** than the viewport can't fit beside the inventory, so `LofModal` centres it on the whole
+  canvas instead. In resizable mode everything centres on the whole canvas.
 - **Vertical:** centre in the game view but **keep the window above the chat box** (`CHATBOX_RESERVE`,
   a ~165px bottom band). On a roomy canvas this is a plain vertical centre; as the client shrinks the
   window rides up to stay off the chat, and only a window taller than the room above the chat (a
