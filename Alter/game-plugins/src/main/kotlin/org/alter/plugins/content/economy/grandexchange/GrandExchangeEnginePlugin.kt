@@ -1,5 +1,6 @@
 package org.alter.plugins.content.economy.grandexchange
 
+import dev.openrune.cache.CacheManager.getItem
 import org.alter.api.ext.getCommandArgs
 import org.alter.api.ext.message
 import org.alter.api.ext.player
@@ -15,10 +16,9 @@ import org.alter.game.plugin.PluginRepository
  * **Grand Exchange — engine lifecycle + dev test harness (Part A).**
  *
  * Owns the [GrandExchange] engine's lifecycle (load on world init, periodic [GrandExchange.matchTick]
- * + save on a world timer) and exposes dev commands that drive the engine directly, so the whole
- * order book — escrow, price-time matching, partial fills, collect, cancel — is testable in-game
- * **before** the native interface-465 offer packets are wired (that step needs the rsprot GE message
- * classes from `net.rsprot:osrs-228-api`, plus the in-game component map from `::geproto`).
+ * + save on a world timer, delivering completion notices + the login collect prompt) and exposes dev
+ * commands that drive the engine directly. Players use the custom `lofge` window
+ * ([GrandExchangeClickPlugin] + [GrandExchangeWindow]); these dev commands stay for testing/admin.
  *
  * Dev commands (all `dev`-gated):
  *  - `::gebuy  <itemId> <price> <qty>`  — place a buy offer (escrows coins).
@@ -44,9 +44,17 @@ class GrandExchangeEnginePlugin(
         onTimer(matchTimer) {
             GrandExchange.matchTick()
             GrandExchange.save() // no-op unless something changed
+            deliverNotices()
             world.timers[matchTimer] = MATCH_INTERVAL
         }
         onLogout { GrandExchange.save() }
+
+        // Login prompt so completed offers (matched while offline) are discoverable.
+        onLogin {
+            if (GrandExchange.hasCollectables(player.username.lowercase())) {
+                player.message("<col=801700>Grand Exchange:</col> you have items waiting to collect. Talk to the clerk or use ::ge.")
+            }
+        }
 
         onCommand("gebuy", Privilege.DEV_POWER, description = "GE test: place a buy offer <item> <price> <qty>") {
             place(player, buy = true)
@@ -69,6 +77,17 @@ class GrandExchangeEnginePlugin(
             val box = player.getCommandArgs().firstOrNull()?.toIntOrNull() ?: return@onCommand player.message("Usage: ::gecancel <box>")
             GrandExchange.cancel(player, box)
             printOffers(player)
+        }
+    }
+
+    /** Message online owners whose offers just completed (events queued by the matching pass). */
+    private fun deliverNotices() {
+        val pending = GrandExchange.drainNotices()
+        if (pending.isEmpty()) return
+        for (n in pending) {
+            val who = world.players.firstOrNull { it.username.lowercase() == n.owner } ?: continue
+            val name = runCatching { getItem(n.itemId).name }.getOrDefault("item ${n.itemId}")
+            who.message("<col=801700>Grand Exchange:</col> your offer to ${if (n.buy) "buy" else "sell"} ${n.qty} x $name has completed.")
         }
     }
 

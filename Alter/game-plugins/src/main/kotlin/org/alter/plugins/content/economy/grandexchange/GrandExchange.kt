@@ -14,7 +14,7 @@ import kotlin.io.path.writeText
 
 /**
  * The **Grand Exchange engine** — the world-level order book plus the escrow, matching, collect and
- * cancel logic. UI-free by design: [GrandExchangeInterface] reads [slotsOf] to paint the board and
+ * cancel logic. UI-free by design: [GrandExchangeWindow] reads [slotsOf] to paint the board and
  * calls [createBuy]/[createSell]/[collect]/[cancel]; a world service ticks [matchTick].
  *
  * **Slots.** Each player owns 8 boxes (0..7). A `(owner, box)` pair is one [GeOffer]. Offers persist
@@ -41,6 +41,22 @@ object GrandExchange {
 
     private val coinsId: Int by lazy { getRSCM("item.coins_995") }
 
+    /** A just-completed offer, queued for the plugin to notify the (possibly offline) owner. */
+    data class GeNotice(val owner: String, val buy: Boolean, val itemId: Int, val qty: Int)
+    private val notices = ArrayList<GeNotice>()
+
+    /** Take + clear the pending completion notices (delivered to online owners by the plugin). */
+    fun drainNotices(): List<GeNotice> {
+        if (notices.isEmpty()) return emptyList()
+        val out = ArrayList(notices)
+        notices.clear()
+        return out
+    }
+
+    /** True if [owner] has any collectable proceeds waiting (for the login prompt). */
+    fun hasCollectables(owner: String): Boolean =
+        offers.any { it.owner == owner && (it.collectCoins > 0 || it.collectItems > 0) }
+
     // ---- queries -------------------------------------------------------------------------------
 
     /** The player's 8 boxes in order, null where empty. */
@@ -65,6 +81,7 @@ object GrandExchange {
         if (!takeCoins(p, total.toInt())) { p.message("You don't have enough coins for that offer."); return false }
         put(GeOffer(box = box, buy = true, itemId = itemId, price = price, qty = qty,
             escrowCoins = total.toInt(), state = GeState.BUYING, owner = key(p), seq = seqCounter++))
+        save() // persist immediately: coins already left the player, the offer must not be lost on a crash
         p.message("<col=801700>Grand Exchange:</col> buying ${qty} x ${nameOf(itemId)} at ${price} gp each.")
         return true
     }
@@ -78,6 +95,7 @@ object GrandExchange {
         if (removed.hasFailed()) { p.message("You don't have ${qty} of that to sell."); return false }
         put(GeOffer(box = box, buy = false, itemId = itemId, price = price, qty = qty,
             escrowItems = qty, state = GeState.SELLING, owner = key(p), seq = seqCounter++))
+        save() // persist immediately: items already left the player, the offer must not be lost on a crash
         p.message("<col=801700>Grand Exchange:</col> selling ${qty} x ${nameOf(itemId)} at ${price} gp each.")
         return true
     }
@@ -104,10 +122,11 @@ object GrandExchange {
         o.collectItems += o.escrowItems; o.escrowItems = 0
         o.state = if (o.buy) GeState.CANCELLED_BUY else GeState.CANCELLED_SELL
         markDirty()
+        save() // proceeds are now collectable — persist so a crash can't double-hand-out on reload
     }
 
-    /** Move an offer's collectable proceeds into the player (inventory or bank); free the slot when drained. */
-    fun collect(p: Player, box: Int, toBank: Boolean) {
+    /** Move one slot's collectable proceeds into the player; free it when drained (no save — see callers). */
+    private fun collectBox(p: Player, box: Int, toBank: Boolean) {
         val o = slot(key(p), box) ?: return
         if (o.collectCoins > 0) {
             val added = give(p, coinsId, o.collectCoins, toBank)
@@ -122,6 +141,18 @@ object GrandExchange {
             offers.remove(o)
         }
         markDirty()
+    }
+
+    /** Collect one slot's proceeds (persisted immediately — items left the book, must not reappear). */
+    fun collect(p: Player, box: Int, toBank: Boolean) {
+        collectBox(p, box, toBank)
+        save()
+    }
+
+    /** Collect every slot's proceeds, persisting once at the end. */
+    fun collectAll(p: Player, toBank: Boolean) {
+        for (box in 0 until SLOTS) collectBox(p, box, toBank)
+        save()
     }
 
     // ---- matching ------------------------------------------------------------------------------
@@ -162,6 +193,15 @@ object GrandExchange {
         sell.escrowItems -= q
         sell.collectCoins += p * q
         sell.refreshState()
+        noticeIfComplete(buy)
+        noticeIfComplete(sell)
+    }
+
+    /** Queue an owner notification when an offer has just fully filled. */
+    private fun noticeIfComplete(o: GeOffer) {
+        if (o.filled >= o.qty && (o.state == GeState.BOUGHT || o.state == GeState.SOLD)) {
+            notices.add(GeNotice(o.owner, o.buy, o.itemId, o.qty))
+        }
     }
 
     // ---- NPC commodity backstop (the one intentional faucet/sink; gated to commodities) ---------
@@ -179,12 +219,12 @@ object GrandExchange {
                 val q = o.remaining
                 o.filled += q; o.escrowCoins -= ceiling * q
                 o.collectItems += q; o.collectCoins += (o.price - ceiling) * q
-                o.refreshState(); changed = true
+                o.refreshState(); changed = true; noticeIfComplete(o)
             } else if (!o.buy && o.price <= floor) {
                 val q = o.remaining
                 o.filled += q; o.escrowItems -= q
                 o.collectCoins += floor * q
-                o.refreshState(); changed = true
+                o.refreshState(); changed = true; noticeIfComplete(o)
             }
         }
         return changed

@@ -20,7 +20,7 @@ import org.bson.Document
  *
  * The [wire] codes are the exact ordinals of the client's `net.runelite.api.GrandExchangeOfferState`
  * (EMPTY 0, CANCELLED_BUY 1, CANCELLED_SELL 2, BUYING 3, BOUGHT 4, SELLING 5, SOLD 6), so the
- * outgoing slot-update maps 1:1 once the wire protocol is wired in [GrandExchangeInterface].
+ * outgoing slot-update maps 1:1 with the client's enum ([GrandExchangeWindow] streams `state.wire`).
  */
 enum class GeState(val wire: Int) {
     EMPTY(0), CANCELLED_BUY(1), CANCELLED_SELL(2), BUYING(3), BOUGHT(4), SELLING(5), SOLD(6),
