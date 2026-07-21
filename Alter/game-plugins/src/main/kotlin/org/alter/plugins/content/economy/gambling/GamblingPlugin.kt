@@ -38,10 +38,26 @@ object DiceMenu {
      */
     const val OPEN_VARP = 4628
 
-    fun open(p: Player) = pulse(p, 1)
+    /**
+     * Coins the player can stake, pushed to the client so the window can light the ROLL button and
+     * show the total. We only send the **bank** balance here (≤ Int.MAX, always fits a varp); the
+     * client adds its own live inventory count on top, so the felt reads inventory + bank. Persisted
+     * varp — refreshed on every [open] and after every roll, and it is safe to re-fire on login.
+     */
+    const val COINS_VARP = 4634
+
+    fun open(p: Player) {
+        pushBankCoins(p)
+        pulse(p, 1)
+    }
 
     fun result(p: Player, roll: Int, win: Boolean) =
         pulse(p, 1 or (1 shl 9) or (roll.coerceIn(0, 127) shl 1) or (if (win) 1 shl 8 else 0))
+
+    /** Publish the player's bank coin balance to the Gambler's Table window. */
+    fun pushBankCoins(p: Player) {
+        p.setVarp(COINS_VARP, p.bank.getItemCount(getRSCM("item.coins_995")))
+    }
 
     private fun pulse(p: Player, v: Int) {
         p.setVarp(OPEN_VARP, v)
@@ -82,28 +98,44 @@ class GamblingPlugin(
             player.message("The house only takes bets at the table — find the host at the shop hub.")
             return
         }
-        val held = player.inventory.getItemCount(coins)
+        // The stake may be funded from the inventory AND the bank, so the player never has to carry
+        // coins to bet — the common confusion. Total spendable is both balances combined.
+        val invHeld = player.inventory.getItemCount(coins)
+        val bankHeld = player.bank.getItemCount(coins)
+        val held = invHeld.toLong() + bankHeld.toLong()
         if (bet > held) {
-            player.message("You don't have that many coins.")
+            player.message("You don't have that many coins in your inventory or bank.")
             return
         }
         if (bet > MAX_BET) {
             player.message("House limit is ${"%,d".format(MAX_BET)} coins a roll.")
             return
         }
-        // Take the stake up front.
-        if (player.inventory.remove(item = coins, amount = bet).completed < bet) return
+        // Take the stake up front — inventory first, then the bank for any shortfall.
+        val fromInv = minOf(bet, invHeld)
+        val fromBank = bet - fromInv
+        if (fromInv > 0 && player.inventory.remove(item = coins, amount = fromInv).completed < fromInv) {
+            return
+        }
+        if (fromBank > 0 && player.bank.remove(item = coins, amount = fromBank).completed < fromBank) {
+            // Bank removal fell short (shouldn't happen on a single tick) — refund the inventory leg.
+            if (fromInv > 0) player.inventory.add(item = coins, amount = fromInv)
+            return
+        }
 
         val roll = world.random(99) + 1 // 1..100
         val win = roll >= WIN_THRESHOLD
         if (win) {
             val payout = (bet.toLong() * 2L * (1.0 - RAKE)).toLong().coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
-            player.inventory.add(item = coins, amount = payout)
+            // Winnings land in the pack; if it's full, they overflow to the bank so nothing is lost.
+            val toInv = player.inventory.add(item = coins, amount = payout).completed
+            if (toInv < payout) player.bank.add(item = coins, amount = payout - toInv, assureFullInsertion = false)
             player.message("You rolled <col=007f00>$roll</col>. Winner! The house pays ${"%,d".format(payout)} coins.")
         } else {
             player.message("You rolled <col=7f0000>$roll</col>. The house wins this one.")
         }
         DiceMenu.result(player, roll, win) // burn the number into the open window
+        DiceMenu.pushBankCoins(player)     // bank balance changed — refresh the window's spendable total
         logger.info { "GAMBLE ${player.username} bet=$bet roll=$roll ${if (win) "WIN" else "LOSE"}" }
     }
 

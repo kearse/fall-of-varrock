@@ -246,7 +246,18 @@ class LofDiceOverlay extends Overlay implements LofWindows.Window
 	// the client thread returns null (→ 0 coins), which made canRoll() false, so hitTest answered
 	// INSIDE and the ROLL click was swallowed while the button was drawn lit. The click path must
 	// read ONLY this cached value. Same fix, same reason, as LofShopTabsOverlay's cached showing.
+	// This now holds inventory + bank so a bet can be funded straight from the bank.
 	private volatile long coinsCached;
+
+	// Bank coin balance pushed by the server (DiceMenu.COINS_VARP). Added to the live inventory count
+	// so the felt shows — and the ROLL button lights for — the player's whole spendable stack.
+	private volatile long bankCoins;
+
+	/** Server push of the bank coin balance; folded into the spendable total each frame. */
+	void setBankCoins(int coins)
+	{
+		bankCoins = Math.max(0, coins);
+	}
 
 	private boolean canRoll()
 	{
@@ -411,10 +422,11 @@ class LofDiceOverlay extends Overlay implements LofWindows.Window
 			hx += 26;
 		}
 
-		// footer
-		final long coins = LofModal.carried(client, LofModal.COINS_ID);
+		// footer — spendable is the pack plus the bank (server-pushed), so no coins need be carried
+		final long coins = LofModal.carried(client, LofModal.COINS_ID) + bankCoins;
 		coinsCached = coins; // publish for the mouse thread before canRoll() is consulted
-		LofTheme.shadowText(g, "Coins carried: " + LofModal.fmt(coins), ox + LofModal.PAD, oy + LofModal.H - 22, LofTheme.TEXT_DIM);
+		LofTheme.shadowText(g, "Coins available: " + LofModal.fmt(coins) + "  (inventory + bank)",
+			ox + LofModal.PAD, oy + LofModal.H - 22, LofTheme.TEXT_DIM);
 		final String rollLabel = rolling ? "ROLLING" + dots(now)
 			: (stake > 0 ? "ROLL THE DIE — " + LofModal.fmt(stake) : "ROLL THE DIE");
 		LofModal.button(g, rollRect(ox, oy), rollLabel, LofTheme.EMBER, canRoll(), rollRect(ox, oy).contains(mouse));

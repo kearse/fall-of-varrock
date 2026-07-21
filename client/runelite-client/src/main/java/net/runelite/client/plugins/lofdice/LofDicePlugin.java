@@ -31,6 +31,9 @@ public class LofDicePlugin extends Plugin
 	/** Must match server DiceMenu.OPEN_VARP. */
 	private static final int OPEN_VARP = 4628;
 
+	/** Must match server DiceMenu.COINS_VARP — the player's bank coin balance (spendable alongside the pack). */
+	private static final int COINS_VARP = 4634;
+
 	@Inject
 	private Client client;
 
@@ -74,6 +77,12 @@ public class LofDicePlugin extends Plugin
 	public void onVarbitChanged(VarbitChanged event)
 	{
 		LofWindows.onForeignSignal(event.getVarpId(), client.getVarpValue(event.getVarpId()));
+		if (event.getVarpId() == COINS_VARP)
+		{
+			// bank balance push — feeds the window's spendable total; never opens the table
+			overlay.setBankCoins(client.getVarpValue(COINS_VARP));
+			return;
+		}
 		if (event.getVarpId() != OPEN_VARP)
 		{
 			return;

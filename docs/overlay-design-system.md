@@ -178,7 +178,8 @@ Reusable pieces — reach for these before inventing a new one. Metrics above.
     **4627 war forge** · **4628 dice (open / result: bit9 flag, roll bits 1-7, win bit 8)** ·
     **4629 bond exchange (packed: open|tradeable|claimed)** · **4630 duel rules** ·
     **4631 mire dispenser (packed: open|data|attuned|bank|streak)** ·
-    **4632 character style (open|female)** · **4640-4679 kit editor** (control + per-slot — was
+    **4632 character style (open|female)** · **4634 dice bank coins (spendable = client inventory +
+    this bank balance)** · **4640-4679 kit editor** (control + per-slot — was
     missing from this list; a parallel branch DID double-claim 4631 the same week — keep EVERY
     varp here).
     (4601/4609/4616 all feed the `lofdials` dial row.)
