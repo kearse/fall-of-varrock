@@ -13,10 +13,20 @@ import org.alter.game.model.appearance.Colours
 import org.alter.game.model.appearance.Gender
 import org.alter.game.model.appearance.Looks
 import org.alter.game.model.attr.APPEARANCE_SET_ATTR
+import org.alter.game.model.attr.AttributeKey
 import org.alter.game.model.attr.STYLE_PREVIEW_ATTR
 import org.alter.game.model.entity.Player
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
+
+/**
+ * Session-only callback fired the moment the player clicks **Confirm** (button 74) on the
+ * character-design screen. The first-login onboarding sets it so that confirming the design hands
+ * control straight back to the Recruiting Sergeant flow (mustering the recruit into the Trials).
+ * No persistenceKey — a logout mid-design just drops it, and the flow re-opens the screen when the
+ * recruit re-hails the Sergeant, so it can never soft-lock.
+ */
+val APPEARANCE_CONFIRM_CALLBACK_ATTR = AttributeKey<() -> Unit>()
 
 /**
  * The native OSRS **character-design interface** (679) — the screen every OSRS account sees at
@@ -54,7 +64,14 @@ object AppearanceDesign {
     /** Stock varbit the interface uses to highlight the selected body-type button (A/B). */
     const val GENDER_VARBIT = 11697
 
-    fun open(p: Player) {
+    /**
+     * Open the character-design screen. [onConfirm], if given, runs once when the player clicks
+     * Confirm (button 74) — used by the first-login onboarding to resume the Sergeant flow. Passing
+     * null (the default, e.g. `::appearance` or the Stylist) clears any stale pending callback.
+     */
+    fun open(p: Player, onConfirm: (() -> Unit)? = null) {
+        if (onConfirm != null) p.attr[APPEARANCE_CONFIRM_CALLBACK_ATTR] = onConfirm
+        else p.attr.remove(APPEARANCE_CONFIRM_CALLBACK_ATTR)
         p.setVarbit(GENDER_VARBIT, if (p.appearance.gender == Gender.FEMALE) 1 else 0)
         // Hide worn gear so the preview shows the default skins being edited; restored on close.
         p.attr[STYLE_PREVIEW_ATTR] = true
@@ -117,6 +134,13 @@ class AppearanceInterfacePlugin(
             player.attr[APPEARANCE_SET_ATTR] = true
             player.closeInterface(AppearanceDesign.INTERFACE_ID)
             player.unlock() // no-op unless a (future) first-login flow locked the player
+            // First-login onboarding hands control back here: run the pending confirm callback once
+            // (e.g. muster the recruit into the Trials), then clear it so it never re-fires.
+            val onConfirm = player.attr[APPEARANCE_CONFIRM_CALLBACK_ATTR]
+            if (onConfirm != null) {
+                player.attr.remove(APPEARANCE_CONFIRM_CALLBACK_ATTR)
+                onConfirm()
+            }
         }
 
         rows.forEach { row ->
