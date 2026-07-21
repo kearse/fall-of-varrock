@@ -71,7 +71,9 @@ object BossLairs {
         Lair("vorkath", intArrayOf(2256, 4032, 48, 48)),
         Lair("alchemical_hydra", intArrayOf(1344, 10208, 48, 48)),
         Lair("phantom_muspah", intArrayOf(2096, 5624, 48, 48)),
-        Lair("abyssal_sire", intArrayOf(2944, 4360, 48, 48), multi = true),
+        // Abyssal Nexus SW chamber (region 11850). Moved off region 11844 (the Corp Beast's cave,
+        // now its own lair below) — the Sire's old plane-0 tile there was void. Box ↔ EliteBosses lair.
+        Lair("abyssal_sire", intArrayOf(2944, 4736, 64, 64), multi = true),
         Lair("nex", intArrayOf(2904, 5184, 48, 48), multi = true),
         Lair("grotesque_guardians", intArrayOf(3392, 3520, 48, 48), multi = true),
 
