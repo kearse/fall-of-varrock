@@ -135,7 +135,11 @@ of being pinned to one pixel spot:**
   column on the right — which keeps the inventory clickable while the stake screen is open. A window
   **wider** than the viewport (the kit editor) can't fit beside the inventory, so `LofModal` centres it
   on the whole canvas instead. In resizable mode everything centres on the whole canvas.
-- **Vertical:** centre on the canvas height.
+- **Vertical:** centre in the game view but **keep the window above the chat box** (`CHATBOX_RESERVE`,
+  a ~165px bottom band). On a roomy canvas this is a plain vertical centre; as the client shrinks the
+  window rides up to stay off the chat, and only a window taller than the room above the chat (a
+  minimised client) reaches into that band. This is what "centred in the game viewport, not covering
+  the chat" means — a default OSRS interface sits the same way.
 - **Always clamped:** the origin is clamped so the window never runs off any edge, even on a canvas
   smaller than the window — a too-big window pins to the top/left edge rather than centring off-screen.
 - Position with `OverlayPosition.DYNAMIC` and draw at absolute `ox/oy`; these windows are not movable

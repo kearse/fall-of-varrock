@@ -39,6 +39,9 @@ public final class LofModal
 	public static final int FIXED_VIEWPORT_W = 512;
 	public static final int FIXED_VIEWPORT_H = 334;
 
+	/** Bottom band kept clear for the chat box, so a centred window never covers the chat (§6A). */
+	public static final int CHATBOX_RESERVE = 165;
+
 	public static final int COINS_ID = 995; // item.coins_995
 
 	private LofModal()
@@ -79,12 +82,17 @@ public final class LofModal
 	}
 
 	/**
-	 * Centre a window {@code h} tall on the canvas, clamped so it never clips the top or bottom.
+	 * Centre a window {@code h} tall in the game view, but keep its bottom edge above the chat box so
+	 * it never covers the chat — the way a default OSRS interface sits in the viewport. On a roomy
+	 * canvas this is a plain vertical centre; as the client shrinks the window rides up to stay off the
+	 * chat, and only a window taller than the room above the chat (a minimised client) reaches into
+	 * that band. Clamped so it never clips the top.
 	 */
 	public static int originY(Client client, int h)
 	{
 		final int canvasH = client.getCanvasHeight();
-		return clamp((canvasH - h) / 2, canvasH, h);
+		final int aboveChat = canvasH - CHATBOX_RESERVE;
+		return clamp(Math.min((canvasH - h) / 2, aboveChat - h), canvasH, h);
 	}
 
 	/** The placement rectangle of a standard {@link #W}×{@link #H} window on the current canvas. */
