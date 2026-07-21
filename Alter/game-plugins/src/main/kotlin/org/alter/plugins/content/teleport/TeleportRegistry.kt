@@ -81,7 +81,7 @@ object TeleportRegistry {
         built("barrows", "Barrows", BOSSES, Tile(3565, 3306, 0), SAFE_ZONE), // Phase B — mounds (dig to enter a crypt)
         built("kraken", "Kraken", BOSSES, Tile(2279, 10012, 0), HOSTILE),    // Phase D — Kraken Cove (Slayer 87)
         // Elite / endgame bosses (see EliteBosses).
-        built("nex", "Nex", BOSSES, Tile(2924, 5202, 2), HOSTILE),
+        built("nex", "Nex", BOSSES, Tile(2924, 5202, 0), HOSTILE), // Ancient Prison floor is plane 0 (not the plane-2 encampments)
         built("vorkath", "Vorkath", BOSSES, Tile(2272, 4052, 0), HOSTILE),
         built("alchemical_hydra", "Alchemical Hydra", BOSSES, Tile(1361, 10231, 0), HOSTILE),
         built("phantom_muspah", "Phantom Muspah", BOSSES, Tile(2117, 5645, 0), HOSTILE),

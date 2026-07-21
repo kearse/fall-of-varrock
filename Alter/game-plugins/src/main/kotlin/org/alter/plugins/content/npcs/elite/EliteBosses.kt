@@ -170,7 +170,9 @@ object EliteBosses {
         ),
         EliteBoss(
             key = "npc.nex", name = "Nex",
-            lair = Tile(2924, 5202, 2), walkRadius = 6,
+            // Ancient Prison floor is on plane 0 (the GWD encampments are the plane-2 rooms). The old
+            // plane-2 tile had no floor there, so players spawned/looted floating in the sky.
+            lair = Tile(2924, 5202, 0), walkRadius = 6,
             hp = 1000, att = 250, str = 250, def = 250, mag = 300, rng = 300,
             attackSpeed = 4, maxHit = 30, approach = 8, bossPoints = 60, slayerReq = 0, slayerXp = 0.0, multi = true,
             loot = DropTable(
