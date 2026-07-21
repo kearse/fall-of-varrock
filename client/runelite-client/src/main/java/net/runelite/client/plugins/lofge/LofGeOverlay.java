@@ -38,8 +38,10 @@ class LofGeOverlay extends Overlay
 	static final int INSIDE = 0;
 	static final int CLOSE = 1;
 	static final int COLLECT_ALL = 2;
-	static final int SLOT_BASE = 100; // + box  → click slot body (empty = new offer, else collect)
+	static final int SLOT_BASE = 100; // + box  → occupied card body → collect
 	static final int ABORT_BASE = 200; // + box → abort an active offer
+	static final int SLOT_BUY_BASE = 300; // + box → new BUY offer (empty card)
+	static final int SLOT_SELL_BASE = 400; // + box → new SELL offer (empty card)
 
 	// setup-view hit codes
 	static final int SET_TOGGLE = 10;
@@ -265,16 +267,45 @@ class LofGeOverlay extends Overlay
 		for (int i = 0; i < LofGePlugin.SLOTS; i++)
 		{
 			final LofGePlugin.Slot s = slots[i];
-			if (s != null && !s.isEmpty() && isAbortable(s) && abortRect(ox, oy, i).contains(p))
+			if (s == null || s.isEmpty())
+			{
+				// empty card: Buy / Sell buttons (OSRS-style, chosen on the card)
+				if (buyBtnRect(ox, oy, i).contains(p))
+				{
+					return SLOT_BUY_BASE + i;
+				}
+				if (sellBtnRect(ox, oy, i).contains(p))
+				{
+					return SLOT_SELL_BASE + i;
+				}
+				if (slotRect(ox, oy, i).contains(p))
+				{
+					return INSIDE;
+				}
+				continue;
+			}
+			if (isAbortable(s) && abortRect(ox, oy, i).contains(p))
 			{
 				return ABORT_BASE + i;
 			}
 			if (slotRect(ox, oy, i).contains(p))
 			{
-				return SLOT_BASE + i;
+				return SLOT_BASE + i; // occupied card body → collect
 			}
 		}
 		return INSIDE;
+	}
+
+	private Rectangle buyBtnRect(int ox, int oy, int i)
+	{
+		final Rectangle r = slotRect(ox, oy, i);
+		return new Rectangle(r.x + 8, r.y + 16, r.width - 16, 30);
+	}
+
+	private Rectangle sellBtnRect(int ox, int oy, int i)
+	{
+		final Rectangle r = slotRect(ox, oy, i);
+		return new Rectangle(r.x + 8, r.y + 52, r.width - 16, 30);
 	}
 
 	private boolean isAbortable(LofGePlugin.Slot s)
@@ -346,16 +377,11 @@ class LofGeOverlay extends Overlay
 
 		if (s == null || s.isEmpty())
 		{
-			// empty slot: a "+" and "Make offer"
-			g.setFont(FontManager.getRunescapeBoldFont());
-			final String plus = "+";
-			final FontMetrics fmp = g.getFontMetrics();
-			LofTheme.shadowText(g, plus, r.x + (r.width - fmp.stringWidth(plus)) / 2, r.y + r.height / 2 - 2,
-				hov ? LofTheme.GOLD : LofTheme.GOLD_DIM);
-			g.setFont(FontManager.getRunescapeSmallFont());
-			final String lbl = "Make offer";
-			LofTheme.shadowText(g, lbl, r.x + (r.width - g.getFontMetrics().stringWidth(lbl)) / 2, r.y + r.height / 2 + 18,
-				LofTheme.TEXT_DIM);
+			// empty card: Buy / Sell buttons, chosen here (OSRS-style) before the item search
+			final Rectangle bb = buyBtnRect(ox, oy, i);
+			final Rectangle sb = sellBtnRect(ox, oy, i);
+			LofModal.button(g, bb, "Buy ▲", LofTheme.LAVA, true, bb.contains(mouse));
+			LofModal.button(g, sb, "Sell ▼", LofTheme.GOLD, true, sb.contains(mouse));
 			return;
 		}
 

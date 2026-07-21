@@ -120,9 +120,18 @@ class LofGeMouseListener extends MouseAdapter
 
 	private void handleBoard(int hit)
 	{
+		// Check highest bases first — SLOT_SELL/BUY_BASE (400/300) sit above ABORT/SLOT_BASE.
 		if (hit == LofGeOverlay.COLLECT_ALL)
 		{
 			plugin.collectAll();
+		}
+		else if (hit >= LofGeOverlay.SLOT_SELL_BASE)
+		{
+			plugin.openSetup(hit - LofGeOverlay.SLOT_SELL_BASE, false); // empty card → new sell
+		}
+		else if (hit >= LofGeOverlay.SLOT_BUY_BASE)
+		{
+			plugin.openSetup(hit - LofGeOverlay.SLOT_BUY_BASE, true); // empty card → new buy
 		}
 		else if (hit >= LofGeOverlay.ABORT_BASE)
 		{
@@ -130,17 +139,7 @@ class LofGeMouseListener extends MouseAdapter
 		}
 		else if (hit >= LofGeOverlay.SLOT_BASE)
 		{
-			final int box = hit - LofGeOverlay.SLOT_BASE;
-			final LofGePlugin.Slot[] slots = plugin.getSlots();
-			final LofGePlugin.Slot s = box >= 0 && box < slots.length ? slots[box] : null;
-			if (s == null || s.isEmpty())
-			{
-				plugin.openSetup(box);
-			}
-			else
-			{
-				plugin.collect(box);
-			}
+			plugin.collect(hit - LofGeOverlay.SLOT_BASE); // occupied card body → collect
 		}
 	}
 

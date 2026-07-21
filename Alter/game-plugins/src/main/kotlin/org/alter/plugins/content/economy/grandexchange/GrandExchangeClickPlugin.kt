@@ -67,14 +67,21 @@ class GrandExchangeClickPlugin(
             }
         }
 
-        // Drawn setup box: pick an item (native search only), then open the in-window setup view.
+        // Buy/Sell chosen on the card → pick an item (native search only) → open the drawn setup box.
+        // The client hid its window before the search (so it can't cover the search box); on cancel we
+        // re-stream the board so the window comes back.
         onCommand("gesetupclick", description = "GE window: pick an item and open the drawn setup box") {
-            val box = player.getCommandArgs().getOrNull(0)?.toIntOrNull() ?: return@onCommand
+            val a = player.getCommandArgs()
+            val box = a.getOrNull(0)?.toIntOrNull() ?: return@onCommand
+            val buy = (a.getOrNull(1)?.toIntOrNull() ?: 1) != 0
             if (box !in 0 until GrandExchange.SLOTS) return@onCommand
             player.queue {
                 val item = searchItemInput(player, "Search for an item")
-                if (item <= 0) return@queue
-                GrandExchangeWindow.sendSetup(player, box, item)
+                if (item <= 0) {
+                    GrandExchangeWindow.stream(player) // search cancelled → bring the board back
+                    return@queue
+                }
+                GrandExchangeWindow.sendSetup(player, box, buy, item)
             }
         }
 
