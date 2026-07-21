@@ -22,6 +22,7 @@ import lombok.Getter;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
 import net.runelite.api.NPC;
+import net.runelite.api.Player;
 import net.runelite.api.ScriptID;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.GameStateChanged;
@@ -209,7 +210,73 @@ public class LofQuestsPlugin extends Plugin
 		{
 			return null;
 		}
+		// The arrow only leads you TO the objective. Once a highlighted target creature is in sight
+		// the outline/minimap dot is guidance enough, so the arrow (and its tile marker) get out of the
+		// way — mirroring RuneLite Quest Helper, which drops the arrow once the NPC is on screen. Only
+		// applies while the creature highlight is actually on to hand off to.
+		if (config.highlightObjectiveNpcs() && objectiveNpcInSight())
+		{
+			return null;
+		}
 		return trackedQuest.currentTarget(client);
+	}
+
+	/** Tiles from the player within which a highlighted target counts as "in sight" (≈ the viewport),
+	 *  at which point the arrow hands off to the on-creature highlight. */
+	private static final int IN_SIGHT_RADIUS = 15;
+
+	/**
+	 * True when at least one of the tracked step's highlighted target creatures is close enough to see
+	 * (same plane, within {@link #IN_SIGHT_RADIUS}). Distance is Chebyshev via {@link WorldPoint#distanceTo}
+	 * — off-plane targets read as {@code Integer.MAX_VALUE} and never count.
+	 */
+	private boolean objectiveNpcInSight()
+	{
+		LofQuest quest = trackedQuest;
+		if (quest == null)
+		{
+			return false;
+		}
+		int[] ids = quest.currentHighlightNpcIds(client);
+		if (ids.length == 0)
+		{
+			return false;
+		}
+		Player local = client.getLocalPlayer();
+		if (local == null)
+		{
+			return false;
+		}
+		WorldPoint playerLoc = local.getWorldLocation();
+		if (playerLoc == null)
+		{
+			return false;
+		}
+		for (NPC npc : client.getNpcs())
+		{
+			if (npc == null || !contains(ids, npc.getId()))
+			{
+				continue;
+			}
+			WorldPoint npcLoc = npc.getWorldLocation();
+			if (npcLoc != null && npcLoc.distanceTo(playerLoc) <= IN_SIGHT_RADIUS)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private static boolean contains(int[] ids, int id)
+	{
+		for (int candidate : ids)
+		{
+			if (candidate == id)
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**
@@ -250,13 +317,6 @@ public class LofQuestsPlugin extends Plugin
 		{
 			return false;
 		}
-		for (int id : quest.currentHighlightNpcIds(client))
-		{
-			if (id == npcId)
-			{
-				return true;
-			}
-		}
-		return false;
+		return contains(quest.currentHighlightNpcIds(client), npcId);
 	}
 }
