@@ -36,12 +36,17 @@ class SpellFilterPlugin(
             player.setInterfaceEvents(interfaceId = SPELL_FILTER_INTERFACE_ID, component = SPELL_FILTER_COMPONENT_ID, range = 0..4, setting = 2)
         }
 
+        /**
+         * Right-clicking the magic sidestone toggles the filters off/on. The stone is the last of
+         * the gameplay strip in every layout (spellbook icon, sprite 903) and the cache already
+         * gives it the second op; [org.alter.api.ext.initInterfaces] enables it.
+         */
         DisplayMode.values.forEach { mode ->
             val child =
                 when (mode) {
-                    DisplayMode.RESIZABLE_NORMAL -> 77
-                    DisplayMode.RESIZABLE_LIST -> 77
-                    DisplayMode.FIXED -> 75
+                    DisplayMode.FIXED -> 69
+                    DisplayMode.RESIZABLE_NORMAL -> 65
+                    DisplayMode.RESIZABLE_LIST -> 58
                     else -> return@forEach
                 }
             onButton(interfaceId = getDisplayComponentId(mode), component = child) {

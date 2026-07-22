@@ -458,64 +458,41 @@ fun Player.openOverlayInterface(displayMode: DisplayMode) {
     write(IfOpenTop(component))
 }
 
+/**
+ * Enables the click ops on the sidestones for the gameframe root the player is currently in.
+ *
+ * Every layout lays its stones out the same way: a "social" strip (chat channel, account, friends,
+ * logout, settings, emotes, music) and a "gameplay" strip (combat, skills, quests, inventory,
+ * equipment, prayer, magic). The last two gameplay stones -- prayer and magic -- carry a second op
+ * in the cache, which is what [org.alter.plugins.content.interfaces.gameframe.tabs.magic] hangs the
+ * spell-filter toggle off; they get setting 6 (op1 + op2) rather than 2.
+ *
+ * Modern layout drops the logout stone out of the social strip and parks it beside the minimap at
+ * 164:34, leaving that strip one short.
+ */
 fun Player.initInterfaces(displayMode: DisplayMode) {
-    when (displayMode) {
-        DisplayMode.FIXED -> {
-            setInterfaceEvents(interfaceId = 548, component = 51, range = -1..-1, setting = 2)
-            setInterfaceEvents(interfaceId = 548, component = 52, range = -1..-1, setting = 2)
-            setInterfaceEvents(interfaceId = 548, component = 53, range = -1..-1, setting = 2)
-            setInterfaceEvents(interfaceId = 548, component = 54, range = -1..-1, setting = 2)
-            setInterfaceEvents(interfaceId = 548, component = 55, range = -1..-1, setting = 2)
-            setInterfaceEvents(interfaceId = 548, component = 56, range = -1..-1, setting = 2)
-            setInterfaceEvents(interfaceId = 548, component = 57, range = -1..-1, setting = 6)
-            setInterfaceEvents(interfaceId = 548, component = 34, range = -1..-1, setting = 2)
-            setInterfaceEvents(interfaceId = 548, component = 35, range = -1..-1, setting = 2)
-            setInterfaceEvents(interfaceId = 548, component = 36, range = -1..-1, setting = 2)
-            setInterfaceEvents(interfaceId = 548, component = 37, range = -1..-1, setting = 2)
-            setInterfaceEvents(interfaceId = 548, component = 38, range = -1..-1, setting = 2)
-            setInterfaceEvents(interfaceId = 548, component = 39, range = -1..-1, setting = 2)
-            setInterfaceEvents(interfaceId = 548, component = 40, range = -1..-1, setting = 2)
+    val (root, social, gameplay, loose) =
+        when (displayMode) {
+            DisplayMode.FIXED -> InitSidestones(548, 47..53, 63..69, null)
+            DisplayMode.RESIZABLE_NORMAL -> InitSidestones(161, 43..49, 59..65, null)
+            DisplayMode.RESIZABLE_LIST -> InitSidestones(164, 38..43, 52..58, 34)
+            else -> return
         }
-        DisplayMode.RESIZABLE_NORMAL -> {
-            setInterfaceEvents(interfaceId = 161, component = 54, range = -1..-1, setting = 2)
-            setInterfaceEvents(interfaceId = 161, component = 55, range = -1..-1, setting = 2)
-            setInterfaceEvents(interfaceId = 161, component = 56, range = -1..-1, setting = 2)
-            setInterfaceEvents(interfaceId = 161, component = 57, range = -1..-1, setting = 2)
-            setInterfaceEvents(interfaceId = 161, component = 58, range = -1..-1, setting = 2)
-            setInterfaceEvents(interfaceId = 161, component = 59, range = -1..-1, setting = 2)
-            setInterfaceEvents(interfaceId = 161, component = 60, range = -1..-1, setting = 6)
-            setInterfaceEvents(interfaceId = 161, component = 38, range = -1..-1, setting = 2)
-            setInterfaceEvents(interfaceId = 161, component = 39, range = -1..-1, setting = 2)
-            setInterfaceEvents(interfaceId = 161, component = 40, range = -1..-1, setting = 2)
-            setInterfaceEvents(interfaceId = 161, component = 41, range = -1..-1, setting = 2)
-            setInterfaceEvents(interfaceId = 161, component = 42, range = -1..-1, setting = 2)
-            setInterfaceEvents(interfaceId = 161, component = 43, range = -1..-1, setting = 2)
-            setInterfaceEvents(interfaceId = 161, component = 44, range = -1..-1, setting = 2)
-        }
-        DisplayMode.RESIZABLE_LIST -> {
-            /*
-             * Modern layout splits the sidestones into two strips: 164:38-43 (top, six tabs) and
-             * 164:52-58 (bottom, seven tabs, the last two carrying a second op). The logout button
-             * sits on its own by the minimap at 164:34.
-             */
-            setInterfaceEvents(interfaceId = 164, component = 38, range = -1..-1, setting = 2)
-            setInterfaceEvents(interfaceId = 164, component = 39, range = -1..-1, setting = 2)
-            setInterfaceEvents(interfaceId = 164, component = 40, range = -1..-1, setting = 2)
-            setInterfaceEvents(interfaceId = 164, component = 41, range = -1..-1, setting = 2)
-            setInterfaceEvents(interfaceId = 164, component = 42, range = -1..-1, setting = 2)
-            setInterfaceEvents(interfaceId = 164, component = 43, range = -1..-1, setting = 2)
-            setInterfaceEvents(interfaceId = 164, component = 52, range = -1..-1, setting = 2)
-            setInterfaceEvents(interfaceId = 164, component = 53, range = -1..-1, setting = 2)
-            setInterfaceEvents(interfaceId = 164, component = 54, range = -1..-1, setting = 2)
-            setInterfaceEvents(interfaceId = 164, component = 55, range = -1..-1, setting = 2)
-            setInterfaceEvents(interfaceId = 164, component = 56, range = -1..-1, setting = 2)
-            setInterfaceEvents(interfaceId = 164, component = 57, range = -1..-1, setting = 6)
-            setInterfaceEvents(interfaceId = 164, component = 58, range = -1..-1, setting = 6)
-            setInterfaceEvents(interfaceId = 164, component = 34, range = -1..-1, setting = 2)
-        }
-        else -> return
+
+    social.forEach { setInterfaceEvents(interfaceId = root, component = it, range = -1..-1, setting = 2) }
+    gameplay.forEach {
+        val twoOps = it >= gameplay.last - 1
+        setInterfaceEvents(interfaceId = root, component = it, range = -1..-1, setting = if (twoOps) 6 else 2)
     }
+    loose?.let { setInterfaceEvents(interfaceId = root, component = it, range = -1..-1, setting = 2) }
 }
+
+private data class InitSidestones(
+    val root: Int,
+    val social: IntRange,
+    val gameplay: IntRange,
+    val loose: Int?,
+)
 
 fun Player.sendItemContainer(
     key: Int,
