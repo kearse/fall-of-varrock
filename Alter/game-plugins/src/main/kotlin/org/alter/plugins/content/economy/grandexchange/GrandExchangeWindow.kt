@@ -16,13 +16,23 @@ import org.alter.rscm.RSCM.getRSCM
  * FOV_GE:slot|box|state|buy|item|price|qty|filled|collectCoins|collectItems   (8 lines, one per box; empty = state 0)
  * FOV_GE:end                                                               (commit board)
  * FOV_GE:bal|coins                                                         (coin readout: inventory + bank)
- * FOV_GE:setup|box|buy|item|guide|floor|ceil                               (enter offer-setup for box; floor/ceil = -1 if unbanded)
+ * FOV_GE:setup|box|buy|item|guide|floor|ceil|bestAsk|bestBid|nSell|nBuy|own (enter offer-setup; -1 where absent)
+ * FOV_GE:ask|price|qty                                                     (0..N top open sells, cheapest first)
+ * FOV_GE:bid|price|qty                                                     (0..N top open buys, dearest first)
+ * FOV_GE:setupend                                                          (commit the setup view)
  * FOV_GE:close                                                             (server-driven close)
  * ```
  * `state` uses [GeState.wire] (EMPTY 0 … SOLD 6 — the client's enum ordinals). `buy` is 1/0.
+ * `guide` is the cache value (the "Guide X gp" readout + guide button); `bestAsk/bestBid` are the live
+ * market prices the client uses for its smart default. `own` is how many of the item the player holds
+ * (sell only — the client defaults/caps the sell quantity to it; 0 for a buy). `floor/ceil/bestAsk/
+ * bestBid = -1` when absent.
  */
 object GrandExchangeWindow {
     const val PREFIX = "FOV_GE:"
+
+    /** How many price levels of each side of the book to stream into the setup panel. */
+    private const val MARKET_ROWS = 5
 
     private val coinsId: Int by lazy { getRSCM("item.coins_995") }
 
@@ -51,11 +61,23 @@ object GrandExchangeWindow {
     }
 
     /** Tell the client to show the offer-setup view for [box] with the chosen buy/sell + the picked
-     *  item + its guide/band. The client owns quantity + price; confirm arrives via `geconfirmclick`. */
+     *  item + its guide/band + a snapshot of the live market (best prices, depth, top listings). The
+     *  client owns quantity + price; confirm arrives via `geconfirmclick`. */
     fun sendSetup(p: Player, box: Int, buy: Boolean, item: Int) {
         val guide = GrandExchange.guidePrice(item)
         val band = GrandExchange.band(item)
-        line(p, "setup|$box|${if (buy) 1 else 0}|$item|$guide|${band?.first ?: -1}|${band?.second ?: -1}")
+        val bestAsk = GrandExchange.bestAsk(item) ?: -1
+        val bestBid = GrandExchange.bestBid(item) ?: -1
+        val nSell = GrandExchange.sellDepth(item)
+        val nBuy = GrandExchange.buyDepth(item)
+        val own = if (buy) 0 else p.inventory.getItemCount(item)
+        line(
+            p,
+            "setup|$box|${if (buy) 1 else 0}|$item|$guide|${band?.first ?: -1}|${band?.second ?: -1}|$bestAsk|$bestBid|$nSell|$nBuy|$own",
+        )
+        for ((price, qty) in GrandExchange.topAsks(item, MARKET_ROWS)) line(p, "ask|$price|$qty")
+        for ((price, qty) in GrandExchange.topBids(item, MARKET_ROWS)) line(p, "bid|$price|$qty")
+        line(p, "setupend")
     }
 
     fun close(p: Player) = line(p, "close")

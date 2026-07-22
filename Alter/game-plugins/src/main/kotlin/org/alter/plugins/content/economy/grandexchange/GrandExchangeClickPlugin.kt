@@ -4,6 +4,7 @@ import dev.openrune.cache.CacheManager.getNpc
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.alter.api.ext.getCommandArgs
 import org.alter.api.ext.inputInt
+import org.alter.api.ext.message
 import org.alter.api.ext.options
 import org.alter.api.ext.player
 import org.alter.api.ext.searchItemInput
@@ -67,14 +68,28 @@ class GrandExchangeClickPlugin(
             }
         }
 
-        // Buy/Sell chosen on the card → pick an item (native search only) → open the drawn setup box.
-        // The client hid its window before the search (so it can't cover the search box); on cancel we
-        // re-stream the board so the window comes back.
+        // Buy/Sell chosen on the card → open the drawn setup box for the chosen item.
+        //  - Sell: the client passes the item it picked from the in-window inventory grid (arg 2), so we
+        //    skip the search and open setup straight away (validate it's listable + owned first).
+        //  - Buy: no item yet — the client keeps its window up and we run the native chat search; the
+        //    result opens setup. On cancel we re-stream the board so the window returns to the grid.
         onCommand("gesetupclick", description = "GE window: pick an item and open the drawn setup box") {
             val a = player.getCommandArgs()
             val box = a.getOrNull(0)?.toIntOrNull() ?: return@onCommand
             val buy = (a.getOrNull(1)?.toIntOrNull() ?: 1) != 0
+            val presetItem = a.getOrNull(2)?.toIntOrNull()
             if (box !in 0 until GrandExchange.SLOTS) return@onCommand
+
+            if (presetItem != null && presetItem > 0) {
+                if (!GrandExchange.isListable(presetItem) || player.inventory.getItemCount(presetItem) <= 0) {
+                    player.message("You can't sell that on the Grand Exchange.")
+                    GrandExchangeWindow.stream(player)
+                    return@onCommand
+                }
+                GrandExchangeWindow.sendSetup(player, box, buy, presetItem)
+                return@onCommand
+            }
+
             player.queue {
                 val item = searchItemInput(player, "Search for an item")
                 if (item <= 0) {

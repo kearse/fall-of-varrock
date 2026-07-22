@@ -1,11 +1,12 @@
 /*
  * Fall of Varrock — Grand Exchange window (mouse input).
  *
- * Hit-tests left-clicks against the open board: the ✕ closes it, "Collect all" collects every slot,
- * an empty slot starts a new offer (native Buy/Sell → ::item search → number entry), an active slot's
- * body collects its proceeds and its small ✕ aborts it. Clicks on the window are consumed so they
- * don't fall through to the game; a click outside is left alone (the window only closes via its ✕, so
- * the native offer dialogs can open over it without dismissing it).
+ * Hit-tests left-clicks against the open window. On the board: the ✕ closes it, "Collect all" collects
+ * every slot, an empty card's Buy/Sell opens the offer screen, an active card's body collects and its
+ * small ✕ aborts. On the offer screen: quantity/price steppers + presets, market listing rows (tap to
+ * adopt a price), Back and Confirm. Clicks on the window are consumed so they don't fall through to the
+ * game; a click outside is left alone — so the chat item-search (buy) and inventory right-click "Offer"
+ * (sell) still work with the window open.
  */
 package net.runelite.client.plugins.lofge;
 
@@ -59,9 +60,14 @@ class LofGeMouseListener extends MouseAdapter
 
 	private void handleSetup(int hit)
 	{
-		if (hit == LofGeOverlay.SET_TOGGLE)
+		// Market listing rows sit above every other setup code — check them first.
+		if (hit >= LofGeOverlay.BID_ROW_BASE)
 		{
-			plugin.setupToggleBuy();
+			plugin.adoptMarketPrice(false, hit - LofGeOverlay.BID_ROW_BASE);
+		}
+		else if (hit >= LofGeOverlay.ASK_ROW_BASE)
+		{
+			plugin.adoptMarketPrice(true, hit - LofGeOverlay.ASK_ROW_BASE);
 		}
 		else if (hit == LofGeOverlay.SET_QMINUS)
 		{
