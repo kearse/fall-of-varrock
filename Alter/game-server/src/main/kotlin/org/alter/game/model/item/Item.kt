@@ -87,6 +87,19 @@ class Item(val id: Int, var amount: Int = 1) {
     }
 
     companion object {
+        /**
+         * Sentinel [amount] marking a **bank placeholder** — the greyed marker left behind in a
+         * bank slot when its item is withdrawn. It is not a real stack and holds no value; the
+         * bank writes it as `Item(def.placeholderLink, PLACEHOLDER_AMOUNT)` and finds it again by
+         * matching on this exact amount.
+         *
+         * It must never be treated as a corrupt stack, and must never be sent to the client
+         * verbatim: the wire format encodes a placeholder as a count of **0**, and handing a
+         * negative count to rsprot throws "Obj count cannot be below zero" (which used to abort
+         * the owner's entire game cycle). See the object providers in `org.alter.game.rsprot`.
+         */
+        const val PLACEHOLDER_AMOUNT = -2
+
         fun fromDocument(doc: Document): Item {
             val id = doc.getInteger("id")
             val amount = doc.getInteger("amount")
