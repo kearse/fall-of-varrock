@@ -109,11 +109,19 @@ enum LofQuest
 
 	KING_OF_LUMBRIDGE(
 		"King of Lumbridge",
-		"The top of the feudal ladder. A questline that ends with you ruling the city — commanding "
-			+ "its armies, reshaping its laws, and marching on the other kingdoms.",
+		"The top of the feudal ladder, and the endgame. Crowned King, you finally put the crown to "
+			+ "use: stock the realm for war, muster a full army, and march on Fallen Varrock to retake "
+			+ "the old capital. Win the conquest and the realm's armies march at your word.",
+		4, // DONE ordinal (Conquest.Step)
 		Arrays.asList(
-			"Rule Lumbridge",
-			"Command the city's NPC armies",
+			new LofQuestStep(1, "Stock the realm's war-stores", "Skill the Mire and hand supplies to a Quartermaster (::supply to check).", new WorldPoint(3248, 3193, 0)),
+			new LofQuestStep(2, "Launch the conquest of Fallen Varrock", "Gather your war-chest, then command ::conquest varrock.", new WorldPoint(3231, 3219, 0)),
+			new LofQuestStep(3, "Win the conquest", "Break Fallen Varrock's garrison — lead your army to victory.", new WorldPoint(3213, 3424, 0))
+		),
+		Arrays.asList(
+			"Fallen Varrock retaken",
+			"Command of the realm's armies (::conquest)",
+			"A commander's spoils (::claim) and Prestige",
 			"City-vs-city conquest"
 		));
 
@@ -164,6 +172,8 @@ enum LofQuest
 				return LofQuestVarps.warprepStep(client);
 			case THE_ROGUE_PROBLEM:
 				return LofQuestVarps.rogueProblemStep(client);
+			case KING_OF_LUMBRIDGE:
+				return LofQuestVarps.conquestStep(client);
 			default:
 				return 0;
 		}
@@ -195,6 +205,10 @@ enum LofQuest
 				}
 				return ord >= doneOrdinal ? LofQuestState.FINISHED
 					: ord == 0 ? LofQuestState.LOCKED : LofQuestState.IN_PROGRESS;
+			case KING_OF_LUMBRIDGE:
+				// The endgame quest auto-begins on the King rank-up; ordinal 0 = not yet King (locked).
+				return ord >= doneOrdinal ? LofQuestState.FINISHED
+					: ord == 0 ? LofQuestState.LOCKED : LofQuestState.IN_PROGRESS;
 			default:
 				return LofQuestState.LOCKED;
 		}
@@ -210,6 +224,10 @@ enum LofQuest
 		if (this == THE_ROGUE_PROBLEM && state(client) == LofQuestState.LOCKED)
 		{
 			return "Finish War-Prep I — Magic first.";
+		}
+		if (this == KING_OF_LUMBRIDGE && state(client) == LofQuestState.LOCKED)
+		{
+			return "Reach the rank of King (buy it from Duke Horacio) first.";
 		}
 		return null;
 	}

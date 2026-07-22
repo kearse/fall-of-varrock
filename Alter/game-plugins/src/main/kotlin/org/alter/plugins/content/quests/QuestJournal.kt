@@ -8,6 +8,7 @@ import org.alter.game.model.attr.QUEST_GUIDE_MUTED_ATTR
 import org.alter.game.model.attr.RECRUIT_GOBLIN_KILLS_ATTR
 import org.alter.game.model.attr.SLAYER_TASK_NPC_ATTR
 import org.alter.game.model.entity.Player
+import org.alter.plugins.content.war.Conquest
 import org.alter.plugins.content.war.recruit.RecruitTrials
 import org.alter.plugins.content.war.roguehunt.RogueProblem
 import org.alter.plugins.content.war.warprep.WarPrepChain
@@ -24,10 +25,11 @@ import org.alter.plugins.content.war.warprep.WarPrepChain
  *  - [WARPREP_VARP] = [WarPrepChain.Step] ordinal.
  *  - [ROGUE_PROBLEM_VARP] packed: bits 0-5 = [RogueProblem.Step] ordinal, bits 6-11 = rogues felled
  *    on the HUNT step (0-63 clamp) so the client can render the "(x/30)" progress.
+ *  - [CONQUEST_VARP] bits 0-5 = [Conquest.Step] ordinal (the endgame "King of Lumbridge" quest).
  *  - [GUIDE_MUTED_VARP] = 1 while guidance is muted, else 0 (so the client toggle reflects state).
  *
  * Varps 4600-4608, 4613-4616 and 4620-4623 are taken by the other client HUDs; quests own
- * 4610-4612 and 4617.
+ * 4610-4612, 4617 and 4633.
  * Non-zero varps persist ([VarpSerialisation]), but the attributes stay the source of truth —
  * everything here is re-derived and re-published on login and on the world poll.
  *
@@ -45,6 +47,7 @@ object QuestJournal {
     const val WARPREP_VARP = 4611
     const val GUIDE_MUTED_VARP = 4612
     const val ROGUE_PROBLEM_VARP = 4617 // 4613-4616 belong to the companion + slayer HUDs
+    const val CONQUEST_VARP = 4633      // King of Lumbridge (endgame); 4635-4637 are companion indices
 
     // Reused OSRS quest progress varps that colour the relabelled native quest-tab rows. A value of
     // 0 reads as "not started" (red), the complete value as "finished" (green), anything between as
@@ -55,6 +58,9 @@ object QuestJournal {
     /** Doric's Quest varp — now the "War-Prep I — Magic" row. Completes at 100. */
     const val WARPREP_QUEST_VARP = 31
     private const val WARPREP_QUEST_COMPLETE = 100
+    /** Witch's Potion varp — now the "King of Lumbridge" row. Completes at 3. */
+    const val KING_QUEST_VARP = 67
+    private const val KING_QUEST_COMPLETE = 3
 
     /** True while the player has quest guidance muted (free-play mode). */
     fun muted(p: Player): Boolean = p.attr[QUEST_GUIDE_MUTED_ATTR] == true
@@ -89,6 +95,9 @@ object QuestJournal {
         val roguePacked = rogueStep or (rogueKills shl 6)
         if (p.getVarp(ROGUE_PROBLEM_VARP) != roguePacked) p.setVarp(ROGUE_PROBLEM_VARP, roguePacked)
 
+        val conquest = Conquest.step(p).ordinal and 0x3F
+        if (p.getVarp(CONQUEST_VARP) != conquest) p.setVarp(CONQUEST_VARP, conquest)
+
         val mutedFlag = if (muted(p)) 1 else 0
         if (p.getVarp(GUIDE_MUTED_VARP) != mutedFlag) p.setVarp(GUIDE_MUTED_VARP, mutedFlag)
 
@@ -118,6 +127,16 @@ object QuestJournal {
             else -> 1                              // in progress
         }
         setVarpSafely(p, WARPREP_QUEST_VARP, warprepVal)
+
+        // King of Lumbridge: NONE (not yet King / not begun) is not started; DONE is complete;
+        // anything between is in progress.
+        val conquest = Conquest.step(p)
+        val conquestVal = when {
+            conquest == Conquest.Step.DONE -> KING_QUEST_COMPLETE
+            conquest == Conquest.Step.NONE -> 0 // not begun / locked
+            else -> 1                           // in progress
+        }
+        setVarpSafely(p, KING_QUEST_VARP, conquestVal)
     }
 
     private fun setVarpSafely(p: Player, varp: Int, value: Int) {

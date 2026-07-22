@@ -200,6 +200,7 @@ class CampaignCommandPlugin(
             return
         }
         RealmSupply.consume(world, tier, player.username, op.displayName) // launching drains the realm stores
+        Conquest.onLaunched(player, tier) // advances the "King of Lumbridge" quest on a conquest launch
         // The commander is NOT teleported — they stay where they are and rally to the army themselves.
         if (op.route.isNotEmpty()) {
             val m = op.route.first()

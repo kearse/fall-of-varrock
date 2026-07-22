@@ -322,6 +322,16 @@ val ROGUE_PROBLEM_STEP_ATTR = AttributeKey<Int>("rogue_problem_step")
 val ROGUE_PROBLEM_KILLS_ATTR = AttributeKey<Int>("rogue_problem_kills")
 
 /**
+ * **King of Lumbridge** — the endgame conquest quest (see
+ * [org.alter.plugins.content.war.Conquest]). Opens the moment a player reaches [King][
+ * org.alter.plugins.content.war.Title.KING] and guides them through supplying the realm, mustering
+ * an army and winning a conquest of Fallen Varrock. [CONQUEST_STEP_ATTR] is the current step ordinal
+ * of [org.alter.plugins.content.war.Conquest.Step] (0 = not started / not yet King); persistent, and
+ * the chain never re-fires once DONE.
+ */
+val CONQUEST_STEP_ATTR = AttributeKey<Int>("conquest_step")
+
+/**
  * A flag which indicates that the player will not take collision into account
  * when walking.
  */
