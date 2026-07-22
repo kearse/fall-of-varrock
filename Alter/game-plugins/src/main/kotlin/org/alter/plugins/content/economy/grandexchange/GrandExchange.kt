@@ -45,6 +45,44 @@ object GrandExchange {
     data class GeNotice(val owner: String, val buy: Boolean, val itemId: Int, val qty: Int)
     private val notices = ArrayList<GeNotice>()
 
+    /** A completed trade recorded for the player's History tab. `coins` = price × qty (the offer price);
+     *  `time` = epoch millis at completion. Newest entries live at the end of [history]. */
+    data class GeHistoryEntry(
+        val owner: String, val buy: Boolean, val itemId: Int, val qty: Int, val price: Int, val time: Long,
+    ) {
+        fun toDocument(): Document = Document()
+            .append("owner", owner).append("buy", buy).append("item", itemId)
+            .append("qty", qty).append("price", price).append("time", time)
+
+        companion object {
+            fun fromDocument(d: Document) = GeHistoryEntry(
+                owner = d.getString("owner") ?: "",
+                buy = d.getBoolean("buy", true),
+                itemId = d.getInteger("item", -1),
+                qty = d.getInteger("qty", 0),
+                price = d.getInteger("price", 0),
+                time = (d.get("time") as? Number)?.toLong() ?: 0L,
+            )
+        }
+    }
+
+    private val history = ArrayList<GeHistoryEntry>()
+    private const val HISTORY_PER_OWNER = 20
+
+    /** A player's completed trades, newest first (for the History tab). */
+    fun historyOf(owner: String): List<GeHistoryEntry> =
+        history.filter { it.owner == owner }.asReversed()
+
+    /** Append a completed trade, trimming the owner's history to the most recent [HISTORY_PER_OWNER]. */
+    private fun recordHistory(o: GeOffer) {
+        history.add(GeHistoryEntry(o.owner, o.buy, o.itemId, o.qty, o.price, System.currentTimeMillis()))
+        val mine = history.filter { it.owner == o.owner }
+        if (mine.size > HISTORY_PER_OWNER) {
+            history.removeAll(mine.take(mine.size - HISTORY_PER_OWNER).toSet())
+        }
+        markDirty()
+    }
+
     /** Take + clear the pending completion notices (delivered to online owners by the plugin). */
     fun drainNotices(): List<GeNotice> {
         if (notices.isEmpty()) return emptyList()
@@ -182,9 +220,11 @@ object GrandExchange {
 
     private fun applyFill(buy: GeOffer, sell: GeOffer, fill: GeFill) {
         val (q, p) = fill
-        // buyer: spend p per item, receive items, refund the (buy.price - p) overpay
+        // buyer: the full reservation for these q units (buy.price each) leaves escrow — p per item is
+        // paid to the seller, the (buy.price - p) overpay is refunded into collectCoins. Draining only
+        // p*q here would strand the overpay in escrow forever, so the slot never becomes fullyDrained.
         buy.filled += q
-        buy.escrowCoins -= p * q
+        buy.escrowCoins -= buy.price * q
         buy.collectItems += q
         buy.collectCoins += (buy.price - p) * q
         buy.refreshState()
@@ -197,10 +237,11 @@ object GrandExchange {
         noticeIfComplete(sell)
     }
 
-    /** Queue an owner notification when an offer has just fully filled. */
+    /** Queue an owner notification + a History entry when an offer has just fully filled. */
     private fun noticeIfComplete(o: GeOffer) {
         if (o.filled >= o.qty && (o.state == GeState.BOUGHT || o.state == GeState.SOLD)) {
             notices.add(GeNotice(o.owner, o.buy, o.itemId, o.qty))
+            recordHistory(o)
         }
     }
 
@@ -217,7 +258,9 @@ object GrandExchange {
             val floor = commodityFloor(o.itemId) ?: continue
             if (o.buy && o.price >= ceiling) {
                 val q = o.remaining
-                o.filled += q; o.escrowCoins -= ceiling * q
+                // Full reservation (o.price each) leaves escrow: ceiling*q is the NPC sink, the
+                // (o.price - ceiling) overpay per item is refunded into collectCoins.
+                o.filled += q; o.escrowCoins -= o.price * q
                 o.collectItems += q; o.collectCoins += (o.price - ceiling) * q
                 o.refreshState(); changed = true; noticeIfComplete(o)
             } else if (!o.buy && o.price <= floor) {
@@ -342,10 +385,33 @@ object GrandExchange {
             seqCounter = (doc.get("seq") as? Number)?.toLong() ?: 0L
             offers.clear()
             doc.getList("offers", Document::class.java)?.forEach { offers.add(GeOffer.fromDocument(it)) }
-            dirty = false
-            logger.info { "Loaded Grand Exchange: ${offers.size} offer(s)." }
+            history.clear()
+            doc.getList("history", Document::class.java)?.forEach { history.add(GeHistoryEntry.fromDocument(it)) }
+            reconcile()
+            logger.info { "Loaded Grand Exchange: ${offers.size} offer(s), ${history.size} history entr(ies)." }
         } catch (e: Exception) {
             logger.error(e) { "Failed to load Grand Exchange; starting empty." }
+        }
+    }
+
+    /** Post-load repair: correct any buy escrow stranded by the old drain bug (the invariant is
+     *  `escrowCoins == (qty - filled) * price` for a live buy) and drop finished, fully-drained offers
+     *  that were stuck on the board. Runs once per load; safe/idempotent on already-correct data. */
+    private fun reconcile() {
+        var repaired = 0
+        for (o in offers) {
+            if (o.buy && o.state != GeState.CANCELLED_BUY) {
+                val correct = (o.qty - o.filled) * o.price
+                if (o.escrowCoins != correct) { o.escrowCoins = correct; repaired++ }
+            }
+        }
+        val removed = offers.removeAll { it.fullyDrained && (it.filled >= it.qty ||
+            it.state == GeState.CANCELLED_BUY || it.state == GeState.CANCELLED_SELL) }
+        if (repaired > 0 || removed) {
+            dirty = true
+            logger.info { "Grand Exchange reconcile: repaired $repaired buy escrow(s), pruned drained offers." }
+        } else {
+            dirty = false
         }
     }
 
@@ -357,6 +423,7 @@ object GrandExchange {
                 .append("version", SCHEMA_VERSION)
                 .append("seq", seqCounter)
                 .append("offers", offers.map { it.toDocument() })
+                .append("history", history.map { it.toDocument() })
             saveFile.writeText(doc.toJson(pretty))
             dirty = false
         } catch (e: Exception) {

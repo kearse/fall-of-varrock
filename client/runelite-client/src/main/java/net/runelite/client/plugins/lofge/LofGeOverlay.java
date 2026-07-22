@@ -41,6 +41,8 @@ class LofGeOverlay extends Overlay
 	static final int INSIDE = 0;
 	static final int CLOSE = 1;
 	static final int COLLECT_ALL = 2;
+	static final int TAB_OFFERS = 5;  // tab strip: show the offer board
+	static final int TAB_HISTORY = 6; // tab strip: show the History tab
 	static final int SLOT_BASE = 100; // + box  → occupied card body → collect
 	static final int ABORT_BASE = 200; // + box → abort an active offer
 	static final int SLOT_BUY_BASE = 300; // + box → new BUY offer (empty card)
@@ -60,13 +62,16 @@ class LofGeOverlay extends Overlay
 	static final int BID_ROW_BASE = 520;    // + i → adopt this Buying listing's price
 
 	private static final int PAD = LofModal.PAD;        // 14
-	private static final int GRID_TOP = 46;             // below the 38px title + 8
+	private static final int TAB_Y = 42;                // tab strip, just below the title underline
+	private static final int TAB_H = 20;
+	private static final int TAB_W = 110;
+	private static final int GRID_TOP = 66;             // below the tab strip
 	private static final int COL_GAP = 8;
 	private static final int ROW_GAP = 8;
 	private static final int COLS = 4;
 	private static final int ROWS = 2;
 	private static final int COL_W = (LofModal.W - PAD * 2 - COL_GAP * (COLS - 1)) / COLS; // 107
-	private static final int ROW_H = 94;
+	private static final int ROW_H = 84;
 	private static final int COLL_Y = GRID_TOP + ROWS * ROW_H + ROWS * ROW_GAP;            // 250
 	private static final int BTN_W = 150;
 	private static final int BTN_H = 28;
@@ -105,6 +110,16 @@ class LofGeOverlay extends Overlay
 	private int originY()
 	{
 		return LofModal.originY(client);
+	}
+
+	private Rectangle tabOffersRect(int ox, int oy)
+	{
+		return new Rectangle(ox + PAD, oy + TAB_Y, TAB_W, TAB_H);
+	}
+
+	private Rectangle tabHistoryRect(int ox, int oy)
+	{
+		return new Rectangle(ox + PAD + TAB_W + 6, oy + TAB_Y, TAB_W, TAB_H);
 	}
 
 	private Rectangle slotRect(int ox, int oy, int i)
@@ -309,6 +324,19 @@ class LofGeOverlay extends Overlay
 		{
 			return hitTestSetup(ox, oy, p);
 		}
+		// Tab strip (board + history views)
+		if (tabOffersRect(ox, oy).contains(p))
+		{
+			return TAB_OFFERS;
+		}
+		if (tabHistoryRect(ox, oy).contains(p))
+		{
+			return TAB_HISTORY;
+		}
+		if (plugin.isShowingHistory())
+		{
+			return INSIDE; // history rows are read-only
+		}
 		if (anyCollectable() && collectAllRect(ox, oy).contains(p))
 		{
 			return COLLECT_ALL;
@@ -349,13 +377,13 @@ class LofGeOverlay extends Overlay
 	private Rectangle buyBtnRect(int ox, int oy, int i)
 	{
 		final Rectangle r = slotRect(ox, oy, i);
-		return new Rectangle(r.x + 8, r.y + 16, r.width - 16, 30);
+		return new Rectangle(r.x + 8, r.y + 14, r.width - 16, 28);
 	}
 
 	private Rectangle sellBtnRect(int ox, int oy, int i)
 	{
 		final Rectangle r = slotRect(ox, oy, i);
-		return new Rectangle(r.x + 8, r.y + 52, r.width - 16, 30);
+		return new Rectangle(r.x + 8, r.y + 46, r.width - 16, 28);
 	}
 
 	private boolean isAbortable(LofGePlugin.Slot s)
@@ -401,18 +429,104 @@ class LofGeOverlay extends Overlay
 			return new Dimension(LofModal.W, LofModal.H);
 		}
 
+		final boolean hist = plugin.isShowingHistory();
 		LofModal.frame(g, ox, oy, "Grand Exchange", LofModal.fmt(plugin.getCoins()) + " gp", mouse);
+		drawTabs(g, ox, oy, mouse, hist);
 
-		final LofGePlugin.Slot[] slots = plugin.getSlots();
-		for (int i = 0; i < LofGePlugin.SLOTS; i++)
+		if (hist)
 		{
-			drawSlot(g, ox, oy, i, slots[i], mouse);
+			drawHistory(g, ox, oy);
 		}
-
-		drawCollection(g, ox, oy, mouse);
+		else
+		{
+			final LofGePlugin.Slot[] slots = plugin.getSlots();
+			for (int i = 0; i < LofGePlugin.SLOTS; i++)
+			{
+				drawSlot(g, ox, oy, i, slots[i], mouse);
+			}
+			drawCollection(g, ox, oy, mouse);
+		}
 
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, oldAA == null ? RenderingHints.VALUE_ANTIALIAS_DEFAULT : oldAA);
 		return new Dimension(LofModal.W, LofModal.H);
+	}
+
+	private void drawTabs(Graphics2D g, int ox, int oy, Point mouse, boolean hist)
+	{
+		final Rectangle offers = tabOffersRect(ox, oy);
+		final Rectangle history = tabHistoryRect(ox, oy);
+		LofModal.button(g, offers, "Offers", hist ? LofTheme.GOLD_DIM : LofTheme.EMBER, true,
+			!hist || offers.contains(mouse));
+		LofModal.button(g, history, "History", hist ? LofTheme.GOLD : LofTheme.GOLD_DIM, true,
+			hist || history.contains(mouse));
+	}
+
+	private void drawHistory(Graphics2D g, int ox, int oy)
+	{
+		final java.util.List<LofGePlugin.Hist> rows = plugin.getHistory();
+		if (rows.isEmpty())
+		{
+			g.setFont(FontManager.getRunescapeFont());
+			final String m = "No completed trades yet.";
+			final int mw = g.getFontMetrics().stringWidth(m);
+			LofTheme.shadowText(g, m, ox + (LofModal.W - mw) / 2, oy + 150, LofTheme.TEXT_DIM);
+			return;
+		}
+		final int x = ox + PAD;
+		final int w = LofModal.W - 2 * PAD;
+		int y = oy + GRID_TOP;
+		final int rowH = 30;
+		final int max = Math.min(rows.size(), (LofModal.H - PAD - GRID_TOP) / rowH); // fits without a scrollbar
+		for (int i = 0; i < max; i++)
+		{
+			final LofGePlugin.Hist h = rows.get(i);
+			g.setColor(LofTheme.ROW);
+			g.fillRoundRect(x, y, w, rowH - 4, 6, 6);
+
+			final BufferedImage img = h.itemId > 0 ? itemManager.getImage(h.itemId, h.qty, h.qty > 1) : null;
+			if (img != null)
+			{
+				g.drawImage(img, x + 4, y + (rowH - 4 - img.getHeight()) / 2, null);
+			}
+
+			g.setFont(FontManager.getRunescapeFont());
+			final String verb = h.buy ? "Bought" : "Sold";
+			final String main = verb + " " + LofModal.fmt(h.qty) + " × " + fit(g.getFontMetrics(), itemName(h.itemId), 150);
+			LofTheme.shadowText(g, main, x + 42, y + 13, h.buy ? LofTheme.LAVA : LofTheme.GOLD);
+
+			g.setFont(FontManager.getRunescapeSmallFont());
+			final long total = (long) h.qty * h.price;
+			final String sub = LofModal.fmt(total) + " gp  (" + LofModal.fmt(h.price) + " ea)";
+			LofTheme.shadowText(g, sub, x + 42, y + 24, LofTheme.TEXT_DIM);
+
+			final String ago = relTime(h.time);
+			final int aw = g.getFontMetrics().stringWidth(ago);
+			LofTheme.shadowText(g, ago, x + w - aw - 6, y + 24, LofTheme.GOLD_DIM);
+			y += rowH;
+		}
+	}
+
+	/** Compact "how long ago" from an epoch-millis timestamp. */
+	private static String relTime(long time)
+	{
+		if (time <= 0)
+		{
+			return "";
+		}
+		final long secs = Math.max(0, (System.currentTimeMillis() - time) / 1000L);
+		if (secs < 60)
+		{
+			return "just now";
+		}
+		if (secs < 3600)
+		{
+			return (secs / 60) + "m ago";
+		}
+		if (secs < 86_400)
+		{
+			return (secs / 3600) + "h ago";
+		}
+		return (secs / 86_400) + "d ago";
 	}
 
 	private void drawSlot(Graphics2D g, int ox, int oy, int i, LofGePlugin.Slot s, Point mouse)
@@ -459,17 +573,17 @@ class LofGeOverlay extends Overlay
 		final BufferedImage img = s.itemId > 0 ? itemManager.getImage(s.itemId) : null;
 		if (img != null)
 		{
-			g.drawImage(img, r.x + (r.width - img.getWidth()) / 2, r.y + 18, null);
+			g.drawImage(img, r.x + (r.width - img.getWidth()) / 2, r.y + 15, null);
 		}
 
 		// name
 		g.setFont(FontManager.getRunescapeSmallFont());
 		final FontMetrics fm = g.getFontMetrics();
 		final String name = fit(fm, itemName(s.itemId), r.width - 10);
-		LofTheme.shadowText(g, name, r.x + (r.width - fm.stringWidth(name)) / 2, r.y + 58, LofTheme.TEXT);
+		LofTheme.shadowText(g, name, r.x + (r.width - fm.stringWidth(name)) / 2, r.y + 52, LofTheme.TEXT);
 
 		// progress bar
-		final int barY = r.y + 64;
+		final int barY = r.y + 58;
 		final int barW = r.width - 12;
 		g.setColor(new Color(14, 10, 8));
 		g.fillRoundRect(r.x + 6, barY, barW, 7, 3, 3);
@@ -480,7 +594,7 @@ class LofGeOverlay extends Overlay
 		// status line: filled/qty @ price
 		final String done = (s.state == 4 || s.state == 6) ? "done" : s.filled + "/" + s.qty;
 		final String line = done + " · " + LofModal.fmt(s.price) + " gp";
-		LofTheme.shadowText(g, fit(fm, line, r.width - 8), r.x + 6, r.y + 84, LofTheme.TEXT_DIM);
+		LofTheme.shadowText(g, fit(fm, line, r.width - 8), r.x + 6, r.y + 78, LofTheme.TEXT_DIM);
 	}
 
 	private void drawCollection(Graphics2D g, int ox, int oy, Point mouse)

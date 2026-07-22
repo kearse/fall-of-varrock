@@ -125,6 +125,14 @@ class MessagePublicHandler : MessageHandler<MessagePublic> {
                     client.world.plugins.executeCommand(client, "gecancelclick", parts.drop(1).toTypedArray())
                     return
                 }
+                "lofgehistory" -> {
+                    client.world.plugins.executeCommand(client, "gehistoryclick", parts.drop(1).toTypedArray())
+                    return
+                }
+                "lofgeboard" -> {
+                    client.world.plugins.executeCommand(client, "ge", parts.drop(1).toTypedArray())
+                    return
+                }
                 "lofgeclose" -> {
                     client.world.plugins.executeCommand(client, "gecloseclick", parts.drop(1).toTypedArray())
                     return
