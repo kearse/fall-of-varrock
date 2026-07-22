@@ -36,21 +36,36 @@ class OptionsTabFirstPlugin(
         val BRIGHTNES_BAR = 23
         val ZOOM_TOGGLE_BUTTON = 44
         val DISPLAY_MODE = 41
-        val MUTE_MUSIC = 93
-        val MUSIC_BAR = 104
-        val MUTE_SOUND = 107
-        val SOUND_BAR = 118
-        val MUTE_AREA_SOUND = 122
-        val AREA_SOUND_BAR = 133
-        val MUSIC_UNLOCK_MESSAGE = 121
+
+        /*
+         * The three sub-tabs across the top of the settings panel (children of 116:1), and the
+         * body each one reveals: 116:4 (controls), 116:9 (audio), 116:10 (display). The buttons
+         * carry their ops in the cache, so a click always reaches us -- the tab you land on is
+         * purely whatever we write to SETTINGS_TAB_FOCUS.
+         */
+        val CONTROLS_TAB_BUTTON = 59   // cog icon, left
+        val AUDIO_TAB_BUTTON = 67      // ear icon, centre
+        val DISPLAY_TAB_BUTTON = 68    // monitor icon, right
+
+        /*
+         * Audio tab: four volume rows (master, music, sound effects, area sounds), each a mute
+         * toggle plus a slider track.
+         */
+        val MUTE_MASTER_SOUND = 85
+        val MUTE_MASTER_SOUND_BAR = 96
+        val MUTE_MUSIC = 99
+        val MUSIC_BAR = 110
+        val MUTE_SOUND = 113
+        val SOUND_BAR = 124
+        val MUTE_AREA_SOUND = 128
+        val AREA_SOUND_BAR = 139
+        val MUSIC_UNLOCK_MESSAGE = 127
+
         val ACCEPT_AID_BUTTON = 29
         val RUN_MODE_BUTTON = 30
         val HOUSE_OPT_BUTTON = 31
         val BOND_BUTTON = 33
         val ALL_SETTINGS_BUTTON = 32
-
-        val MUTE_MASTER_SOUND = 79
-        val MUTE_MASTER_SOUND_BAR = 90
 
         val AUDIO_MUSIC_VOLUME = AttributeKey<Int>()
         val SOUND_EFFECT_VOLUME = AttributeKey<Int>()
@@ -58,26 +73,9 @@ class OptionsTabFirstPlugin(
         val MASTER_SOUND_VOLUME = AttributeKey<Int>()
 
         onLogin {
-            player.setInterfaceEvents(interfaceId = OptionsTab.SETTINGS_INTERFACE_TAB, component = 55, 0..21, setting = InterfaceEvent.ClickOp1)
-            player.setInterfaceEvents(
-                interfaceId = OptionsTab.SETTINGS_INTERFACE_TAB,
-                component = DISPLAY_MODE,
-                0..21,
-                setting = InterfaceEvent.ClickOp1,
-            )
             player.setInterfaceEvents(
                 interfaceId = OptionsTab.SETTINGS_INTERFACE_TAB,
                 component = BRIGHTNES_BAR,
-                0..21,
-                setting = InterfaceEvent.ClickOp1,
-            )
-            player.setInterfaceEvents(interfaceId = OptionsTab.SETTINGS_INTERFACE_TAB, component = 84, 1..3, setting = InterfaceEvent.ClickOp1)
-            player.setInterfaceEvents(interfaceId = OptionsTab.SETTINGS_INTERFACE_TAB, component = 82, 1..4, setting = InterfaceEvent.ClickOp1)
-            player.setInterfaceEvents(interfaceId = OptionsTab.SETTINGS_INTERFACE_TAB, component = 81, 1..5, setting = InterfaceEvent.ClickOp1)
-            player.setInterfaceEvents(interfaceId = OptionsTab.SETTINGS_INTERFACE_TAB, component = 69, 0..21, setting = InterfaceEvent.ClickOp1)
-            player.setInterfaceEvents(
-                interfaceId = OptionsTab.SETTINGS_INTERFACE_TAB,
-                component = SOUND_BAR,
                 0..21,
                 setting = InterfaceEvent.ClickOp1,
             )
@@ -95,23 +93,18 @@ class OptionsTabFirstPlugin(
             )
             player.setInterfaceEvents(
                 interfaceId = OptionsTab.SETTINGS_INTERFACE_TAB,
-                component = MUSIC_BAR,
-                0..21,
-                setting = InterfaceEvent.ClickOp1,
-            )
-            player.setInterfaceEvents(
-                interfaceId = OptionsTab.SETTINGS_INTERFACE_TAB,
                 component = DISPLAY_MODE,
                 1..3,
                 setting = InterfaceEvent.ClickOp1,
             )
-            player.setInterfaceEvents(interfaceId = OptionsTab.SETTINGS_INTERFACE_TAB, component = 90, 0..21, setting = InterfaceEvent.ClickOp1)
-            player.setInterfaceEvents(
-                interfaceId = OptionsTab.SETTINGS_INTERFACE_TAB,
-                component = AREA_SOUND_BAR,
-                0..21,
-                setting = InterfaceEvent.ClickOp1,
-            )
+            listOf(MUTE_MASTER_SOUND_BAR, MUSIC_BAR, SOUND_BAR, AREA_SOUND_BAR).forEach { bar ->
+                player.setInterfaceEvents(
+                    interfaceId = OptionsTab.SETTINGS_INTERFACE_TAB,
+                    component = bar,
+                    0..21,
+                    setting = InterfaceEvent.ClickOp1,
+                )
+            }
         }
 
         /**
@@ -176,13 +169,13 @@ class OptionsTabFirstPlugin(
             player.toggleVarbit(Varbit.PK_PREVENT_SKULL)
         }
 
-        bind_setting(63) {
+        bind_setting(CONTROLS_TAB_BUTTON) {
             player.setVarbit(Varbit.SETTINGS_TAB_FOCUS, 0)
         }
-        bind_setting(68) {
+        bind_setting(AUDIO_TAB_BUTTON) {
             player.setVarbit(Varbit.SETTINGS_TAB_FOCUS, 1)
         }
-        bind_setting(69) {
+        bind_setting(DISPLAY_TAB_BUTTON) {
             player.setVarbit(Varbit.SETTINGS_TAB_FOCUS, 2)
         }
         bind_setting(MUSIC_BAR) {
