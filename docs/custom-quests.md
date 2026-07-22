@@ -27,11 +27,14 @@ custom client reads (same transport as the war HUD — no custom packets):
 | **4610** | Recruit Trials, packed: bits 0-5 step ordinal, bits 6-9 goblin kills, bit 10 contract taken |
 | **4611** | War-Prep chain step ordinal |
 | **4612** | 1 while quest guidance is muted (free play), else 0 |
+| **4617** | The Rogue Problem, packed: bits 0-5 step ordinal, bits 6-11 rogues felled on HUNT |
+| **4633** | King of Lumbridge (endgame conquest) step ordinal, bits 0-5 |
 
 A 3-tick world poll re-derives these from the persistent attributes (which stay the source of
 truth) and only writes on change. **Custom-varp registry so far:** 4600 siege alert · 4601 war
 progress · 4602-4605 PK stats · 4606 wilderness level · 4607 teleport menu · 4608 LMS HUD ·
-**4610-4612 quests** · 4620-4623 CW timer. Claim the next one here when you add a system.
+**4610-4612 quests** · 4617 quests (rogue) · 4620-4623 CW timer · **4633 quests (King of
+Lumbridge)**. Claim the next one here when you add a system.
 
 ### 2b. Free-play toggle (`::questguide`)
 

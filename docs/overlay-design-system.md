@@ -218,7 +218,8 @@ Reusable pieces — reach for these before inventing a new one. Metrics above.
     **4627 war forge** · **4628 dice (open / result: bit9 flag, roll bits 1-7, win bit 8)** ·
     **4629 bond exchange (packed: open|tradeable|claimed)** · **4630 duel rules** ·
     **4631 mire dispenser (packed: open|data|attuned|bank|streak)** ·
-    **4632 character style (open|female)** · **4634 dice bank coins (spendable = client inventory +
+    **4632 character style (open|female)** · **4633 quests (King of Lumbridge / conquest step)** ·
+    **4634 dice bank coins (spendable = client inventory +
     this bank balance)** · **4635-4637 companion world-indices** (server→client; was double-claimed on
     4610-4612 over the quest varps, which pointed the guidance arrow at Duke Horacio) ·
     **4640-4679 kit editor** (control + per-slot — was

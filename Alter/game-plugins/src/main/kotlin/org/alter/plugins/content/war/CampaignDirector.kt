@@ -469,7 +469,10 @@ class CampaignDirector(
                 val whose = sponsor?.let { "${it.username}'s" } ?: "The realm's"
                 broadcast(world, "<col=ffcc00>${op.displayName} is taken! $whose ${tier.display} seizes the spoils.</col>")
                 CapturePayout.award(world, op, tier, participation, sponsor, lootPool)
-                if (sponsor != null && sponsor.index >= 0) sponsor.addPoints(PointKind.PRESTIGE, tier.prestige)
+                if (sponsor != null && sponsor.index >= 0) {
+                    sponsor.addPoints(PointKind.PRESTIGE, tier.prestige)
+                    if (tier == CampaignTier.CONQUEST) Conquest.onConquestWon(sponsor) // closes the King quest's WIN step
+                }
             }
         } else {
             val whose = sponsor?.let { "${it.username}'s" } ?: "The realm's"

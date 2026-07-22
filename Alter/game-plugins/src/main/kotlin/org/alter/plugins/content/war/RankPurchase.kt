@@ -49,6 +49,7 @@ object RankPurchase {
         WarPrepChain.onRankBought(player) // closes the War-Prep chain's RANK step, if active
         RogueProblem.begin(player)        // War-Prep's Squire rank-up opens Act II — start "The Rogue Problem"
         RogueProblem.onRankBought(player) // closes "The Rogue Problem" RANK step once Knight is reached
+        Conquest.begin(player)            // the King rank-up opens the endgame "King of Lumbridge" quest
         return Result.Success
     }
 }

@@ -22,6 +22,9 @@ final class LofQuestVarps
 	/** Packed "The Rogue Problem" state: bits 0-5 step ordinal, bits 6-11 rogues felled on the HUNT step. */
 	static final int ROGUE_PROBLEM = 4617;
 
+	/** "King of Lumbridge" (endgame conquest) step ordinal, bits 0-5 (0 = not started / not yet King). */
+	static final int CONQUEST = 4633;
+
 	static int recruitStep(Client client)
 	{
 		return client.getVarpValue(RECRUIT) & 0x3F;
@@ -45,6 +48,11 @@ final class LofQuestVarps
 	static int rogueProblemStep(Client client)
 	{
 		return client.getVarpValue(ROGUE_PROBLEM) & 0x3F;
+	}
+
+	static int conquestStep(Client client)
+	{
+		return client.getVarpValue(CONQUEST) & 0x3F;
 	}
 
 	static int rogueProblemKills(Client client)

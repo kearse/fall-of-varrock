@@ -457,7 +457,8 @@ assume the common one (`::bank`); other scam-bait words would also open the bank
   4617 quests (rogue problem) ·
   **4618 rank menu · 4619 recruit menu** · 4620-4623 Castle Wars ·
   **4624 supply · 4625 make · 4626 contracts · 4627 forge · 4628 dice · 4629 bonds** ·
-  4630 duel rules · **4635-4637 companion world-indices** (moved off 4610-4612 to stop the
+  4630 duel rules · **4633 quests (King of Lumbridge / conquest)** ·
+  **4635-4637 companion world-indices** (moved off 4610-4612 to stop the
   guidance arrow pointing at the Duke after buying companions).
 
 ## 5h. Build stamp — spotting stale installs at a glance
