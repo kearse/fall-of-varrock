@@ -250,6 +250,49 @@ object GrandExchange {
         return floor to ceil
     }
 
+    // ---- market view (read-only order-book queries for the offer-setup panel) -------------------
+    // All ignore the viewer's own book position; they simply summarise open interest so a player can
+    // price sensibly. "Ask" = an open sell (you buy from it); "bid" = an open buy (you sell to it).
+
+    private fun openSells(itemId: Int) =
+        offers.filter { !it.buy && it.itemId == itemId && it.isActive && it.remaining > 0 }
+
+    private fun openBuys(itemId: Int) =
+        offers.filter { it.buy && it.itemId == itemId && it.isActive && it.remaining > 0 }
+
+    /** Lowest open sell price (what it costs to buy right now), or null if nobody is selling. */
+    fun bestAsk(itemId: Int): Int? = openSells(itemId).minOfOrNull { it.price }
+
+    /** Highest open buy price (what you'd get selling right now), or null if nobody is buying. */
+    fun bestBid(itemId: Int): Int? = openBuys(itemId).maxOfOrNull { it.price }
+
+    /** Number of distinct open sell / buy offers (the "N selling / N buying" readout). */
+    fun sellDepth(itemId: Int): Int = openSells(itemId).size
+    fun buyDepth(itemId: Int): Int = openBuys(itemId).size
+
+    /** Top [n] open sells as `(price, totalQty)`, cheapest first (the listings a buyer walks up). */
+    fun topAsks(itemId: Int, n: Int): List<Pair<Int, Int>> = aggregate(openSells(itemId), ascending = true, n)
+
+    /** Top [n] open buys as `(price, totalQty)`, dearest first (the bids a seller can hit). */
+    fun topBids(itemId: Int, n: Int): List<Pair<Int, Int>> = aggregate(openBuys(itemId), ascending = false, n)
+
+    private fun aggregate(os: List<GeOffer>, ascending: Boolean, n: Int): List<Pair<Int, Int>> {
+        val byPrice = os.groupBy { it.price }.map { (price, list) -> price to list.sumOf { it.remaining } }
+        val sorted = if (ascending) byPrice.sortedBy { it.first } else byPrice.sortedByDescending { it.first }
+        return sorted.take(n)
+    }
+
+    /** Smart default price: the best offer on the side the player takes (lowest sell for a buy,
+     *  highest buy for a sell); falls back to the cache guide when that side of the book is empty. */
+    fun guideFor(itemId: Int, buy: Boolean): Int =
+        (if (buy) bestAsk(itemId) else bestBid(itemId)) ?: guidePrice(itemId)
+
+    /** Whether [itemId] may be listed on the GE at all (tradeable, not coins, not excluded). Used to
+     *  reject a sell pick from the inventory grid before opening the setup box. */
+    fun isListable(itemId: Int): Boolean =
+        itemId != coinsId && itemId !in EXCLUDED &&
+            runCatching { getItem(itemId).isTradeable }.getOrDefault(false)
+
     /**
      * Backstop only the coin-store commodities ([GrandExchangeCommodities]); special-currency gear
      * and everything else stays player-listed with no NPC floor.
