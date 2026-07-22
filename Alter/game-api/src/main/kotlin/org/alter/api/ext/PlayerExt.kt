@@ -493,20 +493,25 @@ fun Player.initInterfaces(displayMode: DisplayMode) {
             setInterfaceEvents(interfaceId = 161, component = 44, range = -1..-1, setting = 2)
         }
         DisplayMode.RESIZABLE_LIST -> {
+            /*
+             * Modern layout splits the sidestones into two strips: 164:38-43 (top, six tabs) and
+             * 164:52-58 (bottom, seven tabs, the last two carrying a second op). The logout button
+             * sits on its own by the minimap at 164:34.
+             */
+            setInterfaceEvents(interfaceId = 164, component = 38, range = -1..-1, setting = 2)
+            setInterfaceEvents(interfaceId = 164, component = 39, range = -1..-1, setting = 2)
+            setInterfaceEvents(interfaceId = 164, component = 40, range = -1..-1, setting = 2)
+            setInterfaceEvents(interfaceId = 164, component = 41, range = -1..-1, setting = 2)
+            setInterfaceEvents(interfaceId = 164, component = 42, range = -1..-1, setting = 2)
+            setInterfaceEvents(interfaceId = 164, component = 43, range = -1..-1, setting = 2)
+            setInterfaceEvents(interfaceId = 164, component = 52, range = -1..-1, setting = 2)
             setInterfaceEvents(interfaceId = 164, component = 53, range = -1..-1, setting = 2)
             setInterfaceEvents(interfaceId = 164, component = 54, range = -1..-1, setting = 2)
             setInterfaceEvents(interfaceId = 164, component = 55, range = -1..-1, setting = 2)
             setInterfaceEvents(interfaceId = 164, component = 56, range = -1..-1, setting = 2)
-            setInterfaceEvents(interfaceId = 164, component = 57, range = -1..-1, setting = 2)
-            setInterfaceEvents(interfaceId = 164, component = 58, range = -1..-1, setting = 2)
-            setInterfaceEvents(interfaceId = 164, component = 59, range = -1..-1, setting = 6)
-            setInterfaceEvents(interfaceId = 164, component = 38, range = -1..-1, setting = 2)
-            setInterfaceEvents(interfaceId = 164, component = 39, range = -1..-1, setting = 2)
-            setInterfaceEvents(interfaceId = 164, component = 40, range = -1..-1, setting = 2)
-            setInterfaceEvents(interfaceId = 164, component = 32, range = -1..-1, setting = 2)
-            setInterfaceEvents(interfaceId = 164, component = 41, range = -1..-1, setting = 2)
-            setInterfaceEvents(interfaceId = 164, component = 42, range = -1..-1, setting = 2)
-            setInterfaceEvents(interfaceId = 164, component = 43, range = -1..-1, setting = 2)
+            setInterfaceEvents(interfaceId = 164, component = 57, range = -1..-1, setting = 6)
+            setInterfaceEvents(interfaceId = 164, component = 58, range = -1..-1, setting = 6)
+            setInterfaceEvents(interfaceId = 164, component = 34, range = -1..-1, setting = 2)
         }
         else -> return
     }
