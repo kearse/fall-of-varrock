@@ -17,6 +17,7 @@ import org.alter.game.model.queue.*
 import org.alter.game.model.shop.*
 import org.alter.game.model.timer.*
 import org.alter.game.plugin.*
+import org.alter.plugins.content.interfaces.bank.Bank.LAST_X_INPUT
 
 class ShopsPlugin(
     r: PluginRepository,
@@ -29,30 +30,41 @@ class ShopsPlugin(
         val INV_INTERFACE_ID = 301
 
         val BUY_OPTS = arrayOf(1, 5, 10, 50)
-        val SELL_OPTS = arrayOf(1, 5, 10, 50)
+        val SELL_OPTS = arrayOf(1, 5, 10)
 
-        val OPTION_1 = "Value"
-        val OPTION_2 = "Sell ${BUY_OPTS[0]}"
-        val OPTION_3 = "Sell ${BUY_OPTS[1]}"
-        val OPTION_4 = "Sell ${BUY_OPTS[2]}"
-        val OPTION_5 = "Sell ${BUY_OPTS[3]}"
+        // The 5th quantity slot ("50" in vanilla) now shows the last custom "X" the player entered,
+        // defaulting to 50 until they type one — matching how the OSRS bank/shop last-quantity works.
+        val DEFAULT_X = 50
+
+        fun sellLastX(player: Player): Int =
+            player.getVarbit(LAST_X_INPUT).let { if (it <= 0) DEFAULT_X else it }
+
+        /**
+         * (Re)build the inventory (interface 301) sell right-click options. Uses the "big" init script
+         * so we can fit six options: Value / Sell 1 / Sell 5 / Sell 10 / Sell <lastX> / Sell X. Called
+         * on open and again after a custom X is entered, so the 5th label reflects the latest amount.
+         */
+        fun initSellOptions(player: Player) {
+            player.runClientScript(
+                INTERFACE_INV_INIT_BIG,
+                19726336,
+                93,
+                4,
+                7,
+                0,
+                -1,
+                "Value<col=ff9040>",
+                "Sell ${SELL_OPTS[0]}<col=ff9040>",
+                "Sell ${SELL_OPTS[1]}<col=ff9040>",
+                "Sell ${SELL_OPTS[2]}<col=ff9040>",
+                "Sell ${sellLastX(player)}<col=ff9040>",
+                "Sell X<col=ff9040>",
+            )
+        }
 
         onInterfaceOpen(interfaceId = SHOP_INTERFACE_ID) {
             player.attr[CURRENT_SHOP_ATTR]?.let { shop ->
-                player.runClientScript(
-                    CommonClientScripts.INTERFACE_INV_INIT,
-                    19726336,
-                    93,
-                    4,
-                    7,
-                    0,
-                    -1,
-                    "$OPTION_1<col=ff9040>",
-                    "$OPTION_2<col=ff9040>",
-                    "$OPTION_3<col=ff9040>",
-                    "$OPTION_4<col=ff9040>",
-                    "$OPTION_5<col=ff9040>",
-                )
+                initSellOptions(player)
                 shop.viewers.add(player.uid)
             }
         }
@@ -97,13 +109,25 @@ class ShopsPlugin(
                 when (opt) {
                     1 -> shop.currency.onBuyValueMessage(player, shop, item.id)
                     10 -> world.sendExamine(player, item.id, ExamineEntityType.ITEM)
+                    6 -> {
+                        // "Sell X" — prompt for a custom amount, remember it, then refresh the menu so
+                        // the entered value shows in the 5th slot (where "50" used to be).
+                        player.queue(TaskPriority.WEAK) {
+                            val amount = inputInt(player, "Sell how many?")
+                            if (amount > 0) {
+                                player.setVarbit(LAST_X_INPUT, amount)
+                                shop.currency.buyFromPlayer(player, shop, slot, amount)
+                                initSellOptions(player)
+                            }
+                        }
+                    }
                     else -> {
                         val amount =
                             when (opt) {
                                 2 -> SELL_OPTS[0]
                                 3 -> SELL_OPTS[1]
                                 4 -> SELL_OPTS[2]
-                                5 -> SELL_OPTS[3]
+                                5 -> sellLastX(player)
                                 else -> return@onButton
                             }
                         shop.currency.buyFromPlayer(player, shop, slot, amount)

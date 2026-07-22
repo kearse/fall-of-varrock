@@ -87,7 +87,8 @@ private fun Player.showShop(s: org.alter.game.model.shop.Shop) {
     }
     runClientScript(CommonClientScripts.SHOP_INIT, 3, s.name, -1, 0, 1)
     setInterfaceEvents(interfaceId = 300, component = 16, range = 0..s.items.size, setting = 1086)
-    setInterfaceEvents(interfaceId = 301, component = 0, range = 0 until inventory.capacity, setting = 1086)
+    // 1086 enables sell ops 1-5 + examine (bit 10); add bit 6 (1150) for the new "Sell X" option.
+    setInterfaceEvents(interfaceId = 301, component = 0, range = 0 until inventory.capacity, setting = 1150)
 }
 
 /**
