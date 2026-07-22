@@ -87,6 +87,7 @@ class LofStyleOverlay extends Overlay implements LofWindows.Window
 
 	private boolean visible;
 	private boolean female;
+	private boolean mandatory; // first-login mode: no ✕, DONE reads "ENTER THE WAR", can't be dismissed
 	private Runnable closeNotifier;
 
 	@Inject
@@ -116,6 +117,16 @@ class LofStyleOverlay extends Overlay implements LofWindows.Window
 	void setFemale(boolean f)
 	{
 		female = f;
+	}
+
+	void setMandatory(boolean m)
+	{
+		mandatory = m;
+	}
+
+	boolean isMandatory()
+	{
+		return mandatory;
 	}
 
 	boolean isFemale()
@@ -187,7 +198,9 @@ class LofStyleOverlay extends Overlay implements LofWindows.Window
 		{
 			return OUTSIDE;
 		}
-		if (LofModal.closeRect(ox, oy).contains(p))
+		// In first-login mode the window can't be dismissed: no ✕, and a click where it would be
+		// is swallowed as INSIDE rather than closing the window.
+		if (!mandatory && LofModal.closeRect(ox, oy).contains(p))
 		{
 			return CLOSE;
 		}
@@ -269,20 +282,23 @@ class LofStyleOverlay extends Overlay implements LofWindows.Window
 		g.setFont(FontManager.getRunescapeBoldFont());
 		LofTheme.shadowText(g, "Character Style", titleX, oy + 25, LofTheme.GOLD);
 		g.setFont(FontManager.getRunescapeSmallFont());
-		final String sub = "free restyle";
+		final String sub = mandatory ? "forge your likeness" : "free restyle";
 		LofTheme.shadowText(g, sub, ox + WIN_W - 44 - g.getFontMetrics().stringWidth(sub), oy + 24, LofTheme.TEXT_DIM);
 
-		// close ✕
-		final Rectangle cr = LofModal.closeRect(ox, oy);
-		final boolean closeHov = cr.contains(mouse);
-		g.setColor(closeHov ? LofTheme.EMBER : new Color(255, 255, 255, 18));
-		g.fillRoundRect(cr.x, cr.y, cr.width, cr.height, 6, 6);
-		g.setColor(closeHov ? LofTheme.TEXT : LofTheme.TEXT_DIM);
+		// close ✕ — hidden in first-login mode (the window is mandatory, no way out but DONE)
 		final Stroke oldStroke = g.getStroke();
-		g.setStroke(new BasicStroke(1.6f));
-		g.drawLine(cr.x + 6, cr.y + 6, cr.x + cr.width - 7, cr.y + cr.height - 7);
-		g.drawLine(cr.x + cr.width - 7, cr.y + 6, cr.x + 6, cr.y + cr.height - 7);
-		g.setStroke(oldStroke);
+		if (!mandatory)
+		{
+			final Rectangle cr = LofModal.closeRect(ox, oy);
+			final boolean closeHov = cr.contains(mouse);
+			g.setColor(closeHov ? LofTheme.EMBER : new Color(255, 255, 255, 18));
+			g.fillRoundRect(cr.x, cr.y, cr.width, cr.height, 6, 6);
+			g.setColor(closeHov ? LofTheme.TEXT : LofTheme.TEXT_DIM);
+			g.setStroke(new BasicStroke(1.6f));
+			g.drawLine(cr.x + 6, cr.y + 6, cr.x + cr.width - 7, cr.y + cr.height - 7);
+			g.drawLine(cr.x + cr.width - 7, cr.y + 6, cr.x + 6, cr.y + cr.height - 7);
+			g.setStroke(oldStroke);
+		}
 
 		// portrait frame: a gold sill around the hole so it reads as the model window
 		g.setStroke(new BasicStroke(1.4f));
@@ -336,8 +352,8 @@ class LofStyleOverlay extends Overlay implements LofWindows.Window
 		LofTheme.shadowText(g, "while you restyle - it", ox + PAD, oy + HOLE_Y + LEFT_ROWS * ROW_STEP + 26, LofTheme.TEXT_DIM);
 		LofTheme.shadowText(g, "returns when you close.", ox + PAD, oy + HOLE_Y + LEFT_ROWS * ROW_STEP + 38, LofTheme.TEXT_DIM);
 
-		// done, under the portrait
-		LofModal.button(g, doneRect(ox, oy), "DONE", LofTheme.GOLD, true, doneRect(ox, oy).contains(mouse));
+		// done, under the portrait — first-login mode confirms the look and enters the game
+		LofModal.button(g, doneRect(ox, oy), mandatory ? "ENTER THE WAR" : "DONE", LofTheme.GOLD, true, doneRect(ox, oy).contains(mouse));
 
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, oldAA == null ? RenderingHints.VALUE_ANTIALIAS_DEFAULT : oldAA);
 		return new Dimension(WIN_W, WIN_H);
@@ -368,6 +384,12 @@ class LofStyleOverlay extends Overlay implements LofWindows.Window
 	public void hideWindow()
 	{
 		if (!visible)
+		{
+			return;
+		}
+		// First-login mode can't be dismissed by anything (a foreign window opening, etc.) — only
+		// pressing ENTER THE WAR (DONE) closes it, and that path clears mandatory server-side first.
+		if (mandatory)
 		{
 			return;
 		}

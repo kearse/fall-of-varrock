@@ -1,15 +1,16 @@
 package org.alter.plugins.content.mechanics.introvideo
 
 import org.alter.api.ChatMessageType
+import org.alter.api.ext.getCommandArgs
 import org.alter.api.ext.message
 import org.alter.api.ext.player
 import org.alter.game.Server
 import org.alter.game.model.World
 import org.alter.game.model.attr.AttributeKey
-import org.alter.game.model.attr.NEW_ACCOUNT_ATTR
 import org.alter.game.model.priv.Privilege
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
+import org.alter.plugins.content.mechanics.onboarding.FirstLoginFlow
 
 /**
  * First-login intro video trigger.
@@ -70,31 +71,18 @@ class IntroVideoPlugin(
     }
 
     init {
-        onLogin {
-            // Brand-new account: record that it is owed the intro. Persistent, so if this
-            // first login never manages to deliver (client not listening yet, early drop),
-            // the flag outlives the session and a later login still delivers it — instead
-            // of burning the single NEW_ACCOUNT_ATTR chance.
-            if (player.attr[NEW_ACCOUNT_ATTR] == true && player.attr[INTRO_SEEN_ATTR] != true) {
-                player.attr[INTRO_PENDING_ATTR] = true
-            }
+        // Triggering the video is owned by FirstLoginFlow (step VIDEO): it locks and stages the
+        // player, sends TRIGGER_MESSAGE, and — because step VIDEO is re-run on every login until
+        // the client reports back — retries delivery across logins on its own. This plugin now only
+        // owns the message constant and the client→server "video finished" channel.
 
-            // Owed the intro and not yet seen: (re)send the client trigger. Do it on a
-            // WORLD queue — a player queue would be terminated by the next plugin that
-            // queues on this player (the recruit sergeant dialogue does, on this exact
-            // login). Only mark it seen once the broadcast has actually gone out to an
-            // online client, so a login that ends before delivery stays pending and
-            // retries next time.
-            if (player.attr[INTRO_PENDING_ATTR] == true && player.attr[INTRO_SEEN_ATTR] != true) {
-                val p = player
-                world.queue {
-                    wait(TRIGGER_DELAY)
-                    if (p.isOnline) {
-                        p.message(TRIGGER_MESSAGE, ChatMessageType.BROADCAST)
-                        p.attr[INTRO_SEEN_ATTR] = true
-                        p.attr.remove(INTRO_PENDING_ATTR)
-                    }
-                }
+        // Client overlay channel: the custom client posts "::lofintro done" when the intro video
+        // ends (or can't play), routed here via MessagePublicHandler. Hand it to the flow, which
+        // advances VIDEO → STYLE. Idempotent on the flow side (a duplicate signal / the server-side
+        // fallback timer can't double-fire).
+        onCommand("introclick", description = "Intro video overlay channel (client reports playback finished)") {
+            if (player.getCommandArgs().firstOrNull()?.lowercase() == "done") {
+                FirstLoginFlow.onVideoFinished(player)
             }
         }
 

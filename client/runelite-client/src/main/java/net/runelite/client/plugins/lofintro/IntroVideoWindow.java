@@ -59,31 +59,52 @@ final class IntroVideoWindow
 	{
 	}
 
-	/** Dock the video over the game canvas until it finishes. Call on the EDT. */
-	static void play(Canvas canvas, File videoFile)
+	/**
+	 * Dock the video over the game canvas until it finishes. Call on the EDT.
+	 *
+	 * @param onFinished run EXACTLY ONCE when playback is over by ANY path (normal end, error,
+	 *   grace/hard cap, canvas unavailable, or a rejected concurrent call). The server-side
+	 *   first-login flow relies on this signal to advance video → character style, so it must never
+	 *   be dropped. May be null (e.g. ::introtest, which plays without reporting to the server).
+	 */
+	static void play(Canvas canvas, File videoFile, Runnable onFinished)
 	{
+		// Fire onFinished at most once, whatever happens below.
+		final AtomicBoolean finishedFired = new AtomicBoolean();
+		final Runnable finish = () ->
+		{
+			if (onFinished != null && finishedFired.compareAndSet(false, true))
+			{
+				onFinished.run();
+			}
+		};
+
 		if (canvas == null || !canvas.isShowing())
 		{
 			log.warn("intro video skipped: game canvas not available");
+			finish.run();
 			return;
 		}
 		if (!SHOWING.compareAndSet(false, true))
 		{
+			// A video is already docked; this call does nothing but must still report.
+			finish.run();
 			return;
 		}
 		try
 		{
-			show(canvas, videoFile);
+			show(canvas, videoFile, finish);
 		}
 		catch (Throwable t)
 		{
 			// e.g. FX toolkit failed to init (no natives on this platform) — skip the intro.
 			log.warn("intro video playback unavailable: {}", t.toString());
 			SHOWING.set(false);
+			finish.run();
 		}
 	}
 
-	private static void show(Canvas canvas, File videoFile)
+	private static void show(Canvas canvas, File videoFile, Runnable finish)
 	{
 		final JFXPanel fxPanel = new JFXPanel(); // boots the FX toolkit
 		Platform.setImplicitExit(false);
@@ -165,6 +186,8 @@ final class IntroVideoWindow
 				dialog.setVisible(false);
 				dialog.dispose();
 				SHOWING.set(false);
+				// Video is over — tell the server so the first-login flow advances to character style.
+				finish.run();
 			});
 		};
 

@@ -51,6 +51,15 @@ val FREE_BOND_CLAIMED_ATTR = AttributeKey<String>("bond_claimed")
 val APPEARANCE_SET_ATTR = AttributeKey<Boolean>("appearance_set")
 
 /**
+ * First-login onboarding step (see FirstLoginFlow): 0 = intro VIDEO, 1 = character
+ * STYLE window, 2 = DONE. Persisted so the flow survives a disconnect mid-sequence
+ * (resume where you left off). An ABSENT value means DONE — every existing account
+ * predates onboarding and must never be re-onboarded. Seeded to 0 for brand-new
+ * accounts in PlayerSaving.configureNewPlayer.
+ */
+val ONBOARD_STEP_ATTR = AttributeKey<Int>("onboard_step")
+
+/**
  * While set, appearance syncs broadcast the player WITHOUT worn equipment — the identikit
  * body only. Set for the duration of the Character Style window (you edit your default
  * skins, so the preview must show them); cleared when the window closes. Transient on

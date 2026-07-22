@@ -30,9 +30,11 @@ import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.ChatMessageType;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
+import net.runelite.api.ScriptID;
 import net.runelite.api.events.ChatMessage;
 import net.runelite.api.events.CommandExecuted;
 import net.runelite.api.events.GameStateChanged;
+import net.runelite.client.callback.ClientThread;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
@@ -60,6 +62,9 @@ public class LofIntroPlugin extends Plugin
 
 	@Inject
 	private Client client;
+
+	@Inject
+	private ClientThread clientThread;
 
 	@Inject
 	private OkHttpClient okHttpClient;
@@ -125,25 +130,35 @@ public class LofIntroPlugin extends Plugin
 		if ("play".equals(command) && !playedThisSession)
 		{
 			playedThisSession = true;
-			startPlayback();
+			startPlayback(true); // report back to the server when it ends (drives the first-login flow)
 		}
 	}
 
 	@Subscribe
 	public void onCommandExecuted(CommandExecuted event)
 	{
-		// Dev aid: ::introtest replays the intro locally (no server round-trip, no once-guard).
+		// Dev aid: ::introtest replays the intro locally (no server round-trip, no once-guard, no report).
 		if ("introtest".equalsIgnoreCase(event.getCommand()))
 		{
-			startPlayback();
+			startPlayback(false);
 		}
 	}
 
-	private void startPlayback()
+	/**
+	 * @param report when true, send "::lofintro done" to the server once the video finishes (or can't
+	 *   play). The server-side first-login flow waits on that signal to open the character-style window,
+	 *   so a failed download must report IMMEDIATELY — never leave a new player stranded on a black video.
+	 */
+	private void startPlayback(boolean report)
 	{
 		final IntroVideoFetcher f = fetcher;
+		final Runnable onFinished = report ? () -> send("::lofintro done") : null;
 		if (f == null)
 		{
+			if (onFinished != null)
+			{
+				onFinished.run();
+			}
 			return;
 		}
 		executor.execute(() ->
@@ -152,9 +167,19 @@ public class LofIntroPlugin extends Plugin
 			if (video == null)
 			{
 				log.warn("intro video unavailable (download failed and no cached copy) — skipping intro");
+				if (onFinished != null)
+				{
+					onFinished.run();
+				}
 				return;
 			}
-			SwingUtilities.invokeLater(() -> IntroVideoWindow.play(client.getCanvas(), video));
+			SwingUtilities.invokeLater(() -> IntroVideoWindow.play(client.getCanvas(), video, onFinished));
 		});
+	}
+
+	/** Post a chat-script command the server routes (MessagePublicHandler); mirrors LofStylePlugin.send. */
+	private void send(String msg)
+	{
+		clientThread.invokeLater(() -> client.runScript(ScriptID.CHAT_SEND, msg, 0, 0, 0, -1));
 	}
 }

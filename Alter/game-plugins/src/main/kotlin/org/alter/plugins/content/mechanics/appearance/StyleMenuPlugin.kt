@@ -16,6 +16,7 @@ import org.alter.game.model.attr.STYLE_PREVIEW_ATTR
 import org.alter.game.model.entity.Player
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
+import org.alter.plugins.content.mechanics.onboarding.FirstLoginFlow
 
 /**
  * Server half of the client-drawn **Character Style** window (`lofstyle`) — the on-brand
@@ -40,12 +41,17 @@ object StyleMenu {
     /** Overlay-open varp (docs/overlay-design-system.md §8) — pulsed to 0, never persisted. */
     const val OPEN_VARP = 4632
 
-    fun open(p: Player) {
+    /**
+     * @param mandatory first-login mode — the client hides the ✕ and relabels DONE ("ENTER THE
+     *   WAR"), so the window can't be dismissed without confirming. Carried in payload bit 2.
+     */
+    fun open(p: Player, mandatory: Boolean = false) {
         if (p.attr[STYLE_PREVIEW_ATTR] != true) {
             p.attr[STYLE_PREVIEW_ATTR] = true
             PlayerInfo(p).syncAppearance()
         }
-        val v = 1 or (if (p.appearance.gender == Gender.FEMALE) 2 else 0)
+        var v = 1 or (if (p.appearance.gender == Gender.FEMALE) 2 else 0)
+        if (mandatory) v = v or 4
         p.setVarp(OPEN_VARP, v)
         p.queue { wait(2); p.setVarp(OPEN_VARP, 0) }
     }
@@ -78,7 +84,13 @@ class StyleMenuPlugin(
                 "done" -> {
                     player.attr[APPEARANCE_SET_ATTR] = true
                     StyleMenu.endPreview(player)
-                    player.message("Looking sharp — the realm will know you by it.")
+                    // First-login mode: DONE ("ENTER THE WAR") confirms the look and advances the
+                    // onboarding flow (unlock → Sergeant). Otherwise it's an ordinary makeover close.
+                    if (FirstLoginFlow.isOnboarding(player)) {
+                        FirstLoginFlow.onStyleConfirmed(player)
+                    } else {
+                        player.message("Looking sharp — the realm will know you by it.")
+                    }
                 }
                 // The window closed without confirming (✕, or another window replaced it) —
                 // the style edits already applied live; just put the gear back on.
@@ -155,7 +167,9 @@ class StyleMenuPlugin(
         // Keep the player's colours; reset looks to a valid default for the new gender.
         p.appearance = Appearance(defaults.looks.copyOf(), p.appearance.colors.copyOf(), gender)
         PlayerInfo(p).syncAppearance()
-        StyleMenu.open(p) // re-pulse with the new gender bit so the window updates its rows
+        // Re-pulse with the new gender bit so the window updates its rows — preserve the mandatory
+        // bit while onboarding, or the ✕ would reappear after a gender switch.
+        StyleMenu.open(p, mandatory = FirstLoginFlow.isOnboarding(p))
     }
 
     private fun wrap(value: Int, size: Int): Int = ((value % size) + size) % size

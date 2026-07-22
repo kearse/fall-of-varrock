@@ -12,7 +12,7 @@ import org.alter.game.model.entity.Player
 import org.alter.game.model.queue.QueueTask
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
-import org.alter.plugins.content.mechanics.appearance.AppearanceDesign
+import org.alter.plugins.content.mechanics.onboarding.FirstLoginFlow
 import org.alter.plugins.content.war.address
 import org.alter.plugins.content.war.roguehunt.RogueHunt
 import org.alter.plugins.content.war.roguehunt.RogueProblem
@@ -55,12 +55,21 @@ class RecruitTrialsPlugin(
         bindSergeant()
         spawnTutorialGoblins()
 
+        // Let FirstLoginFlow run the Sergeant's welcome once onboarding (video → character style)
+        // finishes — the dialogue is private/suspend/QueueTask-scoped, so we expose it as a callback.
+        RecruitTrials.greet = { p -> p.queue { sergeantDialog(p) } }
+
         onLogin {
-            // Brand-new account: start the chain and hail the player with the Sergeant's dialogue
-            // (gated on the session-only flag so it fires exactly once; chain progress is persistent).
+            // Brand-new account: start the chain. The Sergeant's welcome is deferred to the END of
+            // the first-login flow (FirstLoginFlow calls RecruitTrials.greet after the player confirms
+            // their character), so it never runs behind the intro video or before customization.
+            // If the player is NOT onboarding (older account predating the flow, still NEW_ACCOUNT)
+            // greet immediately — the session-only flag keeps it to once.
             if (player.attr[NEW_ACCOUNT_ATTR] == true) {
                 RecruitTrials.begin(player)
-                player.queue { sergeantDialog(player) }
+                if (!FirstLoginFlow.isOnboarding(player)) {
+                    player.queue { sergeantDialog(player) }
+                }
             }
             // Point the guidance arrow at the current objective and re-arm the SLAY/SUPPLY poll if needed.
             RecruitTrials.resumeOnLogin(player)
@@ -142,11 +151,11 @@ class RecruitTrialsPlugin(
                 chatNpc(p, "Goblins have slipped through our back defences into the woods behind the city. With the army at the front, you're the LAST line of defence between them and our people.", npc = s, title = "Recruiting Sergeant")
                 chatPlayer(p, "What do you need me to do?")
                 chatNpc(p, "Get into the back woods and kill ${RecruitTrials.GOBLIN_GOAL} of them — follow the marker. Hold that line and the city stands. Then report straight back to me.", npc = s, title = "Recruiting Sergeant")
-                chatNpc(p, "But first — every soldier goes on the muster roll. Hold still while the quartermaster takes down your likeness, then we'll get you to the front.", npc = s, title = "Recruiting Sergeant")
-                // Character customization pops up now; clicking Confirm musters the recruit into the
-                // Trials proper (advances to FIGHT). Opening the screen last means the flow reads as
-                // intro video → Sergeant's dialogue → customization → the goblin-clearing trial.
-                AppearanceDesign.open(p) { RecruitTrials.advanceTo(p, RecruitTrials.Step.FIGHT) }
+                chatNpc(p, "You've got the look of a soldier now — you're on the muster roll. Get to the front, recruit.", npc = s, title = "Recruiting Sergeant")
+                // Character customization already happened before this dialogue (the first-login flow
+                // opens the Character Style window when the intro video ends, then hands control here),
+                // so the Sergeant just musters the recruit straight into the Trials (advances to FIGHT).
+                RecruitTrials.advanceTo(p, RecruitTrials.Step.FIGHT)
             }
             RecruitTrials.Step.FIGHT -> {
                 val kills = p.attr[org.alter.game.model.attr.RECRUIT_GOBLIN_KILLS_ATTR] ?: 0
