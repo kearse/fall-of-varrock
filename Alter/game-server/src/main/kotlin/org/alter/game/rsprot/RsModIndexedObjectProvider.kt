@@ -7,9 +7,11 @@ import org.alter.game.model.item.Item
 class RsModIndexedObjectProvider(indices: Iterator<Int>, val items: Array<Item?>) : UpdateInvPartial.IndexedObjectProvider(indices) {
     override fun provide(slot: Int): Long {
         val item = items[slot] ?: return InventoryObject(slot, -1, -1)
-        // See RsModObjectProvider: a non-positive stack is corrupt and makes rsprot throw, which
-        // would abort the player's cycle every tick. Render such a slot as empty instead.
-        if (item.amount <= 0) return InventoryObject(slot, -1, -1)
+        // See RsModObjectProvider: a bank placeholder (amount -2) goes on the wire as count 0,
+        // and any other negative amount is corruption rendered as an empty slot — either way we
+        // must not hand a negative count to rsprot, which throws and aborts the player's cycle.
+        if (item.amount == Item.PLACEHOLDER_AMOUNT) return InventoryObject(slot, item.id, 0)
+        if (item.amount < 0) return InventoryObject(slot, -1, -1)
         return InventoryObject(slot, item.id, item.amount)
     }
 }
