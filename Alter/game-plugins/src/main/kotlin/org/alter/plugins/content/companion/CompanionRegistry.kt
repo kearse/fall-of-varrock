@@ -36,8 +36,15 @@ object CompanionRegistry {
     private const val SAVE_EVERY = 30 // brain ticks between blob refreshes (~36s)
     /** Varps the server writes each tick with the owner's companion world-indices (+1; 0 = empty),
      *  so the "Fall of Varrock Companions" RuneLite plugin can find exactly THIS player's companions by index
-     *  (name-independent). One varp per slot: 4610, 4611, 4612. */
-    private const val COMP_VARP_BASE = 4610
+     *  (name-independent). One varp per slot: 4635, 4636, 4637.
+     *
+     *  These MUST NOT overlap the Quest Journal varps (4610-4612 = recruit/war-prep/guide-muted in
+     *  QuestJournal, which the client's `LofQuestVarps` actively reads): a companion's world-index
+     *  stamped over those every tick makes the client decode a bogus quest step and point its guidance
+     *  arrow at Duke Horacio (the war-prep RANK step's anchor) — the "arrow randomly points at the Duke
+     *  after buying companions" bug. 4635-4637 is free space between the character-style/dice varps and
+     *  the kit editor (4640+). Keep the master varp map in docs/overlay-design-system.md §8 in step. */
+    private const val COMP_VARP_BASE = 4635
     /** Status varps (4613, 4614, 4615) — a packed snapshot per companion so the panel shows them
      *  **always**, even when far away/un-rendered (the index varp only works when rendered).
      *  Layout: bit0 present | 1-6 nameIdx | 7-14 combat | 15-21 hp% | 22-24 orders | 25-26 style. */
