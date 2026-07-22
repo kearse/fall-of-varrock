@@ -16,7 +16,7 @@ import org.alter.rscm.RSCM.getRSCM
  * FOV_GE:slot|box|state|buy|item|price|qty|filled|collectCoins|collectItems   (8 lines, one per box; empty = state 0)
  * FOV_GE:end                                                               (commit board)
  * FOV_GE:bal|coins                                                         (coin readout: inventory + bank)
- * FOV_GE:setup|box|item|guide|floor|ceil                                   (enter offer-setup for box; floor/ceil = -1 if unbanded)
+ * FOV_GE:setup|box|buy|item|guide|floor|ceil                               (enter offer-setup for box; floor/ceil = -1 if unbanded)
  * FOV_GE:close                                                             (server-driven close)
  * ```
  * `state` uses [GeState.wire] (EMPTY 0 … SOLD 6 — the client's enum ordinals). `buy` is 1/0.
@@ -50,12 +50,12 @@ object GrandExchangeWindow {
         line(p, "bal|${coins(p)}")
     }
 
-    /** Tell the client to show the offer-setup view for [box] with the picked item + its guide/band.
-     *  The client owns buy/sell + quantity + price from here; confirm arrives via `geconfirmclick`. */
-    fun sendSetup(p: Player, box: Int, item: Int) {
+    /** Tell the client to show the offer-setup view for [box] with the chosen buy/sell + the picked
+     *  item + its guide/band. The client owns quantity + price; confirm arrives via `geconfirmclick`. */
+    fun sendSetup(p: Player, box: Int, buy: Boolean, item: Int) {
         val guide = GrandExchange.guidePrice(item)
         val band = GrandExchange.band(item)
-        line(p, "setup|$box|$item|$guide|${band?.first ?: -1}|${band?.second ?: -1}")
+        line(p, "setup|$box|${if (buy) 1 else 0}|$item|$guide|${band?.first ?: -1}|${band?.second ?: -1}")
     }
 
     fun close(p: Player) = line(p, "close")

@@ -110,13 +110,14 @@ public class LofGePlugin extends Plugin implements LofWindows.Window
 		final int guide;
 		final int floor;
 		final int ceil;
-		boolean buy = true;
+		boolean buy;
 		int qty = 1;
 		int price;
 
-		Setup(int box, int item, int guide, int floor, int ceil)
+		Setup(int box, boolean buy, int item, int guide, int floor, int ceil)
 		{
 			this.box = box;
+			this.buy = buy;
 			this.item = item;
 			this.guide = guide;
 			this.floor = floor;
@@ -234,14 +235,14 @@ public class LofGePlugin extends Plugin implements LofWindows.Window
 		}
 		else if ("gesetuppanel".equalsIgnoreCase(event.getCommand()))
 		{
-			// Sample setup view for a commodity (nature rune: guide 100, store band 85-100).
-			handle("setup|0|561|100|85|100");
+			// Sample setup view for a commodity buy (nature rune: guide 100, store band 85-100).
+			handle("setup|0|1|561|100|85|100");
 			clientThread.invokeLater(client::refreshChat);
 		}
 		else if ("gesetuppanel2".equalsIgnoreCase(event.getCommand()))
 		{
-			// Sample setup view for a player-listed item (abyssal whip: no store band).
-			handle("setup|0|4151|60000|-1|-1");
+			// Sample setup view for a player-listed sell (abyssal whip: no store band).
+			handle("setup|0|0|4151|60000|-1|-1");
 			clientThread.invokeLater(client::refreshChat);
 		}
 	}
@@ -309,12 +310,12 @@ public class LofGePlugin extends Plugin implements LofWindows.Window
 			}
 			case "setup":
 			{
-				// setup|box|item|guide|floor|ceil
+				// setup|box|buy|item|guide|floor|ceil
 				final String[] f = rest.split("\\|");
-				if (f.length >= 5)
+				if (f.length >= 6)
 				{
-					setup = new Setup(parseInt(f[0], -1), parseInt(f[1], 0), parseInt(f[2], 1),
-						parseInt(f[3], -1), parseInt(f[4], -1));
+					setup = new Setup(parseInt(f[0], -1), parseInt(f[1], 1) != 0, parseInt(f[2], 1),
+						parseInt(f[3], 1), parseInt(f[4], -1), parseInt(f[5], -1));
 					overlay.setVisible(true);
 					LofWindows.openExclusive(this);
 				}
@@ -327,10 +328,12 @@ public class LofGePlugin extends Plugin implements LofWindows.Window
 
 	// ---- board actions (client → server tokens) ------------------------------------------------
 
-	/** Empty slot: ask the server to run the native item search, then stream the setup view back. */
-	void openSetup(int box)
+	/** Buy/Sell chosen on an empty card: hide the window (so it can't cover the item search), then ask
+	 *  the server to run the native search and stream the setup view back for that box + mode. */
+	void openSetup(int box, boolean buy)
 	{
-		send("::lofgesetup " + box);
+		overlay.setVisible(false);
+		send("::lofgesetup " + box + " " + (buy ? 1 : 0));
 	}
 
 	void collect(int box)
