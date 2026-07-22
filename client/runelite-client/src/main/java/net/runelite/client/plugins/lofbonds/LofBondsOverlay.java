@@ -85,10 +85,12 @@ class LofBondsOverlay extends Overlay implements LofWindows.Window
 		return new Rectangle(ox + LofModal.PAD + i * (w + 10), oy + WALLET_Y, w, WALLET_H);
 	}
 
+	/** Sits in the right of the tradeable-bonds box — narrow enough to leave the box's own label
+	 *  room to print in full (it used to be 96px wide and covered "TRADEABLE BONDS"). */
 	private Rectangle claimRect(int ox, int oy)
 	{
 		final Rectangle box = walletBox(ox, oy, 0);
-		return new Rectangle(box.x + box.width - 106, box.y + (box.height - 24) / 2, 96, 24);
+		return new Rectangle(box.x + box.width - 78, box.y + (box.height - 24) / 2, 70, 24);
 	}
 
 	private Rectangle cardRect(int ox, int oy, int i)
@@ -144,13 +146,16 @@ class LofBondsOverlay extends Overlay implements LofWindows.Window
 		final Point mouse = mousePoint();
 		LofModal.frame(g, ox, oy, "The Bond Exchange", "Bond Merchant", mouse);
 
-		// wallet
-		drawWalletBox(g, ox, oy, 0, tradeableIcon, tradeable, "TRADEABLE BONDS");
-		drawWalletBox(g, ox, oy, 1, claimedIcon, claimed, "CLAIMED BONDS");
-		if (tradeable > 0)
+		// wallet — the left box carries the Claim button, so its text is fitted to the space before
+		// it (the label used to be drawn full-width and the button sat straight on top of it).
+		final boolean claimable = tradeable > 0;
+		drawWalletBox(g, ox, oy, 0, tradeableIcon, tradeable, "TRADEABLE",
+			claimable ? claimRect(ox, oy).x - walletBox(ox, oy, 0).x - 54 - 8 : Integer.MAX_VALUE);
+		drawWalletBox(g, ox, oy, 1, claimedIcon, claimed, "CLAIMED", Integer.MAX_VALUE);
+		if (claimable)
 		{
 			final Rectangle cb = claimRect(ox, oy);
-			LofModal.button(g, cb, "Claim one", LofTheme.GOLD, true, cb.contains(mouse));
+			LofModal.button(g, cb, "Claim", LofTheme.GOLD, true, cb.contains(mouse));
 		}
 
 		// redemption cards
@@ -170,7 +175,8 @@ class LofBondsOverlay extends Overlay implements LofWindows.Window
 		return new Dimension(LofModal.W, LofModal.H);
 	}
 
-	private void drawWalletBox(Graphics2D g, int ox, int oy, int i, BufferedImage icon, int count, String label)
+	private void drawWalletBox(Graphics2D g, int ox, int oy, int i, BufferedImage icon, int count,
+		String label, int textRoom)
 	{
 		final Rectangle r = walletBox(ox, oy, i);
 		g.setColor(LofTheme.ROW);
@@ -182,7 +188,8 @@ class LofBondsOverlay extends Overlay implements LofWindows.Window
 		g.setFont(FontManager.getRunescapeBoldFont());
 		LofTheme.shadowText(g, String.valueOf(count), r.x + 54, r.y + 24, LofTheme.GOLD);
 		g.setFont(FontManager.getRunescapeSmallFont());
-		LofTheme.shadowText(g, label, r.x + 54, r.y + 40, LofTheme.TEXT_DIM);
+		LofTheme.shadowText(g, LofModal.fit(g.getFontMetrics(), label, textRoom),
+			r.x + 54, r.y + 40, LofTheme.TEXT_DIM);
 	}
 
 	private void drawCard(Graphics2D g, int ox, int oy, int i, BufferedImage icon, String big, String small, Point mouse)

@@ -19,7 +19,6 @@ import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
-import java.awt.Shape;
 import java.awt.Stroke;
 import java.awt.image.BufferedImage;
 import javax.inject.Inject;
@@ -97,9 +96,8 @@ class LofKitOverlay extends Overlay
 	// item icons are drawn scaled-to-slot (itemSlot) so the 7-row inventory + palette still fit.
 	static final int WIN_W = 512;
 	static final int WIN_H = 324;
-	private static final int WIN_ARC = 14;
-	private static final int TITLE_H = 38;
-	private static final int PAD = 12;
+	private static final int TITLE_H = LofModal.TITLE_H;
+	private static final int PAD = LofModal.PAD;
 	private static final int PRESET_Y = TITLE_H + 6;
 	private static final int PRESET_H = 20;
 	private static final int LABEL_Y = TITLE_H + 34;
@@ -117,7 +115,6 @@ class LofKitOverlay extends Overlay
 	private static final int PAL_COLS = 5;
 	private static final int PAL_ROWS = 4;
 	private static final int TAB_H = 15;
-	private static final int FOOT_H = 30;
 	private static final int CHIP_H = 20;
 
 	private final Client client;
@@ -205,7 +202,7 @@ class LofKitOverlay extends Overlay
 
 	// ── geometry ──
 
-	private Rectangle closeRect(int ox, int oy) { return new Rectangle(ox + WIN_W - 30, oy + 8, 22, 22); }
+	private Rectangle closeRect(int ox, int oy) { return LofModal.closeRect(ox, oy, WIN_W); }
 
 	private Rectangle presetRect(int ox, int oy, int i) // 0..1 presets
 	{
@@ -254,9 +251,12 @@ class LofKitOverlay extends Overlay
 	private Rectangle pagePrevRect(int ox, int oy) { return new Rectangle(ox + PAL_X, palTop(oy) + PAL_ROWS * (PAL_SZ + PAL_GAP) + 4, 30, 18); }
 	private Rectangle pageNextRect(int ox, int oy) { return new Rectangle(ox + PAL_X + 150, palTop(oy) + PAL_ROWS * (PAL_SZ + PAL_GAP) + 4, 30, 18); }
 
-	private Rectangle bookRect(int ox, int oy, int i) { return new Rectangle(ox + PAD + 50 + i * 44, oy + WIN_H - FOOT_H, 40, CHIP_H); }
-	private Rectangle diffRect(int ox, int oy, int i) { return new Rectangle(ox + PAD + 226 + i * 40, oy + WIN_H - FOOT_H, 36, CHIP_H); }
-	private Rectangle actionRect(int ox, int oy) { return new Rectangle(ox + WIN_W - PAD - 108, oy + WIN_H - FOOT_H - 4, 108, 28); }
+	// Footer band (§5): the spellbook / difficulty chips ride centred in the shared button row so
+	// this window's footer lines up with every other modal's.
+	private int chipY(int oy) { return LofModal.footerBtnY(oy, WIN_H) + (LofModal.FOOTER_BTN_H - CHIP_H) / 2; }
+	private Rectangle bookRect(int ox, int oy, int i) { return new Rectangle(ox + PAD + 50 + i * 44, chipY(oy), 40, CHIP_H); }
+	private Rectangle diffRect(int ox, int oy, int i) { return new Rectangle(ox + PAD + 226 + i * 40, chipY(oy), 36, CHIP_H); }
+	private Rectangle actionRect(int ox, int oy) { return LofModal.footerButton(ox, oy, WIN_W, WIN_H, 108); }
 
 	int hitTest(Point p)
 	{
@@ -358,23 +358,10 @@ class LofKitOverlay extends Overlay
 		final Point mouse = mousePoint();
 		String hover = null;
 
-		LofTheme.panel(g, ox, oy, WIN_W, WIN_H, WIN_ARC);
-
-		// header
-		final Shape clip = g.getClip();
-		g.setClip(ox, oy, WIN_W, TITLE_H);
-		g.setColor(LofTheme.HEADER);
-		g.fillRoundRect(ox, oy, WIN_W, TITLE_H + WIN_ARC, WIN_ARC, WIN_ARC);
-		g.setClip(clip);
-		LofTheme.emberUnderline(g, ox + 1, oy + TITLE_H - 2, WIN_W - 2);
-		final BufferedImage logo = LofTheme.logo();
-		int titleX = ox + 14;
-		if (logo != null) { g.drawImage(logo, ox + 12, oy + 5, 28, 28, null); titleX = ox + 46; }
-		g.setFont(FontManager.getRunescapeBoldFont());
-		LofTheme.shadowText(g, "Kit Editor", titleX, oy + 25, LofTheme.GOLD);
-		g.setFont(FontManager.getRunescapeBoldFont());
-		final Rectangle xr = closeRect(ox, oy);
-		LofTheme.shadowText(g, "✕", xr.x + 6, xr.y + 16, xr.contains(mouse) ? LofTheme.LAVA : LofTheme.TEXT_DIM);
+		// Shared frame — the close ✕ is now the standard 20px drawn one, not this window's own
+		// 22px text glyph.
+		LofModal.frame(g, ox, oy, WIN_W, WIN_H, TITLE_H, "Kit Editor", null, mouse, true);
+		final int titleX = ox + 46;
 
 		// preset + save-slot chips (not in LMS mode — LMS has exactly one kit, the category picks)
 		g.setFont(FontManager.getRunescapeFont());
@@ -474,7 +461,7 @@ class LofKitOverlay extends Overlay
 		if (!lms)
 		{
 			g.setFont(FontManager.getRunescapeSmallFont());
-			LofTheme.shadowText(g, "BOOK", ox + PAD, oy + WIN_H - FOOT_H + 14, LofTheme.GOLD_DIM);
+			LofTheme.shadowText(g, "BOOK", ox + PAD, chipY(oy) + 14, LofTheme.GOLD_DIM);
 			g.setFont(FontManager.getRunescapeFont());
 			final String[] books = { "Std", "Anc", "Lun" };
 			for (int i = 0; i < 3; i++)
@@ -487,12 +474,12 @@ class LofKitOverlay extends Overlay
 			g.setFont(FontManager.getRunescapeSmallFont());
 			final String[] bookNames = { "Standard", "Ancients", "Lunar" };
 			LofTheme.shadowText(g, "SPELLBOOK: " + bookNames[Math.min(book, 2)] + " (set by your magic pack)",
-				ox + PAD, oy + WIN_H - FOOT_H + 14, LofTheme.GOLD_DIM);
+				ox + PAD, chipY(oy) + 14, LofTheme.GOLD_DIM);
 		}
 		if (training)
 		{
 			g.setFont(FontManager.getRunescapeSmallFont());
-			LofTheme.shadowText(g, "BOT", ox + PAD + 196, oy + WIN_H - FOOT_H + 14, LofTheme.GOLD_DIM);
+			LofTheme.shadowText(g, "BOT", ox + PAD + 196, chipY(oy) + 14, LofTheme.GOLD_DIM);
 			g.setFont(FontManager.getRunescapeFont());
 			final String[] diffs = { "Easy", "Med", "Hard" };
 			for (int i = 0; i < 3; i++)
@@ -500,15 +487,18 @@ class LofKitOverlay extends Overlay
 				chip(g, diffRect(ox, oy, i), diffs[i], diff == i, diffRect(ox, oy, i).contains(mouse));
 			}
 		}
-		g.setFont(FontManager.getRunescapeBoldFont());
-		button(g, actionRect(ox, oy), training ? "Start bout" : lms ? "Done" : "Load kit",
-			LofTheme.GOLD, false, actionRect(ox, oy).contains(mouse));
+		final Rectangle ar = actionRect(ox, oy);
+		LofModal.button(g, ar, training ? "Start bout" : lms ? "Done" : "Load kit",
+			LofTheme.GOLD, true, ar.contains(mouse));
 
-		// hover hint in the title bar (OSRS-style)
+		// hover hint in the title bar (OSRS-style), fitted to the space before the close ✕ so a long
+		// item name can't run under it
 		if (hover != null)
 		{
 			g.setFont(FontManager.getRunescapeSmallFont());
-			LofTheme.shadowText(g, hover, titleX + 96, oy + 24, LofTheme.GOLD);
+			final int hintX = titleX + 96;
+			LofTheme.shadowText(g, LofModal.fit(g.getFontMetrics(), hover, closeRect(ox, oy).x - hintX - 8),
+				hintX, oy + 24, LofTheme.GOLD);
 		}
 
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, oldAA == null ? RenderingHints.VALUE_ANTIALIAS_DEFAULT : oldAA);
@@ -566,19 +556,6 @@ class LofKitOverlay extends Overlay
 		final int tw = g.getFontMetrics().stringWidth(label);
 		LofTheme.shadowText(g, label, rc.x + (rc.width - tw) / 2, rc.y + rc.height / 2 + 5,
 			active ? LofTheme.GOLD : (hov ? LofTheme.TEXT : LofTheme.TEXT_DIM));
-	}
-
-	private static void button(Graphics2D g, Rectangle rc, String label, Color accent, boolean active, boolean hov)
-	{
-		g.setColor(active ? LofTheme.alpha(accent, 46) : (hov ? LofTheme.alpha(accent, 30) : new Color(255, 255, 255, 12)));
-		g.fillRoundRect(rc.x, rc.y, rc.width, rc.height, 8, 8);
-		g.setColor(LofTheme.alpha(accent, hov || active ? 200 : 120));
-		final Stroke old = g.getStroke();
-		g.setStroke(new BasicStroke(1.4f));
-		g.drawRoundRect(rc.x, rc.y, rc.width - 1, rc.height - 1, 8, 8);
-		g.setStroke(old);
-		final int tw = g.getFontMetrics().stringWidth(label);
-		LofTheme.shadowText(g, label, rc.x + (rc.width - tw) / 2, rc.y + rc.height / 2 + 6, accent);
 	}
 
 	private Point mousePoint()

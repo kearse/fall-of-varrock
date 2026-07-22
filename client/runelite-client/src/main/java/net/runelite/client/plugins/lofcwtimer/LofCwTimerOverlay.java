@@ -16,6 +16,7 @@ import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import javax.inject.Inject;
 import net.runelite.api.Client;
+import net.runelite.client.plugins.loftheme.LofTheme;
 import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.overlay.Overlay;
 import net.runelite.client.ui.overlay.OverlayLayer;
@@ -100,9 +101,6 @@ class LofCwTimerOverlay extends Overlay
 
 	private void drawShadowed(Graphics2D graphics, String text, int x, int y, Color color)
 	{
-		graphics.setColor(Color.BLACK);
-		graphics.drawString(text, x + 1, y + 1);
-		graphics.setColor(color);
-		graphics.drawString(text, x, y);
+		LofTheme.shadowText(graphics, text, x, y, color);
 	}
 }

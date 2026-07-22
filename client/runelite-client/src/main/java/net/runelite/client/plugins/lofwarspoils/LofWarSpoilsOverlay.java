@@ -10,7 +10,6 @@
 package net.runelite.client.plugins.lofwarspoils;
 
 import java.awt.BasicStroke;
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
@@ -42,23 +41,21 @@ class LofWarSpoilsOverlay extends Overlay
 	static final int TAKE_ALL = 3;
 	static final int ROW_BASE = 1000;
 
+	// Narrower than the 480 standard (a short item list needs no more), but placed, framed and
+	// footered by the same authority as every other modal.
 	private static final int WIN_W = 340;
 	private static final int WIN_H = 320;
-	private static final int WIN_ARC = 14;
-	private static final int TITLE_H = 38;
+	private static final int TITLE_H = LofModal.TITLE_H;
 
-	private static final int MARGIN = 12;
-	private static final int BTN_H = 30;
-	private static final int BTN_BAR_Y = WIN_H - BTN_H - MARGIN; // 278
-	private static final int BTN_W = (WIN_W - MARGIN * 3) / 2;   // 152
+	private static final int MARGIN = LofModal.PAD;
+	private static final int BTN_BAR_Y = WIN_H - LofModal.FOOTER_GAP - LofModal.FOOTER_BTN_H; // 276
+	private static final int BTN_W = (WIN_W - MARGIN * 3) / 2;   // 149
 	private static final int VP_TOP = TITLE_H + 8;               // 46
-	private static final int VP_BOTTOM = BTN_BAR_Y - 8;          // 270
-	private static final int VP_H = VP_BOTTOM - VP_TOP;          // 224
+	private static final int VP_BOTTOM = BTN_BAR_Y - 8;          // 268
+	private static final int VP_H = VP_BOTTOM - VP_TOP;          // 222
 	private static final int ROW_H = 40;
 	private static final int ROW_STEP = 44;
 	private static final int SCROLLBAR_W = 5;
-
-	private static final Color CLOSE_HOVER = LofTheme.EMBER;
 
 	private final Client client;
 	private final LofWarSpoilsPlugin plugin;
@@ -161,17 +158,17 @@ class LofWarSpoilsOverlay extends Overlay
 
 	private Rectangle closeRect(int ox, int oy)
 	{
-		return new Rectangle(ox + WIN_W - 30, oy + 9, 20, 20);
+		return LofModal.closeRect(ox, oy, WIN_W);
 	}
 
 	private Rectangle bankRect(int ox, int oy)
 	{
-		return new Rectangle(ox + MARGIN, oy + BTN_BAR_Y, BTN_W, BTN_H);
+		return LofModal.footerChip(ox, oy, WIN_H, 0, BTN_W, MARGIN);
 	}
 
 	private Rectangle takeRect(int ox, int oy)
 	{
-		return new Rectangle(ox + MARGIN * 2 + BTN_W, oy + BTN_BAR_Y, BTN_W, BTN_H);
+		return LofModal.footerChip(ox, oy, WIN_H, 1, BTN_W, MARGIN);
 	}
 
 	@Override
@@ -205,47 +202,13 @@ class LofWarSpoilsOverlay extends Overlay
 		final Point mouse = mousePoint();
 		final List<LofWarSpoilsPlugin.Item> items = plugin.getItems();
 
-		LofTheme.panel(g, ox, oy, WIN_W, WIN_H, WIN_ARC);
-
-		// header bar with ember underline
-		final Shape headerClip = g.getClip();
-		g.setClip(ox, oy, WIN_W, TITLE_H);
-		g.setColor(LofTheme.HEADER);
-		g.fillRoundRect(ox, oy, WIN_W, TITLE_H + WIN_ARC, WIN_ARC, WIN_ARC);
-		g.setClip(headerClip);
-		LofTheme.emberUnderline(g, ox + 1, oy + TITLE_H - 2, WIN_W - 2);
-
-		// shield logo + title
-		final BufferedImage logo = LofTheme.logo();
-		int titleX = ox + 14;
-		if (logo != null)
-		{
-			g.drawImage(logo, ox + 12, oy + 5, 28, 28, null);
-			titleX = ox + 46;
-		}
-		g.setFont(FontManager.getRunescapeBoldFont());
-		LofTheme.shadowText(g, "Spoils of War", titleX, oy + 25, LofTheme.GOLD);
-		g.setFont(FontManager.getRunescapeSmallFont());
-		final String sub = items.size() + (items.size() == 1 ? " item" : " items");
-		LofTheme.shadowText(g, sub, ox + WIN_W - 44 - g.getFontMetrics().stringWidth(sub), oy + 24, LofTheme.TEXT_DIM);
-
-		// close button
-		final Rectangle cr = closeRect(ox, oy);
-		final boolean closeHov = cr.contains(mouse);
-		g.setColor(closeHov ? CLOSE_HOVER : new Color(255, 255, 255, 18));
-		g.fillRoundRect(cr.x, cr.y, cr.width, cr.height, 6, 6);
-		g.setColor(closeHov ? LofTheme.TEXT : LofTheme.TEXT_DIM);
-		final Stroke oldStroke = g.getStroke();
-		g.setStroke(new BasicStroke(1.4f));
-		g.drawLine(cr.x + 6, cr.y + 6, cr.x + cr.width - 7, cr.y + cr.height - 7);
-		g.drawLine(cr.x + cr.width - 7, cr.y + 6, cr.x + 6, cr.y + cr.height - 7);
-		g.setStroke(oldStroke);
+		LofModal.frame(g, ox, oy, WIN_W, WIN_H, TITLE_H, "Spoils of War",
+			items.size() + (items.size() == 1 ? " item" : " items"), mouse, true);
 
 		// item rows (clipped to viewport)
 		final Shape oldClip = g.getClip();
 		g.setClip(ox + MARGIN, oy + VP_TOP, WIN_W - MARGIN * 2, VP_H);
 		g.setFont(FontManager.getRunescapeFont());
-		final FontMetrics fm = g.getFontMetrics();
 		final int rowW = WIN_W - MARGIN * 2 - (maxScroll() > 0 ? SCROLLBAR_W + 4 : 0);
 		for (int i = 0; i < items.size(); i++)
 		{
@@ -274,55 +237,23 @@ class LofWarSpoilsOverlay extends Overlay
 				g.drawImage(img, rx + 6, ry + (ROW_H - img.getHeight()) / 2, null);
 			}
 
-			final String name = itemName(it.itemId);
+			// Name left, quantity right, the name fitted against the quantity so a long item can
+			// never run into it.
 			final int ty = ry + ROW_H / 2 + 4;
-			LofTheme.shadowText(g, name, rx + 48, ty, LofTheme.GOLD);
-			if (it.qty > 1)
-			{
-				final String q = "x " + String.format("%,d", it.qty);
-				LofTheme.shadowText(g, q, rx + rowW - 10 - fm.stringWidth(q), ty, LofTheme.TEXT_DIM);
-			}
+			LofModal.rowText(g, rx + 48, ty, rowW - 48 - 10, itemName(it.itemId),
+				it.qty > 1 ? "x " + LofModal.fmt(it.qty) : "", LofTheme.GOLD, LofTheme.TEXT_DIM);
 		}
 		g.setClip(oldClip);
 
-		// scrollbar
-		final int ms = maxScroll();
-		if (ms > 0)
-		{
-			final int sbX = ox + WIN_W - MARGIN - SCROLLBAR_W;
-			g.setColor(new Color(255, 255, 255, 14));
-			g.fillRoundRect(sbX, oy + VP_TOP, SCROLLBAR_W, VP_H, SCROLLBAR_W, SCROLLBAR_W);
-			final int content = rowCount() * ROW_STEP;
-			final int thumbH = Math.max(24, VP_H * VP_H / content);
-			final int thumbY = oy + VP_TOP + (VP_H - thumbH) * scroll / ms;
-			g.setColor(LofTheme.alpha(LofTheme.EMBER, 190));
-			g.fillRoundRect(sbX, thumbY, SCROLLBAR_W, thumbH, SCROLLBAR_W, SCROLLBAR_W);
-		}
+		LofModal.scrollbar(g, ox + WIN_W - MARGIN - SCROLLBAR_W, oy + VP_TOP, VP_H, rowCount() * ROW_STEP, scroll);
 
-		// button bar
-		drawButton(g, bankRect(ox, oy), "Bank All", mouse, true);
-		drawButton(g, takeRect(ox, oy), "To Inventory", mouse, false);
+		// button bar — shared button style (this window used to draw its own, a fourth variant)
+		final Rectangle bank = bankRect(ox, oy), take = takeRect(ox, oy);
+		LofModal.button(g, bank, "Bank All", LofTheme.GOLD, true, bank.contains(mouse));
+		LofModal.button(g, take, "To Inventory", LofTheme.GOLD_DIM, true, take.contains(mouse));
 
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, oldAA == null ? RenderingHints.VALUE_ANTIALIAS_DEFAULT : oldAA);
 		return new Dimension(WIN_W, WIN_H);
-	}
-
-	private void drawButton(Graphics2D g, Rectangle r, String label, Point mouse, boolean primary)
-	{
-		final boolean hov = r.contains(mouse);
-		g.setColor(primary
-			? LofTheme.alpha(LofTheme.EMBER, hov ? 90 : 60)
-			: LofTheme.alpha(LofTheme.PANEL_OPAQUE, hov ? 210 : 160));
-		g.fillRoundRect(r.x, r.y, r.width, r.height, 8, 8);
-		final Stroke old = g.getStroke();
-		g.setStroke(new BasicStroke(hov ? 1.6f : 1.0f));
-		g.setColor(LofTheme.alpha(primary ? LofTheme.GOLD : LofTheme.EMBER, hov ? 220 : 140));
-		g.drawRoundRect(r.x, r.y, r.width - 1, r.height - 1, 8, 8);
-		g.setStroke(old);
-		g.setFont(FontManager.getRunescapeFont());
-		final int tw = g.getFontMetrics().stringWidth(label);
-		LofTheme.shadowText(g, label, r.x + (r.width - tw) / 2, r.y + r.height / 2 + 5,
-			hov ? LofTheme.GOLD : LofTheme.TEXT);
 	}
 
 	/** Top-centre timed banner prompting the commander to ::claim (drawn even when the window is closed). */

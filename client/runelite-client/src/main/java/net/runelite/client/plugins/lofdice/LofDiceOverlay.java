@@ -271,7 +271,7 @@ class LofDiceOverlay extends Overlay implements LofWindows.Window
 
 	private Rectangle rollRect(int ox, int oy)
 	{
-		return new Rectangle(ox + LofModal.W - LofModal.PAD - 240, oy + LofModal.H - 12 - 32, 240, 32);
+		return LofModal.footerButton(ox, oy, 240);
 	}
 
 	int hitTest(Point p)
@@ -422,11 +422,13 @@ class LofDiceOverlay extends Overlay implements LofWindows.Window
 			hx += 26;
 		}
 
-		// footer — spendable is the pack plus the bank (server-pushed), so no coins need be carried
+		// footer — spendable is the pack plus the bank (server-pushed), so no coins need be carried.
+		// The coin line goes on the shared status baseline, one row ABOVE the button band: it used to
+		// share the button's row and a billion-coin balance drew straight through ROLL THE DIE.
 		final long coins = LofModal.carried(client, LofModal.COINS_ID) + bankCoins;
 		coinsCached = coins; // publish for the mouse thread before canRoll() is consulted
-		LofTheme.shadowText(g, "Coins available: " + LofModal.fmt(coins) + "  (inventory + bank)",
-			ox + LofModal.PAD, oy + LofModal.H - 22, LofTheme.TEXT_DIM);
+		LofModal.statusLine(g, ox, oy, "Coins available: " + LofModal.fmt(coins) + "  (inventory + bank)",
+			LofTheme.TEXT_DIM);
 		final String rollLabel = rolling ? "ROLLING" + dots(now)
 			: (stake > 0 ? "ROLL THE DIE — " + LofModal.fmt(stake) : "ROLL THE DIE");
 		LofModal.button(g, rollRect(ox, oy), rollLabel, LofTheme.EMBER, canRoll(), rollRect(ox, oy).contains(mouse));

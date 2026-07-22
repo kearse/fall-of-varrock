@@ -17,9 +17,7 @@ import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
-import java.awt.Shape;
 import java.awt.Stroke;
-import java.awt.image.BufferedImage;
 import javax.inject.Inject;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
@@ -60,9 +58,8 @@ class LofDuelOverlay extends Overlay
 	// docs/overlay-design-system.md.
 	static final int WIN_W = LofModal.W;
 	static final int WIN_H = LofModal.H;
-	private static final int WIN_ARC = 14;
-	private static final int TITLE_H = 38;
-	private static final int PAD = 12;
+	private static final int TITLE_H = LofModal.TITLE_H;
+	private static final int PAD = LofModal.PAD;
 	// Rules column + paper-doll are tightened to fit the short standard window (both must show in full —
 	// rules can't be hidden and the doll isn't a list, so this window crams rather than scrolls).
 	private static final int RULE_TOP = TITLE_H + 26;
@@ -72,7 +69,6 @@ class LofDuelOverlay extends Overlay
 	private static final int DOLL_TOP = TITLE_H + 34;
 	private static final int SLOT_SZ = 32;
 	private static final int SLOT_GAP = 6;
-	private static final int BTN_H = 32;
 
 	private static final Color GREEN = new Color(110, 205, 110);
 
@@ -121,9 +117,10 @@ class LofDuelOverlay extends Overlay
 		final int y = oy + DOLL_TOP + DOLL_ROW[i] * (SLOT_SZ + SLOT_GAP);
 		return new Rectangle(x, y, SLOT_SZ, SLOT_SZ);
 	}
-	private Rectangle loadRect(int ox, int oy) { return new Rectangle(ox + PAD, oy + WIN_H - PAD - BTN_H, 96, BTN_H); }
-	private Rectangle acceptRect(int ox, int oy) { return new Rectangle(ox + WIN_W - PAD - 210, oy + WIN_H - PAD - BTN_H, 100, BTN_H); }
-	private Rectangle declineRect(int ox, int oy) { return new Rectangle(ox + WIN_W - PAD - 100, oy + WIN_H - PAD - BTN_H, 100, BTN_H); }
+	// Shared footer band (§5): Load Last on the left, Accept + Decline right-aligned.
+	private Rectangle loadRect(int ox, int oy) { return LofModal.footerChip(ox, oy, WIN_H, 0, 96, 0); }
+	private Rectangle acceptRect(int ox, int oy) { return new Rectangle(ox + WIN_W - PAD - 210, LofModal.footerBtnY(oy, WIN_H), 100, LofModal.FOOTER_BTN_H); }
+	private Rectangle declineRect(int ox, int oy) { return LofModal.footerButton(ox, oy, WIN_W, WIN_H, 100); }
 
 	int hitTest(Point p)
 	{
@@ -161,20 +158,8 @@ class LofDuelOverlay extends Overlay
 		final int ox = originX(), oy = originY();
 		final Point mouse = mousePoint();
 
-		LofTheme.panel(g, ox, oy, WIN_W, WIN_H, WIN_ARC);
-
-		// header
-		final Shape clip = g.getClip();
-		g.setClip(ox, oy, WIN_W, TITLE_H);
-		g.setColor(LofTheme.HEADER);
-		g.fillRoundRect(ox, oy, WIN_W, TITLE_H + WIN_ARC, WIN_ARC, WIN_ARC);
-		g.setClip(clip);
-		LofTheme.emberUnderline(g, ox + 1, oy + TITLE_H - 2, WIN_W - 2);
-		final BufferedImage logo = LofTheme.logo();
-		int titleX = ox + 14;
-		if (logo != null) { g.drawImage(logo, ox + 12, oy + 5, 28, 28, null); titleX = ox + 46; }
-		g.setFont(FontManager.getRunescapeBoldFont());
-		LofTheme.shadowText(g, "Duel Arena", titleX, oy + 25, LofTheme.GOLD);
+		// No close ✕ — a server-driven flow is left via Decline (§5.3).
+		LofModal.frame(g, ox, oy, WIN_W, WIN_H, TITLE_H, "Duel Arena", "combat options", mouse, false);
 
 		// section labels
 		g.setFont(FontManager.getRunescapeSmallFont());
@@ -196,18 +181,17 @@ class LofDuelOverlay extends Overlay
 			dollSlot(g, slotRect(ox, oy, i), SLOTS[i], forbidden, slotRect(ox, oy, i).contains(mouse));
 		}
 
-		// status
+		// status — shared baseline above the button row
 		final String status = myAccept && !theirAccept ? "Waiting for the other player…"
 			: !myAccept && theirAccept ? "Opponent has accepted — waiting on you."
 			: "Either player can change the rules; both must accept.";
-		g.setFont(FontManager.getRunescapeSmallFont());
-		LofTheme.shadowText(g, status, ox + PAD + 2, oy + WIN_H - PAD - BTN_H - 8, (myAccept ^ theirAccept) ? GREEN : LofTheme.TEXT_DIM);
+		LofModal.statusLine(g, ox, oy, WIN_W, WIN_H, status, (myAccept ^ theirAccept) ? GREEN : LofTheme.TEXT_DIM);
 
 		// buttons
-		g.setFont(FontManager.getRunescapeBoldFont());
-		button(g, loadRect(ox, oy), "Load Last", LofTheme.GOLD_DIM, false, loadRect(ox, oy).contains(mouse));
-		button(g, acceptRect(ox, oy), myAccept ? "✔ Accepted" : "Accept", LofTheme.GOLD, myAccept, acceptRect(ox, oy).contains(mouse));
-		button(g, declineRect(ox, oy), "Decline", LofTheme.EMBER, false, declineRect(ox, oy).contains(mouse));
+		final Rectangle load = loadRect(ox, oy), accept = acceptRect(ox, oy), decline = declineRect(ox, oy);
+		LofModal.button(g, load, "Load Last", LofTheme.GOLD_DIM, true, load.contains(mouse));
+		LofModal.button(g, accept, myAccept ? "✔ Accepted" : "Accept", LofTheme.GOLD, true, myAccept || accept.contains(mouse));
+		LofModal.button(g, decline, "Decline", LofTheme.EMBER, true, decline.contains(mouse));
 
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, oldAA == null ? RenderingHints.VALUE_ANTIALIAS_DEFAULT : oldAA);
 		return new Dimension(WIN_W, WIN_H);
@@ -250,19 +234,6 @@ class LofDuelOverlay extends Overlay
 			g.drawLine(rc.x + rc.width - 6, rc.y + 6, rc.x + 6, rc.y + rc.height - 6);
 			g.setStroke(old);
 		}
-	}
-
-	private static void button(Graphics2D g, Rectangle rc, String label, Color accent, boolean active, boolean hov)
-	{
-		g.setColor(active ? LofTheme.alpha(accent, 46) : (hov ? LofTheme.alpha(accent, 30) : new Color(255, 255, 255, 12)));
-		g.fillRoundRect(rc.x, rc.y, rc.width, rc.height, 8, 8);
-		g.setColor(LofTheme.alpha(accent, hov || active ? 200 : 120));
-		final Stroke old = g.getStroke();
-		g.setStroke(new BasicStroke(1.4f));
-		g.drawRoundRect(rc.x, rc.y, rc.width - 1, rc.height - 1, 8, 8);
-		g.setStroke(old);
-		final int tw = g.getFontMetrics().stringWidth(label);
-		LofTheme.shadowText(g, label, rc.x + (rc.width - tw) / 2, rc.y + rc.height / 2 + 6, accent);
 	}
 
 	private Point mousePoint()

@@ -18,11 +18,9 @@ import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
-import java.awt.Shape;
 import java.awt.Stroke;
 import java.awt.geom.Area;
 import java.awt.geom.RoundRectangle2D;
-import java.awt.image.BufferedImage;
 import javax.inject.Inject;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
@@ -70,9 +68,9 @@ class LofStyleOverlay extends Overlay implements LofWindows.Window
 
 	private static final int WIN_W = LofModal.W;
 	private static final int WIN_H = 420; // taller than the standard modal to frame the character model
-	private static final int ARC = 14;
-	private static final int TITLE_H = 38;
-	private static final int PAD = 14;
+	private static final int ARC = LofModal.ARC;
+	private static final int TITLE_H = LofModal.TITLE_H;
+	private static final int PAD = LofModal.PAD;
 	private static final int COL_W = 150;
 	private static final int ROW_STEP = 30;
 	private static final int ROW_H = 24;
@@ -145,13 +143,12 @@ class LofStyleOverlay extends Overlay implements LofWindows.Window
 		return LofModal.originX(client); // same 480 width as the standard modal
 	}
 
-	/** Centre on the game viewport (334px tall in fixed mode), not the whole canvas, so the
-	 *  portrait hole frames the player rather than drifting down over the chatbox. */
+	/** Centre in the game viewport, not the whole canvas, so the portrait hole frames the player
+	 *  rather than drifting down over the chatbox — the shared placement authority does exactly
+	 *  this (§6A); this used to hand-roll it and ignored the chat-box reserve. */
 	private int originY()
 	{
-		final int canvasH = client.getCanvasHeight();
-		final int viewportH = client.isResized() ? canvasH : Math.min(canvasH, 334);
-		return Math.max(0, Math.min((canvasH - WIN_H) / 2, (viewportH - WIN_H) / 2));
+		return LofModal.originY(client, WIN_H);
 	}
 
 	private Rectangle rowRect(int ox, int oy, int row)
@@ -183,7 +180,8 @@ class LofStyleOverlay extends Overlay implements LofWindows.Window
 
 	private Rectangle doneRect(int ox, int oy)
 	{
-		return new Rectangle(ox + HOLE_X, oy + WIN_H - 46, HOLE_W, 32);
+		// Centred under the portrait, but on the shared footer button row.
+		return new Rectangle(ox + HOLE_X, LofModal.footerBtnY(oy, WIN_H), HOLE_W, LofModal.FOOTER_BTN_H);
 	}
 
 	int hitTest(Point p)
@@ -265,40 +263,11 @@ class LofStyleOverlay extends Overlay implements LofWindows.Window
 		g.setColor(LofTheme.alpha(LofTheme.EMBER_DARK, 210));
 		g.drawRoundRect(ox, oy, WIN_W - 1, WIN_H - 1, ARC, ARC);
 
-		// header
-		final Shape headerClip = g.getClip();
-		g.setClip(ox, oy, WIN_W, TITLE_H);
-		g.setColor(LofTheme.HEADER);
-		g.fillRoundRect(ox, oy, WIN_W, TITLE_H + ARC, ARC, ARC);
-		g.setClip(headerClip);
-		LofTheme.emberUnderline(g, ox + 1, oy + TITLE_H - 2, WIN_W - 2);
-		final BufferedImage logo = LofTheme.logo();
-		int titleX = ox + 14;
-		if (logo != null)
-		{
-			g.drawImage(logo, ox + 12, oy + 5, 28, 28, null);
-			titleX = ox + 46;
-		}
-		g.setFont(FontManager.getRunescapeBoldFont());
-		LofTheme.shadowText(g, "Character Style", titleX, oy + 25, LofTheme.GOLD);
-		g.setFont(FontManager.getRunescapeSmallFont());
-		final String sub = mandatory ? "forge your likeness" : "free restyle";
-		LofTheme.shadowText(g, sub, ox + WIN_W - 44 - g.getFontMetrics().stringWidth(sub), oy + 24, LofTheme.TEXT_DIM);
-
-		// close ✕ — hidden in first-login mode (the window is mandatory, no way out but DONE)
+		// Header is the shared one; the panel above is bespoke because of the portrait cutout.
+		// The close ✕ is hidden in first-login mode (mandatory — no way out but DONE).
+		LofModal.header(g, ox, oy, WIN_W, TITLE_H, "Character Style",
+			mandatory ? "forge your likeness" : "free restyle", mouse, !mandatory);
 		final Stroke oldStroke = g.getStroke();
-		if (!mandatory)
-		{
-			final Rectangle cr = LofModal.closeRect(ox, oy);
-			final boolean closeHov = cr.contains(mouse);
-			g.setColor(closeHov ? LofTheme.EMBER : new Color(255, 255, 255, 18));
-			g.fillRoundRect(cr.x, cr.y, cr.width, cr.height, 6, 6);
-			g.setColor(closeHov ? LofTheme.TEXT : LofTheme.TEXT_DIM);
-			g.setStroke(new BasicStroke(1.6f));
-			g.drawLine(cr.x + 6, cr.y + 6, cr.x + cr.width - 7, cr.y + cr.height - 7);
-			g.drawLine(cr.x + cr.width - 7, cr.y + 6, cr.x + 6, cr.y + cr.height - 7);
-			g.setStroke(oldStroke);
-		}
 
 		// portrait frame: a gold sill around the hole so it reads as the model window
 		g.setStroke(new BasicStroke(1.4f));

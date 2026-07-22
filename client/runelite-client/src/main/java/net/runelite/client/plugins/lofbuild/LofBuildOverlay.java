@@ -12,6 +12,7 @@ import java.awt.Dimension;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import javax.inject.Inject;
+import net.runelite.client.plugins.loftheme.LofTheme;
 import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.overlay.Overlay;
 import net.runelite.client.ui.overlay.OverlayLayer;
@@ -20,8 +21,8 @@ import net.runelite.client.ui.overlay.OverlayPriority;
 
 class LofBuildOverlay extends Overlay
 {
-	private static final Color BG = new Color(0x08, 0x05, 0x06, 160);
-	private static final Color TEXT = new Color(0xE8, 0xD8, 0xB0);
+	private static final Color BG = LofTheme.alpha(LofTheme.PANEL_OPAQUE, 160);
+	private static final Color TEXT = LofTheme.GOLD_DIM;
 	private static final int PAD_X = 5;
 	private static final int PAD_Y = 3;
 
@@ -49,12 +50,7 @@ class LofBuildOverlay extends Overlay
 		graphics.setColor(BG);
 		graphics.fillRect(0, 0, w, h);
 
-		final int tx = PAD_X;
-		final int ty = PAD_Y + fm.getAscent();
-		graphics.setColor(Color.BLACK);
-		graphics.drawString(text, tx + 1, ty + 1);
-		graphics.setColor(TEXT);
-		graphics.drawString(text, tx, ty);
+		LofTheme.shadowText(graphics, text, PAD_X, PAD_Y + fm.getAscent(), TEXT);
 
 		return new Dimension(w, h);
 	}

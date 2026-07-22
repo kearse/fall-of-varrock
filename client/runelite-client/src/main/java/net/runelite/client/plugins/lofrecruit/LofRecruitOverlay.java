@@ -20,7 +20,6 @@ import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
-import java.awt.Shape;
 import java.awt.Stroke;
 import java.awt.image.BufferedImage;
 import javax.inject.Inject;
@@ -64,15 +63,14 @@ class LofRecruitOverlay extends Overlay implements LofWindows.Window
 	private static final int COMP_STATUS_BASE = 4613;  // CompanionRegistry status varps
 	private static final int MAX_COMPANIONS = 3;
 
-	// Design-system standard modal (480x400 — docs/overlay-design-system.md §6A).
+	// Design-system standard width (docs/overlay-design-system.md §6A).
 	private static final int WIN_W = LofModal.W;
 	// Taller than the standard modal (content exception, like the kit editor): the three companion
 	// cards have a fixed internal layout that can't compress to 324. Still placed by LofModal.originY,
 	// so it centres in the game viewport and clears the chat on a normal resizable client.
 	private static final int WIN_H = 384;
-	private static final int WIN_ARC = 14;
-	private static final int TITLE_H = 38;
-	private static final int PAD = 14;
+	private static final int TITLE_H = LofModal.TITLE_H;
+	private static final int PAD = LofModal.PAD;
 
 	private static final int TABS_Y = TITLE_H + 8;     // Muster | Regalia
 	private static final int TAB_H = 22;
@@ -139,7 +137,7 @@ class LofRecruitOverlay extends Overlay implements LofWindows.Window
 
 	private Rectangle closeRect(int ox, int oy)
 	{
-		return new Rectangle(ox + WIN_W - 30, oy + 9, 20, 20);
+		return LofModal.closeRect(ox, oy, WIN_W);
 	}
 
 	private Rectangle cardRect(int ox, int oy, int i)
@@ -227,8 +225,8 @@ class LofRecruitOverlay extends Overlay implements LofWindows.Window
 		final boolean full = cap > 0 && count >= cap;
 		final boolean active = recruitable();
 
-		LofTheme.panel(g, ox, oy, WIN_W, WIN_H, WIN_ARC);
-		drawHeader(g, ox, oy, mouse);
+		LofModal.frame(g, ox, oy, WIN_W, WIN_H, TITLE_H, "Muster Companions",
+			"General Zo  ·  banner " + count + " of " + cap, mouse, true);
 
 		// tab strip: Muster (this window) | Regalia (opens the Commander's Regalia shop —
 		// the native shop window draws the real sanguine torva sprites)
@@ -276,7 +274,7 @@ class LofRecruitOverlay extends Overlay implements LofWindows.Window
 		}
 		else if (coins < RECRUIT_COST)
 		{
-			drawCentred(g, ox, oy + STRIP_Y + STRIP_H + 34, "A trained soldier costs " + fmt(RECRUIT_COST) + " coins.", new Color(255, 138, 117));
+			drawCentred(g, ox, oy + STRIP_Y + STRIP_H + 34, "A trained soldier costs " + LofModal.fmt(RECRUIT_COST) + " coins.", new Color(255, 138, 117));
 		}
 
 		// status + footer
@@ -285,44 +283,10 @@ class LofRecruitOverlay extends Overlay implements LofWindows.Window
 			? "Companions fight, train and carry your banner into the war."
 			: "A " + TITLE_NAMES[titleOrdinal] + " may field " + cap + " companion" + (cap > 1 ? "s" : "") + ". Manage them with the Companions panel.";
 		LofTheme.shadowText(g, status, ox + PAD, oy + WIN_H - 40, LofTheme.TEXT_DIM);
-		LofTheme.shadowText(g, "Coins carried: " + fmt(coins), ox + PAD, oy + WIN_H - 18, LofTheme.TEXT_DIM);
+		LofTheme.shadowText(g, "Coins carried: " + LofModal.fmt(coins), ox + PAD, oy + WIN_H - 18, LofTheme.TEXT_DIM);
 
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, oldAA == null ? RenderingHints.VALUE_ANTIALIAS_DEFAULT : oldAA);
 		return new Dimension(WIN_W, WIN_H);
-	}
-
-	private void drawHeader(Graphics2D g, int ox, int oy, Point mouse)
-	{
-		final Shape headerClip = g.getClip();
-		g.setClip(ox, oy, WIN_W, TITLE_H);
-		g.setColor(LofTheme.HEADER);
-		g.fillRoundRect(ox, oy, WIN_W, TITLE_H + WIN_ARC, WIN_ARC, WIN_ARC);
-		g.setClip(headerClip);
-		LofTheme.emberUnderline(g, ox + 1, oy + TITLE_H - 2, WIN_W - 2);
-
-		final BufferedImage logo = LofTheme.logo();
-		int titleX = ox + 14;
-		if (logo != null)
-		{
-			g.drawImage(logo, ox + 12, oy + 5, 28, 28, null);
-			titleX = ox + 46;
-		}
-		g.setFont(FontManager.getRunescapeBoldFont());
-		LofTheme.shadowText(g, "Muster Companions", titleX, oy + 25, LofTheme.GOLD);
-		g.setFont(FontManager.getRunescapeSmallFont());
-		final String sub = "General Zo  ·  banner " + count + " of " + cap;
-		LofTheme.shadowText(g, sub, ox + WIN_W - 44 - g.getFontMetrics().stringWidth(sub), oy + 24, LofTheme.TEXT_DIM);
-
-		final Rectangle cr = closeRect(ox, oy);
-		final boolean hov = cr.contains(mouse);
-		g.setColor(hov ? LofTheme.EMBER : new Color(255, 255, 255, 18));
-		g.fillRoundRect(cr.x, cr.y, cr.width, cr.height, 6, 6);
-		g.setColor(hov ? LofTheme.TEXT : LofTheme.TEXT_DIM);
-		final Stroke oldStroke = g.getStroke();
-		g.setStroke(new BasicStroke(1.6f));
-		g.drawLine(cr.x + 6, cr.y + 6, cr.x + cr.width - 7, cr.y + cr.height - 7);
-		g.drawLine(cr.x + cr.width - 7, cr.y + 6, cr.x + 6, cr.y + cr.height - 7);
-		g.setStroke(oldStroke);
 	}
 
 	private void drawCard(Graphics2D g, int ox, int oy, int i, boolean active, boolean hover)
@@ -359,7 +323,7 @@ class LofRecruitOverlay extends Overlay implements LofWindows.Window
 			ly += 14;
 		}
 
-		final String cost = fmt(RECRUIT_COST) + " coins";
+		final String cost = LofModal.fmt(RECRUIT_COST) + " coins";
 		LofTheme.shadowText(g, cost, r.x + (r.width - fm.stringWidth(cost)) / 2, r.y + r.height - 12,
 			active ? LofTheme.GOLD : LofTheme.TEXT_DIM);
 
@@ -522,8 +486,4 @@ class LofRecruitOverlay extends Overlay implements LofWindows.Window
 		return m == null ? new Point(-1, -1) : new Point(m.getX(), m.getY());
 	}
 
-	private static String fmt(long n)
-	{
-		return String.format("%,d", n);
-	}
 }

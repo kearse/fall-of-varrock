@@ -21,7 +21,6 @@ import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
-import java.awt.Shape;
 import java.awt.Stroke;
 import java.awt.image.BufferedImage;
 import javax.inject.Inject;
@@ -47,22 +46,26 @@ class LofRanksOverlay extends Overlay implements LofWindows.Window
 	static final int CLOSE = 1;
 	static final int BUY = 2;
 
-	// Design-system standard modal (480x400 — docs/overlay-design-system.md §6A).
+	// Design-system standard modal (480x324 — docs/overlay-design-system.md §6A).
 	private static final int WIN_W = LofModal.W;
 	private static final int WIN_H = LofModal.H;
-	private static final int WIN_ARC = 14;
-	private static final int TITLE_H = 38;
-	private static final int PAD = 14;
+	private static final int TITLE_H = LofModal.TITLE_H;
+	private static final int PAD = LofModal.PAD;
 
+	// Vertical budget for the 324-tall standard window, top to bottom: hero · coin bar · next-rank
+	// showcase · the 8-node ladder with its cost captions · the button band (H-44..H-12).
+	// The ladder used to sit at y 256-300 with captions on baseline 313 — i.e. the Lord/Minister/King
+	// nodes and every caption were drawn straight over the RANK UP button. Everything below the hero
+	// is pulled up so the ladder's captions finish clear of the button row.
 	private static final int HERO_Y = TITLE_H + 8;      // 46
-	private static final int BAR_LABEL_Y = 118;
-	private static final int BAR_Y = 124;
+	private static final int BAR_LABEL_Y = 112;
+	private static final int BAR_Y = 118;
 	private static final int BAR_H = 14;
-	private static final int CARD_Y = 150;
-	private static final int CARD_H = 88;
-	private static final int TRACK_LINE_Y = 278;        // connector line through the node centres
-	private static final int NODE_D = 44;               // node circle diameter
-	private static final int FOOT_BTN_H = 32;
+	private static final int CARD_Y = 140;
+	private static final int CARD_H = 76;
+	private static final int TRACK_LINE_Y = 241;        // connector line through the node centres
+	private static final int NODE_D = 38;               // node circle diameter
+	private static final int COST_LABEL_DY = 13;        // caption baseline below a node
 
 	private static final int COINS_ID = 995;            // item.coins_995
 
@@ -130,13 +133,12 @@ class LofRanksOverlay extends Overlay implements LofWindows.Window
 
 	private Rectangle closeRect(int ox, int oy)
 	{
-		return new Rectangle(ox + WIN_W - 30, oy + 9, 20, 20);
+		return LofModal.closeRect(ox, oy, WIN_W);
 	}
 
 	private Rectangle buyRect(int ox, int oy)
 	{
-		final int w = 250;
-		return new Rectangle(ox + WIN_W - PAD - w, oy + WIN_H - 12 - FOOT_BTN_H, w, FOOT_BTN_H);
+		return LofModal.footerButton(ox, oy, WIN_W, WIN_H, 250);
 	}
 
 	private Rectangle nodeRect(int ox, int oy, int i)
@@ -221,50 +223,15 @@ class LofRanksOverlay extends Overlay implements LofWindows.Window
 		// Publish the gate for the mouse thread in the same pass that draws it.
 		canBuyCached = canBuy;
 
-		LofTheme.panel(g, ox, oy, WIN_W, WIN_H, WIN_ARC);
-		drawHeader(g, ox, oy, mouse);
+		LofModal.frame(g, ox, oy, WIN_W, WIN_H, TITLE_H, "Feudal Ranks", "Duke Horacio", mouse, true);
 		drawHero(g, ox, oy, cur, next, coins, canBuy);
 		drawCoinBar(g, ox, oy, next, coins);
 		drawNextCard(g, ox, oy, nextIdx);
 		drawTrack(g, ox, oy, mouse);
-		drawFooter(g, ox, oy, next, coins, canBuy, mouse);
+		drawFooter(g, ox, oy, next, canBuy, mouse);
 
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, oldAA == null ? RenderingHints.VALUE_ANTIALIAS_DEFAULT : oldAA);
 		return new Dimension(WIN_W, WIN_H);
-	}
-
-	private void drawHeader(Graphics2D g, int ox, int oy, Point mouse)
-	{
-		final Shape headerClip = g.getClip();
-		g.setClip(ox, oy, WIN_W, TITLE_H);
-		g.setColor(LofTheme.HEADER);
-		g.fillRoundRect(ox, oy, WIN_W, TITLE_H + WIN_ARC, WIN_ARC, WIN_ARC);
-		g.setClip(headerClip);
-		LofTheme.emberUnderline(g, ox + 1, oy + TITLE_H - 2, WIN_W - 2);
-
-		final BufferedImage logo = LofTheme.logo();
-		int titleX = ox + 14;
-		if (logo != null)
-		{
-			g.drawImage(logo, ox + 12, oy + 5, 28, 28, null);
-			titleX = ox + 46;
-		}
-		g.setFont(FontManager.getRunescapeBoldFont());
-		LofTheme.shadowText(g, "Feudal Ranks", titleX, oy + 25, LofTheme.GOLD);
-		g.setFont(FontManager.getRunescapeSmallFont());
-		final String sub = "Duke Horacio";
-		LofTheme.shadowText(g, sub, ox + WIN_W - 44 - g.getFontMetrics().stringWidth(sub), oy + 24, LofTheme.TEXT_DIM);
-
-		final Rectangle cr = closeRect(ox, oy);
-		final boolean hov = cr.contains(mouse);
-		g.setColor(hov ? LofTheme.EMBER : new Color(255, 255, 255, 18));
-		g.fillRoundRect(cr.x, cr.y, cr.width, cr.height, 6, 6);
-		g.setColor(hov ? LofTheme.TEXT : LofTheme.TEXT_DIM);
-		final Stroke oldStroke = g.getStroke();
-		g.setStroke(new BasicStroke(1.6f));
-		g.drawLine(cr.x + 6, cr.y + 6, cr.x + cr.width - 7, cr.y + cr.height - 7);
-		g.drawLine(cr.x + cr.width - 7, cr.y + 6, cr.x + 6, cr.y + cr.height - 7);
-		g.setStroke(oldStroke);
 	}
 
 	private void drawHero(Graphics2D g, int ox, int oy, LofRanksData.Rank cur, LofRanksData.Rank next, long coins, boolean canBuy)
@@ -293,7 +260,7 @@ class LofRanksOverlay extends Overlay implements LofWindows.Window
 		}
 		else
 		{
-			pill = fmt(next.cost - coins) + " TO GO";
+			pill = LofModal.fmt(next.cost - coins) + " TO GO";
 			pillCol = LofTheme.TEXT_DIM;
 		}
 		final FontMetrics fm = g.getFontMetrics();
@@ -306,7 +273,9 @@ class LofRanksOverlay extends Overlay implements LofWindows.Window
 		g.setFont(FontManager.getRunescapeSmallFont());
 		final String label = next != null ? "COIN TOWARD " + next.name : "THE LADDER IS CLIMBED";
 		LofTheme.shadowText(g, label, ox + PAD, oy + BAR_LABEL_Y, LofTheme.GOLD_DIM);
-		final String value = next != null ? fmt(coins) + " / " + fmt(next.cost) : fmt(coins) + " coins carried";
+		final String value = next != null
+			? LofModal.fmt(coins) + " / " + LofModal.fmt(next.cost)
+			: LofModal.fmt(coins) + " coins carried";
 		LofTheme.shadowText(g, value, ox + WIN_W - PAD - g.getFontMetrics().stringWidth(value), oy + BAR_LABEL_Y, LofTheme.GOLD);
 
 		// track
@@ -420,7 +389,7 @@ class LofRanksOverlay extends Overlay implements LofWindows.Window
 			g.drawOval(r.x, r.y, NODE_D, NODE_D);
 			g.setStroke(oldStroke);
 
-			drawEmblemAt(g, r.x + (NODE_D - 30) / 2, r.y + (NODE_D - 30) / 2, 30, i, !held && !isNext);
+			drawEmblemAt(g, r.x + (NODE_D - 26) / 2, r.y + (NODE_D - 26) / 2, 26, i, !held && !isNext);
 
 			// held tick
 			if (held && !isCur)
@@ -429,15 +398,12 @@ class LofRanksOverlay extends Overlay implements LofWindows.Window
 				g.drawLine(r.x + NODE_D - 10, r.y + 4, r.x + NODE_D - 7, r.y + 7);
 				g.drawLine(r.x + NODE_D - 7, r.y + 7, r.x + NODE_D - 2, r.y - 1);
 			}
-			if (isCur)
-			{
-				final String you = "YOU";
-				LofTheme.shadowText(g, you, r.x + (NODE_D - fm.stringWidth(you)) / 2, r.y - 6, LofTheme.EMBER);
-			}
 
+			// The rank you hold is marked by its ember ring (2.2f, above) — the old "YOU" caption sat
+			// above the node and bled into the showcase card once the ladder moved up.
 			final String cost = LofRanksData.RANKS[i].costShort;
 			final Color costCol = isCur || isNext ? LofTheme.GOLD : LofTheme.TEXT_DIM;
-			LofTheme.shadowText(g, cost, r.x + (NODE_D - fm.stringWidth(cost)) / 2, r.y + NODE_D + 13, costCol);
+			LofTheme.shadowText(g, cost, r.x + (NODE_D - fm.stringWidth(cost)) / 2, r.y + NODE_D + COST_LABEL_DY, costCol);
 		}
 
 		if (hoveredNode >= 0 && hoveredNode != currentRank)
@@ -476,37 +442,16 @@ class LofRanksOverlay extends Overlay implements LofWindows.Window
 		}
 	}
 
-	private void drawFooter(Graphics2D g, int ox, int oy, LofRanksData.Rank next, long coins, boolean canBuy, Point mouse)
+	private void drawFooter(Graphics2D g, int ox, int oy, LofRanksData.Rank next, boolean canBuy, Point mouse)
 	{
-		g.setFont(FontManager.getRunescapeSmallFont());
-		LofTheme.shadowText(g, "Coins carried: " + fmt(coins), ox + PAD, oy + WIN_H - 22, LofTheme.TEXT_DIM);
-
+		// No status line here: the ladder's cost captions occupy that baseline, and the coin bar
+		// above already prints "carried / cost" right-aligned, so it was duplicate information.
 		if (next == null)
 		{
 			return; // King has nothing left to buy
 		}
 		final Rectangle b = buyRect(ox, oy);
-		final boolean hov = canBuy && b.contains(mouse);
-
-		if (canBuy)
-		{
-			// soft glow behind the lit button
-			g.setColor(LofTheme.alpha(LofTheme.GOLD, hov ? 60 : 38));
-			g.fillRoundRect(b.x - 3, b.y - 3, b.width + 6, b.height + 6, 12, 12);
-		}
-		g.setColor(canBuy ? LofTheme.alpha(LofTheme.GOLD, hov ? 60 : 30) : new Color(255, 255, 255, 8));
-		g.fillRoundRect(b.x, b.y, b.width, b.height, 8, 8);
-		final Stroke oldStroke = g.getStroke();
-		g.setStroke(new BasicStroke(1.4f));
-		g.setColor(canBuy ? LofTheme.GOLD : LofTheme.alpha(LofTheme.TEXT_DIM, 110));
-		g.drawRoundRect(b.x, b.y, b.width, b.height, 8, 8);
-		g.setStroke(oldStroke);
-
-		g.setFont(FontManager.getRunescapeFont());
-		final String label = "RANK UP — BECOME A " + next.name;
-		final FontMetrics fm = g.getFontMetrics();
-		LofTheme.shadowText(g, label, b.x + (b.width - fm.stringWidth(label)) / 2, b.y + b.height / 2 + 5,
-			canBuy ? LofTheme.GOLD : LofTheme.TEXT_DIM);
+		LofModal.button(g, b, "RANK UP — BECOME A " + next.name, LofTheme.GOLD, canBuy, b.contains(mouse));
 	}
 
 	// ---------------------------------- emblems ----------------------------------
@@ -572,8 +517,4 @@ class LofRanksOverlay extends Overlay implements LofWindows.Window
 		return m == null ? new Point(-1, -1) : new Point(m.getX(), m.getY());
 	}
 
-	private static String fmt(long n)
-	{
-		return String.format("%,d", n);
-	}
 }

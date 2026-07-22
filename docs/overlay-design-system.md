@@ -66,13 +66,18 @@ All text is drawn with `LofTheme.shadowText(...)` (1px black shadow) so it stays
 
 | Constant | Value | Meaning |
 | --- | --- | --- |
-| Window corner `ARC` | 14 | panel rounding |
-| Title bar height | 38 | header strip |
-| Padding `PAD` | 12 | window inset |
+| Window corner `LofModal.ARC` | 14 | panel rounding |
+| Title bar height `LofModal.TITLE_H` | 38 | header strip |
+| Padding `LofModal.PAD` | 14 | window inset |
 | Row / chip height | 22 | list row, checkbox chip |
-| Button height | 32 | footer buttons |
+| Button height `LofModal.FOOTER_BTN_H` | 32 | footer buttons |
+| Footer bottom gap `LofModal.FOOTER_GAP` | 12 | button row → panel edge |
 | Small rounding | 6–8 | chips, buttons, slots |
 | Hairline stroke | 1.4f | button borders, close ✕ |
+
+**Take these from `LofModal`, don't re-declare them.** Padding in particular was documented as 12
+while the code said 14, and four windows hard-coded their own 12 — so "the standard inset" meant
+three different things at once.
 
 Antialiasing: turn it **on** at the top of `render` and **restore the prior hint** before returning
 (see any current overlay).
@@ -81,21 +86,57 @@ Antialiasing: turn it **on** at the top of `render` and **restore the prior hint
 
 ## 5. Window anatomy (framed modals)
 
-Build every framed window the same way:
+**Don't hand-roll any of this — call `LofModal`.** One call builds the whole frame:
+
+```java
+LofModal.frame(g, ox, oy, WIN_W, WIN_H, TITLE_H, "Title", "subtitle", mouse, /* showClose */ true);
+```
+
+`LofModal.header(...)` draws the header alone, for the two windows that must own their panel (the
+character-style window punches a portrait hole through its; the shop panel is sized to the native
+shop widget). Everything is parameterised by window size — the earlier `frame()` hardcoded 480×324,
+which is exactly why the 340/492/512-wide windows copied it and the copies drifted.
+
+The anatomy it gives you:
 
 1. **Panel** — `LofTheme.panel(g, ox, oy, w, h, ARC)` (drop shadow + rounded body + ember border).
    The body is **fully opaque** — our windows never let the game show through them.
-2. **Header** — fill the top `38px` with `HEADER` (clip to the title strip), then
-   `LofTheme.emberUnderline(...)` a 2px fading ember line under it. Draw the **shield logo**
-   (`LofTheme.logo()`, 28px, at `ox+12, oy+5`) then the **gold bold title** at `ox+46`. Optional
-   right-aligned **subtitle** in `TEXT_DIM` (e.g. "Basics • 7 destinations").
-3. **Close** — a `20px` rounded square top-right (`ox + w-30, oy+9`) with a drawn ✕; ember on hover.
-   (Windows opened by a server flow — duel, stake — use a **Decline** button instead of a close ✕.)
+2. **Header** — the top `38px` in `HEADER` (clipped), a 2px fading `emberUnderline` beneath, the
+   **shield logo** (28px at `ox+12`), the **gold bold title**, and an optional right-aligned
+   **subtitle** in `TEXT_DIM` (e.g. "Basics • 7 destinations"). The subtitle is **truncated against
+   the title's measured end**, so the two can never collide on a narrow window.
+3. **Close** — a `20px` rounded square top-right (`LofModal.closeRect(ox, oy, w)`) with a drawn ✕;
+   ember on hover. Pass `showClose=false` for windows opened by a server flow (duel, stake) — they
+   are left via a **Decline** button instead.
 4. **Body** — the content region, inset by `PAD`.
-5. **Footer** — right-aligned action buttons on the bottom row: **Accept = `GOLD`**, **Decline /
-   destructive = `EMBER`**, secondary (Load Last, etc.) = `GOLD_DIM`, left-aligned.
-6. **Status line** — one line of `getRunescapeSmallFont()` just above the footer; green when a
-   one-sided accept is pending, else `TEXT_DIM`.
+5. **Footer band** — see §5A. Never lay this out by hand.
+
+### 5A. The footer band — the one rule that keeps text off buttons
+
+Every modal's footer is **one shared geometry**, so a status string and an action button can never
+be drawn on top of each other:
+
+| Element | Where | Helper |
+| --- | --- | --- |
+| Action button row | `y = H-44 .. H-12` | `LofModal.footerButton(ox, oy, w, h, btnW)` (right-aligned) |
+| Left-aligned chips | same row | `LofModal.footerChip(ox, oy, h, i, chipW, gap)` |
+| Status line | baseline `H-56`, one row **above** the buttons | `LofModal.statusLine(...)` |
+
+**Rule: never draw text inside the button row.** This was the single most common defect in the
+client — dice printed its coin balance across ROLL THE DIE, mire printed its hint across CLAIM,
+forge printed its confirm warning across FORGE IT, and the ranks ladder drew three rank emblems and
+all eight cost captions over RANK UP. Windows had picked eight different footer baselines (`H-18`
+through `H-56`) with no shared reference. `statusLine` puts the text on the shared baseline and
+truncates it to the panel width; `footerButton` puts the button on the shared row. Use both.
+
+(A window with **no** footer button may use that band for text — bonds and recruit do. The ban is on
+text where a control is.)
+
+Colours: **Accept = `GOLD`**, **Decline / destructive = `EMBER`**, secondary (Load Last, etc.) =
+`GOLD_DIM`. The status line is green when a one-sided accept is pending, else `TEXT_DIM`.
+
+**Content must fit above the band.** If a fixed-size table doesn't (the mire's 7 loot rows, the
+stake's 4×7 grids, the ranks ladder), tighten the rows — do not push content down into the footer.
 
 ---
 
@@ -191,7 +232,16 @@ Reusable pieces — reach for these before inventing a new one. Metrics above.
   amulet/ammo; weapon/body/shield; legs; hands/boots/ring); a forbidden slot is ember-filled with a ✕.
 - **Buttons** — rounded, hairline accent border, accent-coloured centred label; fill brightens on
   hover / when active. Accept=`GOLD`, Decline=`EMBER`, secondary=`GOLD_DIM`.
-- **Scrollbar** — 5px `alpha(EMBER,190)` rounded thumb on an `alpha(white,14)` track.
+- **Scrollbar** — 5px `alpha(EMBER,190)` rounded thumb on an `alpha(white,14)` track
+  (`LofModal.scrollbar` + `clampScroll`; five overlays used to inline their own copy).
+- **Text fitting** (`LofModal.fit(fm, text, maxW)`) — ellipsis truncation. Four overlays each carried
+  a private copy, and the ones that *didn't* were exactly the ones whose long names ran into the
+  value beside them. Any string whose length you don't control goes through this.
+- **Label + value row** (`LofModal.rowText`) — the standard "name on the left, number/pill on the
+  right" row. It measures the value and truncates the label against it, keeping a 10px gap. Use it
+  for every list row rather than a bare `shadowText` pair.
+- **Number formatting** — `LofModal.fmt` (1,234,567) and `LofModal.compact` (12.4k / 1.85M) for
+  tight cells. Don't re-declare either.
 - **Circular gauge** (`lofdials` row) — `PANEL_OPAQUE` disc, track ring `alpha(white,28)`, value arc from
   12-o'clock clockwise; ember while filling, gold + pulse when a threshold is met, `LAVA` at the top tier.
   The dial row draws several of these right-anchored so they **stack leftward** (supply pinned far right,
@@ -299,7 +349,14 @@ Reusable pieces — reach for these before inventing a new one. Metrics above.
 | `lofstyle` | Modal (portrait cutout) | 480×420, viewport-centred | varp 4632 (open|female) + `::lofstyle` — a see-through hole in the panel centre frames the in-world model as the live preview; the server hides worn gear while open (`STYLE_PREVIEW_ATTR`) and `::lofstyle close`/`done` restores it |
 | `lofduel` (rules) | Modal | 480×324 | varp 4630 + `::duel` |
 | `lofstake` | Modal (inventory-clear) | 480×324, viewport-left | read iface 335 + `::stake` |
+| `lofge` | Modal (offer board + setup) | 480×324 | plugin state + `::lofge` |
+| `lofcommands` | Modal (tabbed list) | 480×324, scrolls | `FOV_CMDS:` CONSOLE stream + `::lofcmds` |
+| `lofvote` | Modal (card grid) | 492×auto, scrolls | plugin toplist fetch + browser open |
+| `lofkit` | Modal (loadout editor) | 512×324 * | varps 4640-4679 + `::kit` |
+| `lofwarspoils` | Modal (loot list) | 340×320, scrolls | `FOV_SPOILS` CONSOLE + `::lofspoils` |
 | `lofdials` | HUD dial row | content, ABOVE_CHATBOX_RIGHT | varps 4616 slayer · 4601 progress · 4609 supplies |
+| `lofbuild` | HUD stamp | content, TOP_LEFT | plugin build id |
+| `lofquests` | Scene + minimap arrows | in-world | varps 4610-4612 · 4617 · 4633 |
 | `lofalerts` | HUD banner | content, TOP_CENTER | plugin/varp 4600 |
 | `loflms` | HUD panel | content, TOP_RIGHT | varp 4608 |
 | `lofannouncements` | Ticker | content, above chat (absolute) | BROADCAST chat |
@@ -317,10 +374,13 @@ scrolls (`LofModal.clampScroll`/`scrollbar` + a wheel listener) rather than grow
 
 ## 10. New-overlay checklist
 
-1. Import `LofTheme`; use its palette, `logo()`, and helpers — no hand-rolled colours/metrics.
+1. Import `LofTheme`; use its palette, `logo()`, and helpers — no hand-rolled colours/metrics. Take
+   `PAD`/`TITLE_H`/`ARC`/`FOOTER_*` from `LofModal` rather than re-declaring them.
 2. Pick a category (§6): standard 480×324 framed modal, or content-sized corner HUD. Place a modal
    with `LofModal.originX(client, WIN_W)` / `originY(client, WIN_H)` — never hand-roll the origin.
-3. Header per §5 (shield + gold title + ember underline); footer buttons Accept=gold / Decline=ember.
+3. **Chrome comes from `LofModal.frame`/`header` — never hand-roll a header, close ✕ or button.**
+   Footer geometry from `footerButton`/`footerChip`/`statusLine` (§5A): Accept=gold, Decline=ember.
+   Every variable-length string goes through `LofModal.fit` or `rowText`.
 4. State channel per §8: packed varp (document the bits + claim a free varp id in §8) **or** read an
    existing interface's widgets (null-guarded).
 5. Actions via a `::cmd` token + a server command in `MessagePublicHandler`.

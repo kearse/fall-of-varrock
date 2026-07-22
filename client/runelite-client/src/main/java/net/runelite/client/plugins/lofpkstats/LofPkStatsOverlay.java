@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.inject.Inject;
 import net.runelite.api.Client;
+import net.runelite.client.plugins.loftheme.LofTheme;
 import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.overlay.Overlay;
 import net.runelite.client.ui.overlay.OverlayLayer;
@@ -99,10 +100,7 @@ class LofPkStatsOverlay extends Overlay
 		int y = TOP_OFFSET + fm.getAscent();
 		for (String line : lines)
 		{
-			graphics.setColor(Color.BLACK);
-			graphics.drawString(line, 1, y + 1);
-			graphics.setColor(YELLOW);
-			graphics.drawString(line, 0, y);
+			LofTheme.shadowText(graphics, line, 0, y, YELLOW);
 			y += lineH;
 		}
 

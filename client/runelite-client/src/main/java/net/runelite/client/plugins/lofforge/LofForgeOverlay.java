@@ -61,11 +61,13 @@ class LofForgeOverlay extends Overlay implements LofWindows.Window
 	private static final int ROWS_Y = TABS_Y + TAB_H + 8;
 	private static final int ROW_H = 34;
 	private static final int ROW_STEP = 38;
-	private static final int CHECK_H = 96;
+	private static final int CHECK_H = 92;
 	// The recipe list scrolls inside a clipped viewport; the material checklist is pinned at a fixed
 	// spot above the footer (not floated under the rows), so the window fits the short standard height.
-	private static final int LIST_TOP = ROWS_Y;                             // 78
-	private static final int CHECK_Y = LofModal.H - 12 - 32 - 8 - CHECK_H;  // fixed, above the footer
+	// Anchored off the shared status baseline, so the checklist, the status line and the FORGE IT
+	// button stack without touching — the confirm warning used to be drawn across the button itself.
+	private static final int LIST_TOP = ROWS_Y;                                  // 78
+	private static final int CHECK_Y = LofModal.statusY(LofModal.H) - 12 - CHECK_H; // above the status line
 	private static final int LIST_BOTTOM = CHECK_Y - 6;
 	private static final int LIST_H = LIST_BOTTOM - LIST_TOP;
 
@@ -214,7 +216,7 @@ class LofForgeOverlay extends Overlay implements LofWindows.Window
 
 	private Rectangle forgeRect(int ox, int oy)
 	{
-		return new Rectangle(ox + LofModal.W - LofModal.PAD - 170, oy + LofModal.H - 12 - 32, 170, 32);
+		return LofModal.footerButton(ox, oy, 170);
 	}
 
 	int hitTest(Point p)
@@ -318,12 +320,13 @@ class LofForgeOverlay extends Overlay implements LofWindows.Window
 			g.setFont(FontManager.getRunescapeFont());
 			LofTheme.shadowText(g, "->", rr.x + 42, rr.y + 22, LofTheme.EMBER);
 			drawItem(g, rr.x + 62, rr.y + 3, r.outId, 30, 27);
-			LofTheme.shadowText(g, itemName(r.outId), rr.x + 100, rr.y + 22, sel ? LofTheme.GOLD : LofTheme.TEXT);
+			// Result name left, cost summary right — the name is fitted against the cost so a long
+			// item can never run into it.
 			g.setFont(FontManager.getRunescapeSmallFont());
 			final String cost = r.comm + " comm · " + r.bars + " bars · " + LofModal.fmt(r.coins)
 				+ (r.embers > 0 ? " · " + r.embers + " ember" : "");
-			final FontMetrics fm = g.getFontMetrics();
-			LofTheme.shadowText(g, cost, rr.x + rr.width - 10 - fm.stringWidth(cost), rr.y + 22, LofTheme.TEXT_DIM);
+			LofModal.rowText(g, rr.x + 100, rr.y + 22, rr.width - 100 - 10, itemName(r.outId), cost,
+				sel ? LofTheme.GOLD : LofTheme.TEXT, LofTheme.TEXT_DIM);
 		}
 		g.setClip(listClip);
 		LofModal.scrollbar(g, ox + LofModal.W - 10, oy + LIST_TOP, LIST_H, contentH, scroll);
@@ -341,7 +344,7 @@ class LofForgeOverlay extends Overlay implements LofWindows.Window
 			g.setFont(FontManager.getRunescapeSmallFont());
 			LofTheme.shadowText(g, "FORGING: " + itemName(sel.outId).toUpperCase(), cr.x + 10, cr.y + 15, LofTheme.GOLD_DIM);
 
-			int ly = cr.y + 32;
+			int ly = cr.y + 30;
 			ly = checkLine(g, cr, ly, sel.baseId, itemName(sel.baseId), sel.baseHave, 1);
 			ly = checkLine(g, cr, ly, commId, "Commendations (untradeable — earned marching)", commHave, sel.comm);
 			ly = checkLine(g, cr, ly, barId, "Runite bars", barsHave, sel.bars);
@@ -352,9 +355,9 @@ class LofForgeOverlay extends Overlay implements LofWindows.Window
 			}
 		}
 
-		g.setFont(FontManager.getRunescapeSmallFont());
-		LofTheme.shadowText(g, armed ? "This consumes the base piece and materials — click again to commit."
-			: "A success is announced to the whole realm.", ox + LofModal.PAD, oy + LofModal.H - 22,
+		LofModal.statusLine(g, ox, oy,
+			armed ? "This consumes the base piece and materials — click again to commit."
+				: "A success is announced to the whole realm.",
 			armed ? LofTheme.LAVA : LofTheme.TEXT_DIM);
 		final boolean can = satisfied(sel);
 		LofModal.button(g, forgeRect(ox, oy), armed ? "CONFIRM — FORGE IT" : "FORGE IT",
@@ -367,14 +370,11 @@ class LofForgeOverlay extends Overlay implements LofWindows.Window
 	private int checkLine(Graphics2D g, Rectangle cr, int y, int itemId, String label, int have, int need)
 	{
 		drawItem(g, cr.x + 8, y - 12, itemId, 18, 16);
-		LofTheme.shadowText(g, label, cr.x + 32, y, LofTheme.TEXT);
 		final boolean ok = have >= need;
-		final String status = ok ? "OK  " + LofModal.fmt(have) + " / " + LofModal.fmt(need)
-			: "X  " + LofModal.fmt(have) + " / " + LofModal.fmt(need);
-		final FontMetrics fm = g.getFontMetrics();
-		LofTheme.shadowText(g, status, cr.x + cr.width - 10 - fm.stringWidth(status), y,
+		final String status = (ok ? "OK  " : "X  ") + LofModal.fmt(have) + " / " + LofModal.fmt(need);
+		LofModal.rowText(g, cr.x + 32, y, cr.width - 32 - 10, label, status, LofTheme.TEXT,
 			ok ? new Color(110, 205, 110) : new Color(255, 138, 117));
-		return y + 16;
+		return y + 15;
 	}
 
 	private void drawItem(Graphics2D g, int x, int y, int itemId, int w, int h)

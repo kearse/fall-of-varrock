@@ -11,7 +11,6 @@
  */
 package net.runelite.client.plugins.lofteleports;
 
-import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FontMetrics;
@@ -20,7 +19,6 @@ import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.Shape;
-import java.awt.Stroke;
 import java.awt.image.BufferedImage;
 import java.util.List;
 import javax.inject.Inject;
@@ -44,13 +42,12 @@ class LofTeleportsOverlay extends Overlay implements LofWindows.Window
 	static final int TAB_BASE = 100;
 	static final int ROW_BASE = 1000;
 
-	// Design-system standard modal (480x400 — docs/overlay-design-system.md); viewport-anchored so
+	// Design-system standard modal (480x324 — docs/overlay-design-system.md §6A); viewport-anchored so
 	// the window clears the inventory/tab column in fixed mode (it used to be 560 wide, canvas-
 	// centred, which draped over the side panel once modals moved to ALWAYS_ON_TOP).
 	private static final int WIN_W = LofModal.W;
 	private static final int WIN_H = LofModal.H;
-	private static final int WIN_ARC = 14;
-	private static final int TITLE_H = 38;
+	private static final int TITLE_H = LofModal.TITLE_H;
 	private static final int TAB_X = 10;
 	private static final int TAB_W = 122;
 	private static final int TAB_Y0 = TITLE_H + 14;
@@ -60,14 +57,15 @@ class LofTeleportsOverlay extends Overlay implements LofWindows.Window
 	private static final int LIST_W = WIN_W - LIST_X - 10;     // 326
 	private static final int SCROLLBAR_W = 5;
 	private static final int VP_TOP = TITLE_H + 32;            // 70, below the column headers
-	private static final int VP_BOTTOM = WIN_H - 12;
-	private static final int VP_H = VP_BOTTOM - VP_TOP;        // 318
+	private static final int VP_BOTTOM = WIN_H - 12;           // 312
+	private static final int VP_H = VP_BOTTOM - VP_TOP;        // 242
 	private static final int CARD_X = LIST_X + 2;
 	private static final int CARD_W = LIST_W - SCROLLBAR_W - 8;
 	private static final int CARD_H = 26;
 	private static final int STEP = 30;
+	/** Space the "FREE" tag and the danger pill reserve on the right of a destination row. */
+	private static final int ROW_TAIL_W = 120;
 
-	private static final Color CLOSE_HOVER = LofTheme.EMBER;
 	private static final Color FREE_GREEN = new Color(110, 205, 110);
 
 	private final Client client;
@@ -150,7 +148,7 @@ class LofTeleportsOverlay extends Overlay implements LofWindows.Window
 		return INSIDE;
 	}
 
-	private Rectangle closeRect(int ox, int oy) { return new Rectangle(ox + WIN_W - 30, oy + 9, 20, 20); }
+	private Rectangle closeRect(int ox, int oy) { return LofModal.closeRect(ox, oy, WIN_W); }
 	private Rectangle tabRect(int ox, int oy, int t) { return new Rectangle(ox + TAB_X, oy + TAB_Y0 + t * TAB_GAP, TAB_W, TAB_H); }
 
 	@Override
@@ -173,42 +171,9 @@ class LofTeleportsOverlay extends Overlay implements LofWindows.Window
 		final int ox = originX(), oy = originY();
 		final Point mouse = mousePoint();
 
-		LofTheme.panel(g, ox, oy, WIN_W, WIN_H, WIN_ARC);
-
-		// header bar with ember accent underline
-		final Shape headerClip = g.getClip();
-		g.setClip(ox, oy, WIN_W, TITLE_H);
-		g.setColor(LofTheme.HEADER);
-		g.fillRoundRect(ox, oy, WIN_W, TITLE_H + WIN_ARC, WIN_ARC, WIN_ARC);
-		g.setClip(headerClip);
-		LofTheme.emberUnderline(g, ox + 1, oy + TITLE_H - 2, WIN_W - 2);
-
-		// shield logo + title
-		final BufferedImage logo = LofTheme.logo();
-		int titleX = ox + 14;
-		if (logo != null)
-		{
-			g.drawImage(logo, ox + 12, oy + 5, 28, 28, null);
-			titleX = ox + 46;
-		}
-		g.setFont(FontManager.getRunescapeBoldFont());
-		LofTheme.shadowText(g, "Teleport Portal", titleX, oy + 25, LofTheme.GOLD);
-		g.setFont(FontManager.getRunescapeSmallFont());
 		final List<LofTeleportsData.Category> cats = LofTeleportsData.CATEGORIES;
-		final String sub = cats.get(activeTab).name + "  •  " + rowCount() + " destinations";
-		LofTheme.shadowText(g, sub, ox + WIN_W - 44 - g.getFontMetrics().stringWidth(sub), oy + 24, LofTheme.TEXT_DIM);
-
-		// close button
-		final Rectangle cr = closeRect(ox, oy);
-		final boolean closeHov = cr.contains(mouse);
-		g.setColor(closeHov ? CLOSE_HOVER : new Color(255, 255, 255, 18));
-		g.fillRoundRect(cr.x, cr.y, cr.width, cr.height, 6, 6);
-		g.setColor(closeHov ? LofTheme.TEXT : LofTheme.TEXT_DIM);
-		final Stroke oldStroke = g.getStroke();
-		g.setStroke(new BasicStroke(1.6f));
-		g.drawLine(cr.x + 6, cr.y + 6, cr.x + cr.width - 7, cr.y + cr.height - 7);
-		g.drawLine(cr.x + cr.width - 7, cr.y + 6, cr.x + 6, cr.y + cr.height - 7);
-		g.setStroke(oldStroke);
+		LofModal.frame(g, ox, oy, WIN_W, WIN_H, TITLE_H,
+			"Teleport Portal", cats.get(activeTab).name + "  •  " + rowCount() + " destinations", mouse, true);
 
 		// tab rail
 		g.setColor(LofTheme.ROW);
@@ -267,29 +232,20 @@ class LofTeleportsOverlay extends Overlay implements LofWindows.Window
 			drawIcon(g, cx + 6, cy + 4, d.icon);
 
 			final int ty = cy + CARD_H / 2 + 4;
-			LofTheme.shadowText(g, d.name, cx + 32, ty, d.built ? LofTheme.TEXT : LofTheme.TEXT_DIM);
+			// The name is fitted to the space before the FREE tag / danger pill, so a long
+			// destination can never run into them.
+			LofTheme.shadowText(g, LofModal.fit(fm, d.name, CARD_W - ROW_TAIL_W - 32 - 8), cx + 32, ty,
+				d.built ? LofTheme.TEXT : LofTheme.TEXT_DIM);
 			if (d.built)
 			{
 				// FREE sits between the longest names and the danger pill (narrower 480 frame).
-				LofTheme.shadowText(g, "FREE", cx + CARD_W - 120, ty, FREE_GREEN);
+				LofTheme.shadowText(g, "FREE", cx + CARD_W - ROW_TAIL_W, ty, FREE_GREEN);
 			}
 			LofTheme.pill(g, fm, d.danger, cx + CARD_W - 10, ty, d.built ? d.colour : LofTheme.TEXT_DIM);
 		}
 		g.setClip(oldClip);
 
-		// scrollbar
-		final int ms = maxScroll();
-		if (ms > 0)
-		{
-			final int sbX = ox + LIST_X + LIST_W - SCROLLBAR_W;
-			g.setColor(new Color(255, 255, 255, 14));
-			g.fillRoundRect(sbX, oy + VP_TOP, SCROLLBAR_W, VP_H, SCROLLBAR_W, SCROLLBAR_W);
-			final int content = rowCount() * STEP;
-			final int thumbH = Math.max(24, VP_H * VP_H / content);
-			final int thumbY = oy + VP_TOP + (VP_H - thumbH) * scroll / ms;
-			g.setColor(LofTheme.alpha(LofTheme.EMBER, 190));
-			g.fillRoundRect(sbX, thumbY, SCROLLBAR_W, thumbH, SCROLLBAR_W, SCROLLBAR_W);
-		}
+		LofModal.scrollbar(g, ox + LIST_X + LIST_W - SCROLLBAR_W, oy + VP_TOP, VP_H, rowCount() * STEP, scroll);
 
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, oldAA == null ? RenderingHints.VALUE_ANTIALIAS_DEFAULT : oldAA);
 		return new Dimension(WIN_W, WIN_H);

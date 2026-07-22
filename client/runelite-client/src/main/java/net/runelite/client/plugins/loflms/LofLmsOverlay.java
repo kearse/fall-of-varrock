@@ -13,6 +13,7 @@ import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import javax.inject.Inject;
 import net.runelite.api.Client;
+import net.runelite.client.plugins.loftheme.LofModal;
 import net.runelite.client.plugins.loftheme.LofTheme;
 import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.overlay.Overlay;
@@ -98,23 +99,12 @@ class LofLmsOverlay extends Overlay
 
 	private void drawCentered(Graphics2D g, FontMetrics fm, String text, int y, Color color)
 	{
-		final int x = (W - fm.stringWidth(text)) / 2;
-		g.setColor(Color.BLACK);
-		g.drawString(text, x + 1, y + 1);
-		g.setColor(color);
-		g.drawString(text, x, y);
+		LofTheme.shadowText(g, text, (W - fm.stringWidth(text)) / 2, y, color);
 	}
 
+	/** Label left, value right — the label is truncated against the value by the shared helper. */
 	private void drawPair(Graphics2D g, FontMetrics fm, String label, String value, int y, Color valueColor)
 	{
-		g.setColor(Color.BLACK);
-		g.drawString(label, PAD + 1, y + 1);
-		g.setColor(TEXT);
-		g.drawString(label, PAD, y);
-		final int vx = W - PAD - fm.stringWidth(value);
-		g.setColor(Color.BLACK);
-		g.drawString(value, vx + 1, y + 1);
-		g.setColor(valueColor);
-		g.drawString(value, vx, y);
+		LofModal.rowText(g, PAD, y, W - PAD * 2, label, value, TEXT, valueColor);
 	}
 }

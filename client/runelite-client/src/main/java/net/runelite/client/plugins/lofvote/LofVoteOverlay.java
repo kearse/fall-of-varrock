@@ -15,7 +15,6 @@
  */
 package net.runelite.client.plugins.lofvote;
 
-import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FontMetrics;
@@ -25,7 +24,6 @@ import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.Shape;
-import java.awt.Stroke;
 import java.awt.image.BufferedImage;
 import java.util.List;
 import javax.inject.Inject;
@@ -49,9 +47,8 @@ class LofVoteOverlay extends Overlay
 
 	// framed-modal standard (docs/overlay-design-system.md §6A), sized for fixed mode.
 	private static final int WIN_W = 492;
-	private static final int WIN_ARC = 14;
-	private static final int TITLE_H = 38;
-	private static final int PAD = 12;
+	private static final int TITLE_H = LofModal.TITLE_H;
+	private static final int PAD = LofModal.PAD;
 	private static final int GAP = 10;
 	private static final int COLS = 3;
 	private static final int CARD_W = (WIN_W - 2 * PAD - (COLS - 1) * GAP) / COLS; // 149
@@ -64,7 +61,6 @@ class LofVoteOverlay extends Overlay
 	private static final int MAX_GRID_ROWS_VISIBLE = 2; // fixed-mode height budget
 	private static final int SCROLLBAR_W = 5;
 
-	private static final Color CLOSE_HOVER = LofTheme.EMBER;
 	private static final Color GREEN = new Color(74, 164, 88);
 	private static final Color GREEN_HI = new Color(94, 190, 108);
 
@@ -189,7 +185,7 @@ class LofVoteOverlay extends Overlay
 
 	private Rectangle closeRect(int ox, int oy)
 	{
-		return new Rectangle(ox + WIN_W - 30, oy + 9, 20, 20);
+		return LofModal.closeRect(ox, oy, WIN_W);
 	}
 
 	private Rectangle cardRect(int ox, int oy, int i)
@@ -228,38 +224,8 @@ class LofVoteOverlay extends Overlay
 		final int winH = winH();
 		final Point mouse = mousePoint();
 
-		LofTheme.panel(g, ox, oy, WIN_W, winH, WIN_ARC);
-
-		// header bar with ember accent underline
-		final Shape headerClip = g.getClip();
-		g.setClip(ox, oy, WIN_W, TITLE_H);
-		g.setColor(LofTheme.HEADER);
-		g.fillRoundRect(ox, oy, WIN_W, TITLE_H + WIN_ARC, WIN_ARC, WIN_ARC);
-		g.setClip(headerClip);
-		LofTheme.emberUnderline(g, ox + 1, oy + TITLE_H - 2, WIN_W - 2);
-
-		// shield logo + title
-		final BufferedImage shield = LofTheme.logo();
-		int titleX = ox + 14;
-		if (shield != null)
-		{
-			g.drawImage(shield, ox + 12, oy + 5, 28, 28, null);
-			titleX = ox + 46;
-		}
-		g.setFont(FontManager.getRunescapeBoldFont());
-		LofTheme.shadowText(g, "Vote for Fall of Varrock", titleX, oy + 25, LofTheme.GOLD);
-
-		// close button
-		final Rectangle cr = closeRect(ox, oy);
-		final boolean closeHov = cr.contains(mouse);
-		g.setColor(closeHov ? CLOSE_HOVER : new Color(255, 255, 255, 18));
-		g.fillRoundRect(cr.x, cr.y, cr.width, cr.height, 6, 6);
-		g.setColor(closeHov ? LofTheme.TEXT : LofTheme.TEXT_DIM);
-		final Stroke oldStroke = g.getStroke();
-		g.setStroke(new BasicStroke(1.4f));
-		g.drawLine(cr.x + 6, cr.y + 6, cr.x + cr.width - 7, cr.y + cr.height - 7);
-		g.drawLine(cr.x + cr.width - 7, cr.y + 6, cr.x + 6, cr.y + cr.height - 7);
-		g.setStroke(oldStroke);
+		LofModal.frame(g, ox, oy, WIN_W, winH, TITLE_H, "Vote for Fall of Varrock",
+			sites.size() + " toplists", mouse, true);
 
 		// site cards (clipped to the grid viewport)
 		final Shape oldClip = g.getClip();
@@ -276,19 +242,7 @@ class LofVoteOverlay extends Overlay
 		}
 		g.setClip(oldClip);
 
-		// scrollbar
-		final int ms = maxScroll();
-		if (ms > 0)
-		{
-			final int sbX = ox + WIN_W - PAD + 3;
-			g.setColor(new Color(255, 255, 255, 14));
-			g.fillRoundRect(sbX, oy + VP_TOP, SCROLLBAR_W, vpH(), SCROLLBAR_W, SCROLLBAR_W);
-			final int content = gridRows() * ROW_STEP - GAP;
-			final int thumbH = Math.max(24, vpH() * vpH() / content);
-			final int thumbY = oy + VP_TOP + (vpH() - thumbH) * scroll / ms;
-			g.setColor(LofTheme.alpha(LofTheme.EMBER, 190));
-			g.fillRoundRect(sbX, thumbY, SCROLLBAR_W, thumbH, SCROLLBAR_W, SCROLLBAR_W);
-		}
+		LofModal.scrollbar(g, ox + WIN_W - PAD + 3, oy + VP_TOP, vpH(), gridRows() * ROW_STEP - GAP, scroll);
 
 		// footer hint
 		g.setFont(FontManager.getRunescapeSmallFont());
@@ -345,7 +299,7 @@ class LofVoteOverlay extends Overlay
 		// site name
 		g.setFont(FontManager.getRunescapeFont());
 		final FontMetrics fm = g.getFontMetrics();
-		LofTheme.shadowText(g, ellipsise(fm, s.name, card.width - 16),
+		LofTheme.shadowText(g, LofModal.fit(fm, s.name, card.width - 16),
 			card.x + (card.width - Math.min(fm.stringWidth(s.name), card.width - 16)) / 2,
 			card.y + 68, onCooldown ? LofTheme.TEXT_DIM : LofTheme.TEXT);
 
@@ -381,26 +335,6 @@ class LofVoteOverlay extends Overlay
 	{
 		final int h = mins / 60, m = mins % 60;
 		return h > 0 ? h + "h " + m + "m" : m + "m";
-	}
-
-	/** Truncate text with a trailing "…" so it fits within maxW pixels. */
-	private static String ellipsise(FontMetrics fm, String text, int maxW)
-	{
-		if (maxW <= 0)
-		{
-			return "";
-		}
-		if (fm.stringWidth(text) <= maxW)
-		{
-			return text;
-		}
-		final int ellW = fm.stringWidth("…");
-		int end = text.length();
-		while (end > 0 && fm.stringWidth(text.substring(0, end)) + ellW > maxW)
-		{
-			end--;
-		}
-		return text.substring(0, end).stripTrailing() + "…";
 	}
 
 	private Point mousePoint()

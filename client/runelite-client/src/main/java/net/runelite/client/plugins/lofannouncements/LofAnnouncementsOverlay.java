@@ -30,6 +30,7 @@ import javax.inject.Inject;
 import net.runelite.api.Client;
 import net.runelite.api.widgets.ComponentID;
 import net.runelite.api.widgets.Widget;
+import net.runelite.client.plugins.loftheme.LofModal;
 import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.overlay.Overlay;
 import net.runelite.client.ui.overlay.OverlayLayer;
@@ -95,7 +96,7 @@ class LofAnnouncementsOverlay extends Overlay
 		final String[] fitted = new String[raw.size()];
 		for (int i = 0; i < raw.size(); i++)
 		{
-			final String text = ellipsise(fm, Text.removeTags(raw.get(i)), cap);
+			final String text = LofModal.fit(fm, Text.removeTags(raw.get(i)), cap);
 			fitted[i] = text;
 			w = Math.max(w, fm.stringWidth(text));
 		}
@@ -150,23 +151,6 @@ class LofAnnouncementsOverlay extends Overlay
 		// Classic fixed-mode fallback: ~519x165 in the bottom-left of the canvas.
 		final int w = Math.min(519, client.getCanvasWidth());
 		return new Rectangle(0, client.getCanvasHeight() - 165, w, 165);
-	}
-
-	/** Truncate text with a trailing "…" so it fits within maxW pixels. */
-	private static String ellipsise(FontMetrics fm, String text, int maxW)
-	{
-		if (fm.stringWidth(text) <= maxW)
-		{
-			return text;
-		}
-		final String ell = "…";
-		final int ellW = fm.stringWidth(ell);
-		int end = text.length();
-		while (end > 0 && fm.stringWidth(text.substring(0, end)) + ellW > maxW)
-		{
-			end--;
-		}
-		return text.substring(0, end).stripTrailing() + ell;
 	}
 
 	/** First &lt;col=RRGGBB&gt; tag's colour, or the default warm yellow. */

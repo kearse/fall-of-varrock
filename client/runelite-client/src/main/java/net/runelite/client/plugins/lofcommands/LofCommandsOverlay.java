@@ -10,7 +10,6 @@
  */
 package net.runelite.client.plugins.lofcommands;
 
-import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FontMetrics;
@@ -19,8 +18,6 @@ import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.Shape;
-import java.awt.Stroke;
-import java.awt.image.BufferedImage;
 import java.util.List;
 import javax.inject.Inject;
 import net.runelite.api.Client;
@@ -43,11 +40,10 @@ class LofCommandsOverlay extends Overlay
 	static final int TAB_BASE = 100;
 	static final int ROW_BASE = 1000;
 
-	// 480x400 framed-modal standard (docs/overlay-design-system.md §6A).
+	// 480x324 framed-modal standard (docs/overlay-design-system.md §6A).
 	private static final int WIN_W = LofModal.W;
 	private static final int WIN_H = LofModal.H;
-	private static final int WIN_ARC = 14;
-	private static final int TITLE_H = 38;
+	private static final int TITLE_H = LofModal.TITLE_H;
 	private static final int TAB_X = 10;
 	private static final int TAB_W = 116;
 	private static final int TAB_Y0 = TITLE_H + 16;
@@ -57,14 +53,12 @@ class LofCommandsOverlay extends Overlay
 	private static final int LIST_W = WIN_W - LIST_X - 10;     // 336
 	private static final int SCROLLBAR_W = 5;
 	private static final int VP_TOP = TITLE_H + 14;            // 52
-	private static final int VP_BOTTOM = WIN_H - 12;           // 388
-	private static final int VP_H = VP_BOTTOM - VP_TOP;        // 336
+	private static final int VP_BOTTOM = WIN_H - 12;           // 312
+	private static final int VP_H = VP_BOTTOM - VP_TOP;        // 260
 	private static final int CARD_X = LIST_X + 2;
 	private static final int CARD_W = LIST_W - SCROLLBAR_W - 8; // 323
 	private static final int CARD_H = 22;                      // §4 standard row height
 	private static final int STEP = 26;
-
-	private static final Color CLOSE_HOVER = LofTheme.EMBER;
 
 	private final Client client;
 	private final LofCommandsPlugin plugin;
@@ -194,7 +188,7 @@ class LofCommandsOverlay extends Overlay
 
 	private Rectangle closeRect(int ox, int oy)
 	{
-		return new Rectangle(ox + WIN_W - 30, oy + 9, 20, 20);
+		return LofModal.closeRect(ox, oy, WIN_W);
 	}
 
 	private Rectangle tabRect(int ox, int oy, int t)
@@ -232,43 +226,10 @@ class LofCommandsOverlay extends Overlay
 		final int ox = originX(), oy = originY();
 		final Point mouse = mousePoint();
 
-		LofTheme.panel(g, ox, oy, WIN_W, WIN_H, WIN_ARC);
-
-		// header bar with ember accent underline
-		final Shape headerClip = g.getClip();
-		g.setClip(ox, oy, WIN_W, TITLE_H);
-		g.setColor(LofTheme.HEADER);
-		g.fillRoundRect(ox, oy, WIN_W, TITLE_H + WIN_ARC, WIN_ARC, WIN_ARC);
-		g.setClip(headerClip);
-		LofTheme.emberUnderline(g, ox + 1, oy + TITLE_H - 2, WIN_W - 2);
-
-		// shield logo + title
-		final BufferedImage logo = LofTheme.logo();
-		int titleX = ox + 14;
-		if (logo != null)
-		{
-			g.drawImage(logo, ox + 12, oy + 5, 28, 28, null);
-			titleX = ox + 46;
-		}
-		g.setFont(FontManager.getRunescapeBoldFont());
-		LofTheme.shadowText(g, "Commands", titleX, oy + 25, LofTheme.GOLD);
-		g.setFont(FontManager.getRunescapeSmallFont());
 		final Tab active = tabs.get(activeTab);
 		final String rank = plugin.getRankTitle();
-		final String sub = (rank.isEmpty() ? "" : rank + "  •  ") + active.rows.size() + " commands";
-		LofTheme.shadowText(g, sub, ox + WIN_W - 44 - g.getFontMetrics().stringWidth(sub), oy + 24, LofTheme.TEXT_DIM);
-
-		// close button
-		final Rectangle cr = closeRect(ox, oy);
-		final boolean closeHov = cr.contains(mouse);
-		g.setColor(closeHov ? CLOSE_HOVER : new Color(255, 255, 255, 18));
-		g.fillRoundRect(cr.x, cr.y, cr.width, cr.height, 6, 6);
-		g.setColor(closeHov ? LofTheme.TEXT : LofTheme.TEXT_DIM);
-		final Stroke oldStroke = g.getStroke();
-		g.setStroke(new BasicStroke(1.4f));
-		g.drawLine(cr.x + 6, cr.y + 6, cr.x + cr.width - 7, cr.y + cr.height - 7);
-		g.drawLine(cr.x + cr.width - 7, cr.y + 6, cr.x + 6, cr.y + cr.height - 7);
-		g.setStroke(oldStroke);
+		LofModal.frame(g, ox, oy, WIN_W, WIN_H, TITLE_H, "Commands",
+			(rank.isEmpty() ? "" : rank + "  •  ") + active.rows.size() + " commands", mouse, true);
 
 		// tab rail
 		g.setColor(LofTheme.ROW);
@@ -293,7 +254,7 @@ class LofCommandsOverlay extends Overlay
 				g.setColor(LofTheme.ROW_HOVER);
 				g.fillRoundRect(tr.x, tr.y, tr.width, tr.height, 8, 8);
 			}
-			final String label = ellipsise(tabFm, tabs.get(t).role, TAB_W - 20);
+			final String label = LofModal.fit(tabFm, tabs.get(t).role, TAB_W - 20);
 			LofTheme.shadowText(g, label, tr.x + 12, tr.y + 19, sel ? LofTheme.GOLD : (hov ? LofTheme.TEXT : LofTheme.TEXT_DIM));
 		}
 
@@ -329,48 +290,16 @@ class LofCommandsOverlay extends Overlay
 			if (!e.desc.isEmpty())
 			{
 				final int cmdW = fm.stringWidth(e.cmd);
-				final String tail = ellipsise(fm, "  —  " + e.desc, CARD_W - 20 - cmdW);
+				final String tail = LofModal.fit(fm, "  —  " + e.desc, CARD_W - 20 - cmdW);
 				LofTheme.shadowText(g, tail, cx + 10 + cmdW, ty, LofTheme.TEXT_DIM);
 			}
 		}
 		g.setClip(oldClip);
 
-		// scrollbar
-		final int ms = maxScroll();
-		if (ms > 0)
-		{
-			final int sbX = ox + LIST_X + LIST_W - SCROLLBAR_W;
-			g.setColor(new Color(255, 255, 255, 14));
-			g.fillRoundRect(sbX, oy + VP_TOP, SCROLLBAR_W, VP_H, SCROLLBAR_W, SCROLLBAR_W);
-			final int content = rowCount() * STEP;
-			final int thumbH = Math.max(24, VP_H * VP_H / content);
-			final int thumbY = oy + VP_TOP + (VP_H - thumbH) * scroll / ms;
-			g.setColor(LofTheme.alpha(LofTheme.EMBER, 190));
-			g.fillRoundRect(sbX, thumbY, SCROLLBAR_W, thumbH, SCROLLBAR_W, SCROLLBAR_W);
-		}
+		LofModal.scrollbar(g, ox + LIST_X + LIST_W - SCROLLBAR_W, oy + VP_TOP, VP_H, rowCount() * STEP, scroll);
 
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, oldAA == null ? RenderingHints.VALUE_ANTIALIAS_DEFAULT : oldAA);
 		return new Dimension(WIN_W, WIN_H);
-	}
-
-	/** Truncate text with a trailing "…" so it fits within maxW pixels. */
-	private static String ellipsise(FontMetrics fm, String text, int maxW)
-	{
-		if (maxW <= 0)
-		{
-			return "";
-		}
-		if (fm.stringWidth(text) <= maxW)
-		{
-			return text;
-		}
-		final int ellW = fm.stringWidth("…");
-		int end = text.length();
-		while (end > 0 && fm.stringWidth(text.substring(0, end)) + ellW > maxW)
-		{
-			end--;
-		}
-		return text.substring(0, end).stripTrailing() + "…";
 	}
 
 	private Point mousePoint()

@@ -4,7 +4,6 @@
 package net.runelite.client.plugins.lofalerts;
 
 import java.awt.BasicStroke;
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
@@ -13,13 +12,16 @@ import java.awt.Stroke;
 import java.awt.image.BufferedImage;
 import javax.inject.Inject;
 import net.runelite.client.plugins.loftheme.LofTheme;
+import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.overlay.Overlay;
 import net.runelite.client.ui.overlay.OverlayLayer;
 import net.runelite.client.ui.overlay.OverlayPosition;
 
 class LofAlertsOverlay extends Overlay
 {
-	private static final Font BANNER_FONT = new Font(Font.SANS_SERIF, Font.BOLD, 18);
+	/** RuneScape bold, scaled up — §3 forbids Font.SANS_SERIF in-window and this banner was the
+	 *  last place still using it, so the alert read as a different product to everything else. */
+	private static final Font BANNER_FONT = FontManager.getRunescapeBoldFont().deriveFont(18f);
 
 	private final LofAlertsPlugin plugin;
 
@@ -71,11 +73,7 @@ class LofAlertsOverlay extends Overlay
 		{
 			graphics.drawImage(logo, padX, 4, logoSize, logoSize, null);
 		}
-		final int ty = padY + fm.getAscent();
-		graphics.setColor(Color.BLACK);
-		graphics.drawString(text, textX + 1, ty + 1);
-		graphics.setColor(new Color(255, 110, 90));
-		graphics.drawString(text, textX, ty);
+		LofTheme.shadowText(graphics, text, textX, padY + fm.getAscent(), LofTheme.LAVA);
 
 		return new Dimension(w, h);
 	}

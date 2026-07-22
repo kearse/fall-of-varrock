@@ -57,8 +57,8 @@ class LofMakeOverlay extends Overlay implements LofWindows.Window
 	// The recipe list scrolls inside a clipped viewport (LofModal.scrollbar), so any number of recipes
 	// fits the short standard window — rows are clipped to LIST_H and never reach the status line
 	// (H-56) or footer buttons (H-44), which would otherwise cover MAKE and swallow its click.
-	private static final int LIST_TOP = ROWS_Y;                 // 48
-	private static final int LIST_BOTTOM = LofModal.H - 64;     // clear of the status line
+	private static final int LIST_TOP = ROWS_Y;                              // 48
+	private static final int LIST_BOTTOM = LofModal.statusY(LofModal.H) - 12; // clear of the status line
 	private static final int LIST_H = LIST_BOTTOM - LIST_TOP;
 
 	private final Client client;
@@ -203,12 +203,12 @@ class LofMakeOverlay extends Overlay implements LofWindows.Window
 
 	private Rectangle qtyRect(int ox, int oy, int i)
 	{
-		return new Rectangle(ox + LofModal.PAD + i * 56, oy + LofModal.H - 12 - 32, 48, 32);
+		return LofModal.footerChip(ox, oy, LofModal.H, i, 48, 8);
 	}
 
 	private Rectangle makeRect(int ox, int oy)
 	{
-		return new Rectangle(ox + LofModal.W - LofModal.PAD - 170, oy + LofModal.H - 12 - 32, 170, 32);
+		return LofModal.footerButton(ox, oy, 170);
 	}
 
 	int hitTest(Point p)
@@ -314,7 +314,7 @@ class LofMakeOverlay extends Overlay implements LofWindows.Window
 				status = "Materials for " + max + " carried.";
 				col = new Color(110, 205, 110);
 			}
-			LofTheme.shadowText(g, status, ox + LofModal.PAD, oy + LofModal.H - 56, col);
+			LofModal.statusLine(g, ox, oy, status, col);
 		}
 
 		// quantity chips + MAKE
@@ -362,7 +362,9 @@ class LofMakeOverlay extends Overlay implements LofWindows.Window
 
 		drawItem(g, row.x + 6, row.y + 3, r.resultId);
 		g.setFont(FontManager.getRunescapeFont());
-		LofTheme.shadowText(g, itemName(r.resultId), row.x + 42, row.y + 21, locked ? LofTheme.TEXT_DIM : LofTheme.TEXT);
+		// Fitted to the space before the materials column so a long recipe name can't run into it.
+		LofTheme.shadowText(g, LofModal.fit(g.getFontMetrics(), itemName(r.resultId), 200 - 42 - 8),
+			row.x + 42, row.y + 21, locked ? LofTheme.TEXT_DIM : LofTheme.TEXT);
 
 		// materials, drawn as icon ×qty pairs mid-row
 		int mx = row.x + 200;

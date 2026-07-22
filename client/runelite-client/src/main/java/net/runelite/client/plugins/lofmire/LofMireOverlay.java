@@ -13,7 +13,6 @@
  */
 package net.runelite.client.plugins.lofmire;
 
-import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FontMetrics;
@@ -21,8 +20,6 @@ import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
-import java.awt.Shape;
-import java.awt.Stroke;
 import java.awt.image.BufferedImage;
 import javax.inject.Inject;
 import net.runelite.api.Client;
@@ -83,18 +80,21 @@ class LofMireOverlay extends Overlay
 	private static final int COINS_MAX = 5_000;
 	private static final int COINS_ID = 995;
 
-	// Design-system standard modal (480x400 — docs/overlay-design-system.md §6A).
+	// Design-system standard modal (480x324 — docs/overlay-design-system.md §6A).
 	private static final int WIN_W = LofModal.W;
 	private static final int WIN_H = LofModal.H;
-	private static final int WIN_ARC = 14;
-	private static final int TITLE_H = 38;
-	private static final int PAD = 14;
+	private static final int TITLE_H = LofModal.TITLE_H;
+	private static final int PAD = LofModal.PAD;
 
+	// Vertical budget, top to bottom: stat strip · section label · the fixed 7-row loot table · the
+	// shared status baseline (LofModal.statusY = H-56) · the button band (H-44..H-12). The strip and
+	// the rows are tight because all seven loot rows must show and the status line no longer shares
+	// the button's row — a 324-tall window has exactly this much room.
 	private static final int STATS_Y = TITLE_H + 12;   // 50
-	private static final int STATS_H = 56;
-	private static final int LOOT_LABEL_Y = STATS_Y + STATS_H + 20; // baseline of the section label
+	private static final int STATS_H = 46;
+	private static final int LOOT_LABEL_Y = STATS_Y + STATS_H + 16; // baseline of the section label
 	private static final int LOOT_Y = LOOT_LABEL_Y + 8;
-	private static final int ROW_H = 20; // loot rows: tightened so the fixed 7-row table fits the short window
+	private static final int ROW_H = 19; // loot rows: tightened so the fixed 7-row table fits the short window
 	private static final int BTN_W = 130;
 	private static final int BTN_H = 32;
 
@@ -164,12 +164,12 @@ class LofMireOverlay extends Overlay
 
 	private Rectangle closeRect(int ox, int oy)
 	{
-		return new Rectangle(ox + WIN_W - 30, oy + 9, 20, 20);
+		return LofModal.closeRect(ox, oy, WIN_W);
 	}
 
 	private Rectangle actionRect(int ox, int oy)
 	{
-		return new Rectangle(ox + WIN_W - PAD - BTN_W, oy + WIN_H - PAD - BTN_H, BTN_W, BTN_H);
+		return LofModal.footerButton(ox, oy, WIN_W, WIN_H, BTN_W);
 	}
 
 	int hitTest(Point p)
@@ -231,8 +231,9 @@ class LofMireOverlay extends Overlay
 		final int ox = originX(), oy = originY();
 		final Point mouse = mousePoint();
 
-		LofTheme.panel(g, ox, oy, WIN_W, WIN_H, WIN_ARC);
-		drawHeader(g, ox, oy, mouse);
+		LofModal.frame(g, ox, oy, WIN_W, WIN_H, TITLE_H, "Mire Dispenser",
+			attuned ? "Mire Run  ·  streak ×" + fmtMult(multiplier()) : "Mire Run  ·  not attuned",
+			mouse, true);
 
 		if (attuned)
 		{
@@ -248,42 +249,6 @@ class LofMireOverlay extends Overlay
 
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, oldAA == null ? RenderingHints.VALUE_ANTIALIAS_DEFAULT : oldAA);
 		return new Dimension(WIN_W, WIN_H);
-	}
-
-	private void drawHeader(Graphics2D g, int ox, int oy, Point mouse)
-	{
-		final Shape headerClip = g.getClip();
-		g.setClip(ox, oy, WIN_W, TITLE_H);
-		g.setColor(LofTheme.HEADER);
-		g.fillRoundRect(ox, oy, WIN_W, TITLE_H + WIN_ARC, WIN_ARC, WIN_ARC);
-		g.setClip(headerClip);
-		LofTheme.emberUnderline(g, ox + 1, oy + TITLE_H - 2, WIN_W - 2);
-
-		final BufferedImage logo = LofTheme.logo();
-		int titleX = ox + 14;
-		if (logo != null)
-		{
-			g.drawImage(logo, ox + 12, oy + 5, 28, 28, null);
-			titleX = ox + 46;
-		}
-		g.setFont(FontManager.getRunescapeBoldFont());
-		LofTheme.shadowText(g, "Mire Dispenser", titleX, oy + 25, LofTheme.GOLD);
-		g.setFont(FontManager.getRunescapeSmallFont());
-		final String sub = attuned
-			? "Mire Run  ·  streak ×" + fmtMult(multiplier())
-			: "Mire Run  ·  not attuned";
-		LofTheme.shadowText(g, sub, ox + WIN_W - 44 - g.getFontMetrics().stringWidth(sub), oy + 24, LofTheme.TEXT_DIM);
-
-		final Rectangle cr = closeRect(ox, oy);
-		final boolean hov = cr.contains(mouse);
-		g.setColor(hov ? LofTheme.EMBER : new Color(255, 255, 255, 18));
-		g.fillRoundRect(cr.x, cr.y, cr.width, cr.height, 6, 6);
-		g.setColor(hov ? LofTheme.TEXT : LofTheme.TEXT_DIM);
-		final Stroke oldStroke = g.getStroke();
-		g.setStroke(new BasicStroke(1.6f));
-		g.drawLine(cr.x + 6, cr.y + 6, cr.x + cr.width - 7, cr.y + cr.height - 7);
-		g.drawLine(cr.x + cr.width - 7, cr.y + 6, cr.x + 6, cr.y + cr.height - 7);
-		g.setStroke(oldStroke);
 	}
 
 	/** Attuned top strip: three stat tiles — lap streak, loot multiplier (+bar), banked laps. */
@@ -312,16 +277,16 @@ class LofMireOverlay extends Overlay
 
 			g.setFont(FontManager.getRunescapeSmallFont());
 			FontMetrics fm = g.getFontMetrics();
-			LofTheme.shadowText(g, labels[i], x + (w - fm.stringWidth(labels[i])) / 2, y + 16, LofTheme.GOLD_DIM);
+			LofTheme.shadowText(g, labels[i], x + (w - fm.stringWidth(labels[i])) / 2, y + 13, LofTheme.GOLD_DIM);
 
 			g.setFont(FontManager.getRunescapeBoldFont());
 			fm = g.getFontMetrics();
-			LofTheme.shadowText(g, values[i], x + (w - fm.stringWidth(values[i])) / 2, y + 36, valueCols[i]);
+			LofTheme.shadowText(g, values[i], x + (w - fm.stringWidth(values[i])) / 2, y + 30, valueCols[i]);
 
 			if (i == 1)
 			{
 				// the ×1→×5 progress bar under the multiplier value
-				final int bx = x + 12, bw = w - 24, by = y + STATS_H - 12;
+				final int bx = x + 12, bw = w - 24, by = y + STATS_H - 10;
 				g.setColor(LofTheme.PANEL_OPAQUE);
 				g.fillRoundRect(bx, by, bw, 5, 5, 5);
 				final int fill = (int) (bw * Math.min(streak, STREAK_CAP) / (double) STREAK_CAP);
@@ -343,11 +308,11 @@ class LofMireOverlay extends Overlay
 		g.drawRoundRect(x, y, w, STATS_H, 8, 8);
 
 		g.setFont(FontManager.getRunescapeFont());
-		drawCentred(g, ox, y + 22, "Attune to the dispenser to earn lap rewards.", LofTheme.TEXT);
+		drawCentred(g, ox, y + 19, "Attune to the dispenser to earn lap rewards.", LofTheme.TEXT);
 		g.setFont(FontManager.getRunescapeSmallFont());
 		final long coins = coinsCarried();
-		drawCentred(g, ox, y + 42,
-			"One-time fee: " + fmt(ATTUNE_FEE) + " coins  ·  you carry " + fmt(coins),
+		drawCentred(g, ox, y + 37,
+			"One-time fee: " + LofModal.fmt(ATTUNE_FEE) + " coins  ·  you carry " + LofModal.fmt(coins),
 			coins >= ATTUNE_FEE ? new Color(110, 205, 110) : new Color(255, 138, 117));
 	}
 
@@ -397,14 +362,13 @@ class LofMireOverlay extends Overlay
 			g.drawImage(icon, x + 6, y + (ROW_H - 3 - 16) / 2, 18, 16, null);
 		}
 
-		g.setFont(FontManager.getRunescapeFont());
+		// Name left, quantity right of it, then the chance pill — the name is fitted to the space
+		// before the quantity so a long supply name can't run into either.
 		final int baseline = y + (ROW_H - 3) / 2 + 5;
-		LofTheme.shadowText(g, name, x + 32, baseline, LofTheme.TEXT);
-
-		final String qty = min == max ? fmt(min) : fmt(min) + "–" + fmt(max);
+		final String qty = min == max ? LofModal.fmt(min) : LofModal.fmt(min) + "–" + LofModal.fmt(max);
 		g.setFont(FontManager.getRunescapeSmallFont());
-		FontMetrics fm = g.getFontMetrics();
-		LofTheme.shadowText(g, qty, x + w - 110 - fm.stringWidth(qty), baseline, LofTheme.GOLD);
+		final FontMetrics fm = g.getFontMetrics();
+		LofModal.rowText(g, x + 32, baseline, w - 32 - 110, name, qty, LofTheme.TEXT, LofTheme.GOLD);
 		LofTheme.pill(g, fm, tag, x + w - 8, baseline, tagCol);
 	}
 
@@ -424,27 +388,16 @@ class LofMireOverlay extends Overlay
 		{
 			status = "Complete a lap to bank loot. The streak breaks after 5 idle minutes or logout.";
 		}
-		LofTheme.shadowText(g, status, ox + PAD, oy + WIN_H - PAD - BTN_H / 2 + 4, LofTheme.TEXT_DIM);
+		// Shared status baseline, one row above the button band — this line used to sit ON the
+		// button's row and ran straight through CLAIM.
+		LofModal.statusLine(g, ox, oy, WIN_W, WIN_H, status, LofTheme.TEXT_DIM);
 
 		final Rectangle br = actionRect(ox, oy);
 		final boolean active = actionable();
-		final boolean hov = active && br.contains(mouse);
-		final Color accent = active ? LofTheme.GOLD : LofTheme.GOLD_DIM;
-		g.setColor(hov ? LofTheme.alpha(LofTheme.GOLD, 60) : LofTheme.alpha(accent, active ? 34 : 16));
-		g.fillRoundRect(br.x, br.y, br.width, br.height, 8, 8);
-		final Stroke oldStroke = g.getStroke();
-		g.setStroke(new BasicStroke(1.4f));
-		g.setColor(LofTheme.alpha(accent, active ? 200 : 90));
-		g.drawRoundRect(br.x, br.y, br.width, br.height, 8, 8);
-		g.setStroke(oldStroke);
-
-		g.setFont(FontManager.getRunescapeFont());
 		final String label = attuned
 			? (bank > 0 ? "CLAIM " + bank + " LAP" + (bank > 1 ? "S" : "") : "NOTHING BANKED")
-			: "ATTUNE — " + fmt(ATTUNE_FEE);
-		final FontMetrics fm = g.getFontMetrics();
-		LofTheme.shadowText(g, label, br.x + (br.width - fm.stringWidth(label)) / 2, br.y + br.height / 2 + 5,
-			active ? LofTheme.GOLD : LofTheme.TEXT_DIM);
+			: "ATTUNE — " + LofModal.fmt(ATTUNE_FEE);
+		LofModal.button(g, br, label, LofTheme.GOLD, active, br.contains(mouse));
 	}
 
 	private static int scaled(int base, double mult)
@@ -462,11 +415,6 @@ class LofMireOverlay extends Overlay
 	{
 		final net.runelite.api.Point m = client.getMouseCanvasPosition();
 		return m == null ? new Point(-1, -1) : new Point(m.getX(), m.getY());
-	}
-
-	private static String fmt(long n)
-	{
-		return String.format("%,d", n);
 	}
 
 	private static String fmtMult(double m)

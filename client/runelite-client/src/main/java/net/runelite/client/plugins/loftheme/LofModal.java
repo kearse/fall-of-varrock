@@ -1,7 +1,13 @@
 /*
- * Fall of Varrock — shared frame helpers for the standard 480x400 overlay modal
- * (docs/overlay-design-system.md §5/§6A): viewport-centred origin, the panel + header +
- * ember underline + close ✕, footer buttons, and small shared utilities.
+ * Fall of Varrock — shared chrome for every lof overlay modal (docs/overlay-design-system.md
+ * §5/§6A): viewport-centred origin, the panel + header + ember underline + close ✕, the footer
+ * band (button row + status line), text fitting, and small shared utilities.
+ *
+ * Everything here is parameterised by window size. The earlier version hardcoded the 480x324
+ * standard, so the 340px spoils window, the 492px vote window, the 512px kit editor and the shop
+ * panel each COPIED the header/close/button code instead of calling it — and the copies then
+ * drifted into three close-button sizes, three button styles and eight different footer baselines.
+ * Draw chrome from here; don't hand-roll it.
  *
  * Not a plugin — a static utility like LofTheme (PluginManager only registers Plugin
  * subclasses, so this package is safe).
@@ -33,6 +39,20 @@ public final class LofModal
 	public static final int ARC = 14;
 	public static final int TITLE_H = 38;
 	public static final int PAD = 14;
+
+	/**
+	 * The footer band (docs/overlay-design-system.md §5/§6A). Every modal's action buttons occupy
+	 * ONE row, {@link #FOOTER_BTN_H} tall, {@link #FOOTER_GAP} above the panel's bottom edge — and
+	 * the status line sits on its own baseline ABOVE that row ({@link #statusY}).
+	 *
+	 * This exists because windows used to pick their own footer baseline (H-18, H-22, H-24, H-26,
+	 * H-40, H-46, H-52, H-56 were all in use) and several of them drew a full-width status string
+	 * straight THROUGH their own button — the dice window's coin line over ROLL THE DIE, the mire's
+	 * hint over CLAIM, the forge's confirm warning over FORGE IT. Route both through the helpers
+	 * here and it cannot happen again: no text is ever drawn inside the button band.
+	 */
+	public static final int FOOTER_BTN_H = 32;
+	public static final int FOOTER_GAP = 12;
 
 	/**
 	 * The vanilla fixed-mode world view (the game renders at 765×503; the world sits in the top-left
@@ -114,39 +134,200 @@ public final class LofModal
 		return Math.max(0, Math.min(pos, extent - size));
 	}
 
-	public static Rectangle closeRect(int ox, int oy)
+	// ---------------------------------------------------------------------------------------------
+	// Footer band — the action-button row and the status line above it (§5). Single-sourced so the
+	// two can never collide; see the FOOTER_BTN_H note.
+	// ---------------------------------------------------------------------------------------------
+
+	/** Top edge (canvas y) of the footer button row for a window {@code h} tall. */
+	public static int footerBtnY(int oy, int h)
 	{
-		return new Rectangle(ox + W - 30, oy + 9, 20, 20);
+		return oy + h - FOOTER_GAP - FOOTER_BTN_H;
 	}
 
-	/** Panel + header strip + logo + gold title + dim right-aligned subtitle + close ✕. */
-	public static void frame(Graphics2D g, int ox, int oy, String title, String subtitle, Point mouse)
+	/** Baseline (window-relative) of the status line — one row ABOVE the button band. */
+	public static int statusY(int h)
 	{
-		LofTheme.panel(g, ox, oy, W, H, ARC);
+		return h - FOOTER_GAP - FOOTER_BTN_H - 12;
+	}
 
+	/** The right-aligned primary action button of a window {@code w}×{@code h}. */
+	public static Rectangle footerButton(int ox, int oy, int w, int h, int btnW)
+	{
+		return new Rectangle(ox + w - PAD - btnW, footerBtnY(oy, h), btnW, FOOTER_BTN_H);
+	}
+
+	/** Standard-size window's right-aligned action button. */
+	public static Rectangle footerButton(int ox, int oy, int btnW)
+	{
+		return footerButton(ox, oy, W, H, btnW);
+	}
+
+	/** The i-th chip in the left-aligned footer run (quantity pickers, stake chips, …). */
+	public static Rectangle footerChip(int ox, int oy, int h, int i, int chipW, int gap)
+	{
+		return new Rectangle(ox + PAD + i * (chipW + gap), footerBtnY(oy, h), chipW, FOOTER_BTN_H);
+	}
+
+	/**
+	 * The one-line status/hint above the footer buttons (§5.6): small font, left-aligned at the
+	 * window padding, truncated to the panel width. Draws on {@link #statusY}, so it is structurally
+	 * incapable of landing on a button.
+	 */
+	public static void statusLine(Graphics2D g, int ox, int oy, int w, int h, String text, Color col)
+	{
+		if (text == null || text.isEmpty())
+		{
+			return;
+		}
+		g.setFont(FontManager.getRunescapeSmallFont());
+		LofTheme.shadowText(g, fit(g.getFontMetrics(), text, w - 2 * PAD), ox + PAD, oy + statusY(h), col);
+	}
+
+	/** Standard-size window's status line. */
+	public static void statusLine(Graphics2D g, int ox, int oy, String text, Color col)
+	{
+		statusLine(g, ox, oy, W, H, text, col);
+	}
+
+	// ---------------------------------------------------------------------------------------------
+	// Text fitting — the shared truncators. Four overlays each carried a private copy of this and
+	// the ones that didn't have it are exactly the ones whose long names ran into the value beside
+	// them, so it lives here now.
+	// ---------------------------------------------------------------------------------------------
+
+	/** {@code text} truncated with a trailing ellipsis so it fits {@code maxW} px. */
+	public static String fit(FontMetrics fm, String text, int maxW)
+	{
+		if (text == null || text.isEmpty())
+		{
+			return "";
+		}
+		if (maxW <= 0)
+		{
+			return "";
+		}
+		if (fm.stringWidth(text) <= maxW)
+		{
+			return text;
+		}
+		final String ell = "…";
+		final int ellW = fm.stringWidth(ell);
+		int end = text.length();
+		while (end > 0 && fm.stringWidth(text.substring(0, end)) + ellW > maxW)
+		{
+			end--;
+		}
+		return text.substring(0, end).stripTrailing() + ell;
+	}
+
+	/** Minimum gap kept between a row's label and its right-aligned value. */
+	private static final int ROW_TEXT_GAP = 10;
+
+	/**
+	 * One list row's text: {@code left} label and {@code right} value on the same baseline inside a
+	 * {@code w}-wide row starting at {@code x}. The label is truncated against the measured value,
+	 * so a long item/destination name can never run into the number or pill beside it. Uses the
+	 * caller's current font for both.
+	 */
+	public static void rowText(Graphics2D g, int x, int y, int w, String left, String right,
+		Color leftCol, Color rightCol)
+	{
+		final FontMetrics fm = g.getFontMetrics();
+		final int rightW = right == null || right.isEmpty() ? 0 : fm.stringWidth(right);
+		if (rightW > 0)
+		{
+			LofTheme.shadowText(g, right, x + w - rightW, y, rightCol);
+		}
+		final int room = w - rightW - (rightW > 0 ? ROW_TEXT_GAP : 0);
+		LofTheme.shadowText(g, fit(fm, left, room), x, y, leftCol);
+	}
+
+	/** Compact number for tight cells: 1,234 · 12.4k · 340k · 1.85M · 12M. */
+	public static String compact(long v)
+	{
+		if (v >= 10_000_000)
+		{
+			return (v / 1_000_000) + "M";
+		}
+		if (v >= 1_000_000)
+		{
+			return String.format("%.2fM", v / 1_000_000.0);
+		}
+		if (v >= 100_000)
+		{
+			return (v / 1000) + "k";
+		}
+		if (v >= 10_000)
+		{
+			return String.format("%.1fk", v / 1000.0);
+		}
+		return fmt(v);
+	}
+
+	// ---------------------------------------------------------------------------------------------
+	// Chrome — panel + header + close ✕. Parameterised by width/height/title-height: the old
+	// versions hardcoded the 480x324 standard, which is why the 340px spoils window, the 492px vote
+	// window, the 512px kit editor and the shop panel (sized to the native widget) each COPIED this
+	// code instead of calling it — and then drifted apart. Anything with its own panel (the style
+	// window punches a hole through its) calls header() alone.
+	// ---------------------------------------------------------------------------------------------
+
+	public static Rectangle closeRect(int ox, int oy, int w)
+	{
+		return new Rectangle(ox + w - 30, oy + 9, 20, 20);
+	}
+
+	public static Rectangle closeRect(int ox, int oy)
+	{
+		return closeRect(ox, oy, W);
+	}
+
+	/** Header strip + ember underline + logo + gold title + dim right-aligned subtitle + close ✕. */
+	public static void header(Graphics2D g, int ox, int oy, int w, int titleH,
+		String title, String subtitle, Point mouse, boolean showClose)
+	{
+		final int arc = ARC;
 		final Shape headerClip = g.getClip();
-		g.setClip(ox, oy, W, TITLE_H);
+		g.setClip(ox, oy, w, titleH);
 		g.setColor(LofTheme.HEADER);
-		g.fillRoundRect(ox, oy, W, TITLE_H + ARC, ARC, ARC);
+		g.fillRoundRect(ox, oy, w, titleH + arc, arc, arc);
 		g.setClip(headerClip);
-		LofTheme.emberUnderline(g, ox + 1, oy + TITLE_H - 2, W - 2);
+		LofTheme.emberUnderline(g, ox + 1, oy + titleH - 2, w - 2);
 
 		final BufferedImage logo = LofTheme.logo();
+		final int logoSz = Math.min(28, titleH - 10);
 		int titleX = ox + 14;
 		if (logo != null)
 		{
-			g.drawImage(logo, ox + 12, oy + 5, 28, 28, null);
-			titleX = ox + 46;
+			g.drawImage(logo, ox + 12, oy + (titleH - logoSz) / 2, logoSz, logoSz, null);
+			titleX = ox + 12 + logoSz + 6;
 		}
+		final int baseline = oy + titleH / 2 + 6;
 		g.setFont(FontManager.getRunescapeBoldFont());
-		LofTheme.shadowText(g, title, titleX, oy + 25, LofTheme.GOLD);
-		if (subtitle != null)
+		final int titleEnd = titleX + g.getFontMetrics().stringWidth(title);
+		LofTheme.shadowText(g, title, titleX, baseline, LofTheme.GOLD);
+
+		if (subtitle != null && !subtitle.isEmpty())
 		{
+			// Right-aligned, and truncated against the title's measured end — a long title plus a
+			// long subtitle used to be free to overlap in the middle of the bar.
 			g.setFont(FontManager.getRunescapeSmallFont());
-			LofTheme.shadowText(g, subtitle, ox + W - 44 - g.getFontMetrics().stringWidth(subtitle), oy + 24, LofTheme.TEXT_DIM);
+			final FontMetrics fm = g.getFontMetrics();
+			final int rightEdge = ox + w - (showClose ? 44 : 14);
+			final String sub = fit(fm, subtitle, rightEdge - titleEnd - 10);
+			LofTheme.shadowText(g, sub, rightEdge - fm.stringWidth(sub), baseline - 1, LofTheme.TEXT_DIM);
 		}
 
-		final Rectangle cr = closeRect(ox, oy);
+		if (showClose)
+		{
+			closeButton(g, closeRect(ox, oy, w), mouse);
+		}
+	}
+
+	/** The standard 20px rounded ✕, ember on hover. */
+	public static void closeButton(Graphics2D g, Rectangle cr, Point mouse)
+	{
 		final boolean hov = cr.contains(mouse);
 		g.setColor(hov ? LofTheme.EMBER : new Color(255, 255, 255, 18));
 		g.fillRoundRect(cr.x, cr.y, cr.width, cr.height, 6, 6);
@@ -156,6 +337,20 @@ public final class LofModal
 		g.drawLine(cr.x + 6, cr.y + 6, cr.x + cr.width - 7, cr.y + cr.height - 7);
 		g.drawLine(cr.x + cr.width - 7, cr.y + 6, cr.x + 6, cr.y + cr.height - 7);
 		g.setStroke(oldStroke);
+	}
+
+	/** Panel + header (§5.1-3). {@code showClose=false} for windows closed by a Decline button. */
+	public static void frame(Graphics2D g, int ox, int oy, int w, int h, int titleH,
+		String title, String subtitle, Point mouse, boolean showClose)
+	{
+		LofTheme.panel(g, ox, oy, w, h, ARC);
+		header(g, ox, oy, w, titleH, title, subtitle, mouse, showClose);
+	}
+
+	/** Standard-size framed window with a close ✕. */
+	public static void frame(Graphics2D g, int ox, int oy, String title, String subtitle, Point mouse)
+	{
+		frame(g, ox, oy, W, H, TITLE_H, title, subtitle, mouse, true);
 	}
 
 	// ---------------------------------------------------------------------------------------------

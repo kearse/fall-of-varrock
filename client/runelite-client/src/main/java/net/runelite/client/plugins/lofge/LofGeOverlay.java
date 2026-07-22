@@ -69,7 +69,6 @@ class LofGeOverlay extends Overlay
 	private static final int ROW_H = 94;
 	private static final int COLL_Y = GRID_TOP + ROWS * ROW_H + ROWS * ROW_GAP;            // 250
 	private static final int BTN_W = 150;
-	private static final int BTN_H = 28;
 
 	private final Client client;
 	private final LofGePlugin plugin;
@@ -123,7 +122,7 @@ class LofGeOverlay extends Overlay
 
 	private Rectangle collectAllRect(int ox, int oy)
 	{
-		return new Rectangle(ox + LofModal.W - PAD - BTN_W, oy + LofModal.H - PAD - BTN_H, BTN_W, BTN_H);
+		return LofModal.footerButton(ox, oy, BTN_W);
 	}
 
 	// ---- setup-view geometry (fixed for both the awaiting + ready states) -----------------------
@@ -212,12 +211,12 @@ class LofGeOverlay extends Overlay
 
 	private Rectangle suBack(int ox, int oy)
 	{
-		return new Rectangle(ox + PAD, oy + LofModal.H - PAD - 30, 120, 30);
+		return LofModal.footerChip(ox, oy, LofModal.H, 0, 120, 0);
 	}
 
 	private Rectangle suConfirm(int ox, int oy)
 	{
-		return new Rectangle(ox + LofModal.W - PAD - 200, oy + LofModal.H - PAD - 30, 200, 30);
+		return LofModal.footerButton(ox, oy, 200);
 	}
 
 	private int hitTestSetup(int ox, int oy, Point p)
@@ -465,7 +464,7 @@ class LofGeOverlay extends Overlay
 		// name
 		g.setFont(FontManager.getRunescapeSmallFont());
 		final FontMetrics fm = g.getFontMetrics();
-		final String name = fit(fm, itemName(s.itemId), r.width - 10);
+		final String name = LofModal.fit(fm, itemName(s.itemId), r.width - 10);
 		LofTheme.shadowText(g, name, r.x + (r.width - fm.stringWidth(name)) / 2, r.y + 58, LofTheme.TEXT);
 
 		// progress bar
@@ -480,7 +479,7 @@ class LofGeOverlay extends Overlay
 		// status line: filled/qty @ price
 		final String done = (s.state == 4 || s.state == 6) ? "done" : s.filled + "/" + s.qty;
 		final String line = done + " · " + LofModal.fmt(s.price) + " gp";
-		LofTheme.shadowText(g, fit(fm, line, r.width - 8), r.x + 6, r.y + 84, LofTheme.TEXT_DIM);
+		LofTheme.shadowText(g, LofModal.fit(fm, line, r.width - 8), r.x + 6, r.y + 84, LofTheme.TEXT_DIM);
 	}
 
 	private void drawCollection(Graphics2D g, int ox, int oy, Point mouse)
@@ -507,8 +506,7 @@ class LofGeOverlay extends Overlay
 		final String summary = any
 			? (stacks + (stacks == 1 ? " stack" : " stacks") + (coins > 0 ? " · " + LofModal.fmt(coins) + " gp" : "") + " ready")
 			: "Nothing to collect";
-		g.setFont(FontManager.getRunescapeFont());
-		LofTheme.shadowText(g, summary, ox + PAD, oy + COLL_Y + 22, any ? LofTheme.TEXT : LofTheme.TEXT_DIM);
+		LofModal.statusLine(g, ox, oy, summary, any ? LofTheme.TEXT : LofTheme.TEXT_DIM);
 
 		// collect-all button (bottom-right)
 		final Rectangle br = collectAllRect(ox, oy);
@@ -535,7 +533,7 @@ class LofGeOverlay extends Overlay
 		}
 
 		g.setFont(FontManager.getRunescapeBoldFont());
-		LofTheme.shadowText(g, ready ? fit(g.getFontMetrics(), itemName(s.item), 300) : "— choose an item —",
+		LofTheme.shadowText(g, ready ? LofModal.fit(g.getFontMetrics(), itemName(s.item), 300) : "— choose an item —",
 			ox + PAD + 44, oy + SU_NAME_Y, ready ? LofTheme.TEXT : LofTheme.GOLD_DIM);
 
 		g.setFont(FontManager.getRunescapeSmallFont());
@@ -621,8 +619,8 @@ class LofGeOverlay extends Overlay
 		}
 
 		// summary line (compact so big prices never overflow the panel)
-		final String bestSell = s.bestAsk > 0 ? compact(s.bestAsk) : "—";
-		final String bestBuy = s.bestBid > 0 ? compact(s.bestBid) : "—";
+		final String bestSell = s.bestAsk > 0 ? LofModal.compact(s.bestAsk) : "—";
+		final String bestBuy = s.bestBid > 0 ? LofModal.compact(s.bestBid) : "—";
 		final String summary = "Best sell " + bestSell + " · Best buy " + bestBuy
 			+ " · " + s.nSell + " sell / " + s.nBuy + " buy · tap a row";
 		LofTheme.shadowText(g, summary, x + 6, oy + MK_SUM_Y, LofTheme.GOLD_DIM);
@@ -660,8 +658,8 @@ class LofGeOverlay extends Overlay
 				g.fillRect(r.x + 2, r.y, r.width - 4, r.height);
 			}
 			final int[] row = rows.get(i);
-			LofTheme.shadowText(g, compact(row[0]), r.x + 6, r.y + 10, priceCol);
-			final String q = "× " + compact(row[1]);
+			LofTheme.shadowText(g, LofModal.compact(row[0]), r.x + 6, r.y + 10, priceCol);
+			final String q = "× " + LofModal.compact(row[1]);
 			final int qw = g.getFontMetrics().stringWidth(q);
 			LofTheme.shadowText(g, q, r.x + r.width - qw - 8, r.y + 10, LofTheme.TEXT_DIM);
 		}
@@ -704,55 +702,10 @@ class LofGeOverlay extends Overlay
 		}
 	}
 
-	/** Compact number for the tight market cells: 1,234 → "1,234"; 1.85M / 12.4k for big values. */
-	private static String compact(long v)
-	{
-		if (v >= 10_000_000)
-		{
-			return (v / 1_000_000) + "M";
-		}
-		if (v >= 1_000_000)
-		{
-			return String.format("%.2fM", v / 1_000_000.0);
-		}
-		if (v >= 100_000)
-		{
-			return (v / 1000) + "k";
-		}
-		if (v >= 10_000)
-		{
-			return String.format("%.1fk", v / 1000.0);
-		}
-		return LofModal.fmt(v);
-	}
-
-	/** Truncate text with an ellipsis to fit maxW pixels. */
-	private String fit(FontMetrics fm, String text, int maxW)
-	{
-		if (fm.stringWidth(text) <= maxW)
-		{
-			return text;
-		}
-		final String ell = "…";
-		final int ew = fm.stringWidth(ell);
-		final StringBuilder sb = new StringBuilder();
-		int w = 0;
-		for (int i = 0; i < text.length(); i++)
-		{
-			final int cw = fm.charWidth(text.charAt(i));
-			if (w + cw + ew > maxW)
-			{
-				break;
-			}
-			sb.append(text.charAt(i));
-			w += cw;
-		}
-		return sb.append(ell).toString();
-	}
-
 	private Point mousePoint()
 	{
 		final net.runelite.api.Point m = client.getMouseCanvasPosition();
 		return m == null ? new Point(-1, -1) : new Point(m.getX(), m.getY());
 	}
 }
+

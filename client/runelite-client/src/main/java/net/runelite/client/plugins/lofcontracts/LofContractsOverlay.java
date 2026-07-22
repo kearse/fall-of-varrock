@@ -37,12 +37,15 @@ class LofContractsOverlay extends Overlay implements LofWindows.Window
 	static final int NEW_RESOURCE = 3;
 	static final int REWARDS = 4;
 
+	// Cards and the take-a-contract buttons are sized so the button pair finishes above the shared
+	// status baseline (LofModal.statusY) — they used to run down to H-46, i.e. through the hint line.
 	private static final int CARD_X_PAD = LofModal.PAD;
 	private static final int COMBAT_Y = LofModal.TITLE_H + 12;
-	private static final int CARD_H = 96;
+	private static final int CARD_H = 88;
 	private static final int RESOURCE_Y = COMBAT_Y + CARD_H + 10;
-	private static final int RESOURCE_H = 70;
-	private static final int BTNS_Y = RESOURCE_Y + RESOURCE_H + 12;
+	private static final int RESOURCE_H = 64;
+	private static final int BTNS_Y = RESOURCE_Y + RESOURCE_H + 8;
+	private static final int BTNS_H = 34;
 
 	private final Client client;
 
@@ -103,7 +106,7 @@ class LofContractsOverlay extends Overlay implements LofWindows.Window
 
 	private Rectangle combatBtn(int ox, int oy)
 	{
-		return new Rectangle(ox + LofModal.PAD, oy + BTNS_Y, (LofModal.W - 2 * LofModal.PAD - 10) / 2, 40);
+		return new Rectangle(ox + LofModal.PAD, oy + BTNS_Y, (LofModal.W - 2 * LofModal.PAD - 10) / 2, BTNS_H);
 	}
 
 	private Rectangle resourceBtn(int ox, int oy)
@@ -114,7 +117,7 @@ class LofContractsOverlay extends Overlay implements LofWindows.Window
 
 	private Rectangle rewardsBtn(int ox, int oy)
 	{
-		return new Rectangle(ox + LofModal.W - LofModal.PAD - 190, oy + LofModal.H - 12 - 32, 190, 32);
+		return LofModal.footerButton(ox, oy, 190);
 	}
 
 	int hitTest(Point p)
@@ -174,9 +177,9 @@ class LofContractsOverlay extends Overlay implements LofWindows.Window
 			resourceActive() ? "Resource contract active" : "New resource contract",
 			LofTheme.GOLD, !resourceActive(), resourceBtn(ox, oy).contains(mouse));
 
-		g.setFont(FontManager.getRunescapeSmallFont());
-		LofTheme.shadowText(g, "Back-to-back contracts keep your streak — the tougher the contract, the better the pay.",
-			ox + LofModal.PAD, oy + LofModal.H - 46, LofTheme.TEXT_DIM);
+		LofModal.statusLine(g, ox, oy,
+			"Back-to-back contracts keep your streak — the tougher the contract, the better the pay.",
+			LofTheme.TEXT_DIM);
 		LofModal.button(g, rewardsBtn(ox, oy), "Open reward shop", LofTheme.GOLD, true, rewardsBtn(ox, oy).contains(mouse));
 
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, oldAA == null ? RenderingHints.VALUE_ANTIALIAS_DEFAULT : oldAA);
@@ -196,7 +199,9 @@ class LofContractsOverlay extends Overlay implements LofWindows.Window
 		g.setFont(FontManager.getRunescapeBoldFont());
 		if (combatActive())
 		{
-			LofTheme.shadowText(g, combatName, r.x + 58, r.y + 26, LofTheme.TEXT);
+			// Fitted clear of the streak pill on the right.
+			LofTheme.shadowText(g, LofModal.fit(g.getFontMetrics(), combatName, r.width - 58 - 110),
+				r.x + 58, r.y + 26, LofTheme.TEXT);
 			g.setFont(FontManager.getRunescapeSmallFont());
 			LofTheme.shadowText(g, "Combat contract · assigned by Vannaka", r.x + 58, r.y + 42, LofTheme.TEXT_DIM);
 			if (streak > 0)
@@ -246,10 +251,13 @@ class LofContractsOverlay extends Overlay implements LofWindows.Window
 		g.setFont(FontManager.getRunescapeBoldFont());
 		if (resourceActive())
 		{
-			LofTheme.shadowText(g, resourceLeft + " " + resourceName + " to gather", r.x + 58, r.y + 26, LofTheme.TEXT);
+			LofTheme.shadowText(g, LofModal.fit(g.getFontMetrics(),
+				resourceLeft + " " + resourceName + " to gather", r.width - 58 - 12),
+				r.x + 58, r.y + 26, LofTheme.TEXT);
 			g.setFont(FontManager.getRunescapeSmallFont());
-			LofTheme.shadowText(g, "Resource contract · " + resourceSkill + " work — completes as you gather, you keep the goods.",
-				r.x + 58, r.y + 44, LofTheme.TEXT_DIM);
+			LofTheme.shadowText(g, LofModal.fit(g.getFontMetrics(),
+				"Resource contract · " + resourceSkill + " work — completes as you gather, you keep the goods.",
+				r.width - 58 - 12), r.x + 58, r.y + 44, LofTheme.TEXT_DIM);
 		}
 		else
 		{

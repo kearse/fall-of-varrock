@@ -30,6 +30,7 @@ import net.runelite.api.GameState;
 import net.runelite.api.widgets.ComponentID;
 import net.runelite.api.widgets.Widget;
 import net.runelite.client.game.ItemManager;
+import net.runelite.client.plugins.loftheme.LofModal;
 import net.runelite.client.plugins.loftheme.LofTheme;
 import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.overlay.Overlay;
@@ -62,7 +63,7 @@ class LofShopTabsOverlay extends Overlay
 	private static final int COLS = 8;
 	private static final int CELL_GAP = 3;
 	private static final int CELL_H = 50;       // fixed — never scales with item count
-	private static final int TITLE_H = 30;
+	private static final int TITLE_H = LofModal.TITLE_H;
 	private static final int RAIL_W = 40;
 	private static final int RAIL_GAP = 4;
 	private static final int PAD = 6;
@@ -218,7 +219,7 @@ class LofShopTabsOverlay extends Overlay
 
 	private Rectangle closeRect(Rectangle w)
 	{
-		return new Rectangle(w.x + w.width - 24, w.y + 7, 16, 16);
+		return LofModal.closeRect(w.x, w.y, w.width);
 	}
 
 	private Rectangle tabRect(Rectangle w, int t)
@@ -370,54 +371,14 @@ class LofShopTabsOverlay extends Overlay
 
 		final Point mouse = mousePoint();
 
+		// This window is sized to the native shop widget rather than the 480x324 standard, so it owns
+		// its panel — but the header, the close ✕ and the subtitle truncation are the shared ones.
 		LofTheme.panel(g, w.x, w.y, w.width, w.height, 12);
-
-		// header
-		final Shape clip = g.getClip();
-		g.setClip(w.x, w.y, w.width, TITLE_H);
-		g.setColor(LofTheme.HEADER);
-		g.fillRoundRect(w.x, w.y, w.width, TITLE_H + 12, 12, 12);
-		g.setClip(clip);
-		LofTheme.emberUnderline(g, w.x + 1, w.y + TITLE_H - 2, w.width - 2);
-
-		final BufferedImage logo = LofTheme.logo();
-		int titleX = w.x + 10;
-		if (logo != null)
-		{
-			g.drawImage(logo, w.x + 8, w.y + 4, 22, 22, null);
-			titleX = w.x + 34;
-		}
-		g.setFont(FontManager.getRunescapeBoldFont());
-		LofTheme.shadowText(g, plugin.getShopName(), titleX, w.y + 20, LofTheme.GOLD);
-		final int nameEnd = titleX + g.getFontMetrics().stringWidth(plugin.getShopName());
-
-		// balance
-		g.setFont(FontManager.getRunescapeSmallFont());
-		final String bal = fmt(plugin.getBalance()) + " " + plugin.getCurrencyLabel();
-		// Sell-only store: say so, so nobody hunts for a Buy option. Drawn only when it fits
-		// between the shop name and the balance readout.
-		if (plugin.isSellOnly())
-		{
-			final String hint = "· hand in for " + plugin.getCurrencyLabel();
-			final int balW = g.getFontMetrics().stringWidth(bal);
-			if (nameEnd + 8 + g.getFontMetrics().stringWidth(hint) < w.x + w.width - 30 - balW - 8)
-			{
-				LofTheme.shadowText(g, hint, nameEnd + 8, w.y + 19, LofTheme.TEXT_DIM);
-			}
-		}
-		LofTheme.shadowText(g, bal, w.x + w.width - 30 - g.getFontMetrics().stringWidth(bal), w.y + 19, LofTheme.TEXT_DIM);
-
-		// close
-		final Rectangle cr = closeRect(w);
-		final boolean closeHov = cr.contains(mouse);
-		g.setColor(closeHov ? LofTheme.EMBER : new Color(255, 255, 255, 18));
-		g.fillRoundRect(cr.x, cr.y, cr.width, cr.height, 5, 5);
-		g.setColor(closeHov ? LofTheme.TEXT : LofTheme.TEXT_DIM);
+		final String bal = LofModal.compact(plugin.getBalance()) + " " + plugin.getCurrencyLabel();
+		LofModal.header(g, w.x, w.y, w.width, TITLE_H, plugin.getShopName(),
+			plugin.isSellOnly() ? "hand in for " + plugin.getCurrencyLabel() + "  ·  " + bal : bal,
+			mouse, true);
 		final Stroke oldStroke = g.getStroke();
-		g.setStroke(new BasicStroke(1.5f));
-		g.drawLine(cr.x + 5, cr.y + 5, cr.x + cr.width - 6, cr.y + cr.height - 6);
-		g.drawLine(cr.x + cr.width - 6, cr.y + 5, cr.x + 5, cr.y + cr.height - 6);
-		g.setStroke(oldStroke);
 
 		// tab rail
 		if (hasRail())
@@ -487,7 +448,7 @@ class LofShopTabsOverlay extends Overlay
 			{
 				g.drawImage(img, rc.x + (rc.width - spriteW) / 2, rc.y + 2, spriteW, (int) (spriteW * 32.0 / 36.0), null);
 			}
-			final String price = fmt(it.price);
+			final String price = LofModal.compact(it.price);
 			LofTheme.shadowText(g, price, rc.x + (rc.width - g.getFontMetrics().stringWidth(price)) / 2, rc.y + CELL_H - 3, LofTheme.GOLD);
 		}
 		g.setClip(gridClip);
@@ -579,28 +540,6 @@ class LofShopTabsOverlay extends Overlay
 				LofTheme.shadowText(g, name, ox, ry + 12, LofTheme.LAVA);
 			}
 		}
-	}
-
-	/** Compact price: 1.2k / 3.4m / 1.1b, else the raw number. */
-	private static String fmt(int v)
-	{
-		if (v >= 10_000_000)
-		{
-			return (v / 1_000_000) + "m";
-		}
-		if (v >= 1_000_000)
-		{
-			return String.format("%.1fm", v / 1_000_000.0);
-		}
-		if (v >= 100_000)
-		{
-			return (v / 1000) + "k";
-		}
-		if (v >= 1000)
-		{
-			return String.format("%.1fk", v / 1000.0);
-		}
-		return String.valueOf(v);
 	}
 
 	private Point mousePoint()
