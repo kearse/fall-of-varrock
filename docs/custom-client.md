@@ -452,11 +452,13 @@ assume the common one (`::bank`); other scam-bait words would also open the bank
   Ember arc while stocking; gold + pulsing glow when a campaign can march ("go tell a
   Minister"), lava glow when a conquest can. Hidden until the varp is first published.
 - **Varp allocations so far:** 4600 alert · 4601 war progress · 4602-4605 pk stats ·
-  4606 wild level · 4607 teleport open · 4608 LMS · **4609 supplies** · 4610-4612
-  companions · 4613-4615 companion status · 4616 slayer · 4617 quests ·
+  4606 wild level · 4607 teleport open · 4608 LMS · **4609 supplies** · **4610-4612
+  quests** (recruit / war-prep / guide-muted) · 4613-4615 companion status · 4616 slayer ·
+  4617 quests (rogue problem) ·
   **4618 rank menu · 4619 recruit menu** · 4620-4623 Castle Wars ·
   **4624 supply · 4625 make · 4626 contracts · 4627 forge · 4628 dice · 4629 bonds** ·
-  4630 duel rules.
+  4630 duel rules · **4635-4637 companion world-indices** (moved off 4610-4612 to stop the
+  guidance arrow pointing at the Duke after buying companions).
 
 ## 5h. Build stamp — spotting stale installs at a glance
 

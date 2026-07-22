@@ -210,15 +210,18 @@ Reusable pieces — reach for these before inventing a new one. Metrics above.
   - *Small state* (toggles, counters, flags): one **packed varp**. Document the bit layout in the
     server driver. Transient/event varps must **pulse to 0** and be cleared on login (persisted varps
     re-fire on login — see `docs/custom-client.md` §5e). Current varps: 4600 alert · 4601 war progress ·
-    4602-4605 pk stats · 4606 wild level · 4607 teleport open · 4608 LMS · 4609 supplies · 4610-4612
-    companions · 4613-4615 companion status · 4616 slayer · 4617 quests · **4618 rank menu (payload =
+    4602-4605 pk stats · 4606 wild level · 4607 teleport open · 4608 LMS · 4609 supplies · **4610-4612
+    quests** (recruit packed / war-prep step / guide-muted — the client's `lofquests` reads these) ·
+    4613-4615 companion status · 4616 slayer · 4617 quests (rogue problem) · **4618 rank menu (payload =
     title ordinal + 1)** · **4619 recruit menu (packed: open|count|cap|title)** · 4620-4623 Castle Wars ·
     **4624 supply depot** · **4625 making window (payload = kind)** · **4626 war contracts** ·
     **4627 war forge** · **4628 dice (open / result: bit9 flag, roll bits 1-7, win bit 8)** ·
     **4629 bond exchange (packed: open|tradeable|claimed)** · **4630 duel rules** ·
     **4631 mire dispenser (packed: open|data|attuned|bank|streak)** ·
     **4632 character style (open|female)** · **4634 dice bank coins (spendable = client inventory +
-    this bank balance)** · **4640-4679 kit editor** (control + per-slot — was
+    this bank balance)** · **4635-4637 companion world-indices** (server→client; was double-claimed on
+    4610-4612 over the quest varps, which pointed the guidance arrow at Duke Horacio) ·
+    **4640-4679 kit editor** (control + per-slot — was
     missing from this list; a parallel branch DID double-claim 4631 the same week — keep EVERY
     varp here).
     (4601/4609/4616 all feed the `lofdials` dial row.)
