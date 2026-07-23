@@ -3,6 +3,7 @@ package org.alter.plugins.content.economy
 import org.alter.api.ext.message
 import org.alter.game.model.Tile
 import org.alter.game.model.entity.Player
+import org.alter.game.model.item.Item
 import org.alter.plugins.content.war.recruit.RecruitTrials
 import org.alter.rscm.RSCM.getRSCM
 
@@ -93,9 +94,11 @@ object SupplyDepot {
         }.toMap()
     }
 
-    /** War Effort paid per unit of [itemId] right now — base value × today's [SupplyDrive]. 0 = not accepted. */
+    /** War Effort paid per unit of [itemId] right now — base value × today's [SupplyDrive]. 0 = not accepted.
+     *  Noted items resolve to their unnoted form for the lookup, so a noted stack is valued the same as
+     *  the item it represents (unnoting an already-unnoted id is a no-op — shelf callers are unaffected). */
     fun valueOf(itemId: Int): Int {
-        val (key, we) = BY_ID[itemId] ?: return 0
+        val (key, we) = BY_ID[Item(itemId).toUnnoted().id] ?: return 0
         return we * SupplyDrive.multiplierFor(key)
     }
 
@@ -162,7 +165,9 @@ object SupplyDepot {
      * "all carried"). Returns (items, WE) — (0, 0) if the item isn't accepted or none carried.
      */
     fun depositItem(p: Player, itemId: Int, qty: Int): Pair<Int, Int> {
-        val (key, value) = BY_ID[itemId] ?: return 0 to 0
+        // Price/accept by the unnoted form, but count and remove the ACTUAL carried id (which may be
+        // noted) — mirrors ItemCurrency.buyFromPlayer, so noted stacks hand in like unnoted ones.
+        val (key, value) = BY_ID[Item(itemId).toUnnoted().id] ?: return 0 to 0
         val carried = p.inventory.getItemCount(itemId)
         if (carried <= 0) return 0 to 0
         val count = if (qty <= 0) carried else minOf(qty, carried)
