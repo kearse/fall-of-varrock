@@ -64,13 +64,15 @@ class LofGeOverlay extends Overlay
 	static final int BID_ROW_BASE = 520;    // + i -> adopt this Buying listing's price
 
 	// The GE runs wider than the shared LofModal default so it fills the game viewport like the native
-	// OSRS Grand Exchange. In fixed mode it's the 512px world-view width (clearing the inventory column +
-	// chat box); in resizable mode it grows with the canvas so it doesn't look tiny on a big screen,
-	// while still leaving room on the right for the inventory (sell right-click). Height is steady.
+	// OSRS Grand Exchange. In fixed mode it's the 512px world-view width; in resizable it grows with the
+	// canvas so it doesn't look tiny on a big screen. CRUCIAL: it must never cover the inventory, because
+	// selling right-clicks real inventory items — so in resizable it sits in the area *left* of the
+	// inventory panel (INV_RESERVE_RIGHT), never centred across the whole canvas. Height is steady.
 	private static final int GE_W_MIN = 512;
 	private static final int GE_W_MAX = 600;
 	private static final int GE_H = 330;
-	private static final int INVENTORY_RESERVE = 380;   // canvas width kept clear so the window centres left of the inventory
+	private static final int INV_RESERVE_RIGHT = 280;   // right-hand canvas kept clear for the inventory/tab panel
+	private static final int LEFT_MARGIN = 6;
 	private int geW = GE_W_MIN;                          // recomputed each render/hit-test (see computeSize)
 	private static final int PAD = LofModal.PAD;        // 14
 	private static final int TAB_Y = 42;                // tab strip, just below the title underline
@@ -112,14 +114,27 @@ class LofGeOverlay extends Overlay
 		visible = v;
 	}
 
-	/** Pick the window width for this frame: fixed 512 in fixed mode, growing with the canvas (capped) in
-	 *  resizable so it fills more of a big screen while still centring left of the inventory column. Call
-	 *  before any geometry each render + hit-test so the two agree. */
+	/** True while a right-click menu is open — the mouse listener stands down so menu options (e.g. the
+	 *  inventory "Offer" for selling) still work even if the menu overlaps the window edge. */
+	boolean isGameMenuOpen()
+	{
+		return client.isMenuOpen();
+	}
+
+	/** Pick the window width for this frame: 512 in fixed mode; in resizable, as wide as fits in the area
+	 *  left of the inventory panel (capped GE_W_MIN..GE_W_MAX). Call before any geometry each render +
+	 *  hit-test so the two agree. */
 	private void computeSize()
 	{
-		geW = client.isResized()
-			? Math.max(GE_W_MIN, Math.min(GE_W_MAX, client.getCanvasWidth() - INVENTORY_RESERVE))
-			: GE_W_MIN;
+		if (client.isResized())
+		{
+			final int avail = client.getCanvasWidth() - INV_RESERVE_RIGHT - LEFT_MARGIN * 2;
+			geW = Math.max(GE_W_MIN, Math.min(GE_W_MAX, avail));
+		}
+		else
+		{
+			geW = GE_W_MIN;
+		}
 	}
 
 	private int colW()
@@ -127,9 +142,17 @@ class LofGeOverlay extends Overlay
 		return (geW - PAD * 2 - COL_GAP * (COLS - 1)) / COLS;
 	}
 
+	/** Fixed mode: centre in the 512px world view (already left of the inventory column). Resizable:
+	 *  centre within the region *left* of the inventory panel so the window never covers the inventory
+	 *  — the sell flow needs those items clickable. */
 	private int originX()
 	{
-		return LofModal.originX(client, geW);
+		if (!client.isResized())
+		{
+			return LofModal.originX(client, geW);
+		}
+		final int avail = client.getCanvasWidth() - INV_RESERVE_RIGHT;
+		return Math.max(LEFT_MARGIN, (avail - geW) / 2);
 	}
 
 	private int originY()
