@@ -30,9 +30,9 @@ class LofGeMouseListener extends MouseAdapter
 	@Override
 	public MouseEvent mousePressed(MouseEvent event)
 	{
-		if (!overlay.isVisible() || !SwingUtilities.isLeftMouseButton(event))
+		if (!overlay.isVisible() || !SwingUtilities.isLeftMouseButton(event) || overlay.isGameMenuOpen())
 		{
-			return event;
+			return event; // a right-click menu is open — let its options (e.g. inventory "Offer") through
 		}
 
 		final int hit = overlay.hitTest(event.getPoint());
@@ -171,7 +171,7 @@ class LofGeMouseListener extends MouseAdapter
 
 	private MouseEvent swallowIfOnWindow(MouseEvent event)
 	{
-		if (overlay.isVisible() && overlay.hitTest(event.getPoint()) != LofGeOverlay.OUTSIDE)
+		if (overlay.isVisible() && !overlay.isGameMenuOpen() && overlay.hitTest(event.getPoint()) != LofGeOverlay.OUTSIDE)
 		{
 			event.consume();
 		}
