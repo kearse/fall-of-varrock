@@ -116,20 +116,33 @@ public final class LofModal
 
 	public static Rectangle closeRect(int ox, int oy)
 	{
-		return new Rectangle(ox + W - 30, oy + 9, 20, 20);
+		return closeRect(ox, oy, W);
 	}
 
-	/** Panel + header strip + logo + gold title + dim right-aligned subtitle + close ✕. */
+	/** Close ✕ for a window {@code w} wide (anchored to its top-right, like the default). */
+	public static Rectangle closeRect(int ox, int oy, int w)
+	{
+		return new Rectangle(ox + w - 30, oy + 9, 20, 20);
+	}
+
+	/** Panel + header strip + logo + gold title + dim right-aligned subtitle + close ✕ (default size). */
 	public static void frame(Graphics2D g, int ox, int oy, String title, String subtitle, Point mouse)
 	{
-		LofTheme.panel(g, ox, oy, W, H, ARC);
+		frame(g, ox, oy, W, H, title, subtitle, mouse);
+	}
+
+	/** Same frame at a custom {@code w}×{@code h} — for windows that deviate from the default size
+	 *  (e.g. the kit editor and Grand Exchange), so they still get the shared header/logo/close chrome. */
+	public static void frame(Graphics2D g, int ox, int oy, int w, int h, String title, String subtitle, Point mouse)
+	{
+		LofTheme.panel(g, ox, oy, w, h, ARC);
 
 		final Shape headerClip = g.getClip();
-		g.setClip(ox, oy, W, TITLE_H);
+		g.setClip(ox, oy, w, TITLE_H);
 		g.setColor(LofTheme.HEADER);
-		g.fillRoundRect(ox, oy, W, TITLE_H + ARC, ARC, ARC);
+		g.fillRoundRect(ox, oy, w, TITLE_H + ARC, ARC, ARC);
 		g.setClip(headerClip);
-		LofTheme.emberUnderline(g, ox + 1, oy + TITLE_H - 2, W - 2);
+		LofTheme.emberUnderline(g, ox + 1, oy + TITLE_H - 2, w - 2);
 
 		final BufferedImage logo = LofTheme.logo();
 		int titleX = ox + 14;
@@ -143,10 +156,10 @@ public final class LofModal
 		if (subtitle != null)
 		{
 			g.setFont(FontManager.getRunescapeSmallFont());
-			LofTheme.shadowText(g, subtitle, ox + W - 44 - g.getFontMetrics().stringWidth(subtitle), oy + 24, LofTheme.TEXT_DIM);
+			LofTheme.shadowText(g, subtitle, ox + w - 44 - g.getFontMetrics().stringWidth(subtitle), oy + 24, LofTheme.TEXT_DIM);
 		}
 
-		final Rectangle cr = closeRect(ox, oy);
+		final Rectangle cr = closeRect(ox, oy, w);
 		final boolean hov = cr.contains(mouse);
 		g.setColor(hov ? LofTheme.EMBER : new Color(255, 255, 255, 18));
 		g.fillRoundRect(cr.x, cr.y, cr.width, cr.height, 6, 6);

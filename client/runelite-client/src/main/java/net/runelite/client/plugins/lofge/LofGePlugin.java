@@ -420,6 +420,23 @@ public class LofGePlugin extends Plugin implements LofWindows.Window
 			LofWindows.openExclusive(this);
 			return;
 		}
+		if (body.equals("refreshopen"))
+		{
+			// Live board repaint: reset only the buffer — do NOT touch the setup/history view state.
+			buffer = new Slot[SLOTS];
+			for (int i = 0; i < SLOTS; i++)
+			{
+				buffer[i] = new Slot();
+			}
+			return;
+		}
+		if (body.equals("refreshend"))
+		{
+			// Apply the new board data in place. No visibility change: a fill you're watching on the
+			// board progresses live, and one you're not never pops the window open or wipes a setup.
+			System.arraycopy(buffer, 0, slots, 0, SLOTS);
+			return;
+		}
 		if (body.equals("histopen"))
 		{
 			histBuffer = new ArrayList<>();

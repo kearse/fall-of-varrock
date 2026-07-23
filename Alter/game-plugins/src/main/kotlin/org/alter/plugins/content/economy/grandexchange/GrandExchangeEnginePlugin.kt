@@ -42,9 +42,10 @@ class GrandExchangeEnginePlugin(
             world.timers[matchTimer] = MATCH_INTERVAL
         }
         onTimer(matchTimer) {
-            GrandExchange.matchTick()
+            val changed = GrandExchange.matchTick()
             GrandExchange.save() // no-op unless something changed
             deliverNotices()
+            if (changed) refreshOnlineBoards() // so open boards show fills progressing live
             world.timers[matchTimer] = MATCH_INTERVAL
         }
         onLogout { GrandExchange.save() }
@@ -77,6 +78,14 @@ class GrandExchangeEnginePlugin(
             val box = player.getCommandArgs().firstOrNull()?.toIntOrNull() ?: return@onCommand player.message("Usage: ::gecancel <box>")
             GrandExchange.cancel(player, box)
             printOffers(player)
+        }
+    }
+
+    /** Repaint the board for every online player who owns an offer, so a match they're watching
+     *  progresses live (bars + filled counts) without them having to reopen the window. */
+    private fun refreshOnlineBoards() {
+        world.players.forEach { p ->
+            if (GrandExchange.ownsOffer(p.username.lowercase())) GrandExchangeWindow.refresh(p)
         }
     }
 
