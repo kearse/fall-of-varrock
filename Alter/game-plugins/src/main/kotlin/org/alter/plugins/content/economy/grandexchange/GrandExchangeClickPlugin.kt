@@ -132,21 +132,32 @@ class GrandExchangeClickPlugin(
             GrandExchangeWindow.stream(player)
         }
 
+        // The History tab (also reachable via the clerk's "History" option, bound in bindClerk).
+        onCommand("gehistoryclick", description = "GE window: show the History tab") {
+            GrandExchangeWindow.streamHistory(player)
+        }
+
         onCommand("gecloseclick", description = "GE window: close") { GrandExchangeWindow.close(player) }
     }
 
-    /** Bind whichever click option the clerk's cache def actually carries (Exchange/Talk-to/…). */
+    /** Bind the clerk's click options: the main open (Exchange/Talk-to/…) and, when the cache def carries
+     *  it, a separate "History" option that opens straight to the History tab. */
     private fun bindClerk(npc: String) {
         val acts = try {
             getNpc(getRSCM(npc)).actions.filterNotNull().filter { it.isNotBlank() }
         } catch (e: Exception) { emptyList() }
-        val opt = listOf("exchange", "trade", "talk-to", "view-offers", "history").firstNotNullOfOrNull { want ->
+        // Prefer a real open option; don't let "history" be picked as the primary open.
+        val opt = listOf("exchange", "trade", "talk-to", "view-offers").firstNotNullOfOrNull { want ->
             acts.firstOrNull { it.equals(want, ignoreCase = true) }
-        } ?: acts.firstOrNull()
+        } ?: acts.firstOrNull { !it.equals("history", ignoreCase = true) }
         if (opt != null) {
             onNpcOption(npc, option = opt) { GrandExchangeWindow.stream(player) }
         } else {
-            logger.warn { "grand-exchange: '$npc' has no click options; use ::ge." }
+            logger.warn { "grand-exchange: '$npc' has no open option; use ::ge." }
+        }
+        // Bind "History" only if the def actually has it — onNpcOption throws on a missing option.
+        acts.firstOrNull { it.equals("history", ignoreCase = true) }?.let { hist ->
+            onNpcOption(npc, option = hist) { GrandExchangeWindow.streamHistory(player) }
         }
     }
 

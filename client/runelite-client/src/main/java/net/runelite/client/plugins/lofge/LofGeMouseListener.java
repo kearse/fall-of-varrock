@@ -127,7 +127,15 @@ class LofGeMouseListener extends MouseAdapter
 	private void handleBoard(int hit)
 	{
 		// Check highest bases first — SLOT_SELL/BUY_BASE (400/300) sit above ABORT/SLOT_BASE.
-		if (hit == LofGeOverlay.COLLECT_ALL)
+		if (hit == LofGeOverlay.TAB_OFFERS)
+		{
+			plugin.openBoard();
+		}
+		else if (hit == LofGeOverlay.TAB_HISTORY)
+		{
+			plugin.openHistory();
+		}
+		else if (hit == LofGeOverlay.COLLECT_ALL)
 		{
 			plugin.collectAll();
 		}

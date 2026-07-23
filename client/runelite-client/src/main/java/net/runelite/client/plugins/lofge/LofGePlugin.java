@@ -42,8 +42,10 @@ import net.runelite.api.Client;
 import net.runelite.api.MenuAction;
 import net.runelite.api.MenuEntry;
 import net.runelite.api.ScriptID;
+import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.ChatMessage;
 import net.runelite.api.events.CommandExecuted;
+import net.runelite.api.events.GameTick;
 import net.runelite.api.events.MenuOpened;
 import net.runelite.api.events.ScriptCallbackEvent;
 import net.runelite.api.events.VarbitChanged;
@@ -99,6 +101,24 @@ public class LofGePlugin extends Plugin implements LofWindows.Window
 	private final Slot[] slots = new Slot[SLOTS];
 	private Slot[] buffer = new Slot[SLOTS];
 	private long coins;
+
+	/** History tab: committed rows + the buffer filled while a hist batch streams in. */
+	private final List<Hist> history = new ArrayList<>();
+	private List<Hist> histBuffer = new ArrayList<>();
+	private boolean showHistory; // true => the window draws the History tab instead of the board
+
+	/** Tile the window opened at, so it can close itself when the player walks away (see onGameTick). */
+	private WorldPoint anchor;
+
+	/** One completed-trade row for the History tab. */
+	static final class Hist
+	{
+		boolean buy;
+		int itemId;
+		int qty;
+		int price;
+		long time;
+	}
 
 	/** One offer slot. state uses the server's GeState.wire (0 EMPTY .. 6 SOLD); buy = true for a buy offer. */
 	static final class Slot
@@ -258,6 +278,24 @@ public class LofGePlugin extends Plugin implements LofWindows.Window
 		LofWindows.onForeignSignal(event.getVarpId(), client.getVarpValue(event.getVarpId()));
 	}
 
+	/** Close the window when the player walks away from the clerk — like a native interface. The window
+	 *  only stays open while you stand still (its own clicks are swallowed), so any tile change means the
+	 *  player clicked the world to walk off. */
+	@Subscribe
+	public void onGameTick(GameTick event)
+	{
+		if (client.getLocalPlayer() == null)
+		{
+			return;
+		}
+		final WorldPoint here = client.getLocalPlayer().getWorldLocation();
+		if (overlay.isVisible() && anchor != null && here != null && here.distanceTo(anchor) > 0)
+		{
+			close();
+		}
+		anchor = overlay.isVisible() ? (anchor == null ? here : anchor) : null;
+	}
+
 	/** While the empty *sell* screen is open, add an "Offer" option to inventory items — the player
 	 *  right-clicks the item they want to sell (the same idiom as selling to a store), which pulls it
 	 *  into the sell screen. Buy uses the chat search instead, so nothing is added there. */
@@ -348,6 +386,16 @@ public class LofGePlugin extends Plugin implements LofWindows.Window
 			overlay.setVisible(true);
 			LofWindows.openExclusive(this);
 		}
+		else if ("gehistpanel".equalsIgnoreCase(event.getCommand()))
+		{
+			// Sample History tab.
+			handle("histopen");
+			handle("hist|1|561|5000|100|" + (System.currentTimeMillis() - 60_000));
+			handle("hist|0|1333|1|15000|" + (System.currentTimeMillis() - 3_600_000));
+			handle("hist|0|4151|1|1850000|" + (System.currentTimeMillis() - 86_400_000L));
+			handle("histend");
+			clientThread.invokeLater(client::refreshChat);
+		}
 	}
 
 	/** Parse one batch line (already stripped of {@link #PREFIX}). */
@@ -362,6 +410,7 @@ public class LofGePlugin extends Plugin implements LofWindows.Window
 			}
 			setup = null; // a fresh board stream returns us to the board view
 			pendingSetup = null;
+			showHistory = false;
 			return;
 		}
 		if (body.equals("end"))
@@ -371,10 +420,27 @@ public class LofGePlugin extends Plugin implements LofWindows.Window
 			LofWindows.openExclusive(this);
 			return;
 		}
+		if (body.equals("histopen"))
+		{
+			histBuffer = new ArrayList<>();
+			setup = null;
+			pendingSetup = null;
+			return;
+		}
+		if (body.equals("histend"))
+		{
+			history.clear();
+			history.addAll(histBuffer);
+			showHistory = true;
+			overlay.setVisible(true);
+			LofWindows.openExclusive(this);
+			return;
+		}
 		if (body.equals("close"))
 		{
 			setup = null;
 			pendingSetup = null;
+			showHistory = false;
 			overlay.setVisible(false);
 			return;
 		}
@@ -467,6 +533,22 @@ public class LofGePlugin extends Plugin implements LofWindows.Window
 				}
 				break;
 			}
+			case "hist":
+			{
+				// hist|buy|item|qty|price|time
+				final String[] f = rest.split("\\|");
+				if (f.length >= 5)
+				{
+					final Hist h = new Hist();
+					h.buy = parseInt(f[0], 1) != 0;
+					h.itemId = parseInt(f[1], 0);
+					h.qty = parseInt(f[2], 0);
+					h.price = parseInt(f[3], 0);
+					h.time = parseLong(f[4], 0);
+					histBuffer.add(h);
+				}
+				break;
+			}
 			default:
 				break;
 		}
@@ -515,12 +597,25 @@ public class LofGePlugin extends Plugin implements LofWindows.Window
 		send("::lofgecancel " + box);
 	}
 
+	/** Tab: fetch + show the History tab (server streams the completed-trade rows back). */
+	void openHistory()
+	{
+		send("::lofgehistory");
+	}
+
+	/** Tab: fetch + show the offer board (server re-streams it via the `ge` command). */
+	void openBoard()
+	{
+		send("::lofgeboard");
+	}
+
 	/** Close: tell the server (so it stops streaming) and hide locally. */
 	void close()
 	{
 		send("::lofgeclose");
 		setup = null;
 		pendingSetup = null;
+		showHistory = false;
 		overlay.setVisible(false);
 	}
 
@@ -690,6 +785,16 @@ public class LofGePlugin extends Plugin implements LofWindows.Window
 	long getCoins()
 	{
 		return coins;
+	}
+
+	boolean isShowingHistory()
+	{
+		return showHistory;
+	}
+
+	List<Hist> getHistory()
+	{
+		return history;
 	}
 
 	private static int parseInt(String s, int def)

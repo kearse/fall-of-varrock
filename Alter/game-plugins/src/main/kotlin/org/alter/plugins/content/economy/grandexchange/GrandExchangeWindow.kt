@@ -20,6 +20,9 @@ import org.alter.rscm.RSCM.getRSCM
  * FOV_GE:ask|price|qty                                                     (0..N top open sells, cheapest first)
  * FOV_GE:bid|price|qty                                                     (0..N top open buys, dearest first)
  * FOV_GE:setupend                                                          (commit the setup view)
+ * FOV_GE:histopen                                                          (open the History tab; reset)
+ * FOV_GE:hist|buy|item|qty|price|time                                      (one completed trade, newest first)
+ * FOV_GE:histend                                                           (commit the History tab)
  * FOV_GE:close                                                             (server-driven close)
  * ```
  * `state` uses [GeState.wire] (EMPTY 0 … SOLD 6 — the client's enum ordinals). `buy` is 1/0.
@@ -78,6 +81,15 @@ object GrandExchangeWindow {
         for ((price, qty) in GrandExchange.topAsks(item, MARKET_ROWS)) line(p, "ask|$price|$qty")
         for ((price, qty) in GrandExchange.topBids(item, MARKET_ROWS)) line(p, "bid|$price|$qty")
         line(p, "setupend")
+    }
+
+    /** Open the window straight to the History tab: the player's completed trades, newest first. */
+    fun streamHistory(p: Player) {
+        line(p, "histopen")
+        for (h in GrandExchange.historyOf(p.username.lowercase())) {
+            line(p, "hist|${if (h.buy) 1 else 0}|${h.itemId}|${h.qty}|${h.price}|${h.time}")
+        }
+        line(p, "histend")
     }
 
     fun close(p: Player) = line(p, "close")
