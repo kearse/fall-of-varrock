@@ -67,6 +67,9 @@ class LofWarSpoilsOverlay extends Overlay
 	private boolean visible;
 	private int scroll; // px
 
+	// Scaled placement published by render() on the client thread; the mouse thread hit-tests via this cache only.
+	private volatile LofModal.Placement placement;
+
 	@Inject
 	private LofWarSpoilsOverlay(Client client, LofWarSpoilsPlugin plugin, ItemManager itemManager)
 	{
@@ -108,13 +111,19 @@ class LofWarSpoilsOverlay extends Overlay
 	private int originY() { return LofModal.originY(client, WIN_H); }
 
 	/** Wheel scroll if the cursor is over the list; returns true if consumed. */
-	boolean handleScroll(Point p, int rotation)
+	boolean handleScroll(Point canvas, int rotation)
 	{
 		if (!visible)
 		{
 			return false;
 		}
-		final int ox = originX(), oy = originY();
+		final LofModal.Placement place = placement;
+		if (place == null)
+		{
+			return false;
+		}
+		final Point p = place.toLocal(canvas);
+		final int ox = place.ox, oy = place.oy;
 		if (!new Rectangle(ox + MARGIN, oy + VP_TOP, WIN_W - MARGIN * 2, VP_H).contains(p))
 		{
 			return false;
@@ -123,13 +132,19 @@ class LofWarSpoilsOverlay extends Overlay
 		return true;
 	}
 
-	int hitTest(Point p)
+	int hitTest(Point canvas)
 	{
 		if (!visible)
 		{
 			return OUTSIDE;
 		}
-		final int ox = originX(), oy = originY();
+		final LofModal.Placement place = placement;
+		if (place == null)
+		{
+			return OUTSIDE;
+		}
+		final Point p = place.toLocal(canvas);
+		final int ox = place.ox, oy = place.oy;
 		if (!new Rectangle(ox, oy, WIN_W, WIN_H).contains(p))
 		{
 			return OUTSIDE;
@@ -201,8 +216,10 @@ class LofWarSpoilsOverlay extends Overlay
 			return toast != null ? new Dimension(client.getCanvasWidth(), 40) : null;
 		}
 
-		final int ox = originX(), oy = originY();
-		final Point mouse = mousePoint();
+		final LofModal.Placement place = LofModal.beginWindow(g, client, WIN_W, WIN_H);
+		placement = place;
+		final int ox = place.ox, oy = place.oy;
+		final Point mouse = place.toLocal(mousePoint());
 		final List<LofWarSpoilsPlugin.Item> items = plugin.getItems();
 
 		LofTheme.panel(g, ox, oy, WIN_W, WIN_H, WIN_ARC);
@@ -299,30 +316,13 @@ class LofWarSpoilsOverlay extends Overlay
 			g.fillRoundRect(sbX, thumbY, SCROLLBAR_W, thumbH, SCROLLBAR_W, SCROLLBAR_W);
 		}
 
-		// button bar
-		drawButton(g, bankRect(ox, oy), "Bank All", mouse, true);
-		drawButton(g, takeRect(ox, oy), "To Inventory", mouse, false);
+		// button bar — shared helper: gold primary (Bank All), gold-dim secondary (To Inventory)
+		LofModal.button(g, bankRect(ox, oy), "Bank All", LofTheme.GOLD, true, bankRect(ox, oy).contains(mouse));
+		LofModal.button(g, takeRect(ox, oy), "To Inventory", LofTheme.GOLD_DIM, true, takeRect(ox, oy).contains(mouse));
 
+		LofModal.endWindow(g, place);
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, oldAA == null ? RenderingHints.VALUE_ANTIALIAS_DEFAULT : oldAA);
 		return new Dimension(WIN_W, WIN_H);
-	}
-
-	private void drawButton(Graphics2D g, Rectangle r, String label, Point mouse, boolean primary)
-	{
-		final boolean hov = r.contains(mouse);
-		g.setColor(primary
-			? LofTheme.alpha(LofTheme.EMBER, hov ? 90 : 60)
-			: LofTheme.alpha(LofTheme.PANEL_OPAQUE, hov ? 210 : 160));
-		g.fillRoundRect(r.x, r.y, r.width, r.height, 8, 8);
-		final Stroke old = g.getStroke();
-		g.setStroke(new BasicStroke(hov ? 1.6f : 1.0f));
-		g.setColor(LofTheme.alpha(primary ? LofTheme.GOLD : LofTheme.EMBER, hov ? 220 : 140));
-		g.drawRoundRect(r.x, r.y, r.width - 1, r.height - 1, 8, 8);
-		g.setStroke(old);
-		g.setFont(FontManager.getRunescapeFont());
-		final int tw = g.getFontMetrics().stringWidth(label);
-		LofTheme.shadowText(g, label, r.x + (r.width - tw) / 2, r.y + r.height / 2 + 5,
-			hov ? LofTheme.GOLD : LofTheme.TEXT);
 	}
 
 	/** Top-centre timed banner prompting the commander to ::claim (drawn even when the window is closed). */

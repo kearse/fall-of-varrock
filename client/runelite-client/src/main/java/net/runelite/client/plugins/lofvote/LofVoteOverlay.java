@@ -74,6 +74,9 @@ class LofVoteOverlay extends Overlay
 	private boolean visible;
 	private int scroll; // px
 
+	// Scaled placement published by render() on the client thread; the mouse thread hit-tests via this cache only.
+	private volatile LofModal.Placement placement;
+
 	@Inject
 	private LofVoteOverlay(Client client, LofVotePlugin plugin)
 	{
@@ -129,13 +132,19 @@ class LofVoteOverlay extends Overlay
 	private int originY() { return LofModal.originY(client, winH()); }
 
 	/** Wheel scroll if the cursor is over the grid; returns true if consumed. */
-	boolean handleScroll(Point p, int rotation)
+	boolean handleScroll(Point canvas, int rotation)
 	{
 		if (!visible)
 		{
 			return false;
 		}
-		final int ox = originX(), oy = originY();
+		final LofModal.Placement place = placement;
+		if (place == null)
+		{
+			return false;
+		}
+		final Point p = place.toLocal(canvas);
+		final int ox = place.ox, oy = place.oy;
 		if (!new Rectangle(ox + PAD, oy + VP_TOP, WIN_W - 2 * PAD, vpH()).contains(p))
 		{
 			return false;
@@ -144,13 +153,19 @@ class LofVoteOverlay extends Overlay
 		return true;
 	}
 
-	int hitTest(Point p)
+	int hitTest(Point canvas)
 	{
 		if (!visible)
 		{
 			return OUTSIDE;
 		}
-		final int ox = originX(), oy = originY();
+		final LofModal.Placement place = placement;
+		if (place == null)
+		{
+			return OUTSIDE;
+		}
+		final Point p = place.toLocal(canvas);
+		final int ox = place.ox, oy = place.oy;
 		if (!new Rectangle(ox, oy, WIN_W, winH()).contains(p))
 		{
 			return OUTSIDE;
@@ -224,9 +239,11 @@ class LofVoteOverlay extends Overlay
 		final Rectangle selfBounds = getBounds();
 		g.translate(-selfBounds.x, -selfBounds.y);
 
-		final int ox = originX(), oy = originY();
 		final int winH = winH();
-		final Point mouse = mousePoint();
+		final LofModal.Placement place = LofModal.beginWindow(g, client, WIN_W, winH);
+		placement = place;
+		final int ox = place.ox, oy = place.oy;
+		final Point mouse = place.toLocal(mousePoint());
 
 		LofTheme.panel(g, ox, oy, WIN_W, winH, WIN_ARC);
 
@@ -297,6 +314,7 @@ class LofVoteOverlay extends Overlay
 		LofTheme.shadowText(g, hint, ox + (WIN_W - hintFm.stringWidth(hint)) / 2, oy + winH - 9, LofTheme.TEXT_DIM);
 
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, oldAA == null ? RenderingHints.VALUE_ANTIALIAS_DEFAULT : oldAA);
+		LofModal.endWindow(g, place);
 		return new Dimension(WIN_W, winH);
 	}
 

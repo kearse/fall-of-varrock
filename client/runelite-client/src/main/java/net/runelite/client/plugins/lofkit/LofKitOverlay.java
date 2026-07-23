@@ -149,6 +149,9 @@ class LofKitOverlay extends Overlay
 	private volatile boolean trainingCached;
 	private volatile boolean lmsCached;
 
+	// Scaled placement published by render() on the client thread; the mouse thread hit-tests via this cache only.
+	private volatile LofModal.Placement placement;
+
 	/** Cached — safe to call from the mouse thread (see the field note). */
 	boolean isShowing()
 	{
@@ -258,11 +261,14 @@ class LofKitOverlay extends Overlay
 	private Rectangle diffRect(int ox, int oy, int i) { return new Rectangle(ox + PAD + 226 + i * 40, oy + WIN_H - FOOT_H, 36, CHIP_H); }
 	private Rectangle actionRect(int ox, int oy) { return new Rectangle(ox + WIN_W - PAD - 108, oy + WIN_H - FOOT_H - 4, 108, 28); }
 
-	int hitTest(Point p)
+	int hitTest(Point canvas)
 	{
 		if (!isShowing()) return OUTSIDE;
+		final LofModal.Placement place = placement;
+		if (place == null) return OUTSIDE;
+		final Point p = place.toLocal(canvas);
 		final boolean training = isTraining(), lms = isLms();
-		final int ox = originX(), oy = originY();
+		final int ox = place.ox, oy = place.oy;
 		if (!new Rectangle(ox, oy, WIN_W, WIN_H).contains(p)) return OUTSIDE;
 		if (closeRect(ox, oy).contains(p)) return CLOSE;
 		if (actionRect(ox, oy).contains(p)) return ACTION;
@@ -348,14 +354,17 @@ class LofKitOverlay extends Overlay
 		final java.awt.Rectangle selfBounds = getBounds();
 		g.translate(-selfBounds.x, -selfBounds.y);
 
+		final LofModal.Placement place = LofModal.beginWindow(g, client, WIN_W, WIN_H);
+		placement = place;
+
 		final int control = client.getVarpValue(CONTROL_VARP);
 		final int mode = (control >> 1) & 0x3;
 		final boolean training = mode == 1;
 		final boolean lms = mode == 3;
 		final int book = (control >> 3) & 0x3;
 		final int diff = (control >> 5) & 0x3;
-		final int ox = originX(), oy = originY();
-		final Point mouse = mousePoint();
+		final int ox = place.ox, oy = place.oy;
+		final Point mouse = place.toLocal(mousePoint());
 		String hover = null;
 
 		LofTheme.panel(g, ox, oy, WIN_W, WIN_H, WIN_ARC);
@@ -511,6 +520,7 @@ class LofKitOverlay extends Overlay
 			LofTheme.shadowText(g, hover, titleX + 96, oy + 24, LofTheme.GOLD);
 		}
 
+		LofModal.endWindow(g, place);
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, oldAA == null ? RenderingHints.VALUE_ANTIALIAS_DEFAULT : oldAA);
 		return new Dimension(WIN_W, WIN_H);
 	}

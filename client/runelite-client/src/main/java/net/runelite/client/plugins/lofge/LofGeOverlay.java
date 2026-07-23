@@ -86,6 +86,9 @@ class LofGeOverlay extends Overlay
 
 	private boolean visible;
 
+	// Scaled placement published by render() on the client thread; the mouse thread hit-tests via this cache only.
+	private volatile LofModal.Placement placement;
+
 	@Inject
 	private LofGeOverlay(Client client, LofGePlugin plugin, ItemManager itemManager)
 	{
@@ -309,13 +312,19 @@ class LofGeOverlay extends Overlay
 		return INSIDE;
 	}
 
-	int hitTest(Point p)
+	int hitTest(Point canvas)
 	{
 		if (!visible)
 		{
 			return OUTSIDE;
 		}
-		final int ox = originX(), oy = originY();
+		final LofModal.Placement place = placement;
+		if (place == null)
+		{
+			return OUTSIDE;
+		}
+		final int ox = place.ox, oy = place.oy;
+		final Point p = place.toLocal(canvas); // map the canvas click into the window's authored space
 		if (!new Rectangle(ox, oy, GE_W, GE_H).contains(p))
 		{
 			return OUTSIDE;
@@ -422,13 +431,16 @@ class LofGeOverlay extends Overlay
 		final Rectangle selfBounds = getBounds();
 		g.translate(-selfBounds.x, -selfBounds.y);
 
-		final int ox = originX(), oy = originY();
-		final Point mouse = mousePoint();
+		final LofModal.Placement place = LofModal.beginWindow(g, client, GE_W, GE_H);
+		placement = place; // publish for the mouse thread before any hit-testable frame is drawn
+		final int ox = place.ox, oy = place.oy;
+		final Point mouse = place.toLocal(mousePoint()); // hover in the window's authored space
 
 		final LofGePlugin.Setup setup = plugin.getSetup();
 		if (setup != null)
 		{
 			drawSetup(g, ox, oy, mouse, setup);
+			LofModal.endWindow(g, place);
 			g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, oldAA == null ? RenderingHints.VALUE_ANTIALIAS_DEFAULT : oldAA);
 			return new Dimension(GE_W, GE_H);
 		}
@@ -451,6 +463,7 @@ class LofGeOverlay extends Overlay
 			drawCollection(g, ox, oy, mouse);
 		}
 
+		LofModal.endWindow(g, place);
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, oldAA == null ? RenderingHints.VALUE_ANTIALIAS_DEFAULT : oldAA);
 		return new Dimension(GE_W, GE_H);
 	}
@@ -459,7 +472,7 @@ class LofGeOverlay extends Overlay
 	{
 		final Rectangle offers = tabOffersRect(ox, oy);
 		final Rectangle history = tabHistoryRect(ox, oy);
-		LofModal.button(g, offers, "Offers", hist ? LofTheme.GOLD_DIM : LofTheme.EMBER, true,
+		LofModal.button(g, offers, "Offers", hist ? LofTheme.GOLD_DIM : LofTheme.GOLD, true,
 			!hist || offers.contains(mouse));
 		LofModal.button(g, history, "History", hist ? LofTheme.GOLD : LofTheme.GOLD_DIM, true,
 			hist || history.contains(mouse));
@@ -630,7 +643,7 @@ class LofGeOverlay extends Overlay
 
 		// collect-all button (bottom-right)
 		final Rectangle br = collectAllRect(ox, oy);
-		LofModal.button(g, br, "Collect all", LofTheme.EMBER, any, br.contains(mouse));
+		LofModal.button(g, br, "Collect all", LofTheme.GOLD, any, br.contains(mouse));
 	}
 
 	private void drawSetup(Graphics2D g, int ox, int oy, Point mouse, LofGePlugin.Setup s)
@@ -674,9 +687,9 @@ class LofGeOverlay extends Overlay
 
 		// quantity
 		LofTheme.shadowText(g, "QUANTITY", ox + PAD, oy + SU_QLAB_Y, LofTheme.GOLD_DIM);
-		LofModal.button(g, suQMinus(ox, oy), "−", LofTheme.EMBER, ready, suQMinus(ox, oy).contains(mouse));
+		LofModal.button(g, suQMinus(ox, oy), "−", LofTheme.GOLD_DIM, ready, suQMinus(ox, oy).contains(mouse));
 		drawValueBox(g, suQValue(ox, oy), ready ? LofModal.fmt(s.qty) : "—", ready);
-		LofModal.button(g, suQPlus(ox, oy), "+", LofTheme.EMBER, ready, suQPlus(ox, oy).contains(mouse));
+		LofModal.button(g, suQPlus(ox, oy), "+", LofTheme.GOLD_DIM, ready, suQPlus(ox, oy).contains(mouse));
 		final String[] presets = {"1", "10", "100", "1k", "X"};
 		for (int i = 0; i < 5; i++)
 		{
@@ -693,9 +706,9 @@ class LofGeOverlay extends Overlay
 			final int hw = g.getFontMetrics().stringWidth(hint);
 			LofTheme.shadowText(g, hint, ox + GE_W - PAD - hw, oy + SU_PLAB_Y, s.buy ? LofTheme.LAVA : LofTheme.GOLD);
 		}
-		LofModal.button(g, suPMinus(ox, oy), "-5%", LofTheme.EMBER, ready, suPMinus(ox, oy).contains(mouse));
+		LofModal.button(g, suPMinus(ox, oy), "-5%", LofTheme.GOLD_DIM, ready, suPMinus(ox, oy).contains(mouse));
 		drawValueBox(g, suPValue(ox, oy), ready ? LofModal.fmt(s.price) + " gp" : "—", ready);
-		LofModal.button(g, suPPlus(ox, oy), "+5%", LofTheme.EMBER, ready, suPPlus(ox, oy).contains(mouse));
+		LofModal.button(g, suPPlus(ox, oy), "+5%", LofTheme.GOLD_DIM, ready, suPPlus(ox, oy).contains(mouse));
 		LofModal.button(g, suPGuide(ox, oy), "guide", LofTheme.GOLD_DIM, ready, suPGuide(ox, oy).contains(mouse));
 		LofModal.button(g, suPCustom(ox, oy), "X", LofTheme.GOLD_DIM, ready, suPCustom(ox, oy).contains(mouse));
 
@@ -712,7 +725,7 @@ class LofGeOverlay extends Overlay
 		// footer
 		LofModal.button(g, suBack(ox, oy), "‹ Back", LofTheme.GOLD_DIM, true, suBack(ox, oy).contains(mouse));
 		LofModal.button(g, suConfirm(ox, oy), s.buy ? "Confirm buy offer" : "Confirm sell offer",
-			s.buy ? LofTheme.EMBER : LofTheme.GOLD, ready, suConfirm(ox, oy).contains(mouse));
+			LofTheme.GOLD, ready, suConfirm(ox, oy).contains(mouse));
 	}
 
 	/** The Selling / Buying two-column market snapshot (or a blank panel while awaiting an item). */
@@ -805,7 +818,9 @@ class LofGeOverlay extends Overlay
 		g.drawRoundRect(r.x, r.y, r.width - 1, r.height - 1, 6, 6);
 		g.setFont(FontManager.getRunescapeFont());
 		final FontMetrics fm = g.getFontMetrics();
-		LofTheme.shadowText(g, text, r.x + (r.width - fm.stringWidth(text)) / 2, r.y + r.height / 2 + 5,
+		// Clip to the box so a long value never overruns into the adjacent stepper buttons.
+		final String shown = fit(fm, text, r.width - 8);
+		LofTheme.shadowText(g, shown, r.x + (r.width - fm.stringWidth(shown)) / 2, r.y + r.height / 2 + 5,
 			ready ? LofTheme.TEXT : LofTheme.TEXT_DIM);
 	}
 

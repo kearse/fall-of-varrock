@@ -126,6 +126,9 @@ class LofRecruitOverlay extends Overlay implements LofWindows.Window
 	// cached value. Same fix, same reason, as LofShopTabsOverlay's cached showing.
 	private volatile long coinsCached;
 
+	// Scaled placement published by render() on the client thread; the mouse thread hit-tests via this cache only.
+	private volatile LofModal.Placement placement;
+
 	/** Cards accept clicks only when a muster could actually go through. */
 	boolean recruitable()
 	{
@@ -153,13 +156,19 @@ class LofRecruitOverlay extends Overlay implements LofWindows.Window
 		return new Rectangle(ox + PAD + i * 96, oy + TABS_Y, 90, TAB_H);
 	}
 
-	int hitTest(Point p)
+	int hitTest(Point canvas)
 	{
 		if (!visible)
 		{
 			return OUTSIDE;
 		}
-		final int ox = originX(), oy = originY();
+		final LofModal.Placement place = placement;
+		if (place == null)
+		{
+			return OUTSIDE;
+		}
+		final Point p = place.toLocal(canvas);
+		final int ox = place.ox, oy = place.oy;
 		if (!new Rectangle(ox, oy, WIN_W, WIN_H).contains(p))
 		{
 			return OUTSIDE;
@@ -217,10 +226,13 @@ class LofRecruitOverlay extends Overlay implements LofWindows.Window
 		final Rectangle selfBounds = getBounds();
 		g.translate(-selfBounds.x, -selfBounds.y);
 
+		final LofModal.Placement place = LofModal.beginWindow(g, client, WIN_W, WIN_H);
+		placement = place;
+
 		ensureIcons();
 
-		final int ox = originX(), oy = originY();
-		final Point mouse = mousePoint();
+		final int ox = place.ox, oy = place.oy;
+		final Point mouse = place.toLocal(mousePoint());
 		final long coins = coinsCarried();
 		coinsCached = coins; // publish for the mouse thread before recruitable() is consulted
 		final boolean locked = cap == 0;
@@ -287,6 +299,7 @@ class LofRecruitOverlay extends Overlay implements LofWindows.Window
 		LofTheme.shadowText(g, status, ox + PAD, oy + WIN_H - 40, LofTheme.TEXT_DIM);
 		LofTheme.shadowText(g, "Coins carried: " + fmt(coins), ox + PAD, oy + WIN_H - 18, LofTheme.TEXT_DIM);
 
+		LofModal.endWindow(g, place);
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, oldAA == null ? RenderingHints.VALUE_ANTIALIAS_DEFAULT : oldAA);
 		return new Dimension(WIN_W, WIN_H);
 	}

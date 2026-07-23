@@ -92,8 +92,12 @@ Build every framed window the same way:
 3. **Close** — a `20px` rounded square top-right (`ox + w-30, oy+9`) with a drawn ✕; ember on hover.
    (Windows opened by a server flow — duel, stake — use a **Decline** button instead of a close ✕.)
 4. **Body** — the content region, inset by `PAD`.
-5. **Footer** — right-aligned action buttons on the bottom row: **Accept = `GOLD`**, **Decline /
-   destructive = `EMBER`**, secondary (Load Last, etc.) = `GOLD_DIM`, left-aligned.
+5. **Footer** — right-aligned action buttons on the bottom row. **Primary / Accept = `GOLD`**,
+   **Decline / destructive = `EMBER`**, secondary (Load Last, steppers, etc.) = `GOLD_DIM`,
+   left-aligned. Draw them with **`LofModal.button(...)`** — the fill + border carry the accent, but
+   the **label is always high-contrast** (a dark accent like ember renders its label near-white, so a
+   button can never be red-on-dark and "mix in"). Default a neutral/primary action to `GOLD`; reserve
+   `EMBER` for the genuinely destructive / decline action only.
 6. **Status line** — one line of `getRunescapeSmallFont()` just above the footer; green when a
    one-sided accept is pending, else `TEXT_DIM`.
 
@@ -154,6 +158,36 @@ of being pinned to one pixel spot:**
   (they're modal to a flow). Cache `ox/oy` on the client thread in `render()` and read only the cache
   from the click path (§8).
 
+### A′. Scaling — windows grow with the canvas (auto-scale + Stretched Mode)
+
+A real OSRS interface is a **fixed pixel size** and only re-centres — which is why our windows used
+to look tiny on a big monitor. OSRS fixes that with **Stretched Mode** (it scales the whole client).
+We do **both**: our framed modals auto-scale with the canvas, *and* compose correctly when Stretched
+Mode is on. One authority, `LofModal`, owns it — **never hand-roll a scale or a `g.scale()` in an
+overlay.**
+
+- **`LofModal.uiScale(client)`** returns a scale ≥ 1.0 derived from the **logical** canvas
+  (`getCanvasWidth/Height`) against a `765×503` baseline, capped at `SCALE_MAX` (1.6). It reads the
+  logical canvas — **never** the stretched/window dimensions — so Stretched Mode composes: fixed +
+  stretched keeps the logical canvas small (scale ≈ 1.0, Stretched Mode does the enlarging); resizable
+  grows the logical canvas, so our windows grow.
+- **Draw through `LofModal.beginWindow` / `endWindow`.** `beginWindow(g, client, baseW, baseH)` places
+  the *scaled* window with the standard origin authority and applies a **pivot-scale about the
+  origin**, so the overlay keeps drawing at its existing `ox + PAD …` coordinates using the authored
+  base constants — the transform does the scaling, crisply (the RS fonts are vector). It returns a
+  `Placement` (`ox`, `oy`, `scale`); cache it in a `volatile` field. Call `endWindow(g, place)` before
+  every return that runs after `beginWindow`.
+- **Hit-test through the cache.** The mouse thread reads the cached `Placement` and maps the canvas
+  point with `place.toLocal(canvasPoint)` into the window's authored space, then tests the same
+  `ox+…` rects unchanged. `render()` maps the hover mouse the same way
+  (`place.toLocal(mousePoint())`). This extends the §8 rule: origin **and scale** are computed on the
+  client thread and the click path reads only the cache — never re-derives origin/scale off-thread.
+- **Exceptions.** A window whose visual is pinned to the un-scaled game render can't take the
+  transform: `lofstyle` frames the live in-world character model through a see-through hole in the
+  panel, so it stays at 1.0 (scaling the panel would desync it from the model). Native-anchored
+  storefronts (`lofshoptabs`) size to the game's shop interface (group 300) and so scale with
+  Stretched Mode / client zoom rather than `uiScale`.
+
 ### B. HUD overlay — content-sized, corner-anchored
 War dial row (supply · campaign/conquest · Slayer), alerts banner, LMS panel, announcement ticker, PK stats, CW timer.
 
@@ -189,8 +223,10 @@ Reusable pieces — reach for these before inventing a new one. Metrics above.
   `ItemManager.getImage(id, qty, stackable)`; read the item ids from the source interface's widgets.
 - **Equipment paper-doll** (duel gear) — the classic worn-equipment layout (3 columns: head; cape/
   amulet/ammo; weapon/body/shield; legs; hands/boots/ring); a forbidden slot is ember-filled with a ✕.
-- **Buttons** — rounded, hairline accent border, accent-coloured centred label; fill brightens on
-  hover / when active. Accept=`GOLD`, Decline=`EMBER`, secondary=`GOLD_DIM`.
+- **Buttons** (`LofModal.button`) — rounded, hairline accent border, centred label in a
+  **high-contrast** colour (never the low-contrast accent); fill brightens on hover / when active.
+  Primary/Accept=`GOLD`, Decline/destructive=`EMBER`, secondary/steppers=`GOLD_DIM`. Long values in a
+  value-box are clipped (`fit(...)`) so they never overrun an adjacent button.
 - **Scrollbar** — 5px `alpha(EMBER,190)` rounded thumb on an `alpha(white,14)` track.
 - **Circular gauge** (`lofdials` row) — `PANEL_OPAQUE` disc, track ring `alpha(white,28)`, value arc from
   12-o'clock clockwise; ember while filling, gold + pulse when a threshold is met, `LAVA` at the top tier.
@@ -318,13 +354,25 @@ scrolls (`LofModal.clampScroll`/`scrollbar` + a wheel listener) rather than grow
 ## 10. New-overlay checklist
 
 1. Import `LofTheme`; use its palette, `logo()`, and helpers — no hand-rolled colours/metrics.
-2. Pick a category (§6): standard 480×324 framed modal, or content-sized corner HUD. Place a modal
-   with `LofModal.originX(client, WIN_W)` / `originY(client, WIN_H)` — never hand-roll the origin.
-3. Header per §5 (shield + gold title + ember underline); footer buttons Accept=gold / Decline=ember.
-4. State channel per §8: packed varp (document the bits + claim a free varp id in §8) **or** read an
+2. Pick a category (§6): standard **480×324** framed modal, or content-sized corner HUD.
+3. **Frame + place + scale a modal through `LofModal` — never hand-roll origin, size, or scale.**
+   At the top of `render()`, after undoing the renderer translate, call
+   `final LofModal.Placement place = LofModal.beginWindow(g, client, WIN_W, WIN_H);` and cache it in a
+   `volatile` field; draw the window at your existing `place.ox + PAD …` coordinates; call
+   `LofModal.endWindow(g, place)` before every return after `beginWindow` (§A′). Set
+   `WIN_W`/`WIN_H` to `LofModal.W`/`LofModal.H` for the standard size.
+4. Header per §5 (shield + gold title + ember underline); footer with `LofModal.button(...)` —
+   **primary/Accept = gold, Decline/destructive = ember, secondary = gold-dim**; the helper keeps the
+   label legible.
+5. **Hit-test through the placement cache.** In `hitTest` (and any `handleScroll`), read the cached
+   `Placement`, `null`-guard it, map the canvas point with `place.toLocal(canvas)`, and test your
+   existing `ox+…` rects. Map the hover mouse in `render()` the same way. Compute every gate on the
+   client thread; the click path reads only the cache (§8).
+6. State channel per §8: packed varp (document the bits + claim a free varp id in §8) **or** read an
    existing interface's widgets (null-guarded).
-5. Actions via a `::cmd` token + a server command in `MessagePublicHandler`.
-6. Antialiasing on at the top of `render`, restored before returning. Layer per §6: framed
+7. Actions via a `::lof<cmd>` token + a server command branch in `MessagePublicHandler`.
+8. Antialiasing on at the top of `render`, restored before returning. Layer per §6: framed
    modals on `ALWAYS_ON_TOP`, corner HUDs on `ABOVE_WIDGETS`.
-7. Never cover a control the player must click while the window is open (esp. the inventory).
-8. Add a row to the §9 catalog.
+9. Never cover a control the player must click while the window is open (esp. the inventory).
+10. Add a row to the §9 catalog. Copy an existing standard modal (e.g. `lofteleports` or `lofdice`) as
+    the template.

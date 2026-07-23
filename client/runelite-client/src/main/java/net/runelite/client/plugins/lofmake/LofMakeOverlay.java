@@ -79,7 +79,9 @@ class LofMakeOverlay extends Overlay implements LofWindows.Window
 	// client state directly.
 	private volatile boolean canMakeCached;
 	private volatile int qtyCached;
-	private volatile int oxCached, oyCached;
+
+	// Scaled placement published by render() on the client thread; the mouse thread hit-tests via this cache only.
+	private volatile LofModal.Placement placement;
 
 	@Inject
 	private LofMakeOverlay(Client client, ItemManager itemManager)
@@ -187,13 +189,20 @@ class LofMakeOverlay extends Overlay implements LofWindows.Window
 		return new Rectangle(ox + LofModal.PAD, oy + LIST_TOP, LofModal.W - 2 * LofModal.PAD, LIST_H);
 	}
 
-	boolean handleScroll(Point p, int rotation)
+	boolean handleScroll(Point canvas, int rotation)
 	{
 		if (!visible)
 		{
 			return false;
 		}
-		if (!listRect(oxCached, oyCached).contains(p))
+		final LofModal.Placement place = placement;
+		if (place == null)
+		{
+			return false;
+		}
+		final Point p = place.toLocal(canvas);
+		final int ox = place.ox, oy = place.oy;
+		if (!listRect(ox, oy).contains(p))
 		{
 			return false;
 		}
@@ -211,13 +220,19 @@ class LofMakeOverlay extends Overlay implements LofWindows.Window
 		return new Rectangle(ox + LofModal.W - LofModal.PAD - 170, oy + LofModal.H - 12 - 32, 170, 32);
 	}
 
-	int hitTest(Point p)
+	int hitTest(Point canvas)
 	{
 		if (!visible)
 		{
 			return OUTSIDE;
 		}
-		final int ox = oxCached, oy = oyCached; // cached on the client thread by render()
+		final LofModal.Placement place = placement;
+		if (place == null)
+		{
+			return OUTSIDE;
+		}
+		final Point p = place.toLocal(canvas);
+		final int ox = place.ox, oy = place.oy;
 		if (!new Rectangle(ox, oy, LofModal.W, LofModal.H).contains(p))
 		{
 			return OUTSIDE;
@@ -266,11 +281,11 @@ class LofMakeOverlay extends Overlay implements LofWindows.Window
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		final Rectangle selfBounds = getBounds();
 		g.translate(-selfBounds.x, -selfBounds.y);
+		final LofModal.Placement place = LofModal.beginWindow(g, client, LofModal.W, LofModal.H);
+		placement = place;
 
-		final int ox = LofModal.originX(client), oy = LofModal.originY(client);
-		oxCached = ox;
-		oyCached = oy;
-		final Point mouse = mousePoint();
+		final int ox = place.ox, oy = place.oy;
+		final Point mouse = place.toLocal(mousePoint());
 		final String sub = "Smithing " + client.getBoostedSkillLevel(Skill.SMITHING);
 		LofModal.frame(g, ox, oy, title, sub, mouse);
 
@@ -334,6 +349,7 @@ class LofMakeOverlay extends Overlay implements LofWindows.Window
 		final String makeLabel = canMake ? "MAKE " + qty : "MAKE";
 		LofModal.button(g, makeRect(ox, oy), makeLabel, LofTheme.GOLD, canMake, makeRect(ox, oy).contains(mouse));
 
+		LofModal.endWindow(g, place);
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, oldAA == null ? RenderingHints.VALUE_ANTIALIAS_DEFAULT : oldAA);
 		return new Dimension(LofModal.W, LofModal.H);
 	}
