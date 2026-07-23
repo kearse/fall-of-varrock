@@ -5,6 +5,8 @@ import org.alter.game.model.entity.Player
 import org.alter.plugins.content.war.recruit.RecruitTrials
 import org.alter.plugins.content.war.roguehunt.RogueProblem
 import org.alter.plugins.content.war.warprep.WarPrepChain
+import org.alter.plugins.content.war.warprep.WarPrepRanged
+import org.alter.plugins.content.war.warprep.WarPrepSurvival
 import org.alter.rscm.RSCM.getRSCM
 
 /**
@@ -49,6 +51,10 @@ object RankPurchase {
         WarPrepChain.onRankBought(player) // closes the War-Prep chain's RANK step, if active
         RogueProblem.begin(player)        // War-Prep's Squire rank-up opens Act II — start "The Rogue Problem"
         RogueProblem.onRankBought(player) // closes "The Rogue Problem" RANK step once Knight is reached
+        WarPrepRanged.begin(player)       // the Knight rank-up opens War-Prep II (gated on RogueProblem.complete)
+        WarPrepRanged.onRankBought(player)   // closes War-Prep II once Lord is reached
+        WarPrepSurvival.begin(player)     // the Lord rank-up opens War-Prep III (gated on WarPrepRanged.complete)
+        WarPrepSurvival.onRankBought(player) // closes War-Prep III once Minister is reached
         Conquest.begin(player)            // the King rank-up opens the endgame "King of Lumbridge" quest
         return Result.Success
     }

@@ -12,6 +12,8 @@ import org.alter.plugins.content.war.Conquest
 import org.alter.plugins.content.war.recruit.RecruitTrials
 import org.alter.plugins.content.war.roguehunt.RogueProblem
 import org.alter.plugins.content.war.warprep.WarPrepChain
+import org.alter.plugins.content.war.warprep.WarPrepRanged
+import org.alter.plugins.content.war.warprep.WarPrepSurvival
 
 /**
  * **Quest Journal client feed** — publishes each custom quest chain's live state to the varps the
@@ -25,11 +27,14 @@ import org.alter.plugins.content.war.warprep.WarPrepChain
  *  - [WARPREP_VARP] = [WarPrepChain.Step] ordinal.
  *  - [ROGUE_PROBLEM_VARP] packed: bits 0-5 = [RogueProblem.Step] ordinal, bits 6-11 = rogues felled
  *    on the HUNT step (0-63 clamp) so the client can render the "(x/30)" progress.
+ *  - [WARPREP_RANGED_VARP] packed: bits 0-5 = [WarPrepRanged.Step] ordinal, bits 6-11 = enemies felled
+ *    with a ranged weapon on the FIELD step (0-63 clamp) so the client can render the "(x/20)" progress.
+ *  - [WARPREP_SURVIVAL_VARP] bits 0-5 = [WarPrepSurvival.Step] ordinal.
  *  - [CONQUEST_VARP] bits 0-5 = [Conquest.Step] ordinal (the endgame "King of Lumbridge" quest).
  *  - [GUIDE_MUTED_VARP] = 1 while guidance is muted, else 0 (so the client toggle reflects state).
  *
- * Varps 4600-4608, 4613-4616 and 4620-4623 are taken by the other client HUDs; quests own
- * 4610-4612, 4617 and 4633.
+ * Varps 4600-4608, 4613-4616, 4618-4623, 4625-4626 and 4633-4637 are taken by the other client HUDs;
+ * quests own 4610-4612, 4617, 4624, 4633 and 4643.
  * Non-zero varps persist ([VarpSerialisation]), but the attributes stay the source of truth —
  * everything here is re-derived and re-published on login and on the world poll.
  *
@@ -47,6 +52,8 @@ object QuestJournal {
     const val WARPREP_VARP = 4611
     const val GUIDE_MUTED_VARP = 4612
     const val ROGUE_PROBLEM_VARP = 4617 // 4613-4616 belong to the companion + slayer HUDs
+    const val WARPREP_RANGED_VARP = 4624   // War-Prep II — Ranged (4618-4623, 4625-4626 belong to other HUDs)
+    const val WARPREP_SURVIVAL_VARP = 4643 // War-Prep III — Survival
     const val CONQUEST_VARP = 4633      // King of Lumbridge (endgame); 4635-4637 are companion indices
 
     // Reused OSRS quest progress varps that colour the relabelled native quest-tab rows. A value of
@@ -58,6 +65,16 @@ object QuestJournal {
     /** Doric's Quest varp — now the "War-Prep I — Magic" row. Completes at 100. */
     const val WARPREP_QUEST_VARP = 31
     private const val WARPREP_QUEST_COMPLETE = 100
+    /** The Restless Ghost varp — now the "The Rogue Problem" row (reused War-Prep II — Ranged slot).
+     *  Completes at 5. */
+    const val ROGUE_QUEST_VARP = 107
+    private const val ROGUE_QUEST_COMPLETE = 5
+    /** Imp Catcher varp — now the "War-Prep II — Ranged" row. Completes at 2. */
+    const val WARPREP_RANGED_QUEST_VARP = 160
+    private const val WARPREP_RANGED_QUEST_COMPLETE = 2
+    /** Sheep Shearer varp — now the "War-Prep III — Survival" row. Completes at 21. */
+    const val WARPREP_SURVIVAL_QUEST_VARP = 179
+    private const val WARPREP_SURVIVAL_QUEST_COMPLETE = 21
     /** Witch's Potion varp — now the "King of Lumbridge" row. Completes at 3. */
     const val KING_QUEST_VARP = 67
     private const val KING_QUEST_COMPLETE = 3
@@ -95,6 +112,14 @@ object QuestJournal {
         val roguePacked = rogueStep or (rogueKills shl 6)
         if (p.getVarp(ROGUE_PROBLEM_VARP) != roguePacked) p.setVarp(ROGUE_PROBLEM_VARP, roguePacked)
 
+        val rangedStep = WarPrepRanged.step(p).ordinal and 0x3F
+        val rangedKills = WarPrepRanged.fieldKills(p).coerceIn(0, 63)
+        val rangedPacked = rangedStep or (rangedKills shl 6)
+        if (p.getVarp(WARPREP_RANGED_VARP) != rangedPacked) p.setVarp(WARPREP_RANGED_VARP, rangedPacked)
+
+        val survivalStep = WarPrepSurvival.step(p).ordinal and 0x3F
+        if (p.getVarp(WARPREP_SURVIVAL_VARP) != survivalStep) p.setVarp(WARPREP_SURVIVAL_VARP, survivalStep)
+
         val conquest = Conquest.step(p).ordinal and 0x3F
         if (p.getVarp(CONQUEST_VARP) != conquest) p.setVarp(CONQUEST_VARP, conquest)
 
@@ -127,6 +152,36 @@ object QuestJournal {
             else -> 1                              // in progress
         }
         setVarpSafely(p, WARPREP_QUEST_VARP, warprepVal)
+
+        // The Rogue Problem (Act II): NONE (locked until War-Prep I finishes / not begun) is not
+        // started; DONE is complete; any hunting/reporting/rank step in between is in progress.
+        val rogue = RogueProblem.step(p)
+        val rogueVal = when {
+            rogue == RogueProblem.Step.DONE -> ROGUE_QUEST_COMPLETE
+            rogue == RogueProblem.Step.NONE -> 0 // not begun / locked
+            else -> 1                            // in progress
+        }
+        setVarpSafely(p, ROGUE_QUEST_VARP, rogueVal)
+
+        // War-Prep II — Ranged: NONE (locked until The Rogue Problem finishes / not begun) is not
+        // started; DONE is complete; any drill/skirmish/rank step in between is in progress.
+        val ranged = WarPrepRanged.step(p)
+        val rangedVal = when {
+            ranged == WarPrepRanged.Step.DONE -> WARPREP_RANGED_QUEST_COMPLETE
+            ranged == WarPrepRanged.Step.NONE -> 0 // not begun / locked
+            else -> 1                              // in progress
+        }
+        setVarpSafely(p, WARPREP_RANGED_QUEST_VARP, rangedVal)
+
+        // War-Prep III — Survival: NONE (locked until War-Prep II finishes / not begun) is not started;
+        // DONE is complete; anything between is in progress.
+        val survival = WarPrepSurvival.step(p)
+        val survivalVal = when {
+            survival == WarPrepSurvival.Step.DONE -> WARPREP_SURVIVAL_QUEST_COMPLETE
+            survival == WarPrepSurvival.Step.NONE -> 0 // not begun / locked
+            else -> 1                                  // in progress
+        }
+        setVarpSafely(p, WARPREP_SURVIVAL_QUEST_VARP, survivalVal)
 
         // King of Lumbridge: NONE (not yet King / not begun) is not started; DONE is complete;
         // anything between is in progress.

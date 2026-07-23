@@ -125,7 +125,9 @@ public class LofQuestsPlugin extends Plugin
 	public void onVarbitChanged(VarbitChanged event)
 	{
 		int varp = event.getVarpId();
-		if (varp == LofQuestVarps.RECRUIT || varp == LofQuestVarps.WARPREP || varp == LofQuestVarps.GUIDE_MUTED)
+		if (varp == LofQuestVarps.RECRUIT || varp == LofQuestVarps.WARPREP || varp == LofQuestVarps.GUIDE_MUTED
+			|| varp == LofQuestVarps.ROGUE_PROBLEM || varp == LofQuestVarps.RANGED
+			|| varp == LofQuestVarps.SURVIVAL || varp == LofQuestVarps.CONQUEST)
 		{
 			refresh();
 		}
@@ -195,7 +197,7 @@ public class LofQuestsPlugin extends Plugin
 	/** Panel: flip the SERVER's guidance arrows (free play) — same as typing ::questguide. */
 	void toggleServerGuidance()
 	{
-		clientThread.invokeLater(() -> client.runScript(ScriptID.CHAT_SEND, "::lofquestguide", 0, 0, 0, -1));
+		clientThread.invokeLater(() -> client.runScript(ScriptID.CHAT_SEND, "::questguide", 0, 0, 0, -1));
 	}
 
 	/** The world tile the overlays should point at right now (null = nothing to draw). */

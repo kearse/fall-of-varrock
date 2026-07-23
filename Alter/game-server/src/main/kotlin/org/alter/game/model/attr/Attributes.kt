@@ -332,6 +332,33 @@ val ROGUE_PROBLEM_KILLS_ATTR = AttributeKey<Int>("rogue_problem_kills")
 val CONQUEST_STEP_ATTR = AttributeKey<Int>("conquest_step")
 
 /**
+ * **War-Prep II — Ranged** — the Act II prep quest (story-and-grind-design §1) that follows
+ * The Rogue Problem and carries the new Knight up to Lord, teaching the bow for the front's
+ * skirmish lines. [WARPREP_RANGED_STEP_ATTR] is the current step ordinal of
+ * [org.alter.plugins.content.war.warprep.WarPrepRanged.Step] (0 = not started).
+ * [WARPREP_RANGED_KILLS_ATTR] is a **quest-scoped** counter for the FIELD step's ranged kills
+ * (kept fresh, not satisfied by earlier kills). [WARPREP_RANGED_AMMO_TOPUPS_ATTR] bounds the
+ * anti-soft-lock ammo top-up on the DRILL step (arrows are tradeable, so an uncapped top-up is a
+ * faucet; past the cap the remaining Ranged XP is drilled in directly). All persistent; the chain
+ * never re-fires once DONE. Persisted BY ORDINAL — never reorder the Step enum without a migration.
+ */
+val WARPREP_RANGED_STEP_ATTR = AttributeKey<Int>("warprep_ranged_step")
+val WARPREP_RANGED_KILLS_ATTR = AttributeKey<Int>("warprep_ranged_kills")
+val WARPREP_RANGED_AMMO_TOPUPS_ATTR = AttributeKey<Int>("warprep_ranged_ammo_topups")
+
+/**
+ * **War-Prep III — Survival** — the Act III prep quest that follows War-Prep II and carries the
+ * Lord up to Minister, teaching field survival for when the front collapses.
+ * [WARPREP_SURVIVAL_STEP_ATTR] is the current step ordinal of
+ * [org.alter.plugins.content.war.warprep.WarPrepSurvival.Step] (0 = not started).
+ * [WARPREP_SURVIVAL_DRILL_TOPUPS_ATTR] bounds the anti-soft-lock food top-up on the DRILL step
+ * (same rationale as the ranged ammo top-up). Persistent; never re-fires once DONE. Persisted BY
+ * ORDINAL — never reorder the Step enum without a migration.
+ */
+val WARPREP_SURVIVAL_STEP_ATTR = AttributeKey<Int>("warprep_survival_step")
+val WARPREP_SURVIVAL_DRILL_TOPUPS_ATTR = AttributeKey<Int>("warprep_survival_drill_topups")
+
+/**
  * A flag which indicates that the player will not take collision into account
  * when walking.
  */

@@ -28,13 +28,16 @@ custom client reads (same transport as the war HUD — no custom packets):
 | **4611** | War-Prep chain step ordinal |
 | **4612** | 1 while quest guidance is muted (free play), else 0 |
 | **4617** | The Rogue Problem, packed: bits 0-5 step ordinal, bits 6-11 rogues felled on HUNT |
+| **4624** | War-Prep II — Ranged, packed: bits 0-5 step ordinal, bits 6-11 enemies felled with a ranged weapon on FIELD |
+| **4643** | War-Prep III — Survival step ordinal, bits 0-5 |
 | **4633** | King of Lumbridge (endgame conquest) step ordinal, bits 0-5 |
 
 A 3-tick world poll re-derives these from the persistent attributes (which stay the source of
 truth) and only writes on change. **Custom-varp registry so far:** 4600 siege alert · 4601 war
 progress · 4602-4605 PK stats · 4606 wilderness level · 4607 teleport menu · 4608 LMS HUD ·
-**4610-4612 quests** · 4617 quests (rogue) · 4620-4623 CW timer · **4633 quests (King of
-Lumbridge)**. Claim the next one here when you add a system.
+**4610-4612 quests** · 4617 quests (rogue) · 4620-4623 CW timer · **4624 quests (War-Prep II)** ·
+**4633 quests (King of Lumbridge)** · **4643 quests (War-Prep III)**. Claim the next one here when
+you add a system.
 
 ### 2b. Free-play toggle (`::questguide`)
 
@@ -48,8 +51,9 @@ A first-party sidebar plugin (book icon) modelled on the RuneLite **Quest Helper
 (BSD-2, ported arrow rendering credits in `LofArrow.java`):
 
 - **Quest list** coloured like the OSRS quest tab (red / yellow / green, grey for locked), with
-  per-quest progress (`6/11`). **FUTURE teasers** (War-Prep II/III, King of Lumbridge) render
-  dimmed so players see where the line is heading.
+  per-quest progress (`6/11`). All six chain quests (Recruit Trials, War-Prep I — Magic, The Rogue
+  Problem, War-Prep II — Ranged, War-Prep III — Survival, King of Lumbridge) are fully wired; the
+  FUTURE-teaser render path (dimmed "coming soon" rows) stays available for the next unbuilt quest.
 - **Per-quest card**: the "why" blurb, the step checklist (✓ done / ➤ current+detail / ○ ahead,
   live counters like goblin kills and Prayer level), and **what it unlocks**.
 - **Track / Stop tracking**: the player chooses which quest (if any) draws client-side guidance
