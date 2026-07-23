@@ -58,6 +58,10 @@ object QuestJournal {
     /** Doric's Quest varp — now the "War-Prep I — Magic" row. Completes at 100. */
     const val WARPREP_QUEST_VARP = 31
     private const val WARPREP_QUEST_COMPLETE = 100
+    /** The Restless Ghost varp — now the "The Rogue Problem" row (reused War-Prep II — Ranged slot).
+     *  Completes at 5. */
+    const val ROGUE_QUEST_VARP = 107
+    private const val ROGUE_QUEST_COMPLETE = 5
     /** Witch's Potion varp — now the "King of Lumbridge" row. Completes at 3. */
     const val KING_QUEST_VARP = 67
     private const val KING_QUEST_COMPLETE = 3
@@ -127,6 +131,16 @@ object QuestJournal {
             else -> 1                              // in progress
         }
         setVarpSafely(p, WARPREP_QUEST_VARP, warprepVal)
+
+        // The Rogue Problem (Act II): NONE (locked until War-Prep I finishes / not begun) is not
+        // started; DONE is complete; any hunting/reporting/rank step in between is in progress.
+        val rogue = RogueProblem.step(p)
+        val rogueVal = when {
+            rogue == RogueProblem.Step.DONE -> ROGUE_QUEST_COMPLETE
+            rogue == RogueProblem.Step.NONE -> 0 // not begun / locked
+            else -> 1                            // in progress
+        }
+        setVarpSafely(p, ROGUE_QUEST_VARP, rogueVal)
 
         // King of Lumbridge: NONE (not yet King / not begun) is not started; DONE is complete;
         // anything between is in progress.

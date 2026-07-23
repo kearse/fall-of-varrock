@@ -57,11 +57,11 @@ private const val COL_DISPLAY_NAME = 2 // the name shown in the quest tab (DBTab
  * so our quests list in quest-line order; `displayName` is what players see. The `varp` is the
  * reused quest's progress varp the server drives (kept in lock-step with [QuestJournal]).
  *
- * The three LIVE, server-driven quests are relabelled — the still-unbuilt teasers (War-Prep II/III)
+ * The LIVE, server-driven quests are relabelled — the still-unbuilt teasers (War-Prep II/III)
  * stay as their OSRS rows (a "coming soon" quest showing red "not started" would just mislead). Their
- * mappings are documented in docs/quest-tab-handoff.md for Phase 2. NOTE: "The Rogue Problem" drives
- * the custom-client Journal already but has no native-tab row yet — add it here the same way if you
- * want it in the stock tab too.
+ * mappings are documented in docs/quest-tab-handoff.md for Phase 2. "The Rogue Problem" (Act II)
+ * reuses the still-unbuilt War-Prep II — Ranged slot (The Restless Ghost, varp 107) — it drives the
+ * custom-client Journal today and now the native tab too, coloured by [QuestJournal.syncNativeTab].
  */
 private data class Relabel(
     val dbrowId: Int,
@@ -74,6 +74,10 @@ private data class Relabel(
 private val PLAN = listOf(
     Relabel(dbrowId = 17, questId = 1, sortName = "1 Recruit Trials", displayName = "Recruit Trials", varp = 29),
     Relabel(dbrowId = 30, questId = 11, sortName = "2 War-Prep I - Magic", displayName = "War-Prep I - Magic", varp = 31),
+    // The Rogue Problem (Act II) reuses The Restless Ghost (dbrow 120, quest id 3, varp 107, driven by
+    // QuestJournal from RogueProblem.step) — the War-Prep II — Ranged reuse slot, spare while Ranged is
+    // unbuilt. Sort digit 3 places it after War-Prep I and before King of Lumbridge.
+    Relabel(dbrowId = 120, questId = 3, sortName = "3 The Rogue Problem", displayName = "The Rogue Problem", varp = 107),
     // King of Lumbridge (endgame conquest) reuses Witch's Potion (varp 67, driven by QuestJournal from
     // Conquest.step). Sort digit 5 keeps it last in the quest-line order.
     Relabel(dbrowId = 161, questId = 13, sortName = "5 King of Lumbridge", displayName = "King of Lumbridge", varp = 67),

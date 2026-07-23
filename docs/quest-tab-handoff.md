@@ -41,13 +41,13 @@ findings that shape everything below:
 **The server already drives the first two varps** (`QuestJournal.syncNativeTab` writes varp 29/31
 to not-started/in-progress/complete from real quest state). So the proof is just the cache half:
 
-> **Follow-up — "The Rogue Problem" (Act II) native-tab row.** The Act II quest
-> `RogueProblem.kt` is live and fully drives the **custom client's Quest Journal** (its own lofquests
-> varp 4617 — arrows + panel work today). It does **not** yet have a native quest-tab row: pick a
-> spare reuse quest below (the **War-Prep II — Ranged** slot, quest id 3 / varp 107, is a natural fit
-> since Ranged is still unbuilt, or reserve a fresh one), relabel it to "The Rogue Problem" here, and
-> add the matching `QuestJournal.syncNativeTab` write from `RogueProblem.step` (not-started when
-> `NONE`, complete at `DONE`). Server + cache halves both needed for the stock tab to colour it.
+> **Follow-up — "The Rogue Problem" (Act II) native-tab row. ✅ wired.** The Act II quest
+> `RogueProblem.kt` is live and drives the **custom client's Quest Journal** (its own lofquests varp
+> 4617 — arrows + panel) *and* now the native quest tab. It reuses the spare **War-Prep II — Ranged**
+> slot (The Restless Ghost, DBROW **120**, quest id **3**, progress varp **107**, complete val **5**),
+> relabelled to "The Rogue Problem" in `PLAN` and coloured by `QuestJournal.syncNativeTab` (not-started
+> when `NONE`, complete at `DONE`, in-progress otherwise). Server + cache halves are both in place —
+> run `relabel` + `hide` on the cache to surface it (the `PLAN`/`KEPT` set already includes DBROW 120).
 
 ```powershell
 # from the repo root, JDK 17. Point at the cache YOUR SERVER READS — a fresh git clone's
@@ -85,7 +85,8 @@ Actions -> Quest cache relabel -> Run workflow -> hide
 
 **How it works (simpler than a full rebuild).** The rev-228 quest list enumerates rows via the quest
 table's **master index** (js5 index 21, archive 0, file 0) — one key mapping to every row id. `hide`
-rewrites just that row list down to our kept rows (17, 30). The other ~196 rows' *data is left
+rewrites just that row list down to our kept rows (17, 30, 120, 161 — Recruit Trials, War-Prep I,
+The Rogue Problem, King of Lumbridge; `KEPT` is derived from `PLAN`). The other ~194 rows' *data is left
 intact* (not deleted), so the per-column indexes stay valid and it's fully reversible — they're just
 no longer reachable from the list. `QuestTablePatch.decodeIndex`/`encodeIndex` handle the index byte
 format (§2); it backs the master index up and verifies by re-decode. Rollback is the `restore` action
@@ -202,7 +203,8 @@ subclass the decoder and drive the protected `read(map, id, reader)` with a pre-
 
 ## 4. Success criteria
 
-- Quest tab lists exactly: Recruit Trials, War-Prep I — Magic (+ future teasers if desired as
+- Quest tab lists exactly: Recruit Trials, War-Prep I — Magic, The Rogue Problem, King of Lumbridge
+  (+ future teasers if desired as
   greyed rows), with correct state colours from a fresh account through completion.
 - Quest points / count varbits in the summary tab show FoV numbers, not placeholders.
 - No other content regressions; both FoV and stock clients still log in.
