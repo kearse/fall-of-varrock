@@ -22,6 +22,12 @@ final class LofQuestVarps
 	/** Packed "The Rogue Problem" state: bits 0-5 step ordinal, bits 6-11 rogues felled on the HUNT step. */
 	static final int ROGUE_PROBLEM = 4617;
 
+	/** Packed "War-Prep II — Ranged" state: bits 0-5 step ordinal, bits 6-11 enemies felled with a ranged weapon on FIELD. */
+	static final int RANGED = 4624;
+
+	/** "War-Prep III — Survival" step ordinal, bits 0-5. */
+	static final int SURVIVAL = 4643;
+
 	/** "King of Lumbridge" (endgame conquest) step ordinal, bits 0-5 (0 = not started / not yet King). */
 	static final int CONQUEST = 4633;
 
@@ -48,6 +54,21 @@ final class LofQuestVarps
 	static int rogueProblemStep(Client client)
 	{
 		return client.getVarpValue(ROGUE_PROBLEM) & 0x3F;
+	}
+
+	static int warprepRangedStep(Client client)
+	{
+		return client.getVarpValue(RANGED) & 0x3F;
+	}
+
+	static int warprepRangedKills(Client client)
+	{
+		return (client.getVarpValue(RANGED) >> 6) & 0x3F;
+	}
+
+	static int warprepSurvivalStep(Client client)
+	{
+		return client.getVarpValue(SURVIVAL) & 0x3F;
 	}
 
 	static int conquestStep(Client client)

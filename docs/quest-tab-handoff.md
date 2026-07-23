@@ -34,20 +34,24 @@ findings that shape everything below:
   |---|---|---|---|---|---|
   | Recruit Trials | Cook's Assistant | 17 | 1 | **29** | 2 |
   | War-Prep I — Magic | Doric's Quest | 30 | 11 | **31** | 100 |
-  | War-Prep II — Ranged | The Restless Ghost | 120 | 3 | 107 | 5 |
+  | The Rogue Problem | The Restless Ghost | 120 | 3 | 107 | 5 |
+  | War-Prep II — Ranged | Imp Catcher | 76 | 9 | 160 | 2 |
   | War-Prep III — Survival | Sheep Shearer | 131 | 5 | 179 | 21 |
   | King of Lumbridge | Witch's Potion | 161 | 13 | 67 | 3 |
 
-**The server already drives the first two varps** (`QuestJournal.syncNativeTab` writes varp 29/31
-to not-started/in-progress/complete from real quest state). So the proof is just the cache half:
+> **Note (2026-07):** The Rogue Problem took The Restless Ghost (varp 107) — the slot originally
+> penciled in for War-Prep II — Ranged — so Ranged was re-mapped to a fresh spare quest, **Imp
+> Catcher** (DBROW 76, varp 160, complete 2). All six quests now have live server chains driving
+> these varps.
 
-> **Follow-up — "The Rogue Problem" (Act II) native-tab row. ✅ wired.** The Act II quest
-> `RogueProblem.kt` is live and drives the **custom client's Quest Journal** (its own lofquests varp
-> 4617 — arrows + panel) *and* now the native quest tab. It reuses the spare **War-Prep II — Ranged**
-> slot (The Restless Ghost, DBROW **120**, quest id **3**, progress varp **107**, complete val **5**),
-> relabelled to "The Rogue Problem" in `PLAN` and coloured by `QuestJournal.syncNativeTab` (not-started
-> when `NONE`, complete at `DONE`, in-progress otherwise). Server + cache halves are both in place —
-> run `relabel` + `hide` on the cache to surface it (the `PLAN`/`KEPT` set already includes DBROW 120).
+**The server drives all six varps** (`QuestJournal.syncNativeTab` writes each to
+not-started/in-progress/complete from real quest state). So the proof is just the cache half:
+
+> **All six FoV quests are ✅ wired** (server + `PLAN`). `RogueProblem`, `WarPrepRanged` and
+> `WarPrepSurvival` each drive their reused varp (107 / 160 / 179) via `QuestJournal.syncNativeTab`
+> (not-started when `NONE`, complete at `DONE`, in-progress otherwise), and each has a `Relabel` row
+> in `PLAN` — so `KEPT` already lists DBROWs 17, 30, 120, 76, 131, 161. Run `relabel` + `hide` on the
+> cache to surface them.
 
 ```powershell
 # from the repo root, JDK 17. Point at the cache YOUR SERVER READS — a fresh git clone's
@@ -85,8 +89,9 @@ Actions -> Quest cache relabel -> Run workflow -> hide
 
 **How it works (simpler than a full rebuild).** The rev-228 quest list enumerates rows via the quest
 table's **master index** (js5 index 21, archive 0, file 0) — one key mapping to every row id. `hide`
-rewrites just that row list down to our kept rows (17, 30, 120, 161 — Recruit Trials, War-Prep I,
-The Rogue Problem, King of Lumbridge; `KEPT` is derived from `PLAN`). The other ~194 rows' *data is left
+rewrites just that row list down to our kept rows (17, 30, 120, 76, 131, 161 — Recruit Trials,
+War-Prep I, The Rogue Problem, War-Prep II, War-Prep III, King of Lumbridge; `KEPT` is derived from
+`PLAN`). The other ~192 rows' *data is left
 intact* (not deleted), so the per-column indexes stay valid and it's fully reversible — they're just
 no longer reachable from the list. `QuestTablePatch.decodeIndex`/`encodeIndex` handle the index byte
 format (§2); it backs the master index up and verifies by re-decode. Rollback is the `restore` action
@@ -203,9 +208,9 @@ subclass the decoder and drive the protected `read(map, id, reader)` with a pre-
 
 ## 4. Success criteria
 
-- Quest tab lists exactly: Recruit Trials, War-Prep I — Magic, The Rogue Problem, King of Lumbridge
-  (+ future teasers if desired as
-  greyed rows), with correct state colours from a fresh account through completion.
+- Quest tab lists exactly: Recruit Trials, War-Prep I — Magic, The Rogue Problem, War-Prep II —
+  Ranged, War-Prep III — Survival, King of Lumbridge, with correct state colours from a fresh account
+  through completion.
 - Quest points / count varbits in the summary tab show FoV numbers, not placeholders.
 - No other content regressions; both FoV and stock clients still log in.
 - The patch task is re-runnable (idempotent) so future quests are one config entry + re-run.

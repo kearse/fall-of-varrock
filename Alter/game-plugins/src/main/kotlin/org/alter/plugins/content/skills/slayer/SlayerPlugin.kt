@@ -35,6 +35,7 @@ import org.alter.plugins.content.economy.points
 import org.alter.plugins.content.war.address
 import org.alter.plugins.content.war.recruit.RecruitTrials
 import org.alter.plugins.content.war.warprep.WarPrepChain
+import org.alter.plugins.content.war.warprep.WarPrepRanged
 import org.alter.rscm.RSCM.getRSCM
 
 private val logger = KotlinLogging.logger {}
@@ -257,6 +258,18 @@ class SlayerPlugin(
         }
         if (WarPrepChain.step(p) == WarPrepChain.Step.PRAYER) warPrepPrayerNudge(p)
         if (WarPrepChain.step(p) == WarPrepChain.Step.TOWER) warPrepTowerNudge(p)
+        // War-Prep II (Ranged): Vannaka MUST act on GEAR (arm the marksman kit) and REPORT (the debrief
+        // that closes the quest); DRILL/FIELD just get a one-line nudge before the contract menu opens.
+        if (WarPrepRanged.step(p) == WarPrepRanged.Step.GEAR) {
+            warPrepRangedArm(p)
+            return
+        }
+        if (WarPrepRanged.step(p) == WarPrepRanged.Step.REPORT) {
+            warPrepRangedDebrief(p)
+            return
+        }
+        if (WarPrepRanged.step(p) == WarPrepRanged.Step.DRILL) warPrepRangedDrillNudge(p)
+        if (WarPrepRanged.step(p) == WarPrepRanged.Step.FIELD) warPrepRangedFieldNudge(p)
         // Outside the quest beats, the contract board is the client-drawn War Contracts window
         // (lofcontracts): active contracts, streak and points at a glance — no options() menu.
         ContractMenu.open(p)
@@ -350,6 +363,45 @@ class SlayerPlugin(
         say(p, "And the realm pays for a tower taken. Here — <col=801700>${"%,d".format(WarPrepChain.RANK_REWARD_COINS)} coins</col>, a purse fit for your next <col=801700>rank</col>.")
         WarPrepChain.onReportedToVannaka(p) // RETURN → RANK: pays the purse + arrows to the Duke
         say(p, "Take it to <col=801700>Duke Horacio</col> and have him raise you — a higher rank means <col=801700>heavier armour</col> on your back. Follow the marker; you've earned this one.")
+    }
+
+    /** War-Prep II (Ranged) DRILL nudge: keep them training the bow; top up arrows if they ran dry
+     *  (bounded — see [WarPrepRanged.topUpAmmo]), and past the cap drill the remaining Ranged xp in. */
+    private suspend fun QueueTask.warPrepRangedDrillNudge(p: Player) {
+        when (WarPrepRanged.topUpAmmo(p)) {
+            WarPrepRanged.TopUp.AMMO ->
+                say(p, "Out of arrows? Here's more — and mind them. Keep loosing until your <col=801700>Ranged</col> reaches <col=801700>${WarPrepRanged.RANGED_TARGET}</col>.")
+            WarPrepRanged.TopUp.DRILLED -> {
+                say(p, "Fumbling your quiver AGAIN? Enough. On the line, soldier — we'll drill it into you.")
+                say(p, "Vannaka runs you ragged on the range until your <col=801700>Ranged</col> reaches <col=801700>${WarPrepRanged.RANGED_TARGET}</col>.")
+            }
+            WarPrepRanged.TopUp.NOT_NEEDED ->
+                say(p, "A raider holds the line at distance too. Train your <col=801700>Ranged to ${WarPrepRanged.RANGED_TARGET}</col> — loose those arrows — then come back and I'll kit you for the skirmish.")
+        }
+    }
+
+    /** War-Prep II (Ranged) GEAR step: Ranged is trained — arm the marksman kit and send them to the
+     *  skirmish (fell enemies with a ranged weapon). */
+    private suspend fun QueueTask.warPrepRangedArm(p: Player) {
+        say(p, "Ranged trained — good eye. Now you'll need a proper marksman's kit, not that training bow.")
+        WarPrepRanged.armForSkirmish(p) // bow + d'hide + arrows
+        say(p, "Take this bow, the hide armour and a full quiver. Get out there and <col=801700>fell ${WarPrepRanged.FIELD_GOAL} of the enemy with a ranged weapon</col> — bow, crossbow, thrown, your choice.")
+        say(p, "Prove you can hold a skirmish line, then report back to me. Follow the marker.")
+        WarPrepRanged.onArmedForSkirmish(p) // GEAR → FIELD
+    }
+
+    /** War-Prep II (Ranged) FIELD nudge. */
+    private suspend fun QueueTask.warPrepRangedFieldNudge(p: Player) {
+        say(p, "The skirmish isn't won yet, ${p.address}. <col=801700>${WarPrepRanged.fieldKills(p)}/${WarPrepRanged.FIELD_GOAL}</col> felled with a ranged weapon — keep at it, then report back.")
+    }
+
+    /** War-Prep II (Ranged) REPORT step: back from the skirmish — Vannaka's debrief pays the rank purse
+     *  and sends the soldier to Duke Horacio to rise to Lord. */
+    private suspend fun QueueTask.warPrepRangedDebrief(p: Player) {
+        say(p, "A clean skirmish — I watched the reports come in. You can hold a line at range now, ${p.address}.")
+        say(p, "The realm pays for a soldier who can. Here — <col=801700>${"%,d".format(WarPrepRanged.RANK_REWARD_COINS)} coins</col>, a purse fit to raise you to <col=801700>Lord</col>.")
+        WarPrepRanged.onReportedToVannaka(p) // REPORT → RANK: pays the purse
+        say(p, "Take it to <col=801700>Duke Horacio</col>. A Lord commands knights — and General Zo will have words for you once you wear the title. Follow the marker.")
     }
 
     /** Intro-quest: the recruit reports back to Vannaka after the rats — Vannaka rewards the combat

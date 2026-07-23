@@ -57,11 +57,11 @@ private const val COL_DISPLAY_NAME = 2 // the name shown in the quest tab (DBTab
  * so our quests list in quest-line order; `displayName` is what players see. The `varp` is the
  * reused quest's progress varp the server drives (kept in lock-step with [QuestJournal]).
  *
- * The LIVE, server-driven quests are relabelled — the still-unbuilt teasers (War-Prep II/III)
- * stay as their OSRS rows (a "coming soon" quest showing red "not started" would just mislead). Their
- * mappings are documented in docs/quest-tab-handoff.md for Phase 2. "The Rogue Problem" (Act II)
- * reuses the still-unbuilt War-Prep II — Ranged slot (The Restless Ghost, varp 107) — it drives the
- * custom-client Journal today and now the native tab too, coloured by [QuestJournal.syncNativeTab].
+ * All six LIVE, server-driven quests are relabelled. "The Rogue Problem" (Act II) reuses The Restless
+ * Ghost (varp 107); "War-Prep II — Ranged" reuses Imp Catcher (varp 160) — a fresh slot, since The
+ * Rogue Problem took Ranged's old Restless-Ghost mapping; "War-Prep III — Survival" reuses Sheep
+ * Shearer (varp 179). All are driven by [QuestJournal.syncNativeTab]. Mappings for any future quests
+ * are documented in docs/quest-tab-handoff.md.
  */
 private data class Relabel(
     val dbrowId: Int,
@@ -75,12 +75,17 @@ private val PLAN = listOf(
     Relabel(dbrowId = 17, questId = 1, sortName = "1 Recruit Trials", displayName = "Recruit Trials", varp = 29),
     Relabel(dbrowId = 30, questId = 11, sortName = "2 War-Prep I - Magic", displayName = "War-Prep I - Magic", varp = 31),
     // The Rogue Problem (Act II) reuses The Restless Ghost (dbrow 120, quest id 3, varp 107, driven by
-    // QuestJournal from RogueProblem.step) — the War-Prep II — Ranged reuse slot, spare while Ranged is
-    // unbuilt. Sort digit 3 places it after War-Prep I and before King of Lumbridge.
+    // QuestJournal from RogueProblem.step). Sort digit 3 places it after War-Prep I.
     Relabel(dbrowId = 120, questId = 3, sortName = "3 The Rogue Problem", displayName = "The Rogue Problem", varp = 107),
+    // War-Prep II — Ranged reuses Imp Catcher (dbrow 76, quest id 9, varp 160, complete 2) — a fresh
+    // slot, since The Rogue Problem took Ranged's old Restless-Ghost mapping. Driven from WarPrepRanged.step.
+    Relabel(dbrowId = 76, questId = 9, sortName = "4 War-Prep II - Ranged", displayName = "War-Prep II - Ranged", varp = 160),
+    // War-Prep III — Survival reuses Sheep Shearer (dbrow 131, quest id 5, varp 179, complete 21).
+    // Driven from WarPrepSurvival.step.
+    Relabel(dbrowId = 131, questId = 5, sortName = "5 War-Prep III - Survival", displayName = "War-Prep III - Survival", varp = 179),
     // King of Lumbridge (endgame conquest) reuses Witch's Potion (varp 67, driven by QuestJournal from
-    // Conquest.step). Sort digit 5 keeps it last in the quest-line order.
-    Relabel(dbrowId = 161, questId = 13, sortName = "5 King of Lumbridge", displayName = "King of Lumbridge", varp = 67),
+    // Conquest.step). Sort digit 6 keeps it last in the quest-line order.
+    Relabel(dbrowId = 161, questId = 13, sortName = "6 King of Lumbridge", displayName = "King of Lumbridge", varp = 67),
 )
 
 /** The only quest rows the tab should list after `hide` — exactly the ones we relabelled. */

@@ -94,17 +94,43 @@ enum LofQuest
 
 	WARPREP_RANGED(
 		"War-Prep II — Ranged",
-		"The next drill in the War-Prep chain: mastering the bow for the front's skirmish lines.",
+		"The next drill in the War-Prep chain: the front's skirmish lines are won with the bow. Vannaka "
+			+ "drills your Ranged, arms you with a marksman's kit, and sends you to prove you can hold a "
+			+ "line at distance — then pays a purse that raises you to Lord.",
+		6, // DONE ordinal (WarPrepRanged.Step)
+		// World anchors are best-effort — TUNE against the live map.
 		Arrays.asList(
-			"Ranged mastery for the war",
-			"Marksman's kit"
+			new LofQuestStep(1, "Train Ranged to 40", "Loose arrows on the front's foes — the goblin woods or Fallen Varrock.", new WorldPoint(3193, 3221, 0)),
+			new LofQuestStep(2, "Return to Vannaka for the marksman's kit", new WorldPoint(3219, 3215, 0)),
+			new LofQuestStep(3, "Fell 20 enemies with a ranged weapon", "Bow, crossbow or thrown — Fallen Varrock's rogues will do.", new WorldPoint(3212, 3428, 0)),
+			new LofQuestStep(4, "Report back to Vannaka", new WorldPoint(3219, 3215, 0)),
+			new LofQuestStep(5, "Rise to Lord at Duke Horacio", "Vannaka's purse covers the climb — heavier armour and command await.", new WorldPoint(3222, 3218, 0))
+		),
+		Arrays.asList(
+			"The rank of Lord — dragon armour",
+			"Command of the knights (General Zo)",
+			"War-Prep III — Survival (General Zo's next lesson)",
+			"A purse that covers your rank to Lord"
 		)),
 
 	WARPREP_SURVIVAL(
 		"War-Prep III — Survival",
-		"Field survival training — staying alive when the front collapses around you.",
-		Collections.singletonList(
-			"Survivability perks for raids and sieges"
+		"Field survival training — staying alive when the front collapses around you. General Zo toughens "
+			+ "you up, kits you out, and sends you into the Fight Cave to prove you can endure — then pays "
+			+ "a purse that raises you to Minister.",
+		6, // DONE ordinal (WarPrepSurvival.Step)
+		Arrays.asList(
+			new LofQuestStep(1, "Raise your Hitpoints to 60", "Hitpoints climbs as you fight — toughen up.", new WorldPoint(3222, 3220, 0)),
+			new LofQuestStep(2, "Return to General Zo for a survival kit", new WorldPoint(3222, 3220, 0)),
+			new LofQuestStep(3, "Endure the Fight Cave to wave 6", "Enter with ::arena — manage your health and outlast it.", null),
+			new LofQuestStep(4, "Report back to General Zo", new WorldPoint(3222, 3220, 0)),
+			new LofQuestStep(5, "Rise to Minister at Duke Horacio", "General Zo's purse covers the climb.", new WorldPoint(3222, 3218, 0))
+		),
+		Arrays.asList(
+			"The rank of Minister — within reach of the crown",
+			"Survivability for raids and sieges",
+			"The road to King and the endgame conquest",
+			"A purse that covers your rank to Minister"
 		)),
 
 	KING_OF_LUMBRIDGE(
@@ -172,6 +198,10 @@ enum LofQuest
 				return LofQuestVarps.warprepStep(client);
 			case THE_ROGUE_PROBLEM:
 				return LofQuestVarps.rogueProblemStep(client);
+			case WARPREP_RANGED:
+				return LofQuestVarps.warprepRangedStep(client);
+			case WARPREP_SURVIVAL:
+				return LofQuestVarps.warprepSurvivalStep(client);
 			case KING_OF_LUMBRIDGE:
 				return LofQuestVarps.conquestStep(client);
 			default:
@@ -205,6 +235,24 @@ enum LofQuest
 				}
 				return ord >= doneOrdinal ? LofQuestState.FINISHED
 					: ord == 0 ? LofQuestState.LOCKED : LofQuestState.IN_PROGRESS;
+			case WARPREP_RANGED:
+				// Locked until The Rogue Problem finishes (its DONE ordinal is 6); then auto-begins at
+				// the Knight rank-up, so ordinal 0 still reads as locked.
+				if (LofQuestVarps.rogueProblemStep(client) < 6)
+				{
+					return LofQuestState.LOCKED;
+				}
+				return ord >= doneOrdinal ? LofQuestState.FINISHED
+					: ord == 0 ? LofQuestState.LOCKED : LofQuestState.IN_PROGRESS;
+			case WARPREP_SURVIVAL:
+				// Locked until War-Prep II (Ranged) finishes (its DONE ordinal is 6); then auto-begins at
+				// the Lord rank-up, so ordinal 0 still reads as locked.
+				if (LofQuestVarps.warprepRangedStep(client) < 6)
+				{
+					return LofQuestState.LOCKED;
+				}
+				return ord >= doneOrdinal ? LofQuestState.FINISHED
+					: ord == 0 ? LofQuestState.LOCKED : LofQuestState.IN_PROGRESS;
 			case KING_OF_LUMBRIDGE:
 				// The endgame quest auto-begins on the King rank-up; ordinal 0 = not yet King (locked).
 				return ord >= doneOrdinal ? LofQuestState.FINISHED
@@ -224,6 +272,14 @@ enum LofQuest
 		if (this == THE_ROGUE_PROBLEM && state(client) == LofQuestState.LOCKED)
 		{
 			return "Finish War-Prep I — Magic first.";
+		}
+		if (this == WARPREP_RANGED && state(client) == LofQuestState.LOCKED)
+		{
+			return "Finish The Rogue Problem first.";
+		}
+		if (this == WARPREP_SURVIVAL && state(client) == LofQuestState.LOCKED)
+		{
+			return "Finish War-Prep II — Ranged first.";
 		}
 		if (this == KING_OF_LUMBRIDGE && state(client) == LofQuestState.LOCKED)
 		{
@@ -322,6 +378,18 @@ enum LofQuest
 		if (this == THE_ROGUE_PROBLEM && step.getOrdinal() == 2 && stepOrdinal(client) == 2)
 		{
 			return " (" + LofQuestVarps.rogueProblemKills(client) + "/30)";
+		}
+		if (this == WARPREP_RANGED && step.getOrdinal() == 1 && stepOrdinal(client) == 1)
+		{
+			return " (" + client.getRealSkillLevel(Skill.RANGED) + "/40)";
+		}
+		if (this == WARPREP_RANGED && step.getOrdinal() == 3 && stepOrdinal(client) == 3)
+		{
+			return " (" + LofQuestVarps.warprepRangedKills(client) + "/20)";
+		}
+		if (this == WARPREP_SURVIVAL && step.getOrdinal() == 1 && stepOrdinal(client) == 1)
+		{
+			return " (" + client.getRealSkillLevel(Skill.HITPOINTS) + "/60)";
 		}
 		return "";
 	}
