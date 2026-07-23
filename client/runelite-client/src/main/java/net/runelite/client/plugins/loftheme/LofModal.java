@@ -16,6 +16,7 @@ import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Shape;
 import java.awt.Stroke;
+import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import net.runelite.api.Client;
 import net.runelite.api.InventoryID;
@@ -43,6 +44,16 @@ public final class LofModal
 
 	/** Bottom band kept clear for the chat box, so a centred window never covers the chat (§6A). */
 	public static final int CHATBOX_RESERVE = 165;
+
+	/**
+	 * UI-scale reference canvas — the vanilla fixed-mode render size. At this logical canvas a window
+	 * draws at its authored (1.0x) size; the scale grows as the logical canvas grows past it, so our
+	 * custom windows aren't tiny on a big screen (docs/overlay-design-system.md §6 "Scaling").
+	 */
+	public static final int SCALE_BASE_W = 765;
+	public static final int SCALE_BASE_H = 503;
+	/** Cap so a huge canvas doesn't blow the window up past a comfortable size. */
+	public static final float SCALE_MAX = 1.6f;
 
 	public static final int COINS_ID = 995; // item.coins_995
 
@@ -112,6 +123,75 @@ public final class LofModal
 			return 0;
 		}
 		return Math.max(0, Math.min(pos, extent - size));
+	}
+
+	// ---------------------------------------------------------------------------------------------
+	// UI scaling — one screen-aware scale factor so custom windows grow with the canvas instead of
+	// looking tiny on a big screen, the OSRS way (docs/overlay-design-system.md §6 "Scaling"). We scale from the
+	// LOGICAL canvas (getCanvasWidth/Height), never the stretched/window dimensions, so RuneLite's
+	// Stretched Mode composes cleanly on top (fixed+stretched keeps the logical canvas small → scale
+	// 1.0 and Stretched Mode does the enlarging; resizable grows the logical canvas → our windows grow).
+	// ---------------------------------------------------------------------------------------------
+
+	/** The current window scale (≥ 1.0) for this canvas. Compute on the client thread ({@code render}). */
+	public static float uiScale(Client client)
+	{
+		final float byW = client.getCanvasWidth() / (float) SCALE_BASE_W;
+		final float byH = client.getCanvasHeight() / (float) SCALE_BASE_H;
+		final float s = Math.min(byW, byH);
+		return Math.max(1.0f, Math.min(s, SCALE_MAX));
+	}
+
+	/**
+	 * A window's placement for one frame: scaled origin + scale factor. Computed on the client thread in
+	 * {@code render()} via {@link #beginWindow}; cache it in a {@code volatile} field so the mouse thread
+	 * hit-tests against the same values (§8). {@link #toLocal} maps a canvas mouse point back into the
+	 * window's authored (un-scaled) coordinate space, so existing {@code ox+PAD}-based rects still work.
+	 */
+	public static final class Placement
+	{
+		public final int ox;
+		public final int oy;
+		public final float scale;
+		private final AffineTransform saved;
+
+		private Placement(int ox, int oy, float scale, AffineTransform saved)
+		{
+			this.ox = ox;
+			this.oy = oy;
+			this.scale = scale;
+			this.saved = saved;
+		}
+
+		/** Map a canvas point into the window's authored coordinate space (anchored at {@code ox,oy}). */
+		public Point toLocal(Point canvas)
+		{
+			return new Point(ox + Math.round((canvas.x - ox) / scale), oy + Math.round((canvas.y - oy) / scale));
+		}
+	}
+
+	/**
+	 * Begin a scaled window. Computes the scale, places the (scaled) window with the standard origin
+	 * authority, and applies a pivot-scale about the origin so the caller keeps drawing at its existing
+	 * {@code ox + PAD …} coordinates using the authored base constants — the transform does the scaling
+	 * (crisply, since the RS fonts are vector). Draw the window, then call {@link #endWindow}.
+	 */
+	public static Placement beginWindow(Graphics2D g, Client client, int baseW, int baseH)
+	{
+		final float s = uiScale(client);
+		final int ox = originX(client, Math.round(baseW * s));
+		final int oy = originY(client, Math.round(baseH * s));
+		final AffineTransform saved = g.getTransform();
+		g.translate(ox, oy);
+		g.scale(s, s);
+		g.translate(-ox, -oy);
+		return new Placement(ox, oy, s, saved);
+	}
+
+	/** End a scaled window — restore the transform captured by {@link #beginWindow}. */
+	public static void endWindow(Graphics2D g, Placement p)
+	{
+		g.setTransform(p.saved);
 	}
 
 	public static Rectangle closeRect(int ox, int oy)
@@ -201,7 +281,12 @@ public final class LofModal
 		g.fillRoundRect(x, thumbY, 5, thumbH, 5, 5);
 	}
 
-	/** Standard footer button (§5): accent-coloured when enabled, dim + inert when not. */
+	/**
+	 * Standard footer button (§5). The fill + border carry the {@code accent} (GOLD = primary/Accept,
+	 * EMBER = Decline/destructive, GOLD_DIM = secondary), but the LABEL is always drawn in a
+	 * high-contrast colour — never the low-contrast accent — so a dark accent (ember) can't render
+	 * red-on-dark and "mix in". Dim + inert when disabled.
+	 */
 	public static void button(Graphics2D g, Rectangle r, String label, Color accent, boolean enabled, boolean hover)
 	{
 		if (enabled && hover)
@@ -220,7 +305,19 @@ public final class LofModal
 		g.setFont(FontManager.getRunescapeFont());
 		final FontMetrics fm = g.getFontMetrics();
 		LofTheme.shadowText(g, label, r.x + (r.width - fm.stringWidth(label)) / 2, r.y + r.height / 2 + 5,
-			enabled ? accent : LofTheme.TEXT_DIM);
+			enabled ? label(accent) : LofTheme.TEXT_DIM);
+	}
+
+	/**
+	 * The legible label colour for a button of the given accent, on our dark panel: a light accent
+	 * (gold, gold-dim) reads fine as-is, but a darker accent (ember/red) would "mix in", so its label
+	 * falls back to near-white {@link LofTheme#TEXT}. Perceptual luminance; the threshold sits between
+	 * EMBER (~98, → white) and GOLD_DIM (~139, keeps its hue) so only the red case is rewritten.
+	 */
+	private static Color label(Color accent)
+	{
+		final double lum = 0.299 * accent.getRed() + 0.587 * accent.getGreen() + 0.114 * accent.getBlue();
+		return lum >= 120 ? accent : LofTheme.TEXT;
 	}
 
 	/** Total of one stackable item carried in the inventory. */

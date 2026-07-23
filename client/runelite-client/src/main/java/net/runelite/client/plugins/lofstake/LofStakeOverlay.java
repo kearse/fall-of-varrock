@@ -94,6 +94,9 @@ class LofStakeOverlay extends Overlay
 	// Same fix, same reason, as LofShopTabsOverlay's cached showing/winRect.
 	private volatile boolean showingCached;
 
+	// Scaled placement published by render() on the client thread; the mouse thread hit-tests via this cache only.
+	private volatile LofModal.Placement placement;
+
 	/** Cached — safe to call from the mouse thread (see the field note). */
 	boolean isShowing()
 	{
@@ -125,10 +128,13 @@ class LofStakeOverlay extends Overlay
 	private Rectangle acceptRect(int ox, int oy) { return new Rectangle(ox + WIN_W - PAD - 210, oy + WIN_H - PAD - BTN_H, 100, BTN_H); }
 	private Rectangle declineRect(int ox, int oy) { return new Rectangle(ox + WIN_W - PAD - 100, oy + WIN_H - PAD - BTN_H, 100, BTN_H); }
 
-	int hitTest(Point p)
+	int hitTest(Point canvas)
 	{
 		if (!isShowing()) return OUTSIDE;
-		final int ox = originX(), oy = originY();
+		final LofModal.Placement place = placement;
+		if (place == null) return OUTSIDE;
+		final Point p = place.toLocal(canvas);
+		final int ox = place.ox, oy = place.oy;
 		if (!new Rectangle(ox, oy, WIN_W, WIN_H).contains(p)) return OUTSIDE;
 		if (acceptRect(ox, oy).contains(p)) return ACCEPT;
 		if (declineRect(ox, oy).contains(p)) return DECLINE;
@@ -155,9 +161,11 @@ class LofStakeOverlay extends Overlay
 		final java.awt.Rectangle selfBounds = getBounds();
 		g.translate(-selfBounds.x, -selfBounds.y);
 
+		final LofModal.Placement place = LofModal.beginWindow(g, client, WIN_W, WIN_H);
+		placement = place;
 
-		final int ox = originX(), oy = originY();
-		final Point mouse = mousePoint();
+		final int ox = place.ox, oy = place.oy;
+		final Point mouse = place.toLocal(mousePoint());
 
 		LofTheme.panel(g, ox, oy, WIN_W, WIN_H, WIN_ARC);
 
@@ -207,6 +215,7 @@ class LofStakeOverlay extends Overlay
 		button(g, acc, "Accept", LofTheme.GOLD, acc.contains(mouse));
 		button(g, dec, "Decline", LofTheme.EMBER, dec.contains(mouse));
 
+		LofModal.endWindow(g, place);
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, oldAA == null ? RenderingHints.VALUE_ANTIALIAS_DEFAULT : oldAA);
 		return new Dimension(WIN_W, WIN_H);
 	}

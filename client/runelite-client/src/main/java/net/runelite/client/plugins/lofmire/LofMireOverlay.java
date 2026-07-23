@@ -145,6 +145,9 @@ class LofMireOverlay extends Overlay
 	// read ONLY this cached value. Same fix, same reason, as LofShopTabsOverlay's cached showing.
 	private volatile long coinsCached;
 
+	// Scaled placement published by render() on the client thread; the mouse thread hit-tests via this cache only.
+	private volatile LofModal.Placement placement;
+
 	/** The footer button only takes clicks when its action could actually go through. */
 	boolean actionable()
 	{
@@ -172,13 +175,19 @@ class LofMireOverlay extends Overlay
 		return new Rectangle(ox + WIN_W - PAD - BTN_W, oy + WIN_H - PAD - BTN_H, BTN_W, BTN_H);
 	}
 
-	int hitTest(Point p)
+	int hitTest(Point canvas)
 	{
 		if (!visible)
 		{
 			return OUTSIDE;
 		}
-		final int ox = originX(), oy = originY();
+		final LofModal.Placement place = placement;
+		if (place == null)
+		{
+			return OUTSIDE;
+		}
+		final Point p = place.toLocal(canvas);
+		final int ox = place.ox, oy = place.oy;
 		if (!new Rectangle(ox, oy, WIN_W, WIN_H).contains(p))
 		{
 			return OUTSIDE;
@@ -228,8 +237,11 @@ class LofMireOverlay extends Overlay
 		final Rectangle selfBounds = getBounds();
 		g.translate(-selfBounds.x, -selfBounds.y);
 
-		final int ox = originX(), oy = originY();
-		final Point mouse = mousePoint();
+		final LofModal.Placement place = LofModal.beginWindow(g, client, WIN_W, WIN_H);
+		placement = place;
+
+		final int ox = place.ox, oy = place.oy;
+		final Point mouse = place.toLocal(mousePoint());
 
 		LofTheme.panel(g, ox, oy, WIN_W, WIN_H, WIN_ARC);
 		drawHeader(g, ox, oy, mouse);
@@ -246,6 +258,7 @@ class LofMireOverlay extends Overlay
 		drawLootTable(g, ox, oy, attuned);
 		drawFooter(g, ox, oy, mouse);
 
+		LofModal.endWindow(g, place);
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, oldAA == null ? RenderingHints.VALUE_ANTIALIAS_DEFAULT : oldAA);
 		return new Dimension(WIN_W, WIN_H);
 	}

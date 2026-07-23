@@ -60,6 +60,9 @@ class LofContractsOverlay extends Overlay implements LofWindows.Window
 	private BufferedImage resourceIcon;
 	private boolean iconsLoaded;
 
+	// Scaled placement published by render() on the client thread; the mouse thread hit-tests via this cache only.
+	private volatile LofModal.Placement placement;
+
 	@Inject
 	private LofContractsOverlay(Client client)
 	{
@@ -117,13 +120,19 @@ class LofContractsOverlay extends Overlay implements LofWindows.Window
 		return new Rectangle(ox + LofModal.W - LofModal.PAD - 190, oy + LofModal.H - 12 - 32, 190, 32);
 	}
 
-	int hitTest(Point p)
+	int hitTest(Point canvas)
 	{
 		if (!visible)
 		{
 			return OUTSIDE;
 		}
-		final int ox = LofModal.originX(client), oy = LofModal.originY(client);
+		final LofModal.Placement place = placement;
+		if (place == null)
+		{
+			return OUTSIDE;
+		}
+		final Point p = place.toLocal(canvas);
+		final int ox = place.ox, oy = place.oy;
 		if (!new Rectangle(ox, oy, LofModal.W, LofModal.H).contains(p))
 		{
 			return OUTSIDE;
@@ -158,10 +167,12 @@ class LofContractsOverlay extends Overlay implements LofWindows.Window
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		final Rectangle selfBounds = getBounds();
 		g.translate(-selfBounds.x, -selfBounds.y);
+		final LofModal.Placement place = LofModal.beginWindow(g, client, LofModal.W, LofModal.H);
+		placement = place;
 		ensureIcons();
 
-		final int ox = LofModal.originX(client), oy = LofModal.originY(client);
-		final Point mouse = mousePoint();
+		final int ox = place.ox, oy = place.oy;
+		final Point mouse = place.toLocal(mousePoint());
 		LofModal.frame(g, ox, oy, "War Contracts", "Vannaka · War Effort: " + LofModal.fmt(warEffort), mouse);
 
 		drawCombatCard(g, ox, oy);
@@ -179,6 +190,7 @@ class LofContractsOverlay extends Overlay implements LofWindows.Window
 			ox + LofModal.PAD, oy + LofModal.H - 46, LofTheme.TEXT_DIM);
 		LofModal.button(g, rewardsBtn(ox, oy), "Open reward shop", LofTheme.GOLD, true, rewardsBtn(ox, oy).contains(mouse));
 
+		LofModal.endWindow(g, place);
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, oldAA == null ? RenderingHints.VALUE_ANTIALIAS_DEFAULT : oldAA);
 		return new Dimension(LofModal.W, LofModal.H);
 	}

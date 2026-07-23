@@ -94,6 +94,9 @@ class LofDuelOverlay extends Overlay
 	// ONLY this cached value. Same fix, same reason, as LofShopTabsOverlay's cached showing.
 	private volatile boolean showingCached;
 
+	// Scaled placement published by render() on the client thread; the mouse thread hit-tests via this cache only.
+	private volatile LofModal.Placement placement;
+
 	/** Cached — safe to call from the mouse thread (see the field note). */
 	boolean isShowing()
 	{
@@ -125,10 +128,13 @@ class LofDuelOverlay extends Overlay
 	private Rectangle acceptRect(int ox, int oy) { return new Rectangle(ox + WIN_W - PAD - 210, oy + WIN_H - PAD - BTN_H, 100, BTN_H); }
 	private Rectangle declineRect(int ox, int oy) { return new Rectangle(ox + WIN_W - PAD - 100, oy + WIN_H - PAD - BTN_H, 100, BTN_H); }
 
-	int hitTest(Point p)
+	int hitTest(Point canvas)
 	{
 		if (!isShowing()) return OUTSIDE;
-		final int ox = originX(), oy = originY();
+		final LofModal.Placement place = placement;
+		if (place == null) return OUTSIDE;
+		final Point p = place.toLocal(canvas);
+		final int ox = place.ox, oy = place.oy;
 		if (!new Rectangle(ox, oy, WIN_W, WIN_H).contains(p)) return OUTSIDE;
 		if (loadRect(ox, oy).contains(p)) return LOAD;
 		if (acceptRect(ox, oy).contains(p)) return ACCEPT;
@@ -154,12 +160,14 @@ class LofDuelOverlay extends Overlay
 		final java.awt.Rectangle selfBounds = getBounds();
 		g.translate(-selfBounds.x, -selfBounds.y);
 
+		final LofModal.Placement place = LofModal.beginWindow(g, client, WIN_W, WIN_H);
+		placement = place;
 
 		final int state = client.getVarpValue(STATE_VARP);
 		final boolean myAccept = (state & (1 << 13)) != 0;
 		final boolean theirAccept = (state & (1 << 14)) != 0;
-		final int ox = originX(), oy = originY();
-		final Point mouse = mousePoint();
+		final int ox = place.ox, oy = place.oy;
+		final Point mouse = place.toLocal(mousePoint());
 
 		LofTheme.panel(g, ox, oy, WIN_W, WIN_H, WIN_ARC);
 
@@ -209,6 +217,7 @@ class LofDuelOverlay extends Overlay
 		button(g, acceptRect(ox, oy), myAccept ? "✔ Accepted" : "Accept", LofTheme.GOLD, myAccept, acceptRect(ox, oy).contains(mouse));
 		button(g, declineRect(ox, oy), "Decline", LofTheme.EMBER, false, declineRect(ox, oy).contains(mouse));
 
+		LofModal.endWindow(g, place);
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, oldAA == null ? RenderingHints.VALUE_ANTIALIAS_DEFAULT : oldAA);
 		return new Dimension(WIN_W, WIN_H);
 	}

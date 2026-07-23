@@ -249,6 +249,10 @@ class LofDiceOverlay extends Overlay implements LofWindows.Window
 	// This now holds inventory + bank so a bet can be funded straight from the bank.
 	private volatile long coinsCached;
 
+	// Window placement (scaled origin + scale) published by render() on the client thread; the mouse
+	// thread hit-tests against this cache only (§8) — never re-derives origin/scale off-thread.
+	private volatile LofModal.Placement placement;
+
 	// Bank coin balance pushed by the server (DiceMenu.COINS_VARP). Added to the live inventory count
 	// so the felt shows — and the ROLL button lights for — the player's whole spendable stack.
 	private volatile long bankCoins;
@@ -274,13 +278,19 @@ class LofDiceOverlay extends Overlay implements LofWindows.Window
 		return new Rectangle(ox + LofModal.W - LofModal.PAD - 240, oy + LofModal.H - 12 - 32, 240, 32);
 	}
 
-	int hitTest(Point p)
+	int hitTest(Point canvas)
 	{
 		if (!visible)
 		{
 			return OUTSIDE;
 		}
-		final int ox = LofModal.originX(client), oy = LofModal.originY(client);
+		final LofModal.Placement place = placement;
+		if (place == null)
+		{
+			return OUTSIDE;
+		}
+		final int ox = place.ox, oy = place.oy;
+		final Point p = place.toLocal(canvas); // map the canvas click into the window's authored space
 		if (!new Rectangle(ox, oy, LofModal.W, LofModal.H).contains(p))
 		{
 			return OUTSIDE;
@@ -327,8 +337,10 @@ class LofDiceOverlay extends Overlay implements LofWindows.Window
 			}
 		}
 
-		final int ox = LofModal.originX(client), oy = LofModal.originY(client);
-		final Point mouse = mousePoint();
+		final LofModal.Placement place = LofModal.beginWindow(g, client, LofModal.W, LofModal.H);
+		placement = place; // publish for the mouse thread before any hit-testable frame is drawn
+		final int ox = place.ox, oy = place.oy;
+		final Point mouse = place.toLocal(mousePoint()); // hover in the window's authored space
 		LofModal.frame(g, ox, oy, "The Gambler's Table", "roll 51+ to win", mouse);
 
 		// drive the roll animation for this frame
@@ -429,8 +441,9 @@ class LofDiceOverlay extends Overlay implements LofWindows.Window
 			ox + LofModal.PAD, oy + LofModal.H - 22, LofTheme.TEXT_DIM);
 		final String rollLabel = rolling ? "ROLLING" + dots(now)
 			: (stake > 0 ? "ROLL THE DIE — " + LofModal.fmt(stake) : "ROLL THE DIE");
-		LofModal.button(g, rollRect(ox, oy), rollLabel, LofTheme.EMBER, canRoll(), rollRect(ox, oy).contains(mouse));
+		LofModal.button(g, rollRect(ox, oy), rollLabel, LofTheme.GOLD, canRoll(), rollRect(ox, oy).contains(mouse));
 
+		LofModal.endWindow(g, place);
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, oldAA == null ? RenderingHints.VALUE_ANTIALIAS_DEFAULT : oldAA);
 		return new Dimension(LofModal.W, LofModal.H);
 	}

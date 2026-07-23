@@ -55,6 +55,9 @@ class LofBondsOverlay extends Overlay implements LofWindows.Window
 	private BufferedImage donorIcon;
 	private boolean iconsLoaded;
 
+	// Scaled placement published by render() on the client thread; the mouse thread hit-tests via this cache only.
+	private volatile LofModal.Placement placement;
+
 	@Inject
 	private LofBondsOverlay(Client client)
 	{
@@ -97,13 +100,19 @@ class LofBondsOverlay extends Overlay implements LofWindows.Window
 		return new Rectangle(ox + LofModal.PAD + i * (w + 10), oy + CARDS_Y, w, CARD_H);
 	}
 
-	int hitTest(Point p)
+	int hitTest(Point canvas)
 	{
 		if (!visible)
 		{
 			return OUTSIDE;
 		}
-		final int ox = LofModal.originX(client), oy = LofModal.originY(client);
+		final LofModal.Placement place = placement;
+		if (place == null)
+		{
+			return OUTSIDE;
+		}
+		final Point p = place.toLocal(canvas);
+		final int ox = place.ox, oy = place.oy;
 		if (!new Rectangle(ox, oy, LofModal.W, LofModal.H).contains(p))
 		{
 			return OUTSIDE;
@@ -138,10 +147,12 @@ class LofBondsOverlay extends Overlay implements LofWindows.Window
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		final Rectangle selfBounds = getBounds();
 		g.translate(-selfBounds.x, -selfBounds.y);
+		final LofModal.Placement place = LofModal.beginWindow(g, client, LofModal.W, LofModal.H);
+		placement = place;
 		ensureIcons();
 
-		final int ox = LofModal.originX(client), oy = LofModal.originY(client);
-		final Point mouse = mousePoint();
+		final int ox = place.ox, oy = place.oy;
+		final Point mouse = place.toLocal(mousePoint());
 		LofModal.frame(g, ox, oy, "The Bond Exchange", "Bond Merchant", mouse);
 
 		// wallet
@@ -166,6 +177,7 @@ class LofBondsOverlay extends Overlay implements LofWindows.Window
 		LofTheme.shadowText(g, "You never have to pay to be a member. Bonds never redeem for gold.",
 			ox + LofModal.PAD, oy + LofModal.H - 24, LofTheme.TEXT_DIM);
 
+		LofModal.endWindow(g, place);
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, oldAA == null ? RenderingHints.VALUE_ANTIALIAS_DEFAULT : oldAA);
 		return new Dimension(LofModal.W, LofModal.H);
 	}

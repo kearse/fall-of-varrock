@@ -81,6 +81,9 @@ class LofRanksOverlay extends Overlay implements LofWindows.Window
 	// lit. Same fix, same reason, as LofShopTabsOverlay's cached showing/winRect.
 	private volatile boolean canBuyCached;
 
+	// Scaled placement published by render() on the client thread; the mouse thread hit-tests via this cache only.
+	private volatile LofModal.Placement placement;
+
 	/** rank_<name>.png once the generated art lands; null slots fall back to vector emblems. */
 	private final BufferedImage[] emblems = new BufferedImage[LofRanksData.RANKS.length];
 	private boolean emblemsLoaded;
@@ -147,13 +150,19 @@ class LofRanksOverlay extends Overlay implements LofWindows.Window
 		return new Rectangle(cx, oy + TRACK_LINE_Y - NODE_D / 2, NODE_D, NODE_D);
 	}
 
-	int hitTest(Point p)
+	int hitTest(Point canvas)
 	{
 		if (!visible)
 		{
 			return OUTSIDE;
 		}
-		final int ox = originX(), oy = originY();
+		final LofModal.Placement place = placement;
+		if (place == null)
+		{
+			return OUTSIDE;
+		}
+		final Point p = place.toLocal(canvas);
+		final int ox = place.ox, oy = place.oy;
 		if (!new Rectangle(ox, oy, WIN_W, WIN_H).contains(p))
 		{
 			return OUTSIDE;
@@ -204,6 +213,9 @@ class LofRanksOverlay extends Overlay implements LofWindows.Window
 		final Rectangle selfBounds = getBounds();
 		g.translate(-selfBounds.x, -selfBounds.y);
 
+		final LofModal.Placement place = LofModal.beginWindow(g, client, WIN_W, WIN_H);
+		placement = place;
+
 		ensureEmblems();
 		if (heroFont == null)
 		{
@@ -211,8 +223,8 @@ class LofRanksOverlay extends Overlay implements LofWindows.Window
 			nextFont = FontManager.getRunescapeBoldFont().deriveFont(18f);
 		}
 
-		final int ox = originX(), oy = originY();
-		final Point mouse = mousePoint();
+		final int ox = place.ox, oy = place.oy;
+		final Point mouse = place.toLocal(mousePoint());
 		final LofRanksData.Rank cur = LofRanksData.RANKS[currentRank];
 		final int nextIdx = nextRank();
 		final LofRanksData.Rank next = nextIdx >= 0 ? LofRanksData.RANKS[nextIdx] : null;
@@ -229,6 +241,7 @@ class LofRanksOverlay extends Overlay implements LofWindows.Window
 		drawTrack(g, ox, oy, mouse);
 		drawFooter(g, ox, oy, next, coins, canBuy, mouse);
 
+		LofModal.endWindow(g, place);
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, oldAA == null ? RenderingHints.VALUE_ANTIALIAS_DEFAULT : oldAA);
 		return new Dimension(WIN_W, WIN_H);
 	}

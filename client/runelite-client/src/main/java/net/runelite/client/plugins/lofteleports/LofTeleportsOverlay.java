@@ -78,6 +78,9 @@ class LofTeleportsOverlay extends Overlay implements LofWindows.Window
 	private int activeTab;
 	private int scroll; // px
 
+	// Scaled placement published by render() on the client thread; the mouse thread hit-tests via this cache only.
+	private volatile LofModal.Placement placement;
+
 	@Inject
 	private LofTeleportsOverlay(Client client, LofTeleportsConfig config, ItemManager itemManager)
 	{
@@ -114,19 +117,25 @@ class LofTeleportsOverlay extends Overlay implements LofWindows.Window
 	private int originY() { return LofModal.originY(client, WIN_H); }
 
 	/** Wheel scroll if the cursor is over the list; returns true if consumed. */
-	boolean handleScroll(Point p, int rotation)
+	boolean handleScroll(Point canvas, int rotation)
 	{
 		if (!visible) return false;
-		final int ox = originX(), oy = originY();
+		final LofModal.Placement place = placement;
+		if (place == null) return false;
+		final Point p = place.toLocal(canvas);
+		final int ox = place.ox, oy = place.oy;
 		if (!new Rectangle(ox + LIST_X, oy + VP_TOP, LIST_W, VP_H).contains(p)) return false;
 		scroll = clamp(scroll + rotation * STEP, 0, maxScroll());
 		return true;
 	}
 
-	int hitTest(Point p)
+	int hitTest(Point canvas)
 	{
 		if (!visible) return OUTSIDE;
-		final int ox = originX(), oy = originY();
+		final LofModal.Placement place = placement;
+		if (place == null) return OUTSIDE;
+		final Point p = place.toLocal(canvas);
+		final int ox = place.ox, oy = place.oy;
 		if (!new Rectangle(ox, oy, WIN_W, WIN_H).contains(p)) return OUTSIDE;
 		if (closeRect(ox, oy).contains(p)) return CLOSE;
 
@@ -169,9 +178,11 @@ class LofTeleportsOverlay extends Overlay implements LofWindows.Window
 		final java.awt.Rectangle selfBounds = getBounds();
 		g.translate(-selfBounds.x, -selfBounds.y);
 
+		final LofModal.Placement place = LofModal.beginWindow(g, client, WIN_W, WIN_H);
+		placement = place;
 
-		final int ox = originX(), oy = originY();
-		final Point mouse = mousePoint();
+		final int ox = place.ox, oy = place.oy;
+		final Point mouse = place.toLocal(mousePoint());
 
 		LofTheme.panel(g, ox, oy, WIN_W, WIN_H, WIN_ARC);
 
@@ -291,6 +302,7 @@ class LofTeleportsOverlay extends Overlay implements LofWindows.Window
 			g.fillRoundRect(sbX, thumbY, SCROLLBAR_W, thumbH, SCROLLBAR_W, SCROLLBAR_W);
 		}
 
+		LofModal.endWindow(g, place);
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, oldAA == null ? RenderingHints.VALUE_ANTIALIAS_DEFAULT : oldAA);
 		return new Dimension(WIN_W, WIN_H);
 	}

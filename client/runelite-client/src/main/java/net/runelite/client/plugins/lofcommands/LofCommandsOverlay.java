@@ -70,6 +70,9 @@ class LofCommandsOverlay extends Overlay
 	private final LofCommandsPlugin plugin;
 
 	private boolean visible;
+
+	// Scaled placement published by render() on the client thread; the mouse thread hit-tests via this cache only.
+	private volatile LofModal.Placement placement;
 	private int activeTab;
 	private int scroll; // px
 
@@ -128,13 +131,19 @@ class LofCommandsOverlay extends Overlay
 	private int originY() { return LofModal.originY(client, WIN_H); }
 
 	/** Wheel scroll if the cursor is over the list; returns true if consumed. */
-	boolean handleScroll(Point p, int rotation)
+	boolean handleScroll(Point canvas, int rotation)
 	{
 		if (!visible)
 		{
 			return false;
 		}
-		final int ox = originX(), oy = originY();
+		final LofModal.Placement place = placement;
+		if (place == null)
+		{
+			return false;
+		}
+		final Point p = place.toLocal(canvas);
+		final int ox = place.ox, oy = place.oy;
 		if (!new Rectangle(ox + LIST_X, oy + VP_TOP, LIST_W, VP_H).contains(p))
 		{
 			return false;
@@ -143,13 +152,19 @@ class LofCommandsOverlay extends Overlay
 		return true;
 	}
 
-	int hitTest(Point p)
+	int hitTest(Point canvas)
 	{
 		if (!visible)
 		{
 			return OUTSIDE;
 		}
-		final int ox = originX(), oy = originY();
+		final LofModal.Placement place = placement;
+		if (place == null)
+		{
+			return OUTSIDE;
+		}
+		final Point p = place.toLocal(canvas);
+		final int ox = place.ox, oy = place.oy;
 		if (!new Rectangle(ox, oy, WIN_W, WIN_H).contains(p))
 		{
 			return OUTSIDE;
@@ -229,8 +244,10 @@ class LofCommandsOverlay extends Overlay
 		g.translate(-selfBounds.x, -selfBounds.y);
 
 
-		final int ox = originX(), oy = originY();
-		final Point mouse = mousePoint();
+		final LofModal.Placement place = LofModal.beginWindow(g, client, WIN_W, WIN_H);
+		placement = place;
+		final int ox = place.ox, oy = place.oy;
+		final Point mouse = place.toLocal(mousePoint());
 
 		LofTheme.panel(g, ox, oy, WIN_W, WIN_H, WIN_ARC);
 
@@ -349,6 +366,7 @@ class LofCommandsOverlay extends Overlay
 			g.fillRoundRect(sbX, thumbY, SCROLLBAR_W, thumbH, SCROLLBAR_W, SCROLLBAR_W);
 		}
 
+		LofModal.endWindow(g, place);
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, oldAA == null ? RenderingHints.VALUE_ANTIALIAS_DEFAULT : oldAA);
 		return new Dimension(WIN_W, WIN_H);
 	}
