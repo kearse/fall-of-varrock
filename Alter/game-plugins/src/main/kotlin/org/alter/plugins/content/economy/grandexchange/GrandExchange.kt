@@ -95,6 +95,9 @@ object GrandExchange {
     fun hasCollectables(owner: String): Boolean =
         offers.any { it.owner == owner && (it.collectCoins > 0 || it.collectItems > 0) }
 
+    /** True if [owner] has any offer on the book (used to push live board refreshes to them). */
+    fun ownsOffer(owner: String): Boolean = offers.any { it.owner == owner }
+
     // ---- queries -------------------------------------------------------------------------------
 
     /** The player's 8 boxes in order, null where empty. */
@@ -195,8 +198,9 @@ object GrandExchange {
 
     // ---- matching ------------------------------------------------------------------------------
 
-    /** One matching pass: cross players first (price-time priority), then the NPC commodity backstop. */
-    fun matchTick() {
+    /** One matching pass: cross players first (price-time priority), then the NPC commodity backstop.
+     *  Returns true if any offer changed this pass (so the caller can push a live board refresh). */
+    fun matchTick(): Boolean {
         var changed = false
         val active = offers.filter { it.isActive }
         for (item in active.map { it.itemId }.toSet()) {
@@ -216,6 +220,7 @@ object GrandExchange {
         }
         if (backstopEnabled) changed = backstopSweep() || changed
         if (changed) markDirty()
+        return changed
     }
 
     private fun applyFill(buy: GeOffer, sell: GeOffer, fill: GeFill) {

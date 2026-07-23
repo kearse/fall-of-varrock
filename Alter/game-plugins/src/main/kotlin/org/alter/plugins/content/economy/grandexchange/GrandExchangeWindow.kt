@@ -14,7 +14,8 @@ import org.alter.rscm.RSCM.getRSCM
  * ```
  * FOV_GE:open                                                              (show window; reset board buffer)
  * FOV_GE:slot|box|state|buy|item|price|qty|filled|collectCoins|collectItems   (8 lines, one per box; empty = state 0)
- * FOV_GE:end                                                               (commit board)
+ * FOV_GE:end                                                               (commit board; open the window)
+ * FOV_GE:refreshopen / … / FOV_GE:refreshend                               (live board repaint; no open)
  * FOV_GE:bal|coins                                                         (coin readout: inventory + bank)
  * FOV_GE:setup|box|buy|item|guide|floor|ceil|bestAsk|bestBid|nSell|nBuy|own (enter offer-setup; -1 where absent)
  * FOV_GE:ask|price|qty                                                     (0..N top open sells, cheapest first)
@@ -44,9 +45,7 @@ object GrandExchangeWindow {
     private fun coins(p: Player): Long =
         p.inventory.getItemCount(coinsId).toLong() + p.bank.getItemCount(coinsId).toLong()
 
-    /** Open (or refresh) the window: the full 8-slot board + the coin readout. */
-    fun stream(p: Player) {
-        line(p, "open")
+    private fun writeSlots(p: Player) {
         val slots = GrandExchange.slotsOf(p.username.lowercase())
         for (box in 0 until GrandExchange.SLOTS) {
             val o = slots[box]
@@ -59,8 +58,23 @@ object GrandExchangeWindow {
                 )
             }
         }
-        line(p, "end")
         line(p, "bal|${coins(p)}")
+    }
+
+    /** Open the window on the board: the full 8-slot board + the coin readout (shows the window). */
+    fun stream(p: Player) {
+        line(p, "open")
+        writeSlots(p)
+        line(p, "end")
+    }
+
+    /** Live board update (from the match tick) — repaints the board *in place* without opening the
+     *  window or disturbing an open setup/history view. The client applies the slots but never changes
+     *  visibility, so a fill you're watching progresses live and one you're not never pops the window. */
+    fun refresh(p: Player) {
+        line(p, "refreshopen")
+        writeSlots(p)
+        line(p, "refreshend")
     }
 
     /** Tell the client to show the offer-setup view for [box] with the chosen buy/sell + the picked
