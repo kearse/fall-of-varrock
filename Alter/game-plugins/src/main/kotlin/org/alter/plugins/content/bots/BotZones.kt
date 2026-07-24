@@ -87,6 +87,19 @@ object BotZones {
     ))
 
     /**
+     * ROGUE tier — the capped pool for [Fallen Varrock][fallen_varrock], the scripted first-run
+     * zone of the Act II "Rogue Problem" quest. New Squires are steered here straight off War-Prep,
+     * so its "Rogue Knights" are deliberately beatable: metal-armour fodder up to adamant plus a
+     * couple of budget PK sets — NO rune/dragon metal, NO mid/high/elite meta, none of them pray.
+     * Fixing the tier here (instead of letting the city's wild depth roll mithril→rune→elite) is
+     * what keeps the quest survivable while the rest of the wilderness stays scary by depth.
+     */
+    private val T_ROGUE = BotTier(listOf(
+        "bronze_pker" to 4, "iron_pker" to 4, "steel_pker" to 4, "black_pker" to 3,
+        "mithril_pker" to 3, "adamant_pker" to 2, "budget_pure" to 2, "budget_zerker" to 1,
+    ))
+
+    /**
      * Loadout tier for a given custom wilderness level ([PvpZones.wildernessLevel], depth north from
      * the wild's south edge). The single source of truth for "tier PKers by depth": a bot's danger is
      * decided by how deep it spawned. Wild 1–10 is a metal-armour ladder for new players; past 10 the
@@ -149,18 +162,23 @@ object BotZones {
         }
 
         // FALLEN VARROCK — the city fell and is now the loot hub where the rogues congregate, so it
-        // gets a dedicated, denser colony ON TOP of the grid cells that cover it. Tier stays dynamic
-        // (wild level ~15-33 across the city → mithril/rune-band PKers); the muster filter's
-        // walkable + isWilderness check self-trims the banks/GE carve-outs and the buildings.
+        // gets a dedicated, denser colony ON TOP of the grid cells that cover it. This is also the
+        // scripted hunting ground for the Act II "Rogue Problem" quest, so its rogues are PINNED to
+        // the capped [T_ROGUE] pool (beatable metal/budget PKers, no rune/elite) instead of rolling
+        // the city's wild depth up to elite — players reported fresh Squires being farmed by geared
+        // Rogue Knights here. The chase leash/roam are also tightened so a rogue can't drag a quester
+        // clear across the shallow streets (the "coming in too far" complaint). The muster filter's
+        // walkable + isWilderness check still self-trims the banks/GE carve-outs and the buildings.
         add(
             BotZoneConfig(
                 key = "fallen_varrock",
                 displayName = "Fallen Varrock",
                 area = Area(3155, 3376, 3300, 3520),
+                tier = T_ROGUE,     // capped: no rune/elite geared rogues in the quest zone
                 target = 3,
                 spacing = 5,
-                roamRadius = 14,
-                leashRadius = 28,
+                roamRadius = 8,     // was 14 — keep rogues near their post
+                leashRadius = 14,   // was 28 — stop dragging questers across the city
                 activationPadding = 24,
             ),
         )

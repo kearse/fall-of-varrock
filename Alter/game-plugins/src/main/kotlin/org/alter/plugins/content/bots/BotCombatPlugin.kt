@@ -13,6 +13,9 @@ import org.alter.game.model.item.Item
 import org.alter.game.model.timer.TimerKey
 import org.alter.plugins.content.combat.PvpZones
 import org.alter.plugins.content.economy.pk.LootKeys
+import org.alter.plugins.content.quests.QuestJournal
+import org.alter.plugins.content.war.roguehunt.RogueHunt
+import org.alter.plugins.content.war.roguehunt.RogueProblem
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
 // Aliased: this class has its own `companion object`, whose implicit name `Companion` would SHADOW
@@ -69,6 +72,7 @@ class BotCombatPlugin(
             if (bot.attr[CW_BOT_ATTR] == true) return@onPlayerPreDeath
             val killer = bot.attr[KILLER_ATTR]?.get() as? Player
             dropAllGear(world, bot, killer)
+            creditRogueKill(bot, killer)
         }
 
         // Remove the bot from the world at the end of its death sequence.
@@ -110,6 +114,23 @@ class BotCombatPlugin(
             null
         }
         (overflow ?: kit).forEach { world.spawn(GroundItem(it.id, it.amount, tile, realKiller)) }
+    }
+
+    /**
+     * A slain "Rogue Knight" PKer counts toward the rogue-hunt tally + the Rogue Problem quest, exactly
+     * like a rogue-family NPC does — the bots carry that name ([BotManager]'s `ROGUE_NAME`) and players
+     * (rightly) expect the kill to register: the lone Rogue Knight at the Lumbridge goblin camp, and the
+     * geared wilderness PKers a questing Squire actually fights. Only a real-player kill counts — every
+     * companion/spar/LMS/CW bot already returned above, so anything reaching here is a wilderness/ambush
+     * rogue. Syncs the Quest Journal so the on-screen counter ticks the instant the kill lands rather
+     * than on the next ~2s poll (the "stays updated" ask).
+     */
+    private fun creditRogueKill(bot: PkBot, killer: Player?) {
+        val hunter = killer?.takeIf { it !is PkBot } ?: return
+        if (!RogueHunt.isRogue(bot.username)) return
+        RogueHunt.onKill(hunter)      // lifetime milestone tally (Recruiting Sergeant bounties)
+        RogueProblem.onRogueKill(hunter) // Act II quest HUNT step, if the hunter is on it
+        QuestJournal.sync(hunter)     // push the counter to the client immediately
     }
 
     private companion object {
