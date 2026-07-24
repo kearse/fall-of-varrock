@@ -1,6 +1,7 @@
 package org.alter.game.action
 
 import dev.openrune.cache.CacheManager.getAnim
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.alter.game.action.NpcDeathAction.reset
 import org.alter.game.info.NpcInfo
 import org.alter.game.model.LockState
@@ -25,6 +26,8 @@ import java.lang.ref.WeakReference
  * @author Tom <rspsmods@gmail.com>
  */
 object NpcDeathAction {
+    private val logger = KotlinLogging.logger {}
+
     var deathPlugin: Plugin.() -> Unit = {
         val npc = ctx as Npc
         if (!npc.world.plugins.executeNpcFullDeath(npc)) {
@@ -67,13 +70,29 @@ object NpcDeathAction {
          * @TODO add interruption for this block if we would want to execute a plugin during it's death animation
          */
         deathAnimation.forEach { anim ->
-            val def = getAnim(anim)
+            // A bad/missing anim id must not abort the death sequence: everything downstream —
+            // the kill counters on [anyNpcDeath], loot, respawn — hangs off finishing this loop.
+            val def = try {
+                getAnim(anim)
+            } catch (e: Exception) {
+                logger.error(e) { "Death animation $anim unresolved for npc ${npc.id} '${npc.name}' — skipping it." }
+                return@forEach
+            }
             npc.animate(def.id, def.cycleLength)
             wait(def.cycleLength)
         }
         world.plugins.executeNpcDeath(npc)
+        // The additive death hooks (Slayer/rogue-hunt/quest kill counters, generic drops, Discord
+        // boss feed, …) are independent cross-cutting listeners. A throw in one used to abort the
+        // whole forEach, silently starving EVERY later listener of the kill — the classic "the
+        // server randomly stops counting a task/quest" bug, and order-dependent to boot. Isolate
+        // each handler so one bad listener can't disable the others (mirrors [Pawn.hitsCycle]).
         world.plugins.anyNpcDeath.forEach {
-            npc.executePlugin(it)
+            try {
+                npc.executePlugin(it)
+            } catch (e: Exception) {
+                logger.error(e) { "An onAnyNpcDeath handler threw for npc ${npc.id} '${npc.name}' — other death handlers still ran." }
+            }
         }
         if (npc.respawns) {
             NpcInfo(npc).setInaccessible(true)
