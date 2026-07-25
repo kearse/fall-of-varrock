@@ -1,0 +1,19 @@
+{
+  "region": 12850,
+  "note": "Open up the GROUND FLOOR of Lumbridge Castle (home hangout space). Home is Tile(3222,3218,0), inside this footprint. Clear the interior clutter and dividing walls so level 0 becomes one big walkable room, while KEEPING the outer castle walls + doorways standing (removing the perimeter glitches the footprint out to the map edge — the lesson from ge_ruins.json). Removing locs also drops their server-side collision, so the cleared tiles become walkable with no separate clipping edit. Terrain (the checkerboard floor) is left untouched. NPCs (cook, tutors, Hans, Duke) are spawned server-side by plugins, NOT by these cache locs, so they are unaffected by this edit. RUN 'preview' FIRST and read the 'removed (by object name)' list before 'apply'.",
+
+  "removes": [
+    {
+      "box": [3205, 3208, 3226, 3229],
+      "level": 0,
+      "types": [4, 5, 6, 7, 8, 10, 11, 22],
+      "_comment": "SAFE DECLUTTER PASS — furniture + decoration only, NOT structural walls. Types: 4-8 wall decorations (torches/banners/wall hangings), 10/11 freestanding scenery (tables, chairs, ranges, shelves, crates, the dining table + benches), 22 ground decoration (floor decals/rugs). Box is inset 1 tile from the castle's outer walls (outer shell sits on x=3204/3227, z=3207/3230) so the perimeter is preserved. CAUTION: type 10 also covers the ground-floor STAIRCASE(s). In preview, if a 'Staircase'/'Staircase'-named loc shows up in the removed list and you want to keep upstairs reachable, split this box to exclude the staircase tile(s) (read their coords from preview). Confirm the 3205..3226 / 3208..3229 footprint against preview — nudge the box if the removed set spills outside the castle."
+    },
+    {
+      "box": [3207, 3210, 3224, 3227],
+      "level": 0,
+      "types": [0, 1, 2, 3, 9],
+      "_comment": "INTERIOR WALLS PASS — the dividing walls that split the ground floor into rooms (0 straight, 1 corner, 2/3 corner variants/pillars, 9 diagonal). Box is inset a further tile (2 from the outer shell) so it CANNOT touch the perimeter walls or their doorways. This is the pass most likely to need tuning: preview and confirm every removed wall is an interior divider, not part of the outer enclosure. If a stretch of outer wall appears in the removed list, shrink this box. If some interior stubs survive near the perimeter, list them as small targeted boxes rather than widening this one toward the shell."
+    }
+  ]
+}
