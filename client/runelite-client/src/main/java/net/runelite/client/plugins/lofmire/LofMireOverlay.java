@@ -414,7 +414,7 @@ class LofMireOverlay extends Overlay
 		final int baseline = y + (ROW_H - 3) / 2 + 5;
 		LofTheme.shadowText(g, name, x + 32, baseline, LofTheme.TEXT);
 
-		final String qty = min == max ? fmt(min) : fmt(min) + "–" + fmt(max);
+		final String qty = min == max ? fmt(min) : fmt(min) + "-" + fmt(max);
 		g.setFont(FontManager.getRunescapeSmallFont());
 		FontMetrics fm = g.getFontMetrics();
 		LofTheme.shadowText(g, qty, x + w - 110 - fm.stringWidth(qty), baseline, LofTheme.GOLD);

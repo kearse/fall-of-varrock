@@ -29,7 +29,6 @@ import java.awt.FontFormatException;
 import java.awt.GraphicsEnvironment;
 import java.io.IOException;
 import java.io.InputStream;
-import javax.swing.text.StyleContext;
 import lombok.Getter;
 
 public class FontManager
@@ -53,32 +52,31 @@ public class FontManager
 			InputStream inRunescapeSmall = FontManager.class.getResourceAsStream("runescape_small.ttf");
 			InputStream inRunescapeBold = FontManager.class.getResourceAsStream("runescape_bold.ttf"))
 		{
+			// Use the Font we actually loaded from the .ttf, not a copy re-fetched by family name.
+			// registerFont() only makes the family resolvable *by name*; on some environments (a headless
+			// or sandboxed GraphicsEnvironment, or a container whose fontconfig default is a serif face)
+			// that name lookup fails and StyleContext.getFont(name, ...) silently returns a logical
+			// fallback — which is why our overlays rendered in a serif font instead of the RuneScape one.
+			// Holding onto the createFont() result binds our text to the real glyphs regardless. We still
+			// register each font so any name-based consumer (Swing panels, HTML) can find it too.
+
 			// runescape
 			Font font = Font.createFont(Font.TRUETYPE_FONT, inRunescape)
-				.deriveFont(Font.PLAIN, 16);
+				.deriveFont(Font.PLAIN, 16f);
 			ge.registerFont(font);
-
-			runescapeFont = StyleContext.getDefaultStyleContext()
-				.getFont(font.getName(), Font.PLAIN, 16);
-			ge.registerFont(runescapeFont);
+			runescapeFont = font;
 
 			// small
 			Font smallFont = Font.createFont(Font.TRUETYPE_FONT, inRunescapeSmall)
-				.deriveFont(Font.PLAIN, 16);
+				.deriveFont(Font.PLAIN, 16f);
 			ge.registerFont(smallFont);
-
-			runescapeSmallFont = StyleContext.getDefaultStyleContext()
-				.getFont(smallFont.getName(), Font.PLAIN, 16);
-			ge.registerFont(runescapeSmallFont);
+			runescapeSmallFont = smallFont;
 
 			// bold
 			Font boldFont = Font.createFont(Font.TRUETYPE_FONT, inRunescapeBold)
-				.deriveFont(Font.BOLD, 16);
+				.deriveFont(Font.BOLD, 16f);
 			ge.registerFont(boldFont);
-
-			runescapeBoldFont = StyleContext.getDefaultStyleContext()
-				.getFont(boldFont.getName(), Font.BOLD, 16);
-			ge.registerFont(runescapeBoldFont);
+			runescapeBoldFont = boldFont;
 		}
 		catch (FontFormatException ex)
 		{

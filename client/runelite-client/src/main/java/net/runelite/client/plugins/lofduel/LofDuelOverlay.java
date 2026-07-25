@@ -214,7 +214,7 @@ class LofDuelOverlay extends Overlay
 		// buttons
 		g.setFont(FontManager.getRunescapeBoldFont());
 		button(g, loadRect(ox, oy), "Load Last", LofTheme.GOLD_DIM, false, loadRect(ox, oy).contains(mouse));
-		button(g, acceptRect(ox, oy), myAccept ? "✔ Accepted" : "Accept", LofTheme.GOLD, myAccept, acceptRect(ox, oy).contains(mouse));
+		button(g, acceptRect(ox, oy), myAccept ? "Accepted" : "Accept", LofTheme.GOLD, myAccept, acceptRect(ox, oy).contains(mouse));
 		button(g, declineRect(ox, oy), "Decline", LofTheme.EMBER, false, declineRect(ox, oy).contains(mouse));
 
 		LofModal.endWindow(g, place);

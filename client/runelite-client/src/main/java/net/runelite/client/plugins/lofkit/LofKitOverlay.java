@@ -381,9 +381,14 @@ class LofKitOverlay extends Overlay
 		if (logo != null) { g.drawImage(logo, ox + 12, oy + 5, 28, 28, null); titleX = ox + 46; }
 		g.setFont(FontManager.getRunescapeBoldFont());
 		LofTheme.shadowText(g, "Kit Editor", titleX, oy + 25, LofTheme.GOLD);
-		g.setFont(FontManager.getRunescapeBoldFont());
+		// Close ✕ drawn as two strokes (not a glyph — the RuneScape font has no ✕, so a text ✕ tofus).
 		final Rectangle xr = closeRect(ox, oy);
-		LofTheme.shadowText(g, "✕", xr.x + 6, xr.y + 16, xr.contains(mouse) ? LofTheme.LAVA : LofTheme.TEXT_DIM);
+		g.setColor(xr.contains(mouse) ? LofTheme.LAVA : LofTheme.TEXT_DIM);
+		final Stroke oldX = g.getStroke();
+		g.setStroke(new BasicStroke(1.6f));
+		g.drawLine(xr.x + 7, xr.y + 7, xr.x + xr.width - 8, xr.y + xr.height - 8);
+		g.drawLine(xr.x + xr.width - 8, xr.y + 7, xr.x + 7, xr.y + xr.height - 8);
+		g.setStroke(oldX);
 
 		// preset + save-slot chips (not in LMS mode — LMS has exactly one kit, the category picks)
 		g.setFont(FontManager.getRunescapeFont());

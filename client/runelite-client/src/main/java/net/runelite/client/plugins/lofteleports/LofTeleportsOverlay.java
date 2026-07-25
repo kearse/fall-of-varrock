@@ -53,9 +53,9 @@ class LofTeleportsOverlay extends Overlay implements LofWindows.Window
 	private static final int TITLE_H = 38;
 	private static final int TAB_X = 10;
 	private static final int TAB_W = 122;
-	private static final int TAB_Y0 = TITLE_H + 14;
-	private static final int TAB_H = 30;
-	private static final int TAB_GAP = 34;
+	private static final int TAB_Y0 = TITLE_H + 12;    // 50 — top of the first tab
+	private static final int TAB_BOTTOM = WIN_H - 12;  // 312 — tabs must all fit above this
+	private static final int TAB_H_MAX = 30;           // a tab is never taller than this
 	private static final int LIST_X = 144;
 	private static final int LIST_W = WIN_W - LIST_X - 10;     // 326
 	private static final int SCROLLBAR_W = 5;
@@ -160,7 +160,16 @@ class LofTeleportsOverlay extends Overlay implements LofWindows.Window
 	}
 
 	private Rectangle closeRect(int ox, int oy) { return new Rectangle(ox + WIN_W - 30, oy + 9, 20, 20); }
-	private Rectangle tabRect(int ox, int oy, int t) { return new Rectangle(ox + TAB_X, oy + TAB_Y0 + t * TAB_GAP, TAB_W, TAB_H); }
+	/** Vertical pitch of the tab rail: the tab band ({@link #TAB_Y0}..{@link #TAB_BOTTOM}) split evenly
+	 *  across every category, so all tabs always fit inside the window — the window shrank to 324px and
+	 *  the old fixed 34px pitch pushed the last tab (Donator) off the bottom edge, unclickable. */
+	private int tabPitch() { return (TAB_BOTTOM - TAB_Y0) / Math.max(1, LofTeleportsData.CATEGORIES.size()); }
+
+	private Rectangle tabRect(int ox, int oy, int t)
+	{
+		final int pitch = tabPitch();
+		return new Rectangle(ox + TAB_X, oy + TAB_Y0 + t * pitch, TAB_W, Math.min(TAB_H_MAX, pitch - 4));
+	}
 
 	@Override
 	public Dimension render(Graphics2D g)
@@ -206,7 +215,7 @@ class LofTeleportsOverlay extends Overlay implements LofWindows.Window
 		LofTheme.shadowText(g, "Teleport Portal", titleX, oy + 25, LofTheme.GOLD);
 		g.setFont(FontManager.getRunescapeSmallFont());
 		final List<LofTeleportsData.Category> cats = LofTeleportsData.CATEGORIES;
-		final String sub = cats.get(activeTab).name + "  •  " + rowCount() + " destinations";
+		final String sub = cats.get(activeTab).name + "  ·  " + rowCount() + " destinations";
 		LofTheme.shadowText(g, sub, ox + WIN_W - 44 - g.getFontMetrics().stringWidth(sub), oy + 24, LofTheme.TEXT_DIM);
 
 		// close button
@@ -242,7 +251,7 @@ class LofTeleportsOverlay extends Overlay implements LofWindows.Window
 				g.setColor(LofTheme.ROW_HOVER);
 				g.fillRoundRect(tr.x, tr.y, tr.width, tr.height, 8, 8);
 			}
-			LofTheme.shadowText(g, cats.get(t).name, tr.x + 12, tr.y + 20, sel ? LofTheme.GOLD : (hov ? LofTheme.TEXT : LofTheme.TEXT_DIM));
+			LofTheme.shadowText(g, cats.get(t).name, tr.x + 12, tr.y + tr.height / 2 + 5, sel ? LofTheme.GOLD : (hov ? LofTheme.TEXT : LofTheme.TEXT_DIM));
 		}
 
 		// column headers
