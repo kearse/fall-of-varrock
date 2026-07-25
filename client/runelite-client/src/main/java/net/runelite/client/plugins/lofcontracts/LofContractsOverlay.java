@@ -37,12 +37,16 @@ class LofContractsOverlay extends Overlay implements LofWindows.Window
 	static final int NEW_RESOURCE = 3;
 	static final int REWARDS = 4;
 
+	// Vertical rhythm tuned for the 480x324 modal: the two cards, the flavour line and the two
+	// button rows all fit above the window's bottom edge (docs/overlay-design-system.md §6A).
 	private static final int CARD_X_PAD = LofModal.PAD;
-	private static final int COMBAT_Y = LofModal.TITLE_H + 12;
-	private static final int CARD_H = 96;
-	private static final int RESOURCE_Y = COMBAT_Y + CARD_H + 10;
-	private static final int RESOURCE_H = 70;
-	private static final int BTNS_Y = RESOURCE_Y + RESOURCE_H + 12;
+	private static final int COMBAT_Y = LofModal.TITLE_H + 12;      // 50
+	private static final int CARD_H = 88;                           // combat card 50..138
+	private static final int RESOURCE_Y = COMBAT_Y + CARD_H + 10;   // 148
+	private static final int RESOURCE_H = 60;                       // resource card 148..208
+	private static final int HINT_Y = RESOURCE_Y + RESOURCE_H + 16; // 224 — flavour line, above the buttons
+	private static final int BTNS_Y = 232;                          // new-contract row (232..268)
+	private static final int BTN_H = 36;
 
 	private final Client client;
 
@@ -106,7 +110,7 @@ class LofContractsOverlay extends Overlay implements LofWindows.Window
 
 	private Rectangle combatBtn(int ox, int oy)
 	{
-		return new Rectangle(ox + LofModal.PAD, oy + BTNS_Y, (LofModal.W - 2 * LofModal.PAD - 10) / 2, 40);
+		return new Rectangle(ox + LofModal.PAD, oy + BTNS_Y, (LofModal.W - 2 * LofModal.PAD - 10) / 2, BTN_H);
 	}
 
 	private Rectangle resourceBtn(int ox, int oy)
@@ -187,7 +191,7 @@ class LofContractsOverlay extends Overlay implements LofWindows.Window
 
 		g.setFont(FontManager.getRunescapeSmallFont());
 		LofTheme.shadowText(g, "Back-to-back contracts keep your streak — the tougher the contract, the better the pay.",
-			ox + LofModal.PAD, oy + LofModal.H - 46, LofTheme.TEXT_DIM);
+			ox + LofModal.PAD, oy + HINT_Y, LofTheme.TEXT_DIM);
 		LofModal.button(g, rewardsBtn(ox, oy), "Open reward shop", LofTheme.GOLD, true, rewardsBtn(ox, oy).contains(mouse));
 
 		LofModal.endWindow(g, place);
