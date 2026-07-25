@@ -291,6 +291,17 @@ open class Player(world: World) : Pawn(world) {
             val forceLogout = timers.exists(FORCE_DISCONNECTION_TIMER) && !timers.has(FORCE_DISCONNECTION_TIMER)
 
             if (!stopLogout || forceLogout) {
+                /*
+                 * A forced disconnect (channel dead for ~2.5 mins) must NOT stay blocked by a
+                 * lingering lock. A player left in a FULL lock — e.g. a death sequence that threw
+                 * before it could unlock — would otherwise remain registered in the world forever:
+                 * unable to log out, and therefore unable to log back in (every attempt is rejected
+                 * as a duplicate, "already logged in"). Once the force-disconnection timer has run
+                 * out, clear the lock so the logout can save and unregister them.
+                 */
+                if (forceLogout && !lock.canLogout()) {
+                    lock = LockState.NONE
+                }
                 if (lock.canLogout()) {
                     handleLogout()
                     return
