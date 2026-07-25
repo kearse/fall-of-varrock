@@ -238,6 +238,9 @@ object GrandExchange {
         sell.escrowItems -= q
         sell.collectCoins += p * q
         sell.refreshState()
+        // Feed the clerk's ledger — real price discovery, player↔player only (backstop is deliberately
+        // excluded so the trend never pegs to the fixed store band; see MarketMemory).
+        MarketMemory.record(buy.itemId, q, p, System.currentTimeMillis())
         noticeIfComplete(buy)
         noticeIfComplete(sell)
     }
@@ -331,9 +334,42 @@ object GrandExchange {
     }
 
     /** Smart default price: the best offer on the side the player takes (lowest sell for a buy,
-     *  highest buy for a sell); falls back to the cache guide when that side of the book is empty. */
+     *  highest buy for a sell), then the last real trade, then the cache guide when both are empty. */
     fun guideFor(itemId: Int, buy: Boolean): Int =
-        (if (buy) bestAsk(itemId) else bestBid(itemId)) ?: guidePrice(itemId)
+        (if (buy) bestAsk(itemId) else bestBid(itemId)) ?: MarketMemory.last(itemId) ?: guidePrice(itemId)
+
+    // ---- the clerk's market read (memory + live book → a human recommendation) ------------------
+
+    /** The last price [itemId] actually changed hands at here, or null if it never has. */
+    fun lastTrade(itemId: Int): Int? = MarketMemory.last(itemId)
+
+    /** Momentum trend in permille (‰); positive = climbing, negative = sliding, null = no memory. */
+    fun trendPermille(itemId: Int): Int? = MarketMemory.trendPermille(itemId)
+
+    /**
+     * The clerk's one-line pricing advice for an offer of [qty]×[itemId] at [price] on the [buy]/sell
+     * side, spoken in his post-collapse voice. Reads the live book (best ask/bid) and the ledger
+     * ([MarketMemory.last]) so it's grounded in what's actually happening, not the static guide.
+     */
+    fun advice(itemId: Int, buy: Boolean, price: Int, @Suppress("UNUSED_PARAMETER") qty: Int = 1): String {
+        val ask = bestAsk(itemId)
+        val bid = bestBid(itemId)
+        val last = MarketMemory.last(itemId)
+        if (ask == null && bid == null && last == null) {
+            return "Quiet market — you're setting the price on this one."
+        }
+        return if (buy) when {
+            ask != null && price >= ask -> "Stock's on sale at your price. This fills straight away."
+            last != null && price >= last -> "Fair for what these have gone for. Should fill."
+            bid != null && price <= bid -> "You're bidding under folk already waiting. Patience, or pay up."
+            else -> "Under recent prices — a steal if it lands, but it may sit a while."
+        } else when {
+            bid != null && price <= bid -> "A buyer's already waiting. That's coin in hand."
+            last != null && price <= last -> "Priced to move. It'll clear soon enough."
+            ask != null && price >= ask -> "Above what others are asking — you'll be last in the queue."
+            else -> "Steep for this market. It'll wait for a keen buyer."
+        }
+    }
 
     /** Whether [itemId] may be listed on the GE at all (tradeable, not coins, not excluded). Used to
      *  reject a sell pick from the inventory grid before opening the setup box. */
@@ -392,6 +428,7 @@ object GrandExchange {
             doc.getList("offers", Document::class.java)?.forEach { offers.add(GeOffer.fromDocument(it)) }
             history.clear()
             doc.getList("history", Document::class.java)?.forEach { history.add(GeHistoryEntry.fromDocument(it)) }
+            MarketMemory.load(doc.get("market", Document::class.java))
             reconcile()
             logger.info { "Loaded Grand Exchange: ${offers.size} offer(s), ${history.size} history entr(ies)." }
         } catch (e: Exception) {
@@ -429,6 +466,7 @@ object GrandExchange {
                 .append("seq", seqCounter)
                 .append("offers", offers.map { it.toDocument() })
                 .append("history", history.map { it.toDocument() })
+                .append("market", MarketMemory.toDocument())
             saveFile.writeText(doc.toJson(pretty))
             dirty = false
         } catch (e: Exception) {

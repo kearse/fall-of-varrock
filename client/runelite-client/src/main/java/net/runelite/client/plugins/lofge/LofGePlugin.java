@@ -155,6 +155,9 @@ public class LofGePlugin extends Plugin implements LofWindows.Window
 		int nSell;
 		int nBuy;
 		int own;             // sell: how many the player holds (default + cap); buy: 0
+		int last = -1;       // last price the item actually traded at here (MarketMemory), -1 = never
+		int trend;           // momentum in permille (signed; + climbing, - sliding, 0 = no memory)
+		String advice = "";  // the clerk's one-line pricing note for the opening default
 		final List<int[]> asks = new ArrayList<>(); // {price, qty}, cheapest first
 		final List<int[]> bids = new ArrayList<>(); // {price, qty}, dearest first
 		int qty = 1;
@@ -347,26 +350,30 @@ public class LofGePlugin extends Plugin implements LofWindows.Window
 		}
 		else if ("gesetuppanel".equalsIgnoreCase(event.getCommand()))
 		{
-			// Sample populated buy setup (nature rune: guide 100, store band 85-100, live market).
-			handle("setup|0|1|561|100|85|100|98|92|7|4|0");
+			// Sample populated buy setup (nature rune: guide 100, store band 85-100, live market,
+			// last traded 96, climbing +31‰).
+			handle("setup|0|1|561|100|85|100|98|92|7|4|0|96|31");
 			handle("ask|98|3200");
 			handle("ask|100|8000");
 			handle("ask|105|12400");
 			handle("bid|92|1500");
 			handle("bid|90|5000");
 			handle("bid|88|900");
+			handle("advice|Stock's on sale at your price. This fills straight away.");
 			handle("setupend");
 			clientThread.invokeLater(client::refreshChat);
 		}
 		else if ("gesetuppanel2".equalsIgnoreCase(event.getCommand()))
 		{
-			// Sample populated sell setup (abyssal whip: no store band, player-listed, you own 1).
-			handle("setup|0|0|4151|60000|-1|-1|2050000|1850000|3|5|1");
+			// Sample populated sell setup (abyssal whip: no store band, player-listed, you own 1,
+			// last traded 1,900,000, sliding -26‰).
+			handle("setup|0|0|4151|60000|-1|-1|2050000|1850000|3|5|1|1900000|-26");
 			handle("ask|2050000|1");
 			handle("ask|2100000|2");
 			handle("bid|1850000|2");
 			handle("bid|1800000|1");
 			handle("bid|1750000|3");
+			handle("advice|A buyer's already waiting. That's coin in hand.");
 			handle("setupend");
 			clientThread.invokeLater(client::refreshChat);
 		}
@@ -527,6 +534,11 @@ public class LofGePlugin extends Plugin implements LofWindows.Window
 						su.nBuy = parseInt(f[9], 0);
 						su.own = parseInt(f[10], 0);
 					}
+					if (f.length >= 13)
+					{
+						su.last = parseInt(f[11], -1);
+						su.trend = parseInt(f[12], 0);
+					}
 					pendingSetup = su;
 				}
 				break;
@@ -547,6 +559,15 @@ public class LofGePlugin extends Plugin implements LofWindows.Window
 					{
 						pendingSetup.bids.add(row);
 					}
+				}
+				break;
+			}
+			case "advice":
+			{
+				// advice|text — the clerk's spoken pricing note (part of the setup batch)
+				if (pendingSetup != null)
+				{
+					pendingSetup.advice = rest;
 				}
 				break;
 			}
