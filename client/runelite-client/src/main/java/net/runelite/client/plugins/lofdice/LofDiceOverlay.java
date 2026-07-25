@@ -437,8 +437,10 @@ class LofDiceOverlay extends Overlay implements LofWindows.Window
 		// footer — spendable is the pack plus the bank (server-pushed), so no coins need be carried
 		final long coins = LofModal.carried(client, LofModal.COINS_ID) + bankCoins;
 		coinsCached = coins; // publish for the mouse thread before canRoll() is consulted
+		// Status baseline sits above the Roll button — never on it (the button spans the window's
+		// full width, so a bottom-anchored status would draw through it in the 324px modal).
 		LofTheme.shadowText(g, "Coins available: " + LofModal.fmt(coins) + "  (inventory + bank)",
-			ox + LofModal.PAD, oy + LofModal.H - 22, LofTheme.TEXT_DIM);
+			ox + LofModal.PAD, oy + HIST_Y + 38, LofTheme.TEXT_DIM);
 		final String rollLabel = rolling ? "ROLLING" + dots(now)
 			: (stake > 0 ? "ROLL THE DIE — " + LofModal.fmt(stake) : "ROLL THE DIE");
 		LofModal.button(g, rollRect(ox, oy), rollLabel, LofTheme.GOLD, canRoll(), rollRect(ox, oy).contains(mouse));

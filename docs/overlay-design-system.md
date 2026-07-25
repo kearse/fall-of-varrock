@@ -60,6 +60,11 @@ Use the RuneScape fonts via `FontManager` (never `Font.SANS_SERIF` in-window):
 
 All text is drawn with `LofTheme.shadowText(...)` (1px black shadow) so it stays legible over the world.
 
+**Stick to characters the RuneScape font actually has.** The `.ttf` covers ASCII plus a handful of
+symbols (`— … × · § ¼`) but **not** the bullet `•`, en-dash `–`, arrows, or check/cross marks — those
+render as a missing-glyph box (tofu) in an overlay. Use `·` as a separator, `-` for ranges, and draw a
+close ✕ as two strokes (see `LofModal.frame`) rather than as a glyph.
+
 ---
 
 ## 4. Metrics

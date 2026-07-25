@@ -47,7 +47,9 @@ class LofRanksOverlay extends Overlay implements LofWindows.Window
 	static final int CLOSE = 1;
 	static final int BUY = 2;
 
-	// Design-system standard modal (480x400 — docs/overlay-design-system.md §6A).
+	// Design-system standard modal (480x324 — docs/overlay-design-system.md §6A). The vertical
+	// rhythm below is tuned so the whole stack — hero, coin bar, next-rank card and the 8-node
+	// ladder — fits above the footer button inside the 324px height.
 	private static final int WIN_W = LofModal.W;
 	private static final int WIN_H = LofModal.H;
 	private static final int WIN_ARC = 14;
@@ -55,13 +57,13 @@ class LofRanksOverlay extends Overlay implements LofWindows.Window
 	private static final int PAD = 14;
 
 	private static final int HERO_Y = TITLE_H + 8;      // 46
-	private static final int BAR_LABEL_Y = 118;
-	private static final int BAR_Y = 124;
-	private static final int BAR_H = 14;
-	private static final int CARD_Y = 150;
-	private static final int CARD_H = 88;
-	private static final int TRACK_LINE_Y = 278;        // connector line through the node centres
-	private static final int NODE_D = 44;               // node circle diameter
+	private static final int BAR_LABEL_Y = 110;
+	private static final int BAR_Y = 116;
+	private static final int BAR_H = 12;
+	private static final int CARD_Y = 130;
+	private static final int CARD_H = 72;               // next-rank card 130..202
+	private static final int TRACK_LINE_Y = 240;        // node centres (220..260); "YOU" marker clears the card, cost labels clear the footer button
+	private static final int NODE_D = 40;               // node circle diameter
 	private static final int FOOT_BTN_H = 32;
 
 	private static final int COINS_ID = 995;            // item.coins_995

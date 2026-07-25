@@ -272,7 +272,7 @@ class LofCommandsOverlay extends Overlay
 		g.setFont(FontManager.getRunescapeSmallFont());
 		final Tab active = tabs.get(activeTab);
 		final String rank = plugin.getRankTitle();
-		final String sub = (rank.isEmpty() ? "" : rank + "  •  ") + active.rows.size() + " commands";
+		final String sub = (rank.isEmpty() ? "" : rank + "  ·  ") + active.rows.size() + " commands";
 		LofTheme.shadowText(g, sub, ox + WIN_W - 44 - g.getFontMetrics().stringWidth(sub), oy + 24, LofTheme.TEXT_DIM);
 
 		// close button
