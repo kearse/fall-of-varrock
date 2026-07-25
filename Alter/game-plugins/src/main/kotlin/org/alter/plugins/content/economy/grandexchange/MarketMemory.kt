@@ -85,10 +85,9 @@ object MarketMemory {
     /** The most recent [n] fills across all items, newest first (for the market-pulse tape). */
     fun recent(n: Int): List<Trade> {
         if (n <= 0 || tape.isEmpty()) return emptyList()
-        val out = ArrayList<Trade>(minOf(n, tape.size))
-        val it = tape.descendingIterator()
-        while (it.hasNext() && out.size < n) out.add(it.next())
-        return out
+        // kotlin.collections.ArrayDeque has no descendingIterator(); it is a List, so walk the
+        // reversed view (newest-first, since fills are appended with addLast) and take up to n.
+        return tape.asReversed().take(n)
     }
 
     // ---- persistence (folded into the GrandExchange save doc) ----------------------------------
