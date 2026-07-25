@@ -17,9 +17,10 @@ import org.alter.rscm.RSCM.getRSCM
  * FOV_GE:end                                                               (commit board; open the window)
  * FOV_GE:refreshopen / … / FOV_GE:refreshend                               (live board repaint; no open)
  * FOV_GE:bal|coins                                                         (coin readout: inventory + bank)
- * FOV_GE:setup|box|buy|item|guide|floor|ceil|bestAsk|bestBid|nSell|nBuy|own (enter offer-setup; -1 where absent)
+ * FOV_GE:setup|box|buy|item|guide|floor|ceil|bestAsk|bestBid|nSell|nBuy|own|last|trend (enter offer-setup; -1 where absent)
  * FOV_GE:ask|price|qty                                                     (0..N top open sells, cheapest first)
  * FOV_GE:bid|price|qty                                                     (0..N top open buys, dearest first)
+ * FOV_GE:advice|text                                                       (the clerk's one-line pricing note)
  * FOV_GE:setupend                                                          (commit the setup view)
  * FOV_GE:histopen                                                          (open the History tab; reset)
  * FOV_GE:hist|buy|item|qty|price|time                                      (one completed trade, newest first)
@@ -29,8 +30,11 @@ import org.alter.rscm.RSCM.getRSCM
  * `state` uses [GeState.wire] (EMPTY 0 … SOLD 6 — the client's enum ordinals). `buy` is 1/0.
  * `guide` is the cache value (the "Guide X gp" readout + guide button); `bestAsk/bestBid` are the live
  * market prices the client uses for its smart default. `own` is how many of the item the player holds
- * (sell only — the client defaults/caps the sell quantity to it; 0 for a buy). `floor/ceil/bestAsk/
- * bestBid = -1` when absent.
+ * (sell only — the client defaults/caps the sell quantity to it; 0 for a buy). `last` is the last price
+ * the item actually traded at here ([MarketMemory]) and `trend` its momentum in permille (signed;
+ * positive = climbing) — the client draws these as the "last seen" figure + a trend arrow. `floor/ceil/
+ * bestAsk/bestBid/last = -1` when absent, `trend = 0` when there's no memory. The `advice` line that
+ * follows the market rows carries the clerk's spoken pricing note ([GrandExchange.advice]).
  */
 object GrandExchangeWindow {
     const val PREFIX = "FOV_GE:"
@@ -88,12 +92,17 @@ object GrandExchangeWindow {
         val nSell = GrandExchange.sellDepth(item)
         val nBuy = GrandExchange.buyDepth(item)
         val own = if (buy) 0 else p.inventory.getItemCount(item)
+        val last = GrandExchange.lastTrade(item) ?: -1
+        val trend = GrandExchange.trendPermille(item) ?: 0
         line(
             p,
-            "setup|$box|${if (buy) 1 else 0}|$item|$guide|${band?.first ?: -1}|${band?.second ?: -1}|$bestAsk|$bestBid|$nSell|$nBuy|$own",
+            "setup|$box|${if (buy) 1 else 0}|$item|$guide|${band?.first ?: -1}|${band?.second ?: -1}|$bestAsk|$bestBid|$nSell|$nBuy|$own|$last|$trend",
         )
         for ((price, qty) in GrandExchange.topAsks(item, MARKET_ROWS)) line(p, "ask|$price|$qty")
         for ((price, qty) in GrandExchange.topBids(item, MARKET_ROWS)) line(p, "bid|$price|$qty")
+        // The clerk's read on the opening default price (best deal / last trade / guide, per side).
+        val defaultPrice = GrandExchange.guideFor(item, buy)
+        line(p, "advice|${GrandExchange.advice(item, buy, defaultPrice)}")
         line(p, "setupend")
     }
 
