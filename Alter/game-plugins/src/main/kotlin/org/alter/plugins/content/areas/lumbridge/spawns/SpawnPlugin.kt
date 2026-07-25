@@ -17,20 +17,19 @@ class SpawnPlugin(
     server: Server
 ) : KotlinPlugin(r, world, server) {
     init {
+        // Home-hub declutter: the default NPCs that stood on the OPEN castle ground floor
+        // (three men, two rats and the imp, all level 0 inside the building) were removed so the
+        // floor reads as a social hub. Kept: the upstairs men/women (height 1) and the courtyard
+        // fauna by the south steps (a woman + four rats). The matching config duplicates were also
+        // dropped from data/cfg/spawns/npc_spawns.json.
         spawnNpc(npc = "npc.man_3106", x = 3206, z = 3219, walkRadius = 20, height = 1, direction = Direction.SOUTH)
-        spawnNpc(npc = "npc.man_3106", x = 3216, z = 3219, walkRadius = 20, direction = Direction.EAST)
-        spawnNpc(npc = "npc.man_3106", x = 3207, z = 3227, walkRadius = 20, direction = Direction.EAST)
         spawnNpc(npc = "npc.man_3108", x = 3209, z = 3215, walkRadius = 20, height = 1, direction = Direction.SOUTH)
-        spawnNpc(npc = "npc.man_3108", x = 3221, z = 3219, walkRadius = 20, direction = Direction.EAST)
         spawnNpc(npc = "npc.woman_3111", x = 3211, z = 3213, walkRadius = 20, height = 1, direction = Direction.SOUTH)
         spawnNpc(npc = "npc.woman_3111", x = 3217, z = 3205, walkRadius = 20, direction = Direction.NORTH)
         spawnNpc(npc = "npc.rat_2854", x = 3207, z = 3202, walkRadius = 10, direction = Direction.NORTH)
         spawnNpc(npc = "npc.rat_2854", x = 3205, z = 3204, walkRadius = 10, direction = Direction.NORTH)
         spawnNpc(npc = "npc.rat_2854", x = 3206, z = 3202, walkRadius = 10, direction = Direction.NORTH)
         spawnNpc(npc = "npc.rat_2854", x = 3207, z = 3203, walkRadius = 10, direction = Direction.NORTH)
-        spawnNpc(npc = "npc.rat_2854", x = 3205, z = 3209, walkRadius = 10, direction = Direction.EAST)
-        spawnNpc(npc = "npc.rat_2854", x = 3207, z = 3209, walkRadius = 10, direction = Direction.EAST)
-        spawnNpc(npc = "npc.imp_5007", x = 3217, z = 3226, walkRadius = 20, direction = Direction.EAST)
         spawnNpc(npc = "npc.sheep_2789", x = 3196, z = 3263, walkRadius = 10, direction = Direction.NORTH)
         spawnNpc(npc = "npc.sheep_2789", x = 3199, z = 3261, walkRadius = 10, direction = Direction.EAST)
         spawnNpc(npc = "npc.sheep_2789", x = 3201, z = 3272, walkRadius = 10, direction = Direction.SOUTH)

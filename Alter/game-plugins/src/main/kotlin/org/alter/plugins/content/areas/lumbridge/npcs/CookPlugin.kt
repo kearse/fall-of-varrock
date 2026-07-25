@@ -18,7 +18,10 @@ class CookPlugin (
 ) : KotlinPlugin(r, world, server) {
 
     init {
-        spawnNpc("npc.cook_4626", x = 3209, z = 3215, direction = Direction.SOUTH)
+        // Home-hub declutter: the Cook was removed from the open castle ground floor. His talk-to
+        // binding is kept so re-adding a spawn (or relocating him) restores Cook's Assistant with
+        // no other changes. NB: while unspawned, Cook's Assistant has no Cook to talk to.
+        // spawnNpc("npc.cook_4626", x = 3209, z = 3215, direction = Direction.SOUTH)
 
         onNpcOption("npc.cook_4626", option = "talk-to") {
             player.queue { dialog(player) }
