@@ -13,6 +13,7 @@ import org.alter.api.ext.setVarp
 import org.alter.game.info.PlayerInfo
 import org.alter.plugins.content.combat.strategy.magic.CombatSpell
 import org.alter.plugins.content.interfaces.attack.AttackTab
+import org.alter.game.model.EntityType
 import org.alter.game.model.PlayerUID
 import org.alter.game.model.Tile
 import org.alter.game.model.World
@@ -21,15 +22,18 @@ import org.alter.game.model.attr.RESPAWN_TILE_ATTR
 import org.alter.game.model.attr.TITLED_NAME_ATTR
 import org.alter.game.model.entity.Player
 import org.alter.game.model.item.Item
+import org.alter.game.model.skill.SkillSet
 import org.alter.plugins.content.bots.BotManager
 import org.alter.plugins.content.war.title
+import kotlin.math.floor
 
 private val logger = KotlinLogging.logger {}
 
 /**
  * Tracks every player's live [Companion]s (max [MAX]) and owns their lifecycle: recruit, login
- * respawn, logout store + despawn, and the per-tick brain drive. Persistence rides on a JSON blob
- * stored on the owner's `COMPANIONS_ATTR` (rebuilt on change + periodically so autosave catches it).
+ * respawn, dismiss/summon (off duty without leaving the roster), logout store + despawn, and the
+ * per-tick brain drive. Persistence rides on a JSON blob stored on the owner's `COMPANIONS_ATTR`
+ * (rebuilt on change + periodically so autosave catches it).
  */
 object CompanionRegistry {
     const val MAX = 3
@@ -59,7 +63,7 @@ object CompanionRegistry {
      *
      * Wire format (one message per owner) — `~LOFCMP~<comp>~<comp>...` where each `<comp>` is four
      * `|`-delimited sections:
-     *   1. META   `idx,name,arch,combat,curHp,maxHp,orders,styleVarp,autocast,autoLoot,retaliate,ammoId,ammoQty`
+     *   1. META   `idx,name,arch,combat,curHp,maxHp,orders,styleVarp,autocast,autoLoot,retaliate,ammoId,ammoQty,state`
      *   2. SKILLS `atk,str,def,hp,range,mage,pray` (base/unboosted levels)
      *   3. EQUIP  `slot:itemId:qty;...` (may be empty)
      *   4. STYLES `label/label/...` — attack-style button labels for the companion's class (empty for mage)
@@ -69,11 +73,23 @@ object CompanionRegistry {
     private const val PUSH_EVERY = 3 // registry ticks between state pushes (~3.6s)
     private var pushTick = 0
 
+    /** META `state` values — keep in step with the client panel's CompanionRow.state. */
+    private const val STATE_FIELDED = 0
+    private const val STATE_DISMISSED = 1
+    private const val STATE_SLAIN = 2
+
     /** World cycles a freshly spawned companion is exempt from the orphan sweep (~18s). */
     private const val ORPHAN_GRACE = 30
 
     /** owner key ([keyOf]) -> their live companions. */
     private val byOwner = HashMap<Any, MutableList<Companion>>()
+    /**
+     * owner key -> roster entries that exist but are NOT in the world: **dismissed** (off duty until
+     * summoned) and **dead** (awaiting revival). They must be tracked separately from [byOwner],
+     * because [persist] rebuilds the save blob from what the registry holds — before this existed, a
+     * dead companion was silently dropped from the roster by the first refresh after it died.
+     */
+    private val benchedByOwner = HashMap<Any, MutableList<CompanionData>>()
     /** owner key -> their tile last tick + their current facing (dx,dz), for the follow formation. */
     private val ownerLastTile = HashMap<Any, Tile>()
     private val ownerFacing = HashMap<Any, Pair<Int, Int>>()
@@ -95,6 +111,15 @@ object CompanionRegistry {
 
     fun ofOwner(player: Player): List<Companion> = byOwner[keyOf(player)] ?: emptyList()
     fun count(player: Player): Int = ofOwner(player).size
+
+    /** [player]'s benched roster entries — dismissed or dead, in panel order after the live ones. */
+    fun benchedOf(player: Player): List<CompanionData> = benchedByOwner[keyOf(player)] ?: emptyList()
+
+    /**
+     * Everyone [player] owns, in the world or not. This — not [count] — is what the rank cap gates:
+     * a dismissed companion is still a companion, so benching one must not free a recruit slot.
+     */
+    fun rosterSize(player: Player): Int = count(player) + benchedOf(player).size
 
     /** This companion's index (0..MAX-1) among its owner's roster, for its formation slot. */
     fun slotOf(comp: Companion): Int = (byOwner[keyOf(comp.ownerUid)]?.indexOf(comp) ?: 0).coerceAtLeast(0)
@@ -119,8 +144,8 @@ object CompanionRegistry {
 
     /** Recruit a fresh (naked, level-1) companion of [archetype]. Returns null if at the rank cap. */
     fun recruit(world: World, owner: Player, archetype: CompanionStyle): Companion? {
-        if (count(owner) >= companionCap(owner)) return null
-        val taken = ofOwner(owner).map { it.username }
+        if (rosterSize(owner) >= companionCap(owner)) return null
+        val taken = ofOwner(owner).map { it.username } + benchedOf(owner).map { it.name }
         val comp = spawn(world, owner, CompanionData.fresh(archetype, taken), owner.tile) ?: return null
         byOwner.getOrPut(keyOf(owner)) { ArrayList() } += comp
         persist(owner)
@@ -177,13 +202,18 @@ object CompanionRegistry {
         despawnAll(world, orphans)
     }
 
-    /** Login: respawn the owner's roster beside them (dead companions wait at General Zo — Step 5). */
+    /**
+     * Login: respawn the owner's roster beside them. Dismissed companions stay off duty (they only
+     * come back when the panel summons them) and dead ones wait at General Zo — both are kept on the
+     * bench ([benchedByOwner]) so they survive the next [persist].
+     */
     fun spawnFor(world: World, player: Player) {
         // Ghost-buster: clear any companions this owner already has registered BEFORE respawning.
         // Overwriting byOwner below would otherwise orphan a lingering previous session's companions
         // (from a disconnect/relog race) into un-ticked ghosts. Sweep the world by ownerUid so they
         // can't survive — and drop any stale byOwner tracking entry too.
         byOwner.remove(keyOf(player))
+        benchedByOwner.remove(keyOf(player))
         val ghosts = despawnOwned(world, keyOf(player))
         if (ghosts > 0) logger.warn { "spawnFor ${player.username}: cleared $ghosts stale companion ghost(s) before respawn." }
 
@@ -199,24 +229,28 @@ object CompanionRegistry {
             return
         }
         val list = ArrayList<Companion>()
+        val benched = ArrayList<CompanionData>()
         roster.forEach { data ->
-            if (data.dead) return@forEach
+            if (data.dead || data.dismissed) { benched += data; return@forEach }
             spawn(world, player, data, player.tile)?.let { list += it }
         }
         byOwner[keyOf(player)] = list
-        logger.info { "spawnFor ${player.username}: spawned ${list.size} companion(s), indices=${list.map { it.index }}, names=${list.map { it.username }}" }
+        benchedByOwner[keyOf(player)] = benched
+        logger.info { "spawnFor ${player.username}: spawned ${list.size} companion(s), indices=${list.map { it.index }}, names=${list.map { it.username }}, benched=${benched.map { it.name }}" }
     }
 
     /** Logout: write the roster blob (so it persists with the save), then despawn the companions. */
     fun storeAndDespawn(world: World, player: Player) {
         val list = byOwner.remove(keyOf(player))
+        val benched = benchedByOwner.remove(keyOf(player))
         ownerLastTile.remove(keyOf(player))
         ownerFacing.remove(keyOf(player))
         // Persist the roster blob FIRST, but never let a snapshot/encode failure skip the despawn
         // below — an orphaned-but-registered companion becomes a frozen ghost on the next login.
-        if (list != null) {
+        if (list != null || benched != null) {
             try {
-                player.attr[COMPANIONS_ATTR] = CompanionData.rosterToBlob(list.map { snapshot(it) })
+                val roster = (list?.map { snapshot(it) } ?: emptyList()) + (benched ?: emptyList())
+                player.attr[COMPANIONS_ATTR] = CompanionData.rosterToBlob(roster)
             } catch (e: Throwable) {
                 logger.error(e) { "Companion roster snapshot failed on logout for ${player.username} (despawning anyway)" }
             }
@@ -268,13 +302,19 @@ object CompanionRegistry {
      * Wire (one message per companion): `~LOFCMP~<i>/<n>|META|SKILLS|EQUIP|STYLES`
      *   where i = roster index (0-based), n = roster size. An empty roster sends `~LOFCMP~0/0` so the
      *   panel clears. The client accumulates i=0..n-1 (sent together each push) into the card list.
+     *
+     * The roster is **live companions first, then the bench** (dismissed/dead — see [benchedByOwner]),
+     * and META's trailing `state` field says which: 0 = fielded, 1 = dismissed, 2 = slain. Benched
+     * companions have no world entity, so their index is -1 and their levels/gear come from the stored
+     * snapshot. A client that predates the field simply ignores it (it reads the first 13).
      */
     private fun pushState(player: Player) {
         try {
-            val list = byOwner[keyOf(player)] ?: emptyList()
-            if (list.isEmpty()) { player.message("${MSG_PREFIX}0/0", ChatMessageType.CONSOLE); return }
-            val n = list.size
-            list.forEachIndexed { i, comp ->
+            val live = byOwner[keyOf(player)] ?: emptyList()
+            val benched = benchedOf(player)
+            val n = live.size + benched.size
+            if (n == 0) { player.message("${MSG_PREFIX}0/0", ChatMessageType.CONSOLE); return }
+            live.forEachIndexed { i, comp ->
                 val s = comp.getSkills()
                 val ammo = comp.equipment[EquipmentType.AMMO.id]
                 val ammoId = ammo?.id ?: comp.lastAmmoId
@@ -294,7 +334,8 @@ object CompanionRegistry {
                     .append(if (comp.autoLoot) 1 else 0).append(',')
                     .append(if (comp.getVarp(AttackTab.DISABLE_AUTO_RETALIATE_VARP) == 0) 1 else 0).append(',')
                     .append(ammoId).append(',')
-                    .append(ammoQty).append('|')
+                    .append(ammoQty).append(',')
+                    .append(STATE_FIELDED).append('|')
                 // SKILLS (base levels): atk,str,def,hp,range,mage,pray
                 sb.append(s.getBaseLevel(0)).append(',')
                     .append(s.getBaseLevel(2)).append(',')
@@ -313,13 +354,150 @@ object CompanionRegistry {
                 sb.append(styleLabels(comp).joinToString("/"))
                 player.message(sb.toString(), ChatMessageType.CONSOLE)
             }
+            benched.forEachIndexed { j, data ->
+                player.message(benchedLine(data, live.size + j, n), ChatMessageType.CONSOLE)
+            }
         } catch (e: Throwable) {
             logger.error(e) { "Companion state push failed for ${player.username}" }
         }
     }
 
+    /** One ~LOFCMP~ line for a benched companion, built from its stored snapshot (no world entity). */
+    private fun benchedLine(data: CompanionData, i: Int, n: Int): String {
+        val lvl = IntArray(7) { SkillSet.getLevelForXp(data.skillXp[it] ?: 0.0).coerceAtLeast(1) }
+        val hp = lvl[CompanionData.HITPOINTS]
+        val sb = StringBuilder(MSG_PREFIX).append(i).append('/').append(n).append('|')
+        // META — index -1 (nothing rendered), HP shown full so the card reads as "ready", not hurt.
+        sb.append(-1).append(',')
+            .append(data.name).append(',')
+            .append(data.archetype.ordinal).append(',')
+            .append(combatLevelOf(lvl)).append(',')
+            .append(if (data.dead) 0 else hp).append(',')
+            .append(hp).append(',')
+            .append(CompanionOrders.FOLLOW.ordinal).append(',')
+            .append(data.attackStyle.coerceIn(0, 3)).append(',')
+            .append(data.autocast ?: "-").append(',')
+            .append(if (data.autoLoot) 1 else 0).append(',')
+            .append(if (data.autoRetaliate) 1 else 0).append(',')
+            .append(data.lastAmmoId).append(',')
+            .append(data.equipment[EquipmentType.AMMO.id]?.amount ?: 0).append(',')
+            .append(if (data.dead) STATE_SLAIN else STATE_DISMISSED).append('|')
+        // SKILLS: atk,str,def,hp,range,mage,pray
+        sb.append(lvl[CompanionData.ATTACK]).append(',')
+            .append(lvl[CompanionData.STRENGTH]).append(',')
+            .append(lvl[CompanionData.DEFENCE]).append(',')
+            .append(lvl[CompanionData.HITPOINTS]).append(',')
+            .append(lvl[CompanionData.RANGED]).append(',')
+            .append(lvl[CompanionData.MAGIC]).append(',')
+            .append(lvl[CompanionData.PRAYER]).append('|')
+        // EQUIP
+        data.equipment.forEach { (slot, item) ->
+            sb.append(slot).append(':').append(item.id).append(':').append(item.amount).append(';')
+        }
+        sb.append('|')
+        // STYLES — by archetype only; there's no live weapon to inspect while benched.
+        sb.append(archetypeStyleLabels(data.archetype).joinToString("/"))
+        return sb.toString()
+    }
+
+    /**
+     * OSRS combat level from base levels (same formula as `Player.calculateAndSetCombatLevel`, which
+     * needs a live pawn). Indices are [CompanionData]'s skill ids.
+     */
+    private fun combatLevelOf(lvl: IntArray): Int {
+        val melee = (lvl[CompanionData.STRENGTH] + lvl[CompanionData.ATTACK]).toDouble()
+        val mage = floor(lvl[CompanionData.MAGIC] * 0.5) + lvl[CompanionData.MAGIC]
+        val range = floor(lvl[CompanionData.RANGED] * 0.5) + lvl[CompanionData.RANGED]
+        val style = maxOf(melee, mage, range)
+        val base = lvl[CompanionData.DEFENCE] + lvl[CompanionData.HITPOINTS] + floor(lvl[CompanionData.PRAYER] * 0.5)
+        return floor(0.25 * base + 0.325 * style).toInt()
+    }
+
     /** Force an immediate state push to [player]'s panel (call right after a gear/order change). */
     fun forcePush(player: Player) = pushState(player)
+
+    // ---- dismiss / summon -------------------------------------------------------------------------
+    //
+    // "Dismiss" is the answer to "I don't want them trailing me everywhere": the companion leaves the
+    // world but NOT the roster — levels, gear and supplies are snapshotted exactly as a logout would,
+    // and he stays off duty across logins until the owner summons him back. Slots are addressed the
+    // way every other panel command addresses them: 0-based over the roster the panel was sent, which
+    // is live companions first, then the bench.
+
+    /** Send the live companion at roster [slot] off duty. Returns false if there's nobody there. */
+    fun dismiss(player: Player, slot: Int): Boolean {
+        val live = byOwner[keyOf(player)] ?: return false
+        val comp = live.getOrNull(slot) ?: return false
+        // Not while another PLAYER is hitting him — vanishing a companion mid-PvP is the same trick as
+        // logging out to escape, so it gets the same 10-second rule the logout gate uses. NPC damage
+        // (training, bossing) doesn't count: waiting out a goblin to bench a knight would just be tedious.
+        if (comp.damageMap.getAll(type = EntityType.PLAYER, timeFrameMs = 10_000).isNotEmpty()) {
+            player.message("<col=801700>Sir ${comp.username} is under attack — he can't stand down yet.</col>")
+            return false
+        }
+        val data = snapshot(comp).also { it.dismissed = true }
+        live.remove(comp)
+        benchedByOwner.getOrPut(keyOf(player)) { ArrayList() } += data
+        CompanionLoot.forget(comp)
+        BotManager.despawn(comp.world, comp, force = true)
+        persist(player); forcePush(player)
+        player.message("<col=4f9b4f>Sir ${data.name} stands down — summon him from the companion panel.</col>")
+        return true
+    }
+
+    /** Send every live companion off duty (skipping any that can't right now). Returns how many stood down. */
+    fun dismissAll(player: Player): Int {
+        var n = 0
+        var i = 0
+        while (i < count(player)) {
+            // A successful dismiss removes that entry, so the same index is now the NEXT companion;
+            // a refusal (mid-PvP) steps past him instead of stalling the sweep.
+            if (dismiss(player, i)) n++ else i++
+        }
+        return n
+    }
+
+    /**
+     * Recall the dismissed companion at roster [slot] (i.e. an index past the live rows) to the
+     * owner's side. Dead companions are NOT summonable — they're revived at General Zo.
+     */
+    fun summon(player: Player, slot: Int): Boolean {
+        val live = byOwner.getOrPut(keyOf(player)) { ArrayList() }
+        val benched = benchedByOwner[keyOf(player)] ?: return false
+        val data = benched.getOrNull(slot - live.size) ?: return false
+        if (data.dead) {
+            player.message("<col=801700>Sir ${data.name} was slain — revive him at General Zo.</col>")
+            return false
+        }
+        if (live.size >= MAX) {
+            player.message("<col=801700>You can only field $MAX companions at once.</col>")
+            return false
+        }
+        data.dismissed = false
+        val comp = spawn(player.world, player, data, player.tile)
+        if (comp == null) {
+            data.dismissed = true // spawn failed (world full) — he stays on the bench
+            player.message("<col=801700>Sir ${data.name} could not answer the call. Try again shortly.</col>")
+            return false
+        }
+        benched.remove(data)
+        live += comp
+        persist(player); forcePush(player)
+        player.message("<col=4f9b4f>Sir ${comp.username} answers your call.</col>")
+        return true
+    }
+
+    /** Recall every dismissed companion (up to [MAX] fielded), skipping the slain. Returns how many answered. */
+    fun summonAll(player: Player): Int {
+        var n = 0
+        var guard = 0
+        while (count(player) < MAX && guard++ <= MAX) {
+            val next = benchedOf(player).indexOfFirst { !it.dead } // dead ones are revived, not summoned
+            if (next < 0 || !summon(player, count(player) + next)) break
+            n++
+        }
+        return n
+    }
 
     /** Tag for the gear-picker reply channel (bank items that fit a slot). Mirrors the client parser. */
     private const val GEAR_PREFIX = "~LOFGEAR~"
@@ -329,9 +507,16 @@ object CompanionRegistry {
     /** The attack-style button labels the panel should show for [comp], by its combat class. */
     private fun styleLabels(comp: Companion): List<String> = when {
         comp.archetype == CompanionStyle.MAGE -> emptyList() // mage uses the autocast selector instead
-        comp.hasWeaponType(WeaponType.BOW, WeaponType.CROSSBOW, WeaponType.THROWN) || comp.archetype == CompanionStyle.RANGE ->
+        comp.hasWeaponType(WeaponType.BOW, WeaponType.CROSSBOW, WeaponType.THROWN) ->
             listOf("Accurate", "Rapid", "Longrange")
-        else -> listOf("Accurate", "Aggressive", "Controlled", "Defensive")
+        else -> archetypeStyleLabels(comp.archetype)
+    }
+
+    /** Style labels from the archetype alone — for a benched companion, whose weapon can't be read. */
+    private fun archetypeStyleLabels(archetype: CompanionStyle): List<String> = when (archetype) {
+        CompanionStyle.MAGE -> emptyList()
+        CompanionStyle.RANGE -> listOf("Accurate", "Rapid", "Longrange")
+        CompanionStyle.MELEE -> listOf("Accurate", "Aggressive", "Controlled", "Defensive")
     }
 
     /** Set a companion's attack-style varp (0-3) from the panel. */
@@ -432,10 +617,13 @@ object CompanionRegistry {
         return 1 or (nameIdx shl 1) or (level shl 7) or (hp shl 15) or (orders shl 22) or (style shl 25)
     }
 
-    /** Rebuild + store the owner's blob from their live companions (call after any change). */
+    /** Rebuild + store the owner's blob from their live companions AND their bench (any change). */
     fun persist(player: Player) {
-        val list = byOwner[keyOf(player)] ?: return
-        player.attr[COMPANIONS_ATTR] = CompanionData.rosterToBlob(list.map { snapshot(it) })
+        val list = byOwner[keyOf(player)]
+        val benched = benchedByOwner[keyOf(player)]
+        if (list == null && benched == null) return
+        val roster = (list?.map { snapshot(it) } ?: emptyList()) + (benched ?: emptyList())
+        player.attr[COMPANIONS_ATTR] = CompanionData.rosterToBlob(roster)
     }
 
     private var sinceSave = 0
@@ -475,7 +663,7 @@ object CompanionRegistry {
         }
         ownerGone.forEach { key ->
             val list = byOwner.remove(key) ?: return@forEach
-            ownerLastTile.remove(key); ownerFacing.remove(key)
+            ownerLastTile.remove(key); ownerFacing.remove(key); benchedByOwner.remove(key)
             logger.warn { "Owner key=$key left without a logout — despawning ${list.size} companion(s)." }
             despawnAll(world, list)
         }

@@ -50,6 +50,11 @@ class CompanionsPanel extends PluginPanel
 	private static final String[] ORDER_LABELS = {"Follow", "Train", "Deploy", "Recall", "Attack"};
 	private static final String[] ORDER_ARGS = {"follow", "train", "deploy", "return", "attack"};
 
+	/** Roster states pushed in META's trailing field (must match CompanionRegistry's STATE_* values). */
+	static final int STATE_FIELDED = 0;
+	static final int STATE_DISMISSED = 1;
+	static final int STATE_SLAIN = 2;
+
 	/** Worn-equipment grid layout (5 rows x 3 cols). Cell value = equipment slot id, or -1 for a gap. */
 	private static final int[] GRID = {
 		-1, 0, -1,    // .      head    .
@@ -95,6 +100,10 @@ class CompanionsPanel extends PluginPanel
 		void loot(int slot);
 		void rename(int slot, String name);
 		void requestGear(int slot, int equipSlot);
+		void dismiss(int slot);                 // send off duty (leaves the world, keeps levels + gear)
+		void summon(int slot);                  // call an off-duty companion back
+		void dismissAll();
+		void summonAll();
 	}
 
 	private enum View { ROSTER, DETAIL, PICKER }
@@ -131,9 +140,10 @@ class CompanionsPanel extends PluginPanel
 			try
 			{
 				rows = newRows;
-				if (view == View.DETAIL && rowForSlot(detailSlot) == null)
+				final CompanionRow viewing = rowForSlot(detailSlot);
+				if (view == View.DETAIL && (viewing == null || !viewing.fielded()))
 				{
-					view = View.ROSTER; // the companion we were viewing is gone
+					view = View.ROSTER; // the companion we were viewing is gone (or now off duty)
 				}
 				refresh();
 			}
@@ -207,8 +217,31 @@ class CompanionsPanel extends PluginPanel
 			// state, so the label mirrors the first row — that's the state the click inverts.
 			page.add(button("Auto-loot ALL to bank: " + onOff(rows.get(0).autoLoot),
 				() -> actions.order("loot")));
-			page.add(spacer(8));
 		}
+
+		// Off-duty controls: "Dismiss ALL" sends the whole banner home so nobody trails you around;
+		// "Summon ALL" calls them back. Each is only offered when it would actually do something.
+		final boolean anyFielded = rows.stream().anyMatch(CompanionRow::fielded);
+		final boolean anyDismissed = rows.stream().anyMatch(CompanionRow::dismissed);
+		if (anyFielded || anyDismissed)
+		{
+			final JPanel dutyButtons = new JPanel(new GridLayout(1, 0, 3, 0));
+			dutyButtons.setAlignmentX(Component.LEFT_ALIGNMENT);
+			if (anyFielded)
+			{
+				final JButton b = button("Dismiss ALL", actions::dismissAll);
+				b.setToolTipText("Send every companion off duty — they leave your side until summoned");
+				dutyButtons.add(b);
+			}
+			if (anyDismissed)
+			{
+				final JButton b = button("Summon ALL", actions::summonAll);
+				b.setToolTipText("Call every off-duty companion back to your side");
+				dutyButtons.add(b);
+			}
+			page.add(dutyButtons);
+		}
+		page.add(spacer(8));
 
 		if (rows.isEmpty())
 		{
@@ -220,7 +253,7 @@ class CompanionsPanel extends PluginPanel
 		{
 			for (CompanionRow r : rows)
 			{
-				page.add(rosterCard(r));
+				page.add(r.fielded() ? rosterCard(r) : benchedCard(r));
 			}
 		}
 
@@ -260,6 +293,42 @@ class CompanionsPanel extends PluginPanel
 		return card;
 	}
 
+	/**
+	 * A companion who isn't in the world: dismissed (one click brings him back) or slain (General Zo
+	 * revives him). There is nothing to order or gear while he's benched, so the card is deliberately
+	 * inert apart from Summon — his levels and kit are safe and come back with him.
+	 */
+	private JPanel benchedCard(CompanionRow r)
+	{
+		final JPanel card = card();
+
+		final JLabel name = new JLabel("Sir " + r.name);
+		name.setFont(FontManager.getRunescapeSmallFont().deriveFont(Font.BOLD));
+		name.setForeground(ColorScheme.LIGHT_GRAY_COLOR); // muted vs. the orange of a fielded knight
+		name.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+		final JLabel stat = small(r.styleName() + " • Combat " + r.combat
+			+ (r.dismissed() ? " • off duty" : " • slain"));
+		stat.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+		card.add(name);
+		card.add(stat);
+		if (r.dismissed())
+		{
+			final JButton summon = button("Summon Sir " + r.name, () -> actions.summon(r.slot));
+			summon.setAlignmentX(Component.LEFT_ALIGNMENT);
+			summon.setBorder(BorderFactory.createEmptyBorder(6, 0, 0, 0));
+			card.add(summon);
+		}
+		else
+		{
+			final JLabel hint = small("Revive him at General Zo.");
+			hint.setBorder(BorderFactory.createEmptyBorder(6, 0, 0, 0));
+			card.add(hint);
+		}
+		return card;
+	}
+
 	private void openDetail(int slot)
 	{
 		detailSlot = slot;
@@ -272,7 +341,9 @@ class CompanionsPanel extends PluginPanel
 	private void renderDetail(int slot)
 	{
 		final CompanionRow r = rowForSlot(slot);
-		if (r == null)
+		// A benched companion has no world entity, so orders/style/gear would all be no-ops server-side —
+		// send the user back to the roster, where his card offers the one thing that works: Summon.
+		if (r == null || !r.fielded())
 		{
 			view = View.ROSTER;
 			renderRoster();
@@ -344,6 +415,9 @@ class CompanionsPanel extends PluginPanel
 		toggles.add(button("Auto-retaliate: " + onOff(r.retaliate), () -> actions.retaliate(r.slot)));
 		toggles.add(button("Auto-loot to bank: " + onOff(r.autoLoot), () -> actions.loot(r.slot)));
 		toggles.add(button("Rename", () -> promptRename(r)));
+		final JButton dismiss = button("Dismiss (off duty)", () -> confirmDismiss(r));
+		dismiss.setToolTipText("Sir " + r.name + " leaves your side until you summon him — levels and gear are kept");
+		toggles.add(dismiss);
 		page.add(toggles);
 
 		// Ammo (ranged)
@@ -439,6 +513,19 @@ class CompanionsPanel extends PluginPanel
 			grid.add(slotLabel);
 		}
 		return grid;
+	}
+
+	/** Confirm before benching — it's easily undone, but it does yank a companion out of the world. */
+	private void confirmDismiss(CompanionRow r)
+	{
+		final int choice = JOptionPane.showConfirmDialog(this,
+			"Dismiss Sir " + r.name + "?\nHe leaves your side (keeping his levels and gear) until you summon him.",
+			"Dismiss companion", JOptionPane.YES_NO_OPTION);
+		if (choice == JOptionPane.YES_OPTION)
+		{
+			view = View.ROSTER; // his card becomes a benched one; the detail screen no longer applies
+			actions.dismiss(r.slot);
+		}
 	}
 
 	private void promptRename(CompanionRow r)
@@ -724,10 +811,11 @@ class CompanionsPanel extends PluginPanel
 		final int[] equipment;      // indexed by equipment slot id; itemId or -1
 		final int[] equipQty;       // parallel to equipment
 		final String[] styleLabels; // attack-style button labels (empty for mage)
+		final int state;            // 0 fielded, 1 dismissed (off duty), 2 slain — mirrors the server's META state
 
 		CompanionRow(int slot, String name, int archetype, int combat, int curHp, int maxHp, int orders,
 			int styleVarp, String autocast, boolean autoLoot, boolean retaliate, int ammoId, int ammoQty,
-			String ammoName, int[] levels, int[] equipment, int[] equipQty, String[] styleLabels)
+			String ammoName, int[] levels, int[] equipment, int[] equipQty, String[] styleLabels, int state)
 		{
 			this.slot = slot;
 			this.name = name;
@@ -748,6 +836,18 @@ class CompanionsPanel extends PluginPanel
 			this.equipment = equipment;
 			this.equipQty = equipQty;
 			this.styleLabels = styleLabels;
+			this.state = state;
+		}
+
+		/** Fielded = actually in the world; anything else is on the bench and can't be ordered or geared. */
+		boolean fielded()
+		{
+			return state == STATE_FIELDED;
+		}
+
+		boolean dismissed()
+		{
+			return state == STATE_DISMISSED;
 		}
 
 		String styleName()

@@ -65,7 +65,8 @@ class RecruitClickPlugin(
             p.message("Only those of rank may lead soldiers — rise to $firstRank and the General will muster your first.")
             return
         }
-        if (CompanionRegistry.count(p) >= cap) {
+        // Roster size, not the fielded count: a dismissed companion still occupies a banner slot.
+        if (CompanionRegistry.rosterSize(p) >= cap) {
             p.message("Your banner is full — a ${p.title.display} may field $cap.")
             return
         }
@@ -81,7 +82,7 @@ class RecruitClickPlugin(
             p.message("No soldier could be raised just now. Try again shortly.")
             return
         }
-        p.message("<col=4f9b4f>A ${style.display} soldier joins your banner — Sir ${comp.username}. You field ${CompanionRegistry.count(p)} of $cap.</col>")
+        p.message("<col=4f9b4f>A ${style.display} soldier joins your banner — Sir ${comp.username}. You field ${CompanionRegistry.rosterSize(p)} of $cap.</col>")
         RecruitMenu.refresh(p) // update the open window's banner strip in place
     }
 

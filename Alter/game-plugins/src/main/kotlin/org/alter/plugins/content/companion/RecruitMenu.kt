@@ -35,7 +35,7 @@ object RecruitMenu {
 
     private fun pulse(p: Player) {
         val v = 1 or
-            (CompanionRegistry.count(p).coerceIn(0, 7) shl 1) or
+            (CompanionRegistry.rosterSize(p).coerceIn(0, 7) shl 1) or
             (CompanionRegistry.companionCap(p).coerceIn(0, 7) shl 4) or
             (p.title.ordinal.coerceIn(0, 15) shl 7)
         p.setVarp(OPEN_VARP, v)
