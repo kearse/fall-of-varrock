@@ -101,7 +101,7 @@ class SlayerPlugin(
     // Vannaka — Turael/Mazchna have no click options in this cache; Vannaka has
     // [Talk-to, Assignment, Trade, Rewards].
     private val master = "npc.vannaka"
-    private val masterTile = Triple(3219, 3215, 0) // end-game cluster south of the shop hub
+    private val masterTile = Triple(3223, 3218, 0) // station 4 (Services), east side of the home hub
     private val rewardShop = "War Rewards"
 
     /** Resolved master id, passed to every dialogue line explicitly: the contract window's

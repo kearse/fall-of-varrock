@@ -36,7 +36,7 @@ class RoyalSmithPlugin(
 
     init {
         // The Royal Smith stands by the castle wall, west of the courtyard fountain. TUNE.
-        spawnNpc(smith, x = 3207, z = 3224, height = 0, walkRadius = 2, direction = Direction.EAST)
+        spawnNpc(smith, x = 3223, z = 3222, height = 0, walkRadius = 0, direction = Direction.WEST)
         bindSmith()
     }
 
@@ -98,7 +98,7 @@ class RoyalSmithPlugin(
     }
 
     private companion object {
-        val SMITH_TILE = Tile(3207, 3224, 0) // keep in sync with the spawnNpc call above
+        val SMITH_TILE = Tile(3223, 3222, 0) // keep in sync with the spawnNpc call above
         const val FORGE_RADIUS = 10
     }
 }

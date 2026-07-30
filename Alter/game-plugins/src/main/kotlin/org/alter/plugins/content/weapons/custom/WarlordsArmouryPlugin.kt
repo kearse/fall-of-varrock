@@ -251,7 +251,7 @@ class WarlordsArmouryPlugin(
 
         // Quartermaster vendor — end-game cluster just south of the shop hub's west column.
         // Gear OUT (the armoury), supplies IN (the §3B war-supply sink).
-        spawnNpc("npc.quartermaster", 3219, 3216, 0, 0, Direction.EAST)
+        spawnNpc("npc.quartermaster", 3218, 3216, 0, 0, Direction.SOUTH)
         bindVendor("npc.quartermaster")
 
         onCommand("armoury", Privilege.ADMIN_POWER, description = "Open the Warlord's Armoury") {

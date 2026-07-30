@@ -77,7 +77,7 @@ class BondPlugin(
         }
 
         // ---- the Bond Merchant, on the east shop row just south of the Reward Exchange.
-        spawnNpc(MERCHANT, 3224, 3220, 0, 0, Direction.WEST)
+        spawnNpc(MERCHANT, 3208, 3217, 0, 0, Direction.EAST)
         // The merchant opens the client-drawn Bond Exchange window (lofbonds) — wallet + the two
         // redemption cards; the permanent-claim warning is drawn, not spoken.
         bindVendorOptions(MERCHANT) { openMenu(player) }

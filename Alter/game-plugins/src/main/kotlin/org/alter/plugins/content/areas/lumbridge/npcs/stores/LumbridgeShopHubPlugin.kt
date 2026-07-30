@@ -378,7 +378,7 @@ class LumbridgeShopHubPlugin(
             ShopTabs.Tab("Rank armour", icon = "item.rune_platebody") { ApprenticeArmoury.open(it) })
         singleVendor("npc.lowe", 3219, 3224, Direction.EAST, RANGED_GEAR)
         // Zaff: Trade opens the store; Talk-to keeps the rune-altar lift dialogue.
-        spawnNpc("npc.zaff", 3219, 3223, 0, 0, Direction.EAST)
+        spawnNpc("npc.zaff", 3208, 3221, 0, 0, Direction.EAST)
         bindVendorTalkAndTrade("npc.zaff",
             talk = { player.queue { zaffTalk(player) } },
             trade = { openOrClosed(player, MAGIC_STORE) })
