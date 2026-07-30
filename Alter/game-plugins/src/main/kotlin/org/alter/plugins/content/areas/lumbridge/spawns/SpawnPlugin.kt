@@ -62,18 +62,18 @@ class SpawnPlugin(
         spawnNpc(npc = "npc.zombie_rat", x = 3239, z = 3198, walkRadius = 5, direction = Direction.WEST)
 
         // Item spawns
-        spawnItem(item = "item.logs", amount = 1, x = 3205, z = 3224, height = 2)
-        spawnItem(item = "item.logs", amount = 1, x = 3205, z = 3226, height = 2)
-        spawnItem(item = "item.logs", amount = 1, x = 3208, z = 3225, height = 2)
-        spawnItem(item = "item.logs", amount = 1, x = 3209, z = 3224, height = 2)
-        spawnItem(item = "item.mind_rune", amount = 1, x = 3206, z = 3208)
-        spawnItem(item = "item.bronze_arrow", amount = 1, x = 3205, z = 3227)
-        spawnItem(item = "item.bronze_dagger", amount = 1, x = 3213, z = 3216, height = 1)
-        spawnItem(item = "item.knife", amount = 1, x = 3205, z = 3212)
+        //
+        // Home-hub declutter: every ground-item spawn that sat inside the castle footprint
+        // (outer shell x=3204..3227, z=3207..3230) was removed so the opened ground floor,
+        // the first floor and the bank roof read as clean social/service space instead of a
+        // litter of one-gp junk under the players' feet. Dropped spawns were:
+        //   level 0 - mind rune (3206,3208), bronze arrow (3205,3227), knife (3205,3212),
+        //             pot (3209,3214), bowl (3208,3214), jug (3211,3212)
+        //   level 1 - bronze dagger (3213,3216)
+        //   level 2 - 4x logs (3205,3224 / 3205,3226 / 3208,3225 / 3209,3224)
+        // The knife south of the castle stays: it is outside the walls, on the courtyard
+        // ground by the south steps where the rats and the woman spawn.
         spawnItem(item = "item.knife", amount = 1, x = 3224, z = 3202)
-        spawnItem(item = "item.pot", amount = 1, x = 3209, z = 3214)
-        spawnItem(item = "item.bowl", amount = 1, x = 3208, z = 3214)
-        spawnItem(item = "item.jug", amount = 1, x = 3211, z = 3212)
 
         // Stray altar (object.altar_409 @ 3222,3215) removed from the courtyard.
     }
