@@ -17,6 +17,12 @@ whitelist-only: false
 # always bypass the whitelist.
 owners: []
 
+# Login usernames forced to the administrator privilege on every login (the
+# `admin` + `mod` powers, no owner powers). Also bypasses the whitelist, and
+# other staff can't kick/ban/mute them. Names are matched on the login key, so
+# "Player B", "player b" and "player_b" all refer to the same account.
+admins: ["Player B"]
+
 # Privileges
 # Any privilege you want to be represented in-game you define here.
 privileges:

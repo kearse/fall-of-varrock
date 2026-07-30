@@ -65,7 +65,7 @@ object PlayerSaving {
         val context = client.world.gameContext
         if (context.whitelistOnly &&
             !PlayerModeration.isWhitelisted(client.loginUsername) &&
-            client.loginUsername.lowercase() !in context.owners.map { it.lowercase() }
+            !context.isConfiguredStaff(client.loginUsername)
         ) {
             return PlayerLoadResult.NOT_WHITELISTED
         }

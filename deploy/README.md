@@ -148,8 +148,13 @@ Staff tooling (all persisted in the `moderation` Mongo collection, shared with s
   spaces. Whitelist changes apply immediately, no restart; flipping `whitelist-only`
   itself requires a game-container restart.
 - Privileges come from `game.yml`: the `owners:` list is forced to the owner rank on
-  every login; to appoint a moderator, grant their account a privilege whose powers
-  include `mod` (see the `privileges:` block in `game.example.yml`).
+  every login, and the `admins:` list is forced to the administrator rank (`mod` +
+  `admin` powers, no owner powers) — both bypass the whitelist and can't be
+  kicked/banned/muted by other staff. Names match on the login key, so `Player B`,
+  `player b` and `player_b` are the same account. Editing either list needs a
+  game-container restart, and the promoted account has to relog. To appoint a plain
+  moderator, grant their account a privilege whose powers include `mod` (see the
+  `privileges:` block in `game.example.yml`).
 
 ## Known follow-ups
 

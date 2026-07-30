@@ -115,6 +115,7 @@ class Server {
                 gItemDespawnDelay = gameProperties.getOrDefault("gitem-despawn-delay", GroundItem.DEFAULT_DESPAWN_CYCLES),
                 preloadMaps = gameProperties.getOrDefault("preload-maps", false),
                 owners = gameProperties.getOrDefault("owners", emptyList<String>()),
+                admins = gameProperties.getOrDefault("admins", emptyList<String>()),
                 whitelistOnly = gameProperties.getOrDefault("whitelist-only", false),
             )
 

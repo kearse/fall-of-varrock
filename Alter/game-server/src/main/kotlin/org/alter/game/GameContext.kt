@@ -1,6 +1,7 @@
 package org.alter.game
 
 import org.alter.game.model.Tile
+import org.alter.game.model.entity.Client
 import org.alter.game.saving.formats.SaveFormatType
 
 /**
@@ -56,9 +57,33 @@ data class GameContext(
     val preloadMaps: Boolean,
     val owners: List<String> = emptyList(),
     /**
+     * Login usernames forced to the administrator privilege on every login —
+     * the [owners] equivalent for staff who should get the `admin` power
+     * without the owner rank. Lets staff be appointed from `game.yml` instead
+     * of hand-editing a save file.
+     */
+    val admins: List<String> = emptyList(),
+    /**
      * When true, only whitelisted accounts (see
-     * [org.alter.game.saving.PlayerModeration]) and configured [owners] can
-     * log in — used for closed-beta/tester phases.
+     * [org.alter.game.saving.PlayerModeration]) and configured staff ([owners]
+     * and [admins]) can log in — used for closed-beta/tester phases.
      */
     val whitelistOnly: Boolean = false,
-)
+) {
+    /** True if [name] is listed under `owners` in game.yml. */
+    fun isConfiguredOwner(name: String): Boolean = owners.any { matches(it, name) }
+
+    /** True if [name] is listed under `admins` in game.yml. */
+    fun isConfiguredAdmin(name: String): Boolean = admins.any { matches(it, name) }
+
+    /** True if [name] is listed under either staff list in game.yml. */
+    fun isConfiguredStaff(name: String): Boolean = isConfiguredOwner(name) || isConfiguredAdmin(name)
+
+    /**
+     * Config entries are written however the owner types them ("Player B"),
+     * while logins arrive normalised ("player_b") — compare on the canonical
+     * account key so both spellings match.
+     */
+    private fun matches(configured: String, name: String): Boolean =
+        Client.normalizeLogin(configured) == Client.normalizeLogin(name)
+}
