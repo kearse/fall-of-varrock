@@ -2,8 +2,8 @@
  * Fall of Varrock - Grand Exchange offer window (renderer + hit-testing).
  *
  * Draws the 8-slot offer board (2x4) and the offer-setup screen, styled with the shared LofTheme/
- * LofModal. Runs at the wide 512x324 (viewport-width, like the native GE and the kit editor) but is
- * placed and scaled by the shared authority through LofModal.beginWindow
+ * LofModal. Runs at the wide 512x334 — the fixed-mode world view, so it fills the game viewport the way
+ * the native GE does — but is placed and scaled by the shared authority through LofModal.beginWindow
  * (docs/overlay-design-system.md §6A/§6A'), so it re-centres in the game viewport and grows with the
  * canvas the same way the teleport/ranks/forge windows do. Geometry lives here so the mouse handler
  * agrees. Like the other lof windows it tracks a plain {@code visible} flag (never reads widgets), so
@@ -71,7 +71,14 @@ class LofGeOverlay extends Overlay
 	// but placed and scaled by the shared authority, so it behaves like every other framed modal
 	// (docs/overlay-design-system.md §6A/§6A′). 512 is the widest a window can be and still centre
 	// *beside* the inventory column in fixed mode, which the sell flow depends on (it right-clicks real
-	// inventory items); the same size the kit editor uses. Height is the standard chat-clear 324.
+	// inventory items); the same size the kit editor uses.
+	//
+	// Height is the world view too, not the standard 324: the offer-setup screen carries a row the other
+	// modals don't — the clerk's pricing note — and it does not compress into 324. Squeezing it there put
+	// "PRICE PER ITEM" through the bottom of the quantity preset row and jammed the note against the
+	// QUANTITY label. At 334 the window fills the fixed-mode world view exactly, like the native GE, and
+	// still clears the chat box, so placement is unaffected; it's the same kind of "fixed layout that
+	// can't compress" exception the design system already lists for recruit and the style window.
 	//
 	// It used to author its own width range (512..600), its own origin (hand-reserving canvas to the
 	// right) and no ui-scaling at all — so it was the one window that sat and sized differently from the
@@ -79,7 +86,7 @@ class LofGeOverlay extends Overlay
 	// now scales it with the canvas (up to SCALE_MAX, so ~819px wide on a big screen) instead of capping
 	// it at 600, which makes it larger on a real monitor than the old hand-rolled range ever went.
 	private static final int WIN_W = LofModal.FIXED_VIEWPORT_W; // 512
-	private static final int WIN_H = LofModal.H;                // 324
+	private static final int WIN_H = LofModal.FIXED_VIEWPORT_H; // 334 — see above; 324 can't hold the note
 	private static final int PAD = LofModal.PAD;               // 14
 	private static final int TAB_Y = 42;                // tab strip, just below the title underline
 	private static final int TAB_H = 20;
@@ -166,29 +173,51 @@ class LofGeOverlay extends Overlay
 	}
 
 	// ---- setup-view geometry (fixed for both the awaiting + ready states) -----------------------
-	// Authored for the standard WIN_H: the header block (sprite/name/sub/clerk note) runs to ~90, the
-	// editable rows to ~182, the market panel to ~256, then the total, then the footer buttons.
+	// A *_Y for text is a BASELINE — the glyphs sit ABOVE it — while a *_Y for a row/box is its TOP. So a
+	// label needs its baseline a full ascender past the bottom of whatever is above it, or it cuts into
+	// that element's lower border. That is exactly what went wrong when this was squeezed into 324:
+	// "PRICE PER ITEM" ran through the bottom of the quantity preset row, and the clerk's note collided
+	// with the QUANTITY label. Don't tune these by eyeballing a screenshot — the gaps below are sized so
+	// nothing collides even if the RS fonts report an ascent as large as 15px, which is well past what
+	// they actually use. Running geometry, so the next edit doesn't have to re-derive it:
+	//
+	//   sprite       44..76      (32px item image, at x = PAD)
+	//   name         58          baseline, bold,  at x = PAD + 44 (right of the sprite)
+	//   sub          72          baseline, small, at x = PAD + 44
+	//   clerk note   88          baseline, small, at x = PAD + 44 — indented past the sprite, NOT under
+	//                            it, so the sprite's height stops constraining this row at all
+	//   QUANTITY     106         baseline, small
+	//   qty row      110..132
+	//   presets      136..155
+	//   PRICE label  172         baseline, small
+	//   price row    176..198
+	//   market panel 202..269
+	//   total        287         baseline, regular
+	//   footer       290..320    WIN_H - PAD - 30, then PAD to the bottom edge
 	private static final int SU_IMG_Y = 44;
-	private static final int SU_NAME_Y = 57;
-	private static final int SU_SUB_Y = 71;
-	private static final int SU_ADVICE_Y = 86;  // the clerk's pricing note, full width under the header
-	private static final int SU_QLAB_Y = 100;
-	private static final int SU_QROW_Y = 104;
+	private static final int SU_NAME_Y = 58;
+	private static final int SU_SUB_Y = 72;
+	private static final int SU_ADVICE_Y = 88;  // the clerk's pricing note, aligned with the name/sub
+	private static final int SU_QLAB_Y = 106;
+	private static final int SU_QROW_Y = 110;
 	private static final int SU_ROW_H = 22;
-	private static final int SU_QPRESET_Y = 129;
+	private static final int SU_QPRESET_Y = 136;
 	private static final int SU_PRESET_H = 19;
-	private static final int SU_PLAB_Y = 158;   // clears the preset row's bottom border (148) by a glyph
-	private static final int SU_PROW_Y = 162;
+	private static final int SU_PLAB_Y = 172;
+	private static final int SU_PROW_Y = 176;
 	private static final int STEP_W = 32;
-	// market panel
-	private static final int MK_PANEL_TOP = 190;
-	private static final int MK_SUM_Y = 202;    // summary text baseline
-	private static final int MK_COLHEAD_Y = 215; // column header baseline
-	private static final int MK_ROW0_Y = 219;   // first listing row top
+	/** Text x for the header block — clear of the item sprite at {@code PAD}. */
+	private static final int SU_TEXT_X = PAD + 44;
+	// market panel — internal rhythm unchanged from the original (summary +12, divider +16,
+	// column heads +25, rows +29, then MK_ROWS * MK_ROW_H, +2 bottom pad = 67px tall).
+	private static final int MK_PANEL_TOP = 202;
+	private static final int MK_SUM_Y = 214;    // summary text baseline
+	private static final int MK_COLHEAD_Y = 227; // column header baseline
+	private static final int MK_ROW0_Y = 231;   // first listing row top
 	private static final int MK_ROW_H = 12;
 	private static final int MK_ROWS = 3;
-	private static final int MK_PANEL_BOT = 258;
-	private static final int SU_TOTAL_Y = 272;
+	private static final int MK_PANEL_BOT = 269;
+	private static final int SU_TOTAL_Y = 287;
 
 	/** Trend arrow colours: climbing runs hot, sliding runs cool (the same cool blue as the SELLING
 	 *  column head), so direction reads at a glance without leaning on the arrow alone. */
@@ -730,7 +759,7 @@ class LofGeOverlay extends Overlay
 
 		g.setFont(FontManager.getRunescapeBoldFont());
 		LofTheme.shadowText(g, ready ? fit(g.getFontMetrics(), itemName(s.item), 300) : "- choose an item -",
-			ox + PAD + 44, oy + SU_NAME_Y, ready ? LofTheme.TEXT : LofTheme.GOLD_DIM);
+			ox + SU_TEXT_X, oy + SU_NAME_Y, ready ? LofTheme.TEXT : LofTheme.GOLD_DIM);
 
 		g.setFont(FontManager.getRunescapeSmallFont());
 		final String sub;
@@ -746,7 +775,7 @@ class LofGeOverlay extends Overlay
 		{
 			sub = "Guide " + LofModal.fmt(s.guide) + " gp · player-listed" + (s.buy ? "" : " · you have " + s.own);
 		}
-		LofTheme.shadowText(g, sub, ox + PAD + 44, oy + SU_SUB_Y, ready ? LofTheme.TEXT_DIM : LofTheme.GOLD);
+		LofTheme.shadowText(g, sub, ox + SU_TEXT_X, oy + SU_SUB_Y, ready ? LofTheme.TEXT_DIM : LofTheme.GOLD);
 
 		// Market memory, right-aligned opposite the guide: what the item last actually changed hands for
 		// here and which way it's moving. Absent (never traded) simply doesn't draw.
@@ -759,8 +788,8 @@ class LofGeOverlay extends Overlay
 		if (ready && s.advice != null && !s.advice.isEmpty())
 		{
 			g.setFont(FontManager.getRunescapeSmallFont());
-			LofTheme.shadowText(g, fit(g.getFontMetrics(), s.advice, WIN_W - 2 * PAD), ox + PAD, oy + SU_ADVICE_Y,
-				LofTheme.GOLD_DIM);
+			LofTheme.shadowText(g, fit(g.getFontMetrics(), s.advice, WIN_W - PAD - SU_TEXT_X),
+				ox + SU_TEXT_X, oy + SU_ADVICE_Y, LofTheme.GOLD_DIM);
 		}
 
 		// quantity
