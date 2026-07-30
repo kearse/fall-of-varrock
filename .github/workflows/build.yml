@@ -76,10 +76,29 @@ jobs:
       - name: Build and push images
         if: github.event_name != 'pull_request'
         run: |
+          # Every push is RETRIED. GHCR intermittently answers a push with "unknown blob" after
+          # accepting the layers — a registry-side race, and because main is keyed per-commit above
+          # (deliberately: no queueing), a burst of merges pushes overlapping layers at the same
+          # moment and trips it. Three main builds have failed exactly that way with the image
+          # already built and named; the upload just needed another go. Retrying also protects the
+          # rest of the loop: a failed push aborts the step, so kol-web and kol-bot were never even
+          # built for those commits.
+          push() {
+            local ref=$1
+            for attempt in 1 2 3 4; do
+              if docker push "$ref"; then
+                return 0
+              fi
+              echo "::warning::push of $ref failed (attempt $attempt of 4) — retrying in $((attempt * 10))s"
+              sleep $((attempt * 10))
+            done
+            echo "::error::push of $ref failed after 4 attempts"
+            return 1
+          }
           TAG=${GITHUB_SHA::7}
           for img in kol-game:Alter kol-web:Alter/web kol-bot:Alter/discord-bot; do
             name=${img%%:*}; ctx=${img#*:}
             docker build -t "$REGISTRY/$name:$TAG" -t "$REGISTRY/$name:latest" "$ctx"
-            docker push "$REGISTRY/$name:$TAG"
-            docker push "$REGISTRY/$name:latest"
+            push "$REGISTRY/$name:$TAG"
+            push "$REGISTRY/$name:latest"
           done
