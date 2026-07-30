@@ -37,9 +37,9 @@ class LumbridgeHomeBankPlugin(
 
     private companion object {
         const val OBJ_TYPE = 10   // standard scenery loc shape (matches how skills spawn booths/benches)
-        const val ROT = 0
+        const val ROT = 1         // face east-west (across the aisle), not along the row
         const val WALL_X = 3206   // just inside the castle's west wall
-        const val Z_START = 3214
-        const val Z_END = 3222    // 9 booths
+        const val Z_START = 3218
+        const val Z_END = 3226    // 9 booths
     }
 }
