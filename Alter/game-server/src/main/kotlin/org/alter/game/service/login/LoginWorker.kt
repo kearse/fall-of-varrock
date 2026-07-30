@@ -31,12 +31,18 @@ class LoginWorker(private val boss: LoginService, private val verificationServic
                 if (loadResult == PlayerLoadResult.LOAD_ACCOUNT || loadResult == PlayerLoadResult.NEW_ACCOUNT) {
                     world.getService(GameService::class.java)?.submitGameThreadJob {
                         /*
-                         * Permanent owner override: any login username listed under
-                         * `owners` in game.yml is forced to the owner privilege on every
-                         * login, regardless of what is stored in their save file.
+                         * Permanent staff override: any login username listed under
+                         * `owners` or `admins` in game.yml is forced to that rank on
+                         * every login, regardless of what is stored in their save file.
+                         * Owner wins when a name appears in both lists.
                          */
-                        if (client.loginUsername.lowercase() in world.gameContext.owners.map { it.lowercase() }) {
-                            world.privileges.get("owner")?.let { client.privilege = it }
+                        val context = world.gameContext
+                        when {
+                            context.isConfiguredOwner(client.loginUsername) ->
+                                world.privileges.get("owner")?.let { client.privilege = it }
+
+                            context.isConfiguredAdmin(client.loginUsername) ->
+                                world.privileges.adminRank()?.let { client.privilege = it }
                         }
                         val interceptedLoginResult =
                             verificationService.interceptLoginResult(

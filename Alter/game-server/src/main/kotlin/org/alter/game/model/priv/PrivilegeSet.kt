@@ -44,6 +44,18 @@ class PrivilegeSet : Iterable<Privilege> {
 
     fun get(name: String): Privilege? = values.firstOrNull { it.name == name.lowercase() }
 
+    /**
+     * The rank handed to accounts listed under `admins` in game.yml: the
+     * privilege named "administrator" when one is defined, else the
+     * lowest-ranked privilege that carries [Privilege.ADMIN_POWER] without
+     * also being an owner rank.
+     */
+    fun adminRank(): Privilege? =
+        get("administrator")
+            ?: values
+                .filter { Privilege.ADMIN_POWER in it.powers && Privilege.OWNER_POWER !in it.powers }
+                .minByOrNull { it.id }
+
     fun isEligible(
         from: Privilege,
         to: String,

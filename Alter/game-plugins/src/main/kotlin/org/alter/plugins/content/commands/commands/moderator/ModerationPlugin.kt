@@ -39,8 +39,8 @@ class ModerationPlugin(
             val name = targetName(player) ?: return@onCommand
             val online = world.getPlayerForName(name)
             if (online != null && protected(player, online)) return@onCommand
-            if (online == null && isConfiguredOwner(name)) {
-                player.message("You can't ban an owner.")
+            if (online == null && isConfiguredStaff(name)) {
+                player.message("You can't ban staff.")
                 return@onCommand
             }
             val reason = player.getCommandArgs().drop(1).joinToString(" ").trim()
@@ -127,8 +127,7 @@ class ModerationPlugin(
 
     private fun loginName(target: Player?): String? = (target as? Client)?.loginUsername ?: target?.username
 
-    private fun isConfiguredOwner(name: String) =
-        name.lowercase() in world.gameContext.owners.map { it.lowercase() }
+    private fun isConfiguredStaff(name: String) = world.gameContext.isConfiguredStaff(name)
 
     /** Staff can't be kicked/banned/muted by other staff — demote them in game.yml first. */
     private fun protected(actor: Player, target: Player): Boolean {
@@ -136,7 +135,7 @@ class ModerationPlugin(
             actor.message("You can't target yourself.")
             return true
         }
-        if (target.privilege.powers.contains(Privilege.MOD_POWER) || isConfiguredOwner(loginName(target)!!)) {
+        if (target.privilege.powers.contains(Privilege.MOD_POWER) || isConfiguredStaff(loginName(target)!!)) {
             actor.message("${target.username} is staff and can't be targeted.")
             return true
         }
