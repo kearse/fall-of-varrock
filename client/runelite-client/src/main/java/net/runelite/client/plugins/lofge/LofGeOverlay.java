@@ -2,14 +2,18 @@
  * Fall of Varrock - Grand Exchange offer window (renderer + hit-testing).
  *
  * Draws the 8-slot offer board (2x4) and the offer-setup screen, styled with the shared LofTheme/
- * LofModal. Runs wider than the default modal to fill the game viewport like the native GE: 512px in
- * fixed mode, growing with the canvas (capped) in resizable — see {@link #computeSize}. Geometry lives
- * here so the mouse handler agrees. Like the other lof windows it tracks a plain {@code visible} flag
- * (never reads widgets), so there's no client-thread hazard in hit-testing.
+ * LofModal. Runs at the wide 512x324 (viewport-width, like the native GE and the kit editor) but is
+ * placed and scaled by the shared authority through LofModal.beginWindow
+ * (docs/overlay-design-system.md §6A/§6A'), so it re-centres in the game viewport and grows with the
+ * canvas the same way the teleport/ranks/forge windows do. Geometry lives here so the mouse handler
+ * agrees. Like the other lof windows it tracks a plain {@code visible} flag (never reads widgets), so
+ * there's no client-thread hazard in hit-testing.
  *
  * The setup screen renders both states of a {@link LofGePlugin.Setup}: "awaiting" (item not chosen -
  * every field blank/greyed, a hint under the header) and "ready" (item + live market panel, editable
- * quantity/price). Same layout either way, so the window never resizes or jumps.
+ * quantity/price). Same layout either way, so the window never resizes or jumps. "Ready" also surfaces
+ * the market brain the server streams alongside the book: the last price the item actually traded at
+ * with a trend arrow, and the clerk's one-line read on the price you're about to set.
  */
 package net.runelite.client.plugins.lofge;
 
@@ -63,18 +67,20 @@ class LofGeOverlay extends Overlay
 	static final int ASK_ROW_BASE = 500;    // + i -> adopt this Selling listing's price
 	static final int BID_ROW_BASE = 520;    // + i -> adopt this Buying listing's price
 
-	// The GE runs wider than the shared LofModal default so it fills the game viewport like the native
-	// OSRS Grand Exchange. In fixed mode it's the 512px world-view width; in resizable it grows with the
-	// canvas so it doesn't look tiny on a big screen. CRUCIAL: it must never cover the inventory, because
-	// selling right-clicks real inventory items — so in resizable it sits in the area *left* of the
-	// inventory panel (INV_RESERVE_RIGHT), never centred across the whole canvas. Height is steady.
-	private static final int GE_W_MIN = 512;
-	private static final int GE_W_MAX = 600;
-	private static final int GE_H = 330;
-	private static final int INV_RESERVE_RIGHT = 280;   // right-hand canvas kept clear for the inventory/tab panel
-	private static final int LEFT_MARGIN = 6;
-	private int geW = GE_W_MIN;                          // recomputed each render/hit-test (see computeSize)
-	private static final int PAD = LofModal.PAD;        // 14
+	// A big window like the native OSRS Grand Exchange — the full width of the fixed-mode world view —
+	// but placed and scaled by the shared authority, so it behaves like every other framed modal
+	// (docs/overlay-design-system.md §6A/§6A′). 512 is the widest a window can be and still centre
+	// *beside* the inventory column in fixed mode, which the sell flow depends on (it right-clicks real
+	// inventory items); the same size the kit editor uses. Height is the standard chat-clear 324.
+	//
+	// It used to author its own width range (512..600), its own origin (hand-reserving canvas to the
+	// right) and no ui-scaling at all — so it was the one window that sat and sized differently from the
+	// rest, and stayed a fixed pixel size while the others grew. Drawing through LofModal.beginWindow
+	// now scales it with the canvas (up to SCALE_MAX, so ~819px wide on a big screen) instead of capping
+	// it at 600, which makes it larger on a real monitor than the old hand-rolled range ever went.
+	private static final int WIN_W = LofModal.FIXED_VIEWPORT_W; // 512
+	private static final int WIN_H = LofModal.H;                // 324
+	private static final int PAD = LofModal.PAD;               // 14
 	private static final int TAB_Y = 42;                // tab strip, just below the title underline
 	private static final int TAB_H = 20;
 	private static final int TAB_W = 116;
@@ -93,6 +99,10 @@ class LofGeOverlay extends Overlay
 	private final ItemManager itemManager;
 
 	private boolean visible;
+
+	/** This frame's origin + ui-scale, published by {@link #render} on the client thread and read (never
+	 *  re-derived) by the mouse thread in {@link #hitTest} — §6A′/§8. */
+	private volatile LofModal.Placement placement;
 
 	@Inject
 	private LofGeOverlay(Client client, LofGePlugin plugin, ItemManager itemManager)
@@ -121,43 +131,9 @@ class LofGeOverlay extends Overlay
 		return client.isMenuOpen();
 	}
 
-	/** Pick the window width for this frame: 512 in fixed mode; in resizable, as wide as fits in the area
-	 *  left of the inventory panel (capped GE_W_MIN..GE_W_MAX). Call before any geometry each render +
-	 *  hit-test so the two agree. */
-	private void computeSize()
-	{
-		if (client.isResized())
-		{
-			final int avail = client.getCanvasWidth() - INV_RESERVE_RIGHT - LEFT_MARGIN * 2;
-			geW = Math.max(GE_W_MIN, Math.min(GE_W_MAX, avail));
-		}
-		else
-		{
-			geW = GE_W_MIN;
-		}
-	}
-
 	private int colW()
 	{
-		return (geW - PAD * 2 - COL_GAP * (COLS - 1)) / COLS;
-	}
-
-	/** Fixed mode: centre in the 512px world view (already left of the inventory column). Resizable:
-	 *  centre within the region *left* of the inventory panel so the window never covers the inventory
-	 *  — the sell flow needs those items clickable. */
-	private int originX()
-	{
-		if (!client.isResized())
-		{
-			return LofModal.originX(client, geW);
-		}
-		final int avail = client.getCanvasWidth() - INV_RESERVE_RIGHT;
-		return Math.max(LEFT_MARGIN, (avail - geW) / 2);
-	}
-
-	private int originY()
-	{
-		return LofModal.originY(client, GE_H);
+		return (WIN_W - PAD * 2 - COL_GAP * (COLS - 1)) / COLS;
 	}
 
 	private Rectangle tabOffersRect(int ox, int oy)
@@ -186,30 +162,38 @@ class LofGeOverlay extends Overlay
 
 	private Rectangle collectAllRect(int ox, int oy)
 	{
-		return new Rectangle(ox + geW - PAD - BTN_W, oy + GE_H - PAD - BTN_H, BTN_W, BTN_H);
+		return new Rectangle(ox + WIN_W - PAD - BTN_W, oy + WIN_H - PAD - BTN_H, BTN_W, BTN_H);
 	}
 
 	// ---- setup-view geometry (fixed for both the awaiting + ready states) -----------------------
+	// Authored for the standard WIN_H: the header block (sprite/name/sub/clerk note) runs to ~90, the
+	// editable rows to ~182, the market panel to ~256, then the total, then the footer buttons.
 	private static final int SU_IMG_Y = 44;
 	private static final int SU_NAME_Y = 57;
-	private static final int SU_SUB_Y = 74;
-	private static final int SU_QLAB_Y = 92;
-	private static final int SU_QROW_Y = 97;
+	private static final int SU_SUB_Y = 71;
+	private static final int SU_ADVICE_Y = 86;  // the clerk's pricing note, full width under the header
+	private static final int SU_QLAB_Y = 100;
+	private static final int SU_QROW_Y = 104;
 	private static final int SU_ROW_H = 22;
-	private static final int SU_QPRESET_Y = 123;
+	private static final int SU_QPRESET_Y = 129;
 	private static final int SU_PRESET_H = 19;
-	private static final int SU_PLAB_Y = 150;
-	private static final int SU_PROW_Y = 155;
+	private static final int SU_PLAB_Y = 158;   // clears the preset row's bottom border (148) by a glyph
+	private static final int SU_PROW_Y = 162;
 	private static final int STEP_W = 32;
 	// market panel
-	private static final int MK_PANEL_TOP = 184;
-	private static final int MK_SUM_Y = 196;    // summary text baseline
-	private static final int MK_COLHEAD_Y = 209; // column header baseline
-	private static final int MK_ROW0_Y = 213;   // first listing row top
+	private static final int MK_PANEL_TOP = 190;
+	private static final int MK_SUM_Y = 202;    // summary text baseline
+	private static final int MK_COLHEAD_Y = 215; // column header baseline
+	private static final int MK_ROW0_Y = 219;   // first listing row top
 	private static final int MK_ROW_H = 12;
 	private static final int MK_ROWS = 3;
-	private static final int MK_PANEL_BOT = 251;
-	private static final int SU_TOTAL_Y = 266;
+	private static final int MK_PANEL_BOT = 258;
+	private static final int SU_TOTAL_Y = 272;
+
+	/** Trend arrow colours: climbing runs hot, sliding runs cool (the same cool blue as the SELLING
+	 *  column head), so direction reads at a glance without leaning on the arrow alone. */
+	private static final Color TREND_UP = LofTheme.LAVA;
+	private static final Color TREND_DOWN = new Color(122, 208, 255);
 
 	private Rectangle suQMinus(int ox, int oy)
 	{
@@ -218,21 +202,21 @@ class LofGeOverlay extends Overlay
 
 	private Rectangle suQPlus(int ox, int oy)
 	{
-		return new Rectangle(ox + geW - PAD - STEP_W, oy + SU_QROW_Y, STEP_W, SU_ROW_H);
+		return new Rectangle(ox + WIN_W - PAD - STEP_W, oy + SU_QROW_Y, STEP_W, SU_ROW_H);
 	}
 
 	private Rectangle suQValue(int ox, int oy)
 	{
-		return new Rectangle(ox + PAD + STEP_W + 4, oy + SU_QROW_Y, geW - 2 * PAD - 2 * (STEP_W + 4), SU_ROW_H);
+		return new Rectangle(ox + PAD + STEP_W + 4, oy + SU_QROW_Y, WIN_W - 2 * PAD - 2 * (STEP_W + 4), SU_ROW_H);
 	}
 
 	private Rectangle suQPreset(int ox, int oy, int i)
 	{
-		final int w = (geW - 2 * PAD - 4 * 6) / 5;
+		final int w = (WIN_W - 2 * PAD - 4 * 6) / 5;
 		return new Rectangle(ox + PAD + i * (w + 6), oy + SU_QPRESET_Y, w, SU_PRESET_H);
 	}
 
-	// price row (geW-relative so it fills a wider window): -5%(50) | value(stretch) | +5%(50) guide(52) custom(34)
+	// price row (WIN_W-relative so it fills a wider window): -5%(50) | value(stretch) | +5%(50) guide(52) custom(34)
 	private Rectangle suPMinus(int ox, int oy)
 	{
 		return new Rectangle(ox + PAD, oy + SU_PROW_Y, 50, SU_ROW_H);
@@ -240,27 +224,27 @@ class LofGeOverlay extends Overlay
 
 	private Rectangle suPValue(int ox, int oy)
 	{
-		return new Rectangle(ox + PAD + 56, oy + SU_PROW_Y, geW - 2 * PAD - 210, SU_ROW_H);
+		return new Rectangle(ox + PAD + 56, oy + SU_PROW_Y, WIN_W - 2 * PAD - 210, SU_ROW_H);
 	}
 
 	private Rectangle suPPlus(int ox, int oy)
 	{
-		return new Rectangle(ox + geW - PAD - 148, oy + SU_PROW_Y, 50, SU_ROW_H);
+		return new Rectangle(ox + WIN_W - PAD - 148, oy + SU_PROW_Y, 50, SU_ROW_H);
 	}
 
 	private Rectangle suPGuide(int ox, int oy)
 	{
-		return new Rectangle(ox + geW - PAD - 92, oy + SU_PROW_Y, 52, SU_ROW_H);
+		return new Rectangle(ox + WIN_W - PAD - 92, oy + SU_PROW_Y, 52, SU_ROW_H);
 	}
 
 	private Rectangle suPCustom(int ox, int oy)
 	{
-		return new Rectangle(ox + geW - PAD - 34, oy + SU_PROW_Y, 34, SU_ROW_H);
+		return new Rectangle(ox + WIN_W - PAD - 34, oy + SU_PROW_Y, 34, SU_ROW_H);
 	}
 
 	private int mkColW()
 	{
-		return (geW - 2 * PAD) / 2;
+		return (WIN_W - 2 * PAD) / 2;
 	}
 
 	private Rectangle mkAskRow(int ox, int oy, int i)
@@ -275,12 +259,12 @@ class LofGeOverlay extends Overlay
 
 	private Rectangle suBack(int ox, int oy)
 	{
-		return new Rectangle(ox + PAD, oy + GE_H - PAD - 30, 120, 30);
+		return new Rectangle(ox + PAD, oy + WIN_H - PAD - 30, 120, 30);
 	}
 
 	private Rectangle suConfirm(int ox, int oy)
 	{
-		return new Rectangle(ox + geW - PAD - 200, oy + GE_H - PAD - 30, 200, 30);
+		return new Rectangle(ox + WIN_W - PAD - 200, oy + WIN_H - PAD - 30, 200, 30);
 	}
 
 	private int hitTestSetup(int ox, int oy, Point p)
@@ -353,19 +337,26 @@ class LofGeOverlay extends Overlay
 		return INSIDE;
 	}
 
-	int hitTest(Point p)
+	int hitTest(Point canvas)
 	{
 		if (!visible)
 		{
 			return OUTSIDE;
 		}
-		computeSize();
-		final int ox = originX(), oy = originY();
-		if (!new Rectangle(ox, oy, geW, GE_H).contains(p))
+		// Origin and scale come from the last rendered frame; map the canvas point into the window's
+		// authored space so every rect below still reads in base coordinates (§6A′).
+		final LofModal.Placement place = placement;
+		if (place == null)
 		{
 			return OUTSIDE;
 		}
-		if (LofModal.closeRect(ox, oy, geW).contains(p))
+		final Point p = place.toLocal(canvas);
+		final int ox = place.ox, oy = place.oy;
+		if (!new Rectangle(ox, oy, WIN_W, WIN_H).contains(p))
+		{
+			return OUTSIDE;
+		}
+		if (LofModal.closeRect(ox, oy, WIN_W).contains(p))
 		{
 			return CLOSE;
 		}
@@ -467,20 +458,23 @@ class LofGeOverlay extends Overlay
 		final Rectangle selfBounds = getBounds();
 		g.translate(-selfBounds.x, -selfBounds.y);
 
-		computeSize();
-		final int ox = originX(), oy = originY();
-		final Point mouse = mousePoint();
+		// Shared placement + ui-scale, published for the mouse thread in the same pass that draws it.
+		final LofModal.Placement place = LofModal.beginWindow(g, client, WIN_W, WIN_H);
+		placement = place;
+		final int ox = place.ox, oy = place.oy;
+		final Point mouse = place.toLocal(mousePoint());
 
 		final LofGePlugin.Setup setup = plugin.getSetup();
 		if (setup != null)
 		{
 			drawSetup(g, ox, oy, mouse, setup);
+			LofModal.endWindow(g, place);
 			g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, oldAA == null ? RenderingHints.VALUE_ANTIALIAS_DEFAULT : oldAA);
-			return new Dimension(geW, GE_H);
+			return new Dimension(WIN_W, WIN_H);
 		}
 
 		final boolean hist = plugin.isShowingHistory();
-		LofModal.frame(g, ox, oy, geW, GE_H, "Grand Exchange", LofModal.fmt(plugin.getCoins()) + " gp", mouse);
+		LofModal.frame(g, ox, oy, WIN_W, WIN_H, "Grand Exchange", LofModal.fmt(plugin.getCoins()) + " gp", mouse);
 		drawTabs(g, ox, oy, mouse, hist);
 
 		if (hist)
@@ -497,8 +491,9 @@ class LofGeOverlay extends Overlay
 			drawCollection(g, ox, oy, mouse);
 		}
 
+		LofModal.endWindow(g, place);
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, oldAA == null ? RenderingHints.VALUE_ANTIALIAS_DEFAULT : oldAA);
-		return new Dimension(geW, GE_H);
+		return new Dimension(WIN_W, WIN_H);
 	}
 
 	private void drawTabs(Graphics2D g, int ox, int oy, Point mouse, boolean hist)
@@ -519,14 +514,14 @@ class LofGeOverlay extends Overlay
 			g.setFont(FontManager.getRunescapeFont());
 			final String m = "No completed trades yet.";
 			final int mw = g.getFontMetrics().stringWidth(m);
-			LofTheme.shadowText(g, m, ox + (geW - mw) / 2, oy + 150, LofTheme.TEXT_DIM);
+			LofTheme.shadowText(g, m, ox + (WIN_W - mw) / 2, oy + 150, LofTheme.TEXT_DIM);
 			return;
 		}
 		final int x = ox + PAD;
-		final int w = geW - 2 * PAD;
+		final int w = WIN_W - 2 * PAD;
 		int y = oy + GRID_TOP;
 		final int rowH = 30;
-		final int max = Math.min(rows.size(), (GE_H - PAD - GRID_TOP) / rowH); // fits without a scrollbar
+		final int max = Math.min(rows.size(), (WIN_H - PAD - GRID_TOP) / rowH); // fits without a scrollbar
 		for (int i = 0; i < max; i++)
 		{
 			final LofGePlugin.Hist h = rows.get(i);
@@ -717,7 +712,7 @@ class LofGeOverlay extends Overlay
 	private void drawSetup(Graphics2D g, int ox, int oy, Point mouse, LofGePlugin.Setup s)
 	{
 		final boolean ready = !s.awaitingItem();
-		LofModal.frame(g, ox, oy, geW, GE_H, "Grand Exchange", s.buy ? "Buy offer" : "Sell offer", mouse);
+		LofModal.frame(g, ox, oy, WIN_W, WIN_H, "Grand Exchange", s.buy ? "Buy offer" : "Sell offer", mouse);
 
 		// item header - sprite or an empty dashed slot
 		if (ready)
@@ -753,6 +748,21 @@ class LofGeOverlay extends Overlay
 		}
 		LofTheme.shadowText(g, sub, ox + PAD + 44, oy + SU_SUB_Y, ready ? LofTheme.TEXT_DIM : LofTheme.GOLD);
 
+		// Market memory, right-aligned opposite the guide: what the item last actually changed hands for
+		// here and which way it's moving. Absent (never traded) simply doesn't draw.
+		if (ready && s.last > 0)
+		{
+			drawLastTrade(g, ox, oy, s.last, s.trend);
+		}
+
+		// The clerk's read on the opening default price — the market brain's headline, in his voice.
+		if (ready && s.advice != null && !s.advice.isEmpty())
+		{
+			g.setFont(FontManager.getRunescapeSmallFont());
+			LofTheme.shadowText(g, fit(g.getFontMetrics(), s.advice, WIN_W - 2 * PAD), ox + PAD, oy + SU_ADVICE_Y,
+				LofTheme.GOLD_DIM);
+		}
+
 		// quantity
 		LofTheme.shadowText(g, "QUANTITY", ox + PAD, oy + SU_QLAB_Y, LofTheme.GOLD_DIM);
 		LofModal.button(g, suQMinus(ox, oy), "-", LofTheme.GOLD_DIM, ready, suQMinus(ox, oy).contains(mouse));
@@ -772,7 +782,7 @@ class LofGeOverlay extends Overlay
 			final String hint = s.buy ? "lowest sell" : "highest buy";
 			g.setFont(FontManager.getRunescapeSmallFont());
 			final int hw = g.getFontMetrics().stringWidth(hint);
-			LofTheme.shadowText(g, hint, ox + geW - PAD - hw, oy + SU_PLAB_Y, s.buy ? LofTheme.LAVA : LofTheme.GOLD);
+			LofTheme.shadowText(g, hint, ox + WIN_W - PAD - hw, oy + SU_PLAB_Y, s.buy ? LofTheme.LAVA : LofTheme.GOLD);
 		}
 		LofModal.button(g, suPMinus(ox, oy), "-5%", LofTheme.GOLD_DIM, ready, suPMinus(ox, oy).contains(mouse));
 		drawValueBox(g, suPValue(ox, oy), ready ? LofModal.fmt(s.price) + " gp" : "-", ready);
@@ -796,11 +806,37 @@ class LofGeOverlay extends Overlay
 			LofTheme.GOLD, ready, suConfirm(ox, oy).contains(mouse));
 	}
 
+	/**
+	 * "Last 1.85M gp ▲ 2.6%" — the MarketMemory readout, right-aligned to the window's inner edge.
+	 * {@code trend} is signed permille (the wire unit), shown as a percentage with the arrow; a zero
+	 * trend (a single remembered trade, so no direction yet) draws the figure alone.
+	 */
+	private void drawLastTrade(Graphics2D g, int ox, int oy, int last, int trend)
+	{
+		g.setFont(FontManager.getRunescapeSmallFont());
+		final FontMetrics fm = g.getFontMetrics();
+		final String head = "Last " + compact(last) + " gp";
+		final boolean moved = trend != 0;
+		final String pct = moved ? String.format("%.1f%%", Math.abs(trend) / 10.0) : "";
+		final int triW = 7;
+		final int extra = moved ? 4 + triW + 3 + fm.stringWidth(pct) : 0;
+		final int x = ox + WIN_W - PAD - fm.stringWidth(head) - extra;
+
+		LofTheme.shadowText(g, head, x, oy + SU_SUB_Y, LofTheme.TEXT_DIM);
+		if (moved)
+		{
+			final Color c = trend > 0 ? TREND_UP : TREND_DOWN;
+			final int triX = x + fm.stringWidth(head) + 4;
+			drawTriangle(g, triX, oy + SU_SUB_Y - 4, triW, trend > 0, c);
+			LofTheme.shadowText(g, pct, triX + triW + 3, oy + SU_SUB_Y, c);
+		}
+	}
+
 	/** The Selling / Buying two-column market snapshot (or a blank panel while awaiting an item). */
 	private void drawMarket(Graphics2D g, int ox, int oy, Point mouse, LofGePlugin.Setup s, boolean ready)
 	{
 		final int x = ox + PAD;
-		final int w = geW - 2 * PAD;
+		final int w = WIN_W - 2 * PAD;
 		final int top = oy + MK_PANEL_TOP;
 		final int h = MK_PANEL_BOT - MK_PANEL_TOP;
 
@@ -815,7 +851,7 @@ class LofGeOverlay extends Overlay
 		{
 			final String m = "Market opens once you pick an item";
 			final int mw = g.getFontMetrics().stringWidth(m);
-			LofTheme.shadowText(g, m, ox + (geW - mw) / 2, top + h / 2 + 4, LofTheme.GOLD_DIM);
+			LofTheme.shadowText(g, m, ox + (WIN_W - mw) / 2, top + h / 2 + 4, LofTheme.GOLD_DIM);
 			return;
 		}
 
