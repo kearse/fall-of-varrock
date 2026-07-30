@@ -111,7 +111,7 @@ class PkRewardsPlugin(
         // Buy Blood Money for coins — sets the coin ceiling on the PvP gear this vendor sells.
         currencyBuyShop(BUY_BM, "item.blood_money", GeCurrencyPrices.BLOOD_MONEY)
 
-        spawnNpc(TRADER, 3216, 3218, 0, 0, Direction.WEST) // station 2 (Commerce & Crown), west face of the central ring
+        spawnNpc(TRADER, 3214, 3218, 0, 0, Direction.SOUTH) // station 2 (Commerce & Crown) 2x2 block, SE tile
         bindTrader(TRADER)
         onCommand("pkshop", description = "Open the PK Rewards (Blood Money) shops") {
             ShopTabs.open(player, traderTabs)
