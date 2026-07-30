@@ -63,6 +63,20 @@ consolidates trade and lets stores set the price floors.
   get an NPC floor (85% of value) and ceiling (value). Gear, megarares and the currency items have **no**
   backstop — they float on the pure player market. The allowlist excludes the deliberately premium-priced
   items (death rune, adamant arrow, cooked swordfish) and load-bearing sinks (runite bar, dragon bones).
+- **Price band (all items):** every offer's price must sit within **a tenth to ten times** the item's
+  economy value (`grandexchange/GrandExchangePricing`, enforced server-side in `validNew`, and mirrored
+  to the client on the setup wire so the steppers clamp before Confirm). This is a sanity rail, not a
+  peg — halving or tripling the guide is still legal, so player price discovery is untouched; it exists
+  because the book used to accept **any** price above zero. An item with **no** credible cache value is
+  unbanded *and* gets no backstop, so a silly price on it can only ever be a consenting player↔player
+  trade, which mints nothing.
+  - *Fixed:* an item whose cache value was 0 used to be handed a **1 gp** backstop ceiling by a
+    `maxOf(1, cost)`, and `backstopSweep` then filled a 1 gp buy against the NPC on the next match tick
+    — buying the item for a single coin. Value resolution (`GrandExchange.economyValue`) now returns
+    null instead of inventing a 1, and null means no band and no backstop.
+- **One price source:** everything above reads `GrandExchange.economyValue` — the same cache `cost` the
+  coin shops price from (`ItemCurrency.getSellPrice`, mirrored by `ItemMarketValueService`) — so the GE
+  and the stores cannot drift apart.
 - **Cross-playstyle trade routes stay open:** a PKer sells Blood Money to a PvMer for gp, etc. — the coin
   ceiling (currency tabs above) caps those prices without hard-pegging them.
 

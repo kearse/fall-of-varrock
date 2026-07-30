@@ -17,7 +17,8 @@ import org.alter.rscm.RSCM.getRSCM
  * FOV_GE:end                                                               (commit board; open the window)
  * FOV_GE:refreshopen / … / FOV_GE:refreshend                               (live board repaint; no open)
  * FOV_GE:bal|coins                                                         (coin readout: inventory + bank)
- * FOV_GE:setup|box|buy|item|guide|floor|ceil|bestAsk|bestBid|nSell|nBuy|own|last|trend (enter offer-setup; -1 where absent)
+ * FOV_GE:setup|box|buy|item|guide|floor|ceil|bestAsk|bestBid|nSell|nBuy|own|last|trend|minPrice|maxPrice
+ *                                                                          (enter offer-setup; -1 where absent)
  * FOV_GE:ask|price|qty                                                     (0..N top open sells, cheapest first)
  * FOV_GE:bid|price|qty                                                     (0..N top open buys, dearest first)
  * FOV_GE:advice|text                                                       (the clerk's one-line pricing note)
@@ -35,6 +36,12 @@ import org.alter.rscm.RSCM.getRSCM
  * positive = climbing) — the client draws these as the "last seen" figure + a trend arrow. `floor/ceil/
  * bestAsk/bestBid/last = -1` when absent, `trend = 0` when there's no memory. The `advice` line that
  * follows the market rows carries the clerk's spoken pricing note ([GrandExchange.advice]).
+ *
+ * `minPrice/maxPrice` are the prices the book will accept ([GrandExchangePricing]), so the client can
+ * clamp its steppers and custom entry instead of letting the player commit a price the server will
+ * refuse; `-1/-1` means the item has no economy value to band against and the price is unconstrained.
+ * Do NOT confuse them with `floor/ceil`, which are the much tighter *store* band on a backstopped
+ * commodity (85–100% of value) shown as "band X-Y" in the header.
  */
 object GrandExchangeWindow {
     const val PREFIX = "FOV_GE:"
@@ -94,9 +101,14 @@ object GrandExchangeWindow {
         val own = if (buy) 0 else p.inventory.getItemCount(item)
         val last = GrandExchange.lastTrade(item) ?: -1
         val trend = GrandExchange.trendPermille(item) ?: 0
+        // The prices the book will actually accept (GrandExchangePricing). Sent so the client can clamp
+        // its own steppers/entry to the band — a price is then refused while it's being typed rather than
+        // after Confirm. -1/-1 = unbanded (no economy value), so the client leaves the price alone.
+        val limits = GrandExchange.priceBand(item)
         line(
             p,
-            "setup|$box|${if (buy) 1 else 0}|$item|$guide|${band?.first ?: -1}|${band?.second ?: -1}|$bestAsk|$bestBid|$nSell|$nBuy|$own|$last|$trend",
+            "setup|$box|${if (buy) 1 else 0}|$item|$guide|${band?.first ?: -1}|${band?.second ?: -1}" +
+                "|$bestAsk|$bestBid|$nSell|$nBuy|$own|$last|$trend|${limits?.first ?: -1}|${limits?.second ?: -1}",
         )
         for ((price, qty) in GrandExchange.topAsks(item, MARKET_ROWS)) line(p, "ask|$price|$qty")
         for ((price, qty) in GrandExchange.topBids(item, MARKET_ROWS)) line(p, "bid|$price|$qty")
