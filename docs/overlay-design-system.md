@@ -174,16 +174,19 @@ We do **both**: our framed modals auto-scale with the canvas, *and* compose corr
 Mode is on. One authority, `LofModal`, owns it — **never hand-roll a scale or a `g.scale()` in an
 overlay.**
 
-- **`LofModal.uiScale(client)`** returns a scale ≥ 1.0 derived from the **logical** canvas
-  (`getCanvasWidth/Height`) against a `765×503` baseline, capped at `SCALE_MAX` (1.6). It reads the
-  logical canvas — **never** the stretched/window dimensions — so Stretched Mode composes: fixed +
-  stretched keeps the logical canvas small (scale ≈ 1.0, Stretched Mode does the enlarging); resizable
-  grows the logical canvas, so our windows grow.
+- **`LofModal.uiScale(client)`** returns a **whole-integer** scale (`1x` or `2x`) derived from the
+  **logical** canvas (`getCanvasWidth/Height`) against a `765×503` baseline, floored to a whole step
+  and capped at `SCALE_MAX` (2). Integer only, because the RuneScape font is a **pixel font** — a
+  fractional scale (e.g. `1.6x` → a `25.6px` font) blurs every glyph, so we snap rather than scale
+  continuously. It reads the logical canvas — **never** the stretched/window dimensions — so Stretched
+  Mode composes: fixed + stretched keeps the logical canvas small (scale = 1, Stretched Mode does the
+  enlarging); resizable grows the logical canvas, so our windows grow a whole step at a time.
 - **Draw through `LofModal.beginWindow` / `endWindow`.** `beginWindow(g, client, baseW, baseH)` places
   the *scaled* window with the standard origin authority and applies a **pivot-scale about the
   origin**, so the overlay keeps drawing at its existing `ox + PAD …` coordinates using the authored
-  base constants — the transform does the scaling, crisply (the RS fonts are vector). It returns a
-  `Placement` (`ox`, `oy`, `scale`); cache it in a `volatile` field. Call `endWindow(g, place)` before
+  base constants — the transform does the scaling. The scale is a whole integer and `beginWindow` forces
+  **text antialiasing off** (restored in `endWindow`), so the pixel font renders crisp, not blurred. It
+  returns a `Placement` (`ox`, `oy`, `scale`); cache it in a `volatile` field. Call `endWindow(g, place)` before
   every return that runs after `beginWindow`.
 - **Hit-test through the cache.** The mouse thread reads the cached `Placement` and maps the canvas
   point with `place.toLocal(canvasPoint)` into the window's authored space, then tests the same

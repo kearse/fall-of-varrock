@@ -14,6 +14,7 @@ import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.RenderingHints;
 import java.awt.Shape;
 import java.awt.Stroke;
 import java.awt.geom.AffineTransform;
@@ -52,8 +53,10 @@ public final class LofModal
 	 */
 	public static final int SCALE_BASE_W = 765;
 	public static final int SCALE_BASE_H = 503;
-	/** Cap so a huge canvas doesn't blow the window up past a comfortable size. */
-	public static final float SCALE_MAX = 1.6f;
+	/** Cap (in whole steps) so a huge canvas doesn't blow the window up past a comfortable size.
+	 *  The scale is always an INTEGER — the RuneScape font is a pixel font and only stays crisp at
+	 *  integer multiples of its design size, so 2x is the largest crisp step we allow. */
+	public static final int SCALE_MAX = 2;
 
 	public static final int COINS_ID = 995; // item.coins_995
 
@@ -133,13 +136,18 @@ public final class LofModal
 	// 1.0 and Stretched Mode does the enlarging; resizable grows the logical canvas → our windows grow).
 	// ---------------------------------------------------------------------------------------------
 
-	/** The current window scale (≥ 1.0) for this canvas. Compute on the client thread ({@code render}). */
+	/**
+	 * The current window scale for this canvas — always a WHOLE integer (1x, 2x). The RuneScape font
+	 * is a pixel font: it only stays crisp at integer multiples of its design size, so a fractional
+	 * scale (e.g. 1.6x → a 25.6px font) blurs every glyph. We therefore floor the canvas ratio to a
+	 * whole step rather than scaling continuously. Compute on the client thread ({@code render}).
+	 */
 	public static float uiScale(Client client)
 	{
 		final float byW = client.getCanvasWidth() / (float) SCALE_BASE_W;
 		final float byH = client.getCanvasHeight() / (float) SCALE_BASE_H;
-		final float s = Math.min(byW, byH);
-		return Math.max(1.0f, Math.min(s, SCALE_MAX));
+		final int step = (int) Math.floor(Math.min(byW, byH));
+		return Math.max(1, Math.min(step, SCALE_MAX));
 	}
 
 	/**
@@ -154,13 +162,17 @@ public final class LofModal
 		public final int oy;
 		public final float scale;
 		private final AffineTransform saved;
+		private final Object savedTextAA;
+		private final Object savedFractionalMetrics;
 
-		private Placement(int ox, int oy, float scale, AffineTransform saved)
+		private Placement(int ox, int oy, float scale, AffineTransform saved, Object savedTextAA, Object savedFractionalMetrics)
 		{
 			this.ox = ox;
 			this.oy = oy;
 			this.scale = scale;
 			this.saved = saved;
+			this.savedTextAA = savedTextAA;
+			this.savedFractionalMetrics = savedFractionalMetrics;
 		}
 
 		/** Map a canvas point into the window's authored coordinate space (anchored at {@code ox,oy}). */
@@ -171,10 +183,11 @@ public final class LofModal
 	}
 
 	/**
-	 * Begin a scaled window. Computes the scale, places the (scaled) window with the standard origin
-	 * authority, and applies a pivot-scale about the origin so the caller keeps drawing at its existing
-	 * {@code ox + PAD …} coordinates using the authored base constants — the transform does the scaling
-	 * (crisply, since the RS fonts are vector). Draw the window, then call {@link #endWindow}.
+	 * Begin a scaled window. Computes the (integer) scale, places the scaled window with the standard
+	 * origin authority, and applies a pivot-scale about the origin so the caller keeps drawing at its
+	 * existing {@code ox + PAD …} coordinates using the authored base constants — the transform does the
+	 * scaling. Because the scale is a whole integer and text is drawn with antialiasing off (below), the
+	 * RuneScape pixel font stays crisp. Draw the window, then call {@link #endWindow}.
 	 */
 	public static Placement beginWindow(Graphics2D g, Client client, int baseW, int baseH)
 	{
@@ -185,13 +198,25 @@ public final class LofModal
 		g.translate(ox, oy);
 		g.scale(s, s);
 		g.translate(-ox, -oy);
-		return new Placement(ox, oy, s, saved);
+		// The RuneScape font is a pixel font — antialiasing/fractional metrics soften its 1px strokes
+		// into a blur. Force them off so glyphs render as crisp, hard-edged pixels (shapes keep their
+		// own KEY_ANTIALIASING; this only governs text). Saved + restored in endWindow so the hint
+		// never leaks to the next overlay drawn on this shared Graphics2D.
+		final Object savedTextAA = g.getRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING);
+		final Object savedFractionalMetrics = g.getRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS);
+		g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_OFF);
+		g.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_OFF);
+		return new Placement(ox, oy, s, saved, savedTextAA, savedFractionalMetrics);
 	}
 
-	/** End a scaled window — restore the transform captured by {@link #beginWindow}. */
+	/** End a scaled window — restore the transform and text hints captured by {@link #beginWindow}. */
 	public static void endWindow(Graphics2D g, Placement p)
 	{
 		g.setTransform(p.saved);
+		g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
+			p.savedTextAA != null ? p.savedTextAA : RenderingHints.VALUE_TEXT_ANTIALIAS_DEFAULT);
+		g.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS,
+			p.savedFractionalMetrics != null ? p.savedFractionalMetrics : RenderingHints.VALUE_FRACTIONALMETRICS_DEFAULT);
 	}
 
 	public static Rectangle closeRect(int ox, int oy)
