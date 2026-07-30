@@ -26,6 +26,9 @@ on:
     paths:
       - "Alter/**"
       - ".github/workflows/build.yml"
+  # Lets the merge-bot rebuild the image for a bot-merged commit (a merge made
+  # with GITHUB_TOKEN does not re-trigger the push event above).
+  workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io/${{ github.repository_owner }}
