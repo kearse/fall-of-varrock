@@ -10,12 +10,15 @@ name: Build images
 # tab with "cancelled" runs before). Every commit ends up with its own image,
 # so you can deploy or roll back to any of them later.
 #
-# Pull requests touching Alter/ run the SAME Gradle compile as a check, but stop
-# there — no GHCR login, no docker build, no push (see the `if:` on those steps).
-# That closes the gap that let a PR whose Kotlin didn't compile reach main: the
-# server half used to be built by nothing until after the merge. Because it's
-# this workflow doing the checking, a green check on the PR is the same build
-# that will run on main.
+# On pull requests that touch server code this compiles the game server as a
+# gate (the "build" check) so a server-side compile error can't merge green —
+# the GHCR login + image push steps are skipped on PRs (build only, no writes).
+# Because it's this workflow doing the checking, a green check on a PR is the
+# same build that will then run on main.
+#
+# To finish enabling it as a merge gate, add the "build" check (workflow
+# "Build images") to the required-status-checks for main in repo Settings — the
+# workflow change alone makes it run and report, but not block.
 on:
   push:
     branches: [main]
@@ -60,7 +63,7 @@ jobs:
       # Publishing is push-to-main only. On a pull request the job ends after the
       # compile above: that's the check, and a PR must never publish an image.
       - name: Log in to GHCR
-        if: ${{ github.event_name != 'pull_request' }}
+        if: github.event_name != 'pull_request'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -68,7 +71,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push images
-        if: ${{ github.event_name != 'pull_request' }}
+        if: github.event_name != 'pull_request'
         run: |
           TAG=${GITHUB_SHA::7}
           for img in kol-game:Alter kol-web:Alter/web kol-bot:Alter/discord-bot; do
