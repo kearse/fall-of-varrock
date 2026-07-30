@@ -296,10 +296,10 @@ object CompanionBrain {
         var bestDist = ENGAGE + 1
         world.players.forEach { p ->
             if (p === owner || p === comp || p.index < 0 || p.isDead()) return@forEach
-            if (p is Companion && p.ownerUid.value == owner.uid.value) return@forEach
+            if (p is Companion && CompanionRegistry.owns(owner, p)) return@forEach
             if (p.tile.height != comp.tile.height) return@forEach
             val t = p.getCombatTarget()
-            val onParty = t === owner || t === comp || (t is Companion && t.ownerUid.value == owner.uid.value)
+            val onParty = t === owner || t === comp || (t is Companion && CompanionRegistry.owns(owner, t))
             if (!onParty) return@forEach
             val d = dist(comp.tile, p.tile)
             if (d <= ENGAGE && d < bestDist) { bestDist = d; best = p }
@@ -368,7 +368,7 @@ object CompanionBrain {
         if (dist(owner.tile, npc.tile) > LEASH) return false
         val t = npc.getCombatTarget()
         if (t is Player && t !== owner && t !== comp &&
-            !(t is Companion && t.ownerUid.value == owner.uid.value)
+            !(t is Companion && CompanionRegistry.owns(owner, t))
         ) return false
         return true
     }

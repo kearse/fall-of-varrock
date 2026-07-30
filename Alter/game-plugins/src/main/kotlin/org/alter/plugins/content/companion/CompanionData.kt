@@ -8,8 +8,9 @@ class CompItem(val id: Int, val amount: Int)
 
 /**
  * The persistent state of one companion: archetype, per-skill XP, worn gear, carried supplies, and
- * the dead/alive flag. Serialized to/from a bson [Document] (the same primitive the player save
- * system uses for items), then the whole roster is one JSON blob on `COMPANIONS_ATTR`.
+ * whether he is fielded, off duty ([dismissed]) or [dead]. Serialized to/from a bson [Document]
+ * (the same primitive the player save system uses for items), then the whole roster is one JSON blob
+ * on `COMPANIONS_ATTR`.
  *
  * Decoding never throws — a malformed blob yields an empty roster — so a bad save can't brick login.
  */
@@ -21,6 +22,12 @@ class CompanionData(
     val inventory: MutableMap<Int, CompItem>,
     var dead: Boolean,
     var autoLoot: Boolean = false,
+    /**
+     * Owner sent this companion off duty: he stays on the roster (levels + gear intact) but is NOT
+     * spawned — not on login, not until the owner summons him back from the panel. This is the
+     * "stop following me around" switch; unlike [dead] it costs nothing to undo.
+     */
+    var dismissed: Boolean = false,
     /** Saved attack-style varp (0-3); -1 = use the spawn default ([org.alter.plugins.content.bots.BotBrain.configureStyle]). */
     var attackStyle: Int = -1,
     /** Whether the companion auto-retaliates (panel toggle). */
@@ -34,6 +41,7 @@ class CompanionData(
         append("name", name)
         append("dead", dead)
         append("autoLoot", autoLoot)
+        append("dismissed", dismissed)
         append("attackStyle", attackStyle)
         append("autoRetaliate", autoRetaliate)
         if (autocast != null) append("autocast", autocast)
@@ -66,6 +74,7 @@ class CompanionData(
             return CompanionData(
                 archetype, name, skills, itemsFrom(doc, "equipment"), itemsFrom(doc, "inventory"),
                 doc.getBoolean("dead", false), doc.getBoolean("autoLoot", false),
+                dismissed = doc.getBoolean("dismissed", false),
                 attackStyle = doc.getInteger("attackStyle", -1),
                 autoRetaliate = doc.getBoolean("autoRetaliate", true),
                 autocast = doc.getString("autocast"),
@@ -73,7 +82,7 @@ class CompanionData(
             )
         }
 
-        /** Serialize a roster (live + dead) to the JSON blob stored on the owner. */
+        /** Serialize a roster (fielded + benched: dismissed/dead) to the JSON blob stored on the owner. */
         fun rosterToBlob(list: List<CompanionData>): String =
             Document("list", list.map { it.toDocument() }).toJson()
 

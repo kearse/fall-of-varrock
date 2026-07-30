@@ -87,6 +87,10 @@ public class CompanionsPlugin extends Plugin
 		public void loot(int slot) { send("::lofcompanion loot " + (slot + 1)); }
 		public void rename(int slot, String name) { send("::lofcompanion rename " + (slot + 1) + " " + name); }
 		public void requestGear(int slot, int equipSlot) { send("::lofcompanion gear " + (slot + 1) + " " + equipSlot); }
+		public void dismiss(int slot) { send("::lofcompanion dismiss " + (slot + 1)); }
+		public void summon(int slot) { send("::lofcompanion summon " + (slot + 1)); }
+		public void dismissAll() { send("::lofcompanion dismiss"); }
+		public void summonAll() { send("::lofcompanion summon"); }
 	};
 
 	@Override
@@ -266,6 +270,9 @@ public class CompanionsPlugin extends Plugin
 		final boolean retaliate = "1".equals(m[10]);
 		final int ammoId = Integer.parseInt(m[11]);
 		final int ammoQty = Integer.parseInt(m[12]);
+		// state (0 fielded / 1 dismissed / 2 slain) was appended after the original 13 fields — treat a
+		// short line as "fielded" so an older server still renders.
+		final int state = m.length > 13 ? parseInt(m[13]) : CompanionsPanel.STATE_FIELDED;
 
 		final int[] levels = new int[7];
 		if (sec.length > 1)
@@ -309,7 +316,8 @@ public class CompanionsPlugin extends Plugin
 		// is legal. The Swing panel (EDT) must never call it (throws "must be called on client thread").
 		final String ammoName = ammoId > 0 ? safeName(ammoId) : null;
 		accRows.put(i, new CompanionsPanel.CompanionRow(i, name, arch, combat, curHp, maxHp, orders,
-			styleVarp, autocast, autoLoot, retaliate, ammoId, ammoQty, ammoName, levels, equipment, equipQty, styleLabels));
+			styleVarp, autocast, autoLoot, retaliate, ammoId, ammoQty, ammoName, levels, equipment, equipQty,
+			styleLabels, state));
 		accIdx.put(i, idx);
 
 		if (accRows.size() >= n) // whole roster received → rebuild
@@ -325,8 +333,11 @@ public class CompanionsPlugin extends Plugin
 					continue;
 				}
 				rows.add(r);
-				companionIndices[s] = accIdx.getOrDefault(s, -1);
-				companionNames[s] = r.name;
+				// Only a FIELDED companion gets an index/name here: the index drives the Attack-menu hide
+				// (a benched one isn't rendered) and the name drives the bank "Equip on …" shortcut, which
+				// the server can only honour for someone actually in the world.
+				companionIndices[s] = r.fielded() ? accIdx.getOrDefault(s, -1) : -1;
+				companionNames[s] = r.fielded() ? r.name : null;
 			}
 			if (panel != null)
 			{

@@ -40,6 +40,12 @@ class Companion(
     /** World cycle of the last honor-system chat message, so it isn't spammed each tick. */
     var lastHonorMsg: Int = 0
     /**
+     * World cycle this companion entered the world. Only used by [CompanionRegistry]'s orphan sweep,
+     * which needs a grace window so a companion spawned between two registry ticks (before its
+     * roster entry is tracked) is never mistaken for an ownerless ghost and despawned.
+     */
+    var spawnCycle: Int = 0
+    /**
      * Owner-chosen autocast override (panel "set spell"). `null` = the legacy behaviour: the mage
      * auto-scales its spell to its Magic level (see [CompanionMagic]). When set, that spell is used as
      * long as the companion's level allows it (the engine still gates the cast); otherwise it falls

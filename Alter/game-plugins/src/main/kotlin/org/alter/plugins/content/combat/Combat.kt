@@ -233,9 +233,12 @@ object Combat {
             return false
         }
 
-        // You cannot raise a blade against your own companions.
+        // You cannot raise a blade against your own companions. Ownership is matched through the
+        // registry's normalized owner key, NOT a raw `uid.value` compare — a display name that comes
+        // back in a different case would otherwise read as someone else's companion, and the guard
+        // would let a player attack their own knights.
         if (pawn is Player && target is org.alter.plugins.content.companion.Companion &&
-            target.ownerUid.value == pawn.uid.value
+            org.alter.plugins.content.companion.CompanionRegistry.owns(pawn, target)
         ) {
             pawn.message("That's your own companion.")
             return false
@@ -322,14 +325,24 @@ object Combat {
 
             // PKer bots are attackable anywhere (no wilderness gate, no level range), and they
             // may attack players anywhere. Real player-vs-player keeps the normal rules.
+            //
+            // A COMPANION is the exception on the target side: it's a player's property, not a
+            // free-for-all PK bot, so hitting someone else's companion obeys the ordinary PvP rules
+            // (wilderness zone + level range, or a sanctioned duel/LMS/Castle Wars fight). Without
+            // this, anyone could stand in Lumbridge and farm another player's knights — and an
+            // orphaned companion, whose owner-guard matches nobody, was an endless free-XP punchbag
+            // (companions are death-protected, so it just respawned and stood there again).
+            // A companion ATTACKING still takes the bypass, so it can defend its owner anywhere.
             val botCombat = pawn is org.alter.plugins.content.bots.PkBot ||
-                target is org.alter.plugins.content.bots.PkBot
+                (target is org.alter.plugins.content.bots.PkBot &&
+                    target !is org.alter.plugins.content.companion.Companion)
 
             // Two players in an active staked duel may hit each other anywhere (the Duel Arena is a
-            // safe, non-wilderness zone). Only this exact pair is unlocked — everyone else stays gated.
-            // (Companions in a companions-allowed duel pass via the bot bypass above.)
+            // safe, non-wilderness zone). Only that duel's own sanctioned pairings are unlocked —
+            // the two principals, plus both sides' companions in a companions-allowed 4v4 (the
+            // isolation check above already rejected everything the duel's rules forbid).
             val duelCombat = pawn is Player && target is Player &&
-                org.alter.plugins.content.minigames.duel.DuelArena.areDueling(pawn, target)
+                org.alter.plugins.content.minigames.duel.DuelArena.sanctionsEngagement(pawn, target)
 
             // Two players in the SAME Last Man Standing game may fight anywhere on the island instance
             // (LMS is free-for-all PvP inside a safe instance). Only same-game pairs are unlocked.
