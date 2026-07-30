@@ -118,10 +118,13 @@ Two categories. Pick the smallest that fits.
 (`LofModal.W` × `LofModal.H`) — teleport, ranks, make, forge, contracts, dice, bonds, mire, duel rules,
 and the stake screen all use it. The **height fits inside the fixed-mode world view (334px)** so the
 window sits centred in the game viewport, clear of the chat box — the way a default OSRS interface
-does. A few windows are a different size — the kit editor is **512×324** (viewport-width, but the same
-chat-clear height); recruit 480×384 and the character-style window 480×420 have fixed layouts that
-can't compress to 324; vote is 492×auto and war spoils 340×320 — all still **placed by the same
-authority** as the standard ones.
+does. A few windows are a different size — the kit editor **and the Grand Exchange** are **512×324**
+(viewport-width, but the same chat-clear height: the GE wants the big native-GE frame for its 4-column
+offer board, and 512 is the widest that still centres *beside* the inventory column in fixed mode,
+which its sell flow needs — it right-clicks real inventory items); recruit 480×384 and the
+character-style window 480×420 have fixed layouts that can't compress to 324; vote is 492×auto and war
+spoils 340×320 — all still **placed by the same authority** as the standard ones, and all still scaled
+by `beginWindow` (§6A′), so "bigger window" never means "hand-rolled placement".
 
 **Content taller than the window scrolls — it does not grow the window.** A recipe/loot list uses a
 clipped viewport with `LofModal.clampScroll` + `LofModal.scrollbar` and a `MouseWheelListener` →
