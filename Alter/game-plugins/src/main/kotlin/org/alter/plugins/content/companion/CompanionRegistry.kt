@@ -69,28 +69,45 @@ object CompanionRegistry {
     private const val PUSH_EVERY = 3 // registry ticks between state pushes (~3.6s)
     private var pushTick = 0
 
-    /** owner uid value -> their live companions. */
+    /** World cycles a freshly spawned companion is exempt from the orphan sweep (~18s). */
+    private const val ORPHAN_GRACE = 30
+
+    /** owner key ([keyOf]) -> their live companions. */
     private val byOwner = HashMap<Any, MutableList<Companion>>()
-    /** owner uid value -> their tile last tick + their current facing (dx,dz), for the follow formation. */
+    /** owner key -> their tile last tick + their current facing (dx,dz), for the follow formation. */
     private val ownerLastTile = HashMap<Any, Tile>()
     private val ownerFacing = HashMap<Any, Pair<Int, Int>>()
     private var counter = 0
 
-    fun ofOwner(player: Player): List<Companion> = byOwner[player.uid.value] ?: emptyList()
+    /**
+     * The tracking key for an owner. `PlayerUID` is a `data class` wrapping the account's **display
+     * name** (`PlayerSaving.loadPlayer`), so a raw `uid.value` comparison is case-sensitive: a display
+     * name that comes back in a different case (or via the new-account path, which keys off
+     * `loginUsername` instead) reads as a DIFFERENT owner and silently orphans the whole roster.
+     * Normalizing here keeps one account's companions matched to it across sessions.
+     */
+    private fun keyOf(uid: PlayerUID): Any = (uid.value as? String)?.lowercase() ?: uid.value
+
+    private fun keyOf(player: Player): Any = keyOf(player.uid)
+
+    /** True if [comp] belongs to [player] (owner-key comparison — see [keyOf]). */
+    fun owns(player: Player, comp: Companion): Boolean = keyOf(comp.ownerUid) == keyOf(player)
+
+    fun ofOwner(player: Player): List<Companion> = byOwner[keyOf(player)] ?: emptyList()
     fun count(player: Player): Int = ofOwner(player).size
 
     /** This companion's index (0..MAX-1) among its owner's roster, for its formation slot. */
-    fun slotOf(comp: Companion): Int = (byOwner[comp.ownerUid.value]?.indexOf(comp) ?: 0).coerceAtLeast(0)
+    fun slotOf(comp: Companion): Int = (byOwner[keyOf(comp.ownerUid)]?.indexOf(comp) ?: 0).coerceAtLeast(0)
 
     /** How many companions the owner fields (drives the formation shape). */
-    fun countOf(comp: Companion): Int = byOwner[comp.ownerUid.value]?.size ?: 1
+    fun countOf(comp: Companion): Int = byOwner[keyOf(comp.ownerUid)]?.size ?: 1
 
     /** The owner's facing unit (dx,dz) — opposite is "behind", where the formation forms. */
-    fun facingOf(comp: Companion): Pair<Int, Int> = ownerFacing[comp.ownerUid.value] ?: (0 to 1)
+    fun facingOf(comp: Companion): Pair<Int, Int> = ownerFacing[keyOf(comp.ownerUid)] ?: (0 to 1)
 
     /** The online owner of [comp], if present. */
     fun ownerOf(world: World, comp: Companion): Player? =
-        world.players.firstOrNull { it.uid.value == comp.ownerUid.value }
+        world.players.firstOrNull { it !is Companion && keyOf(it) == keyOf(comp.ownerUid) }
 
     /**
      * How many companions [owner] may field — their feudal rank's allowance (Knight 1, Lord 2,
@@ -105,24 +122,59 @@ object CompanionRegistry {
         if (count(owner) >= companionCap(owner)) return null
         val taken = ofOwner(owner).map { it.username }
         val comp = spawn(world, owner, CompanionData.fresh(archetype, taken), owner.tile) ?: return null
-        byOwner.getOrPut(owner.uid.value) { ArrayList() } += comp
+        byOwner.getOrPut(keyOf(owner)) { ArrayList() } += comp
         persist(owner)
         return comp
     }
 
     /**
-     * Despawn EVERY companion currently registered in the world that belongs to [ownerValue]
-     * (a `player.uid.value`). This is the **ghost-buster**: companions are tracked in [byOwner]
+     * Despawn EVERY companion currently registered in the world that belongs to [ownerKey]
+     * (a [keyOf] owner key). This is the **ghost-buster**: companions are tracked in [byOwner]
      * keyed by username, and a disconnect/relog race (or any logout where [storeAndDespawn] didn't
      * cleanly run) can leave the previous session's companions still registered in the world but no
      * longer ticked — frozen "ghosts" that stack up. Sweeping by [Companion.ownerUid] finds and
      * removes them no matter how they were orphaned. Returns the count cleared.
      */
-    private fun despawnOwned(world: World, ownerValue: Any): Int {
+    private fun despawnOwned(world: World, ownerKey: Any): Int {
         val stale = ArrayList<Companion>()
-        world.players.forEach { p -> if (p is Companion && p.ownerUid.value == ownerValue) stale += p }
+        world.players.forEach { p -> if (p is Companion && keyOf(p.ownerUid) == ownerKey) stale += p }
         stale.forEach { CompanionLoot.forget(it); BotManager.despawn(world, it, force = true) }
         return stale.size
+    }
+
+    /** Despawn [list] and forget its loot tracking — the shared tail of every ghost cleanup. */
+    private fun despawnAll(world: World, list: List<Companion>) =
+        list.forEach { CompanionLoot.forget(it); BotManager.despawn(world, it, force = true) }
+
+    /**
+     * Despawn every companion in the world that no live roster claims — the **orphan sweep**, run
+     * every registry tick. A companion is orphaned when:
+     *  - its owner left without the logout hook running (an abrupt disconnect calls
+     *    `World.unregister` directly, so [storeAndDespawn] never fires — handled in [tick]), or
+     *  - nothing in [byOwner] tracks it any more, which is what an account **reset/rename** does: the
+     *    owner comes back under a different [keyOf] key, so neither the login ghost-buster
+     *    ([despawnOwned]) nor the logout sweep can ever match the old companions again.
+     *
+     * Left alone, such an orphan stands frozen wherever it was — never ticked, so it never follows,
+     * fights, or despawns — and because its owner key matches nobody, `Combat.canEngage`'s
+     * own-companion guard doesn't cover it either: any player can attack "Sir <Name>" for free combat
+     * XP, and the death handler simply respawns it (companions are death-protected), so it never even
+     * goes away. [Companion.spawnCycle] gives a fresh spawn a grace window so a companion registered
+     * between two ticks isn't mistaken for an orphan.
+     */
+    private fun sweepOrphans(world: World) {
+        val orphans = ArrayList<Companion>()
+        world.players.forEach { p ->
+            if (p !is Companion) return@forEach
+            // Claimed = its own owner's tracked roster still holds THIS instance (identity, not
+            // equality — two companions can share a name).
+            if (byOwner[keyOf(p.ownerUid)]?.any { it === p } == true) return@forEach
+            if (world.currentCycle - p.spawnCycle in 0 until ORPHAN_GRACE) return@forEach // just spawned
+            orphans += p
+        }
+        if (orphans.isEmpty()) return
+        logger.warn { "Orphan sweep: despawning ${orphans.size} ownerless companion(s) ${orphans.map { "${it.username}(owner=${it.ownerUid.value})" }}" }
+        despawnAll(world, orphans)
     }
 
     /** Login: respawn the owner's roster beside them (dead companions wait at General Zo — Step 5). */
@@ -131,8 +183,8 @@ object CompanionRegistry {
         // Overwriting byOwner below would otherwise orphan a lingering previous session's companions
         // (from a disconnect/relog race) into un-ticked ghosts. Sweep the world by ownerUid so they
         // can't survive — and drop any stale byOwner tracking entry too.
-        byOwner.remove(player.uid.value)
-        val ghosts = despawnOwned(world, player.uid.value)
+        byOwner.remove(keyOf(player))
+        val ghosts = despawnOwned(world, keyOf(player))
         if (ghosts > 0) logger.warn { "spawnFor ${player.username}: cleared $ghosts stale companion ghost(s) before respawn." }
 
         val blob = player.attr[COMPANIONS_ATTR]
@@ -151,13 +203,15 @@ object CompanionRegistry {
             if (data.dead) return@forEach
             spawn(world, player, data, player.tile)?.let { list += it }
         }
-        byOwner[player.uid.value] = list
+        byOwner[keyOf(player)] = list
         logger.info { "spawnFor ${player.username}: spawned ${list.size} companion(s), indices=${list.map { it.index }}, names=${list.map { it.username }}" }
     }
 
     /** Logout: write the roster blob (so it persists with the save), then despawn the companions. */
     fun storeAndDespawn(world: World, player: Player) {
-        val list = byOwner.remove(player.uid.value)
+        val list = byOwner.remove(keyOf(player))
+        ownerLastTile.remove(keyOf(player))
+        ownerFacing.remove(keyOf(player))
         // Persist the roster blob FIRST, but never let a snapshot/encode failure skip the despawn
         // below — an orphaned-but-registered companion becomes a frozen ghost on the next login.
         if (list != null) {
@@ -169,7 +223,7 @@ object CompanionRegistry {
         }
         // Despawn by ownerUid sweep (not just the tracked list) so nothing this player owns is left
         // registered in the world after they log out — the definitive ghost cleanup.
-        despawnOwned(world, player.uid.value)
+        despawnOwned(world, keyOf(player))
         val max = player.varps.maxVarps
         for (slot in 0 until MAX) { // clear the index + status varps (bounds-checked)
             if (COMP_VARP_BASE + slot < max) player.setVarp(COMP_VARP_BASE + slot, 0)
@@ -185,7 +239,7 @@ object CompanionRegistry {
      *  whole thing is guarded so it can NEVER kill the companion tick (which would freeze all companions). */
     private fun publishToClient(player: Player) {
         val max = player.varps.maxVarps
-        val list = byOwner[player.uid.value]
+        val list = byOwner[keyOf(player)]
         val log = (++publishLogTick % 25) == 0
         if (log) logger.info { "publish ${player.username} uid=${player.uid.value}: max=$max listSize=${list?.size} byOwnerKeys=${byOwner.keys}" }
         try {
@@ -217,7 +271,7 @@ object CompanionRegistry {
      */
     private fun pushState(player: Player) {
         try {
-            val list = byOwner[player.uid.value] ?: emptyList()
+            val list = byOwner[keyOf(player)] ?: emptyList()
             if (list.isEmpty()) { player.message("${MSG_PREFIX}0/0", ChatMessageType.CONSOLE); return }
             val n = list.size
             list.forEachIndexed { i, comp ->
@@ -380,7 +434,7 @@ object CompanionRegistry {
 
     /** Rebuild + store the owner's blob from their live companions (call after any change). */
     fun persist(player: Player) {
-        val list = byOwner[player.uid.value] ?: return
+        val list = byOwner[keyOf(player)] ?: return
         player.attr[COMPANIONS_ATTR] = CompanionData.rosterToBlob(list.map { snapshot(it) })
     }
 
@@ -388,11 +442,12 @@ object CompanionRegistry {
 
     /** Per-tick drive: prune the gone, track owner facing, run each companion's brain, refresh blobs. */
     fun tick(world: World) {
+        val ownerGone = ArrayList<Any>()
         byOwner.entries.forEach { (key, list) ->
             val before = list.size
             list.removeAll { if (it.index < 0) { CompanionLoot.forget(it); true } else false } // despawned (unregister sets index = -1); death handling = Step 5
             if (list.size != before) logger.warn { "Pruned ${before - list.size} despawned companion(s) for owner key=$key (now ${list.size})" }
-            val owner = world.players.firstOrNull { it.uid.value == key }
+            val owner = world.players.firstOrNull { it !is Companion && keyOf(it) == key }
             if (owner != null) {
                 updateFacing(key, owner) // so the formation forms behind their movement
                 // Die → respawn RIGHT BESIDE the owner (not the far global home tile, which left them
@@ -400,6 +455,14 @@ object CompanionRegistry {
                 // tick to the owner's current tile so a death warps them straight back to your side.
                 val rt = owner.tile.coordinate
                 list.forEach { it.attr[RESPAWN_TILE_ATTR] = rt }
+            } else {
+                // The owner is no longer in the world but their roster survived — an abrupt
+                // disconnect unregisters the player WITHOUT running the logout hook, so
+                // storeAndDespawn never fired. Every order needs the owner, so these companions
+                // would just stand there as attackable ghosts: retire them here. Nothing is lost —
+                // the roster blob is refreshed every SAVE_EVERY ticks and respawns on next login.
+                ownerGone += key
+                return@forEach
             }
             list.toList().forEach { comp ->
                 try {
@@ -410,19 +473,28 @@ object CompanionRegistry {
                 }
             }
         }
+        ownerGone.forEach { key ->
+            val list = byOwner.remove(key) ?: return@forEach
+            ownerLastTile.remove(key); ownerFacing.remove(key)
+            logger.warn { "Owner key=$key left without a logout — despawning ${list.size} companion(s)." }
+            despawnAll(world, list)
+        }
+        // Retire any companion no roster claims at all (account reset/rename orphans).
+        sweepOrphans(world)
+
         // Publish each owner's companion roster (index + status) to their varps for the RuneLite panel.
-        world.players.forEach { p -> if (byOwner.containsKey(p.uid.value)) publishToClient(p) }
+        world.players.forEach { p -> if (byOwner.containsKey(keyOf(p))) publishToClient(p) }
 
         // Push the RICH state (stats + gear) over the message channel — throttled, the panel's real feed.
         if (++pushTick >= PUSH_EVERY) {
             pushTick = 0
-            world.players.forEach { p -> if (byOwner.containsKey(p.uid.value)) pushState(p) }
+            world.players.forEach { p -> if (byOwner.containsKey(keyOf(p))) pushState(p) }
         }
 
         // Refresh persistence blobs periodically so the 60s autosave / a crash keeps recent progress.
         if (++sinceSave >= SAVE_EVERY) {
             sinceSave = 0
-            world.players.forEach { p -> if (byOwner.containsKey(p.uid.value)) persist(p) }
+            world.players.forEach { p -> if (byOwner.containsKey(keyOf(p))) persist(p) }
         }
     }
 
@@ -438,6 +510,7 @@ object CompanionRegistry {
             logger.warn { "Companion spawn for ${owner.username} failed (world full?)." }
             return null
         }
+        comp.spawnCycle = world.currentCycle // orphan-sweep grace window (see sweepOrphans)
         // Real, persistent skills overwrite the vessel loadout's stub stats.
         data.skillXp.forEach { (skill, xp) -> comp.getSkills().setBaseXp(skill, xp) }
         applyContainers(comp, data)

@@ -43,10 +43,17 @@ object DuelArena {
      *  prayer/food/potion/movement enforcement points. */
     fun rulesOf(p: Player): DuelRules? = duelOf(p)?.rules
 
-    /** True only while [a] and [b] are the two sides of the SAME duel that has begun fighting. */
-    fun areDueling(a: Player, b: Player): Boolean {
-        val d = duelOf(a) ?: return false
-        return d.fighting && d.has(a) && d.has(b) && a !== b
+    /**
+     * True when [attacker] and [target] belong to the SAME live duel and [blocksEngagement] has
+     * cleared them — i.e. the duel itself sanctions this swing, so it needs no wilderness/level gate
+     * and may happen inside the safe arena. Covers the two principals AND, in a companions-allowed
+     * duel, both sides' companions (the 4v4) — which the ordinary PvP rules would otherwise block
+     * now that companions no longer ride the PK-bot "attackable anywhere" bypass.
+     */
+    fun sanctionsEngagement(attacker: Player, target: Player): Boolean {
+        val duel = duelOf(partyRoot(attacker.world, attacker)) ?: return false
+        if (duel !== duelOf(partyRoot(target.world, target))) return false
+        return !blocksEngagement(attacker, target)
     }
 
     /** A combatant's party root: a companion resolves to its owner, anyone else to themself. */
