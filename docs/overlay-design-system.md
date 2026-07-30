@@ -118,13 +118,24 @@ Two categories. Pick the smallest that fits.
 (`LofModal.W` × `LofModal.H`) — teleport, ranks, make, forge, contracts, dice, bonds, mire, duel rules,
 and the stake screen all use it. The **height fits inside the fixed-mode world view (334px)** so the
 window sits centred in the game viewport, clear of the chat box — the way a default OSRS interface
-does. A few windows are a different size — the kit editor **and the Grand Exchange** are **512×324**
-(viewport-width, but the same chat-clear height: the GE wants the big native-GE frame for its 4-column
-offer board, and 512 is the widest that still centres *beside* the inventory column in fixed mode,
-which its sell flow needs — it right-clicks real inventory items); recruit 480×384 and the
-character-style window 480×420 have fixed layouts that can't compress to 324; vote is 492×auto and war
-spoils 340×320 — all still **placed by the same authority** as the standard ones, and all still scaled
-by `beginWindow` (§6A′), so "bigger window" never means "hand-rolled placement".
+does. A few windows are a different size — the kit editor is **512×324** (viewport-width, same
+chat-clear height); the **Grand Exchange is 512×334**, the whole fixed-mode world view, so it fills the
+game viewport the way the native GE does (512 is also the widest that still centres *beside* the
+inventory column in fixed mode, which its sell flow needs — it right-clicks real inventory items, and
+its offer-setup screen carries a row the others don't, the clerk's pricing note, which does not
+compress into 324); recruit 480×384 and the character-style window 480×420 have fixed layouts that
+can't compress to 324; vote is 492×auto and war spoils 340×320 — all still **placed by the same
+authority** as the standard ones, and all still scaled by `beginWindow` (§6A′), so "bigger window"
+never means "hand-rolled placement".
+
+**Lay text out from its baseline, not by eye.** A `*_Y` constant for text is a **baseline** — the glyphs
+sit *above* it — while a `*_Y` for a row or box is its **top**. So a section label needs its baseline a
+full ascender clear of the bottom of whatever sits above it, or its ascenders cut through that
+element's lower border. Budget generously (the RS fonts are larger than they look, and a screenshot at
+a scaled canvas hides a 2px overlap): the GE's setup screen was squeezed into 324 on estimates that ran
+~4px optimistic, and shipped with "PRICE PER ITEM" running through the quantity preset row. Prefer
+moving text out of a cramped column entirely — that screen's clerk note was also sitting *under* the
+32px item sprite, so indenting it to the name/sub column removed the constraint rather than tuning it.
 
 **Content taller than the window scrolls — it does not grow the window.** A recipe/loot list uses a
 clipped viewport with `LofModal.clampScroll` + `LofModal.scrollbar` and a `MouseWheelListener` →
