@@ -239,6 +239,15 @@ tasks.register<JavaExec>("locEdit") {
     args = ((project.findProperty("locArgs") as String?) ?: "verify 12598").split(" ")
 }
 
+tasks.register<JavaExec>("terrainEdit") {
+    description = "Terrain fixer: copy a tile's terrain over a void/black tile. verify|apply|restore"
+    group = "application"
+    workingDir = rootProject.projectDir
+    classpath = sourceSets["main"].runtimeClasspath
+    mainClass.set("org.alter.tools.terrainedit.TerrainEditToolKt")
+    args = ((project.findProperty("terrainArgs") as String?) ?: "verify 12850").split(" ")
+}
+
 task<Copy>("extractDependencies") {
     from(zipTree("build/distributions/game-server-${project.version}.zip")) {
         include("game-${project.version}/lib/*")

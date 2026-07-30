@@ -1,0 +1,112 @@
+name: Terrain cache edit
+
+# One-click TERRAIN (map) cache fix on the LIVE server, over the same secure SSH path as the Deploy
+# and Loc-cache workflows. Runs the terrainEdit tool that ships inside the game image
+# (org.alter.tools.terrainedit) against the live cache at /opt/kol/runtime/cache — no manual SSH.
+#
+# Purpose: repair a void/black map tile (an underlay-0 tile exposed when scenery was cleared) by
+# copying an adjacent tile's terrain over it. The cache is a runtime mount, not part of the image,
+# so this workflow is how a terrain fix reaches prod — reversibly.
+#
+#   verify  — read-only: parse the region terrain and prove the byte-parser round-trips (RUN FIRST)
+#   apply   — snapshot the cache ONCE (runtime/cache.preterrain), splice source tile -> target tile,
+#             read-back-verify, restart game (~90s)
+#   restore — swap the snapshot back and restart game
+#
+# Actions -> Terrain cache edit -> Run workflow -> pick an action.
+# NOTE: restore rolls the WHOLE cache back to the snapshot taken at the first apply.
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "What to do to the live terrain cache"
+        type: choice
+        required: true
+        default: verify
+        options: [verify, apply, restore]
+      region:
+        description: "Region id"
+        required: false
+        default: "12850"
+      target:
+        description: "apply: TARGET tile 'x z' (the void tile to fix)"
+        required: false
+        default: "3209 3216"
+      source:
+        description: "apply: SOURCE tile 'x z' (a good neighbouring floor tile to copy)"
+        required: false
+        default: "3210 3216"
+      plane:
+        description: "apply: height plane (0-3)"
+        required: false
+        default: "0"
+
+concurrency:
+  group: terrain-cache
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Write SSH key
+        run: |
+          install -m 600 /dev/null deploy_key
+          printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > deploy_key
+
+      - name: Run terrain cache ${{ inputs.action }} on the VPS
+        run: |
+          ssh -i deploy_key -o StrictHostKeyChecking=accept-new \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+            'bash -s' '${{ inputs.action }}' '${{ inputs.region }}' '${{ inputs.target }}' '${{ inputs.source }}' '${{ inputs.plane }}' <<'REMOTE'
+          set -euo pipefail
+          ACTION="${1:-verify}"
+          REGION="${2:-12850}"
+          TARGET="${3:-3209 3216}"
+          SOURCE="${4:-3210 3216}"
+          PLANE="${5:-0}"
+          cd /opt/kol
+          export IMAGE_TAG="$(cat .deployed-tag 2>/dev/null || echo latest)"
+          CACHE=/opt/kol/runtime/cache
+          COMPOSE="docker compose -f docker-compose.prod.yml"
+
+          # Run the tool inside a throwaway game container with the live cache mounted rw at /cache.
+          # Terrain is not xtea-encrypted, so no keys/xteas mount is needed.
+          run_tool() {
+            $COMPOSE run --rm -T --no-deps \
+              -v "$CACHE":/cache --entrypoint java game \
+              -cp '/app/lib/*' org.alter.tools.terrainedit.TerrainEditToolKt "$@" /cache
+          }
+
+          echo "== terrain cache: $ACTION (image tag $IMAGE_TAG) =="
+          case "$ACTION" in
+            verify)
+              run_tool verify "$REGION"
+              ;;
+            apply)
+              if [ ! -d runtime/cache.preterrain ]; then
+                cp -r runtime/cache runtime/cache.preterrain
+                echo "snapshotted cache -> runtime/cache.preterrain"
+              else
+                echo "terrain snapshot already exists (runtime/cache.preterrain) — keeping it"
+              fi
+              # shellcheck disable=SC2086
+              run_tool apply "$REGION" $TARGET $SOURCE "$PLANE"
+              $COMPOSE restart game
+              echo "game container restarted — relog to see the change"
+              ;;
+            restore)
+              if [ ! -d runtime/cache.preterrain ]; then
+                echo "ERROR: no snapshot at runtime/cache.preterrain — nothing to restore"; exit 1
+              fi
+              $COMPOSE stop game
+              rm -rf runtime/cache
+              cp -r runtime/cache.preterrain runtime/cache
+              $COMPOSE up -d game
+              echo "restored pre-terrain cache + restarted game"
+              ;;
+            *)
+              echo "unknown action: $ACTION"; exit 1 ;;
+          esac
+          REMOTE
