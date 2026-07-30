@@ -150,6 +150,19 @@ object GrandExchange {
         if (!runCatching { getItem(itemId).isTradeable }.getOrDefault(false)) {
             p.message("That item can't be traded on the Grand Exchange."); return false
         }
+        // Price sanity rail (GrandExchangePricing). Deliberately wide — it exists to refuse a price with
+        // no relationship to the item (the 1 gp buy that the NPC backstop then filled), not to peg the
+        // market. Enforced HERE, server-side, because the price arrives from the client.
+        val value = economyValue(itemId)
+        if (value != null && !GrandExchangePricing.permits(value, price)) {
+            val (min, max) = GrandExchangePricing.bounds(value)
+            if (price < min) {
+                p.message("<col=801700>Grand Exchange:</col> the clerk won't take less than ${min} gp each for that.")
+            } else {
+                p.message("<col=801700>Grand Exchange:</col> the clerk won't take more than ${max} gp each for that.")
+            }
+            return false
+        }
         return true
     }
 
@@ -281,18 +294,37 @@ object GrandExchange {
         return changed
     }
 
-    /** Ceiling = full item value; null when the item is not a store-backstopped commodity. */
+    /**
+     * The item's **economy value** — the single price source the whole exchange reads, and the same one
+     * the coin shops use (`ItemCurrency.getSellPrice` is `max(1, cost)` over this field, and
+     * `ItemMarketValueService` mirrors it), so the GE and the stores can't drift apart.
+     *
+     * Null means the cache has **no credible value** for the item. That case must stay null and must not
+     * be papered over with a `maxOf(1, …)`: doing that used to hand every unvalued commodity a 1 gp
+     * ceiling, which [backstopSweep] then filled instantly — a 1 gp buy for anything. An item with no
+     * value simply gets no NPC band and no backstop, and floats purely player-to-player.
+     */
+    fun economyValue(itemId: Int): Int? =
+        runCatching { getItem(itemId).cost }.getOrNull()?.takeIf { it > 0 }
+
+    /** Ceiling = full item value; null when not a backstopped commodity, or when it has no value. */
     private fun commodityCeiling(itemId: Int): Int? =
-        if (isBackstopped(itemId)) runCatching { maxOf(1, getItem(itemId).cost) }.getOrNull() else null
+        if (isBackstopped(itemId)) economyValue(itemId) else null
 
     /** Floor = 85% of value (matches the Trading Post buy rate / gp sink). */
     private fun commodityFloor(itemId: Int): Int? =
         commodityCeiling(itemId)?.let { (it * 0.85).toInt().coerceAtLeast(1) }
 
+    /** The `(min, max)` prices the book will accept for [itemId], or null when it has no value to band
+     *  against (see [economyValue]). The offer-setup window shows this so a price is refused *before*
+     *  the player commits, not after. */
+    fun priceBand(itemId: Int): Pair<Int, Int>? =
+        economyValue(itemId)?.let { GrandExchangePricing.bounds(it) }
+
     // ---- display helpers for the offer window (UI reads these) ---------------------------------
 
-    /** Guide price (cache value) shown in the offer-setup box. */
-    fun guidePrice(itemId: Int): Int = runCatching { maxOf(1, getItem(itemId).cost) }.getOrDefault(1)
+    /** Guide price (economy value) shown in the offer-setup box; 1 when the item has no value. */
+    fun guidePrice(itemId: Int): Int = economyValue(itemId) ?: 1
 
     /** The store band `(floor, ceiling)` if [itemId] is a backstopped commodity, else null (floats). */
     fun band(itemId: Int): Pair<Int, Int>? {

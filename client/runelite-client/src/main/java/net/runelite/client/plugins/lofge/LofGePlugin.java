@@ -157,6 +157,11 @@ public class LofGePlugin extends Plugin implements LofWindows.Window
 		int own;             // sell: how many the player holds (default + cap); buy: 0
 		int last = -1;       // last price the item actually traded at here (MarketMemory), -1 = never
 		int trend;           // momentum in permille (signed; + climbing, - sliding, 0 = no memory)
+		// The prices the server's book will accept (GrandExchangePricing). -1 = unbanded, so leave the
+		// price alone. Every price control clamps to this, so a price the server would refuse can't be
+		// composed here at all — which is what stops a 1 gp offer on an item that has a real value.
+		int minPrice = -1;
+		int maxPrice = -1;
 		String advice = "";  // the clerk's one-line pricing note for the opening default
 		final List<int[]> asks = new ArrayList<>(); // {price, qty}, cheapest first
 		final List<int[]> bids = new ArrayList<>(); // {price, qty}, dearest first
@@ -182,10 +187,25 @@ public class LofGePlugin extends Plugin implements LofWindows.Window
 
 		/** Default price + quantity once the item + market snapshot have arrived. Buy takes the lowest
 		 *  sell (best deal), sell the highest buy (instant sale); both fall back to the guide. */
+		/** Hold a composed price inside the server's band (no-op when the item is unbanded). */
+		int clampPrice(int p)
+		{
+			int v = Math.max(1, p);
+			if (minPrice > 0 && v < minPrice)
+			{
+				v = minPrice;
+			}
+			if (maxPrice > 0 && v > maxPrice)
+			{
+				v = maxPrice;
+			}
+			return v;
+		}
+
 		void applyDefaults()
 		{
 			final int def = buy ? (bestAsk > 0 ? bestAsk : guide) : (bestBid > 0 ? bestBid : guide);
-			this.price = Math.max(1, def);
+			this.price = clampPrice(def);
 			this.qty = buy ? 1 : Math.max(1, own);
 		}
 
@@ -352,7 +372,7 @@ public class LofGePlugin extends Plugin implements LofWindows.Window
 		{
 			// Sample populated buy setup (nature rune: guide 100, store band 85-100, live market,
 			// last traded 96, climbing +31‰).
-			handle("setup|0|1|561|100|85|100|98|92|7|4|0|96|31");
+			handle("setup|0|1|561|100|85|100|98|92|7|4|0|96|31|10|1000");
 			handle("ask|98|3200");
 			handle("ask|100|8000");
 			handle("ask|105|12400");
@@ -367,7 +387,7 @@ public class LofGePlugin extends Plugin implements LofWindows.Window
 		{
 			// Sample populated sell setup (abyssal whip: no store band, player-listed, you own 1,
 			// last traded 1,900,000, sliding -26‰).
-			handle("setup|0|0|4151|60000|-1|-1|2050000|1850000|3|5|1|1900000|-26");
+			handle("setup|0|0|4151|60000|-1|-1|2050000|1850000|3|5|1|1900000|-26|6000|600000");
 			handle("ask|2050000|1");
 			handle("ask|2100000|2");
 			handle("bid|1850000|2");
@@ -539,6 +559,11 @@ public class LofGePlugin extends Plugin implements LofWindows.Window
 						su.last = parseInt(f[11], -1);
 						su.trend = parseInt(f[12], 0);
 					}
+					if (f.length >= 15)
+					{
+						su.minPrice = parseInt(f[13], -1);
+						su.maxPrice = parseInt(f[14], -1);
+					}
 					pendingSetup = su;
 				}
 				break;
@@ -692,7 +717,7 @@ public class LofGePlugin extends Plugin implements LofWindows.Window
 			final long next = Math.round(setup.price * (1.0 + pct / 100.0));
 			// ensure ±1 movement even on tiny prices
 			final long bumped = pct > 0 ? Math.max(next, setup.price + 1L) : Math.min(next, setup.price - 1L);
-			setup.price = (int) Math.max(1, Math.min(Integer.MAX_VALUE, bumped));
+			setup.price = setup.clampPrice((int) Math.max(1, Math.min(Integer.MAX_VALUE, bumped)));
 		}
 	}
 
@@ -700,7 +725,7 @@ public class LofGePlugin extends Plugin implements LofWindows.Window
 	{
 		if (setup != null && !setup.awaitingItem())
 		{
-			setup.price = Math.max(1, setup.guide);
+			setup.price = setup.clampPrice(setup.guide);
 		}
 	}
 
@@ -708,7 +733,7 @@ public class LofGePlugin extends Plugin implements LofWindows.Window
 	{
 		if (setup != null && !setup.awaitingItem())
 		{
-			setup.price = Math.max(1, price);
+			setup.price = setup.clampPrice(price);
 		}
 	}
 
