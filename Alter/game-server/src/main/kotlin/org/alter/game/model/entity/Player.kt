@@ -502,6 +502,20 @@ open class Player(world: World) : Pawn(world) {
     lateinit var playerInfo: PlayerInfo
     lateinit var npcInfo: NpcInfo
     lateinit var worldEntityInfo: WorldEntityInfo
+
+    /*
+     * The three avatars above are allocated by whoever registers the player, AFTER [register] has
+     * handed out the player index (see LoginWorker and BotManager.bringIntoWorld) — so between those
+     * two steps a player is in the world with none of them set. `isInitialized` is only usable from
+     * the file that declares the property, hence these accessors, which let [World.unregister] skip
+     * the deallocs it can't do instead of throwing and leaving the player registered forever.
+     */
+    fun hasPlayerInfo(): Boolean = ::playerInfo.isInitialized
+
+    fun hasNpcInfo(): Boolean = ::npcInfo.isInitialized
+
+    fun hasWorldEntityInfo(): Boolean = ::worldEntityInfo.isInitialized
+
     var session: Session<Client>? = null
     var buildArea: BuildArea = BuildArea.INVALID
     /**

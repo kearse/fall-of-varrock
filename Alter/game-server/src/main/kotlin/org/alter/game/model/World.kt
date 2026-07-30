@@ -436,10 +436,27 @@ class World(val gameContext: GameContext, val devContext: DevContext) {
         return false
     }
 
+    /**
+     * Removes [p] from the world.
+     *
+     * The three info avatars are `lateinit` and are allocated by the caller AFTER [register]
+     * assigns the player index (see [org.alter.game.service.login.LoginWorker] and
+     * `BotManager.bringIntoWorld`), so a player that never got past that point has none of them.
+     * Reading them raised `UninitializedPropertyAccessException` before [players] was touched,
+     * which aborted the removal: the player stayed in [players] forever, holding their name and
+     * making every later login attempt fail as `Duplicate` ("already logged in"). Removal from the
+     * world must never be blocked by avatar bookkeeping — dealloc what exists, then always remove.
+     */
     fun unregister(p: Player) {
-        network.playerInfoProtocol.dealloc(p.playerInfo)
-        network.npcInfoProtocol.dealloc(p.npcInfo)
-        network.worldEntityInfoProtocol.dealloc(p.worldEntityInfo)
+        if (p.hasPlayerInfo()) {
+            network.playerInfoProtocol.dealloc(p.playerInfo)
+        }
+        if (p.hasNpcInfo()) {
+            network.npcInfoProtocol.dealloc(p.npcInfo)
+        }
+        if (p.hasWorldEntityInfo()) {
+            network.worldEntityInfoProtocol.dealloc(p.worldEntityInfo)
+        }
 
         players.remove(p)
         chunks.get(p.tile)?.removeEntity(this, p, p.tile)

@@ -50,32 +50,63 @@ class LoginWorker(private val boss: LoginService, private val verificationServic
                             request.responseHandler.writeFailedResponse(interceptedLoginResult)
                             logger.info { "${"User '{}' login denied with code {}."} ${client.username} $interceptedLoginResult" }
                         } else if (client.register()) {
-                            request.responseHandler.writeSuccessfulResponse(
-                                LoginResponse.Ok(
-                                    authenticatorResponse = AuthenticatorResponse.NoAuthenticator,
-                                    staffModLevel = client.privilege.id,
-                                    playerMod = true,
-                                    index = client.index,
-                                    member = true,
-                                    accountHash = 0,
-                                    userId = 0,
-                                    userHash = 0,
-                                ),
-                                request.block,
-                            ).apply {
-                                if (this == null) {
-                                    return@apply
-                                }
-                                client.session = this
-                                client.playerInfo = client.world.network.playerInfoProtocol.alloc(client.index, OldSchoolClientType.DESKTOP)
-                                client.npcInfo = client.world.network.npcInfoProtocol.alloc(client.index, OldSchoolClientType.DESKTOP)
-                                client.worldEntityInfo =
-                                    client.world.network.worldEntityInfoProtocol.alloc(
-                                        client.index,
-                                        OldSchoolClientType.DESKTOP,
+                            /*
+                             * Everything below is the second half of login, and it all runs AFTER the
+                             * player has been added to `world.players`. If any of it fails to complete
+                             * — most commonly `writeSuccessfulResponse` returning null because the
+                             * channel died between the login request and this game-thread job — the
+                             * player is left registered with no session, no `DisconnectionHook` and no
+                             * pending logout. Nothing can ever remove them again: the dead channel has
+                             * no hook to fire, and the game loop only logs out players who asked to.
+                             *
+                             * That leftover holds the account's name in the world, so every later
+                             * attempt is rejected as `Duplicate` ("already logged in") until the
+                             * server is restarted. So: finish the sequence, or roll the registration
+                             * back so the account stays loginable.
+                             */
+                            var initialised = false
+                            try {
+                                val session =
+                                    request.responseHandler.writeSuccessfulResponse(
+                                        LoginResponse.Ok(
+                                            authenticatorResponse = AuthenticatorResponse.NoAuthenticator,
+                                            staffModLevel = client.privilege.id,
+                                            playerMod = true,
+                                            index = client.index,
+                                            member = true,
+                                            accountHash = 0,
+                                            userId = 0,
+                                            userHash = 0,
+                                        ),
+                                        request.block,
                                     )
-                                setDisconnectionHook(DisconnectionHook(client))
-                                client.login()
+                                if (session == null) {
+                                    logger.info { "User '${client.username}' lost its channel before the session was attached." }
+                                } else {
+                                    client.session = session
+                                    client.playerInfo = client.world.network.playerInfoProtocol.alloc(client.index, OldSchoolClientType.DESKTOP)
+                                    client.npcInfo = client.world.network.npcInfoProtocol.alloc(client.index, OldSchoolClientType.DESKTOP)
+                                    client.worldEntityInfo =
+                                        client.world.network.worldEntityInfoProtocol.alloc(
+                                            client.index,
+                                            OldSchoolClientType.DESKTOP,
+                                        )
+                                    session.setDisconnectionHook(DisconnectionHook(client))
+                                    client.login()
+                                    initialised = true
+                                }
+                            } catch (e: Exception) {
+                                logger.error(e) { "Error finishing login for '${client.username}'." }
+                            }
+
+                            /*
+                             * `Player.login` sets `initiated` before running the (individually
+                             * isolated) login hooks, so a throw after that point still leaves a real,
+                             * playable player with a live channel and a disconnection hook — keep
+                             * them. Anything earlier never became a session at all: unregister it.
+                             */
+                            if (!initialised && !client.initiated) {
+                                world.unregister(client)
                             }
                         } else {
                             request.responseHandler.writeFailedResponse(LoginResponse.InvalidSave)
