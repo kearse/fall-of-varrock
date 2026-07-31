@@ -149,13 +149,16 @@ the chase doubles as PK training + gear progression.
 
 - **The camps** (`BotZones` fixed-tier ambient zones + the named knights): the **Bandit Hideout**
   west of Lumbridge (SAFE — bronze/iron/steel fodder, reclaimable deaths, the learning camp) →
-  **Fallen Falador** (a RAID CITY — Black Knights + low-level NHers: budget pures/zerkers/obby
-  mauler; full-PvP streets, only banks safe) → **Fallen Varrock** (shallow single-combat wild —
-  existing capped pool + void ranger / dark-bow sniper) → the **Wild Bandit Camp** (deep multi —
-  maxers + Statius/Morrigan/rev-weapon builds) → the **Rogue Commander's Redoubt** (wild 45+ — the
-  elite NH guard + Vesta/Zuriel knights). The safe camp rides a new `BotZoneConfig.allowSafe`
-  (+ per-bot `ambushEverywhere`); the wilderness depth-grid roamers stay, now with 8 new archetype
-  loadouts folded into its tiers.
+  the **Siege of Port Sarim** (SAFE — the rogues raid Lumbridge's lifeline port in waves;
+  `areas/portsarim/PortSiegePlugin` runs a Knights-of-Lumbridge-vs-Rogue-Raider NPC battle tuned
+  so the garrison loses 6v4 unless a player kills 2–3 raiders to flip it — wave wins pay a small
+  +5 War Effort; ladder knights 3–6 lead the raids) → **Fallen Varrock** (shallow single-combat
+  wild — existing capped pool + void ranger / dark-bow sniper) → the **Wild Bandit Camp** (deep
+  multi — maxers + Statius/Morrigan/rev-weapon builds) → the **Rogue Commander's Redoubt** (wild
+  45+ — the elite NH guard + Vesta/Zuriel knights). The safe camps ride `BotZoneConfig.allowSafe`
+  (+ per-bot `ambushEverywhere`); the wilderness depth-grid roamers stay, with the 8 archetype
+  loadouts folded into its tiers. (Fallen Falador needs no dedicated camp — the raid-city colony
+  covers it.)
 - **Assignment loop** (`RogueKnightLadder` + `ROGUE_KNIGHT_RANK_ATTR`): kill your assigned knight →
   rank up, get a **first-kill unlock** (deliberately the CORE of the next build up the ladder — the
   gear that beats the next knight), and the Sergeant names the next mark. Beaten knights stay

@@ -24,7 +24,7 @@ Past level 10 the styles are mixed and random: you might meet a pure, a zerker, 
 
 ## The organized camps
 
-On top of the roamers, the Rogue Knights hold **five organized camps by level band** - each an ambient warband of that band's builds, with the [named Rogue Knight bosses](/wiki/rogue-knights) standing among them: the **Bandit Hideout** west of Lumbridge (safe - bronze/iron/steel), overrun **Fallen Falador** (a raid city - Black Knights + low NHers, only the banks safe), **Fallen Varrock**, the deep-wild **Wild Bandit Camp** (maxers + Ancient Warrior builds) and the **Rogue Commander's Redoubt** (the elite guard). The Bandit Hideout is where you learn: die there and your gear waits in a reclaim pile instead of feeding a PKer.
+On top of the roamers, the Rogue Knights hold **five organized camps by level band**, with the [named Rogue Knight bosses](/wiki/rogue-knights) stationed at each: the **Bandit Hideout** west of Lumbridge (safe - a bronze/iron/steel warband), the **Siege of Port Sarim** (safe - the rogues raid the dock garrison in waves; help the Knights of Lumbridge turn the tide), **Fallen Varrock**, the deep-wild **Wild Bandit Camp** (maxers + Ancient Warrior builds) and the **Rogue Commander's Redoubt** (the elite guard). The two low camps are where you learn: die there and your gear waits in a reclaim pile instead of feeding a PKer.
 
 ## Fallen Varrock - the rogues' den
 

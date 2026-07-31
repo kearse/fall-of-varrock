@@ -113,14 +113,6 @@ object BotZones {
         "bronze_pker" to 4, "iron_pker" to 3, "steel_pker" to 2,
     ))
 
-    /** Fallen Falador (RAID CITY — full-PvP streets, only banks safe, fixed wild level 30 via
-     *  [org.alter.plugins.content.raidzones.RaidCities]): the Black Knights + low-level NHers —
-     *  the first camp where the enemy prays and switches. The pinned pool keeps the warband at the
-     *  ladder's low band instead of rolling the raid level's mid meta. */
-    private val T_FALLEN_FALADOR = BotTier(listOf(
-        "black_pker" to 3, "mithril_pker" to 2, "budget_pure" to 2, "budget_zerker" to 2, "obby_mauler" to 1,
-    ))
-
     /** Wild Bandit Camp (deep wild, multi): the high-tier warband — maxers and wildy-set builds. */
     private val T_WILD_BANDIT_CAMP = BotTier(listOf(
         "max_main" to 2, "max_tent" to 2, "statius_bruiser" to 2, "morrigan_skirmisher" to 2, "rev_raider" to 2,
@@ -239,22 +231,12 @@ object BotZones {
                 allowSafe = true,
             ),
         )
-        // Camp 2 — overrun FALLADOR (the Black Knights' quarter). Falador is a RAID CITY now —
-        // its streets are live PvP ground ([PvpZones]' raid-city red), so this is an ordinary
-        // wilderness zone: the muster filter keeps the warband off the safe bank carve-outs.
-        add(
-            BotZoneConfig(
-                key = "fallen_falador_camp",
-                displayName = "Fallen Falador",
-                area = Area(2960, 3330, 3010, 3370),
-                tier = T_FALLEN_FALADOR,
-                target = 3,
-                spacing = 5,
-                roamRadius = 7,
-                leashRadius = 16,
-                activationPadding = 24,
-            ),
-        )
+        // Camp 2 — the SIEGE OF PORT SARIM has NO ambient bot colony: the camp IS the battle scene
+        // (`areas/portsarim/PortSiegePlugin` — Knights of Lumbridge vs Rogue Raider NPC waves) plus
+        // the named ladder knights stationed there (`bots/knights/RogueKnights.PORT_SARIM`). Keeping
+        // roaming PKers out of it keeps the "kill 2-3 raiders to turn the tide" beat legible.
+        // (Fallen Falador needs no dedicated camp either — the raid-city colony below covers it.)
+
         // Camp 4 — the WILD BANDIT CAMP (deep wilderness, multi): the high-tier warband.
         add(
             BotZoneConfig(
