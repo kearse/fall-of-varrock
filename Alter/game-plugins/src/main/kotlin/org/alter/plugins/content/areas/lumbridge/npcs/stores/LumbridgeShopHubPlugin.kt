@@ -373,26 +373,26 @@ class LumbridgeShopHubPlugin(
         // the rows). All tiles verified walkable against the cache collision dump.
 
         // ---- West row (x=3219), facing EAST toward the aisle: gear + prayer/crafting ----
-        tabVendor("npc.horvik", 3219, 3225, Direction.EAST,                          // weapons + rank armour
+        tabVendor("npc.horvik", 3207, 3228, Direction.SOUTH,                         // weapons + rank armour
             ShopTabs.Tab("Weapons", MELEE_WEAPONS, icon = "item.rune_longsword"),
             ShopTabs.Tab("Rank armour", icon = "item.rune_platebody") { ApprenticeArmoury.open(it) })
-        singleVendor("npc.lowe", 3219, 3224, Direction.EAST, RANGED_GEAR)
+        singleVendor("npc.lowe", 3208, 3228, Direction.SOUTH, RANGED_GEAR)
         // Zaff: Trade opens the store; Talk-to keeps the rune-altar lift dialogue.
-        spawnNpc("npc.zaff", 3208, 3226, 0, 0, Direction.SOUTH)
+        spawnNpc("npc.zaff", 3216, 3226, 0, 0, Direction.SOUTH)
         bindVendorTalkAndTrade("npc.zaff",
             talk = { player.queue { zaffTalk(player) } },
             trade = { openOrClosed(player, MAGIC_STORE) })
-        singleVendor("npc.monk", 3219, 3222, Direction.EAST, BONES)                  // bones (Prayer)
-        singleVendor("npc.gem_trader", 3219, 3221, Direction.EAST, CRAFTING)         // crafting/jewellery
+        singleVendor("npc.monk", 3209, 3228, Direction.SOUTH, BONES)                 // bones (Prayer)
+        singleVendor("npc.gem_trader", 3210, 3228, Direction.SOUTH, CRAFTING)        // crafting/jewellery
 
         // ---- East row (x=3224), facing WEST toward the aisle: skilling + economy ----
-        tabVendor("npc.wydin", 3224, 3225, Direction.WEST,                           // tools + materials
+        tabVendor("npc.wydin", 3211, 3228, Direction.SOUTH,                          // tools + materials
             ShopTabs.Tab("Tools", SKILL_TOOLS, icon = "item.rune_pickaxe"),
             ShopTabs.Tab("Materials", SKILL_MATERIALS, icon = "item.iron_ore"))
-        tabVendor("npc.gerrant", 3224, 3224, Direction.WEST,                         // fishing + fish
+        tabVendor("npc.gerrant", 3212, 3228, Direction.SOUTH,                        // fishing + fish
             ShopTabs.Tab("Supplies", FISHING_SUPPLIES, icon = "item.fishing_rod"),
             ShopTabs.Tab("Fish", FISH, icon = "item.swordfish"))
-        tabVendor("npc.jatix", 3224, 3223, Direction.WEST,                           // seeds + herblore
+        tabVendor("npc.jatix", 3213, 3228, Direction.SOUTH,                          // seeds + herblore
             ShopTabs.Tab("Allotment seeds", ALLOTMENT_SEEDS, icon = "item.potato_seed"),
             ShopTabs.Tab("Herb seeds", HERB_SEEDS, icon = "item.ranarr_seed"),
             ShopTabs.Tab("Tree seeds", TREE_SEEDS, icon = "item.acorn"),
@@ -401,8 +401,8 @@ class LumbridgeShopHubPlugin(
             ShopTabs.Tab("Secondaries", SECONDARIES, icon = "item.eye_of_newt"),
             ShopTabs.Tab("Unf. potions", UNFINISHED_POTIONS, icon = "item.ranarr_potion_unf"),
             ShopTabs.Tab("Farm tools", FARM_TOOLS, icon = "item.rake"))
-        singleVendor("npc.sawmill_operator", 3224, 3222, Direction.WEST, CONSTRUCTION) // planks/nails
-        tabVendor("npc.valaine", 3224, 3221, Direction.WEST,                         // boss/vote tickets
+        singleVendor("npc.sawmill_operator", 3214, 3228, Direction.SOUTH, CONSTRUCTION) // planks/nails
+        tabVendor("npc.valaine", 3215, 3227, Direction.SOUTH,                        // boss/vote tickets
             ShopTabs.Tab("Boss rewards", BOSS_REWARDS, icon = "item.boss_ticket"),
             ShopTabs.Tab("Vote rewards", VOTE_REWARDS, icon = "item.vote_ticket"),
             ShopTabs.Tab("Buy Vote Tickets", BUY_VOTE, icon = "item.vote_ticket"))

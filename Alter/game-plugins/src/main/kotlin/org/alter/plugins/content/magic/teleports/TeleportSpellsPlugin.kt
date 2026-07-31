@@ -42,11 +42,11 @@ class TeleportSpellsPlugin(
     /** The free Home Teleport (every spellbook has one). Level 0, no runes, and crucially **no xp** —
      *  it must be matched before the "lumbridge" keyword below, otherwise "Lumbridge Home Teleport"
      *  binds to the 41-xp Teleport to Lumbridge and players farm Magic xp by teleporting home. */
-    private val home = Dest("home", Tile(3222, 3218, 0), 0.0)
+    private val home = Dest("home", Tile(3209, 3216, 0), 0.0)
 
     private val dests = listOf(
         // Standard / modern.
-        Dest("lumbridge", Tile(3222, 3218, 0), 41.0), // home
+        Dest("lumbridge", Tile(3209, 3216, 0), 41.0), // home
         Dest("varrock", Tile(3212, 3424, 0), 35.0),
         Dest("falador", Tile(2964, 3378, 0), 48.0),
         Dest("camelot", Tile(2757, 3477, 0), 55.5),

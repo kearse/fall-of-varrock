@@ -37,7 +37,7 @@ object TeleportRegistry {
     val all: List<TeleportDestination> = listOf(
 
         // ── 🏠 Basics ──────────────────────────────────────────────────────────
-        built("home", "Home (Lumbridge)", BASICS, Tile(3222, 3218, 0), SAFE_ZONE),
+        built("home", "Home (Lumbridge)", BASICS, Tile(3209, 3216, 0), SAFE_ZONE),
         built("market", "Market / Shops", BASICS, Tile(3221, 3216, 0), SAFE_ZONE),
         built("prayer_altar", "Prayer Altar", BASICS, Tile(3242, 3207, 0), SAFE_ZONE),
         soon("gambling", "Gambling (Flower Poker)", BASICS),

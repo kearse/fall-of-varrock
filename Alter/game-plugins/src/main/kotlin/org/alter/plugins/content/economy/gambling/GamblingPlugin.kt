@@ -74,7 +74,7 @@ class GamblingPlugin(
     private val coins = getRSCM("item.coins_995")
 
     init {
-        spawnNpc(HOST, 3209, 3211, 0, 0, Direction.NORTH) // station 4 (Services), south row
+        spawnNpc(HOST, 3212, 3211, 0, 0, Direction.NORTH) // services line (south wall)
         // Bind EVERY vendor option (Talk-to AND Gamble/Trade) so none is a dead click on the host.
         if (!bindVendorOptions(HOST) { DiceMenu.open(player) }) {
             logger.warn { "gambling: '$HOST' has no click options; use ::gamble." }
@@ -141,7 +141,7 @@ class GamblingPlugin(
 
     private companion object {
         const val HOST = "npc.bartender"
-        val HOST_TILE = Tile(3209, 3211, 0) // keep in sync with the spawnNpc call above
+        val HOST_TILE = Tile(3212, 3211, 0) // keep in sync with the spawnNpc call above
         const val TABLE_RADIUS = 10
         const val WIN_THRESHOLD = 51 // 51..100 win = 50/50 odds; the rake is the edge
         const val RAKE = 0.05

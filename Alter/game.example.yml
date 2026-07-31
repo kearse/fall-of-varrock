@@ -5,8 +5,8 @@ game-port: 43594
 revision: 228
 
 # The coordinates for the home location.
-home-x: 3218
-home-z: 3218
+home-x: 3209
+home-z: 3216
 
 # Closed-beta mode: when true, only accounts whitelisted in-game via
 # `::whitelist add <name>` (plus the `owners` list below) can log in.
