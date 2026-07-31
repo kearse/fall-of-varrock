@@ -77,7 +77,7 @@ class LofMireOverlay extends Overlay
 
 	// Mirror of server MireDispenser constants.
 	private static final int ATTUNE_FEE = 150_000;
-	private static final int MAX_BANK = 10;
+	private static final int MAX_BANK = 50;
 	private static final int STREAK_CAP = 60;
 	private static final int COINS_MIN = 2_000;
 	private static final int COINS_MAX = 5_000;

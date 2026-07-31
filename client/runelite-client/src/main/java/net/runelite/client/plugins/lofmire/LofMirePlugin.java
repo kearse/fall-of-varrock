@@ -4,7 +4,7 @@
  * The Mire Run agility course's loot dispenser (server: content/skills/agility MireDispenser)
  * pulses varp 4631, packed:
  *   bit 0 open flag · bit 1 always-set data marker · bit 2 attuned ·
- *   bits 3-6 banked laps · bits 7-13 lap streak.
+ *   bits 3-8 banked laps · bits 9-15 lap streak.
  * This plugin opens the dispenser window (streak/multiplier/bank stat strip + the loot table +
  * the Attune/Claim action). Clicking a button sends "::mire <attune|claim>" as public chat, which
  * the server intercepts (MessagePublicHandler → mireclick), runs the transaction, and re-pulses
@@ -95,7 +95,7 @@ public class LofMirePlugin extends Plugin
 		{
 			return; // the pulse's falling edge never closes the window (design system §8)
 		}
-		overlay.setState((value & 0x4) != 0, (value >> 3) & 0xF, (value >> 7) & 0x7F);
+		overlay.setState((value & 0x4) != 0, (value >> 3) & 0x3F, (value >> 9) & 0x7F);
 		if ((value & 1) != 0 && config.enabled())
 		{
 			overlay.setVisible(true);
