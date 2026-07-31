@@ -87,7 +87,8 @@ object BotBrain {
         if (!bot.isAlive() || !bot.lock.canAttack()) return
 
         // Top up special-attack energy on a slow cadence (bots have no client SPEC_RESTORE timer).
-        if (world.currentCycle % SPEC_REGEN_PERIOD == 0 && AttackTab.getEnergy(bot) < 100) {
+        // Boss knights may override the period ([PkBot.specRegenPeriod]) — lower = more specs.
+        if (world.currentCycle % (bot.specRegenPeriod ?: SPEC_REGEN_PERIOD) == 0 && AttackTab.getEnergy(bot) < 100) {
             AttackTab.restoreEnergy(bot)
         }
 
@@ -186,6 +187,9 @@ object BotBrain {
 
     private fun eligible(bot: PkBot, p: Player): Boolean =
         p !is PkBot && p.isOnline && !p.invisible &&
+            // A named-knight instance is bound to ONE hunter: it never aggros anyone else, so the
+            // per-hunter duplicates at a busy camp each fight their own duel (see [PkBot.boundHunter]).
+            (bot.boundHunter == null || p.uid == bot.boundHunter) &&
             p.tile.isWithinRadius(bot.tile, AGGRO_RANGE) &&
             (bot.leashRadius <= 0 || p.tile.isWithinRadius(bot.homeTile, bot.leashRadius)) &&
             // PKers only fight in the PvP wild: never aggro (or chase) a player standing on a safe tile,
@@ -208,7 +212,9 @@ object BotBrain {
         if (cls != bot.prayedAgainst) {
             if (bot.pendingPray != cls) { // opponent just switched to a new style — start reacting
                 bot.pendingPray = cls
-                bot.timers[PRAYER_REACT] = prayerReactionTicks()
+                // Boss knights may pin the reaction window ([PkBot.reactionTicksRange], e.g. 1..1 for
+                // a near frame-perfect flicker) — the top of the ladder is MEANT to take several tries.
+                bot.timers[PRAYER_REACT] = bot.reactionTicksRange?.random() ?: prayerReactionTicks()
             }
             if (!bot.timers.has(PRAYER_REACT)) { // reaction time elapsed — commit the overhead switch
                 bot.prayedAgainst = cls
@@ -356,7 +362,8 @@ object BotBrain {
         val ratio = hp.toDouble() / max
 
         // DHers override eatAt LOW so they sit in the high-damage band; everyone else uses EAT_AT.
-        val eatAt = bot.loadout.eatAt ?: EAT_AT
+        // A named-knight INSTANCE may override its loadout's threshold ([PkBot.eatAtOverride]).
+        val eatAt = bot.eatAtOverride ?: bot.loadout.eatAt ?: EAT_AT
         // Combo-eat no higher than the eat threshold, so a low-eatAt DHer doesn't karambwan itself
         // back out of its damage band.
         val comboAt = minOf(COMBO_AT, eatAt)

@@ -8,6 +8,7 @@ import org.alter.game.model.attr.QUEST_GUIDE_MUTED_ATTR
 import org.alter.game.model.attr.RECRUIT_GOBLIN_KILLS_ATTR
 import org.alter.game.model.attr.SLAYER_TASK_NPC_ATTR
 import org.alter.game.model.entity.Player
+import org.alter.plugins.content.bots.knights.RogueKnightLadder
 import org.alter.plugins.content.war.Conquest
 import org.alter.plugins.content.war.recruit.RecruitTrials
 import org.alter.plugins.content.war.roguehunt.RogueProblem
@@ -31,10 +32,13 @@ import org.alter.plugins.content.war.warprep.WarPrepSurvival
  *    with a ranged weapon on the FIELD step (0-63 clamp) so the client can render the "(x/20)" progress.
  *  - [WARPREP_SURVIVAL_VARP] bits 0-5 = [WarPrepSurvival.Step] ordinal.
  *  - [CONQUEST_VARP] bits 0-5 = [Conquest.Step] ordinal (the endgame "King of Lumbridge" quest).
+ *  - [KNIGHTS_VARP] packed: bits 0-7 = Rogue Knight ladder rank (knights beaten, 0-255 clamp),
+ *    bits 8-15 = the active hunt's ladder index + 1 (0 = no active hunt) — published for a future
+ *    client ladder panel; the live tracking arrow is server-driven (`RogueKnightCampPlugin`).
  *  - [GUIDE_MUTED_VARP] = 1 while guidance is muted, else 0 (so the client toggle reflects state).
  *
  * Varps 4600-4608, 4613-4616, 4618-4623, 4625-4626 and 4633-4637 are taken by the other client HUDs;
- * quests own 4610-4612, 4617, 4624, 4633 and 4643.
+ * quests own 4610-4612, 4617, 4624, 4633, 4643 and 4644.
  * Non-zero varps persist ([VarpSerialisation]), but the attributes stay the source of truth —
  * everything here is re-derived and re-published on login and on the world poll.
  *
@@ -55,6 +59,7 @@ object QuestJournal {
     const val WARPREP_RANGED_VARP = 4624   // War-Prep II — Ranged (4618-4623, 4625-4626 belong to other HUDs)
     const val WARPREP_SURVIVAL_VARP = 4643 // War-Prep III — Survival
     const val CONQUEST_VARP = 4633      // King of Lumbridge (endgame); 4635-4637 are companion indices
+    const val KNIGHTS_VARP = 4644       // Rogue Knight ladder (rank + active hunt index)
 
     // Reused OSRS quest progress varps that colour the relabelled native quest-tab rows. A value of
     // 0 reads as "not started" (red), the complete value as "finished" (green), anything between as
@@ -122,6 +127,12 @@ object QuestJournal {
 
         val conquest = Conquest.step(p).ordinal and 0x3F
         if (p.getVarp(CONQUEST_VARP) != conquest) p.setVarp(CONQUEST_VARP, conquest)
+
+        // Rogue Knight ladder: rank + the active hunt (index+1; 0 = none) for a future client panel.
+        val knightRank = RogueKnightLadder.rank(p).coerceIn(0, 255)
+        val knightHunt = ((RogueKnightLadder.targetIdx(p) ?: -1) + 1).coerceIn(0, 255)
+        val knightsPacked = knightRank or (knightHunt shl 8)
+        if (p.getVarp(KNIGHTS_VARP) != knightsPacked) p.setVarp(KNIGHTS_VARP, knightsPacked)
 
         val mutedFlag = if (muted(p)) 1 else 0
         if (p.getVarp(GUIDE_MUTED_VARP) != mutedFlag) p.setVarp(GUIDE_MUTED_VARP, mutedFlag)

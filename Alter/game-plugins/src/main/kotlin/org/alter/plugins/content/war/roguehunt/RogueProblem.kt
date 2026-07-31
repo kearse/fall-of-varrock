@@ -16,12 +16,12 @@ import org.alter.rscm.RSCM.getRSCM
  * It is the guided bridge across the **Squire → Knight** climb that the roadmap otherwise leaves as
  * an open-ended grind: the Recruiting Sergeant sends the new Squire into **Fallen Falador** (where
  * the cutthroats fled when demons took Varrock — see `WorldSpawnsPlugin.applyFallenFalador`) to
- * thin its cutthroats and cut down one of its **named captains** (the existing [RogueHunt] +
- * `war/captains` content, now given a scripted first run), then pays a purse that covers the last
- * rungs to **Knight** — which unlocks the player's first **companion** and the real wilderness /
- * PK loop. This is the pure state machine; [RogueProblemPlugin] owns the wiring (login resume,
- * poll timer, kill hooks), the Recruiting Sergeant speaks the beats, and Duke Horacio reports the
- * rank-up.
+ * thin its cutthroats, then opens the **Rogue Knight ladder** (`bots/knights/`) with the player's
+ * first assigned named knight — kill it, and he pays a purse that covers the last rungs to
+ * **Knight**, which unlocks the player's first **companion** and the real wilderness / PK loop.
+ * The ladder itself keeps assigning harder and harder knights long after this quest closes. This
+ * is the pure state machine; [RogueProblemPlugin] owns the wiring (login resume, poll timer, kill
+ * hooks), the Recruiting Sergeant speaks the beats, and Duke Horacio reports the rank-up.
  *
  * State is a single persistent step ordinal ([ROGUE_PROBLEM_STEP_ATTR]) plus a quest-scoped hunt
  * counter ([ROGUE_PROBLEM_KILLS_ATTR]); the chain survives relogs and never re-fires once
@@ -43,7 +43,7 @@ object RogueProblem {
      * The quest's culminating purse — sized straight off the ladder so it always covers the rungs
      * from the player's post-War-Prep rank ([Title.SQUIRE]) up to [Title.KNIGHT]: Soldier + Knight.
      * This is the "…and that gives you enough for Knight" payout the design calls for; combined with
-     * the guaranteed captain bounty and rogue drops earned on the way, the player clears the climb.
+     * the first knight's spoils and rogue drops earned on the way, the player clears the climb.
      *
      * ECONOMY NOTE (TUNE): the roadmap frames Squire→Knight as a longer grind. This purse
      * deliberately short-cuts it into a single guided quest — dial it down (and lean on the earned
@@ -55,15 +55,17 @@ object RogueProblem {
     val TARGET_TITLE = Title.KNIGHT
 
     // Persisted BY ORDINAL. Never reorder without a migration (the ordinal is the save value + the
-    // Quest Journal varp the client reads).
+    // Quest Journal varp the client reads). KNIGHT holds CAPTAIN's old ordinal 3 — the beat was
+    // reworked from "kill a named captain" to "kill your first assigned Rogue Knight" (the ladder
+    // opener); a player saved mid-step simply gets the new objective.
     enum class Step(val objective: String) {
         NONE("(not started)"),
         BRIEF("Speak to the Recruiting Sergeant about the rogues overrunning Fallen Falador."),
         HUNT("Cut down $HUNT_GOAL rogues in the streets of Fallen Falador — the tally is quest-scoped; ::rogueproblem tracks it."),
-        CAPTAIN("Hunt down one of the named captains holed up in Fallen Falador — see the board with ::bounties."),
-        REPORT("Return to the Recruiting Sergeant with word of the captain's fall."),
+        KNIGHT("Hunt down your first assigned Rogue Knight — ::knights shows the hunt and the marker leads the way."),
+        REPORT("Return to the Recruiting Sergeant with word of the knight's fall."),
         RANK("Take your purse to Duke Horacio and climb to Knight — a companion and the wilderness await."),
-        DONE("The Rogue Problem — Knighthood earned. Muster a companion from General Zo, then hunt at the PK Arena."),
+        DONE("The Rogue Problem — Knighthood earned. Muster a companion from General Zo, then keep climbing the Rogue Knight ladder (::knights)."),
     }
 
     /** The player's current step (NONE until the chain begins). */
@@ -92,7 +94,7 @@ object RogueProblem {
 
     /** Steps the poll runs on — those with a live objective the poll watches or refreshes. */
     private fun isTracked(s: Step): Boolean =
-        s == Step.BRIEF || s == Step.HUNT || s == Step.CAPTAIN || s == Step.REPORT || s == Step.RANK
+        s == Step.BRIEF || s == Step.HUNT || s == Step.KNIGHT || s == Step.REPORT || s == Step.RANK
 
     // --- pillar hooks -------------------------------------------------------------------
 
@@ -103,21 +105,23 @@ object RogueProblem {
     }
 
     /** HUNT: [RogueProblemPlugin]'s death hook calls this for every rogue-family kill; when the
-     *  quest-scoped tally hits [HUNT_GOAL] the streets are cleared and the hunt turns to a captain. */
+     *  quest-scoped tally hits [HUNT_GOAL] the streets are cleared and the Sergeant opens the
+     *  Rogue Knight ladder with the player's first named assignment. */
     fun onRogueKill(p: Player) {
         if (step(p) != Step.HUNT) return
         val kills = huntKills(p) + 1
         p.attr[ROGUE_PROBLEM_KILLS_ATTR] = kills
         if (kills >= HUNT_GOAL) {
-            advanceTo(p, Step.CAPTAIN)
+            advanceTo(p, Step.KNIGHT)
         } else if (kills == HUNT_GOAL / 2) {
             p.message("<col=801700>The Rogue Problem:</col> $kills/$HUNT_GOAL cutthroats down — keep at it.")
         }
     }
 
-    /** CAPTAIN → REPORT: `NamedCaptainsPlugin` calls this when the player fells a named captain. */
-    fun onCaptainKill(p: Player) {
-        if (step(p) != Step.CAPTAIN) return
+    /** KNIGHT → REPORT: `RogueKnightLadder` calls this when the player fells their first assigned
+     *  Rogue Knight (the ladder's rank-0 kill — the ladder itself continues past the quest). */
+    fun onAssignedKnightKill(p: Player) {
+        if (step(p) != Step.KNIGHT) return
         advanceTo(p, Step.REPORT)
     }
 
@@ -161,7 +165,7 @@ object RogueProblem {
         }
     }
 
-    /** RANK entry: the Sergeant's payout for breaking the captains — a purse sized to reach Knight. */
+    /** RANK entry: the Sergeant's payout for breaking the first Rogue Knight — a purse sized to reach Knight. */
     private fun grantPurse(p: Player) {
         giveItem(p, COINS, COMPLETION_COINS)
         p.message("<col=801700>The Sergeant pays you ${"%,d".format(COMPLETION_COINS)} coins</col> — enough to climb to ${TARGET_TITLE.display} at Duke Horacio.")
@@ -170,6 +174,7 @@ object RogueProblem {
     private fun grantCompletion(p: Player) {
         p.message("<col=801700>The Rogue Problem complete!</col> You've earned your ${TARGET_TITLE.display}hood — and with it your first <col=801700>companion</col>: seek General Zo in the castle courtyard to muster one.")
         p.message("<col=801700>The wilderness is open to you now.</col> Learn the ropes at the <col=ffae00>PK Training Arena</col> (loaner kits, sparring bots), then hunt for real — player kills pay Blood Money.")
+        p.message("<col=801700>And the Rogue Knight ladder continues:</col> the Sergeant has harder and harder knights for you — each one guards the gear for the next fight (<col=ffae00>::knights</col>).")
     }
 
     /** One-line progress report (`::rogueproblem` and the Sergeant's chatter). */

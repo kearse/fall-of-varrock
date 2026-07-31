@@ -411,6 +411,15 @@ fun Player.setNpcHintArrow(npcIndex: Int) {
     write(HintArrow(HintArrow.NpcHintArrow(npcIndex)))
 }
 
+/**
+ * Draw the hint arrow over another PLAYER by their world (GPI) index — tracks them as they move,
+ * but like the npc arrow it only renders while they're in the local scene, so callers should fall
+ * back to [setTileHintArrow] when the target is far away (the Rogue Knight tracker's hybrid).
+ */
+fun Player.setPlayerHintArrow(playerIndex: Int) {
+    write(HintArrow(HintArrow.PlayerHintArrow(playerIndex)))
+}
+
 /** Remove any active hint arrow. */
 fun Player.clearHintArrow() {
     write(HintArrow(HintArrow.ResetHintArrow))

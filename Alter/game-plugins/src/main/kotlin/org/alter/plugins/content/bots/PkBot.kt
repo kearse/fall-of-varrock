@@ -1,5 +1,6 @@
 package org.alter.plugins.content.bots
 
+import org.alter.game.model.PlayerUID
 import org.alter.game.model.Tile
 import org.alter.game.model.World
 import org.alter.game.model.combat.CombatClass
@@ -40,6 +41,34 @@ open class PkBot(world: World, val loadout: BotLoadout) : Player(world) {
      * is unlocked, via [org.alter.plugins.content.combat.Combat.canEngage]'s bot bypass.
      */
     var ambushEverywhere: Boolean = false
+
+    /**
+     * NAMED-KNIGHT hunter lock: when set, this bot only ever aggro/fights the player with this uid
+     * (see `BotBrain.eligible`). Used by the Rogue Knight camp engine, which spawns one instance of
+     * an assigned knight PER hunter — the lock keeps duplicate knights from cross-aggroing other
+     * hunters' fights (the "two Sir Kades thrash the multi cap" failure). Null = fights anyone.
+     */
+    var boundHunter: PlayerUID? = null
+
+    /**
+     * Boss-knight max-HP override. MUST be applied via this + `setCurrentLevel(3, hp)` — never
+     * `setBaseLevel` above 99, which indexes off the end of the 99-entry XP table. Overriding
+     * [getMaxHp] here makes the brain's eat ratios, heal caps and the head-bar all use the boosted
+     * pool for free. Null = the loadout's normal (≤99) hitpoints.
+     */
+    var maxHpOverride: Int? = null
+
+    override fun getMaxHp(): Int = maxHpOverride ?: super.getMaxHp()
+
+    /** Boss-knight prayer-reaction override (ticks range) — `1..1` = near frame-perfect flicking.
+     *  Null = the brain's human default (mostly 1-2, sometimes 3-6). */
+    var reactionTicksRange: IntRange? = null
+
+    /** Boss-knight spec-regen override (ticks per +10% energy; lower = more specs). Null = default. */
+    var specRegenPeriod: Int? = null
+
+    /** Per-INSTANCE eat-threshold override (fraction of max HP). Null = the loadout's [BotLoadout.eatAt]. */
+    var eatAtOverride: Double? = null
 
     /** World cycle of the last roam step, so idle wandering is throttled (amble, not sprint). */
     var lastRoamCycle: Int = 0

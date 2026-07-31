@@ -834,18 +834,342 @@ object BotLoadouts {
         ),
     )
 
+    // ================== CLASSIC PK ARCHETYPES (the wider build meta — see rogue-knight ladder) ==================
+    // Researched from the real OSRS PK scene so drops/loot pools map onto builds players recognise:
+    // the obby mauler, void ranger, dark-bow sniper, the Statius/Morrigan/Vesta/Zuriel "Ancient
+    // Warrior" wildy-set builds, and the revenant-weapon raider. All keys verified in item.rscm.
+
+    /** OBBY MAULER: the classic 1-att gimmick — Tzhaar-ket-om + berserker necklace, d'hide, huge
+     *  crush swings and nothing else. Melee-only, no prayer switching pressure (low prayer). */
+    val OBBY_MAULER = BotLoadout(
+        key = "obby_mauler",
+        displayName = "Mauler",
+        tier = "budget",
+        combatLevel = 61,
+        stats = BotStats(attack = 40, strength = 90, defence = 1, hitpoints = 70, ranged = 1, magic = 1, prayer = 31),
+        baseStyle = BotStyle.MELEE,
+        gear = mapOf(
+            BotStyle.MELEE to gb(
+                EquipmentType.HEAD to "item.coif",
+                EquipmentType.CAPE to "item.obsidian_cape",
+                EquipmentType.AMULET to "item.berserker_necklace",
+                EquipmentType.WEAPON to "item.tzhaarketom",
+                EquipmentType.CHEST to "item.black_dhide_body",
+                EquipmentType.LEGS to "item.black_dhide_chaps",
+                EquipmentType.GLOVES to "item.combat_bracelet",
+                EquipmentType.BOOTS to "item.climbing_boots",
+                EquipmentType.RING to "item.berserker_ring",
+            ),
+        ),
+        inventory = listOf(
+            BotItem("item.shark", 6),
+            BotItem("item.super_restore4", 1),
+        ),
+    )
+
+    /** VOID RANGER: the void range pure — full Void Knight + rune crossbow and diamond bolts (e),
+     *  dds switch for the finish. The void set is the chase (dropped by its knight). */
+    val VOID_RANGER = BotLoadout(
+        key = "void_ranger",
+        displayName = "Voidguard",
+        tier = "mid",
+        combatLevel = 94,
+        stats = BotStats(attack = 70, strength = 70, defence = 60, hitpoints = 85, ranged = 90, magic = 1, prayer = 52),
+        baseStyle = BotStyle.RANGED,
+        gear = mapOf(
+            BotStyle.RANGED to gb(
+                EquipmentType.HEAD to "item.void_ranger_helm",
+                EquipmentType.CAPE to "item.obsidian_cape",
+                EquipmentType.AMULET to "item.amulet_of_glory",
+                EquipmentType.WEAPON to "item.rune_crossbow",
+                EquipmentType.CHEST to "item.void_knight_top",
+                EquipmentType.LEGS to "item.void_knight_robe",
+                EquipmentType.GLOVES to "item.void_knight_gloves",
+                EquipmentType.BOOTS to "item.snakeskin_boots",
+                EquipmentType.RING to "item.archers_ring",
+                EquipmentType.AMMO to "item.diamond_bolts_e",
+            ),
+            BotStyle.MELEE to gb(
+                EquipmentType.HEAD to "item.void_melee_helm",
+                EquipmentType.CAPE to "item.obsidian_cape",
+                EquipmentType.AMULET to "item.amulet_of_glory",
+                EquipmentType.WEAPON to "item.dragon_dagger",
+                EquipmentType.CHEST to "item.void_knight_top",
+                EquipmentType.LEGS to "item.void_knight_robe",
+                EquipmentType.GLOVES to "item.void_knight_gloves",
+                EquipmentType.BOOTS to "item.climbing_boots",
+                EquipmentType.RING to "item.berserker_ring",
+            ),
+        ),
+        meleeSpecRotation = listOf("item.dragon_dagger"),
+        inventory = listOf(
+            BotItem("item.dragon_dagger"),
+            BotItem("item.shark", 6),
+            BotItem("item.super_restore4", 2),
+        ),
+    )
+
+    /** DARK-BOW SNIPER: the dbow spec gimmick — huge double-arrow openers from range, dds finish.
+     *  Slow between swings, so out-footwork it or eat the 40-40. */
+    val DBOW_SNIPER = BotLoadout(
+        key = "dbow_sniper",
+        displayName = "Sniper",
+        tier = "mid",
+        combatLevel = 102,
+        stats = BotStats(attack = 75, strength = 75, defence = 70, hitpoints = 90, ranged = 92, magic = 1, prayer = 70),
+        baseStyle = BotStyle.RANGED,
+        gear = mapOf(
+            BotStyle.RANGED to gb(
+                EquipmentType.HEAD to "item.karils_coif",
+                EquipmentType.CAPE to "item.fire_cape",
+                EquipmentType.AMULET to "item.amulet_of_fury",
+                EquipmentType.WEAPON to "item.dark_bow",
+                EquipmentType.CHEST to "item.black_dhide_body",
+                EquipmentType.LEGS to "item.black_dhide_chaps",
+                EquipmentType.GLOVES to "item.black_dhide_vambraces",
+                EquipmentType.BOOTS to "item.snakeskin_boots",
+                EquipmentType.RING to "item.archers_ring",
+                EquipmentType.AMMO to "item.dragon_arrow",
+            ),
+            BotStyle.MELEE to gb(
+                EquipmentType.HEAD to "item.helm_of_neitiznot",
+                EquipmentType.CAPE to "item.fire_cape",
+                EquipmentType.AMULET to "item.amulet_of_fury",
+                EquipmentType.WEAPON to "item.dragon_dagger",
+                EquipmentType.CHEST to "item.black_dhide_body",
+                EquipmentType.SHIELD to "item.rune_defender",
+                EquipmentType.LEGS to "item.black_dhide_chaps",
+                EquipmentType.GLOVES to "item.barrows_gloves",
+                EquipmentType.BOOTS to "item.dragon_boots",
+                EquipmentType.RING to "item.berserker_ring",
+            ),
+        ),
+        meleeSpecRotation = listOf("item.dragon_dagger"),
+        inventory = listOf(
+            BotItem("item.dragon_dagger"),
+            BotItem("item.shark", 6),
+            BotItem("item.super_restore4", 2),
+        ),
+    )
+
+    /** STATIUS BRUISER: the Statius-warhammer build — full Statius plate with the def-crushing
+     *  warhammer spec. A walking siege engine; the set pieces are its knight's signature drops. */
+    val STATIUS_BRUISER = BotLoadout(
+        key = "statius_bruiser",
+        displayName = "Warbreaker",
+        tier = "high",
+        combatLevel = 118,
+        stats = BotStats(attack = 80, strength = 99, defence = 85, hitpoints = 99, ranged = 1, magic = 1, prayer = 77),
+        baseStyle = BotStyle.MELEE,
+        gear = mapOf(
+            BotStyle.MELEE to gb(
+                EquipmentType.HEAD to "item.statiuss_full_helm",
+                EquipmentType.CAPE to "item.fire_cape",
+                EquipmentType.AMULET to "item.amulet_of_fury",
+                EquipmentType.WEAPON to "item.statiuss_warhammer",
+                EquipmentType.CHEST to "item.statiuss_platebody",
+                EquipmentType.LEGS to "item.statiuss_platelegs",
+                EquipmentType.GLOVES to "item.barrows_gloves",
+                EquipmentType.BOOTS to "item.dragon_boots",
+                EquipmentType.RING to "item.berserker_ring",
+            ),
+        ),
+        meleeSpecRotation = listOf("item.statiuss_warhammer"),
+        inventory = listOf(
+            BotItem("item.saradomin_brew4", 5),
+            BotItem("item.super_restore4", 3),
+            BotItem("item.cooked_karambwan", 2),
+        ),
+    )
+
+    /** MORRIGAN SKIRMISHER: Morrigan's leathers behind a heavy ballista — long-range javelin
+     *  artillery with a dds finish. The Morrigan set is its knight's signature chase. */
+    val MORRIGAN_SKIRMISHER = BotLoadout(
+        key = "morrigan_skirmisher",
+        displayName = "Huntress",
+        tier = "high",
+        combatLevel = 115,
+        stats = BotStats(attack = 75, strength = 75, defence = 80, hitpoints = 99, ranged = 99, magic = 1, prayer = 77),
+        baseStyle = BotStyle.RANGED,
+        gear = mapOf(
+            BotStyle.RANGED to gb(
+                EquipmentType.HEAD to "item.morrigans_coif",
+                EquipmentType.CAPE to "item.avas_accumulator",
+                EquipmentType.AMULET to "item.amulet_of_fury",
+                EquipmentType.WEAPON to "item.heavy_ballista",
+                EquipmentType.CHEST to "item.morrigans_leather_body",
+                EquipmentType.LEGS to "item.morrigans_leather_chaps",
+                EquipmentType.GLOVES to "item.barrows_gloves",
+                EquipmentType.BOOTS to "item.snakeskin_boots",
+                EquipmentType.RING to "item.archers_ring",
+                EquipmentType.AMMO to "item.dragon_javelin",
+            ),
+            BotStyle.MELEE to gb(
+                EquipmentType.HEAD to "item.morrigans_coif",
+                EquipmentType.CAPE to "item.fire_cape",
+                EquipmentType.AMULET to "item.amulet_of_fury",
+                EquipmentType.WEAPON to "item.dragon_dagger",
+                EquipmentType.CHEST to "item.morrigans_leather_body",
+                EquipmentType.SHIELD to "item.rune_defender",
+                EquipmentType.LEGS to "item.morrigans_leather_chaps",
+                EquipmentType.GLOVES to "item.barrows_gloves",
+                EquipmentType.BOOTS to "item.dragon_boots",
+                EquipmentType.RING to "item.berserker_ring",
+            ),
+        ),
+        meleeSpecRotation = listOf("item.dragon_dagger"),
+        inventory = listOf(
+            BotItem("item.dragon_dagger"),
+            BotItem("item.saradomin_brew4", 5),
+            BotItem("item.super_restore4", 3),
+            BotItem("item.cooked_karambwan", 2),
+        ),
+    )
+
+    /** REV RAIDER: the revenant-weapon wildy farmer — Craw's bow + avarice behind d'hide, with a
+     *  Viggora's chainmace melee switch. Drops feed the revenant-weapon chase. */
+    val REV_RAIDER = BotLoadout(
+        key = "rev_raider",
+        displayName = "Raider",
+        tier = "high",
+        combatLevel = 116,
+        stats = BotStats(attack = 90, strength = 90, defence = 80, hitpoints = 99, ranged = 95, magic = 1, prayer = 77),
+        baseStyle = BotStyle.RANGED,
+        gear = mapOf(
+            BotStyle.RANGED to gb(
+                EquipmentType.HEAD to "item.karils_coif",
+                EquipmentType.CAPE to "item.avas_accumulator",
+                EquipmentType.AMULET to "item.amulet_of_avarice",
+                EquipmentType.WEAPON to "item.craws_bow",
+                EquipmentType.CHEST to "item.black_dhide_body",
+                EquipmentType.LEGS to "item.black_dhide_chaps",
+                EquipmentType.GLOVES to "item.black_dhide_vambraces",
+                EquipmentType.BOOTS to "item.snakeskin_boots",
+                EquipmentType.RING to "item.archers_ring",
+                EquipmentType.AMMO to "item.rune_arrow",
+            ),
+            BotStyle.MELEE to gb(
+                EquipmentType.HEAD to "item.helm_of_neitiznot",
+                EquipmentType.CAPE to "item.fire_cape",
+                EquipmentType.AMULET to "item.amulet_of_avarice",
+                EquipmentType.WEAPON to "item.viggoras_chainmace",
+                EquipmentType.CHEST to "item.black_dhide_body",
+                EquipmentType.LEGS to "item.black_dhide_chaps",
+                EquipmentType.GLOVES to "item.barrows_gloves",
+                EquipmentType.BOOTS to "item.dragon_boots",
+                EquipmentType.RING to "item.berserker_ring",
+            ),
+        ),
+        meleeSpecRotation = listOf("item.dragon_dagger"),
+        inventory = listOf(
+            BotItem("item.dragon_dagger"),
+            BotItem("item.saradomin_brew4", 5),
+            BotItem("item.super_restore4", 3),
+            BotItem("item.cooked_karambwan", 2),
+        ),
+    )
+
+    /** VESTA DUELIST: the Vesta's-longsword duelist — VLS pressure in Vesta's chain with a granite
+     *  maul combo. One of the two elite Ancient Warrior knights (see the rogue-knight ladder). */
+    val VESTA_DUELIST = BotLoadout(
+        key = "vesta_duelist",
+        displayName = "Duelist",
+        tier = "elite",
+        combatLevel = 123,
+        stats = BotStats(attack = 99, strength = 99, defence = 90, hitpoints = 99, ranged = 90, magic = 1, prayer = 99),
+        baseStyle = BotStyle.MELEE,
+        gear = mapOf(
+            BotStyle.MELEE to gb(
+                EquipmentType.HEAD to "item.helm_of_neitiznot",
+                EquipmentType.CAPE to "item.fire_cape",
+                EquipmentType.AMULET to "item.amulet_of_fury",
+                EquipmentType.WEAPON to "item.vestas_longsword",
+                EquipmentType.SHIELD to "item.dragon_defender",
+                EquipmentType.CHEST to "item.vestas_chainbody",
+                EquipmentType.LEGS to "item.vestas_plateskirt",
+                EquipmentType.GLOVES to "item.barrows_gloves",
+                EquipmentType.BOOTS to "item.dragon_boots",
+                EquipmentType.RING to "item.berserker_ring_i",
+            ),
+            BotStyle.RANGED to gb(
+                EquipmentType.HEAD to "item.karils_coif",
+                EquipmentType.CAPE to "item.avas_accumulator",
+                EquipmentType.AMULET to "item.necklace_of_anguish",
+                EquipmentType.WEAPON to "item.magic_shortbow_i",
+                EquipmentType.CHEST to "item.black_dhide_body",
+                EquipmentType.LEGS to "item.black_dhide_chaps",
+                EquipmentType.GLOVES to "item.black_dhide_vambraces",
+                EquipmentType.BOOTS to "item.snakeskin_boots",
+                EquipmentType.RING to "item.archers_ring_i",
+                EquipmentType.AMMO to "item.dragon_arrow",
+            ),
+        ),
+        meleeSpecRotation = listOf("item.vestas_longsword", "item.granite_maul"),
+        inventory = listOf(
+            BotItem("item.granite_maul"),
+            BotItem("item.saradomin_brew4", 6),
+            BotItem("item.super_restore4", 4),
+            BotItem("item.cooked_karambwan", 3),
+        ),
+    )
+
+    /** ZURIEL MAGE: the Zuriel's NHer — Zuriel's staff barrage-freezing out of the full robe set,
+     *  dds burst on a magic-praying target. The other elite Ancient Warrior knight. */
+    val ZURIEL_MAGE = BotLoadout(
+        key = "zuriel_mage",
+        displayName = "Stormcaller",
+        tier = "elite",
+        combatLevel = 121,
+        stats = BotStats(attack = 90, strength = 90, defence = 90, hitpoints = 99, ranged = 1, magic = 99, prayer = 99),
+        baseStyle = BotStyle.MAGIC,
+        gear = mapOf(
+            BotStyle.MAGIC to gb(
+                EquipmentType.HEAD to "item.zuriels_hood",
+                EquipmentType.CAPE to "item.fire_cape",
+                EquipmentType.AMULET to "item.occult_necklace",
+                EquipmentType.WEAPON to "item.zuriels_staff",
+                EquipmentType.CHEST to "item.zuriels_robe_top",
+                EquipmentType.LEGS to "item.zuriels_robe_bottom",
+                EquipmentType.GLOVES to "item.barrows_gloves",
+                EquipmentType.BOOTS to "item.infinity_boots",
+                EquipmentType.RING to "item.seers_ring_i",
+            ),
+            BotStyle.MELEE to gb(
+                EquipmentType.HEAD to "item.helm_of_neitiznot",
+                EquipmentType.CAPE to "item.fire_cape",
+                EquipmentType.AMULET to "item.amulet_of_fury",
+                EquipmentType.WEAPON to "item.dragon_dagger",
+                EquipmentType.CHEST to "item.fighter_torso",
+                EquipmentType.SHIELD to "item.dragon_defender",
+                EquipmentType.LEGS to "item.rune_platelegs",
+                EquipmentType.GLOVES to "item.barrows_gloves",
+                EquipmentType.BOOTS to "item.dragon_boots",
+                EquipmentType.RING to "item.berserker_ring_i",
+            ),
+        ),
+        spell = mapOf(BotStyle.MAGIC to "ice_barrage"),
+        meleeSpecRotation = listOf("item.dragon_dagger"),
+        inventory = listOf(
+            BotItem("item.dragon_dagger"),
+            BotItem("item.saradomin_brew4", 6),
+            BotItem("item.super_restore4", 5),
+            BotItem("item.cooked_karambwan", 3),
+        ),
+    )
+
     private val byKey: Map<String, BotLoadout> =
         listOf(
             // Shallow-wild metal ladder (wild 1–10)
             BRONZE, IRON, STEEL, BLACK, MITHRIL, ADAMANT, RUNE, DRAGON,
             // Budget PK sets (wild 11–20)
-            BUDGET_PURE, BUDGET_ZERKER, BUDGET_MAIN,
+            BUDGET_PURE, BUDGET_ZERKER, BUDGET_MAIN, OBBY_MAULER,
             // Mid archetypes (wild 21–30)
-            CLASSIC_HYBRID, MAGE_MID, RANGE_MID, DHAROK_MID,
+            CLASSIC_HYBRID, MAGE_MID, RANGE_MID, DHAROK_MID, VOID_RANGER, DBOW_SNIPER,
             // High / maxer tier (wild 31–40)
             MAX_MAIN, MAX_TENT, ANCIENT_MAGE, CLAWS_BRID,
+            STATIUS_BRUISER, MORRIGAN_SKIRMISHER, REV_RAIDER,
             // Elite meta (wild 41+)
-            ELITE_NH, MAGE_ELITE, RANGE_ELITE, DHAROK_DHER,
+            ELITE_NH, MAGE_ELITE, RANGE_ELITE, DHAROK_DHER, VESTA_DUELIST, ZURIEL_MAGE,
         ).associateBy { it.key }
 
     fun get(key: String): BotLoadout? = byKey[key.lowercase()]

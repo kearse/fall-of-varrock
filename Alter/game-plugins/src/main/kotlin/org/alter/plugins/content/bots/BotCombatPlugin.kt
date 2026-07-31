@@ -95,6 +95,11 @@ class BotCombatPlugin(
      * The bot's entire kit (worn gear + inventory) goes to the killer: sealed in a loot key for a
      * real-player kill in the wilderness (same as killing a real player), otherwise as ground loot
      * on the death tile (killer-owned window for a real player, public for a bot/no killer).
+     *
+     * On top of the kit, a real killer also rolls the bot's **PK-set loot pool** ([PkLootPools]) —
+     * the tier's rare gear chase (escalating to claws / AGS / voidwaker-class uniques), or a named
+     * rogue knight's signature table. Rolled rares join the kit BEFORE the key is sealed, so they
+     * ride the same loot-key / killer-owned-drop flow as the gear.
      */
     private fun dropAllGear(world: World, bot: PkBot, killer: Player?) {
         val tile = bot.tile
@@ -108,6 +113,7 @@ class BotCombatPlugin(
             bot.inventory[i] = null
         }
         val realKiller = killer?.takeIf { it !is PkBot }
+        kit += PkLootPools.bonusDrops(world, bot, realKiller)
         val overflow = if (realKiller != null && PvpZones.isWilderness(tile)) {
             LootKeys.tryAward(realKiller, bot.username, kit) // null = no key → everything drops
         } else {

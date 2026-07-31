@@ -128,15 +128,58 @@ Effort + realm supply; `SupplyDrive.kt`: rotating 2× demand window). The build 
 - ✅ Introduced by the Act II quest **"The Rogue Problem"** (`war/roguehunt/RogueProblem.kt`) — the
   player's first scripted trip into Fallen Varrock, the city they will one day retake. It
   **auto-starts the moment the War-Prep chain finishes** (the Squire rank-up), given/paid by the
-  Recruiting Sergeant: hunt 30 rogues → fell a named captain → collect a purse sized off the ladder
-  (Soldier + Knight cost) → climb to **Knight** at Duke Horacio, which opens the first companion and
-  the wilderness/PK loop. Fully wired into the Quest Journal (client hint arrows + `::rogueproblem`)
-  so the quest helper guides the whole bridge from Wizard Tower to Knight. Numbers (hunt goal, purse)
-  are TUNE — the purse deliberately short-cuts the Squire→Knight grind into one guided quest; dial it
-  down to keep the climb a longer haul. Now also on the **native quest tab** (reuses The Restless
-  Ghost / varp 107, coloured by `QuestJournal.syncNativeTab`; run the cache `relabel` + `hide` to
-  surface it — see `docs/quest-tab-handoff.md`). **Still ⬜:** a dedicated wilderness hunt instance
-  if the open streets prove too punishing for a fresh Knight.
+  Recruiting Sergeant: hunt 30 rogues → **kill your first assigned Rogue Knight** (the ladder
+  opener, below) → collect a purse sized off the ladder (Soldier + Knight cost) → climb to
+  **Knight** at Duke Horacio, which opens the first companion and the wilderness/PK loop. Fully
+  wired into the Quest Journal (client hint arrows + `::rogueproblem`) so the quest helper guides
+  the whole bridge from Wizard Tower to Knight. Numbers (hunt goal, purse) are TUNE — the purse
+  deliberately short-cuts the Squire→Knight grind into one guided quest; dial it down to keep the
+  climb a longer haul. Now also on the **native quest tab** (reuses The Restless Ghost / varp 107,
+  coloured by `QuestJournal.syncNativeTab`; run the cache `relabel` + `hide` to surface it — see
+  `docs/quest-tab-handoff.md`). **Still ⬜:** a dedicated wilderness hunt instance if the open
+  streets prove too punishing for a fresh Knight.
+
+### 4b. The Rogue Knight ladder ✅ (`bots/knights/` — organized PK-bot progression)
+
+The PK bots, reorganized from an anonymous wilderness spread into a **career**: the quest's
+"captain" beat was reworked into an extensible ladder of ~14 **individually named Rogue Knight
+bosses** (PkBot fake-players, boss-tuned) the Sergeant assigns weakest → strongest, stationed at
+**organized camps by level band** — so players always know exactly what they're chasing next, and
+the chase doubles as PK training + gear progression.
+
+- **The camps** (`BotZones` fixed-tier ambient zones + the named knights): the **Bandit Hideout**
+  west of Lumbridge (SAFE — bronze/iron/steel fodder, reclaimable deaths, the learning camp) →
+  **Fallen Falador** (a RAID CITY — Black Knights + low-level NHers: budget pures/zerkers/obby
+  mauler; full-PvP streets, only banks safe) → **Fallen Varrock** (shallow single-combat wild —
+  existing capped pool + void ranger / dark-bow sniper) → the **Wild Bandit Camp** (deep multi —
+  maxers + Statius/Morrigan/rev-weapon builds) → the **Rogue Commander's Redoubt** (wild 45+ — the
+  elite NH guard + Vesta/Zuriel knights). The safe camp rides a new `BotZoneConfig.allowSafe`
+  (+ per-bot `ambushEverywhere`); the wilderness depth-grid roamers stay, now with 8 new archetype
+  loadouts folded into its tiers.
+- **Assignment loop** (`RogueKnightLadder` + `ROGUE_KNIGHT_RANK_ATTR`): kill your assigned knight →
+  rank up, get a **first-kill unlock** (deliberately the CORE of the next build up the ladder — the
+  gear that beats the next knight), and the Sergeant names the next mark. Beaten knights stay
+  **farmable** (`::huntknight n` / the Sergeant's menu); `::knights` lists the board. Dying to a
+  knight never resets anything — it's the expected loop, and the low camps make it cheap.
+- **Per-hunter instances** (`RogueKnightCampPlugin`): every hunter at a camp gets their OWN bound
+  copy of the knight (`PkBot.boundHunter` locks its aggro), so a crowded rung never queues.
+  Presence-gated, ~45s respawn, capped per camp. Boss knobs on `PkBot` (`maxHpOverride` — current-
+  level based, never `setBaseLevel`>99; `reactionTicksRange`; `specRegenPeriod`) make the top
+  knights take several genuine attempts (Vexmar: 160hp, frame-perfect prayers, 3-tick spec regen).
+- **Tracking** (the quest-helper ask): a native **hint arrow** follows the hunt — tile arrow toward
+  the camp from anywhere, flipping to a player arrow locked on the live knight in scene; respects
+  the guidance mute; varp **4644** publishes rank+target for a future client panel.
+- **PK-set loot pools** (`PkLootPools`): every bot death still drops its full worn kit, PLUS a
+  rare-tier roll from its band's pool — pools are built around real PK builds so grinding a camp
+  assembles a recognisable set: starter metal → **pure/zerker kits** → **hybrid kit** (whip,
+  neitiznot, barrows pieces) → **maxer kit** (bandos, claws 1/150, DWH) → **NH tribrid kit**
+  (ancestral/masori/kodai, AGS 1/100, voidwaker 1/500) + a **revenant-weapon trickle**. Named
+  knights roll their signature table instead at far better odds (e.g. the four Ancient-Warrior
+  knights drop their Statius/Morrigan/Vesta/Zuriel sets at ~1/15-1/18). Rates anchored to the BM
+  shop so drops complement the sink; wilderness rolls seal into the killer's **loot key**. All TUNE.
+- **Scaling:** knight #15+ is one `RogueKnights.LADDER` entry — spawning, arrows, dialogue and
+  drops are all data-driven off the registry. The named captains (`war/captains`) remain standalone
+  bounty content.
 
 Also planned, lower priority: **salvage runs** (loot "relics of old Varrock" from ruined
 buildings — a Historian NPC + collection log; relics are a forge material, §6),
@@ -306,6 +349,8 @@ unlock), commendations or any forge ingredient, XP, stats.
 3. 🔶 **Rogue milestones + bounty board** (§4) — cheap, parallel solo track.
    - ✅ Persistent rogue-family kill counter + Sergeant milestone bounties
      (10/50/250/1000), `::rogues` progress command.
+   - ✅ **The Rogue Knight ladder** (§4b): named-knight assignment track, organized camps,
+     per-hunter boss instances, hint-arrow tracking, PK-set loot pools.
    - ⬜ Rotating weekly bounty target, named captains (with item 4's districts).
 4. 🔶 **Districts + pressure meter** (§5) — turns marches into meta-progression.
    - ✅ Four districts w/ persistent pressure, march targeting + win credit, break/all-broken
