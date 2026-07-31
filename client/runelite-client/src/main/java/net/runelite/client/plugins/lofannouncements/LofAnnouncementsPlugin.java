@@ -37,6 +37,7 @@ import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.plugins.lofintro.LofIntroPlugin;
+import net.runelite.client.plugins.lofsupplydrop.LofSupplyDropPlugin;
 import net.runelite.client.ui.overlay.OverlayManager;
 import net.runelite.client.util.Text;
 
@@ -105,9 +106,10 @@ public class LofAnnouncementsPlugin extends Plugin
 		final String raw = event.getMessage();
 		final String visible = Text.removeTags(raw).trim();
 
-		// Machine-to-machine trigger for the intro video plugin, not a headline (still hidden
-		// from the chatbox by the filter below — it was never meant to be seen).
-		if (!visible.isEmpty() && !visible.startsWith(LofIntroPlugin.TRIGGER_PREFIX))
+		// Machine-to-machine triggers (intro video, supply-drop map markers) are not headlines
+		// (still hidden from the chatbox by the filter below — they were never meant to be seen).
+		if (!visible.isEmpty() && !visible.startsWith(LofIntroPlugin.TRIGGER_PREFIX)
+			&& !visible.startsWith(LofSupplyDropPlugin.TRIGGER_PREFIX))
 		{
 			final int lifetime = Math.max(5, config.lifetimeSeconds());
 			announcements.addLast(new Announcement(raw, System.currentTimeMillis() + lifetime * 1000L));

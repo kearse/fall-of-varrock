@@ -57,9 +57,10 @@ object PvpZones {
         Area(3245, 3214, 3267, 3256),  // east-Lum PK pocket is single combat
     )
 
-    /** Safe carve-outs INSIDE the red (everywhere OUTSIDE the red is already safe). */
+    /** Safe carve-outs INSIDE the red (everywhere OUTSIDE the red is already safe).
+     *  Falador is NO LONGER carved out — it's a raid city now ([RaidCities]): full PvP streets,
+     *  with only its banks safe (auto-carved by [BankSafezonePlugin]). */
     private val SAFE_INSIDE_RED: List<Area> = listOf(
-        Area(2942, 3300, 3066, 3400), // Falador (whole city + banks — safe per the city list)
         Area(3140, 3470, 3185, 3515), // Grand Exchange
         Area(3178, 3432, 3196, 3453), // Varrock west bank
         Area(3250, 3416, 3257, 3424), // Varrock east bank
@@ -73,7 +74,21 @@ object PvpZones {
     /** Extra safe boxes registered at runtime (e.g. bank booths discovered in the world). */
     private val safeDynamic = mutableListOf<Area>()
 
-    private fun inRed(t: Tile): Boolean = WILDERNESS.any { it.contains(t) }
+    /**
+     * RAID CITIES ([org.alter.plugins.content.raidzones.RaidCities]) — overrun cities turned
+     * open-PvP loot grounds (Falador, Al Kharid). Each is red at a FIXED wilderness level
+     * (its `raidWildLevel`) regardless of depth, and cities outside [mainWilderness]
+     * (Al Kharid is south of the line) become red through this list. Their banks stay safe
+     * via [BankSafezonePlugin]'s dynamic carve-outs.
+     *
+     * A `get()` (not an eager val) so classload order never matters: RaidCities never
+     * references this object back, but bots/plugins touch [mainWilderness] during their own
+     * class init and we must not force RaidCities' tables to build before the RSCM is up.
+     */
+    private val raidCities: List<Pair<Area, Int>>
+        get() = org.alter.plugins.content.raidzones.RaidCities.all.map { it.area to it.raidWildLevel }
+
+    private fun inRed(t: Tile): Boolean = WILDERNESS.any { it.contains(t) } || raidCities.any { it.first.contains(t) }
     private fun inCarveout(t: Tile): Boolean = SAFE_INSIDE_RED.any { it.contains(t) } || safeDynamic.any { it.contains(t) }
 
     /** True PvP-enabled wilderness tile (inside red, not a safe carve-out). */
@@ -89,6 +104,7 @@ object PvpZones {
     /** Wilderness level by depth pushed into the wild (0 if not in the wild). */
     fun wildernessLevel(t: Tile): Int {
         if (!isWilderness(t)) return 0
+        raidCities.firstOrNull { it.first.contains(t) }?.let { return it.second } // raid cities: fixed level
         if (CONTESTED.any { it.contains(t) }) return FRONTIER_LEVEL // §4: the town frontier is capped, not open any-level
         val depth = t.z - WILD_SOUTH_EDGE_Z
         // Isolated PK pockets south of the main wild (e.g. the east-Lum arena) are open PvP — any level.

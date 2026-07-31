@@ -13,6 +13,7 @@ import org.alter.game.model.timer.TimerKey
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
 import org.alter.plugins.content.announce.Announce
+import org.alter.plugins.content.combat.PvpZones
 import org.alter.plugins.content.war.forge.WarForge
 import org.alter.rscm.RSCM.getRSCM
 
@@ -86,8 +87,9 @@ class MarchPlugin(
                 return@onCommand
             }
             val dest = march.rallyTile(world)
-            // Rallying into the live battle line is PvP ground — make them say it twice.
-            if (march.coversBattle(dest) && (hotConfirm[player.username] ?: 0) < world.currentCycle) {
+            // Rallying into the live battle line — or any PvP ground (Falador is a raid city
+            // now, so the whole march destination is red) — make them say it twice.
+            if ((march.coversBattle(dest) || PvpZones.isWilderness(dest)) && (hotConfirm[player.username] ?: 0) < world.currentCycle) {
                 hotConfirm[player.username] = world.currentCycle + CONFIRM_WINDOW
                 player.message("<col=801700>The column is already fighting in the enemy's territory — that is PvP ground and you can be attacked.</col> Type <col=ffae00>::march</col> again to rally to them anyway.")
                 return@onCommand
