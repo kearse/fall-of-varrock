@@ -12,6 +12,7 @@ import org.alter.game.model.Tile
 import org.alter.game.model.World
 import org.alter.game.model.item.Item
 import org.alter.game.model.move.moveTo
+import org.alter.game.model.move.stopMovement
 import org.alter.plugins.content.combat.Combat
 import org.alter.plugins.content.combat.getCombatTarget
 import org.alter.plugins.content.interfaces.attack.AttackTab
