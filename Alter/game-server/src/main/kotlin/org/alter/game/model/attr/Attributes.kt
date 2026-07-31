@@ -322,6 +322,24 @@ val ROGUE_PROBLEM_STEP_ATTR = AttributeKey<Int>("rogue_problem_step")
 val ROGUE_PROBLEM_KILLS_ATTR = AttributeKey<Int>("rogue_problem_kills")
 
 /**
+ * **The Rogue Knight ladder** (content/bots/knights — the organized named-knight assignment track
+ * the Recruiting Sergeant runs after The Rogue Problem's briefing). [ROGUE_KNIGHT_RANK_ATTR] is how
+ * many named Rogue Knights the player has beaten — their assigned target is always the knight at
+ * this index of the ladder. [ROGUE_KNIGHT_TARGET_ATTR] is an optional FARM target: a beaten
+ * knight's index the player has asked to hunt again (clamped to <= rank on read; absent = hunt the
+ * assigned knight). Death never resets either — dying to a knight is the expected loop. Persistent.
+ */
+val ROGUE_KNIGHT_RANK_ATTR = AttributeKey<Int>("rogue_knight_rank")
+val ROGUE_KNIGHT_TARGET_ATTR = AttributeKey<Int>("rogue_knight_target")
+
+/**
+ * Marks a live [PkBot] as a NAMED Rogue Knight instance: the ladder key of the knight it embodies
+ * (see `content/bots/knights/RogueKnights`). Set at spawn by the camp engine; bots are never
+ * persisted, so this is session-only by nature. Transient.
+ */
+val KNIGHT_KEY_ATTR = AttributeKey<String>()
+
+/**
  * **King of Lumbridge** — the endgame conquest quest (see
  * [org.alter.plugins.content.war.Conquest]). Opens the moment a player reaches [King][
  * org.alter.plugins.content.war.Title.KING] and guides them through supplying the realm, mustering

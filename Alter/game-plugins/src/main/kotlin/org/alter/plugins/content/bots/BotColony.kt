@@ -45,7 +45,7 @@ class BotColony(private val cfg: BotZoneConfig) {
      * zone box overhangs one. This is the structural guarantee that PKers stay in the PKing areas.
      */
     private val muster = BotZones.boxStaging(cfg.area, cfg.spacing)
-        .filter { StaticTerrain.isWalkable(it.x, it.z) && PvpZones.isWilderness(it) }
+        .filter { StaticTerrain.isWalkable(it.x, it.z) && (cfg.allowSafe || PvpZones.isWilderness(it)) }
 
     init {
         logger.info { "Bot zone '${cfg.displayName}': ${muster.size} walkable muster points (target ${cfg.target})." }
@@ -102,6 +102,9 @@ class BotColony(private val cfg: BotZoneConfig) {
             bot.roamRadius = cfg.roamRadius
             bot.leashRadius = cfg.leashRadius
             bot.zoneKey = cfg.key
+            // Safe-ground camps (Bandit Hideout / Fallen Falador): the bots patrol + aggro on their
+            // safe posts like the goblin-camp ambusher; the brain's wilderness guards stay on elsewhere.
+            bot.ambushEverywhere = cfg.allowSafe
             pool += bot
         }
     }

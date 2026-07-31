@@ -57,7 +57,18 @@ data class BotZoneConfig(
     val respawnDelayTicks: Int = 10,
     /** A real player within [area] expanded by this many tiles activates the zone. */
     val activationPadding: Int = 32,
-)
+    /**
+     * SAFE-GROUND camp: when true the colony musters on walkable tiles even where
+     * [PvpZones.isWilderness] is false, and every spawned bot gets [PkBot.ambushEverywhere] so it
+     * aggros on its safe-tile post (the goblin-camp ambusher pattern, zone-ified). Used by the
+     * organized rogue-knight camps outside the red (the Bandit Hideout west of Lumbridge, overrun
+     * Falador) — players who die there get the normal safe-zone reclaim pile, so the low camps are
+     * where you LEARN to fight PKers cheaply. Requires a pinned [tier] (never depth-roll a safe camp).
+     */
+    val allowSafe: Boolean = false,
+) {
+    init { require(!allowSafe || tier != null) { "allowSafe zone '$key' must pin a tier (wild level is 0 on safe ground)" } }
+}
 
 object BotZones {
 
@@ -73,17 +84,49 @@ object BotZones {
     ))
     // Wild 11–20: budget PK sets — a low-def pure, a 45-def whip zerker, a rune-clad main.
     private val T_BUDGET = BotTier(listOf("budget_pure" to 2, "budget_zerker" to 2, "budget_main" to 1))
-    // Wild 21–30: mid mains — the classic whip hybrid, a mid ranger, a mid freezer, a budget DHer.
+    // Wild 21–30: mid mains — the classic whip hybrid, a mid ranger, a mid freezer, a budget DHer,
+    // plus the void ranger and dark-bow sniper gimmick builds for variety.
     private val T_MID = BotTier(listOf(
         "classic_hybrid" to 2, "range_mid" to 1, "mage_mid" to 1, "dharok_mid" to 1,
+        "void_ranger" to 1, "dbow_sniper" to 1,
     ))
-    // Wild 31–40: high / maxer tier — Bandos maxers (AGS + tentacle/claws), blood mage, claws brid.
+    // Wild 31–40: high / maxer tier — Bandos maxers (AGS + tentacle/claws), blood mage, claws brid,
+    // plus the Statius bruiser, Morrigan ballista and revenant-weapon raider wildy builds.
     private val T_HIGH = BotTier(listOf(
         "max_main" to 2, "max_tent" to 1, "claws_brid" to 1, "ancient_mage" to 1,
+        "statius_bruiser" to 1, "morrigan_skirmisher" to 1, "rev_raider" to 1,
     ))
-    // Wild 41+: elite meta — tribrid NHer, kodai freezer, masori ranger, Dharok DHer.
+    // Wild 41+: elite meta — tribrid NHer, kodai freezer, masori ranger, Dharok DHer, plus the two
+    // elite Ancient Warrior builds (Vesta duelist / Zuriel storm mage).
     private val T_ELITE = BotTier(listOf(
         "elite_nh" to 2, "mage_elite" to 1, "range_elite" to 1, "dharok_dher" to 1, "claws_brid" to 1,
+        "vesta_duelist" to 1, "zuriel_mage" to 1,
+    ))
+
+    // ===================== ORGANIZED ROGUE-KNIGHT CAMPS (rogue-knight ladder §docs) =====================
+    // Fixed-tier ambient populations at each camp on the ladder, so every camp reads as an organized
+    // warband of a recognisable level band — the named knights (bots/knights/) stand among them.
+
+    /** Bandit Hideout (SAFE, west of Lumbridge): the Bronze Knights — bronze/iron/steel fodder for
+     *  brand-new players learning to fight PKers with a reclaimable death. */
+    private val T_BANDIT_HIDEOUT = BotTier(listOf(
+        "bronze_pker" to 4, "iron_pker" to 3, "steel_pker" to 2,
+    ))
+
+    /** Fallen Falador (SAFE carve-out): the Black Knights + low-level NHers — the first camp where
+     *  the enemy prays and switches, still on reclaimable ground. */
+    private val T_FALLEN_FALADOR = BotTier(listOf(
+        "black_pker" to 3, "mithril_pker" to 2, "budget_pure" to 2, "budget_zerker" to 2, "obby_mauler" to 1,
+    ))
+
+    /** Wild Bandit Camp (deep wild, multi): the high-tier warband — maxers and wildy-set builds. */
+    private val T_WILD_BANDIT_CAMP = BotTier(listOf(
+        "max_main" to 2, "max_tent" to 2, "statius_bruiser" to 2, "morrigan_skirmisher" to 2, "rev_raider" to 2,
+    ))
+
+    /** The Rogue Commander's Redoubt (deep wild 45+): the elite guard around the top of the ladder. */
+    private val T_REDOUBT = BotTier(listOf(
+        "elite_nh" to 2, "mage_elite" to 1, "range_elite" to 1, "vesta_duelist" to 2, "zuriel_mage" to 2,
     ))
 
     /**
@@ -160,6 +203,70 @@ object BotZones {
             col++
             x += CELL
         }
+
+        // ============== ORGANIZED ROGUE-KNIGHT CAMPS (ladder camps 1/2/4/5; camp 3 is Fallen ==============
+        // Varrock below). Tiles are TUNE — verify with ::zone in-game. The two safe camps ride the
+        // allowSafe/ambushEverywhere path (reclaimable deaths — the learning camps); the two deep
+        // camps are ordinary wilderness zones with pinned high/elite pools, denser than the grid.
+
+        // Camp 1 — the BANDIT HIDEOUT west of Lumbridge (safe ground, south of the red's edge).
+        add(
+            BotZoneConfig(
+                key = "bandit_hideout",
+                displayName = "Bandit Hideout",
+                area = Area(3095, 3215, 3125, 3245),
+                tier = T_BANDIT_HIDEOUT,
+                target = 3,
+                spacing = 4,
+                roamRadius = 6,
+                leashRadius = 16,
+                activationPadding = 24,
+                allowSafe = true,
+            ),
+        )
+        // Camp 2 — overrun FALLADOR (inside the safe carve-out; the Black Knights' quarter).
+        add(
+            BotZoneConfig(
+                key = "fallen_falador_camp",
+                displayName = "Fallen Falador",
+                area = Area(2960, 3330, 3010, 3370),
+                tier = T_FALLEN_FALADOR,
+                target = 3,
+                spacing = 5,
+                roamRadius = 7,
+                leashRadius = 16,
+                activationPadding = 24,
+                allowSafe = true,
+            ),
+        )
+        // Camp 4 — the WILD BANDIT CAMP (deep wilderness, multi): the high-tier warband.
+        add(
+            BotZoneConfig(
+                key = "wild_bandit_camp",
+                displayName = "Wild Bandit Camp",
+                area = Area(3020, 3675, 3055, 3705),
+                tier = T_WILD_BANDIT_CAMP,
+                target = 3,
+                spacing = 5,
+                roamRadius = 8,
+                leashRadius = 20,
+                activationPadding = 24,
+            ),
+        )
+        // Camp 5 — the ROGUE COMMANDER'S REDOUBT (deepest wild): the elite guard.
+        add(
+            BotZoneConfig(
+                key = "rogue_redoubt",
+                displayName = "Rogue Commander's Redoubt",
+                area = Area(2995, 3865, 3035, 3900),
+                tier = T_REDOUBT,
+                target = 3,
+                spacing = 5,
+                roamRadius = 8,
+                leashRadius = 20,
+                activationPadding = 24,
+            ),
+        )
 
         // FALLEN VARROCK — the city fell and is now the loot hub where the rogues congregate, so it
         // gets a dedicated, denser colony ON TOP of the grid cells that cover it. This is also the
