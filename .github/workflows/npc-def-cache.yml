@@ -1,0 +1,97 @@
+name: NPC def cache edit
+
+# One-click NPC-def cache edit on the LIVE server, over the same secure SSH path
+# the Deploy / Quest cache workflows use (secrets DEPLOY_SSH_KEY / DEPLOY_USER /
+# DEPLOY_HOST) — no manual SSH needed. Runs the npcDef tool that already ships
+# inside the game image (org.alter.tools.npcdef.NpcDefToolKt) against the live
+# cache at /opt/kol/runtime/cache.
+#
+# Right-click menu options live in the CLIENT's cache def, so a server-side
+# override can't add them — this edits the cache directly, and the game serves
+# the changed archive to clients over JS5 after a restart.
+#
+#   inspect  — read-only: print npc 733's current actions + combat level (safe, do first)
+#   grimjaw  — back up the cache (once, to runtime/cache.pregrimjaw), give Grimjaw
+#              (npc 733 / bandit_leader) the "Attack" option + a combat level so he
+#              can be fought, then restart the game container (~90s disconnect)
+#   restore  — swap the pristine backup back and restart the game container
+#
+# Actions -> NPC def cache edit -> Run workflow -> pick an action.
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "What to do to the live npc cache"
+        type: choice
+        required: true
+        default: inspect
+        options: [inspect, grimjaw, restore]
+
+# Share the deploy group so a cache edit never races a running deploy / other cache op.
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Write SSH key
+        run: |
+          install -m 600 /dev/null deploy_key
+          printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > deploy_key
+
+      - name: Run npc def ${{ inputs.action }} on the VPS
+        run: |
+          ssh -i deploy_key -o StrictHostKeyChecking=accept-new \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+            'bash -s' '${{ inputs.action }}' <<'REMOTE'
+          set -euo pipefail
+          ACTION="${1:-inspect}"
+          cd /opt/kol
+          export IMAGE_TAG="$(cat .deployed-tag 2>/dev/null || echo latest)"
+          CACHE=/opt/kol/runtime/cache
+          BACKUP=/opt/kol/runtime/cache.pregrimjaw
+          COMPOSE="docker compose -f docker-compose.prod.yml"
+
+          # NpcDefTool reads a RELATIVE "data/cache" path, so mount the live cache there and
+          # run with workdir /app. The mount is bidirectional — the tool's writes land on the
+          # host cache. (Its own data/cache-backups backup is ephemeral in the --rm container;
+          # we take a real shell-level backup below and restore from that instead.)
+          run_tool() {
+            $COMPOSE run --rm -T --no-deps \
+              -v "$CACHE":/app/data/cache -w /app --entrypoint java game \
+              -cp '/app/lib/*' org.alter.tools.npcdef.NpcDefToolKt "$@"
+          }
+
+          echo "== npc def cache: $ACTION (image tag $IMAGE_TAG) =="
+          case "$ACTION" in
+            inspect)
+              run_tool inspect 733
+              ;;
+            grimjaw)
+              if [ ! -d "$BACKUP" ]; then
+                cp -r "$CACHE" "$BACKUP"
+                echo "backed up pristine cache -> $BACKUP"
+              else
+                echo "pristine backup already exists ($BACKUP) — keeping it"
+              fi
+              run_tool grimjaw
+              $COMPOSE restart game
+              echo "game container restarted — relog to see Grimjaw become attackable"
+              ;;
+            restore)
+              if [ ! -d "$BACKUP" ]; then
+                echo "ERROR: no backup at $BACKUP — nothing to restore"; exit 1
+              fi
+              $COMPOSE stop game
+              rm -rf "$CACHE"
+              cp -r "$BACKUP" "$CACHE"
+              $COMPOSE up -d game
+              echo "restored pristine cache + restarted game"
+              ;;
+            *)
+              echo "unknown action: $ACTION"; exit 1 ;;
+          esac
+          REMOTE
