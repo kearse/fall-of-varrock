@@ -138,7 +138,7 @@ class LumbridgeStylistPlugin(
         coinShop(SHOP_CAPES, capeStock)
 
         // ---- the stylist, at the east-side services spot on the opened castle ground floor ----
-        spawnNpc(NPC, x = 3212, z = 3211, height = 0, walkRadius = 0, direction = Direction.NORTH)
+        spawnNpc(NPC, x = 3210, z = 3211, height = 0, walkRadius = 0, direction = Direction.NORTH)
         // Client-facing name (no cache edit), re-applied on every (re)spawn.
         onNpcSpawn(NPC) { NpcInfo(npc).setTempName(STYLIST_NAME) }
 

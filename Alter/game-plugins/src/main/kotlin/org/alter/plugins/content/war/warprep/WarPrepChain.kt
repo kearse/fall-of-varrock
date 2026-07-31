@@ -92,7 +92,7 @@ object WarPrepChain {
     private const val KNIGHT_NPC = "npc.void_knight"
     private val KNIGHT_TILE = Triple(3113, 3208, 0) // WizardTowerPlugin's knight spawn
     private const val DUKE_NPC = "npc.duke_horacio"
-    private val DUKE_TILE = Triple(3222, 3218, 0) // RecruitTrials' Duke anchor (ground floor, by the market)
+    private val DUKE_TILE = Triple(3213, 3219, 0) // RecruitTrials' Duke anchor (commerce block, ground floor)
 
     private const val ARROW_HEIGHT = 130
     private const val NEAR_TILES = 14

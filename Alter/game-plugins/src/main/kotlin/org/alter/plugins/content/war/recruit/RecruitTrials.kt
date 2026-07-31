@@ -84,7 +84,7 @@ object RecruitTrials {
     private const val QUARTERMASTER_NPC = "npc.quartermaster" // the Supply Officer in The Mire crypt
     // anchor = (x, z, PLANE the npc stands on). Plane drives the floor-aware routing in pointAtNpc.
     private val SERGEANT_TILE = Triple(3219, 3214, 0)
-    private val DUKE_TILE = Triple(3222, 3218, 0) // Duke stands on the ground floor in the market
+    private val DUKE_TILE = Triple(3213, 3219, 0) // Duke stands in the commerce block on the ground floor
     private val VANNAKA_TILE = Triple(3219, 3215, 0)
     private val QUARTERMASTER_TILE = Triple(3248, 3193, 0) // Supply Officer's post by the crypt in The Mire
 

@@ -57,7 +57,7 @@ object Sieges {
      *  (verified against the region-12850 map dump). TUNABLE. */
     private val gate = Tile(3232, 3219, 0)
 
-    /** The protected castle **keep**: the new-player respawn courtyard (respawn tile 3222,3218).
+    /** The protected castle **keep**: the new-player respawn courtyard (respawn tile 3209,3216).
      *  War goblins (and the frontier roamers — see [CityFrontiers]) are hard-leashed OUT of this
      *  box and never target a player inside it, so a fresh account can never be spawn-camped during
      *  a breach. Its EAST edge (x3229) sits a few tiles WEST of the gate ([gate], x3232), so the
@@ -98,7 +98,7 @@ object Sieges {
         // his death no longer fells the city (that mechanic was removed). Decorative/NPC role for
         // now. Inside [LUMBRIDGE_KEEP], so the war never reaches him. TUNE in-game.
         zoNpc = "npc.melee_combat_tutor",
-        zoTile = Tile(3223, 3216, 0),
+        zoTile = Tile(3218, 3218, 0),
         zoDef = zoDef,
         // ONE prong: the camp east of the river marches WEST over the south bridge into the castle.
         // The flow field does the real routing (the bridge is opened in bridgeSpans); these waypoints

@@ -52,7 +52,7 @@ class CosmeticDyePlugin(
         }
         // Optional vendor (the OSRS dye witch); ::dyes is the guaranteed opener regardless.
         if (res("npc.aggie") != null) {
-            spawnNpc("npc.aggie", x = 3208, z = 3211, height = 0, walkRadius = 0, direction = Direction.NORTH)
+            spawnNpc("npc.aggie", x = 3211, z = 3211, height = 0, walkRadius = 0, direction = Direction.NORTH)
             bind("npc.aggie")
         }
         onCommand("dyes", description = "Open the Cosmetic Dyes shop") { player.openShop(SHOP) }

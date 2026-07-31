@@ -19,7 +19,7 @@ object Raids {
         name = "Test Raid",
         sourceArea = Area(2368, 5056, 2432, 5120),
         entryTile = Tile(2400, 5085, 0),
-        exitTile = Tile(3222, 3218, 0), // Lumbridge home
+        exitTile = Tile(3209, 3216, 0), // Lumbridge home
         levels = 1,
         stages = listOf(
             RaidStage("<col=ff0000>Wave 1...</col>", listOf(RaidSpawn("npc.goblin", Tile(2400, 5090, 0), 2))),
