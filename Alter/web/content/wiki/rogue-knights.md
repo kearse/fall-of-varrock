@@ -9,7 +9,7 @@ infobox: Type = Boss ladder (repeatable); Start = The Rogue Problem quest (auto)
 
 The deserters who lead Varrock's rogues style themselves **Rogue Knights** - a ladder of **fourteen named boss PKers**, weakest to strongest, camped from the Lumbridge road to the deepest wilderness. The **Recruiting Sergeant** assigns them **in order**: kill your mark, rank up, and he names the next. Every knight you beat hands you a **first-kill gear unlock** - deliberately the core of the kit that beats the *next* one - so the ladder is both your PK training and your gear progression in one track.
 
-**Expect to die.** The knights fight like real players - they eat, pot, pray-switch and spec - and the top of the ladder flicks prayers nearly frame-perfectly. Dying to a knight is the loop, not a failure: your rank never resets, the first camp sits on **reclaim-safe ground** (walk back for your gear), and the tracking arrow leads you straight back for the rematch. *Dying is training. Going back is winning.*
+**Expect to die.** The knights fight like real players - they eat, pot, pray-switch and spec - and the top of the ladder flicks prayers nearly frame-perfectly. Dying to a knight is the loop, not a failure: your rank never resets, the first two camps sit on **reclaim-safe ground** (walk back for your gear), and the tracking arrow leads you straight back for the rematch. *Dying is training. Going back is winning.*
 
 ## Finding your knight
 
@@ -23,12 +23,24 @@ The deserters who lead Varrock's rogues style themselves **Rogue Knights** - a l
 | Camp | Where | Ground | Who holds it |
 | --- | --- | --- | --- |
 | **Bandit Hideout** | west of Lumbridge, on the Draynor road | **Safe** - death leaves a reclaim pile | Bronze, iron and steel knights - the learning camp |
-| **Fallen Falador** | the overrun white city | **Raid city** - full-PvP streets, only the banks safe | Black Knights and low-level NHers: pures, zerkers, an obsidian mauler |
+| **Siege of Port Sarim** | the docks south-west of Lumbridge | **Safe** - death leaves a reclaim pile | The raid leaders - Black Knights and low-level NHers: pures, zerkers, an obsidian mauler - assaulting the dock garrison in waves |
 | **Fallen Varrock** | the old capital's streets | **Wilderness** (single combat) | Rune mains, hybrids, a Void ranger |
 | **Wild Bandit Camp** | deep wilderness, far north-west | **Wilderness** (multi) | Maxers and Ancient Warrior builds - Dharok's, Statius, Morrigan |
 | **Rogue Commander's Redoubt** | the deepest wild, near the old mage arena | **Wilderness** (multi) | The elite guard - Vesta, Zuriel, and the Commander himself |
 
-Each camp also has an **ambient warband** of regular Rogue Knights in that band's gear prowling it - fodder, loot and practice around the named fights. The Bandit Hideout is the one place the warband fights on reclaim-safe ground; from Falador onward you're on PvP streets, so carry a cheap kit until a fight is learned.
+Most camps also have an **ambient warband** of regular Rogue Knights in that band's gear prowling it - fodder, loot and practice around the named fights. The two low camps sit on reclaim-safe ground (die, walk back, try again); from Fallen Varrock onward you're on PvP ground, so carry a cheap kit until a fight is learned.
+
+## Holding the port
+
+Port Sarim is Lumbridge's **lifeline** - its only port. Lose it and the realm is cut off, so the crown garrisons the docks with **Knights of Lumbridge**, and the Rogue Knights raid them in endless waves to take it.
+
+Here's the thing: **the garrison is losing.** Every wave, six Rogue Raiders come up the Falador road against four dock knights - slightly outnumbered, slightly outmatched, they get ground down and the docks fall, over and over, until reinforcements claw them back. Unless *you* step in:
+
+- Kill **2-3 raiders** and the numbers flip - the knights win the melee and the wave breaks.
+- Everyone who downed a raider that wave is paid a **small contribution** (a few War Effort) when the port holds. It's a token, not a grind loop - the real prizes here are the four named knights leading the raids.
+- The knights have your back too: any raider that strikes you gets piled on by the garrison.
+
+Raiders never attack travellers unprovoked - the port stays a safe hub - and dying to them (or to a named knight) here just leaves a reclaim pile. It's the ladder's second classroom: real switches, real specs, no gear bill.
 
 ## The ladder
 
@@ -36,10 +48,10 @@ Each camp also has an **ambient warband** of regular Rogue Knights in that band'
 | --- | --- | --- | --- | --- |
 | 1 | **Sir Brack the Bronze** | Bandit Hideout | iron | - |
 | 2 | **Sir Oswin the Steel** | Bandit Hideout | steel | - |
-| 3 | **Sir Malrik the Black** | Fallen Falador | black | rune scimitar |
-| 4 | **Dame Vora the Swift** | Fallen Falador | 1-def pure (prays!) | black d'hide |
-| 5 | **Grom the Mauler** | Fallen Falador | obsidian maul | berserker necklace, obby maul |
-| 6 | **Sir Edran Ironclad** | Fallen Falador | 45-def zerker | fighter torso, warrior ring |
+| 3 | **Sir Malrik the Black** | Port Sarim | black | rune scimitar |
+| 4 | **Dame Vora the Swift** | Port Sarim | 1-def pure (prays!) | black d'hide |
+| 5 | **Grom the Mauler** | Port Sarim | obsidian maul | berserker necklace, obby maul |
+| 6 | **Sir Edran Ironclad** | Port Sarim | 45-def zerker | fighter torso, warrior ring |
 | 7 | **Sir Caldus the Red** | Fallen Varrock | rune main | dragon scimitar, dragon defender |
 | 8 | **Dame Isolde the Blade** | Fallen Varrock | tribrid hybrid | **abyssal whip**, fury |
 | 9 | **Sir Guthric Longshot** | Fallen Varrock | Void ranger | **Void set pieces**, dark bow |

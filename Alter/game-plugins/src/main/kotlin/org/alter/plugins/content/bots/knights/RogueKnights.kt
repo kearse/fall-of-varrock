@@ -16,10 +16,12 @@ import org.alter.plugins.content.bots.BotItem
  *   - and every kill (first or farmed) rolls the knight's **signature rare table** on top of its
  *     full worn-kit drop.
  *
- * Camps escalate: the SAFE Bandit Hideout (reclaimable deaths — learn cheaply) → raid-city Fallen
- * Falador (full-PvP streets, banks safe) → shallow-wild Fallen Varrock → the deep-wild camps where
- * dying costs you everything you carry. Top knights are TUNED TO BE GENUINELY HARD (hp overrides +
- * near-perfect prayer reactions + fast specs) — several attempts is the intended experience.
+ * Camps escalate: the SAFE Bandit Hideout (reclaimable deaths — learn cheaply) → the SAFE Siege of
+ * Port Sarim (the rogues raid Lumbridge's lifeline port — `areas/portsarim/PortSiegePlugin` runs
+ * the battle scene; lose the port and the realm is cut off) → shallow-wild Fallen Varrock → the
+ * deep-wild camps where dying costs you everything you carry. Top knights are TUNED TO BE
+ * GENUINELY HARD (hp overrides + near-perfect prayer reactions + fast specs) — several attempts is
+ * the intended experience.
  *
  * **Scaling:** adding knight #15+ is ONE list entry (keep ranks contiguous). Everything else —
  * spawning, tracking arrows, dialogue, drops — is data-driven off this list.
@@ -78,12 +80,12 @@ object RogueKnights {
         safe = true,
         directions = "west out of Lumbridge, past the mill — the hideout squats on the road to Draynor.",
     )
-    val FALLEN_FALADOR = KnightCamp(
-        key = "fallen_falador",
-        display = "Fallen Falador",
-        center = Tile(2985, 3350),
-        safe = false, // a RAID CITY — full-PvP streets, only the banks are safe
-        directions = "the white city's streets, overrun since the captains fled Varrock — a raid city now; only its banks are safe. Enter from the south gate.",
+    val PORT_SARIM = KnightCamp(
+        key = "port_sarim",
+        display = "Port Sarim",
+        center = Tile(3041, 3202), // the docks — matches PortSiegePlugin.PORT_CENTRE (TUNE together)
+        safe = true, // outside the red: reclaim deaths — the ladder's second learning ground
+        directions = "the docks south-west of Lumbridge — our only port. The rogues raid it in waves to cut the realm off; help the dock knights hold it while you hunt.",
     )
     val FALLEN_VARROCK = KnightCamp(
         key = "fallen_varrock",
@@ -107,7 +109,7 @@ object RogueKnights {
         directions = "the deepest wilderness, near the old mage arena — the Commander's elite hold the walls.",
     )
 
-    val CAMPS = listOf(BANDIT_HIDEOUT, FALLEN_FALADOR, FALLEN_VARROCK, WILD_BANDIT_CAMP, ROGUE_REDOUBT)
+    val CAMPS = listOf(BANDIT_HIDEOUT, PORT_SARIM, FALLEN_VARROCK, WILD_BANDIT_CAMP, ROGUE_REDOUBT)
 
     // ---- the ladder (rank == index; ~14 now, add more freely — numbers/items TUNE) ----
 
@@ -126,40 +128,40 @@ object RogueKnights {
         ),
         RogueKnightDef(
             rank = 2, key = "malrik", name = "Sir Malrik the Black",
-            camp = FALLEN_FALADOR, loadoutKey = "black_pker", maxHp = 60,
+            camp = PORT_SARIM, loadoutKey = "black_pker", maxHp = 60,
             firstKillRewards = listOf("item.mithril_scimitar" to 1, "item.climbing_boots" to 1, "item.coins_995" to 20_000),
             rareTable = DropTable(rare = listOf(DropEntry("item.rune_scimitar", oneInN = 8))),
-            briefLine = "Sir Malrik the Black holds a street in Fallen Falador with the Black Knights. The white city's a raid ground now — only the banks are safe, so carry a cheap kit.",
+            briefLine = "Sir Malrik the Black leads the raids on Port Sarim's docks. Lose that port and Lumbridge is cut off from the world — cut HIM down instead. Help the dock knights hold the line while you're there.",
         ),
         RogueKnightDef(
             rank = 3, key = "vora", name = "Dame Vora the Swift",
-            camp = FALLEN_FALADOR, loadoutKey = "budget_pure",
+            camp = PORT_SARIM, loadoutKey = "budget_pure",
             firstKillRewards = listOf("item.rune_scimitar" to 1, "item.magic_shortbow" to 1, "item.amulet_of_glory" to 1),
             rareTable = DropTable(rare = listOf(
                 DropEntry("item.black_dhide_body", oneInN = 8),
                 DropEntry("item.black_dhide_chaps", oneInN = 8),
             )),
-            briefLine = "Dame Vora the Swift — a pure, all blade and no armour. She'll pray your style and out-damage you. Learn to switch.",
+            briefLine = "Dame Vora the Swift runs the port raids' skirmish line — a pure, all blade and no armour. She'll pray your style and out-damage you. Learn to switch.",
         ),
         RogueKnightDef(
             rank = 4, key = "grom", name = "Grom the Mauler",
-            camp = FALLEN_FALADOR, loadoutKey = "obby_mauler", maxHp = 90,
+            camp = PORT_SARIM, loadoutKey = "obby_mauler", maxHp = 90,
             firstKillRewards = listOf("item.obsidian_cape" to 1, "item.granite_maul" to 1),
             rareTable = DropTable(rare = listOf(
                 DropEntry("item.berserker_necklace", oneInN = 10),
                 DropEntry("item.tzhaarketom", oneInN = 16),
             )),
-            briefLine = "Grom the Mauler — no knight at all, just an obsidian maul and bad intentions. Don't stand still.",
+            briefLine = "Grom the Mauler — no knight at all, just an obsidian maul and bad intentions, breaking heads on the port road. Don't stand still.",
         ),
         RogueKnightDef(
             rank = 5, key = "edran", name = "Sir Edran Ironclad",
-            camp = FALLEN_FALADOR, loadoutKey = "budget_zerker", maxHp = 100,
+            camp = PORT_SARIM, loadoutKey = "budget_zerker", maxHp = 100,
             firstKillRewards = listOf("item.berserker_helm" to 1, "item.rune_defender" to 1),
             rareTable = DropTable(rare = listOf(
                 DropEntry("item.fighter_torso", oneInN = 10),
                 DropEntry("item.warrior_ring", oneInN = 16),
             )),
-            briefLine = "Sir Edran Ironclad, a zerker of the old school — whip, torso, and a maul combo that ends fights. Respect the spec.",
+            briefLine = "Sir Edran Ironclad commands the port assault — a zerker of the old school: whip, torso, and a maul combo that ends fights. Break him and the raids on Port Sarim break with him.",
         ),
         RogueKnightDef(
             rank = 6, key = "caldus", name = "Sir Caldus the Red",
