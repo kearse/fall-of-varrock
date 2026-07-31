@@ -30,6 +30,7 @@ import java.nio.file.Path
  *   gradlew :game-server:npcDef -PnpcArgs="wizardknight"     # Void Knight 1755: Talk-to / Solo game / Multi game
  *   gradlew :game-server:npcDef -PnpcArgs="krilbodyguards"   # K'ril's 3 bodyguards: add the "Attack" option
  *   gradlew :game-server:npcDef -PnpcArgs="kreearra"         # Kree'arra's 3 minions: add "Attack" + combat level
+ *   gradlew :game-server:npcDef -PnpcArgs="grimjaw"          # Grimjaw bounty captain (733): add "Attack" + combat level
  *   gradlew :game-server:npcDef -PnpcArgs="restore 1755"
  */
 
@@ -52,6 +53,15 @@ private val KRIL_BODYGUARDS = listOf(3130, 3131, 3132)
 // the OSRS combat level (id to combatLevel).
 private val KREEARRA_MINIONS = listOf(3163 to 143, 3164 to 149, 3165 to 159)
 
+// Grimjaw — the "Rogue Problem" bounty captain (NamedCaptainsPlugin) — is spawned on npc 733
+// (bandit_leader), which ships as a NON-combat npc: no "Attack" menu option AND combatLevel 0. So
+// Combat.canEngage's isAttackable() (needs "Attack" AND combatLevel > 0) rejects him and the client
+// shows only "Talk-to" — players reported "can't attack Grimjaw, only talk". The plugin's runtime
+// combat def can't fix this (isAttackable reads the CACHE def). Same treatment as the Kree'arra
+// minions: give slot 2 the Attack option and a non-zero combat level fitting his boosted stats.
+private const val GRIMJAW = 733
+private const val GRIMJAW_LEVEL = 100
+
 fun main(args: Array<String>) {
     when (args.getOrNull(0)?.lowercase() ?: "inspect") {
         "inspect" -> inspect(args.drop(1).mapNotNull { it.toIntOrNull() })
@@ -64,8 +74,10 @@ fun main(args: Array<String>) {
         "krilbodyguards" -> KRIL_BODYGUARDS.forEach { setActions(it, listOf(null, "Attack", null, null, null)) }
         // Same as krilbodyguards, but the birds also need a combat level (see KREEARRA_MINIONS).
         "kreearra" -> KREEARRA_MINIONS.forEach { (id, cb) -> setActions(id, listOf(null, "Attack", null, null, null), combatLevel = cb) }
+        // Grimjaw the bounty captain: add the "Attack" option + a combat level so he can be fought.
+        "grimjaw" -> setActions(GRIMJAW, listOf(null, "Attack", null, null, null), combatLevel = GRIMJAW_LEVEL)
         "restore" -> restore(args.getOrNull(1)?.toIntOrNull() ?: run { println("restore <id>"); return })
-        else -> println("usage: inspect <id...> | anims <id...> | wizardknight | krilbodyguards | kreearra | restore <id>")
+        else -> println("usage: inspect <id...> | anims <id...> | wizardknight | krilbodyguards | kreearra | grimjaw | restore <id>")
     }
 }
 

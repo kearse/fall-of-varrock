@@ -34,6 +34,14 @@ class EquipmentPlugin(
             }
         }
 
+        // Reset the weapon-type varbit (357) on ANY weapon unequip, not just the worn-tab path.
+        // getCombatClass() derives ranged/melee/magic from this varbit, so if it isn't cleared the
+        // player keeps "using ranged" after taking a bow off via the Equipment-Stats screen, the
+        // bank, or any programmatic unequip. Mirrors the centralized equip hook above.
+        onUnequipFromSlot(EquipmentType.WEAPON.id) {
+            player.sendWeaponComponentInformation()
+        }
+
         bind_unequip(EquipmentType.HEAD, child = 15)
         bind_unequip(EquipmentType.CAPE, child = 16)
         bind_unequip(EquipmentType.AMULET, child = 17)

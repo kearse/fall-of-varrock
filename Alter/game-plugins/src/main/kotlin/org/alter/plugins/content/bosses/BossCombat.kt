@@ -9,6 +9,7 @@ import org.alter.game.model.combat.CombatClass
 import org.alter.game.model.combat.CombatStyle
 import org.alter.game.model.entity.Npc
 import org.alter.game.model.entity.Pawn
+import org.alter.plugins.content.combat.Combat
 import org.alter.plugins.content.combat.createProjectile
 import org.alter.plugins.content.combat.formula.MagicCombatFormula
 import org.alter.plugins.content.combat.formula.MeleeCombatFormula
@@ -33,12 +34,14 @@ fun Npc.bossMelee(
     ignoresPrayer: Boolean = false,
 ): Boolean {
     prepareAttack(CombatClass.MELEE, style, AttackStyle.AGGRESSIVE)
+    val attacker = this
     if (!ignoresPrayer && target.isProtectedFrom(CombatClass.MELEE)) {
-        target.hit(damage = 0, type = HitType.BLOCK, delay = 1)
+        target.hit(damage = 0, type = HitType.BLOCK, delay = 1).addAction { Combat.postDamage(attacker, target) }
         return false
     }
     val landed = MeleeCombatFormula.getAccuracy(this, target) >= world.randomDouble()
     target.hit(damage = if (landed) world.random(maxHit) else 0, type = if (landed) HitType.HIT else HitType.BLOCK, delay = 1)
+        .addAction { Combat.postDamage(attacker, target) } // makes a Player target auto-retaliate (honours the toggle)
     return landed
 }
 
@@ -51,10 +54,11 @@ fun Npc.bossProjectile(
 ): Boolean {
     val style = if (combatClass == CombatClass.MAGIC) CombatStyle.MAGIC else CombatStyle.RANGED
     prepareAttack(combatClass, style, AttackStyle.ACCURATE)
+    val attacker = this
     world.spawn(createProjectile(target, gfx = gfx, startHeight = 43, endHeight = 31, delay = 41, angle = 15, steepness = 20))
     val delay = max(1, RangedCombatStrategy.getHitDelay(getFrontFacingTile(target), target.getCentreTile()) - 1)
     if (!ignoresPrayer && target.isProtectedFrom(combatClass)) {
-        target.hit(damage = 0, type = HitType.BLOCK, delay = delay)
+        target.hit(damage = 0, type = HitType.BLOCK, delay = delay).addAction { Combat.postDamage(attacker, target) }
         return false
     }
     // Formula must match the style: MeleeCombatFormula THROWS on RANGED/MAGIC (only knows
@@ -62,6 +66,7 @@ fun Npc.bossProjectile(
     val formula = if (combatClass == CombatClass.MAGIC) MagicCombatFormula else RangedCombatFormula
     val landed = formula.getAccuracy(this, target) >= world.randomDouble()
     target.hit(damage = if (landed) world.random(maxHit) else 0, type = if (landed) HitType.HIT else HitType.BLOCK, delay = delay)
+        .addAction { Combat.postDamage(attacker, target) } // makes a Player target auto-retaliate (honours the toggle)
     return landed
 }
 

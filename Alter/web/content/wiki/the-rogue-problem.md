@@ -9,7 +9,7 @@ infobox: Type = Quest (auto-starts); Start = Automatic once War-Prep I is done; 
 
 **The Rogue Problem** is the quest that answers "what now?" the moment you clear the [Wizard Tower](/wiki/wizard-tower) and claim your Squire rank. Where the roadmap used to drop you into an open-ended grind toward Knight, this quest hands you a guided path there - and the [Quest Journal](/wiki/gameplay-roadmap) points the way at every step.
 
-It's the first chapter of **Act II - The Soldier**: your first scripted trip into **Fallen Varrock**, the fallen capital you'll one day help retake.
+It's the first chapter of **Act II - The Soldier**: your first scripted trip into **Fallen Falador**, the city the rogues seized when the demons took Varrock.
 
 ## Getting in
 
@@ -21,12 +21,12 @@ It's the first chapter of **Act II - The Soldier**: your first scripted trip int
 
 | Step | What to do |
 | --- | --- |
-| **Hunt** | Cut down **30 rogues** in the streets of Fallen Varrock (rogues, muggers, highwaymen, thugs, bandits, outlaws all count). |
-| **Captain** | Hunt down one of Fallen Varrock's **named district captains** - check the board with `::bounties`. |
+| **Hunt** | Cut down **30 rogues** in the streets of Fallen Falador (rogues, muggers, highwaymen, thugs, bandits, outlaws all count). |
+| **Captain** | Hunt down one of the **named district captains** holed up in Fallen Falador - check the board with `::bounties`. |
 | **Report** | Return to the Recruiting Sergeant for your purse. |
 | **Rank** | Take the purse to **Duke Horacio** and climb to **Knight**. |
 
-Fallen Varrock is **lawless PvP ground** - the wilderness. Take nothing you can't afford to lose; the rogue tally, at least, is yours forever and death never resets it. See [Death & item protection](/wiki/death-and-item-protection).
+Fallen Falador is **lawless PvP ground** - the wilderness. Take nothing you can't afford to lose; the rogue tally, at least, is yours forever and death never resets it. See [Death & item protection](/wiki/death-and-item-protection).
 
 The **named captains** are elite, uniquely-named cutthroats (Karn the Red, Silas the Hollow, Vex of the Row, Grimjaw) - one per district, on a long respawn, boosted and prowling deep in the city. Killing one pays a fat bounty on top of advancing the quest, and rolls a chance at their **signature spec weapon**. See [Rogue hunting & the bounty board](/wiki/gameplay-roadmap).
 

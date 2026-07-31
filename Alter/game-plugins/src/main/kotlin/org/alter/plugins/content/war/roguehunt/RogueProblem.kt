@@ -14,7 +14,8 @@ import org.alter.rscm.RSCM.getRSCM
  * **The Rogue Problem** — the Act II quest (story-and-grind-design §4) that answers "what now?"
  * the moment the [WarPrepChain] (Wizard Tower / War-Prep I — Magic) finishes at the Squire rung.
  * It is the guided bridge across the **Squire → Knight** climb that the roadmap otherwise leaves as
- * an open-ended grind: the Recruiting Sergeant sends the new Squire into **Fallen Varrock** to
+ * an open-ended grind: the Recruiting Sergeant sends the new Squire into **Fallen Falador** (where
+ * the cutthroats fled when demons took Varrock — see `WorldSpawnsPlugin.applyFallenFalador`) to
  * thin its cutthroats and cut down one of its **named captains** (the existing [RogueHunt] +
  * `war/captains` content, now given a scripted first run), then pays a purse that covers the last
  * rungs to **Knight** — which unlocks the player's first **companion** and the real wilderness /
@@ -33,7 +34,7 @@ object RogueProblem {
     val TIMER = TimerKey()
     private const val POLL_TICKS = 3
 
-    /** Rogues to fell in Fallen Varrock for the HUNT step (quest-scoped, not the lifetime tally). TUNE. */
+    /** Rogues to fell in Fallen Falador for the HUNT step (quest-scoped, not the lifetime tally). TUNE. */
     const val HUNT_GOAL = 30
 
     private const val COINS = "item.coins_995"
@@ -57,9 +58,9 @@ object RogueProblem {
     // Quest Journal varp the client reads).
     enum class Step(val objective: String) {
         NONE("(not started)"),
-        BRIEF("Speak to the Recruiting Sergeant about the rogues overrunning Fallen Varrock."),
-        HUNT("Cut down $HUNT_GOAL rogues in the streets of Fallen Varrock — the tally is quest-scoped; ::rogueproblem tracks it."),
-        CAPTAIN("Hunt down one of Fallen Varrock's named captains — see the board with ::bounties."),
+        BRIEF("Speak to the Recruiting Sergeant about the rogues overrunning Fallen Falador."),
+        HUNT("Cut down $HUNT_GOAL rogues in the streets of Fallen Falador — the tally is quest-scoped; ::rogueproblem tracks it."),
+        CAPTAIN("Hunt down one of the named captains holed up in Fallen Falador — see the board with ::bounties."),
         REPORT("Return to the Recruiting Sergeant with word of the captain's fall."),
         RANK("Take your purse to Duke Horacio and climb to Knight — a companion and the wilderness await."),
         DONE("The Rogue Problem — Knighthood earned. Muster a companion from General Zo, then hunt at the PK Arena."),
@@ -174,7 +175,7 @@ object RogueProblem {
     /** One-line progress report (`::rogueproblem` and the Sergeant's chatter). */
     fun statusLine(p: Player): String = when (step(p)) {
         Step.NONE -> "The Rogue Problem: finish the War-Prep chain first."
-        Step.HUNT -> "The Rogue Problem: <col=801700>${huntKills(p)}/$HUNT_GOAL</col> rogues felled in Fallen Varrock."
+        Step.HUNT -> "The Rogue Problem: <col=801700>${huntKills(p)}/$HUNT_GOAL</col> rogues felled in Fallen Falador."
         Step.DONE -> "The Rogue Problem: <col=4f9b4f>complete</col> — the streets fear you."
         else -> "The Rogue Problem — current objective: ${step(p).objective}"
     }
