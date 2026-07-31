@@ -14,6 +14,7 @@ import org.alter.game.model.attr.MIRE_RUN_PAID_ATTR
 import org.alter.game.model.entity.DynamicObject
 import org.alter.game.model.entity.GroundItem
 import org.alter.game.model.entity.Player
+import org.alter.game.model.item.Item
 import org.alter.game.model.move.MovementQueue
 import org.alter.game.model.move.hasMoveDestination
 import org.alter.game.model.move.walkRoute
@@ -474,12 +475,20 @@ class AgilityPlugin(
         return lootTable.last()
     }
 
-    /** Add to the pack; overflow drops at the player's feet (never voided). */
+    /**
+     * Add a dispenser reward to the pack. Supplies are handed out **noted** so a whole claim
+     * collapses into one stack per item — the fix for the "100 anglerfish dumped on the ground
+     * because the pack was full" report: an un-noted stack of 100 needs 100 free slots, a noted
+     * one needs a single slot. [Item.toNoted] is a graceful no-op for ids with no noted form
+     * (coins, marks of grace), so those pass through unchanged. Any genuine overflow (a truly full
+     * pack) still drops at the player's feet rather than being voided.
+     */
     private fun grant(player: Player, id: Int, amount: Int) {
         if (amount <= 0) return
-        val add = player.inventory.add(item = id, amount = amount, assureFullInsertion = false)
+        val noted = Item(id).toNoted().id
+        val add = player.inventory.add(item = noted, amount = amount, assureFullInsertion = false)
         val leftover = amount - add.completed
-        if (leftover > 0) world.spawn(GroundItem(id, leftover, player.tile, player))
+        if (leftover > 0) world.spawn(GroundItem(noted, leftover, player.tile, player))
     }
 
     /** Course objects are spawned at exact tiles; a same-id object anywhere else is world scenery. */
