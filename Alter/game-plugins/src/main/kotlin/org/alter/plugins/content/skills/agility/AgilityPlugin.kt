@@ -42,7 +42,7 @@ object MireDispenser {
     /**
      * Overlay-open varp (docs/overlay-design-system.md §8). Packed:
      *   bit 0 open flag · bit 1 always-set data marker (a refresh pulse is never 0) ·
-     *   bit 2 attuned · bits 3-6 banked laps (cap 10) · bits 7-13 streak (display-capped 99).
+     *   bit 2 attuned · bits 3-8 banked laps (6 bits, cap 50) · bits 9-15 streak (display-capped 99).
      * Pulse-to-0 so a persisted varp can't re-open the window on login.
      */
     const val OPEN_VARP = 4631
@@ -55,7 +55,7 @@ object MireDispenser {
     val LAST_LAP_AT = AttributeKey<Long>() // wall-clock of the last completed lap
 
     const val ATTUNE_FEE = 150_000
-    const val MAX_BANK = 10            // unclaimed laps the dispenser holds
+    const val MAX_BANK = 50            // unclaimed laps the dispenser holds
     const val STREAK_CAP = 60          // laps at which the multiplier maxes out
     const val STREAK_WINDOW_MS = 5 * 60_000L // gap that breaks a streak
     const val COINS_MIN = 2_000
@@ -71,9 +71,9 @@ object MireDispenser {
 
     private fun pulse(p: Player, open: Boolean) {
         val attuned = if (p.attr[MIRE_RUN_PAID_ATTR] == true) 1 else 0
-        val bank = (p.attr[LAP_BANK] ?: 0).coerceIn(0, 15)
+        val bank = (p.attr[LAP_BANK] ?: 0).coerceIn(0, 63)
         val streak = (p.attr[LAP_STREAK] ?: 0).coerceIn(0, 99)
-        val value = (if (open) 1 else 0) or 0b10 or (attuned shl 2) or (bank shl 3) or (streak shl 7)
+        val value = (if (open) 1 else 0) or 0b10 or (attuned shl 2) or (bank shl 3) or (streak shl 9)
         p.setVarp(OPEN_VARP, value)
         p.queue { wait(2); p.setVarp(OPEN_VARP, 0) }
     }
@@ -86,7 +86,7 @@ object MireDispenser {
  * course expanded + dispenser window added 2026-07-19):
  *
  *  - Pay a one-time **150,000 gp attunement fee** at the Ticket Dispenser (a gp sink).
- *  - Complete a lap (all obstacles in order) → the dispenser **banks** the lap (up to 10).
+ *  - Complete a lap (all obstacles in order) → the dispenser **banks** the lap (up to 50).
  *  - **Tag** the dispenser to open the Mire Dispenser window (`lofmire`) and claim every banked
  *    lap at once. Loot scales with CONSECUTIVE laps: quantities multiply up to ×5 at 60 laps
  *    (OSRS model). The streak resets on logout or a >5-minute gap between laps.
