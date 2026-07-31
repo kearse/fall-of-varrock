@@ -72,16 +72,17 @@ enum LofQuest
 
 	THE_ROGUE_PROBLEM(
 		"The Rogue Problem",
-		"Lumbridge holds, but Fallen Varrock — the old capital — has fallen to rogues, muggers and "
-			+ "highwaymen, led by deserters who style themselves Rogue Knights. The Recruiting "
-			+ "Sergeant sends the new Squire into its lawless streets to thin the cutthroats, then "
-			+ "opens the Rogue Knight ladder with your first named assignment. Break them and the "
-			+ "purse earns your Knighthood — your first companion, and the right to hunt the wilderness.",
+		"Lumbridge holds, but when the demons took Varrock its rogues, muggers and highwaymen — led "
+			+ "by deserters who style themselves Rogue Knights — fled west and overran Fallen "
+			+ "Falador. The Recruiting Sergeant sends the new Squire into its lawless streets to "
+			+ "thin the cutthroats, then opens the Rogue Knight ladder with your first named "
+			+ "assignment. Break them and the purse earns your Knighthood — your first companion, "
+			+ "and the right to hunt the wilderness.",
 		6, // DONE ordinal (RogueProblem.Step)
-		// World anchors are best-effort Fallen Varrock tiles — TUNE against the live map.
+		// World anchors are best-effort tiles — TUNE against the live map.
 		Arrays.asList(
 			new LofQuestStep(1, "Speak to the Recruiting Sergeant", "He has harder work now you're a Squire — by the Lumbridge gate.", new WorldPoint(3219, 3214, 0)),
-			new LofQuestStep(2, "Thin out the rogues of Fallen Varrock", "Cut down 30 cutthroats in the streets. Lawless PvP ground — risk little.", new WorldPoint(3212, 3428, 0)),
+			new LofQuestStep(2, "Thin out the rogues of Fallen Falador", "Cut down 30 cutthroats in the raid city's streets. Only the banks are safe — risk little.", new WorldPoint(3013, 3353, 0)),
 			new LofQuestStep(3, "Kill your first assigned Rogue Knight", "The Sergeant's marker leads to the camp; ::knights tracks the ladder.", null),
 			new LofQuestStep(4, "Return to the Recruiting Sergeant", "Report the knight's fall and claim your purse.", new WorldPoint(3219, 3214, 0)),
 			new LofQuestStep(5, "Rise to Knight at Duke Horacio", "The Sergeant's purse covers the climb — Soldier, then Knight.", new WorldPoint(3222, 3218, 0))

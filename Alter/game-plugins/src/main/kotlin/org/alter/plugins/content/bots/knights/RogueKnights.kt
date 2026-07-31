@@ -16,10 +16,10 @@ import org.alter.plugins.content.bots.BotItem
  *   - and every kill (first or farmed) rolls the knight's **signature rare table** on top of its
  *     full worn-kit drop.
  *
- * Camps escalate: the two SAFE camps (reclaimable deaths — learn cheaply) → shallow-wild Fallen
- * Varrock → the deep-wild camps where dying costs you your gear. Top knights are TUNED TO BE
- * GENUINELY HARD (hp overrides + near-perfect prayer reactions + fast specs) — several attempts
- * is the intended experience.
+ * Camps escalate: the SAFE Bandit Hideout (reclaimable deaths — learn cheaply) → raid-city Fallen
+ * Falador (full-PvP streets, banks safe) → shallow-wild Fallen Varrock → the deep-wild camps where
+ * dying costs you everything you carry. Top knights are TUNED TO BE GENUINELY HARD (hp overrides +
+ * near-perfect prayer reactions + fast specs) — several attempts is the intended experience.
  *
  * **Scaling:** adding knight #15+ is ONE list entry (keep ranks contiguous). Everything else —
  * spawning, tracking arrows, dialogue, drops — is data-driven off this list.
@@ -82,8 +82,8 @@ object RogueKnights {
         key = "fallen_falador",
         display = "Fallen Falador",
         center = Tile(2985, 3350),
-        safe = true,
-        directions = "the white city's streets, overrun since the captains fled Varrock — enter from the south gate.",
+        safe = false, // a RAID CITY — full-PvP streets, only the banks are safe
+        directions = "the white city's streets, overrun since the captains fled Varrock — a raid city now; only its banks are safe. Enter from the south gate.",
     )
     val FALLEN_VARROCK = KnightCamp(
         key = "fallen_varrock",
@@ -129,7 +129,7 @@ object RogueKnights {
             camp = FALLEN_FALADOR, loadoutKey = "black_pker", maxHp = 60,
             firstKillRewards = listOf("item.mithril_scimitar" to 1, "item.climbing_boots" to 1, "item.coins_995" to 20_000),
             rareTable = DropTable(rare = listOf(DropEntry("item.rune_scimitar", oneInN = 8))),
-            briefLine = "Sir Malrik the Black holds a street in Fallen Falador with the Black Knights. Your first city fight — mind the alleys.",
+            briefLine = "Sir Malrik the Black holds a street in Fallen Falador with the Black Knights. The white city's a raid ground now — only the banks are safe, so carry a cheap kit.",
         ),
         RogueKnightDef(
             rank = 3, key = "vora", name = "Dame Vora the Swift",
@@ -172,7 +172,7 @@ object RogueKnights {
                 DropEntry("item.dragon_scimitar", oneInN = 12),
                 DropEntry("item.dragon_defender", oneInN = 16),
             )),
-            briefLine = "Sir Caldus the Red holds Varrock square. This is the wild now — from here on, what you carry, you risk.",
+            briefLine = "Sir Caldus the Red holds Varrock square — the true wilderness now. What you carry, you risk.",
         ),
         RogueKnightDef(
             rank = 7, key = "isolde", name = "Dame Isolde the Blade",

@@ -2,6 +2,7 @@ package org.alter.plugins.content.mechanics.shops
 
 import dev.openrune.cache.CacheManager.getItem
 import org.alter.api.ext.message
+import org.alter.api.ext.refreshShopSlot
 import org.alter.game.model.World
 import org.alter.game.model.entity.Player
 import org.alter.game.model.item.Item
@@ -188,6 +189,10 @@ open class ItemCurrency(
 
             shop.refresh(p.world)
         }
+        // Push the changed cell + balance to the custom shop window even for infinite-stock shops,
+        // so a bank-funded buy visibly deducts coins (otherwise it looks free) and the stock count
+        // stays current. See [Player.refreshShopSlot].
+        if (add.completed > 0) p.refreshShopSlot(shop, slot)
     }
 
     override fun buyFromPlayer(
@@ -225,15 +230,19 @@ open class ItemCurrency(
         val compensation = Math.min(Int.MAX_VALUE.toLong(), price.toLong() * remove.completed.toLong()).toInt()
         val add = p.inventory.add(item = currencyItem, amount = compensation, assureFullInsertion = true)
         if (add.requested > 0 && add.completed > 0 || compensation == 0) {
+            val changedSlot: Int
             if (shopSlot != -1) {
                 shop.items[shopSlot]!!.currentAmount += amount
+                changedSlot = shopSlot
             } else {
                 val freeSlot = shop.items.indexOfFirst { it == null }
                 check(freeSlot != -1)
                 shop.items[freeSlot] = ShopItem(unnoted, amount = 0)
                 shop.items[freeSlot]!!.currentAmount = amount
+                changedSlot = freeSlot
             }
             shop.refresh(p.world)
+            p.refreshShopSlot(shop, changedSlot) // update the custom shop window's cell + balance
         } else {
             p.inventory.add(item.id, amount = remove.completed, beginSlot = slot)
             p.message("You don't have enough inventory space.")

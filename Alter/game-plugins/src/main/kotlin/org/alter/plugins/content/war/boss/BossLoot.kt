@@ -8,6 +8,9 @@ import org.alter.game.model.entity.Player
 import org.alter.plugins.content.announce.Announce
 import org.alter.plugins.content.bosses.CollectionLog
 import org.alter.plugins.content.bosses.RolledDrop
+import org.alter.plugins.content.bots.PkBot
+import org.alter.plugins.content.companion.Companion
+import org.alter.plugins.content.companion.CompanionRegistry
 import org.alter.plugins.content.economy.PointKind
 import org.alter.plugins.content.economy.addPoints
 import org.alter.plugins.content.economy.awardTickets
@@ -36,8 +39,23 @@ object BossLoot {
 
     fun award(world: World, npc: Npc, raid: ActiveRaid) {
         val def = raid.def
+        // Fold each companion's damage back into its human owner, and drop every other fake player
+        // (PK bots) from the split entirely. A companion is a Player subclass, so the raw damage map
+        // counts it as a separate reward-sharing participant — that's why a solo player fighting
+        // alongside a companion only got a partial share (~45%) instead of the full pool. Crediting
+        // the owner keeps the companion's damage "counting" for eligibility/MVP without splitting the
+        // spoils away from the human. (Check Companion before PkBot: Companion is a PkBot subclass.)
+        val creditedDamage = HashMap<Player, Int>()
+        npc.damageMap.playerDamage().forEach { (p, dmg) ->
+            val owner = when (p) {
+                is Companion -> CompanionRegistry.ownerOf(world, p) // offline owner → damage is dropped
+                is PkBot -> null // other fake players never share the spoils
+                else -> p
+            } ?: return@forEach
+            creditedDamage.merge(owner, dmg) { a, b -> a + b }
+        }
         // Only living players who dealt at least the eligibility threshold share the spoils.
-        val contrib = npc.damageMap.playerDamage()
+        val contrib = creditedDamage
             .filterKeys { it.index >= 0 && !it.isDead() }
             .filterValues { it >= ELIGIBLE_DMG }
         // Each Lord whose men damaged the boss earns a cut proportional to that damage.

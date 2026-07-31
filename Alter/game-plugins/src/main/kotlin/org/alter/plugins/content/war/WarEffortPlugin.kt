@@ -8,6 +8,11 @@ import org.alter.game.model.World
 import org.alter.game.model.attr.CITY_ID_ATTR
 import org.alter.game.model.attr.KILLER_ATTR
 import org.alter.game.model.entity.Player
+import org.alter.plugins.content.bots.PkBot
+// Aliased: this class has its own `companion object`, whose implicit name `Companion` would SHADOW
+// a bare `import ...companion.Companion`, making `killer is Companion` always-false.
+import org.alter.plugins.content.companion.Companion as CompanionPawn
+import org.alter.plugins.content.companion.CompanionRegistry
 import org.alter.rscm.RSCM.getRSCM
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
@@ -36,7 +41,7 @@ class WarEffortPlugin(
             val goblin = npc
             val front = Sieges.frontAt(goblin.tile) ?: return@onNpcDeath
             if (WarState.phaseOf(front) != WarState.Phase.UNDER_RAID) return@onNpcDeath
-            val killer = goblin.attr[KILLER_ATTR]?.get() as? Player ?: return@onNpcDeath
+            val killer = creditKiller(goblin.attr[KILLER_ATTR]?.get() as? Player) ?: return@onNpcDeath
             killer.inventory.add(COINS, COINS_PER_GOBLIN)
             WarParticipation.record(front, killer, 1)
         }
@@ -46,7 +51,7 @@ class WarEffortPlugin(
             val hob = npc
             val front = Sieges.frontAt(hob.tile) ?: return@onNpcDeath
             if (WarState.phaseOf(front) != WarState.Phase.UNDER_RAID) return@onNpcDeath
-            val killer = hob.attr[KILLER_ATTR]?.get() as? Player ?: return@onNpcDeath
+            val killer = creditKiller(hob.attr[KILLER_ATTR]?.get() as? Player) ?: return@onNpcDeath
             WarDrops.onShockTroopKill(world, killer, hob)
             WarParticipation.record(front, killer, 3)
         }
@@ -63,6 +68,18 @@ class WarEffortPlugin(
                 else -> {}
             }
         }
+    }
+
+    /**
+     * Resolve who actually earns a war kill: a companion's kill is credited to its human owner, and
+     * any other fake player (PK bot) earns nothing — so war rewards, like boss spoils, can't leak to
+     * a player's own NPC ally. (Check [CompanionPawn] before [PkBot]: Companion is a PkBot subclass.)
+     */
+    private fun creditKiller(killer: Player?): Player? = when (killer) {
+        null -> null
+        is CompanionPawn -> CompanionRegistry.ownerOf(world, killer)
+        is PkBot -> null
+        else -> killer
     }
 
     /** The fronts of the player's city (falls back to all fronts if unassigned). */

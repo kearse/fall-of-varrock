@@ -14,7 +14,8 @@ import org.alter.rscm.RSCM.getRSCM
  * **The Rogue Problem** — the Act II quest (story-and-grind-design §4) that answers "what now?"
  * the moment the [WarPrepChain] (Wizard Tower / War-Prep I — Magic) finishes at the Squire rung.
  * It is the guided bridge across the **Squire → Knight** climb that the roadmap otherwise leaves as
- * an open-ended grind: the Recruiting Sergeant sends the new Squire into **Fallen Varrock** to
+ * an open-ended grind: the Recruiting Sergeant sends the new Squire into **Fallen Falador** (where
+ * the cutthroats fled when demons took Varrock — see `WorldSpawnsPlugin.applyFallenFalador`) to
  * thin its cutthroats, then opens the **Rogue Knight ladder** (`bots/knights/`) with the player's
  * first assigned named knight — kill it, and he pays a purse that covers the last rungs to
  * **Knight**, which unlocks the player's first **companion** and the real wilderness / PK loop.
@@ -33,7 +34,7 @@ object RogueProblem {
     val TIMER = TimerKey()
     private const val POLL_TICKS = 3
 
-    /** Rogues to fell in Fallen Varrock for the HUNT step (quest-scoped, not the lifetime tally). TUNE. */
+    /** Rogues to fell in Fallen Falador for the HUNT step (quest-scoped, not the lifetime tally). TUNE. */
     const val HUNT_GOAL = 30
 
     private const val COINS = "item.coins_995"
@@ -42,7 +43,7 @@ object RogueProblem {
      * The quest's culminating purse — sized straight off the ladder so it always covers the rungs
      * from the player's post-War-Prep rank ([Title.SQUIRE]) up to [Title.KNIGHT]: Soldier + Knight.
      * This is the "…and that gives you enough for Knight" payout the design calls for; combined with
-     * the guaranteed captain bounty and rogue drops earned on the way, the player clears the climb.
+     * the first knight's spoils and rogue drops earned on the way, the player clears the climb.
      *
      * ECONOMY NOTE (TUNE): the roadmap frames Squire→Knight as a longer grind. This purse
      * deliberately short-cuts it into a single guided quest — dial it down (and lean on the earned
@@ -59,8 +60,8 @@ object RogueProblem {
     // opener); a player saved mid-step simply gets the new objective.
     enum class Step(val objective: String) {
         NONE("(not started)"),
-        BRIEF("Speak to the Recruiting Sergeant about the rogues overrunning Fallen Varrock."),
-        HUNT("Cut down $HUNT_GOAL rogues in the streets of Fallen Varrock — the tally is quest-scoped; ::rogueproblem tracks it."),
+        BRIEF("Speak to the Recruiting Sergeant about the rogues overrunning Fallen Falador."),
+        HUNT("Cut down $HUNT_GOAL rogues in the streets of Fallen Falador — the tally is quest-scoped; ::rogueproblem tracks it."),
         KNIGHT("Hunt down your first assigned Rogue Knight — ::knights shows the hunt and the marker leads the way."),
         REPORT("Return to the Recruiting Sergeant with word of the knight's fall."),
         RANK("Take your purse to Duke Horacio and climb to Knight — a companion and the wilderness await."),
@@ -164,7 +165,7 @@ object RogueProblem {
         }
     }
 
-    /** RANK entry: the Sergeant's payout for breaking the captains — a purse sized to reach Knight. */
+    /** RANK entry: the Sergeant's payout for breaking the first Rogue Knight — a purse sized to reach Knight. */
     private fun grantPurse(p: Player) {
         giveItem(p, COINS, COMPLETION_COINS)
         p.message("<col=801700>The Sergeant pays you ${"%,d".format(COMPLETION_COINS)} coins</col> — enough to climb to ${TARGET_TITLE.display} at Duke Horacio.")
@@ -179,7 +180,7 @@ object RogueProblem {
     /** One-line progress report (`::rogueproblem` and the Sergeant's chatter). */
     fun statusLine(p: Player): String = when (step(p)) {
         Step.NONE -> "The Rogue Problem: finish the War-Prep chain first."
-        Step.HUNT -> "The Rogue Problem: <col=801700>${huntKills(p)}/$HUNT_GOAL</col> rogues felled in Fallen Varrock."
+        Step.HUNT -> "The Rogue Problem: <col=801700>${huntKills(p)}/$HUNT_GOAL</col> rogues felled in Fallen Falador."
         Step.DONE -> "The Rogue Problem: <col=4f9b4f>complete</col> — the streets fear you."
         else -> "The Rogue Problem — current objective: ${step(p).objective}"
     }

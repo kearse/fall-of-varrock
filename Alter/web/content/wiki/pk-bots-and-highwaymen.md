@@ -6,7 +6,7 @@ order: 4
 updated: 2026-07-31
 ---
 
-Even at low population you'll always find a fight. **PK bots** are fake players - real gear, real stats, real combat brains (they eat, pot, switch and spec) - that roam the wilderness. They live **only in PvP zones**: step across the wilderness line and you're hunted; stay in a safe town and they can't touch you. The exception: the two safe **Rogue Knight camps** below, where a warband deliberately fights on reclaim-safe ground so new players can learn PvP cheaply.
+Even at low population you'll always find a fight. **PK bots** are fake players - real gear, real stats, real combat brains (they eat, pot, switch and spec) - that roam the wilderness. They live **only in PvP zones**: step across the wilderness line and you're hunted; stay in a safe town and they can't touch you. The exception: the safe **Bandit Hideout camp** below, where a warband deliberately fights on reclaim-safe ground so new players can learn PvP cheaply.
 
 ## Deeper is deadlier
 
@@ -24,7 +24,7 @@ Past level 10 the styles are mixed and random: you might meet a pure, a zerker, 
 
 ## The organized camps
 
-On top of the roamers, the Rogue Knights hold **five organized camps by level band** - each an ambient warband of that band's builds, with the [named Rogue Knight bosses](/wiki/rogue-knights) standing among them: the **Bandit Hideout** west of Lumbridge (safe - bronze/iron/steel), overrun **Fallen Falador** (safe - Black Knights + low NHers), **Fallen Varrock**, the deep-wild **Wild Bandit Camp** (maxers + Ancient Warrior builds) and the **Rogue Commander's Redoubt** (the elite guard). The two safe camps are where you learn: die there and your gear waits in a reclaim pile instead of feeding a PKer.
+On top of the roamers, the Rogue Knights hold **five organized camps by level band** - each an ambient warband of that band's builds, with the [named Rogue Knight bosses](/wiki/rogue-knights) standing among them: the **Bandit Hideout** west of Lumbridge (safe - bronze/iron/steel), overrun **Fallen Falador** (a raid city - Black Knights + low NHers, only the banks safe), **Fallen Varrock**, the deep-wild **Wild Bandit Camp** (maxers + Ancient Warrior builds) and the **Rogue Commander's Redoubt** (the elite guard). The Bandit Hideout is where you learn: die there and your gear waits in a reclaim pile instead of feeding a PKer.
 
 ## Fallen Varrock - the rogues' den
 
@@ -42,4 +42,4 @@ There's one bot that breaks the wilderness-only rule. A lone, genuinely weak **B
 - Bots **don't** pay Blood Money and don't count toward your PK stats or Elo - they're loot and practice, not ladder points.
 - They fight back properly, chase hard, and killing you **destroys your loot keys** like any other death.
 
-Safe zones are absolute for the wilderness bots: they never muster, roam or chase onto a safe tile - banks inside the wilderness (and the Varrock bank pockets) are protected ground. The deliberate exceptions are the lone Lumbridge goblin-camp ambusher above and the two safe [Rogue Knight camps](/wiki/rogue-knights) (the Bandit Hideout and Fallen Falador), where the warband fights on reclaim-safe ground by design.
+Safe zones are absolute for the wilderness bots: they never muster, roam or chase onto a safe tile - banks inside the wilderness (including the Varrock bank pockets and the raid-city banks) are protected ground. The deliberate exceptions are the lone Lumbridge goblin-camp ambusher above and the safe [Bandit Hideout camp](/wiki/rogue-knights), where the warband fights on reclaim-safe ground by design.

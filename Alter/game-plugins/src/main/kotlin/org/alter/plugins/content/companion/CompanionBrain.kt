@@ -82,6 +82,13 @@ object CompanionBrain {
                 if (comp.isAttacking()) { comp.removeCombatTarget(); comp.resetFacePawn() }
                 return
             }
+            // Owner in the Fight Cave → companions HOLD. A companion follows into the private instance
+            // and tanks Jad and the waves (they retarget whoever hits them), so the player is barely
+            // attacked — the "Jad not attacking me" report. They resume when the run ends.
+            if (org.alter.plugins.content.minigames.fightcave.FightCavePlugin.inCave(owner)) {
+                if (comp.isAttacking()) { comp.removeCombatTarget(); comp.resetFacePawn() }
+                return
+            }
         }
         CompanionLoot.sweep(world, comp) // donor perk: bank nearby loot before doing anything else
         org.alter.plugins.content.bots.BotBrain.maybeEat(comp) // survive fights from its food supply

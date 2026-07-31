@@ -61,9 +61,9 @@ data class BotZoneConfig(
      * SAFE-GROUND camp: when true the colony musters on walkable tiles even where
      * [PvpZones.isWilderness] is false, and every spawned bot gets [PkBot.ambushEverywhere] so it
      * aggros on its safe-tile post (the goblin-camp ambusher pattern, zone-ified). Used by the
-     * organized rogue-knight camps outside the red (the Bandit Hideout west of Lumbridge, overrun
-     * Falador) — players who die there get the normal safe-zone reclaim pile, so the low camps are
-     * where you LEARN to fight PKers cheaply. Requires a pinned [tier] (never depth-roll a safe camp).
+     * organized rogue-knight camps outside the red (the Bandit Hideout west of Lumbridge) —
+     * players who die there get the normal safe-zone reclaim pile, so the starter camp is where
+     * you LEARN to fight PKers cheaply. Requires a pinned [tier] (never depth-roll a safe camp).
      */
     val allowSafe: Boolean = false,
 ) {
@@ -113,8 +113,10 @@ object BotZones {
         "bronze_pker" to 4, "iron_pker" to 3, "steel_pker" to 2,
     ))
 
-    /** Fallen Falador (SAFE carve-out): the Black Knights + low-level NHers — the first camp where
-     *  the enemy prays and switches, still on reclaimable ground. */
+    /** Fallen Falador (RAID CITY — full-PvP streets, only banks safe, fixed wild level 30 via
+     *  [org.alter.plugins.content.raidzones.RaidCities]): the Black Knights + low-level NHers —
+     *  the first camp where the enemy prays and switches. The pinned pool keeps the warband at the
+     *  ladder's low band instead of rolling the raid level's mid meta. */
     private val T_FALLEN_FALADOR = BotTier(listOf(
         "black_pker" to 3, "mithril_pker" to 2, "budget_pure" to 2, "budget_zerker" to 2, "obby_mauler" to 1,
     ))
@@ -140,6 +142,19 @@ object BotZones {
     private val T_ROGUE = BotTier(listOf(
         "bronze_pker" to 4, "iron_pker" to 4, "steel_pker" to 4, "black_pker" to 3,
         "mithril_pker" to 3, "adamant_pker" to 2, "budget_pure" to 2, "budget_zerker" to 1,
+    ))
+
+    /**
+     * RAIDER tier — the pinned pool for the raid cities ([org.alter.plugins.content.raidzones.RaidCities]:
+     * Falador, Al Kharid). These PKers camp the loot spots, so they're a real threat — a
+     * mithril→rune metal ladder plus the budget PK sets — but deliberately capped below the
+     * mid/high/elite meta: a raid death should cost you your haul, not be unwinnable. Pinning
+     * the tier (instead of the city's wild depth) keeps both cities equally raidable whatever
+     * their latitude says.
+     */
+    private val T_RAIDER = BotTier(listOf(
+        "mithril_pker" to 4, "adamant_pker" to 3, "rune_pker" to 2,
+        "budget_pure" to 3, "budget_zerker" to 2, "budget_main" to 1,
     ))
 
     /**
@@ -224,7 +239,9 @@ object BotZones {
                 allowSafe = true,
             ),
         )
-        // Camp 2 — overrun FALLADOR (inside the safe carve-out; the Black Knights' quarter).
+        // Camp 2 — overrun FALLADOR (the Black Knights' quarter). Falador is a RAID CITY now —
+        // its streets are live PvP ground ([PvpZones]' raid-city red), so this is an ordinary
+        // wilderness zone: the muster filter keeps the warband off the safe bank carve-outs.
         add(
             BotZoneConfig(
                 key = "fallen_falador_camp",
@@ -236,7 +253,6 @@ object BotZones {
                 roamRadius = 7,
                 leashRadius = 16,
                 activationPadding = 24,
-                allowSafe = true,
             ),
         )
         // Camp 4 — the WILD BANDIT CAMP (deep wilderness, multi): the high-tier warband.
@@ -289,6 +305,29 @@ object BotZones {
                 activationPadding = 24,
             ),
         )
+
+        // RAID CITIES ([org.alter.plugins.content.raidzones.RaidCities]) — each gets a dedicated,
+        // denser colony pinned to [T_RAIDER]: PKers who camp the loot spots are the "other raiders"
+        // half of the Tarkov loop. Falador's grid cells also self-populate now the city is red;
+        // Al Kharid sits OUTSIDE [PvpZones.mainWilderness] (south of the line), so its colony is
+        // the town's only bot source. Tight roam/leash so bots prowl the streets without chasing a
+        // raider into a bank pocket (the muster filter's walkable + isWilderness check self-trims
+        // the bank carve-outs anyway).
+        for (city in org.alter.plugins.content.raidzones.RaidCities.all) {
+            add(
+                BotZoneConfig(
+                    key = "raid_${city.key.replace('-', '_')}",
+                    displayName = "${city.display} raiders",
+                    area = city.area,
+                    tier = T_RAIDER,
+                    target = 4,
+                    spacing = 5,
+                    roamRadius = 8,
+                    leashRadius = 14,
+                    activationPadding = 24,
+                ),
+            )
+        }
     }
 
     /** Even grid of candidate muster tiles across [area] at [spacing] (walkability filtered later). */

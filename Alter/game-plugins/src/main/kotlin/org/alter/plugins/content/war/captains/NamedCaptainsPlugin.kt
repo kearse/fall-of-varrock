@@ -103,8 +103,8 @@ class NamedCaptainsPlugin(
         }
 
         // ::bounties — the board: who's at large, who's down and for how long.
-        onCommand("bounties", description = "Show the wanted captains of Fallen Varrock") {
-            player.message("<col=801700>Wanted — the captains of Fallen Varrock:</col>")
+        onCommand("bounties", description = "Show the wanted captains holed up in Fallen Falador") {
+            player.message("<col=801700>Wanted — the captains holed up in Fallen Falador:</col>")
             DEFS.forEachIndexed { i, def ->
                 if (alive.containsKey(i)) {
                     player.message("  ${def.name} — ${def.district.display}: <col=801700>AT LARGE</col> (carries the ${def.signatureDisplay})")

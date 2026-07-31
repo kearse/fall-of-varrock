@@ -54,6 +54,6 @@ enum class CrossbowType(val item: Int, val ammo: Array<Int>) {
     ;
 
     companion object {
-        val values = enumValues<BowType>()
+        val values = enumValues<CrossbowType>()
     }
 }

@@ -182,10 +182,10 @@ class RecruitTrialsPlugin(
                 // to the free-play milestone chatter below when the quest is inactive (NONE) or DONE.
                 when (RogueProblem.step(p)) {
                     RogueProblem.Step.BRIEF -> {
-                        chatNpc(p, "Now you're blooded and ranked, ${p.address}, I've harder work. <col=801700>Fallen Varrock</col> — the old capital — has fallen to rogues, muggers and highwaymen. They bleed our supply roads dry.", npc = s, title = "Recruiting Sergeant")
+                        chatNpc(p, "Now you're blooded and ranked, ${p.address}, I've harder work. When the demons took Varrock, its rogues, muggers and highwaymen fled west and overran <col=801700>Fallen Falador</col>. They bleed our supply roads dry.", npc = s, title = "Recruiting Sergeant")
                         chatNpc(p, "Worse: the deserters who lead them style themselves <col=801700>Rogue Knights</col>. A whole ladder of them, weakest to strongest, camped from the Lumbridge road to the deepest wilderness.", npc = s, title = "Recruiting Sergeant")
-                        chatNpc(p, "First, thin the rank and file — ${RogueProblem.HUNT_GOAL} of Varrock's cutthroats. Prove that, and I'll set you on the first knight of the ladder. Do THAT and there's a purse fit to buy your Knighthood.", npc = s, title = "Recruiting Sergeant")
-                        chatNpc(p, "Fair warning: Varrock's streets are lawless PvP ground. Take nothing you can't afford to lose. Follow the marker.", npc = s, title = "Recruiting Sergeant")
+                        chatNpc(p, "First, thin the rank and file — ${RogueProblem.HUNT_GOAL} of the cutthroats in Falador's streets. Prove that, and I'll set you on the first knight of the ladder. Do THAT and there's a purse fit to buy your Knighthood.", npc = s, title = "Recruiting Sergeant")
+                        chatNpc(p, "Fair warning: Falador's streets are a lawless raid ground — only its banks are safe. Take nothing you can't afford to lose. Follow the marker.", npc = s, title = "Recruiting Sergeant")
                         chatPlayer(p, "Consider it done, sergeant.")
                         RogueProblem.onSergeantBriefed(p)
                         return
@@ -246,7 +246,7 @@ class RecruitTrialsPlugin(
                 // paymaster, so every bounty moment routes the hunter back to him.
                 val bounties = RogueHunt.payout(p)
                 if (bounties.isNotEmpty()) {
-                    chatNpc(p, "Word travels, ${p.address} — ${RogueHunt.kills(p)} of Varrock's cutthroats put down by your hand. The realm pays its hunters. Here's your bounty.", npc = s, title = "Recruiting Sergeant")
+                    chatNpc(p, "Word travels, ${p.address} — ${RogueHunt.kills(p)} cutthroats of the fallen cities put down by your hand. The realm pays its hunters. Here's your bounty.", npc = s, title = "Recruiting Sergeant")
                     chatNpc(p, "Keep at it. ${RogueHunt.statusLine(p)}", npc = s, title = "Recruiting Sergeant")
                     return
                 }
@@ -254,7 +254,7 @@ class RecruitTrialsPlugin(
                 // UX: the teleport portal was undiscoverable — nothing in the game ever mentioned it.
                 chatNpc(p, "One more thing every soldier should know: the <col=801700>glowing portal over the courtyard fountain</col> carries you to every front, skilling ground and arena the realm holds. Use it.", npc = s, title = "Recruiting Sergeant")
                 if (RogueHunt.kills(p) == 0) {
-                    chatNpc(p, "If you're hunting work: <col=801700>Fallen Varrock</col> crawls with rogues, muggers and highwaymen. The realm pays a bounty at every milestone of cutthroats you put down — report your tally to me. <col=ffae00>::rogues</col> tracks it.", npc = s, title = "Recruiting Sergeant")
+                    chatNpc(p, "If you're hunting work: <col=801700>Fallen Falador</col> crawls with rogues, muggers and highwaymen. The realm pays a bounty at every milestone of cutthroats you put down — report your tally to me. <col=ffae00>::rogues</col> tracks it.", npc = s, title = "Recruiting Sergeant")
                     chatNpc(p, "Fair warning: those streets are lawless PvP ground. Take nothing you can't afford to lose — the tally, at least, is yours forever.", npc = s, title = "Recruiting Sergeant")
                 } else {
                     chatNpc(p, RogueHunt.statusLine(p), npc = s, title = "Recruiting Sergeant")

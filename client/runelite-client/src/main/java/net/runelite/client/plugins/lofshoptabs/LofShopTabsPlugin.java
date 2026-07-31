@@ -99,6 +99,9 @@ public class LofShopTabsPlugin extends Plugin
 	private final List<Item> items = new ArrayList<>();
 	private final List<Tab> tabs = new ArrayList<>();
 	private int selectedTab;
+	/** True between a shop| header and its shopend — item| lines fill the buffer. Outside a frame
+	 *  (e.g. a single item| pushed after a buy/sell) item| lines upsert the live grid in place. */
+	private boolean buffering;
 
 	/** Streaming buffer, filled between shop| and shopend. */
 	private String bufName = "";
@@ -208,6 +211,7 @@ public class LofShopTabsPlugin extends Plugin
 			sellOnly = bufSellOnly;
 			items.clear();
 			items.addAll(bufItems);
+			buffering = false;
 			overlay.resetScroll();
 			return;
 		}
@@ -231,6 +235,7 @@ public class LofShopTabsPlugin extends Plugin
 				bufItems.clear();
 				tabs.clear();
 				selectedTab = 0;
+				buffering = true;
 				break;
 			}
 			case "bal":
@@ -245,7 +250,17 @@ public class LofShopTabsPlugin extends Plugin
 				final String[] f = rest.split("\\|");
 				if (f.length >= 4)
 				{
-					bufItems.add(new Item(parseInt(f[0], 0), parseInt(f[1], -1), parseInt(f[2], 0), parseInt(f[3], 0)));
+					final Item it = new Item(parseInt(f[0], 0), parseInt(f[1], -1), parseInt(f[2], 0), parseInt(f[3], 0));
+					if (buffering)
+					{
+						bufItems.add(it);
+					}
+					else
+					{
+						// A lone item| line after a buy/sell: upsert this cell in the live grid so the
+						// stock count updates without a full re-stream (which would reset the scroll/tabs).
+						applyLiveItem(it);
+					}
 				}
 				break;
 			}
@@ -478,6 +493,42 @@ public class LofShopTabsPlugin extends Plugin
 		items.clear();
 		tabs.clear();
 		selectedTab = 0;
+		buffering = false;
+	}
+
+	/** Upsert a single cell into the live grid by slot: replace the matching slot, remove it when the
+	 *  slot emptied (id &lt; 0), or insert in slot order for a brand-new cell (e.g. an item just sold in). */
+	private void applyLiveItem(Item it)
+	{
+		for (int i = 0; i < items.size(); i++)
+		{
+			if (items.get(i).slot == it.slot)
+			{
+				if (it.itemId < 0)
+				{
+					items.remove(i);
+				}
+				else
+				{
+					items.set(i, it);
+				}
+				return;
+			}
+		}
+		if (it.itemId < 0)
+		{
+			return; // nothing to remove
+		}
+		int idx = items.size();
+		for (int i = 0; i < items.size(); i++)
+		{
+			if (items.get(i).slot > it.slot)
+			{
+				idx = i;
+				break;
+			}
+		}
+		items.add(idx, it);
 	}
 
 	private static int parseInt(String s, int def)

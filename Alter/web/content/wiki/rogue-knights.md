@@ -9,7 +9,7 @@ infobox: Type = Boss ladder (repeatable); Start = The Rogue Problem quest (auto)
 
 The deserters who lead Varrock's rogues style themselves **Rogue Knights** - a ladder of **fourteen named boss PKers**, weakest to strongest, camped from the Lumbridge road to the deepest wilderness. The **Recruiting Sergeant** assigns them **in order**: kill your mark, rank up, and he names the next. Every knight you beat hands you a **first-kill gear unlock** - deliberately the core of the kit that beats the *next* one - so the ladder is both your PK training and your gear progression in one track.
 
-**Expect to die.** The knights fight like real players - they eat, pot, pray-switch and spec - and the top of the ladder flicks prayers nearly frame-perfectly. Dying to a knight is the loop, not a failure: your rank never resets, the low camps sit on **reclaim-safe ground** (walk back for your gear), and the tracking arrow leads you straight back for the rematch. *Dying is training. Going back is winning.*
+**Expect to die.** The knights fight like real players - they eat, pot, pray-switch and spec - and the top of the ladder flicks prayers nearly frame-perfectly. Dying to a knight is the loop, not a failure: your rank never resets, the first camp sits on **reclaim-safe ground** (walk back for your gear), and the tracking arrow leads you straight back for the rematch. *Dying is training. Going back is winning.*
 
 ## Finding your knight
 
@@ -23,12 +23,12 @@ The deserters who lead Varrock's rogues style themselves **Rogue Knights** - a l
 | Camp | Where | Ground | Who holds it |
 | --- | --- | --- | --- |
 | **Bandit Hideout** | west of Lumbridge, on the Draynor road | **Safe** - death leaves a reclaim pile | Bronze, iron and steel knights - the learning camp |
-| **Fallen Falador** | the overrun white city | **Safe** - death leaves a reclaim pile | Black Knights and low-level NHers: pures, zerkers, an obsidian mauler |
-| **Fallen Varrock** | the old capital's streets | **Wilderness** (single combat) | Rune mains, hybrids, a Void ranger - from here on you risk what you carry |
+| **Fallen Falador** | the overrun white city | **Raid city** - full-PvP streets, only the banks safe | Black Knights and low-level NHers: pures, zerkers, an obsidian mauler |
+| **Fallen Varrock** | the old capital's streets | **Wilderness** (single combat) | Rune mains, hybrids, a Void ranger |
 | **Wild Bandit Camp** | deep wilderness, far north-west | **Wilderness** (multi) | Maxers and Ancient Warrior builds - Dharok's, Statius, Morrigan |
 | **Rogue Commander's Redoubt** | the deepest wild, near the old mage arena | **Wilderness** (multi) | The elite guard - Vesta, Zuriel, and the Commander himself |
 
-Each camp also has an **ambient warband** of regular Rogue Knights in that band's gear prowling it - fodder, loot and practice around the named fights. The two safe camps are the only place PK bots fight on safe ground; everywhere else the wilderness rules apply.
+Each camp also has an **ambient warband** of regular Rogue Knights in that band's gear prowling it - fodder, loot and practice around the named fights. The Bandit Hideout is the one place the warband fights on reclaim-safe ground; from Falador onward you're on PvP streets, so carry a cheap kit until a fight is learned.
 
 ## The ladder
 

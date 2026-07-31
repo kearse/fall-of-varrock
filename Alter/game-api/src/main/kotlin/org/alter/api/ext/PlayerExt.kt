@@ -119,6 +119,26 @@ fun Player.refreshShopBalance() {
     message("FOV_SHOP:bal|${s.currency.balance(this)}", ChatMessageType.GAME_MESSAGE)
 }
 
+/**
+ * After a buy/sell, push the ONE changed shelf cell + the balance to the open lofshop window,
+ * without re-sending the `shop|`/`shopend` frame (which would reset the tab rail AND the scroll
+ * position mid-shopping). A standalone `FOV_SHOP:item|` line is applied live by the client as an
+ * upsert (an emptied slot is sent as id -1 so the cell is removed). This is what makes bank-funded
+ * purchases visibly cost coins and keeps the on-screen stock count current. No-op if [s] isn't the
+ * shop the player currently has open.
+ */
+fun Player.refreshShopSlot(s: org.alter.game.model.shop.Shop, slot: Int) {
+    if (attr[CURRENT_SHOP_ATTR] !== s) return
+    val item = s.items.getOrNull(slot)
+    if (item != null) {
+        val price = item.sellPrice ?: s.currency.getSellPrice(world, item.item)
+        message("FOV_SHOP:item|$slot|${item.item}|${item.currentAmount}|$price", ChatMessageType.GAME_MESSAGE)
+    } else {
+        message("FOV_SHOP:item|$slot|-1|0|0", ChatMessageType.GAME_MESSAGE) // cell emptied (temporary stock ran out)
+    }
+    refreshShopBalance()
+}
+
 fun Player.message(
     message: String,
     type: ChatMessageType = ChatMessageType.CONSOLE,

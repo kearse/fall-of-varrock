@@ -20,6 +20,8 @@ import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
 import org.alter.plugins.content.bots.PkBot
 import org.alter.plugins.content.combat.PvpZones
+import org.alter.plugins.content.raidzones.AlKharidRaid
+import org.alter.plugins.content.raidzones.RaidCities
 import org.alter.rscm.RSCM.getRSCM
 import java.io.File
 
@@ -200,6 +202,7 @@ class WorldSpawnsPlugin(
         stripGrandExchange()
         applyFallenVarrock()
         applyFallenFalador()
+        applyFallenAlKharid()
         val registered = HashSet<Int>()
         val it = WorldSpawns.byRegion.iterator()
         while (it.hasNext()) {
@@ -357,6 +360,23 @@ class WorldSpawnsPlugin(
         val (replaced, dropped) = repopulateFallenCity(FALLEN_FALADOR, enemies)
         logger.info {
             "[FALLEN FALADOR] city overrun: $replaced spots now bandits/enemies (${enemies.size}-kind pool), " +
+                "$dropped records dropped (upstairs)."
+        }
+    }
+
+    /**
+     * FALLEN AL KHARID (story): the desert gate town, cut off since the fall — scorpion swarms
+     * out of the mines and the desert gangs picked it clean. Falls the same way the other two
+     * did: every ambient record inside the raid box ([AlKharidRaid] is the box's single source
+     * of truth) is stripped and each ground-floor spot respawns from the desert pool
+     * ([AL_KHARID_ENEMY_POOL]). Al Kharid is a raid city ([RaidCities]) — its streets are the
+     * loot grounds this population defends.
+     */
+    private fun applyFallenAlKharid() {
+        val enemies = resolveMonsterPool(AL_KHARID_ENEMY_POOL, "FALLEN AL KHARID")
+        val (replaced, dropped) = repopulateFallenCity(AlKharidRaid.config.area, enemies)
+        logger.info {
+            "[FALLEN AL KHARID] town overrun: $replaced spots now scorpions/gangs (${enemies.size}-kind pool), " +
                 "$dropped records dropped (upstairs)."
         }
     }
@@ -573,7 +593,30 @@ class WorldSpawnsPlugin(
         // the full lifecycle (refill on death, remove on gate close).
         npc.respawns = false
         npc.setActive(true)
+        applyRaidCityAggro(npc)
         return npc
+    }
+
+    /**
+     * RAID-CITY AGGRESSION ([RaidCities]): occupiers inside a raid city hunt raiders harder
+     * than the world defaults — wider spot radius, faster re-targeting, longer interest — and
+     * ignore the level-tolerance rule (a maxed raider is stalked as readily as a fresh one).
+     * Applied per-INSTANCE (the shared per-id defs also cover spawns outside the cities), and
+     * only to ids that are already aggro-flagged; passive pool picks stay passive.
+     *
+     * The aggroCheck lambda runs on the engine's aggro path OUTSIDE any try/catch — a throw
+     * there kills the game-loop task (see [org.alter.plugins.content.war.HostileZone]). It must
+     * stay a constant-true.
+     */
+    private fun applyRaidCityAggro(npc: Npc) {
+        val aggro = RaidCities.at(npc.tile)?.aggro ?: return
+        if (npc.combatDef.aggressiveRadius <= 0) return
+        npc.combatDef = npc.combatDef.copy(
+            aggressiveRadius = aggro.radius,
+            aggroTargetDelay = aggro.targetDelay,
+            aggressiveTimer = aggro.timer,
+        )
+        npc.aggroCheck = { _, _ -> true } // MUST stay throw-free (engine path is unguarded)
     }
 
     private companion object {
@@ -635,6 +678,22 @@ class WorldSpawnsPlugin(
             "npc.skeleton" to 2,
             "npc.dark_wizard" to 2,
             "npc.chaos_druid" to 2,
+            "npc.black_knight" to 1,
+            "npc.bandit_690" to 1,
+        )
+
+        /** Weighted desert pool that overruns Al Kharid ([applyFallenAlKharid]) — scorpions out
+         *  of the mine plus the desert gangs. Every pick except the bandits is aggro-flagged in
+         *  npc_combat.json (stats[7]==1), so the raid-city aggro boost bites. */
+        val AL_KHARID_ENEMY_POOL = listOf(
+            "npc.scorpion" to 4,
+            "npc.thug" to 4,
+            "npc.mugger" to 3,
+            "npc.skeleton" to 2,
+            "npc.dark_wizard" to 2,
+            "npc.wolf" to 2,
+            "npc.pit_scorpion" to 2,
+            "npc.king_scorpion" to 1,
             "npc.black_knight" to 1,
             "npc.bandit_690" to 1,
         )

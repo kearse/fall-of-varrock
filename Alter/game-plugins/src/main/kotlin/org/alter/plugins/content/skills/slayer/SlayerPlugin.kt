@@ -470,17 +470,34 @@ class SlayerPlugin(
             say(p, "Orders first, ${p.address}. ${RecruitTrials.step(p).objective}")
             return
         }
-        val eligible = tasks.values.filter { p.combatLevel >= it.minCombat }
+        // The random pool excludes script-only contracts (e.g. the tutorial rats). Prefer tasks in the
+        // player's combat BAND (min..max) so trivial monsters retire for stronger players; if that
+        // leaves nothing (a very high level), fall back to any task they meet the floor for so the
+        // master is never empty-handed.
+        val pool = tasks.values.filter { it.assignable }
+        val eligible = pool.filter { p.combatLevel in it.minCombat..it.maxCombat }
+            .ifEmpty { pool.filter { p.combatLevel >= it.minCombat } }
         if (eligible.isEmpty()) {
             say(p, "I've nothing for you right now.")
             return
         }
-        val task = eligible[world.random(eligible.size - 1)]
+        val task = weightedPick(eligible)
         val amount = world.random(task.amount)
         p.attr[SLAYER_TASK_NPC_ATTR] = task.npcName
         p.attr[SLAYER_TASK_LEFT_ATTR] = amount
         p.attr[SLAYER_TASK_TOTAL_ATTR] = amount
         say(p, "Your task: slay <col=801700>$amount ${task.display}</col>. Good hunting.")
+    }
+
+    /** Weighted random pick over [eligible] by each task's [SlayerTask.weight]. */
+    private fun weightedPick(eligible: List<SlayerTask>): SlayerTask {
+        val total = eligible.sumOf { it.weight.coerceAtLeast(1) }
+        var roll = world.random(total - 1)
+        for (t in eligible) {
+            roll -= t.weight.coerceAtLeast(1)
+            if (roll < 0) return t
+        }
+        return eligible.last()
     }
 
     private fun reportTask(p: Player) {

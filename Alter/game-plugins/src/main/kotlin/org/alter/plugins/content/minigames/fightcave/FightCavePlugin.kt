@@ -8,6 +8,7 @@ import org.alter.api.ext.*
 import org.alter.game.Server
 import org.alter.game.model.Area
 import org.alter.game.model.Direction
+import org.alter.game.model.PlayerUID
 import org.alter.game.model.Tile
 import org.alter.game.model.World
 import org.alter.game.model.attr.ARENA_BEST_WAVE_ATTR
@@ -16,6 +17,7 @@ import org.alter.game.model.combat.CombatClass
 import org.alter.game.model.entity.Npc
 import org.alter.game.model.entity.Player
 import org.alter.game.model.move.moveTo
+import org.alter.game.model.move.walkTo
 import org.alter.game.model.queue.QueueTask
 import org.alter.game.model.timer.TimerKey
 import org.alter.game.plugin.KotlinPlugin
@@ -124,11 +126,18 @@ class FightCavePlugin(
         onCommand("jad", description = "Practice TzTok-Jad (no rewards)") { start(player, practice = true) }
         onCommand("leave", description = "Flee the Fight Cave") { leave(player) }
 
-        // Scripted attackers. The rest (Tz-Kek, Yt-MejKot, Yt-HurKot) melee via the default AI.
+        // Scripted attackers. ALL wave mobs are scripted so they (a) honour Protect prayers — the
+        // default NPC melee ignores overheads entirely, so an unscripted mob "hits through prayer" —
+        // and (b) actually walk to the player (the shared moveToAttackRange is a range-check only, so
+        // an unscripted-approach scripted mob would idle until walked onto).
         onNpcCombat(TZKIH) { npc.queue { npc.tzKihCombat(this) } }
         onNpcCombat(TOKXIL) { npc.queue { npc.tokXilCombat(this) } }
         onNpcCombat(KETZEK) { npc.queue { npc.ketZekCombat(this) } }
         onNpcCombat(JAD) { npc.queue { npc.jadCombat(this) } }
+        onNpcCombat(TZKEK) { npc.queue { npc.caveMeleeCombat(this, TZKEK_MAX) } }
+        onNpcCombat(TZKEK_SMALL) { npc.queue { npc.caveMeleeCombat(this, TZKEK_SMALL_MAX) } }
+        onNpcCombat(YTMEJKOT) { npc.queue { npc.caveMeleeCombat(this, YTMEJKOT_MAX) } }
+        onNpcCombat(YTHURKOT) { npc.queue { npc.caveMeleeCombat(this, YTHURKOT_MAX) } }
 
         // Big Tz-Kek splits into two small ones where it fell (OSRS behaviour).
         onNpcDeath(TZKEK) {
@@ -158,6 +167,7 @@ class FightCavePlugin(
         val s = Session(player, instance, practice)
         if (practice) s.wave = waves.size - 1 // straight to the Jad wave
         sessions += s
+        activeOwners += player.uid // bench the player's companions for the run (see [inCave])
         player.moveTo(instance.translate(ENTRY_TILE))
         if (practice) {
             player.message("<col=ff0000>Practice mode:</col> TzTok-Jad only — no cape, no tickets. Watch his attacks!")
@@ -225,7 +235,11 @@ class FightCavePlugin(
     /** Spawn one wave npc at [sourceTile] (source-cave coords) inside the session's instance.
      *  [engage] = false for healers, who come for Jad, not the player. */
     private fun spawnWaveNpc(s: Session, key: String, sourceTile: Tile, engage: Boolean = true): Npc {
-        val base = s.instance.translate(sourceTile)
+        // [sourceTile] is normally a source-cave coord that we translate into instance space — but the
+        // Tz-Kek split passes the dying npc's tile, which is ALREADY instance-space. Translating that
+        // again lands the smalls off-map (they never appear AND never clear, hanging the wave). Guard
+        // like the Inferno does: only translate a tile that isn't already inside the instance.
+        val base = if (s.instance.contains(sourceTile)) sourceTile else s.instance.translate(sourceTile)
         val tile = world.findRandomTileAround(base, radius = 2) ?: base
         val npc = Npc(getRSCM(key), tile, world)
         npc.walkRadius = 15
@@ -303,23 +317,52 @@ class FightCavePlugin(
         s.healers.clear()
         s.jad = null
         sessions.remove(s)
+        activeOwners.remove(s.owner.uid) // un-bench the player's companions
         if (teleport && s.owner.index >= 0) s.owner.moveTo(world.gameContext.home)
     }
 
     // ───────────────────────────── scripted combat ─────────────────────────────
+
+    /** Generic scripted melee for the cave's plain melee mobs (Tz-Kek + smalls, Yt-MejKot, Yt-HurKot):
+     *  walk into range, animate a model-appropriate swing, and hit through [bossMelee] so Protect from
+     *  Melee is honoured (the default NPC AI ignores overheads). */
+    private suspend fun Npc.caveMeleeCombat(task: QueueTask, maxHit: Int) {
+        var target = getCombatTarget() ?: return
+        while (canEngageCombat(target)) {
+            facePawn(target)
+            if (moveToAttackRange(task, target, distance = 1, projectile = false)) {
+                if (isAttackDelayReady()) {
+                    animate(CombatConfigs.getAttackAnimation(this))
+                    bossMelee(target, maxHit)
+                    postAttackLogic(target)
+                }
+            } else {
+                walkTo(target.tile) // the shared range check never moves us — approach explicitly
+            }
+            task.wait(1)
+            target = getCombatTarget() ?: break
+        }
+        resetFacePawn()
+        removeCombatTarget()
+    }
 
     /** Tz-Kih: weak melee bat that saps prayer on every attack (drains more when it connects). */
     private suspend fun Npc.tzKihCombat(task: QueueTask) {
         var target = getCombatTarget() ?: return
         while (canEngageCombat(target)) {
             facePawn(target)
-            if (moveToAttackRange(task, target, distance = 1, projectile = false) && isAttackDelayReady()) {
-                val landed = bossMelee(target, TZKIH_MAX)
-                if (target is Player) {
-                    target.getSkills().alterCurrentLevel(Skills.PRAYER, if (landed) -3 else -1, capValue = 0)
-                    target.message("Tz-Kih drains your Prayer!")
+            if (moveToAttackRange(task, target, distance = 1, projectile = false)) {
+                if (isAttackDelayReady()) {
+                    animate(CombatConfigs.getAttackAnimation(this)) // Tz-Kih used to swing invisibly (no animate)
+                    val landed = bossMelee(target, TZKIH_MAX)
+                    if (target is Player) {
+                        target.getSkills().alterCurrentLevel(Skills.PRAYER, if (landed) -3 else -1, capValue = 0)
+                        target.message("Tz-Kih drains your Prayer!")
+                    }
+                    postAttackLogic(target)
                 }
-                postAttackLogic(target)
+            } else {
+                walkTo(target.tile)
             }
             task.wait(1)
             target = getCombatTarget() ?: break
@@ -333,14 +376,18 @@ class FightCavePlugin(
         var target = getCombatTarget() ?: return
         while (canEngageCombat(target)) {
             facePawn(target)
-            if (moveToAttackRange(task, target, distance = 8, projectile = true) && isAttackDelayReady()) {
-                animate(TOKXIL_ANIM)
-                if (tile.isWithinRadius(target.tile, 2)) {
-                    bossMelee(target, TOKXIL_MAX)
-                } else {
-                    bossProjectile(target, CombatClass.RANGED, TOKXIL_MAX, gfx = TOKXIL_GFX)
+            if (moveToAttackRange(task, target, distance = 8, projectile = true)) {
+                if (isAttackDelayReady()) {
+                    animate(TOKXIL_ANIM)
+                    if (tile.isWithinRadius(target.tile, 2)) {
+                        bossMelee(target, TOKXIL_MAX)
+                    } else {
+                        bossProjectile(target, CombatClass.RANGED, TOKXIL_MAX, gfx = TOKXIL_GFX)
+                    }
+                    postAttackLogic(target)
                 }
-                postAttackLogic(target)
+            } else {
+                walkTo(target.tile) // approach — the shared range check never walks us in
             }
             task.wait(1)
             target = getCombatTarget() ?: break
@@ -354,14 +401,18 @@ class FightCavePlugin(
         var target = getCombatTarget() ?: return
         while (canEngageCombat(target)) {
             facePawn(target)
-            if (moveToAttackRange(task, target, distance = 8, projectile = true) && isAttackDelayReady()) {
-                animate(KETZEK_ANIM)
-                if (tile.isWithinRadius(target.tile, 2) && world.random(1) == 0) {
-                    bossMelee(target, KETZEK_MAX)
-                } else {
-                    bossProjectile(target, CombatClass.MAGIC, KETZEK_MAX, gfx = KETZEK_GFX)
+            if (moveToAttackRange(task, target, distance = 8, projectile = true)) {
+                if (isAttackDelayReady()) {
+                    animate(KETZEK_ANIM)
+                    if (tile.isWithinRadius(target.tile, 2) && world.random(1) == 0) {
+                        bossMelee(target, KETZEK_MAX)
+                    } else {
+                        bossProjectile(target, CombatClass.MAGIC, KETZEK_MAX, gfx = KETZEK_GFX)
+                    }
+                    postAttackLogic(target)
                 }
-                postAttackLogic(target)
+            } else {
+                walkTo(target.tile) // approach — the shared range check never walks us in
             }
             task.wait(1)
             target = getCombatTarget() ?: break
@@ -379,7 +430,9 @@ class FightCavePlugin(
         var target = getCombatTarget() ?: return
         while (canEngageCombat(target)) {
             facePawn(target)
-            if (moveToAttackRange(task, target, distance = 15, projectile = true) && isAttackDelayReady()) {
+            if (!moveToAttackRange(task, target, distance = 15, projectile = true)) {
+                walkTo(target.tile) // approach — the shared range check never walks us in
+            } else if (isAttackDelayReady()) {
                 postAttackLogic(target) // 8-tick cycle starts at the telegraph, like OSRS
                 if (tile.isWithinRadius(target.tile, 2) && world.random(2) == 0) {
                     animate(JAD_MELEE_ANIM)
@@ -488,7 +541,15 @@ class FightCavePlugin(
         }.onFailure { logger.warn { "fight-cave: combat def for '$key' failed: ${it.message}" } }
     }
 
-    private companion object {
+    companion object {
+        /** Owners currently inside a Fight Cave instance. Companions stand down while their owner is
+         *  here (a companion follows into the instance, tanks Jad and the waves, and steals all the
+         *  aggro — "Jad not attacking me"). Updated in [start]/[cleanup]. */
+        private val activeOwners = HashSet<PlayerUID>()
+
+        /** True while [p] is fighting in the cave — read by CompanionBrain to bench companions. */
+        fun inCave(p: Player): Boolean = activeOwners.contains(p.uid)
+
         // The fight-cave wave roster — rev-228 cache ids via RSCM (3116..3128).
         const val TZKIH = "npc.tzkih_3116"
         const val TZKEK = "npc.tzkek_3118"
@@ -516,6 +577,10 @@ class FightCavePlugin(
 
         // Max hits — OSRS-exact.
         const val TZKIH_MAX = 4
+        const val TZKEK_MAX = 11
+        const val TZKEK_SMALL_MAX = 3
+        const val YTMEJKOT_MAX = 19
+        const val YTHURKOT_MAX = 13
         const val TOKXIL_MAX = 14
         const val KETZEK_MAX = 49
         const val JAD_MAX = 97
