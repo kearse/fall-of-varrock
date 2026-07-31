@@ -2,6 +2,7 @@ package org.alter.plugins.content.raidzones
 
 import dev.openrune.cache.CacheManager.getItem
 import io.github.oshai.kotlinlogging.KotlinLogging
+import org.alter.api.ChatMessageType
 import org.alter.api.ext.message
 import org.alter.api.ext.player
 import org.alter.game.Server
@@ -44,6 +45,10 @@ class RareDropPlugin(
     private var targetDistrict: RaidDistrict? = null
     /** The live, unclaimed drop (cleared on claim or when it times out and respawns anew). */
     private var liveDrop: GroundItem? = null
+    /** The machine map-marker lines ([MAP_PREFIX]) matching the current phase, replayed to
+     *  late log-ins so their world map catches up (see the client's `lofsupplydrop` plugin). */
+    private var warnMapLine: String? = null
+    private var dropMapLine: String? = null
 
     init {
         val timer = TimerKey()
@@ -67,8 +72,17 @@ class RareDropPlugin(
             val picked = player.attr[INTERACTING_GROUNDITEM_ATTR]?.get() ?: return@onGlobalItemPickup
             if (picked !== drop) return@onGlobalItemPickup
             liveDrop = null
+            dropMapLine = null
             val name = runCatching { getItem(drop.item).name }.getOrNull() ?: "the supply drop"
             Announce.broadcast(world, "<col=ffcc00>${player.username} has claimed $name from the supply drop — and now has to make it out alive!</col>")
+            Announce.broadcast(world, "${MAP_PREFIX}CLEAR")
+        }
+
+        // Late log-ins get the current phase's map marker replayed (the broadcast that carried
+        // it went out before they were online).
+        onLogin {
+            val line = dropMapLine?.takeIf { liveDrop?.let { d -> world.isSpawned(d) } == true } ?: warnMapLine
+            line?.let { player.message(it, ChatMessageType.BROADCAST) }
         }
 
         onCommand("rarespawn", Privilege.ADMIN_POWER, description = "Force the supply-drop cycle forward (test)") {
@@ -92,6 +106,11 @@ class RareDropPlugin(
             "<col=ffae00>A supply drop falls on ${city.display} — ${district.display} — in ~$mins minutes! " +
                 "The city is PvP ground: whoever takes it must carry it out.</col>",
         )
+        // Map marker (client `lofsupplydrop`): the WARN phase marks the district's centre —
+        // the convergence point, not the exact tile (that isn't picked until it lands).
+        val c = district.center
+        warnMapLine = "${MAP_PREFIX}WARN:${city.display}:${district.display}:${c.x}:${c.z}:${WARN_TICKS * 6 / 10}"
+        warnMapLine?.let { Announce.broadcast(world, it) }
     }
 
     private fun land() {
@@ -122,6 +141,10 @@ class RareDropPlugin(
             world,
             "<col=ffcc00>The supply drop is DOWN in ${district.display} of ${city.display}! First to reach it takes it.</col>",
         )
+        // Map marker: the landing swaps the district-centre WARN marker for the exact tile.
+        warnMapLine = null
+        dropMapLine = "${MAP_PREFIX}DROP:${city.display}:${district.display}:${tile.x}:${tile.z}"
+        dropMapLine?.let { Announce.broadcast(world, it) }
         logger.info { "[SUPPLY DROP] ${rolled.item} x${rolled.amount} landed at (${tile.x},${tile.z}) in ${city.key}/${district.key}." }
     }
 
@@ -158,5 +181,11 @@ class RareDropPlugin(
         const val DROP_LIFETIME_TICKS = 6000
         /** Random-tile attempts before falling back to the district centre. */
         const val PICK_ATTEMPTS = 24
+
+        /** Machine-line prefix for the client's `lofsupplydrop` world-map markers. Rides the
+         *  BROADCAST channel like `FOV_INTRO:` (hidden from chat by the client's ticker filter).
+         *  Grammar: `WARN:<city>:<district>:<x>:<z>:<seconds>` (district centre),
+         *  `DROP:<city>:<district>:<x>:<z>` (exact tile), `CLEAR` (claimed). */
+        const val MAP_PREFIX = "FOV_RAID:"
     }
 }

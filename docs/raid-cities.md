@@ -53,6 +53,22 @@ Unclaimed drops despawn after ~an hour.
 
 Admin command: `::rarespawn` (advance warn/land immediately).
 
+### World-map marker
+
+Alongside the human-facing headlines, `RareDropPlugin` sends machine lines on the same
+BROADCAST channel (the `FOV_INTRO:` pattern), prefix `FOV_RAID:`:
+
+- `WARN:<city>:<district>:<x>:<z>:<seconds>` — district centre, at the 5-minute warning
+- `DROP:<city>:<district>:<x>:<z>` — the exact landing tile
+- `CLEAR` — claimed
+
+The custom client's `lofsupplydrop` plugin renders these as a star on the world map
+(snap-to-edge + click-to-jump): the district centre while the drop is incoming, the exact
+tile once it's down. Late log-ins get the current phase's line replayed by the server's
+`onLogin` hook, markers self-expire client-side if a `CLEAR` is missed, and the raw machine
+lines are blanked from the chatbox (`lofannouncements` also excludes the prefix from the
+ticker). Client dev command: `::supplydroptest` cycles WARN → DROP → CLEAR locally.
+
 ## Adding a city
 
 One config entry: write a `<City>Raid.kt` (area, districts + spots + tables, aggro, rare
