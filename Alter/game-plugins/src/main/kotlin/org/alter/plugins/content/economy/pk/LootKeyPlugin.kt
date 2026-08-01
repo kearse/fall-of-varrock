@@ -262,11 +262,12 @@ class LootKeyPlugin(
 ) : KotlinPlugin(r, world, server) {
 
     init {
-        // The Loot Chest (Ferox-style, native "Loot" action) just east of the market rows.
+        // The Loot Chests (Ferox-style, native "Loot" action) in the market, facing each other.
         // Spawned in onWorldInit so the region's collision is loaded first
         // (MiningPlugin/SmithingPlugin pattern).
         onWorldInit {
-            world.spawn(DynamicObject(getRSCM(CHEST), OBJ_TYPE, CHEST_ROT, Tile(CHEST_X, CHEST_Z, 0)))
+            world.spawn(DynamicObject(getRSCM(CHEST), OBJ_TYPE, SOUTH_CHEST_ROT, Tile(CHEST_X, SOUTH_CHEST_Z, 0)))
+            world.spawn(DynamicObject(getRSCM(CHEST), OBJ_TYPE, NORTH_CHEST_ROT, Tile(CHEST_X, NORTH_CHEST_Z, 0)))
         }
         onObjOption(obj = CHEST, option = "loot") { LootChestInterface.open(player) }
 
@@ -352,11 +353,13 @@ class LootKeyPlugin(
         const val CHEST = "object.loot_chest"
         const val OBJ_TYPE = 10 // standard interactable scenery
 
-        /** East of the market rows (3229,3220), facing south. Chest rot cycle is clockwise
-         *  from N (swamp bank chest rot=1 reads east), so 2 = south — cosmetic, TUNE in-game
-         *  if it reads backwards. */
-        const val CHEST_X = 3229
-        const val CHEST_Z = 3220
-        const val CHEST_ROT = 2
+        /** A facing pair on the market's x=3224 column: south chest (3224,3217) reads north,
+         *  north chest (3224,3220) reads south. Chest rot cycle is clockwise from N (swamp
+         *  bank chest rot=1 reads east) — cosmetic, TUNE in-game if it reads backwards. */
+        const val CHEST_X = 3224
+        const val SOUTH_CHEST_Z = 3217
+        const val SOUTH_CHEST_ROT = 0
+        const val NORTH_CHEST_Z = 3220
+        const val NORTH_CHEST_ROT = 2
     }
 }
