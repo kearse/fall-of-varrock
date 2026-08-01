@@ -114,10 +114,12 @@ class GeneralZoPlugin(
     /** GEAR step: hand over the survival kit and send the soldier into the Fight Cave. */
     private suspend fun QueueTask.survivalArm(player: Player) {
         chatNpc(player, "Tough enough now. When the front collapses, ${player.address},<br>it's the soldier who outlasts the rout who lives. Time to<br>prove you can.", title = ZO)
+        // Advance immediately with the handout — a chatNpc between them let an early chat-close
+        // strand the step on GEAR and re-claim the kit (same dupe as Vannaka's tower kit).
         WarPrepSurvival.armForTrial(player) // armour + food + brews + restores
+        WarPrepSurvival.onArmedForTrial(player) // GEAR → FIELD
         chatNpc(player, "Take this kit — armour, food, brews and restores. Go to<br>the <col=801700>Fight Cave</col> and <col=801700>survive to wave ${WarPrepSurvival.FIELD_WAVE}</col>. Manage<br>your health, don't panic, and endure.", title = ZO)
         chatNpc(player, "Come back to me when you've made that wave. Follow the<br>marker.", title = ZO)
-        WarPrepSurvival.onArmedForTrial(player) // GEAR → FIELD
     }
 
     /** FIELD step: reach the target Fight Cave wave. A vouch escape (once they've proven an honest
