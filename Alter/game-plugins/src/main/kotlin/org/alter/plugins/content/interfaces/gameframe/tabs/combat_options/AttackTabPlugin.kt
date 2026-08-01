@@ -70,6 +70,28 @@ class AttackTabPlugin(
             player.setVarp(ATTACK_STYLE_VARP, 3)
         }
 
+        /*
+         * Autocast mode boxes, shown on the combat tab when a staff is wielded:
+         * the left "Spell" box (shield icon) selects defensive casting, the right
+         * one standard casting. On this server they toggle the casting mode
+         * directly (varbit 2668) rather than opening the choose-spell interface,
+         * which isn't wired — autocast arms by casting a spell once (see
+         * CombatSpellsPlugin). Child ids inside interface 593 drift between cache
+         * revisions, so bind every child of each box: 21-25 make up the defensive
+         * box (container/icon/shield/text), 26-29 the standard one. The styles end
+         * at 17 and auto-retaliate starts at 30, so neither range can collide.
+         */
+        for (component in 21..25) {
+            onButton(interfaceId = ATTACK_TAB_INTERFACE_ID, component = component) {
+                setDefensiveCasting(player, true)
+            }
+        }
+        for (component in 26..29) {
+            onButton(interfaceId = ATTACK_TAB_INTERFACE_ID, component = component) {
+                setDefensiveCasting(player, false)
+            }
+        }
+
         /**
          * Toggle auto-retaliate button.
          */
@@ -137,7 +159,27 @@ class AttackTabPlugin(
     private fun clearStaleAutocast(player: Player) {
         if (!player.hasWeaponType(WeaponType.MAGIC_STAFF, WeaponType.STAFF, WeaponType.TRIDENT)) {
             player.setVarbit(Combat.SELECTED_AUTOCAST_VARBIT, 0)
+            player.setVarbit(Combat.DEFENSIVE_MAGIC_CAST_VARBIT, 0)
             player.attr.remove(Combat.CASTING_SPELL)
+        }
+    }
+
+    /**
+     * Flips the casting mode the magic xp split keys off (defensive = Magic +
+     * Defence, standard = full Magic). Kept as a plain varbit toggle so the mode
+     * survives staff-to-staff swaps; [clearStaleAutocast] resets it whenever the
+     * player leaves magic weapons entirely.
+     */
+    private fun setDefensiveCasting(player: Player, defensive: Boolean) {
+        val current = player.getVarbit(Combat.DEFENSIVE_MAGIC_CAST_VARBIT) != 0
+        if (current == defensive) {
+            return
+        }
+        player.setVarbit(Combat.DEFENSIVE_MAGIC_CAST_VARBIT, if (defensive) 1 else 0)
+        if (defensive) {
+            player.message("You will now cast spells defensively, splitting the experience between Magic and Defence.")
+        } else {
+            player.message("You will no longer cast spells defensively.")
         }
     }
 }

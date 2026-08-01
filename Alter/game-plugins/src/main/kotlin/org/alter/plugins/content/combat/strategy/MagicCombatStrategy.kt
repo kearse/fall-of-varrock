@@ -3,7 +3,6 @@ package org.alter.plugins.content.combat.strategy
 import org.alter.api.ProjectileType
 import org.alter.api.Skills
 import org.alter.api.ext.freeze
-import org.alter.api.ext.getVarbit
 import org.alter.api.ext.playSound
 import org.alter.game.model.Graphic
 import org.alter.game.model.Tile
@@ -123,20 +122,11 @@ object MagicCombatStrategy : CombatStrategy {
         val multiplier = if (target is Npc) Combat.getNpcXpMultiplier(target) else 1.0
         val baseXp = spell.baseXp
 
-        if (mode == XpMode.MAGIC) {
-            val defensive =
-                player.getVarbit(
-                    Combat.SELECTED_AUTOCAST_VARBIT,
-                ) != 0 && player.getVarbit(Combat.DEFENSIVE_MAGIC_CAST_VARBIT) != 0
-            if (!defensive) {
-                player.addXp(Skills.MAGIC, (modDamage * 2.0 * multiplier) + baseXp)
-                player.addXp(Skills.HITPOINTS, modDamage * 1.33 * multiplier)
-            } else {
-                player.addXp(Skills.MAGIC, (modDamage * 1.33 * multiplier) + baseXp)
-                player.addXp(Skills.DEFENCE, modDamage * multiplier)
-                player.addXp(Skills.HITPOINTS, modDamage * 1.33 * multiplier)
-            }
-        } else if (mode == XpMode.SHARED) {
+        // getXpMode() reports the *melee* xp mode for staves (bash/pound/focus), so the
+        // defensive-cast decision can't hang off it — the old `mode == MAGIC` gate made
+        // defensive casting unreachable for every staff. Check the defensive-cast state
+        // directly; tridents on long range (SHARED) award the same split.
+        if (mode == XpMode.SHARED || Combat.isCastingDefensively(player)) {
             player.addXp(Skills.MAGIC, (modDamage * 1.33 * multiplier) + baseXp)
             player.addXp(Skills.DEFENCE, modDamage * multiplier)
             player.addXp(Skills.HITPOINTS, modDamage * 1.33 * multiplier)

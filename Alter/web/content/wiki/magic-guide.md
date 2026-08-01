@@ -49,6 +49,13 @@ Wielding an elemental staff is an **endless supply of its own rune** - it isn't 
 
 **Autocast** needs a staff in your hands. Cast a combat spell on a target and it stays selected - you keep casting it until you switch weapons or unequip. Casting with a non-staff weapon still works, it's just a single cast.
 
+**Defensive casting** trains Defence as a mage: your casts award Magic + Defence XP (1.33 Magic + 1 Defence per damage, instead of the usual 2 Magic). Turn it on either way:
+
+- Click the **defensive "Spell" box** (the one with the shield) on the combat tab while holding a staff - click the plain box to switch back.
+- Or just select the **fourth combat style (Focus)** on your staff - any spell you cast while it's selected splits the XP.
+
+Rangers have the same option: the **Longrange** style on any bow, crossbow or thrown weapon splits XP evenly between Ranged and Defence (2 + 2 per damage) and adds 2 tiles of attack range.
+
 ## Spellbook access
 
 Ancient, Lunar and Arceuus need the Wizard Tower unlock - see [Unlocking the magic books](/wiki/unlocking-spellbooks). Switch with `::spellbook`.
