@@ -201,8 +201,8 @@ tiles/object placement in-game.
 - **Phase 1 — DONE** (compiles). The physical portal:
   - `TeleportPortalObjectPlugin.kt` — replaces the Lumbridge courtyard **Fountain**
     (cache obj 879, type 10, 2×2, base tile **3221,3226**) by spawning a portal
-    (`object.freeforall_portal`, id 26645 — teal Clan-Wars swirl) on the same
-    tile+type-10 slot, which overrides the static map loc (no cache edit).
+    (`object.portal_of_champions`, id 31618 — the large ornate "Portal of Champions")
+    on the same tile+type-10 slot, which overrides the static map loc (no cache edit).
   - Click → `TeleportMenu.open`; a second model option (if any) → repeat last teleport.
   - Options bound **defensively** (only actions the model exposes) so a wrong id
     can't throw/drop the plugin.
