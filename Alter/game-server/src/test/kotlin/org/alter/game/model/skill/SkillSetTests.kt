@@ -80,6 +80,72 @@ class SkillSetTests {
         assertEquals(skills.getCurrentLevel(ATTACK_SKILL), baseLevel + (increment * 2))
     }
 
+    @Test
+    fun `restore does not lower a boosted stat`() {
+        val skills = createSkills()
+        skills.setBaseLevel(ATTACK_SKILL, 99)
+
+        // Super combat at 99: +5 + 15% = +19 -> 118/99.
+        skills.alterCurrentLevel(ATTACK_SKILL, 19, capValue = 19)
+        assertEquals(118, skills.getCurrentLevel(ATTACK_SKILL))
+
+        // Super restore at 99: +8 + 25% = +32, capped at base — must not touch the boost.
+        skills.alterCurrentLevel(ATTACK_SKILL, 32, capValue = 0)
+        assertEquals(118, skills.getCurrentLevel(ATTACK_SKILL))
+    }
+
+    @Test
+    fun `restore raises a lowered stat up to base only`() {
+        val skills = createSkills()
+        skills.setBaseLevel(PRAYER_SKILL, 99)
+        skills.decrementCurrentLevel(PRAYER_SKILL, 39, capped = true)
+        assertEquals(60, skills.getCurrentLevel(PRAYER_SKILL))
+
+        skills.alterCurrentLevel(PRAYER_SKILL, 32, capValue = 0)
+        assertEquals(92, skills.getCurrentLevel(PRAYER_SKILL))
+
+        skills.alterCurrentLevel(PRAYER_SKILL, 32, capValue = 0)
+        assertEquals(99, skills.getCurrentLevel(PRAYER_SKILL))
+    }
+
+    @Test
+    fun `weaker boost does not lower a stronger boost`() {
+        val skills = createSkills()
+        skills.setBaseLevel(ATTACK_SKILL, 99)
+
+        // Super attack: +19 -> 118/99.
+        skills.alterCurrentLevel(ATTACK_SKILL, 19, capValue = 19)
+        assertEquals(118, skills.getCurrentLevel(ATTACK_SKILL))
+
+        // Regular attack potion at 99: +3 + 10% = +12 (cap 111) — no effect while above its cap.
+        skills.alterCurrentLevel(ATTACK_SKILL, 12, capValue = 12)
+        assertEquals(118, skills.getCurrentLevel(ATTACK_SKILL))
+    }
+
+    @Test
+    fun `re-drinking the same boost does not stack`() {
+        val skills = createSkills()
+        skills.setBaseLevel(STRENGTH_SKILL, 50)
+
+        skills.alterCurrentLevel(STRENGTH_SKILL, 10, capValue = 10)
+        assertEquals(60, skills.getCurrentLevel(STRENGTH_SKILL))
+
+        skills.alterCurrentLevel(STRENGTH_SKILL, 10, capValue = 10)
+        assertEquals(60, skills.getCurrentLevel(STRENGTH_SKILL))
+    }
+
+    @Test
+    fun `drains still lower boosted stats`() {
+        val skills = createSkills()
+        skills.setBaseLevel(DEFENCE_SKILL, 50)
+
+        skills.alterCurrentLevel(DEFENCE_SKILL, 10, capValue = 10)
+        assertEquals(60, skills.getCurrentLevel(DEFENCE_SKILL))
+
+        skills.alterCurrentLevel(DEFENCE_SKILL, -5, capValue = -50)
+        assertEquals(55, skills.getCurrentLevel(DEFENCE_SKILL))
+    }
+
     @Test(expected = IllegalStateException::class)
     fun `alter level illegally with different cap signum`() {
         val skills = createSkills()

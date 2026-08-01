@@ -79,6 +79,30 @@ class NpcStatsTests {
         assertEquals(skills.getCurrentLevel(ATTACK_STAT), baseLevel + (increment * 2))
     }
 
+    @Test
+    fun `restore does not lower a boosted stat`() {
+        val skills = createStats()
+        skills.setBaseLevel(ATTACK_STAT, 99)
+
+        skills.alterCurrentLevel(ATTACK_STAT, 19, capValue = 19)
+        assertEquals(118, skills.getCurrentLevel(ATTACK_STAT))
+
+        skills.alterCurrentLevel(ATTACK_STAT, 32, capValue = 0)
+        assertEquals(118, skills.getCurrentLevel(ATTACK_STAT))
+    }
+
+    @Test
+    fun `weaker boost does not lower a stronger boost`() {
+        val skills = createStats()
+        skills.setBaseLevel(ATTACK_STAT, 99)
+
+        skills.alterCurrentLevel(ATTACK_STAT, 19, capValue = 19)
+        assertEquals(118, skills.getCurrentLevel(ATTACK_STAT))
+
+        skills.alterCurrentLevel(ATTACK_STAT, 12, capValue = 12)
+        assertEquals(118, skills.getCurrentLevel(ATTACK_STAT))
+    }
+
     @Test(expected = IllegalStateException::class)
     fun `alter level illegally with different cap signum`() {
         val skills = createStats()
