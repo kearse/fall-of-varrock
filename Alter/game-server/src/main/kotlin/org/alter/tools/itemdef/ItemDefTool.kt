@@ -24,10 +24,16 @@ import java.nio.file.Path
  * records are backed up to `data/cache-backups/item_<id>.bin` before the first write;
  * `restore <id>` puts one back. After writing, the def is re-decoded and asserted.
  *
+ * Item EXAMINES live in the cache def too (opcode 3, rendered client-side) — the server's
+ * `objs.csv` copy only feeds the server-side ground-item examine path, so an examine change
+ * needs both this tool (client) and the csv (server).
+ *
  * Run (workingDir = repo root = the Alter project dir):
- *   gradlew :game-server:itemDef -PitemDefArgs="inspect 4067 8851"
+ *   gradlew :game-server:itemDef -PitemDefArgs="inspect 4067 8851 4278"
  *   gradlew :game-server:itemDef -PitemDefArgs="tickets"          # Boss/Vote Ticket names
+ *   gradlew :game-server:itemDef -PitemDefArgs="commendation"     # Ecto-token -> Commendation
  *   gradlew :game-server:itemDef -PitemDefArgs="rename 4067 Boss Ticket"
+ *   gradlew :game-server:itemDef -PitemDefArgs="examine 4067 Redeem me at the boss vendor."
  *   gradlew :game-server:itemDef -PitemDefArgs="restore 4067"
  */
 
@@ -37,22 +43,34 @@ private const val REVISION = 228
 
 private const val BOSS_TICKET = 4067 // Castle wars ticket sprite — our Boss Ticket currency
 private const val VOTE_TICKET = 8851 // Warrior guild token sprite — our Vote Ticket currency
+private const val COMMENDATION = 4278 // Ecto-token sprite — our Commendation war currency (WarForge)
+
+// Keep in sync with the 4278 line in data/cfg/objs.csv (the server-side examine source).
+private const val COMMENDATION_EXAMINE =
+    "Proof of service in the realm's wars. Thurgo, the Royal Smith at Lumbridge Castle, forges armour for these."
 
 fun main(args: Array<String>) {
     when (args.getOrNull(0)?.lowercase() ?: "inspect") {
         "inspect" -> inspect(args.drop(1).mapNotNull { it.toIntOrNull() })
         "tickets" -> {
-            rename(BOSS_TICKET, "Boss Ticket")
-            rename(VOTE_TICKET, "Vote Ticket")
+            edit(BOSS_TICKET, name = "Boss Ticket")
+            edit(VOTE_TICKET, name = "Vote Ticket")
         }
+        "commendation" -> edit(COMMENDATION, name = "Commendation", examine = COMMENDATION_EXAMINE)
         "rename" -> {
             val id = args.getOrNull(1)?.toIntOrNull() ?: run { println("rename <id> <name...>"); return }
             val name = args.drop(2).joinToString(" ").trim()
             if (name.isEmpty()) { println("rename <id> <name...>"); return }
-            rename(id, name)
+            edit(id, name = name)
+        }
+        "examine" -> {
+            val id = args.getOrNull(1)?.toIntOrNull() ?: run { println("examine <id> <text...>"); return }
+            val text = args.drop(2).joinToString(" ").trim()
+            if (text.isEmpty()) { println("examine <id> <text...>"); return }
+            edit(id, examine = text)
         }
         "restore" -> restore(args.getOrNull(1)?.toIntOrNull() ?: run { println("restore <id>"); return })
-        else -> println("usage: inspect <id...> | tickets | rename <id> <name...> | restore <id>")
+        else -> println("usage: inspect <id...> | tickets | commendation | rename <id> <name...> | examine <id> <text...> | restore <id>")
     }
 }
 
@@ -61,7 +79,7 @@ private fun initCache() = CacheManager.init(Cache.load(Path.of(CACHE_PATH), fals
 private fun describe(id: Int): String {
     val def = CacheManager.getItemOrDefault(id)
     return "item $id '${def.name}' cost=${def.cost} stacks=${def.stacks} noteTpl=${def.noteTemplateId} " +
-        "invOptions=${def.options.toList()}"
+        "invOptions=${def.options.toList()} examine='${def.examine}'"
 }
 
 private fun inspect(ids: List<Int>) {
@@ -69,16 +87,20 @@ private fun inspect(ids: List<Int>) {
     ids.forEach { println(describe(it)) }
 }
 
-private fun rename(id: Int, newName: String) {
+private fun edit(id: Int, name: String? = null, examine: String? = null) {
     initCache()
     println("BEFORE: ${describe(id)}")
     val def = CacheManager.getItem(id)
     val before = CacheManager.getItemOrDefault(id)
+    // capture BEFORE mutating — getItem/getItemOrDefault may hand back the same instance
     val beforeCost = before.cost
     val beforeStacks = before.stacks
     val beforeNoteTpl = before.noteTemplateId
+    val wantName = name ?: before.name
+    val wantExamine = examine ?: before.examine
 
-    def.name = newName
+    name?.let { def.name = it }
+    examine?.let { def.examine = it }
 
     val writer = BufferWriter(4096)
     with(ItemEncoder()) { writer.encode(def) }
@@ -106,12 +128,13 @@ private fun rename(id: Int, newName: String) {
     initCache()
     val after = CacheManager.getItemOrDefault(id)
     println("AFTER:  ${describe(id)}")
-    val ok = after.name == newName &&
+    val ok = after.name == wantName &&
+        after.examine == wantExamine &&
         after.cost == beforeCost &&
         after.stacks == beforeStacks &&
         after.noteTemplateId == beforeNoteTpl
     if (ok) {
-        println("OK — name updated, cost/stacks/note intact. Restart the server to serve the new cache.")
+        println("OK — def updated, cost/stacks/note intact. Restart the server to serve the new cache.")
     } else {
         println("VERIFY FAILED — restoring the original record!")
         restore(id)
