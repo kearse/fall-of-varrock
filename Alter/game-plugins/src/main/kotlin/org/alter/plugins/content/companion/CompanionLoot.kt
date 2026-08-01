@@ -29,6 +29,12 @@ import kotlin.math.max
  * are eligible (its own owned drops, or PUBLIC drops). A public drop is skipped if any **other human
  * player** (not the owner, not a bot/companion) stands within [HUMAN_GUARD] of it, so a companion
  * training next to a stranger can't hoover up the stranger's kills.
+ *
+ * **The owner's own drops:** a companion's NPC kills are credited to its OWNER (the kill-credit
+ * resolver), so the drops they spawn belong to the owner — invisible to the companion. Those are
+ * banked too, but only while the owner is AWAY (> [HUMAN_GUARD] tiles or on another floor): that's
+ * what makes a left-behind ATTACK grind actually loot, while an owner standing at the camp keeps
+ * first claim on their pile (and items they deliberately drop at their feet are never vacuumed).
  */
 object CompanionLoot {
     /** Tiles around each sweep centre searched for loot (a melee kill lands on/next to the companion). */
@@ -85,14 +91,17 @@ object CompanionLoot {
                 continue
             }
             buf.bankFullWarned = false
-            // Eligible items are only ever PUBLIC or owned by this companion (the owner's own drops
-            // aren't visible to it), so the remainder goes back to whichever of those two it was.
-            val wasPublic = gi.isPublic()
+            // The remainder goes back with the ownership it had: public, the owner's (a credited
+            // kill's drop), or this companion's.
+            val remainderOwner: Player? = when {
+                gi.isPublic() -> null
+                gi.isOwnedBy(owner) -> owner
+                else -> comp
+            }
             world.remove(gi)
             val remainder = gi.amount - banked
             if (remainder > 0) {
-                world.spawn(if (wasPublic) GroundItem(gi.item, remainder, gi.tile)
-                            else GroundItem(gi.item, remainder, gi.tile, comp))
+                world.spawn(GroundItem(gi.item, remainder, gi.tile, remainderOwner))
             }
             if (gi.item == COINS) buf.coins += banked
             else buf.items[def.name ?: "an item"] = (buf.items[def.name ?: "an item"] ?: 0) + banked
@@ -127,7 +136,12 @@ object CompanionLoot {
                 val tile = Tile(base.x + dx, base.z + dz, base.height)
                 val chunk = world.chunks.get(tile, createIfNeeded = false) ?: continue
                 chunk.getEntities<GroundItem>(tile, EntityType.GROUND_ITEM).forEach { gi ->
-                    if (!gi.canBeViewedBy(comp)) return@forEach           // someone else's owned drop — invisible to us
+                    if (!gi.canBeViewedBy(comp)) {
+                        // The OWNER's drop (what a credited companion kill spawns) is fair game once
+                        // the owner has left it behind; anyone else's stays untouchable.
+                        val ownerAway = owner.tile.height != gi.tile.height || dist(owner.tile, gi.tile) > HUMAN_GUARD
+                        if (!gi.isOwnedBy(owner) || !ownerAway) return@forEach
+                    }
                     if (gi.isPublic() && humanNearby(world, gi.tile, owner)) return@forEach // don't steal a stranger's kill
                     out += gi
                 }

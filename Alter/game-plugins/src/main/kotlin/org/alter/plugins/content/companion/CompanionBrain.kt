@@ -51,8 +51,8 @@ object CompanionBrain {
     private const val FOLLOW_DIST = 3 // how close a follower stays to its owner
     private const val TELEPORT_DIST = 12 // farther than this from its slot → teleport to catch up (pet-style)
     private const val CAMP_RANGE = 60 // TRAIN within this of the goblin camp = the classic camp loop; farther = hunt
-    private const val LEASH = 16      // hunting companions only pick targets this close to the OWNER
-    private const val HUNT_SNAP = LEASH + 8 // hunting companion this far behind its slot → teleport catch-up
+    private const val LEASH = 16      // hunt/grind targets must be this close to the leash centre (owner for TRAIN's escort, the anchor for ATTACK)
+    private const val HUNT_SNAP = LEASH + 8 // escort: this far behind its slot → teleport catch-up; grind: this far off the anchor → post lost, revert to FOLLOW
 
     fun tick(world: World, comp: Companion) {
         if (comp.index < 0 || comp.isDead()) return
@@ -100,7 +100,7 @@ object CompanionBrain {
             CompanionOrders.FOLLOW -> follow(world, comp)
             CompanionOrders.DEPLOY -> deploy(world, comp)
             CompanionOrders.RETURN -> recall(world, comp)
-            CompanionOrders.ATTACK -> hunt(world, comp)
+            CompanionOrders.ATTACK -> grind(world, comp)
         }
     }
 
@@ -132,11 +132,50 @@ object CompanionBrain {
     }
 
     /**
-     * ATTACK = aggressive escort: fight the nearest attackable NPC around the **owner** (leashed
-     * to [LEASH] so the pack never chains off into the distance), and when nothing is left to
-     * kill, form up on the owner like FOLLOW so the hunt travels wherever the owner goes.
-     * Friendlies ([FRIENDLY]) and mobs already fighting a player outside the owner's party are
-     * never engaged.
+     * ATTACK = **hold this ground and grind**: the companion anchors on the tile it stood on when
+     * the order was given ([Companion.huntAnchor]) and farms the attackable NPCs around the ANCHOR
+     * — not the owner — so the owner can walk (or teleport) away and leave it behind killing and
+     * looting until it dies, is given another order, or the owner logs out. When nothing is up it
+     * walks back to the anchor and waits for respawns. Friendlies ([FRIENDLY]) and mobs already
+     * fighting a player outside the owner's party are never engaged.
+     *
+     * Getting yanked far off the anchor (the beside-the-owner death respawn, an instance pull)
+     * ends the grind: the post was lost, so the companion reverts to FOLLOW at the owner's side
+     * rather than marching back across the map on its own.
+     */
+    private fun grind(world: World, comp: Companion) {
+        val owner = CompanionRegistry.ownerOf(world, comp) ?: return
+        val anchor = comp.huntAnchor ?: comp.tile.also { comp.huntAnchor = it }
+        if (comp.tile.height != anchor.height || dist(comp.tile, anchor) > HUNT_SNAP) {
+            if (comp.isAttacking()) { comp.removeCombatTarget(); comp.resetFacePawn() }
+            comp.huntAnchor = null
+            comp.orders = CompanionOrders.FOLLOW
+            owner.message("<col=801700>Sir ${comp.username} lost his post and returns to your side.</col>")
+            return
+        }
+        val cur = comp.getCombatTarget() as? Npc
+        if (comp.isAttacking() && cur != null && isHuntMob(world, comp, owner, anchor, cur)) {
+            if (dist(comp.tile, cur.tile) <= 1 || canPathTo(world, comp, cur)) return
+            comp.removeCombatTarget(); comp.resetFacePawn()
+        }
+        val foe = nearestReachableHuntMob(world, comp, owner, anchor)
+        if (foe != null) {
+            comp.attack(foe)
+            return
+        }
+        // Nothing up — hold the post at the anchor and wait for respawns.
+        if (dist(comp.tile, anchor) >= 1) {
+            if (comp.isAttacking()) { comp.removeCombatTarget(); comp.resetFacePawn() }
+            if (!comp.hasMoveDestination()) comp.walkTo(anchor, StepType.FORCED_RUN)
+        }
+    }
+
+    /**
+     * TRAIN's away-from-camp fallback = aggressive escort: fight the nearest attackable NPC around
+     * the **owner** (leashed to [LEASH] so the pack never chains off into the distance), and when
+     * nothing is left to kill, form up on the owner like FOLLOW so the hunt travels wherever the
+     * owner goes. (The standalone ATTACK order used to work this way too — it's now the anchored
+     * [grind] above.)
      */
     private fun hunt(world: World, comp: Companion) {
         val owner = CompanionRegistry.ownerOf(world, comp) ?: return
@@ -149,11 +188,11 @@ object CompanionBrain {
             return
         }
         val cur = comp.getCombatTarget() as? Npc
-        if (comp.isAttacking() && cur != null && isHuntMob(world, comp, owner, cur)) {
+        if (comp.isAttacking() && cur != null && isHuntMob(world, comp, owner, owner.tile, cur)) {
             if (dist(comp.tile, cur.tile) <= 1 || canPathTo(world, comp, cur)) return
             comp.removeCombatTarget(); comp.resetFacePawn()
         }
-        val foe = nearestReachableHuntMob(world, comp, owner)
+        val foe = nearestReachableHuntMob(world, comp, owner, owner.tile)
         if (foe != null) {
             comp.attack(foe)
             return
@@ -361,17 +400,18 @@ object CompanionBrain {
         npc.index >= 0 && world.npcs.contains(npc) && !npc.isDead() && (npc.id == GOBLIN || npc.id == HOBGOBLIN)
 
     /**
-     * A valid hunt target: alive, on the companion's floor, within [LEASH] of the owner,
-     * genuinely player-attackable (same check as [org.alter.plugins.content.combat.Combat]:
-     * Attack option + a real combat def), not a [FRIENDLY], and not mid-fight with a player
-     * outside the owner's party (no stealing a stranger's kill).
+     * A valid hunt target: alive, on the companion's floor, within [LEASH] of [center] (the owner
+     * for TRAIN's escort, the grind anchor for ATTACK), genuinely player-attackable (same check as
+     * [org.alter.plugins.content.combat.Combat]: Attack option + a real combat def), not a
+     * [FRIENDLY], and not mid-fight with a player outside the owner's party (no stealing a
+     * stranger's kill).
      */
-    private fun isHuntMob(world: World, comp: Companion, owner: Player, npc: Npc): Boolean {
+    private fun isHuntMob(world: World, comp: Companion, owner: Player, center: Tile, npc: Npc): Boolean {
         if (npc.index < 0 || !world.npcs.contains(npc) || npc.isDead()) return false
         if (npc.tile.height != comp.tile.height) return false
         if (npc.id in FRIENDLY) return false
         if (!npc.def.isAttackable() || npc.combatDef.hitpoints == -1) return false
-        if (dist(owner.tile, npc.tile) > LEASH) return false
+        if (dist(center, npc.tile) > LEASH) return false
         val t = npc.getCombatTarget()
         if (t is Player && t !== owner && t !== comp &&
             !(t is Companion && CompanionRegistry.owns(owner, t))
@@ -381,10 +421,10 @@ object CompanionBrain {
 
     /** Nearest hunt target the companion can actually path to — same route-checked walk down the
      *  candidate list as [nearestReachableTrainMob], with the [isHuntMob] filter. */
-    private fun nearestReachableHuntMob(world: World, comp: Companion, owner: Player): Npc? {
+    private fun nearestReachableHuntMob(world: World, comp: Companion, owner: Player, center: Tile): Npc? {
         val candidates = ArrayList<Pair<Npc, Int>>()
         world.npcs.forEach { npc ->
-            if (!isHuntMob(world, comp, owner, npc)) return@forEach
+            if (!isHuntMob(world, comp, owner, center, npc)) return@forEach
             candidates.add(npc to dist(comp.tile, npc.tile))
         }
         candidates.sortBy { it.second }
