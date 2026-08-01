@@ -63,21 +63,24 @@ object FaladorRaid {
         area = Area(2942, 3300, 3066, 3400),
         raidWildLevel = 30,
         districts = listOf(
-            // West — the Old Market, around the west bank (the bank itself is auto-safe).
+            // West — the Old Market: the crossroads and streets NORTH-EAST of the west bank.
+            // The box bottom sits above the bank block so the district centre (the supply-drop
+            // convergence marker + landing fallback) is the market crossroads, not the bank's
+            // back wall — the bank pocket itself is auto-safe and stays off the market.
             RaidDistrict(
                 key = "old-market", display = "the Old Market",
-                area = Area(2942, 3350, 2985, 3400),
+                area = Area(2942, 3362, 2985, 3400),
                 table = districtTable(MARKET_MAIN, RARE_FINDS),
                 spots = listOf(
-                    LootSpot(2960, 3372), LootSpot(2966, 3381), LootSpot(2952, 3390),
+                    LootSpot(2965, 3384), LootSpot(2966, 3381), LootSpot(2952, 3390),
                     LootSpot(2957, 3395), LootSpot(2972, 3390), LootSpot(2980, 3376),
-                    LootSpot(2963, 3365), LootSpot(2984, 3390),
+                    LootSpot(2975, 3382), LootSpot(2984, 3390),
                 ),
             ),
             // South-west — the Museum Quarter and the White Knights' Castle approaches.
             RaidDistrict(
                 key = "museum-quarter", display = "the Museum Quarter",
-                area = Area(2942, 3300, 2999, 3349),
+                area = Area(2942, 3300, 2999, 3361),
                 table = districtTable(ARMOURY_MAIN, RARE_FINDS),
                 spots = listOf(
                     LootSpot(2977, 3341), LootSpot(2985, 3338), LootSpot(2994, 3331),
@@ -85,10 +88,11 @@ object FaladorRaid {
                     LootSpot(2972, 3322), LootSpot(2989, 3344),
                 ),
             ),
-            // North-east — the Slums around the park and the east bank (bank auto-safe).
+            // North-east — the Slums around the park, north of the east bank (bank auto-safe;
+            // the box bottom clears the bank block so its centre isn't behind the bank either).
             RaidDistrict(
                 key = "slums", display = "the Slums",
-                area = Area(2986, 3350, 3066, 3400),
+                area = Area(2986, 3362, 3066, 3400),
                 table = districtTable(MARKET_MAIN, RARE_FINDS),
                 spots = listOf(
                     LootSpot(3030, 3370), LootSpot(3040, 3388), LootSpot(3021, 3392),
@@ -99,7 +103,7 @@ object FaladorRaid {
             // South-east — the East Quarter, the gate the marches enter by.
             RaidDistrict(
                 key = "east-quarter", display = "the East Quarter",
-                area = Area(3000, 3300, 3066, 3349),
+                area = Area(3000, 3300, 3066, 3361),
                 table = districtTable(ARMOURY_MAIN, RARE_FINDS),
                 spots = listOf(
                     LootSpot(3045, 3336), LootSpot(3052, 3340), LootSpot(3060, 3330),

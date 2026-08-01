@@ -52,8 +52,12 @@ class NamedCaptainsPlugin(
     /** One captain per district — driven out of demon-held Varrock, they now hole up in overrun
      *  Falador (see WorldSpawnsPlugin.applyFallenFalador). Tiles TUNE. */
     private val DEFS = listOf(
-        CaptainDef("Karn the Red", District.SLUMS, "npc.rogue_526", Tile(3013, 3357, 0), "item.dragon_claws", "Dragon claws"),
-        CaptainDef("Silas the Hollow", District.OLD_MARKET, "npc.dark_wizard", Tile(2957, 3371, 0), "item.nightmare_staff", "Nightmare staff"),
+        // Karn holds the street north-east of the east bank — his old lair (3013,3357) sat
+        // in the east bank block, inside the BankSafezonePlugin 8-tile safe pocket.
+        CaptainDef("Karn the Red", District.SLUMS, "npc.rogue_526", Tile(3030, 3370, 0), "item.dragon_claws", "Dragon claws"),
+        // Silas holds the Old Market crossroads NE of the west bank — his old lair (2957,3371)
+        // sat on the bank's back wall, inside the BankSafezonePlugin 8-tile safe pocket.
+        CaptainDef("Silas the Hollow", District.OLD_MARKET, "npc.dark_wizard", Tile(2966, 3383, 0), "item.nightmare_staff", "Nightmare staff"),
         CaptainDef("Vex of the Row", District.EAST_QUARTER, "npc.highwayman", Tile(3045, 3336, 0), "item.armadyl_crossbow", "Armadyl crossbow"),
         // Base must be a COMBAT def: bandit_leader (733) has no Attack action / combat level in the
         // cache, which made Grimjaw permanently unattackable (Combat.canEngage checks the cache def).
