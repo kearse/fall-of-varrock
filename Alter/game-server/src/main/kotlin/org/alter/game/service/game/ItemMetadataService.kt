@@ -189,16 +189,25 @@ class ItemMetadataService : Service {
              * @TODO Add better context as to why file could not be loaded.
              * @TODO Add support for remaining [`def`] properties override method.
              */
+            val overridesApplied = java.util.concurrent.atomic.AtomicInteger()
             Files.walk(path.resolve("itemOverrides")).parallel().filter { it.toFile().isFile }.forEach { file ->
                 if (file.fileName.toString().contains("FileExample.yml")) return@forEach
 
                 val content = file.toFile().readText()
                 content.split(Regex("(?m)^---\\s*$"))
                     .filter { it.isNotBlank() }.forEach { document ->
-                        val data = mapper.readValue(document, Metadata::class.java)
-                        load(data)
+                        // One malformed document must not abort the whole override walk (the outer
+                        // catch would silently drop an arbitrary subset of the parallel stream).
+                        try {
+                            val data = mapper.readValue(document, Metadata::class.java)
+                            load(data)
+                            overridesApplied.incrementAndGet()
+                        } catch (e: Exception) {
+                            logger.error(e) { "Item override document failed to apply in $file — skipped." }
+                        }
                     }
             }
+            logger.info { "Applied ${overridesApplied.get()} item override documents." }
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -209,24 +218,15 @@ class ItemMetadataService : Service {
     fun load(item: Metadata) {
         val def = getItem(item.id)
 
-        def.name = item.name
+        if (item.name.isNotBlank()) def.name = item.name
         def.examine = item.examine ?: ""
         def.isTradeable = item.tradeable
-        def.weight = item.weight
+        item.weight?.let { def.weight = it }
 
         if (item.equipment != null) {
             val equipment = item.equipment
             val slots = if (equipment.equipSlot != null) getEquipmentSlots(equipment.equipSlot, def.id) else null
 
-            def.attackSpeed = equipment.attackSpeed
-
-            if (equipment.weaponType == -1 && slots != null) {
-                if (slots.slot == 3) def.weaponType = 17
-            } else {
-                def.weaponType = equipment.weaponType
-            }
-
-            def.renderAnimations = equipment.renderAnimations?.getAsArray()
             /**
              * TODO def.attackSounds = equipment.attackSounds
              *  - Create Array of AttackStyleID -> It's Sound
@@ -243,8 +243,65 @@ class ItemMetadataService : Service {
              *  TODO def.equipSound = equipment.equipSound
              */
             if (slots != null) {
+                // Full-definition override: the YAML claims the item's whole equipment identity
+                // (equipSlot provided), so absent fields fall back to the historical sentinels and
+                // zeroes — the CustomLaunch cosmetics rely on this implicit stat wipe.
+                def.attackSpeed = equipment.attackSpeed ?: -1
+                val weaponType = equipment.weaponType ?: -1
+                if (weaponType == -1) {
+                    if (slots.slot == 3) def.weaponType = 17
+                } else {
+                    def.weaponType = weaponType
+                }
+                def.renderAnimations = equipment.renderAnimations?.getAsArray()
                 def.equipSlot = slots.slot
                 def.equipType = slots.secondary
+                def.bonuses = intArrayOf(
+                    equipment.attackStab ?: 0,
+                    equipment.attackSlash ?: 0,
+                    equipment.attackCrush ?: 0,
+                    equipment.attackMagic ?: 0,
+                    equipment.attackRanged ?: 0,
+                    equipment.defenceStab ?: 0,
+                    equipment.defenceSlash ?: 0,
+                    equipment.defenceCrush ?: 0,
+                    equipment.defenceMagic ?: 0,
+                    equipment.defenceRanged ?: 0,
+                    equipment.meleeStrength ?: 0,
+                    equipment.rangedStrength ?: 0,
+                    equipment.magicDamage ?: 0,
+                    equipment.prayer ?: 0,
+                )
+            } else {
+                // Partial override: no equipSlot means the document only patches the fields it
+                // names (the barrows files carry just skillReqs; warlords_regalia lists every
+                // bonus explicitly). Absent fields keep their cache-loaded values — writing the
+                // -1/0 defaults here wiped attack speed, weapon type and every bonus of all
+                // Barrows gear, turning a Dharok's greataxe into a 1-tick unarmed kick.
+                equipment.attackSpeed?.let { def.attackSpeed = it }
+                equipment.weaponType?.let { def.weaponType = it }
+                equipment.renderAnimations?.let { def.renderAnimations = it.getAsArray() }
+                val bonusOverrides = arrayOf(
+                    equipment.attackStab,
+                    equipment.attackSlash,
+                    equipment.attackCrush,
+                    equipment.attackMagic,
+                    equipment.attackRanged,
+                    equipment.defenceStab,
+                    equipment.defenceSlash,
+                    equipment.defenceCrush,
+                    equipment.defenceMagic,
+                    equipment.defenceRanged,
+                    equipment.meleeStrength,
+                    equipment.rangedStrength,
+                    equipment.magicDamage,
+                    equipment.prayer,
+                )
+                if (bonusOverrides.any { it != null }) {
+                    val bonuses = def.bonuses.copyOf(bonusOverrides.size)
+                    bonusOverrides.forEachIndexed { i, v -> if (v != null) bonuses[i] = v }
+                    def.bonuses = bonuses
+                }
             }
 
             // Same rule as the cache load above: YAML-override skill reqs only apply to weapons —
@@ -257,23 +314,6 @@ class ItemMetadataService : Service {
 
                 def.skillReqs = reqs
             }
-
-            def.bonuses = intArrayOf(
-                equipment.attackStab,
-                equipment.attackSlash,
-                equipment.attackCrush,
-                equipment.attackMagic,
-                equipment.attackRanged,
-                equipment.defenceStab,
-                equipment.defenceSlash,
-                equipment.defenceCrush,
-                equipment.defenceMagic,
-                equipment.defenceRanged,
-                equipment.meleeStrength,
-                equipment.rangedStrength,
-                equipment.magicDamage,
-                equipment.prayer,
-            )
         }
     }
 
@@ -379,7 +419,7 @@ class ItemMetadataService : Service {
         val name: String = "",
         val examine: String? = null,
         val tradeable: Boolean = false,
-        val weight: Double = 0.0,
+        val weight: Double? = null,
         val tradeable_on_ge: Boolean = false,
         val cost: Int = 0,
         val lowalch: Int = 0,
@@ -388,25 +428,28 @@ class ItemMetadataService : Service {
         val equipment: Equipment? = null,
     )
 
+    // Every stat field is nullable so an absent YAML key is distinguishable from an explicit
+    // value: load() treats a document without equipSlot as a PARTIAL override and leaves the
+    // cache-loaded value in place for any field left null.
     data class Equipment(
         @JsonProperty("equip_slot") val equipSlot: String? = null,
         @JsonProperty("equip_sound") val equipSound: Int? = -1,
-        @JsonProperty("weapon_type") val weaponType: Int = -1,
-        @JsonProperty("attack_speed") val attackSpeed: Int = -1,
-        @JsonProperty("attack_stab") val attackStab: Int = 0,
-        @JsonProperty("attack_slash") val attackSlash: Int = 0,
-        @JsonProperty("attack_crush") val attackCrush: Int = 0,
-        @JsonProperty("attack_magic") val attackMagic: Int = 0,
-        @JsonProperty("attack_ranged") val attackRanged: Int = 0,
-        @JsonProperty("defence_stab") val defenceStab: Int = 0,
-        @JsonProperty("defence_slash") val defenceSlash: Int = 0,
-        @JsonProperty("defence_crush") val defenceCrush: Int = 0,
-        @JsonProperty("defence_magic") val defenceMagic: Int = 0,
-        @JsonProperty("defence_ranged") val defenceRanged: Int = 0,
-        @JsonProperty("melee_strength") val meleeStrength: Int = 0,
-        @JsonProperty("ranged_strength") val rangedStrength: Int = 0,
-        @JsonProperty("magic_damage") val magicDamage: Int = 0,
-        @JsonProperty("prayer") val prayer: Int = 0,
+        @JsonProperty("weapon_type") val weaponType: Int? = null,
+        @JsonProperty("attack_speed") val attackSpeed: Int? = null,
+        @JsonProperty("attack_stab") val attackStab: Int? = null,
+        @JsonProperty("attack_slash") val attackSlash: Int? = null,
+        @JsonProperty("attack_crush") val attackCrush: Int? = null,
+        @JsonProperty("attack_magic") val attackMagic: Int? = null,
+        @JsonProperty("attack_ranged") val attackRanged: Int? = null,
+        @JsonProperty("defence_stab") val defenceStab: Int? = null,
+        @JsonProperty("defence_slash") val defenceSlash: Int? = null,
+        @JsonProperty("defence_crush") val defenceCrush: Int? = null,
+        @JsonProperty("defence_magic") val defenceMagic: Int? = null,
+        @JsonProperty("defence_ranged") val defenceRanged: Int? = null,
+        @JsonProperty("melee_strength") val meleeStrength: Int? = null,
+        @JsonProperty("ranged_strength") val rangedStrength: Int? = null,
+        @JsonProperty("magic_damage") val magicDamage: Int? = null,
+        @JsonProperty("prayer") val prayer: Int? = null,
         @JsonProperty("render_animations") val renderAnimations: RenderAnimations? = null,
         @JsonProperty("attackSounds") val attackSounds: IntArray? = null,
         @JsonProperty("skill_reqs") val skillReqs: Array<SkillRequirement>? = null,
@@ -454,22 +497,22 @@ class ItemMetadataService : Service {
 
         override fun hashCode(): Int {
             var result = equipSlot?.hashCode() ?: 0
-            result = 31 * result + weaponType
-            result = 31 * result + attackSpeed
-            result = 31 * result + attackStab
-            result = 31 * result + attackSlash
-            result = 31 * result + attackCrush
-            result = 31 * result + attackMagic
-            result = 31 * result + attackRanged
-            result = 31 * result + defenceStab
-            result = 31 * result + defenceSlash
-            result = 31 * result + defenceCrush
-            result = 31 * result + defenceMagic
-            result = 31 * result + defenceRanged
-            result = 31 * result + meleeStrength
-            result = 31 * result + rangedStrength
-            result = 31 * result + magicDamage
-            result = 31 * result + prayer
+            result = 31 * result + (weaponType ?: -1)
+            result = 31 * result + (attackSpeed ?: -1)
+            result = 31 * result + (attackStab ?: 0)
+            result = 31 * result + (attackSlash ?: 0)
+            result = 31 * result + (attackCrush ?: 0)
+            result = 31 * result + (attackMagic ?: 0)
+            result = 31 * result + (attackRanged ?: 0)
+            result = 31 * result + (defenceStab ?: 0)
+            result = 31 * result + (defenceSlash ?: 0)
+            result = 31 * result + (defenceCrush ?: 0)
+            result = 31 * result + (defenceMagic ?: 0)
+            result = 31 * result + (defenceRanged ?: 0)
+            result = 31 * result + (meleeStrength ?: 0)
+            result = 31 * result + (rangedStrength ?: 0)
+            result = 31 * result + (magicDamage ?: 0)
+            result = 31 * result + (prayer ?: 0)
             result = 31 * result + (renderAnimations?.getAsArray().contentHashCode())
             result = 31 * result + (skillReqs?.contentHashCode() ?: 0)
             return result
