@@ -18,17 +18,19 @@ import org.alter.rscm.RSCM.getRSCM
 private val logger = KotlinLogging.logger {}
 
 /**
- * **Home Rejuvenation pool** — a POH-style Pool of Rejuvenation on the opened Lumbridge castle
- * ground floor (home hangout space), centred on the requested tile (3217,3217,0). "Drink"
- * restores the player completely: Hitpoints, Prayer, run energy, special attack energy, and
- * cures poison/venom — the Ferox/ornate-pool treatment, free at home.
+ * **Home Rejuvenation pools** — POH-style Pools of Rejuvenation on the opened Lumbridge castle
+ * ground floor (home hangout space). "Drink" restores the player completely: Hitpoints, Prayer,
+ * run energy, special attack energy, and cures poison/venom — the Ferox/ornate-pool treatment,
+ * free at home.
  *
- * Placement: POH pools are 3x3, so the SW spawn corner sits at (3216,3216) to centre the basin
- * on the requested tile. The footprint (3216..3218 square) covers the old (3218,3218) tile, so
- * the onboarding stage tile ([org.alter.plugins.content.mechanics.onboarding.FirstLoginFlow])
- * and General Zo's post ([org.alter.plugins.content.war.Sieges]) both stepped east out of the
- * water. If the pool renders smaller than 3x3 in-game, nudge [SW_X]/[SW_Z] back toward the
- * requested tile — cosmetic TUNE, same as every other home-hub placement.
+ * Placement: POH pools are 3x3, so each SW spawn corner in [POOL_SW_TILES] sits one tile SW of
+ * its requested centre. Pool 1 is centred on (3217,3217,0); its footprint (3216..3218 square)
+ * covers the old (3218,3218) tile, so the onboarding stage tile
+ * ([org.alter.plugins.content.mechanics.onboarding.FirstLoginFlow]) and General Zo's post
+ * ([org.alter.plugins.content.war.Sieges]) both stepped east out of the water. Pool 2 is centred
+ * on (3224,3224,0), the open floor toward the courtyard's NE. If a pool renders smaller than 3x3
+ * in-game, nudge its SW tile back toward its centre — cosmetic TUNE, same as every other
+ * home-hub placement.
  *
  * The cache can't be read at authoring time, so the click verb is bound defensively like
  * [org.alter.plugins.content.mechanics.prayer.PrayerAltarPlugin]'s altars: a missing verb logs
@@ -41,7 +43,10 @@ class RejuvenationPoolPlugin(
 ) : KotlinPlugin(r, world, server) {
     init {
         onWorldInit {
-            world.spawn(DynamicObject(id = getRSCM(POOL), type = OBJ_TYPE, rot = ROT, tile = Tile(SW_X, SW_Z, 0)))
+            val pool = getRSCM(POOL)
+            POOL_SW_TILES.forEach { tile ->
+                world.spawn(DynamicObject(id = pool, type = OBJ_TYPE, rot = ROT, tile = tile))
+            }
         }
 
         var bound = false
@@ -87,8 +92,12 @@ class RejuvenationPoolPlugin(
 
         const val OBJ_TYPE = 10 // standard scenery loc shape (same as the home bank booths)
         const val ROT = 0
-        const val SW_X = 3216   // SW corner of the 3x3 basin -> centred on the requested (3217,3217)
-        const val SW_Z = 3216
+
+        // SW corner of each 3x3 basin -> centred on the requested tiles.
+        val POOL_SW_TILES = listOf(
+            Tile(3216, 3216, 0), // centred on (3217,3217)
+            Tile(3223, 3223, 0), // centred on (3224,3224)
+        )
 
         const val DRINK_ANIM = 827 // bend down and scoop
         const val MAX_RUN_ENERGY = 10000.0
