@@ -30,8 +30,8 @@ class LootingBagPlugin(
     server: Server
 ) : KotlinPlugin(r, world, server) {
 
-    val CONTAINER_KEY = ContainerKey("looting_bag", capacity = 28, stackType = ContainerStackType.NORMAL)
-    val LOOTING_BAG_CONTAINER_ID = 516
+    val CONTAINER_KEY = LootingBag.CONTAINER_KEY
+    val LOOTING_BAG_CONTAINER_ID = LootingBag.CONTAINER_ID
     val INV_CONTAINER_KEY = 93
     val TAB_INTERFACE_ID = 81
 
@@ -158,11 +158,17 @@ class LootingBagPlugin(
          * Register "Deposit loot" button from deposit boxes.
          */
         onButton(interfaceId = 192, component = 8) {
-            val container = player.containers[CONTAINER_KEY]
-            if (container != null && player.inventory.containsAny("item.looting_bag", "item.looting_bag_22586") && bank_all(player, container)) {
-                player.sendItemContainer(LOOTING_BAG_CONTAINER_ID, container)
-            } else {
+            if (!player.inventory.containsAny("item.looting_bag", "item.looting_bag_22586")) {
                 player.message("You have nothing to deposit.")
+                return@onButton
+            }
+            // computeIfAbsent: a player who hasn't opened the bag this session has no live
+            // container yet — `containers[KEY]` alone made this button always claim "nothing".
+            val container = LootingBag.containerOf(player)
+            when {
+                container.isEmpty -> player.message("You have nothing to deposit.")
+                LootingBag.bankAll(player, container) -> player.sendItemContainer(LOOTING_BAG_CONTAINER_ID, container)
+                else -> player.message("Your bank is full.")
             }
         }
     }
@@ -226,20 +232,7 @@ class LootingBagPlugin(
     fun bank_all(
         p: Player,
         container: ItemContainer,
-    ): Boolean {
-        var any = false
-
-        container.forEach { item ->
-            if (item != null) {
-                val transfer = container.transfer(p.bank, item = item, unnote = true)?.completed ?: 0
-                if (transfer != 0) {
-                    any = true
-                }
-            }
-        }
-
-        return any
-    }
+    ): Boolean = LootingBag.bankAll(p, container)
 
     fun open(
         p: Player,

@@ -56,6 +56,21 @@ class PotionsPlugin(
         family("super_magic_potion") { boost(it, Skills.MAGIC, 5, 0.15) }
         family("bastion_potion") { boost(it, Skills.RANGED, 4, 0.10); boost(it, Skills.DEFENCE, 5, 0.15) }
         family("battlemage_potion") { boost(it, Skills.MAGIC, 4, 0.0); boost(it, Skills.DEFENCE, 5, 0.15) }
+
+        // ---- Divine variants — sold in shops (e.g. the vote shop's divine super combat) but were
+        // never wired, so drinking one was a silent no-op ("super combat potion does not increase
+        // stats"). Simplified: same boosts as their non-divine counterparts; the OSRS re-boost-
+        // every-15s (and 10hp sip cost) is not modelled.
+        family("divine_super_combat_potion") {
+            boost(it, Skills.ATTACK, 5, 0.15); boost(it, Skills.STRENGTH, 5, 0.15); boost(it, Skills.DEFENCE, 5, 0.15)
+        }
+        family("divine_super_attack_potion") { boost(it, Skills.ATTACK, 5, 0.15) }
+        family("divine_super_strength_potion") { boost(it, Skills.STRENGTH, 5, 0.15) }
+        family("divine_super_defence_potion") { boost(it, Skills.DEFENCE, 5, 0.15) }
+        family("divine_ranging_potion") { boost(it, Skills.RANGED, 5, 0.15) }
+        family("divine_magic_potion") { boost(it, Skills.MAGIC, 4, 0.0) }
+        family("divine_bastion_potion") { boost(it, Skills.RANGED, 4, 0.10); boost(it, Skills.DEFENCE, 5, 0.15) }
+        family("divine_battlemage_potion") { boost(it, Skills.MAGIC, 4, 0.0); boost(it, Skills.DEFENCE, 5, 0.15) }
         family("zamorak_brew") {
             boost(it, Skills.ATTACK, 2, 0.20); boost(it, Skills.STRENGTH, 2, 0.12)
             drainCurrent(it, Skills.DEFENCE, 2, 0.10)
@@ -108,7 +123,9 @@ class PotionsPlugin(
             try {
                 onItemOption(item = key, option = "drink") { drink(player, key) }
             } catch (e: Exception) {
-                logger.warn { "potions: couldn't bind 'drink' on $key" }
+                // ERROR, not warn: a swallowed bind failure means one potion family is silently
+                // dead at boot while every other potion works — near-invisible in a warn stream.
+                logger.error(e) { "potions: couldn't bind 'drink' on $key — this potion will do NOTHING in game" }
             }
         }
     }
@@ -124,6 +141,10 @@ class PotionsPlugin(
                 resolves(b) -> b
                 else -> null
             }
+        }
+        if (present.isEmpty()) {
+            logger.error { "potions: family '$base' resolved no doses in the cache — nothing bound" }
+            return
         }
         present.forEachIndexed { i, key ->
             val next = present.getOrNull(i + 1) ?: "item.vial"
