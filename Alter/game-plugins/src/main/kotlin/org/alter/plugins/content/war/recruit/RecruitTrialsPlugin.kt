@@ -42,7 +42,7 @@ class RecruitTrialsPlugin(
 ) : KotlinPlugin(r, world, server) {
 
     private val sergeant = "npc.sergeant_damien"
-    private val sergeantTile = Triple(3219, 3214, 0) // just inside the Lumbridge gate, near the frontier road
+    private val sergeantTile = Triple(3217, 3220, 0) // just inside the Lumbridge gate, near the frontier road
     private val sergeantId = runCatching { getRSCM(sergeant) }.getOrDefault(-1)
 
     /** Goblin ids that count for the FIGHT trial. The frontier front line is `goblin_2245`
