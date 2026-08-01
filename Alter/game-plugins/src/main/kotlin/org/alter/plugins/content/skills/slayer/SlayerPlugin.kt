@@ -343,11 +343,15 @@ class SlayerPlugin(
      *  Void Knight who runs the assaults. */
     private suspend fun QueueTask.warPrepArm(p: Player) {
         say(p, "Prayer trained and Protect from Magic ready — good. You'll not walk into a tower of mages unarmed, though.")
+        // Handout + step advance back-to-back, with NO suspending say between them: every say is a
+        // point where the player can close the chat, and advancing only at the end of the dialogue
+        // left an early-closer on GEAR with the kit already in hand — re-talking then re-claimed the
+        // whole kit (the rune/robe dupe).
         WarPrepChain.armForTower(p) // staff + robes + runes + noted prayer potions
+        WarPrepChain.onArmedForTower(p) // advance to TOWER
         say(p, "Take this staff, these robes, and a proper stock of runes — <col=801700>air, water, earth and fire</col> by the hundreds, plus the combat runes. And a crate of <col=801700>prayer potions</col>, noted — sip them and <col=801700>Protect from Magic</col> never drops.")
         say(p, "The <col=801700>Wizard Tower</col> stands south-west, across the river. A <col=801700>Void Knight</col> holds the bridge to it — speak to him and he'll send you in. Fight up floor by floor and take the <col=801700>grimoire</col> from the Archmage at the top.")
         say(p, "Follow the marker to the Void Knight — and come back to me once the grimoire's power is yours.")
-        WarPrepChain.onArmedForTower(p) // advance to TOWER
     }
 
     /** TOWER step nudge. */
@@ -384,10 +388,12 @@ class SlayerPlugin(
      *  skirmish (fell enemies with a ranged weapon). */
     private suspend fun QueueTask.warPrepRangedArm(p: Player) {
         say(p, "Ranged trained — good eye. Now you'll need a proper marksman's kit, not that training bow.")
+        // Advance immediately with the handout — a say between them let an early chat-close strand
+        // the step on GEAR and re-claim the kit (same dupe as the tower kit above).
         WarPrepRanged.armForSkirmish(p) // bow + d'hide + arrows
+        WarPrepRanged.onArmedForSkirmish(p) // GEAR → FIELD
         say(p, "Take this bow, the hide armour and a full quiver. Get out there and <col=801700>fell ${WarPrepRanged.FIELD_GOAL} of the enemy with a ranged weapon</col> — bow, crossbow, thrown, your choice.")
         say(p, "Prove you can hold a skirmish line, then report back to me. Follow the marker.")
-        WarPrepRanged.onArmedForSkirmish(p) // GEAR → FIELD
     }
 
     /** War-Prep II (Ranged) FIELD nudge. */
