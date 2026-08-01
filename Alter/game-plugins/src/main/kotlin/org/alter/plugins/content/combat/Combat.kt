@@ -41,6 +41,16 @@ object Combat {
         pawn.attr.remove(COMBAT_TARGET_FOCUS_ATTR)
     }
 
+    /**
+     * Whether spell damage should award the defensive split (Magic + Defence).
+     * Two ways in: the defensive-autocast box on the combat tab (varbit 2668),
+     * or having the fourth combat style (Focus/Block) selected while casting —
+     * the latter guarantees mages a defence-training path even on client builds
+     * where the autocast boxes aren't clickable.
+     */
+    fun isCastingDefensively(player: Player): Boolean =
+        player.getVarbit(DEFENSIVE_MAGIC_CAST_VARBIT) != 0 || player.getAttackStyle() == 3
+
     fun canAttack(
         pawn: Pawn,
         target: Pawn,
