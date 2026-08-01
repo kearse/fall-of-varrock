@@ -1,6 +1,7 @@
 package org.alter.plugins.content.economy.grandexchange
 
 import dev.openrune.cache.CacheManager.getNpc
+import dev.openrune.cache.CacheManager.getObject
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.alter.api.ext.getCommandArgs
 import org.alter.api.ext.inputInt
@@ -10,7 +11,9 @@ import org.alter.api.ext.player
 import org.alter.api.ext.searchItemInput
 import org.alter.game.Server
 import org.alter.game.model.Direction
+import org.alter.game.model.Tile
 import org.alter.game.model.World
+import org.alter.game.model.entity.DynamicObject
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
 import org.alter.rscm.RSCM.getRSCM
@@ -29,7 +32,8 @@ private val logger = KotlinLogging.logger {}
  *  - `::lofgecancel <box>`                         → abort an offer
  *  - `::lofgeclose`                                → close the window
  *
- * Opened by the Grand Exchange clerk (npc.grand_exchange_clerk) or `::ge`. Offer creation reuses the
+ * Opened by the Grand Exchange clerk (npc.grand_exchange_clerk), the GE booth on the old south
+ * fountain tile (3221,3210), or `::ge`. Offer creation reuses the
  * native item search (`searchItemInput`, the `::item` box); quantity/price are set in the overlay and
  * arrive on the confirm token. All engine calls are the dupe-safe escrow paths.
  */
@@ -45,6 +49,18 @@ class GrandExchangeClickPlugin(
             .onFailure { logger.warn { "grand-exchange: could not spawn $CLERK; use ::ge." } }
         bindClerk(CLERK)
         onCommand("ge", description = "Open the Grand Exchange") { GrandExchangeWindow.stream(player) }
+
+        // The GE booth on the old south courtyard fountain's footprint (fountain 879, type 10,
+        // 2x2 @ 3221,3210 — the tile the Occult Altar stood on before it moved to 3215,3211).
+        // Done in onWorldInit so the region/collision is loaded, and the fountain removal runs
+        // *before* the booth is placed — same tile+slot, so the other order would clear the
+        // booth instead (AlkharidGate/MiningPlugin boot pattern). NOTE: the NORTH fountain
+        // (3221,3226) is the teleport portal — do NOT target it.
+        onWorldInit {
+            world.getObject(Tile(BOOTH_X, BOOTH_Z, 0), type = BOOTH_TYPE)?.let { world.remove(it) }
+            world.spawn(DynamicObject(getRSCM(BOOTH), type = BOOTH_TYPE, rot = BOOTH_ROT, Tile(BOOTH_X, BOOTH_Z, 0)))
+        }
+        bindBooth(BOOTH)
 
         // New offer: the reliable native flow (Buy/Sell dialog → the ::item search → two number
         // entries), then create + re-stream the board. (A drawn in-window setup box is a v2 polish.)
@@ -161,7 +177,41 @@ class GrandExchangeClickPlugin(
         }
     }
 
+    /** Bind the booth's click options the same defensive way as [bindClerk]: probe the cache def
+     *  first (onObjOption throws on a missing option), prefer a real open verb, and bind the
+     *  History/Collect extras only when the def carries them. */
+    private fun bindBooth(obj: String) {
+        val acts = try {
+            getObject(getRSCM(obj)).actions.filterNotNull().filter { it.isNotBlank() }
+        } catch (e: Exception) { emptyList() }
+        val opt = listOf("exchange", "trade", "use", "bank").firstNotNullOfOrNull { want ->
+            acts.firstOrNull { it.equals(want, ignoreCase = true) }
+        } ?: acts.firstOrNull { !it.equals("history", ignoreCase = true) && !it.equals("collect", ignoreCase = true) }
+        if (opt != null) {
+            onObjOption(obj, option = opt) { GrandExchangeWindow.stream(player) }
+        } else {
+            logger.warn { "grand-exchange: '$obj' has no open option; use ::ge." }
+        }
+        acts.firstOrNull { it.equals("history", ignoreCase = true) }?.let { hist ->
+            onObjOption(obj, option = hist) { GrandExchangeWindow.streamHistory(player) }
+        }
+        // Collection lives in the window itself, so "Collect" just opens the board too.
+        acts.firstOrNull { it.equals("collect", ignoreCase = true) }?.let { coll ->
+            onObjOption(obj, option = coll) { GrandExchangeWindow.stream(player) }
+        }
+    }
+
     private companion object {
         const val CLERK = "npc.grand_exchange_clerk"
+
+        /** Object 10060 — the classic GE clerk booth. */
+        const val BOOTH = "object.grand_exchange_booth"
+
+        // SW corner of the old SOUTH courtyard fountain (879, 2x2) — the booth takes its
+        // footprint. (The north fountain @ 3221,3226 is the teleport portal — leave it alone.)
+        const val BOOTH_X = 3221
+        const val BOOTH_Z = 3210
+        const val BOOTH_TYPE = 10   // interactable-scenery loc slot (matches the fountain's type)
+        const val BOOTH_ROT = 0     // cosmetic: face the teleport hub to the north; tune in-game via ::obj
     }
 }

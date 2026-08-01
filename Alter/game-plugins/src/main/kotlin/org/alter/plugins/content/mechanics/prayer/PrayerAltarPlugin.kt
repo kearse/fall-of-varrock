@@ -55,8 +55,9 @@ class PrayerAltarPlugin(
     // No courtyard altar: the church's map-baked altar (3243,3207) is right next to the home hub,
     // so we don't spawn a convenience prayer altar in the market courtyard. The "Pray-at" and
     // bone-offering bindings below are keyed by object type (altar_409), so they cover the church
-    // altar (and any other altar_409) automatically. The Altar of the Occult on the old fountain
-    // tile (SpellbookSwapPlugin) is unrelated and stays.
+    // altar (and any other altar_409) automatically. The Altar of the Occult on the south
+    // services line (3215,3211, SpellbookSwapPlugin) is unrelated and stays; the old fountain
+    // tile (3221,3210) hosts the Grand Exchange stand (GrandExchangeClickPlugin).
 
     init {
         altars.forEach { altar ->
