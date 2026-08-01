@@ -38,9 +38,9 @@ class TeleportPortalObjectPlugin(
 ) : KotlinPlugin(r, world, server) {
 
     private companion object {
-        // Object literally named "Portal" (id 31961), 2x2 — exact footprint match for the
-        // Fountain it replaces — with a single "Enter" action. (Aliased in object.rscm.) TUNE.
-        const val PORTAL = "object.portal_31961"
+        // "Portal of Champions" (id 31618) — the large ornate named portal. Spawned on the
+        // Fountain's 2x2 type-10 slot; verify footprint/options in-game with `::aboutobj`. TUNE.
+        const val PORTAL = "object.portal_of_champions"
         const val PORTAL_X = 3221
         const val PORTAL_Z = 3226
         const val PORTAL_TYPE = 10 // same slot as the Fountain it replaces
