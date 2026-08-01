@@ -13,8 +13,9 @@ import org.alter.rscm.RSCM.getRSCM
  * contract economy, tradeable) and a **coin fee** (the sink).
  *
  * Commendations are an ITEM token (`item.ectotoken` — stackable and cache-untradeable;
- * TUNE: rename/resprite via a cache edit later), paid by [CapturePayout] on won war
- * operations, participation-scaled. Forged OUTPUT is tradeable — a rich player may buy a
+ * renamed to "Commendation" with a Thurgo-pointing examine by ItemDefTool's `commendation`
+ * action / the "Item def cache edit" workflow; TUNE: resprite via a cache edit later), paid
+ * by [CapturePayout] on won war operations, participation-scaled. Forged OUTPUT is tradeable — a rich player may buy a
  * finished piece off a grinder, but every piece in the economy represents real marches
  * fought by somebody.
  *

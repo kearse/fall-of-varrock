@@ -227,8 +227,10 @@ The Palace                 ──▶  the King's Conquest — the server-wide cl
 ## 6. The endgame gear economy 🔶 — max gear as the grind
 
 > **Built (v1):** `war/forge/` — **Commendations** are live as an item token
-> (`item.ectotoken`: stackable, cache-untradeable; TUNE: rename/resprite via a cache
-> edit), paid by `CapturePayout` on every WON war op, contribution-scaled (March 1–3,
+> (`item.ectotoken`: stackable, cache-untradeable; renamed to "Commendation" with a
+> Thurgo-pointing examine via the `ItemDefTool` `commendation` action — apply on live
+> with the "Item def cache edit" workflow; TUNE: resprite via a cache edit
+> later), paid by `CapturePayout` on every WON war op, contribution-scaled (March 1–3,
 > Campaign 1–6, Conquest 1–10; losses pay nothing). The **Royal Smith** stands in the
 > Lumbridge castle courtyard (tile TUNE) and forges the three BIS armour lines —
 > Bandos→Torva, Armadyl→Masori, Ahrim's→Ancestral, two pieces each — for
