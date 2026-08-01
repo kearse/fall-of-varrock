@@ -74,7 +74,7 @@ const STEPS = [
 export default async function HomePage() {
   const [{ onlineNow }, news] = await Promise.all([getStats(), getPublishedNews(3)]);
   const forumUrl = process.env.FORUM_URL || "/forum";
-  const discordUrl = process.env.NEXT_PUBLIC_DISCORD_URL || "https://discord.gg";
+  const discordUrl = process.env.NEXT_PUBLIC_DISCORD_URL || "https://discord.gg/AmtccSBKYz";
 
   return (
     <div className="space-y-24">
@@ -109,7 +109,7 @@ export default async function HomePage() {
           </p>
           <div className="animate-fade-up mt-9 flex flex-wrap items-center justify-center gap-3" style={{ animationDelay: "240ms" }}>
             <Link href="/play" className="btn-play text-base">▶ Play Now</Link>
-            <Link href="/register" className="btn-ghost">Create account</Link>
+            <a href={discordUrl} target="_blank" rel="noopener noreferrer" className="btn-ghost">Join Our Discord</a>
           </div>
           <div className="animate-fade-up mt-4 flex items-center gap-2 text-sm text-lumbridge-parchment/70" style={{ animationDelay: "280ms" }}>
             <span className="h-2.5 w-2.5 animate-pulse-dot rounded-full bg-lumbridge-green shadow-[0_0_10px_2px_rgba(34,197,94,0.7)]" />
