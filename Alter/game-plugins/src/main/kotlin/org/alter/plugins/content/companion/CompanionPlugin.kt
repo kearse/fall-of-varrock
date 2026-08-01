@@ -193,11 +193,17 @@ class CompanionPlugin(
             if (slot != null) {
                 val comp = list.getOrNull(slot - 1)
                 if (comp == null) { player.message("<col=801700>No companion in slot $slot.</col>"); return@onCommand }
-                comp.orders = order
+                giveOrder(comp, order)
                 player.message("<col=4f9b4f>Sir ${comp.username}: ${order.name.lowercase()}.</col>")
+                if (order == CompanionOrders.ATTACK) {
+                    player.message("<col=4f9b4f>He will hold this ground and fight until slain or given new orders.</col>")
+                }
             } else {
-                list.forEach { it.orders = order }
+                list.forEach { giveOrder(it, order) }
                 player.message("<col=4f9b4f>All companions: ${order.name.lowercase()}.</col>")
+                if (order == CompanionOrders.ATTACK) {
+                    player.message("<col=4f9b4f>They will hold this ground and fight until slain or given new orders.</col>")
+                }
             }
         }
 
@@ -215,6 +221,14 @@ class CompanionPlugin(
                 player.message(" - Sir ${d.name} (${d.archetype.display}) [$state]")
             }
         }
+    }
+
+    /** Assign [order], anchoring an ATTACK grind on the companion's current tile (see
+     *  [Companion.huntAnchor]) and clearing any old anchor on every other order — RETURN/FOLLOW is
+     *  exactly how a grinding companion is recalled. */
+    private fun giveOrder(comp: CompanionPawn, order: CompanionOrders) {
+        comp.orders = order
+        comp.huntAnchor = if (order == CompanionOrders.ATTACK) comp.tile else null
     }
 
     private companion object {

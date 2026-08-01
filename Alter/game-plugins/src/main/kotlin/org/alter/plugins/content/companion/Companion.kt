@@ -1,6 +1,7 @@
 package org.alter.plugins.content.companion
 
 import org.alter.game.model.PlayerUID
+import org.alter.game.model.Tile
 import org.alter.game.model.World
 import org.alter.plugins.content.bots.BotLoadout
 import org.alter.plugins.content.bots.BotStats
@@ -33,6 +34,12 @@ class Companion(
 ) : PkBot(world, loadout) {
     /** Current orders (drives [CompanionBrain]). */
     var orders: CompanionOrders = CompanionOrders.FOLLOW
+    /**
+     * Where an [CompanionOrders.ATTACK] grind is anchored: the companion's tile when the order was
+     * given. The companion holds this ground and farms the NPCs around IT (not the owner), so the
+     * owner can walk away and leave it grinding. Cleared whenever any other order is issued.
+     */
+    var huntAnchor: Tile? = null
     /** Donor perk: auto-pick nearby loot straight into the owner's bank (see [CompanionLoot]). */
     var autoLoot: Boolean = false
     /** Slain-and-awaiting-recovery flag (revived at General Zo for a fee — keeps level + gear). */
