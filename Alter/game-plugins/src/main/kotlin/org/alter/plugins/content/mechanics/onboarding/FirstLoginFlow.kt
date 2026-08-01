@@ -48,11 +48,14 @@ object FirstLoginFlow {
 
     enum class Step { VIDEO, STYLE, DONE }
 
-    /** Where the player is staged for the video + style window (open Lumbridge courtyard = home). */
-    private val STAGE_TILE = Tile(3218, 3218, 0)
+    /** Where the player is staged for the video + style window (open Lumbridge courtyard = home).
+     *  Sits just east of the rejuvenation pool (3x3 footprint 3216..3218 — see
+     *  [org.alter.plugins.content.areas.lumbridge.objs.RejuvenationPoolPlugin]) so the recruit
+     *  isn't standing in the water. */
+    private val STAGE_TILE = Tile(3220, 3218, 0)
 
     /** Face south toward the Lumbridge gate so the model reads well in the framed portrait. */
-    private val STAGE_FACE = Tile(3218, 3210, 0)
+    private val STAGE_FACE = Tile(3220, 3210, 0)
 
     /** Session-only stash of where the player was before staging, restored on confirm. */
     private val RETURN_TILE_ATTR = AttributeKey<Tile>()
