@@ -50,6 +50,11 @@ private val logger = KotlinLogging.logger {}
  */
 object LmsGame {
 
+    /** TEMPORARY kill-switch: LMS is glitching out, so new games are blocked until it's fixed —
+     *  flip to false to re-open. While closed, everything safety-critical stays live: the crash-recovery
+     *  gear restore on login, Lisa (with her reward shop and the kit builder), and `::lms`. */
+    const val TEMPORARILY_DISABLED = true
+
     lateinit var world: World
 
     /** The mainland lobby tile (set by the plugin from the host's location); the instance exit + where
@@ -106,6 +111,10 @@ object LmsGame {
 
     /** Join the matchmaking queue (competitive). Starts the lobby countdown on the first queuer. */
     fun join(p: Player) {
+        if (TEMPORARILY_DISABLED) {
+            p.message("<col=801700>Last Man Standing is temporarily closed for maintenance.</col> Your kit and points are safe.")
+            return
+        }
         if (inGame(p)) { p.message("You're already in a Last Man Standing game."); return }
         if (inQueue(p)) { p.message("You're already queued. The game starts soon..."); return }
         queue += p

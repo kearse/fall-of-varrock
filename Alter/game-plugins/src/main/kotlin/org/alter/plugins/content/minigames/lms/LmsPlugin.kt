@@ -68,7 +68,12 @@ class LmsPlugin(
                 n.setActive(true)
                 logger.info { "lms: host '$host' spawned at $hostTile (index=${n.index})" }
             }.onFailure { logger.warn { "lms: host '$host' not spawned: ${it.message}" } }
-            world.timers[timer] = 1
+            // Kill-switch: no engine tick while LMS is closed — no lobby countdown, no games, no fog.
+            if (LmsGame.TEMPORARILY_DISABLED) {
+                logger.info { "lms: TEMPORARILY DISABLED — new games blocked (gear recovery, shop and kit builder stay live)" }
+            } else {
+                world.timers[timer] = 1
+            }
         }
         onTimer(timer) {
             LmsGame.tickAll()
@@ -80,7 +85,11 @@ class LmsPlugin(
 
         onCommand("lms", description = "Teleport to the Last Man Standing lobby") {
             player.moveTo(lobbyTile)
-            player.message("<col=8f00ff>Talk to Lisa</col> to enter Last Man Standing, or spend your LMS points at her rewards.")
+            if (LmsGame.TEMPORARILY_DISABLED) {
+                player.message("<col=801700>Last Man Standing is temporarily closed for maintenance.</col> Lisa's rewards and kit builder are still open.")
+            } else {
+                player.message("<col=8f00ff>Talk to Lisa</col> to enter Last Man Standing, or spend your LMS points at her rewards.")
+            }
         }
 
         onPlayerPreDeath { LmsGame.onPreDeath(player) }
@@ -116,9 +125,13 @@ class LmsPlugin(
             "Not now.",
         )) {
             1 -> {
-                // Joining wipes gear for the island — never with the kit editor still up.
-                org.alter.plugins.content.kits.KitEditor.close(p)
-                LmsGame.join(p)
+                if (LmsGame.TEMPORARILY_DISABLED) {
+                    chatNpc(p, "I'm afraid the island is closed while we deal with some... irregularities. Your kit and points are perfectly safe — check back soon.", npc = id, title = "Lisa")
+                } else {
+                    // Joining wipes gear for the island — never with the kit editor still up.
+                    org.alter.plugins.content.kits.KitEditor.close(p)
+                    LmsGame.join(p)
+                }
             }
             2 -> openKitEditor(p)
             3 -> p.openShop(rewardShop)
