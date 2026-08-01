@@ -10,8 +10,9 @@
   `Alter/web/.env.example:21-24`; every `/play` card renders "Building…" while the home page
   promises "download and play in minutes". Fill the env values (or soften the home copy until
   installers exist).
-- [ ] **Discord invite is a placeholder.** `NEXT_PUBLIC_DISCORD_URL` ships as the literal
+- [x] **Discord invite is a placeholder.** `NEXT_PUBLIC_DISCORD_URL` ships as the literal
   `https://discord.gg` (`web/.env.example:17`, used by `SiteHeader.tsx:41`, `page.tsx:77,352`).
+  Fixed: env default and fallbacks now use the real invite `https://discord.gg/AmtccSBKYz`.
 - [x] **War-Prep finale unlocks nothing.** `WarPrepChain.kt:269` announces "the war's raids are
   opening to you" but `raidReady()` (`WarPrepChain.kt:110`) is never called; the only raid is the
   `::testraid` smoke test (`Raids.kt`). Point the finale at real content (see story/sortie work).

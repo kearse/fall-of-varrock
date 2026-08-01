@@ -38,7 +38,7 @@ export function SiteHeader({ session, forumUrl = "/forum", guidesUrl = "/guides"
             <Link href="/play" className="link-cyan">Download client</Link>
           </div>
           <div className="flex items-center gap-4">
-            <a href={process.env.NEXT_PUBLIC_DISCORD_URL || "https://discord.gg"} target="_blank" rel="noopener noreferrer" className="link-cyan">Discord</a>
+            <a href={process.env.NEXT_PUBLIC_DISCORD_URL || "https://discord.gg/AmtccSBKYz"} target="_blank" rel="noopener noreferrer" className="link-cyan">Discord</a>
             <Link href="/vote" className="link-cyan">Vote</Link>
             <Link href="/store" className="font-semibold text-gradient-gold">Donate</Link>
           </div>

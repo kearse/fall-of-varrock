@@ -13,8 +13,8 @@ register/login, news, wiki, forum, footer). Ordered by impact vs effort.
    numbers, and stat values are ALL crimson — it reads as a wall of red. Reserve
    crimson for emphasis (rank 1–3, headings, links, hover) and use white/ash
    (`#e8e2d9`) for data values. Instantly more premium.
-3. **Real Discord invite.** The "Open Discord" buttons and header link still point at
-   the placeholder `https://discord.gg`. Wire the real invite (env `DISCORD_INVITE_URL`).
+3. ~~Real Discord invite~~ — FIXED: `NEXT_PUBLIC_DISCORD_URL` and the in-code
+   fallbacks now use the real invite (`https://discord.gg/AmtccSBKYz`).
 4. ~~News em-dash rendered as "?"~~ — FIXED this pass (PowerShell→mongo mangled the dash).
 
 ## Page-level
