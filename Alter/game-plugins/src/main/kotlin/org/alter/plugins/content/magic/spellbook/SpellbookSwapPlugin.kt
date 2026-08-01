@@ -66,16 +66,16 @@ class SpellbookSwapPlugin(
         }
 
         // ---- Altar of the Occult (Lumbridge market courtyard) ----
-        // A world copy of the POH occult altar, standing on the SOUTH courtyard fountain's
-        // footprint (both 2x2). We delete that static fountain (879, type 10 @ 3221,3210) and
-        // drop the altar on the same SW corner facing NORTH. NOTE: the NORTH fountain (3221,3226)
-        // is a different object — it's already the teleport portal (TeleportPortalObjectPlugin),
-        // so do NOT target it. Done in onWorldInit so the
-        // region/collision is loaded and the removal runs *before* the altar is placed —
-        // otherwise the altar (same tile+slot) would shadow the fountain and world.remove
-        // would clear the altar instead (AlkharidGate/MiningPlugin boot pattern). The cache
-        // def carries real switch verbs (Venerate/Ancient/Lunar/Arceuus), so books swap on a
-        // click without ::spellbook. Same Mage Tower gate via [switchTo].
+        // A world copy of the POH occult altar (2x2), standing at the west end of the
+        // south-wall services line, facing NORTH. The old south fountain tile (3221,3210)
+        // now hosts the Grand Exchange stand (GrandExchangeClickPlugin), and the NORTH
+        // fountain (3221,3226) is the teleport portal (TeleportPortalObjectPlugin) — do NOT
+        // target either. Done in onWorldInit so the region/collision is loaded and the
+        // (defensive) removal of any map-baked loc runs *before* the altar is placed —
+        // otherwise the altar (same tile+slot) would shadow it and world.remove would clear
+        // the altar instead (AlkharidGate/MiningPlugin boot pattern). The cache def carries
+        // real switch verbs (Venerate/Ancient/Lunar/Arceuus), so books swap on a click
+        // without ::spellbook. Same Mage Tower gate via [switchTo].
         onWorldInit {
             world.getObject(Tile(ALTAR_X, ALTAR_Z, 0), type = ALTAR_TYPE)?.let { world.remove(it) }
             world.spawn(DynamicObject(getRSCM(OCCULT_ALTAR), type = ALTAR_TYPE, rot = NORTH_ROT, Tile(ALTAR_X, ALTAR_Z, 0)))
@@ -147,10 +147,12 @@ class SpellbookSwapPlugin(
         /** Object 31858 — the variant whose cache actions are Venerate/Ancient/Lunar/Arceuus/Remove. */
         const val OCCULT_ALTAR = "object.altar_of_the_occult"
 
-        // SW corner of the SOUTH courtyard fountain (id 879, 2x2) — the altar takes its footprint.
-        // (The north fountain @ 3221,3226 is the teleport portal — leave it alone.)
-        const val ALTAR_X = 3221
-        const val ALTAR_Z = 3210
+        // West end of the courtyard's south-wall services line, one tile east of the Royal
+        // Smith (3213,3211) — 2x2 footprint 3215-3216 x 3211-3212. (The old south fountain
+        // tile @ 3221,3210 is now the GE stand; the north fountain @ 3221,3226 is the
+        // teleport portal — leave both alone.)
+        const val ALTAR_X = 3215
+        const val ALTAR_Z = 3211
         const val ALTAR_TYPE = 10   // interactable-scenery loc slot (matches the fountain's type)
         const val NORTH_ROT = 0     // model-verified in-game: rot 1 rendered EAST, so north = rot 0
                                     // (the occult-altar model's base orientation is offset one step

@@ -53,7 +53,7 @@ The Trading Post is growing into a full **Grand Exchange** - the classic OSRS of
 - **Commander's Regalia** (`::prestigeshop`) - the sanguine regalia set for **Prestige** (commanders only earn it).
 - **Gambling Host** - [house dice](/wiki/gambling) at the south end.
 - **Reward shops** - spend **Boss tickets** and **Vote tickets** (tradeable, stackable ticket items earned from bossing and voting).
-- **The fountain altars** - at the north end of the aisle: the **Altar of the Occult** (west of the fountain) [switches your spellbook](/wiki/unlocking-spellbooks), and a **prayer altar** (east of the fountain) recharges prayer points - bones offered on it earn boosted Prayer xp.
+- **The Grand Exchange stand** - on the old fountain site at the north end of the aisle: click it to open the Exchange (the clerk and `::ge` work too). The **Altar of the Occult** now stands on the south side next to the Royal Smith and [switches your spellbook](/wiki/unlocking-spellbooks); the church altar just east of the market recharges prayer points - bones offered on it earn boosted Prayer xp.
 
 ## Player trading
 
