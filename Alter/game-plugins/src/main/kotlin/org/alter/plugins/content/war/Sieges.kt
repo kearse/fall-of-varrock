@@ -98,7 +98,9 @@ object Sieges {
         // his death no longer fells the city (that mechanic was removed). Decorative/NPC role for
         // now. Inside [LUMBRIDGE_KEEP], so the war never reaches him. TUNE in-game.
         zoNpc = "npc.melee_combat_tutor",
-        zoTile = Tile(3218, 3218, 0),
+        // NE of the rejuvenation pool (3x3 at 3216..3218 — RejuvenationPoolPlugin), which took
+        // over his old (3218,3218) post.
+        zoTile = Tile(3219, 3219, 0),
         zoDef = zoDef,
         // ONE prong: the camp east of the river marches WEST over the south bridge into the castle.
         // The flow field does the real routing (the bridge is opened in bridgeSpans); these waypoints
