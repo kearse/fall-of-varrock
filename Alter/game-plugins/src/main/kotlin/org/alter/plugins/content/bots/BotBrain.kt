@@ -371,7 +371,10 @@ object BotBrain {
         if (ratio <= eatAt && !bot.timers.has(EAT_DELAY)) {
             if (consume(bot, BREW_PRIORITY)) {
                 bot.timers[EAT_DELAY] = FOOD_DELAY_TICKS
-                bot.timers[ATTACK_DELAY] = FOOD_DELAY_TICKS // eating delays the next attack, like a real player
+                // Eating delays the next attack like a real player — but must never SHORTEN the swing
+                // timer of a slow weapon (a 7-tick DH axe was being reset to 3 by every brew sip).
+                val pending = if (bot.timers.has(ATTACK_DELAY)) bot.timers[ATTACK_DELAY] else 0
+                bot.timers[ATTACK_DELAY] = maxOf(pending, FOOD_DELAY_TICKS)
             }
         }
         // Karambwan is combo food — can be eaten the same tick, no food-timer gate.

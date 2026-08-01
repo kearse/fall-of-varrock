@@ -1,5 +1,6 @@
 package org.alter.plugins.content.bots
 
+import org.alter.api.EquipmentType
 import org.alter.api.ext.*
 import org.alter.game.Server
 import org.alter.game.model.World
@@ -104,8 +105,11 @@ class BotCombatPlugin(
     private fun dropAllGear(world: World, bot: PkBot, killer: Player?) {
         val tile = bot.tile
         val kit = ArrayList<Item>()
+        val ammoSlot = EquipmentType.AMMO.id
         for (i in 0 until bot.equipment.capacity) {
-            bot.equipment[i]?.let { kit += it }
+            // The worn quiver is dressing — bots are geared via Item(id) so it holds a single arrow
+            // (they don't consume ammo). Dropping it reads as a bugged "1 arrow" drop; skip it.
+            bot.equipment[i]?.let { if (i != ammoSlot || it.amount > 1) kit += it }
             bot.equipment[i] = null
         }
         for (i in 0 until bot.inventory.capacity) {

@@ -26,6 +26,10 @@ import org.alter.rscm.RSCM.getRSCM
  * restocked whenever it's in a safezone (town). The brain eats it via `BotBrain.maybeEat`.
  */
 object CompanionGear {
+    /** Most of a stackable item (ammo, darts) a single panel equip will pull from the bank. Companions
+     *  don't consume ammo, so this is just how much of the owner's stack rides on the companion. */
+    private const val MAX_STACKABLE_EQUIP = 100
+
     /**
      * The standard PKing supply the server keeps a companion stocked with — a real NH kit (brews,
      * restores, sharks, karambwan combo food) plus the archetype's combat potion. Mirrors the bot
@@ -156,7 +160,8 @@ object CompanionGear {
             return
         }
 
-        val amount = if (def.stackable) owner.bank.getItemCount(itemId) else 1
+        // Cap stackable grabs — never hand a companion the owner's ENTIRE bank stack of arrows/darts.
+        val amount = if (def.stackable) minOf(owner.bank.getItemCount(itemId), MAX_STACKABLE_EQUIP) else 1
         val taken = owner.bank.remove(itemId, amount, assureFullRemoval = false)
         if (taken.completed == 0) { owner.message("Couldn't take that from your bank."); return }
 
