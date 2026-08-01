@@ -29,9 +29,9 @@ enum LofQuest
 			+ "ladder, and supplying the war machine — and leave a kitted citizen-soldier.",
 		11, // DONE ordinal
 		Arrays.asList(
-			new LofQuestStep(0, "Speak to the Recruiting Sergeant", "By the Lumbridge gate.", new WorldPoint(3219, 3214, 0)),
+			new LofQuestStep(0, "Speak to the Recruiting Sergeant", "By the Lumbridge gate.", new WorldPoint(3217, 3220, 0)),
 			new LofQuestStep(1, "Clear the back woods", "Kill 5 goblins that slipped the defences.", new WorldPoint(3193, 3221, 0)),
-			new LofQuestStep(2, "Report back to the Sergeant", new WorldPoint(3219, 3214, 0)),
+			new LofQuestStep(2, "Report back to the Sergeant", new WorldPoint(3217, 3220, 0)),
 			new LofQuestStep(3, "Buy your first rank from Duke Horacio", "He's in the market, by the Slayer Master.", new WorldPoint(3222, 3218, 0)),
 			new LofQuestStep(4, "Complete Vannaka's war-contract", "Take the contract, then slay the castle rats.", new WorldPoint(3219, 3215, 0)),
 			new LofQuestStep(5, "Report back to Vannaka", new WorldPoint(3219, 3215, 0)),
@@ -81,10 +81,10 @@ enum LofQuest
 		6, // DONE ordinal (RogueProblem.Step)
 		// World anchors are best-effort tiles — TUNE against the live map.
 		Arrays.asList(
-			new LofQuestStep(1, "Speak to the Recruiting Sergeant", "He has harder work now you're a Squire — by the Lumbridge gate.", new WorldPoint(3219, 3214, 0)),
+			new LofQuestStep(1, "Speak to the Recruiting Sergeant", "He has harder work now you're a Squire — by the Lumbridge gate.", new WorldPoint(3217, 3220, 0)),
 			new LofQuestStep(2, "Thin out the rogues of Fallen Falador", "Cut down 30 cutthroats in the raid city's streets. Only the banks are safe — risk little.", new WorldPoint(3013, 3353, 0)),
 			new LofQuestStep(3, "Kill your first assigned Rogue Knight", "The Sergeant's marker leads to the camp; ::knights tracks the ladder.", null),
-			new LofQuestStep(4, "Return to the Recruiting Sergeant", "Report the knight's fall and claim your purse.", new WorldPoint(3219, 3214, 0)),
+			new LofQuestStep(4, "Return to the Recruiting Sergeant", "Report the knight's fall and claim your purse.", new WorldPoint(3217, 3220, 0)),
 			new LofQuestStep(5, "Rise to Knight at Duke Horacio", "The Sergeant's purse covers the climb — Soldier, then Knight.", new WorldPoint(3222, 3218, 0))
 		),
 		Arrays.asList(
