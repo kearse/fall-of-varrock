@@ -62,6 +62,21 @@ object CompanionGear {
     }
 
     /**
+     * True if the item is genuinely equippable — it carries a Wield/Wear-style inventory option.
+     * The cache gives plenty of consumables (beer, food, potions) `equipSlot == 3`, so slot alone
+     * is NOT proof an item belongs in a hand: filtering on it let a companion "wield" a beer as a
+     * melee weapon (weaponType 0 → unarmed punches). Both the panel picker and the equip path check
+     * this.
+     */
+    fun isWearable(itemId: Int): Boolean {
+        val def = runCatching { getItem(itemId) }.getOrNull() ?: return false
+        return def.interfaceOptions.any {
+            it != null && (it.equals("Wield", true) || it.equals("Wear", true) ||
+                it.equals("Equip", true) || it.equals("Hold", true))
+        }
+    }
+
+    /**
      * True unless [itemId] is rank-gated metal armour above the OWNER's feudal rank ceiling.
      * Armour has no level requirements on this server — rank is THE armour requirement — so a
      * companion's armour is capped by its owner's rank, exactly like the owner's own worn gear.
@@ -141,7 +156,7 @@ object CompanionGear {
     fun equipFromBank(owner: Player, comp: Companion, itemId: Int) {
         val def = getItem(itemId)
         val slot = def.equipSlot
-        if (slot < 0) { owner.message("That item can't be equipped."); return }
+        if (slot < 0 || !isWearable(itemId)) { owner.message("That item can't be equipped."); return }
         if (owner.bank.getItemCount(itemId) <= 0) { owner.message("That item isn't in your bank."); return }
 
         // Same gear-level guardrail a real player gets (EquipAction.meetsLevelRequirements — ALL skills,

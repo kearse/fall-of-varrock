@@ -53,6 +53,29 @@ object BotManager {
     /** Every PKer bot shows the same display name (the uid below stays unique for lookup). */
     private const val ROGUE_NAME = "Rogue Knight"
 
+    /**
+     * A tile near [centre] that a pawn standing at [from] could actually WALK to, route-finder
+     * verified. [World.findRandomTileAround] only checks single-tile clipping, so an enclosed but
+     * unclipped pocket (e.g. the teller corridor behind the home bank booths) passes it — a bot
+     * spawned there is permanently unreachable by players and companions. Null when no reachable
+     * candidate is found in [attempts] tries; callers fall back like they would on a null spawn tile.
+     */
+    fun reachableTileAround(world: World, from: Tile, centre: Tile, radius: Int, attempts: Int = 5): Tile? {
+        repeat(attempts) {
+            val candidate = world.findRandomTileAround(centre, radius) ?: return@repeat
+            if (candidate.height != from.height) return@repeat
+            val route = world.smartRouteFinder.findRoute(
+                level = from.height,
+                srcX = from.x,
+                srcZ = from.z,
+                destX = candidate.x,
+                destZ = candidate.z,
+            )
+            if (route.success && !route.alternative) return candidate
+        }
+        return null
+    }
+
     fun spawn(world: World, loadout: BotLoadout, tile: Tile): PkBot? {
         val bot = PkBot(world, loadout)
         nameCounter++ // bump once per spawn so the uid is always unique (the name is shared)

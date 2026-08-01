@@ -55,7 +55,9 @@ class NamedCaptainsPlugin(
         CaptainDef("Karn the Red", District.SLUMS, "npc.rogue_526", Tile(3013, 3357, 0), "item.dragon_claws", "Dragon claws"),
         CaptainDef("Silas the Hollow", District.OLD_MARKET, "npc.dark_wizard", Tile(2957, 3371, 0), "item.nightmare_staff", "Nightmare staff"),
         CaptainDef("Vex of the Row", District.EAST_QUARTER, "npc.highwayman", Tile(3045, 3336, 0), "item.armadyl_crossbow", "Armadyl crossbow"),
-        CaptainDef("Grimjaw", District.MUSEUM_QUARTER, "npc.bandit_leader", Tile(2977, 3341, 0), "item.dragon_warhammer", "Dragon warhammer"),
+        // Base must be a COMBAT def: bandit_leader (733) has no Attack action / combat level in the
+        // cache, which made Grimjaw permanently unattackable (Combat.canEngage checks the cache def).
+        CaptainDef("Grimjaw", District.MUSEUM_QUARTER, "npc.bandit_champion", Tile(2977, 3341, 0), "item.dragon_warhammer", "Dragon warhammer"),
     )
 
     /** Live captain NPC per def index; absent = slain and awaiting respawn. */

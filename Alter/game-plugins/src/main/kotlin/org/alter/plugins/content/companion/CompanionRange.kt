@@ -26,6 +26,7 @@ object CompanionRange {
             val it = owner.bank[i] ?: continue
             val def = runCatching { getItem(it.id) }.getOrNull() ?: continue
             if (def.equipSlot != equipSlot) continue
+            if (!CompanionGear.isWearable(it.id)) continue // beer has equipSlot 3; slot alone isn't proof
             totals[it.id] = (totals[it.id] ?: 0) + it.amount
         }
         return totals.map { (id, qty) ->
