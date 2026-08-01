@@ -354,12 +354,12 @@ class LootKeyPlugin(
         const val OBJ_TYPE = 10 // standard interactable scenery
 
         /** A facing pair on the market's x=3224 column: south chest (3224,3217) reads north,
-         *  north chest (3224,3220) reads south. Chest rot cycle is clockwise from N (swamp
-         *  bank chest rot=1 reads east) — cosmetic, TUNE in-game if it reads backwards. */
+         *  north chest (3224,3220) reads south. The chest model's rot cycle turned out to be
+         *  the reverse of the swamp bank chest's — verified in-game: rot 2 reads north here. */
         const val CHEST_X = 3224
         const val SOUTH_CHEST_Z = 3217
-        const val SOUTH_CHEST_ROT = 0
+        const val SOUTH_CHEST_ROT = 2
         const val NORTH_CHEST_Z = 3220
-        const val NORTH_CHEST_ROT = 2
+        const val NORTH_CHEST_ROT = 0
     }
 }
