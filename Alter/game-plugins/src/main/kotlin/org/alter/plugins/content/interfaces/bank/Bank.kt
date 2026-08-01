@@ -87,7 +87,6 @@ object Bank {
         id: Int,
         amt: Int,
     ) {
-        println("Deposit method executed ====")
         val from = player.inventory
         val to = player.bank
         val amount = from.getItemCount(id).coerceAtMost(amt)
@@ -95,6 +94,13 @@ object Bank {
         for (i in 0 until from.capacity) {
             val item = from[i] ?: continue
             if (item.id != id) {
+                continue
+            }
+            /*
+             * A non-positive stack is corruption (it renders as an empty slot, so the player
+             * can't even see it) — transferring it would throw and silently kill the click.
+             */
+            if (item.amount <= 0) {
                 continue
             }
             if (deposited >= amount) {
@@ -125,7 +131,12 @@ object Bank {
 
             if (deposited > 0) {
                 if (curTab != 0 && !placeholderOrExistingStack) {
-                    BankTabs.dropToTab(player, curTab, to.getLastFreeSlotReversed() - 1, hasEmptySlot)
+                    // getLastFreeSlotReversed() is -1 when the bank's last slot is occupied,
+                    // which would index the container at -2 and abort the click mid-deposit.
+                    val srcSlot = to.getLastFreeSlotReversed() - 1
+                    if (srcSlot >= 0) {
+                        BankTabs.dropToTab(player, curTab, srcSlot, hasEmptySlot)
+                    }
                 }
             }
         }

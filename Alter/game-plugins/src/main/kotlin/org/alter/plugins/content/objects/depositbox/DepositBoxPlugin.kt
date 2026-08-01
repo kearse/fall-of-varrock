@@ -18,6 +18,7 @@ import org.alter.game.model.queue.*
 import org.alter.game.model.shop.*
 import org.alter.game.model.timer.*
 import org.alter.game.plugin.*
+import org.alter.plugins.content.interfaces.bank.Bank.removePlaceholder
 
 class DepositBoxPlugin(
     r: PluginRepository,
@@ -131,6 +132,9 @@ class DepositBoxPlugin(
             if (inv.id != item.id) {
                 continue
             }
+            if (inv.amount <= 0) {
+                continue
+            }
 
             if (deposited >= amount) {
                 break
@@ -165,6 +169,9 @@ class DepositBoxPlugin(
         var any = false
         for (i in 0 until from.capacity) {
             val item = from[i] ?: continue
+            if (item.amount <= 0) {
+                continue
+            }
 
             val total = item.amount
 
@@ -190,6 +197,9 @@ class DepositBoxPlugin(
         var any = false
         for (i in 0 until from.capacity) {
             val item = from[i] ?: continue
+            if (item.amount <= 0) {
+                continue
+            }
 
             val total = item.amount
 
@@ -211,15 +221,4 @@ class DepositBoxPlugin(
         }
     }
 
-    fun ItemContainer.removePlaceholder(
-        world: World,
-        item: Item,
-    ): Int {
-        val def = item.toUnnoted().getDef()
-        val slot = if (def.placeholderLink > 0) indexOfFirst { it?.id == def.placeholderLink && it.amount == 0 } else -1
-        if (slot != -1) {
-            this[slot] = null
-        }
-        return slot
-    }
 }

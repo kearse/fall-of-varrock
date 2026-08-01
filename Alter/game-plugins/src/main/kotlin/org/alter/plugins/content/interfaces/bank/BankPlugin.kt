@@ -40,6 +40,9 @@ import org.alter.plugins.content.interfaces.bank.BankTabs.numTabsUnlocked
 import org.alter.plugins.content.interfaces.bank.BankTabs.shiftTabs
 import org.alter.plugins.content.items.lootingbag.LootingBag
 import org.alter.rscm.RSCM.getRSCM
+import io.github.oshai.kotlinlogging.KotlinLogging
+
+private val logger = KotlinLogging.logger {}
 
 class BankPlugin(
     r: PluginRepository,
@@ -49,19 +52,30 @@ class BankPlugin(
 
     init {
         onInterfaceOpen(BANK_INTERFACE_ID) {
+            /*
+             * Tab varbit counts are player-saved state and can drift (an unfloored decrement
+             * wraps to the bit field's maximum). This loop runs inside InterfaceSet.open's
+             * listener, BEFORE the IfOpenSub packet is written — an out-of-bounds index here
+             * wedges banking permanently and silently. Heal inflated counts instead.
+             */
             var slotOffset = 0
             for (tab in 1..9) {
-                val size = player.getVarbit(BANK_TAB_ROOT_VARBIT + tab)
-                for (slot in slotOffset until slotOffset + size) {
+                val rawSize = player.getVarbit(BANK_TAB_ROOT_VARBIT + tab)
+                val size = rawSize.coerceIn(0, player.bank.capacity)
+                if (size != rawSize) {
+                    player.setVarbit(BANK_TAB_ROOT_VARBIT + tab, size)
+                }
+                val end = minOf(slotOffset + size, player.bank.capacity)
+                for (slot in slotOffset until end) {
                     if (player.bank[slot] == null) {
-                        player.setVarbit(BANK_TAB_ROOT_VARBIT + tab, player.getVarbit(BANK_TAB_ROOT_VARBIT + tab) - 1)
+                        BankTabs.decrementTabSize(player, tab)
                         // check for empty tab shift
                         if (player.getVarbit(BANK_TAB_ROOT_VARBIT + tab) == 0 && tab <= numTabsUnlocked(player)) {
                             shiftTabs(player, tab)
                         }
                     }
                 }
-                slotOffset += size
+                slotOffset = end
             }
             player.bank.shift()
         }
@@ -89,9 +103,7 @@ class BankPlugin(
 
         intArrayOf(30,32,34,36,38).forEach { quantity ->
             onButton(interfaceId = BANK_INTERFACE_ID, component = quantity) {
-                val state = (quantity - 27) / 2 // wat?
-                player.message("You clicked? $quantity")
-                player.message("You clicked? Also state: $state")
+                val state = (quantity - 27) / 2
                 player.setVarbit(QUANTITY_VARBIT, state - 1)
             }
         }
@@ -105,30 +117,37 @@ class BankPlugin(
 
         onButton(interfaceId = BANK_INTERFACE_ID, component = 47) {
             val slot = player.getInteractingSlot() - 1
-            val destroyItems = player.bank[slot]!!
+            val destroyItems = player.bank.rawItems.getOrNull(slot) ?: return@onButton
             val tabAffected = getCurrentTab(player, slot)
 
             player.playSound(Sound.FIREBREATH)
             player.bank.remove(destroyItems, assureFullRemoval = true)
-            player.setVarbit(BANK_TAB_ROOT_VARBIT + tabAffected, player.getVarbit(BANK_TAB_ROOT_VARBIT + tabAffected) - 1)
+            BankTabs.decrementTabSize(player, tabAffected)
             player.bank.shift()
         }
 
 // bank inventory
         onButton(interfaceId = BANK_INTERFACE_ID, component = 44) {
             val from = player.inventory
-            val to = player.bank
             for (i in 0 until from.capacity) {
-                val item = player.inventory[i]
-                item?.let {
+                val item = player.inventory[i] ?: continue
+                if (item.amount <= 0) {
+                    continue
+                }
+                /*
+                 * One corrupt or undefined item must not abort the rest of the loop —
+                 * that turns "one slot won't bank" into "nothing banks", silently.
+                 */
+                try {
                     deposit(player, item.id, item.amount)
+                } catch (e: Exception) {
+                    logger.error(e) {
+                        "Deposit-inventory failed: player=${player.username} slot=$i id=${item.id} amount=${item.amount}"
+                    }
                 }
             }
             if (!from.isEmpty) {
-                /**
-                 * @TODO
-                 */
-                player.message("Bank full. || theres ${Int.MAX_VALUE} of some item.")
+                player.message("Bank full.")
             }
         }
 // bank equipment
@@ -139,29 +158,40 @@ class BankPlugin(
             var any = false
             for (i in 0 until from.capacity) {
                 val item = from[i] ?: continue
-
-                val total = item.amount
-
-                var toSlot = to.removePlaceholder(world, item)
-                var placeholder = true
-                val curTab = player.getVarbit(SELECTED_TAB_VARBIT)
-                if (toSlot == -1) {
-                    placeholder = false
-                    toSlot = to.getLastFreeSlot()
+                if (item.amount <= 0) {
+                    continue
                 }
 
-                val deposited = from.transfer(to, item, fromSlot = i, toSlot = toSlot, note = false, unnote = true)?.completed ?: 0
+                try {
+                    val total = item.amount
 
-                if (total != deposited) {
-                    // Was not able to deposit the whole stack of [item].
-                }
-                if (deposited > 0) {
-                    any = true
-                    if (curTab != 0 && !placeholder) {
-                        println("Equipment banker 1.")
-                        dropToTab(player, curTab, to.getLastFreeSlot() - 1, true)
+                    var toSlot = to.removePlaceholder(world, item)
+                    var placeholder = true
+                    val curTab = player.getVarbit(SELECTED_TAB_VARBIT)
+                    if (toSlot == -1) {
+                        placeholder = false
+                        toSlot = to.getLastFreeSlot()
                     }
-                    EquipAction.onItemUnequip(player, item.id, i)
+
+                    val deposited = from.transfer(to, item, fromSlot = i, toSlot = toSlot, note = false, unnote = true)?.completed ?: 0
+
+                    if (total != deposited) {
+                        // Was not able to deposit the whole stack of [item].
+                    }
+                    if (deposited > 0) {
+                        any = true
+                        if (curTab != 0 && !placeholder) {
+                            val srcSlot = to.getLastFreeSlot() - 1
+                            if (srcSlot >= 0) {
+                                dropToTab(player, curTab, srcSlot, true)
+                            }
+                        }
+                        EquipAction.onItemUnequip(player, item.id, i)
+                    }
+                } catch (e: Exception) {
+                    logger.error(e) {
+                        "Deposit-equipment failed: player=${player.username} slot=$i id=${item.id} amount=${item.amount}"
+                    }
                 }
             }
             if (!any && !from.isEmpty) {
@@ -235,7 +265,6 @@ class BankPlugin(
                         }
             }
 
-            println("DEPOSIT BUTTON EXEC")
             if (amount == 0) {
                 amount = player.inventory.getItemCount(item.id)
             } else if (amount == -1) {
@@ -353,7 +382,6 @@ class BankPlugin(
             dstInterfaceId = INV_INTERFACE_ID,
             dstComponent = INV_INTERFACE_CHILD,
         ) {
-            println("Here")
             val srcSlot = player.attr[INTERACTING_ITEM_SLOT]!!
             val dstSlot = player.attr[OTHER_ITEM_SLOT_ATTR]!!
 
@@ -405,7 +433,7 @@ class BankPlugin(
                             player.setVarbit(BANK_TAB_ROOT_VARBIT + dstTab, player.getVarbit(BANK_TAB_ROOT_VARBIT + dstTab) + 1)
                         }
                         if (curTab != 0) {
-                            player.setVarbit(BANK_TAB_ROOT_VARBIT + curTab, player.getVarbit(BANK_TAB_ROOT_VARBIT + curTab) - 1)
+                            BankTabs.decrementTabSize(player, curTab)
                             if (player.getVarbit(BANK_TAB_ROOT_VARBIT + curTab) == 0 && curTab <= numTabsUnlocked(player)) {
                                 shiftTabs(player, curTab)
                             }
