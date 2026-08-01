@@ -1,14 +1,17 @@
 package org.alter.api.ext
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.alter.game.model.container.ItemContainer
 import org.alter.game.model.container.ItemTransaction
 import org.alter.game.model.item.Item
+
+private val logger = KotlinLogging.logger {}
 
 /**
  * Transfer [item] from [this] container to [to] container.
  *
  * @return
- * The removal [ItemTransaction].
+ * The removal [ItemTransaction], or null if nothing was moved.
  */
 fun ItemContainer.transfer(
     to: ItemContainer,
@@ -18,7 +21,15 @@ fun ItemContainer.transfer(
     note: Boolean = false,
     unnote: Boolean = false,
 ): ItemTransaction? {
-    check(item.amount > 0)
+    /*
+     * A non-positive amount is always corruption (a placeholder sentinel or a broken stack).
+     * Returning null keeps the "nothing moved" contract; throwing here used to silently abort
+     * whatever click was being processed.
+     */
+    if (item.amount <= 0) {
+        logger.warn { "Refusing to transfer non-positive stack: id=${item.id} amount=${item.amount}" }
+        return null
+    }
 
     /*
      * Get the maximum amount of the item that can be transferred.

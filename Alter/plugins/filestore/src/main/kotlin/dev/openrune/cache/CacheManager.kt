@@ -54,6 +54,9 @@ object CacheManager {
     fun getNpc(id: Int) = npcs[id] ?: throw IllegalStateException("Could not find Npc with id: $id")
     fun getObject(id: Int) = objects[id] ?: throw IllegalStateException("Could not find Object with id: $id")
     fun getItem(id: Int) = items[id] ?: throw IllegalStateException("Could not find Item with id: $id")
+
+    /** Non-throwing existence check, for validating persisted item ids against the mounted cache. */
+    fun itemExists(id: Int): Boolean = items.containsKey(id)
     fun getVarbit(id: Int) = varbits[id] ?: throw IllegalStateException("Could not find Varbit with id: $id")
     fun getVarp(id: Int) = varps[id] ?: throw IllegalStateException("Could not find Varp with id: $id")
     fun getAnim(id: Int) = anims[id] ?: throw IllegalStateException("Could not find Anim with id: $id")
