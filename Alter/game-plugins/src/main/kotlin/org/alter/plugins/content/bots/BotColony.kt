@@ -88,7 +88,10 @@ class BotColony(private val cfg: BotZoneConfig) {
             // cells overlap, so several colonies can otherwise dogpile the same player at a boundary).
             if (anchor != null && botsNear(anchor) >= MAX_BOTS_NEAR_PLAYER) return
             val point = spawnPoint(anchor, pool.size)
-            val tile = world.findRandomTileAround(point, radius = 4) ?: point
+            // Route-verified from the triggering player (fallback: the point itself) so a bot never
+            // spawns inside an enclosed-but-unclipped pocket nobody can path to.
+            val reachFrom = anchor?.tile ?: point
+            val tile = BotManager.reachableTileAround(world, from = reachFrom, centre = point, radius = 4) ?: point
             // Tier by our custom wilderness level at the spawn tile: shallow-wild spawns roll a weak
             // metal PKer, deep-wild spawns roll elite NHers. A zone may pin a fixed tier instead.
             val tier = cfg.tier ?: BotZones.tierForWildLevel(PvpZones.wildernessLevel(tile))

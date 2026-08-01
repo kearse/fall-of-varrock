@@ -5,10 +5,14 @@ import org.alter.api.ext.message
 import org.alter.api.ext.player
 import org.alter.game.Server
 import org.alter.game.model.World
+import org.alter.game.action.NpcDeathAction
 import org.alter.game.model.priv.Privilege
 import org.alter.game.model.timer.TimerKey
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
+// MANDATORY alias: this class has its own `companion object`, so a bare `is Companion` would
+// resolve to it and silently never match (see the warning at BotCombatPlugin.kt).
+import org.alter.plugins.content.companion.Companion as CompanionPawn
 
 /**
  * Host plugin for the **companion** system: spawns a player's roster on login, stores + despawns it
@@ -22,6 +26,14 @@ class CompanionPlugin(
 ) : KotlinPlugin(r, world, server) {
 
     init {
+        // A companion's npc kills credit its OWNER: KILLER_ATTR consumers (bounties, drops, slayer,
+        // war points, …) all pay/attribute whoever this resolves to, and paying a companion writes
+        // into transient containers that evaporate on despawn — the "my companion got the bounty
+        // reward" report. Installed here, at the engine's single kill-credit choke point.
+        NpcDeathAction.killCreditResolver = { pawn ->
+            if (pawn is CompanionPawn) CompanionRegistry.ownerOf(world, pawn) ?: pawn else pawn
+        }
+
         onLogin { CompanionRegistry.spawnFor(world, player) }
         onLogout { CompanionRegistry.storeAndDespawn(world, player) }
 

@@ -73,6 +73,13 @@ open class PkBot(world: World, val loadout: BotLoadout) : Player(world) {
     /** World cycle of the last roam step, so idle wandering is throttled (amble, not sprint). */
     var lastRoamCycle: Int = 0
 
+    /** Tile the brain saw this bot on last tick — feeds the no-progress unstick counter below. */
+    var lastBrainTile: Tile? = null
+
+    /** Consecutive brain ticks the bot has been trying to move without changing tile. When it hits
+     *  [BotBrain]'s stuck threshold the bot is teleported home (see the unstick in `BotBrain.tick`). */
+    var noProgressTicks: Int = 0
+
     /** Index into the loadout's melee spec rotation (AGS -> maul -> ...), advanced on each spec. */
     var nextMeleeSpec: Int = 0
 

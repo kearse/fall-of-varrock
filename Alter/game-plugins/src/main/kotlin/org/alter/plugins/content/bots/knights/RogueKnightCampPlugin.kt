@@ -214,9 +214,11 @@ class RogueKnightCampPlugin(
             logger.error { "Rogue Knight '${def.key}': unknown loadout '${def.loadoutKey}' — not spawning." }
             return null
         }
+        // Route-verified from the hunter's tile: a plain findRandomTileAround can land in an
+        // enclosed pocket (the bank-teller corridor report) where the knight is unreachable.
         val anchor = spawnAnchor(p.tile, def.camp.center)
-        val tile = world.findRandomTileAround(anchor, radius = 4)
-            ?: world.findRandomTileAround(def.camp.center, radius = 6)
+        val tile = BotManager.reachableTileAround(world, from = p.tile, centre = anchor, radius = 4)
+            ?: BotManager.reachableTileAround(world, from = p.tile, centre = def.camp.center, radius = 6)
             ?: def.camp.center
         val bot = BotManager.spawn(world, loadout, tile) ?: return null // world full
 

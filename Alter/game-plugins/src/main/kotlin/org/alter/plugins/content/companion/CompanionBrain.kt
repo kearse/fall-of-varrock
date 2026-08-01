@@ -93,7 +93,6 @@ object CompanionBrain {
         CompanionLoot.sweep(world, comp) // donor perk: bank nearby loot before doing anything else
         org.alter.plugins.content.bots.BotBrain.maybeEat(comp) // survive fights from its food supply
         if (TOWN.contains(comp.tile)) CompanionGear.restock(comp) // top up food/runes at the safezone
-        CompanionRange.ensureAmmo(world, comp) // ranged: restock arrows from the owner's bank when low
         CompanionMagic.ensureSpell(comp) // mage: keep autocast in step with level / owner's chosen spell
         if (comp.isAttacking()) CompanionPotions.maybePot(comp) // boost when fighting
         when (comp.orders) {

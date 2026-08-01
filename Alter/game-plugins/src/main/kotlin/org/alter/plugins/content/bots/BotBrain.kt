@@ -9,6 +9,7 @@ import org.alter.game.model.combat.CombatClass
 import org.alter.game.model.entity.Player
 import org.alter.game.model.item.Item
 import org.alter.game.model.move.hasMoveDestination
+import org.alter.game.model.move.moveTo
 import org.alter.game.model.move.walkTo
 import org.alter.game.model.timer.ATTACK_DELAY
 import org.alter.game.model.timer.TimerKey
@@ -63,6 +64,9 @@ object BotBrain {
     private const val ROAM_PERIOD = 4
     private const val ROAM_ONE_IN = 3
 
+    /** Brain ticks of trying-to-move-without-moving before a wedged bot is teleported home (~30s). */
+    private const val STUCK_TICKS = 50
+
     // Eaten in priority order when low — brews first, then any carried food (so metal-tier bots
     // with cheaper food still heal).
     private val BREW_PRIORITY = listOf(
@@ -91,6 +95,23 @@ object BotBrain {
         if (world.currentCycle % (bot.specRegenPeriod ?: SPEC_REGEN_PERIOD) == 0 && AttackTab.getEnergy(bot) < 100) {
             AttackTab.restoreEnergy(bot)
         }
+
+        // No-progress unstick: a bot that keeps trying to move (a live walk destination, or a
+        // leash-return it can't complete) without ever changing tile is wedged — clipped pockets,
+        // teller corridors, pathing dead ends. After ~30s of that, teleport it home rather than
+        // leave an unreachable knight taunting the bank (companions will whale on it forever).
+        val tryingToMove = bot.hasMoveDestination() ||
+            (bot.leashRadius > 0 && !bot.tile.isWithinRadius(bot.homeTile, bot.leashRadius))
+        if (tryingToMove && bot.lastBrainTile == bot.tile) {
+            if (++bot.noProgressTicks >= STUCK_TICKS) {
+                disengage(bot)
+                bot.moveTo(bot.homeTile)
+                bot.noProgressTicks = 0
+            }
+        } else {
+            bot.noProgressTicks = 0
+        }
+        bot.lastBrainTile = bot.tile
 
         // Tether + give up: a zone bot only chases within its leash of home.
         if (bot.leashRadius > 0) {
@@ -371,7 +392,10 @@ object BotBrain {
         if (ratio <= eatAt && !bot.timers.has(EAT_DELAY)) {
             if (consume(bot, BREW_PRIORITY)) {
                 bot.timers[EAT_DELAY] = FOOD_DELAY_TICKS
-                bot.timers[ATTACK_DELAY] = FOOD_DELAY_TICKS // eating delays the next attack, like a real player
+                // Eating delays the next attack like a real player — but must never SHORTEN the swing
+                // timer of a slow weapon (a 7-tick DH axe was being reset to 3 by every brew sip).
+                val pending = if (bot.timers.has(ATTACK_DELAY)) bot.timers[ATTACK_DELAY] else 0
+                bot.timers[ATTACK_DELAY] = maxOf(pending, FOOD_DELAY_TICKS)
             }
         }
         // Karambwan is combo food — can be eaten the same tick, no food-timer gate.

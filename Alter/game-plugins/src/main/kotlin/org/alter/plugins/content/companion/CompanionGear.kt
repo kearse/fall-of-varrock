@@ -26,6 +26,10 @@ import org.alter.rscm.RSCM.getRSCM
  * restocked whenever it's in a safezone (town). The brain eats it via `BotBrain.maybeEat`.
  */
 object CompanionGear {
+    /** Most of a stackable item (ammo, darts) a single panel equip will pull from the bank. Companions
+     *  don't consume ammo, so this is just how much of the owner's stack rides on the companion. */
+    private const val MAX_STACKABLE_EQUIP = 100
+
     /**
      * The standard PKing supply the server keeps a companion stocked with — a real NH kit (brews,
      * restores, sharks, karambwan combo food) plus the archetype's combat potion. Mirrors the bot
@@ -55,6 +59,21 @@ object CompanionGear {
         add("item.super_restore4", 4)
         add("item.cooked_karambwan", 4)
         add("item.shark", 8)
+    }
+
+    /**
+     * True if the item is genuinely equippable — it carries a Wield/Wear-style inventory option.
+     * The cache gives plenty of consumables (beer, food, potions) `equipSlot == 3`, so slot alone
+     * is NOT proof an item belongs in a hand: filtering on it let a companion "wield" a beer as a
+     * melee weapon (weaponType 0 → unarmed punches). Both the panel picker and the equip path check
+     * this.
+     */
+    fun isWearable(itemId: Int): Boolean {
+        val def = runCatching { getItem(itemId) }.getOrNull() ?: return false
+        return def.interfaceOptions.any {
+            it != null && (it.equals("Wield", true) || it.equals("Wear", true) ||
+                it.equals("Equip", true) || it.equals("Hold", true))
+        }
     }
 
     /**
@@ -89,7 +108,7 @@ object CompanionGear {
             val old = comp.equipment[slot]
             comp.equipment[slot] = Item(give.id, give.amount)
             owner.equipment[slot] = null
-            old?.let { owner.inventory.add(it.id, it.amount) }
+            old?.let { returnToOwner(owner, it.id, it.amount) } // lossless even with a full inventory
             moved++
         }
         if (blocked > 0) owner.message("<col=801700>Sir ${comp.username} wasn't a high enough level for $blocked item(s); they were left on you.</col>")
@@ -106,15 +125,23 @@ object CompanionGear {
     /** Return the companion's whole worn kit to the owner's inventory. */
     fun dismiss(owner: Player, comp: Companion) {
         var moved = 0
+        var kept = 0
         for (slot in 0 until comp.equipment.capacity) {
             val it = comp.equipment[slot] ?: continue
-            owner.inventory.add(it.id, it.amount)
-            comp.equipment[slot] = null
-            moved++
+            // Transactional: a full inventory used to null the slot anyway and destroy the item.
+            val tx = owner.inventory.add(it.id, it.amount)
+            if (tx.completed >= it.amount) {
+                comp.equipment[slot] = null
+                moved++
+            } else {
+                if (tx.completed > 0) comp.equipment[slot] = Item(it.id, it.amount - tx.completed)
+                kept++
+            }
         }
-        if (moved == 0) { owner.message("Your companion has no gear to return."); return }
-        refreshGear(comp)
-        owner.message("<col=4f9b4f>Your companion hands its gear back.</col>")
+        if (moved == 0 && kept == 0) { owner.message("Your companion has no gear to return."); return }
+        if (moved > 0) refreshGear(comp)
+        if (kept > 0) owner.message("<col=801700>Your inventory is full — $kept item(s) stay on Sir ${comp.username}.</col>")
+        if (moved > 0) owner.message("<col=4f9b4f>Your companion hands its gear back.</col>")
     }
 
     /** Top the companion's food + pots back up to the standard kit (free; on spawn + in a safezone). */
@@ -137,7 +164,7 @@ object CompanionGear {
     fun equipFromBank(owner: Player, comp: Companion, itemId: Int) {
         val def = getItem(itemId)
         val slot = def.equipSlot
-        if (slot < 0) { owner.message("That item can't be equipped."); return }
+        if (slot < 0 || !isWearable(itemId)) { owner.message("That item can't be equipped."); return }
         if (owner.bank.getItemCount(itemId) <= 0) { owner.message("That item isn't in your bank."); return }
 
         // Same gear-level guardrail a real player gets (EquipAction.meetsLevelRequirements — ALL skills,
@@ -156,33 +183,64 @@ object CompanionGear {
             return
         }
 
-        val amount = if (def.stackable) owner.bank.getItemCount(itemId) else 1
+        // Cap stackable grabs — never hand a companion the owner's ENTIRE bank stack of arrows/darts.
+        val amount = if (def.stackable) minOf(owner.bank.getItemCount(itemId), MAX_STACKABLE_EQUIP) else 1
         val taken = owner.bank.remove(itemId, amount, assureFullRemoval = false)
         if (taken.completed == 0) { owner.message("Couldn't take that from your bank."); return }
 
-        fun stash(s: Int) {
-            if (s < 0 || s >= comp.equipment.capacity) return
-            val worn = comp.equipment[s] ?: return
-            owner.bank.add(worn.id, worn.amount)
+        // Transactional stash: returns false (leaving the worn item in place) when the bank can't
+        // take it — silently nulling the slot on a full bank destroyed the displaced weapon.
+        fun stash(s: Int): Boolean {
+            if (s < 0 || s >= comp.equipment.capacity) return true
+            val worn = comp.equipment[s] ?: return true
+            val tx = owner.bank.add(worn.id, worn.amount)
+            if (tx.completed < worn.amount) {
+                if (tx.completed > 0) owner.bank.remove(worn.id, tx.completed)
+                return false
+            }
             comp.equipment[s] = null
+            return true
         }
-        stash(slot)
-        if (def.equipType != -1 && def.equipType != slot) stash(def.equipType) // 2h → also clear shield slot
-        for (i in 0 until comp.equipment.capacity) {                            // shield → clear a worn 2h
-            val worn = comp.equipment[i] ?: continue
-            val wd = getItem(worn.id)
-            if (wd.equipType == slot && wd.equipType != 0) stash(i)
+        var stashed = stash(slot)
+        if (stashed && def.equipType != -1 && def.equipType != slot) stashed = stash(def.equipType) // 2h → also clear shield slot
+        if (stashed) {
+            for (i in 0 until comp.equipment.capacity) {                        // shield → clear a worn 2h
+                val worn = comp.equipment[i] ?: continue
+                val wd = getItem(worn.id)
+                if (wd.equipType == slot && wd.equipType != 0 && !stash(i)) { stashed = false; break }
+            }
+        }
+        if (!stashed) {
+            returnToOwner(owner, itemId, taken.completed) // abort: hand the new item back losslessly
+            owner.message("<col=801700>Your bank is full — couldn't swap Sir ${comp.username}'s gear.</col>")
+            refreshGear(comp) // slots stashed before the failure did change
+            return
         }
         comp.equipment[slot] = Item(itemId, taken.completed)
         refreshGear(comp)
         owner.message("<col=4f9b4f>Equipped ${itemName(itemId)} on Sir ${comp.username}.</col>")
     }
 
+    /** Best-effort lossless return of an item to [owner]: bank → inventory → the ground at their feet. */
+    private fun returnToOwner(owner: Player, id: Int, amount: Int) {
+        var left = amount
+        left -= owner.bank.add(id, left).completed
+        if (left > 0) left -= owner.inventory.add(id, left).completed
+        if (left > 0) owner.world.spawn(org.alter.game.model.entity.GroundItem(id, left, owner.tile, owner))
+    }
+
     /** Return the item in equipment [equipSlot] of [comp] to the **owner's bank** (panel "remove"). */
     fun unequipToBank(owner: Player, comp: Companion, equipSlot: Int) {
         if (equipSlot < 0 || equipSlot >= comp.equipment.capacity) return
         val item = comp.equipment[equipSlot] ?: return
-        owner.bank.add(item.id, item.amount)
+        // Transactional: a full bank returns completed < amount, and nulling the slot anyway
+        // DESTROYED the item (one of the "companion's weapon disappeared" vectors).
+        val tx = owner.bank.add(item.id, item.amount)
+        if (tx.completed < item.amount) {
+            if (tx.completed > 0) owner.bank.remove(item.id, tx.completed)
+            owner.message("<col=801700>Your bank is full — ${itemName(item.id)} stays on Sir ${comp.username}.</col>")
+            return
+        }
         comp.equipment[equipSlot] = null
         refreshGear(comp)
         owner.message("<col=4f9b4f>Returned ${itemName(item.id)} to your bank.</col>")

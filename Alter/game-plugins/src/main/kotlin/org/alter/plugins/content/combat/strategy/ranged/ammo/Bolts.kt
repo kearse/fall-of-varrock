@@ -14,6 +14,15 @@ object Bolts {
     val RUNITE_BOLTS = arrayOf(getRSCM("item.runite_bolts"), getRSCM("item.runite_bolts_p"), getRSCM("item.runite_bolts_p_9298"), getRSCM("item.runite_bolts_p_9305"))
     val DRAGON_BOLTS = arrayOf(getRSCM("item.dragon_bolts"), getRSCM("item.dragon_bolts_p"), getRSCM("item.dragon_bolts_p_21926"), getRSCM("item.dragon_bolts_p_21928"))
     val BLURITE_BOLTS = arrayOf(getRSCM("item.blurite_bolts"), getRSCM("item.blurite_bolts_p"), getRSCM("item.blurite_bolts_p_9293"), getRSCM("item.blurite_bolts_p_9300"))
+    val GEM_TIPPED_BOLTS =
+        arrayOf(
+            getRSCM("item.sapphire_bolts"), getRSCM("item.sapphire_bolts_e"),
+            getRSCM("item.emerald_bolts"), getRSCM("item.emerald_bolts_e"),
+            getRSCM("item.ruby_bolts"), getRSCM("item.ruby_bolts_e"),
+            getRSCM("item.diamond_bolts"), getRSCM("item.diamond_bolts_e"), getRSCM("item.diamond_bolts_e_23649"),
+            getRSCM("item.dragonstone_bolts"), getRSCM("item.dragonstone_bolts_e"),
+            getRSCM("item.onyx_bolts"), getRSCM("item.onyx_bolts_e"),
+        )
     val BONE_BOLTS = arrayOf(getRSCM("item.bone_bolts"))
     val KEBBIT_BOLTS = arrayOf(getRSCM("item.kebbit_bolts"), getRSCM("item.long_kebbit_bolts"))
     val BOLT_RACKS = arrayOf(getRSCM("item.bolt_rack"))

@@ -38,6 +38,8 @@ import org.alter.plugins.content.interfaces.bank.BankTabs.dropToTab
 import org.alter.plugins.content.interfaces.bank.BankTabs.getCurrentTab
 import org.alter.plugins.content.interfaces.bank.BankTabs.numTabsUnlocked
 import org.alter.plugins.content.interfaces.bank.BankTabs.shiftTabs
+import org.alter.plugins.content.items.lootingbag.LootingBag
+import org.alter.rscm.RSCM.getRSCM
 
 class BankPlugin(
     r: PluginRepository,
@@ -177,6 +179,23 @@ class BankPlugin(
             if (opt == 10) {
                 world.sendExamine(player, item.id, ExamineEntityType.ITEM)
                 return@p
+            }
+
+            // Looting bag clicked while banking: empty its CONTENTS into the bank (the previously
+            // unreachable "Bank your loot" flow). An empty bag falls through so the bag item itself
+            // can still be deposited like any other item.
+            if (item.id == getRSCM("item.looting_bag") || item.id == getRSCM("item.looting_bag_22586")) {
+                val bag = LootingBag.containerOf(player)
+                if (!bag.isEmpty) {
+                    val emptied = LootingBag.bankAll(player, bag)
+                    player.sendItemContainer(LootingBag.CONTAINER_ID, bag)
+                    when {
+                        bag.isEmpty -> player.message("You empty your looting bag into your bank.")
+                        emptied -> player.message("Some of your loot wouldn't fit in your bank.")
+                        else -> player.message("Your bank is full.")
+                    }
+                    return@p
+                }
             }
 
             val quantityVarbit = player.getVarbit(QUANTITY_VARBIT)

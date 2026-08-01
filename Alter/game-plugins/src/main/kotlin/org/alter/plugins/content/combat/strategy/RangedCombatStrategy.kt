@@ -22,6 +22,7 @@ import org.alter.plugins.content.combat.strategy.ranged.ammo.Knives
 import org.alter.plugins.content.combat.strategy.ranged.weapon.BowType
 import org.alter.plugins.content.combat.strategy.ranged.weapon.Bows
 import org.alter.plugins.content.combat.strategy.ranged.weapon.CrossbowType
+import org.alter.plugins.content.bots.PkBot
 
 /**
  * @author Tom <rspsmods@gmail.com>
@@ -138,9 +139,11 @@ object RangedCombatStrategy : CombatStrategy {
             }
 
             /*
-             * Remove or drop ammo if applicable.
+             * Remove or drop ammo if applicable. Bots and companions are exempt: their
+             * quivers are dressing (bots spawn with a single arrow), and a companion's
+             * dropped ammo lands owned by its uid where the owner can never reclaim it.
              */
-            if (ammo != null && (ammoProjectile == null || !ammoProjectile.breakOnImpact())) {
+            if (pawn !is PkBot && ammo != null && (ammoProjectile == null || !ammoProjectile.breakOnImpact())) {
                 val chance = world.random(99)
                 val breakAmmo = chance in 0..19
                 val dropAmmo =

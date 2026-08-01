@@ -232,7 +232,17 @@ object CompanionRegistry {
         val benched = ArrayList<CompanionData>()
         roster.forEach { data ->
             if (data.dead || data.dismissed) { benched += data; return@forEach }
-            spawn(world, player, data, player.tile)?.let { list += it }
+            val comp = spawn(world, player, data, player.tile)
+            if (comp != null) {
+                list += comp
+            } else {
+                // Spawn failure (world full) must NOT drop the data on the floor: the next persist()
+                // rewrites the blob from live+bench only, which permanently erased the companion and
+                // every piece of gear it wore. Bench it (dismissed, summonable later) instead.
+                data.dismissed = true
+                benched += data
+                logger.error { "spawnFor ${player.username}: could not spawn ${data.name} (world full?) — benched instead of dropped." }
+            }
         }
         byOwner[keyOf(player)] = list
         benchedByOwner[keyOf(player)] = benched

@@ -28,6 +28,14 @@ import java.lang.ref.WeakReference
 object NpcDeathAction {
     private val logger = KotlinLogging.logger {}
 
+    /**
+     * Remaps who gets credit for an npc kill before [KILLER_ATTR] is written. Installed by content
+     * (the companion system points a companion's kills at its owner, so bounties/drops/slayer all
+     * pay the player instead of a transient fake-player whose containers evaporate on despawn).
+     * Identity by default; only NPC deaths run through this — player-death credit is untouched.
+     */
+    var killCreditResolver: (Pawn) -> Pawn = { it }
+
     var deathPlugin: Plugin.() -> Unit = {
         val npc = ctx as Npc
         if (!npc.world.plugins.executeNpcFullDeath(npc)) {
@@ -51,11 +59,12 @@ object NpcDeathAction {
         val respawnDelay = npc.combatDef.respawnDelay
         var killer: Pawn? = null
         npc.damageMap.getMostDamage()?.let {
-            if (it is Player) {
-                killer = it
-                world.getService(LoggerService::class.java, searchSubclasses = true)?.logNpcKill(it, npc)
+            val credited = killCreditResolver(it)
+            if (credited is Player) {
+                killer = credited
+                world.getService(LoggerService::class.java, searchSubclasses = true)?.logNpcKill(credited, npc)
             }
-            npc.attr[KILLER_ATTR] = WeakReference(it)
+            npc.attr[KILLER_ATTR] = WeakReference(credited)
         }
         NpcInfo(npc).setAllOpsInvisible()
         world.plugins.executeNpcPreDeath(npc)
