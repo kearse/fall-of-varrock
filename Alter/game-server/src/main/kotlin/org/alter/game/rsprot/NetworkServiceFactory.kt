@@ -75,10 +75,19 @@ class NetworkServiceFactory(
     }*/
 
     override fun getExceptionHandlers(): ExceptionHandlers<Client> {
+        /*
+         * This is the only thing standing between a throwing packet handler and total silence:
+         * the click is discarded and nothing else notices. Log it with enough context (message
+         * type + payload carries interface/component/slot, plus the connection) that a "clicking
+         * does nothing" report can be traced from the server log alone.
+         */
         val incomingGameMessageConsumerExceptionHandler: IncomingGameMessageConsumerExceptionHandler<Client> =
             IncomingGameMessageConsumerExceptionHandler {
                     session: Session<Client>, incomingGameMessage: IncomingGameMessage, throwable: Throwable ->
-                throwable.printStackTrace()
+                logger.error(throwable) {
+                    "Incoming game message handler threw: message=${incomingGameMessage::class.simpleName} " +
+                        "($incomingGameMessage) channel=${session.ctx.channel()}"
+                }
             }
         return ExceptionHandlers(channelExceptionHandler(), incomingGameMessageConsumerExceptionHandler)
     }
