@@ -1,5 +1,6 @@
 package org.alter.plugins.content.companion
 
+import org.alter.api.ext.message
 import org.alter.game.model.Area
 import org.alter.game.model.Tile
 import org.alter.game.model.World
