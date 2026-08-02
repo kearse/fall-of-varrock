@@ -46,12 +46,13 @@ public interface LofTaskHelperConfig extends Config
 	}
 
 	@ConfigItem(
-		keyName = "hideOnArrival",
-		name = "Hide on arrival",
-		description = "Drop the arrows once you reach the hunting ground — the monsters around you are guidance enough",
+		keyName = "highlightTargets",
+		name = "Highlight assigned monsters",
+		description = "Outline your contract's monsters in the scene and dot them on the minimap once they're in "
+			+ "sight — every variant that counts for the kill is marked, and the arrow hands off to the outlines",
 		position = 4
 	)
-	default boolean hideOnArrival()
+	default boolean highlightTargets()
 	{
 		return true;
 	}
@@ -60,8 +61,8 @@ public interface LofTaskHelperConfig extends Config
 	@ConfigItem(
 		keyName = "arrowColor",
 		name = "Arrow colour",
-		description = "Colour of the task guidance arrows (cyan by default, so they never read as the gold quest arrows)",
-		position = 5
+		description = "Colour of the task guidance arrows and monster outlines (cyan by default, so they never read as the gold quest arrows)",
+		position = 6
 	)
 	default Color arrowColor()
 	{
