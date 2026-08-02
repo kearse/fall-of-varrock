@@ -164,6 +164,29 @@ object Combat {
         }
     }
 
+    /**
+     * OSRS overhead-protection rule: the matching protect prayer blocks 100% of the damage
+     * dealt by an NPC attacker but only 40% of the damage dealt by a player attacker
+     * (accuracy is unaffected in both cases). Bespoke prayer-piercing bosses bypass the
+     * formulas entirely via BossCombat, so no pierce flag is needed here.
+     */
+    fun protectionDamageMultiplier(
+        attacker: Pawn,
+        target: Pawn,
+        combatClass: CombatClass,
+    ): Double {
+        val icon =
+            when (combatClass) {
+                CombatClass.MELEE -> PrayerIcon.PROTECT_FROM_MELEE
+                CombatClass.RANGED -> PrayerIcon.PROTECT_FROM_MISSILES
+                CombatClass.MAGIC -> PrayerIcon.PROTECT_FROM_MAGIC
+            }
+        if (!target.hasPrayerIcon(icon)) {
+            return 1.0
+        }
+        return if (attacker.entityType.isPlayer) 0.6 else 0.0
+    }
+
     fun getNpcXpMultiplier(npc: Npc): Double {
         val attackLvl = npc.stats.getMaxLevel(NpcSkills.ATTACK)
         val strengthLvl = npc.stats.getMaxLevel(NpcSkills.STRENGTH)

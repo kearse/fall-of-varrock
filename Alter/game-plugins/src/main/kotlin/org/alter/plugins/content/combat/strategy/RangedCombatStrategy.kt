@@ -203,12 +203,14 @@ object RangedCombatStrategy : CombatStrategy {
         val mode = CombatConfigs.getXpMode(player)
         val multiplier = if (target is Npc) Combat.getNpcXpMultiplier(target) else 1.0
 
-        if (mode == XpMode.RANGED) {
-            player.addXp(Skills.RANGED, modDamage * 4.0 * multiplier)
-            player.addXp(Skills.HITPOINTS, modDamage * 1.33 * multiplier)
-        } else if (mode == XpMode.SHARED) {
+        if (mode == XpMode.SHARED) {
             player.addXp(Skills.RANGED, modDamage * 2.0 * multiplier)
             player.addXp(Skills.DEFENCE, modDamage * 2.0 * multiplier)
+            player.addXp(Skills.HITPOINTS, modDamage * 1.33 * multiplier)
+        } else {
+            // Any non-longrange style trains Ranged; falling through silently awarded nothing
+            // when the weapon's xp-mode table reported a melee mode (e.g. salamanders).
+            player.addXp(Skills.RANGED, modDamage * 4.0 * multiplier)
             player.addXp(Skills.HITPOINTS, modDamage * 1.33 * multiplier)
         }
     }

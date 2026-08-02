@@ -1,6 +1,7 @@
 package org.alter.plugins.content.combat.formula
 
 import org.alter.game.model.combat.AttackStyle
+import org.alter.game.model.combat.CombatClass
 import org.alter.game.model.combat.CombatStyle
 import org.alter.game.model.entity.Npc
 import org.alter.game.model.entity.Pawn
@@ -11,6 +12,7 @@ import org.alter.plugins.content.combat.Combat
 import org.alter.plugins.content.combat.CombatConfigs
 import org.alter.plugins.content.mechanics.prayer.Prayer
 import org.alter.plugins.content.mechanics.prayer.Prayers
+import org.alter.plugins.content.skills.slayer.SlayerCombat
 
 /**
  * @author Tom <rspsmods@gmail.com>
@@ -52,6 +54,7 @@ object MeleeCombatFormula : CombatFormula {
         if (pawn is Player) {
             base = applyStrengthSpecials(pawn, target, base, specialAttackMultiplier, specialPassiveMultiplier)
         }
+        base = Math.floor(base * Combat.protectionDamageMultiplier(pawn, target, CombatClass.MELEE)).toInt()
         return base
     }
 
@@ -67,7 +70,9 @@ object MeleeCombatFormula : CombatFormula {
     }
 
     private fun getDefenceRoll(pawn: Pawn, target: Pawn): Int {
-        val a = if (pawn is Player) getEffectiveDefenceLevel(pawn) else if (pawn is Npc) getEffectiveDefenceLevel(pawn) else 0.0
+        // The defence roll belongs to the TARGET: their effective Defence level (own prayers,
+        // style bonus, boosts) against the defence bonus matching the attacker's damage type.
+        val a = if (target is Player) getEffectiveDefenceLevel(target) else if (target is Npc) getEffectiveDefenceLevel(target) else 0.0
         val b = getEquipmentDefenceBonus(pawn, target)
 
         var maxRoll = a * (b + 64.0)
@@ -78,16 +83,11 @@ object MeleeCombatFormula : CombatFormula {
     private fun applyStrengthSpecials(player: Player, target: Pawn, base: Int, specialAttackMultiplier: Double, specialPassiveMultiplier: Double): Int {
         var hit = base.toDouble()
 
-        hit *= getEquipmentMultiplier(player)
+        hit *= getEquipmentMultiplier(player, target)
         hit = Math.floor(hit)
 
         hit *= specialAttackMultiplier
         hit = Math.floor(hit)
-
-        if (target.hasPrayerIcon(PrayerIcon.PROTECT_FROM_MELEE)) {
-            hit *= 0.6
-            hit = Math.floor(hit)
-        }
 
         if (specialPassiveMultiplier == 1.0) {
             hit = applyPassiveMultiplier(player, target, hit)
@@ -109,7 +109,7 @@ object MeleeCombatFormula : CombatFormula {
     private fun applyAttackSpecials(player: Player, target: Pawn, base: Double, specialAttackMultiplier: Double): Double {
         var hit = base
 
-        hit *= getEquipmentMultiplier(player)
+        hit *= getEquipmentMultiplier(player, target)
         hit = Math.floor(hit)
 
         hit *= (if (player.hasEquipped(EquipmentType.WEAPON, "item.arclight") && isDemon(target)) 1.7 else specialAttackMultiplier)
@@ -212,23 +212,13 @@ object MeleeCombatFormula : CombatFormula {
         return Math.floor(effectiveLevel)
     }
 
-    private fun getEffectiveStrengthLevel(npc: Npc): Double {
-        var effectiveLevel = npc.stats.getCurrentLevel(NpcSkills.STRENGTH).toDouble()
-        effectiveLevel += 8
-        return effectiveLevel
-    }
+    // NPC effective levels are level + 9: the standard +8 plus the implicit +1 style base
+    // every NPC has (OSRS Wiki, Damage per second/Melee).
+    private fun getEffectiveStrengthLevel(npc: Npc): Double = npc.stats.getCurrentLevel(NpcSkills.STRENGTH) + 9.0
 
-    private fun getEffectiveAttackLevel(npc: Npc): Double {
-        var effectiveLevel = npc.stats.getCurrentLevel(NpcSkills.ATTACK).toDouble()
-        effectiveLevel += 8
-        return effectiveLevel
-    }
+    private fun getEffectiveAttackLevel(npc: Npc): Double = npc.stats.getCurrentLevel(NpcSkills.ATTACK) + 9.0
 
-    private fun getEffectiveDefenceLevel(npc: Npc): Double {
-        var effectiveLevel = npc.stats.getCurrentLevel(NpcSkills.DEFENCE).toDouble()
-        effectiveLevel += 8
-        return effectiveLevel
-    }
+    private fun getEffectiveDefenceLevel(npc: Npc): Double = npc.stats.getCurrentLevel(NpcSkills.DEFENCE) + 9.0
 
     private fun getPrayerStrengthMultiplier(player: Player): Double = when {
         Prayers.isActive(player, Prayer.BURST_OF_STRENGTH) -> 1.05
@@ -259,12 +249,26 @@ object MeleeCombatFormula : CombatFormula {
         else -> 1.0
     }
 
-    private fun getEquipmentMultiplier(player: Player): Double = when {
-        player.hasEquipped(EquipmentType.AMULET, "item.salve_amulet") -> 7.0 / 6.0 // These should only apply if the target is undead..
-        player.hasEquipped(EquipmentType.AMULET, "item.salve_amulet_e") -> 1.2 // These should only apply if the target is undead..
-        // TODO: this should only apply when target is slayer task?
-        player.hasEquipped(EquipmentType.HEAD, *BLACK_MASKS) || player.hasEquipped(EquipmentType.HEAD, *BLACK_MASKS_I) -> 7.0 / 6.0 // This should only apply if you have the target || his category as a Slayer Task
-        else -> 1.0
+    /**
+     * Salve amulets only work against the undead; black masks only against the wearer's
+     * current Slayer assignment. Salve takes precedence and never stacks with the mask.
+     */
+    private fun getEquipmentMultiplier(player: Player, target: Pawn): Double {
+        val undead = isUndead(target)
+        return when {
+            undead && player.hasEquipped(EquipmentType.AMULET, "item.salve_amulet_e") -> 1.2
+            undead && player.hasEquipped(EquipmentType.AMULET, "item.salve_amulet") -> 7.0 / 6.0
+            (player.hasEquipped(EquipmentType.HEAD, *BLACK_MASKS) || player.hasEquipped(EquipmentType.HEAD, *BLACK_MASKS_I)) &&
+                SlayerCombat.isOnTaskAgainst(player, target) -> 7.0 / 6.0
+            else -> 1.0
+        }
+    }
+
+    private fun isUndead(pawn: Pawn): Boolean {
+        if (pawn.entityType.isNpc) {
+            return (pawn as Npc).isSpecies(NpcSpecies.UNDEAD)
+        }
+        return false
     }
 
     private fun applyPassiveMultiplier(pawn: Pawn, target: Pawn, base: Double): Double {

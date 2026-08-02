@@ -749,6 +749,17 @@ class World(val gameContext: GameContext, val devContext: DevContext) {
         val combatDef = plugins.npcCombatDefs.getOrDefault(npc.id, null) ?: NpcCombatDef.DEFAULT
         npc.combatDef = combatDef
         npc.combatDef.bonuses.forEachIndexed { index, bonus -> npc.equipmentBonuses[index] = bonus }
+        // The combat formulas read npc.stats, which initialise to level 1 — without this copy
+        // every monster fought at level 1 regardless of what its combat def registered.
+        // Index order matches NpcSkills: 0=attack, 1=strength, 2=defence, 3=magic, 4=ranged.
+        // Zero levels are skipped so content that stats an npc by hand isn't clobbered on respawn.
+        intArrayOf(combatDef.attack, combatDef.strength, combatDef.defence, combatDef.magic, combatDef.ranged)
+            .forEachIndexed { index, level ->
+                if (level > 0) {
+                    npc.stats.setMaxLevel(index, level)
+                    npc.stats.setCurrentLevel(index, level)
+                }
+            }
         npc.respawns = combatDef.respawnDelay > 0
         npc.setCurrentHp(npc.combatDef.hitpoints)
     }

@@ -114,7 +114,12 @@ object CombatConfigs {
         if (pawn is Player) {
             val default = PLAYER_DEFAULT_ATTACK_SPEED
             val weapon = pawn.getEquipment(EquipmentType.WEAPON) ?: return default
-            return Math.max(MIN_ATTACK_SPEED, weapon.getDef().attackSpeed)
+            var speed = weapon.getDef().attackSpeed
+            // OSRS: the rapid ranged style attacks one tick faster than the weapon's base speed.
+            if (getAttackStyle(pawn) == AttackStyle.RAPID) {
+                speed -= 1
+            }
+            return Math.max(MIN_ATTACK_SPEED, speed)
         }
 
         throw IllegalArgumentException("Invalid pawn type.")

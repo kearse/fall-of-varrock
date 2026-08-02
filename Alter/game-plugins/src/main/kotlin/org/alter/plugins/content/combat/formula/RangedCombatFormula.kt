@@ -3,6 +3,7 @@ package org.alter.plugins.content.combat.formula
 import org.alter.api.*
 import org.alter.api.ext.*
 import org.alter.game.model.combat.AttackStyle
+import org.alter.game.model.combat.CombatClass
 import org.alter.game.model.entity.Npc
 import org.alter.game.model.entity.Pawn
 import org.alter.game.model.entity.Player
@@ -10,6 +11,7 @@ import org.alter.plugins.content.combat.Combat
 import org.alter.plugins.content.combat.CombatConfigs
 import org.alter.plugins.content.mechanics.prayer.Prayer
 import org.alter.plugins.content.mechanics.prayer.Prayers
+import org.alter.plugins.content.skills.slayer.SlayerCombat
 
 /**
  * @author Tom <rspsmods@gmail.com>
@@ -87,6 +89,7 @@ object RangedCombatFormula : CombatFormula {
         if (pawn is Player) {
             base = applyRangedSpecials(pawn, target, base, specialAttackMultiplier, specialPassiveMultiplier)
         }
+        base = Math.floor(base * Combat.protectionDamageMultiplier(pawn, target, CombatClass.RANGED)).toInt()
         return base
     }
 
@@ -116,11 +119,13 @@ object RangedCombatFormula : CombatFormula {
         pawn: Pawn,
         target: Pawn,
     ): Int {
+        // The defence roll belongs to the TARGET: their effective Defence level (own prayers,
+        // style bonus, boosts) against their ranged defence bonus.
         val a =
-            if (pawn is Player) {
-                getEffectiveDefenceLevel(pawn)
-            } else if (pawn is Npc) {
-                getEffectiveDefenceLevel(pawn)
+            if (target is Player) {
+                getEffectiveDefenceLevel(target)
+            } else if (target is Npc) {
+                getEffectiveDefenceLevel(target)
             } else {
                 0.0
             }
@@ -140,7 +145,7 @@ object RangedCombatFormula : CombatFormula {
     ): Int {
         var hit = base.toDouble()
 
-        hit *= getEquipmentMultiplier(player)
+        hit *= getEquipmentMultiplier(player, target)
         hit = Math.floor(hit)
 
         if (specialAttackMultiplier == 1.0) {
@@ -172,11 +177,6 @@ object RangedCombatFormula : CombatFormula {
             hit = Math.floor(hit)
         }
 
-        if (target.hasPrayerIcon(PrayerIcon.PROTECT_FROM_MISSILES)) {
-            hit *= 0.6
-            hit = Math.floor(hit)
-        }
-
         if (specialPassiveMultiplier == 1.0) {
             hit = applyPassiveMultiplier(player, target, hit)
             hit = Math.floor(hit)
@@ -202,7 +202,7 @@ object RangedCombatFormula : CombatFormula {
     ): Double {
         var hit = base
 
-        hit *= getEquipmentMultiplier(player)
+        hit *= getEquipmentMultiplier(player, target)
         hit = Math.floor(hit)
 
         if (specialAttackMultiplier == 1.0) {
@@ -325,23 +325,13 @@ object RangedCombatFormula : CombatFormula {
         return Math.floor(effectiveLevel)
     }
 
-    private fun getEffectiveRangedLevel(npc: Npc): Double {
-        var effectiveLevel = npc.stats.getCurrentLevel(NpcSkills.RANGED).toDouble()
-        effectiveLevel += 8
-        return effectiveLevel
-    }
+    // NPC effective levels are level + 9: the standard +8 plus the implicit +1 style base
+    // every NPC has (OSRS Wiki, Damage per second/Ranged).
+    private fun getEffectiveRangedLevel(npc: Npc): Double = npc.stats.getCurrentLevel(NpcSkills.RANGED) + 9.0
 
-    private fun getEffectiveAttackLevel(npc: Npc): Double {
-        var effectiveLevel = npc.stats.getCurrentLevel(NpcSkills.RANGED).toDouble()
-        effectiveLevel += 8
-        return effectiveLevel
-    }
+    private fun getEffectiveAttackLevel(npc: Npc): Double = npc.stats.getCurrentLevel(NpcSkills.RANGED) + 9.0
 
-    private fun getEffectiveDefenceLevel(npc: Npc): Double {
-        var effectiveLevel = npc.stats.getCurrentLevel(NpcSkills.DEFENCE).toDouble()
-        effectiveLevel += 8
-        return effectiveLevel
-    }
+    private fun getEffectiveDefenceLevel(npc: Npc): Double = npc.stats.getCurrentLevel(NpcSkills.DEFENCE) + 9.0
 
     private fun getPrayerRangedMultiplier(player: Player): Double =
         when {
@@ -373,17 +363,27 @@ object RangedCombatFormula : CombatFormula {
             else -> 1.0
         }
 
-    private fun getEquipmentMultiplier(player: Player): Double =
-        when {
-            player.hasEquipped(EquipmentType.AMULET, "item.salve_amulet") -> 7.0 / 6.0
-            player.hasEquipped(EquipmentType.AMULET, "item.salve_amulet_e") -> 1.2
-            player.hasEquipped(EquipmentType.AMULET, "item.salve_amuleti") -> 1.15
-            player.hasEquipped(EquipmentType.AMULET, "item.salve_amuletei") -> 1.2
-            // TODO: this should only apply when target is slayer task?
-            player.hasEquipped(EquipmentType.HEAD, *BLACK_MASKS) -> 7.0 / 6.0
-            player.hasEquipped(EquipmentType.HEAD, *BLACK_MASKS_I) -> 1.15
+    /**
+     * Only the imbued salve variants and imbued black mask work with ranged in OSRS
+     * (the regular salve/mask are melee-only). Salve requires an undead target, the
+     * mask requires the current Slayer assignment, and salve takes precedence.
+     */
+    private fun getEquipmentMultiplier(player: Player, target: Pawn): Double {
+        val undead = isUndead(target)
+        return when {
+            undead && player.hasEquipped(EquipmentType.AMULET, "item.salve_amuletei") -> 1.2
+            undead && player.hasEquipped(EquipmentType.AMULET, "item.salve_amuleti") -> 1.15
+            player.hasEquipped(EquipmentType.HEAD, *BLACK_MASKS_I) && SlayerCombat.isOnTaskAgainst(player, target) -> 1.15
             else -> 1.0
         }
+    }
+
+    private fun isUndead(pawn: Pawn): Boolean {
+        if (pawn.entityType.isNpc) {
+            return (pawn as Npc).isSpecies(NpcSpecies.UNDEAD)
+        }
+        return false
+    }
 
     private fun applyPassiveMultiplier(
         player: Player,
