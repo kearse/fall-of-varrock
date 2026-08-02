@@ -71,7 +71,6 @@ class GrandExchangeClickPlugin(
         }
         bindBooth(BOOTH_10061)
         bindBooth(BOOTH_10060)
-        bindBooth(BOOTH_30389)
 
         // New offer: the reliable native flow (Buy/Sell dialog → the ::item search → two number
         // entries), then create + re-stream the board. (A drawn in-window setup box is a v2 polish.)
@@ -218,14 +217,13 @@ class GrandExchangeClickPlugin(
         // The clickable desk ids in the hub (all bound to open the GE, def-probed first).
         const val BOOTH_10061 = "object.grand_exchange_booth_10061"
         const val BOOTH_10060 = "object.grand_exchange_booth"
-        const val BOOTH_30389 = "object.null_30389"
 
         // Ring SW corner: the 6x6 hub spans 3219-3224 x 3208-3213, putting the 2x2 pillar
         // (dx 2, dz 2) on the old SOUTH fountain's tile (3221,3210). The courtyard hill
-        // starts around x<=3220, so the ring's west wall renders a step up the slope —
-        // owner-accepted: this placement was preferred over shifting the hub east onto
-        // fully flat ground (tried at HUB_X=3221 and reverted). A real fix would flatten
-        // those hill tiles via the terrain-cache workflow (per-tile terrain splicing).
+        // starts around x<=3220, which is why the two WEST desks are omitted from
+        // HUB_PARTS (they floated at the slope's height; shifting the whole hub east was
+        // tried at HUB_X=3221 and reverted — the owner prefers this spot). A real fix
+        // would flatten those hill tiles via the terrain-cache workflow.
         // (The north fountain @ 3221,3226 is the teleport portal — leave it alone.)
         const val HUB_X = 3219
         const val HUB_Z = 3208
@@ -248,11 +246,13 @@ class GrandExchangeClickPlugin(
             HubPart("object.null_10059", 1, 1, 9, 1),
             HubPart("object.null_10062", 4, 1, 9, 0),
             HubPart("object.null_10059", 5, 1, 1, 0),
-            // middle rows: west/east desks + the central 2x2 pillar
-            HubPart(BOOTH_10060, 0, 2, 0, 2),
+            // middle rows: east desks + the central 2x2 pillar. The WEST desks (dx 0,
+            // dz 2/3 — 10060 and 30389 in the GE original) are deliberately omitted:
+            // their tiles ride the courtyard hill and rendered a step above the ring
+            // (locs always draw at their tile's terrain height), so the ring stays
+            // open on the hillside instead.
             HubPart("object.null_10063", 2, 2, 10, 0),
             HubPart(BOOTH_10060, 5, 2, 0, 0),
-            HubPart(BOOTH_30389, 0, 3, 0, 2),
             HubPart(BOOTH_10060, 5, 3, 0, 0),
             // north face: corners + the two north desks
             HubPart("object.null_10059", 0, 4, 1, 2),
