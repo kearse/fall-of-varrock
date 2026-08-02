@@ -107,7 +107,7 @@ fun Pawn.dealHit(
     val accuracy = formula.getAccuracy(this, target)
     val maxHit = formula.getMaxHit(this, target)
     val landHit = accuracy >= world.randomDouble()
-    return dealHit(target, maxHit, landHit, delay, onHit)
+    return dealHit(target, maxHit, landHit, delay, onHit = onHit)
 }
 
 fun Pawn.dealHit(
