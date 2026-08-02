@@ -137,7 +137,9 @@ object MeleeCombatFormula : CombatFormula {
             CombatStyle.STAB -> BonusSlot.ATTACK_STAB
             CombatStyle.SLASH -> BonusSlot.ATTACK_SLASH
             CombatStyle.CRUSH -> BonusSlot.ATTACK_CRUSH
-            else -> throw IllegalStateException("Invalid combat style. $combatStyle")
+            // NONE/odd styles must not throw mid-hit (it wedges the combat queue) — crush
+            // is the unarmed default.
+            else -> BonusSlot.ATTACK_CRUSH
         }
         return pawn.getBonus(bonus).toDouble()
     }
@@ -148,7 +150,7 @@ object MeleeCombatFormula : CombatFormula {
             CombatStyle.STAB -> BonusSlot.DEFENCE_STAB
             CombatStyle.SLASH -> BonusSlot.DEFENCE_SLASH
             CombatStyle.CRUSH -> BonusSlot.DEFENCE_CRUSH
-            else -> throw IllegalStateException("Invalid combat style. $combatStyle")
+            else -> BonusSlot.DEFENCE_CRUSH
         }
         return target.getBonus(bonus).toDouble()
     }

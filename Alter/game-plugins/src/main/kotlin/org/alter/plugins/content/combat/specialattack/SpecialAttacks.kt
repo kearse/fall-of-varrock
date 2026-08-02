@@ -61,8 +61,13 @@ object SpecialAttacks {
         val resolvedTarget =
             target ?: run {
                 val recent = player.getCombatTarget() ?: player.attr[LAST_HIT_ATTR]?.get()
+                // Instant specs are melee-adjacent only: bordering handles big NPCs correctly
+                // (a Chebyshev-to-SW-tile check let 5x5 bosses be specced from 5 tiles out).
                 if (recent == null || recent.isDead() ||
-                    player.tile.getChebyshevDistance(recent.tile) > recent.getSize() ||
+                    !Combat.areBordering(
+                        player.tile.x, player.tile.z, player.getSize(), player.getSize(),
+                        recent.tile.x, recent.tile.z, recent.getSize(), recent.getSize(),
+                    ) ||
                     !Combat.canEngage(player, recent)
                 ) {
                     return false
@@ -74,11 +79,13 @@ object SpecialAttacks {
             return false
         }
 
-        AttackTab.setEnergy(player, AttackTab.getEnergy(player) - special.energyRequired)
-
         val combatContext = CombatContext(world, player)
         combatContext.target = resolvedTarget
         special.attack(combatContext)
+
+        // Deduct AFTER the attack body: a spec that throws (bad anim id, missing ammo
+        // handling) must not silently eat the player's energy.
+        AttackTab.setEnergy(player, AttackTab.getEnergy(player) - special.energyRequired)
 
         if (target == null) {
             // Instant specs still count as an attack (skull, PJ timer, last-hit

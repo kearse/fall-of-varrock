@@ -59,10 +59,27 @@ class CombatPlugin(
      */
     suspend fun cycle(pawn: Pawn, queue: QueueTask): Boolean {
         val target = pawn.getCombatTarget() ?: return false
+        // Re-arm autocast BEFORE resolving the strategy: on the first engagement tick the
+        // CASTING_SPELL attr is not yet set, so resolving first made the loop pick the
+        // melee strategy (range 1) and open every autocast fight with a melee swing.
+        if (pawn is Player &&
+            !pawn.attr.has(Combat.CASTING_SPELL) &&
+            pawn.getVarbit(Combat.SELECTED_AUTOCAST_VARBIT) != 0 &&
+            CombatConfigs.canAutocast(pawn)
+        ) {
+            val spell =
+                CombatSpell.values.firstOrNull { it.autoCastId == pawn.getVarbit(Combat.SELECTED_AUTOCAST_VARBIT) }
+            if (spell != null) {
+                pawn.attr[Combat.CASTING_SPELL] = spell
+            }
+        }
         val strategy = CombatConfigs.getCombatStrategy(pawn)
         val attackRange = strategy.getAttackRange(pawn)
         var routeLogic = 1
         if (target != pawn.attr[FACING_PAWN_ATTR]?.get()) {
+            // Facing broke (another plugin re-faced us): clear the combat focus too, or the
+            // stale attr keeps this pawn "in combat" for aggro and single-way checks.
+            Combat.reset(pawn)
             return false
         }
         if (pawn.entityType.isNpc) {
@@ -179,12 +196,15 @@ class CombatPlugin(
                 pawn.stopMovement()
             }
         }
-        while (pawn.hasMoveDestination() || !reached) {
-            queue.wait(1)
+        if (pawn.hasMoveDestination() || !reached) {
+            // Still chasing: let the OUTER combat loop wait a tick and call cycle() again.
+            // (This used to tail-recurse across the suspension point, retaining one
+            // continuation frame per tick of pursuit.)
             if (!target.isAlive()) {
+                Combat.reset(pawn)
                 return false
             }
-            return cycle(pawn, queue)
+            return true
         }
         if (!Combat.canEngage(pawn, target)) {
             Combat.reset(pawn)
@@ -197,18 +217,9 @@ class CombatPlugin(
         }
         if (pawn is Player) {
             pawn.setVarp(Combat.PRIORITY_PID_VARP, target.index)
-            if (!pawn.attr.has(Combat.CASTING_SPELL) &&
-                pawn.getVarbit(Combat.SELECTED_AUTOCAST_VARBIT) != 0 &&
-                CombatConfigs.canAutocast(pawn)
-            ) {
-                val spell =
-                    CombatSpell.values.firstOrNull { it.autoCastId == pawn.getVarbit(Combat.SELECTED_AUTOCAST_VARBIT) }
-                if (spell != null) {
-                    pawn.attr[Combat.CASTING_SPELL] = spell
-                }
-            }
         }
         if (target != pawn.attr[FACING_PAWN_ATTR]?.get()) {
+            Combat.reset(pawn)
             return false
         }
         if (Combat.isAttackDelayReady(pawn)) {

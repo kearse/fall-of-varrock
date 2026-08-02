@@ -23,6 +23,7 @@ import net.rsprot.protocol.message.OutgoingGameMessage
 import org.alter.game.model.*
 import org.alter.game.model.appearance.Appearance
 import org.alter.game.model.attr.CURRENT_SHOP_ATTR
+import org.alter.game.model.attr.LAST_HIT_BY_ATTR
 import org.alter.game.model.attr.LEVEL_UP_INCREMENT
 import org.alter.game.model.attr.LEVEL_UP_OLD_XP
 import org.alter.game.model.attr.LEVEL_UP_SKILL_ID
@@ -291,12 +292,14 @@ open class Player(world: World) : Pawn(world) {
              * their channel has been inactive for a while.
              *
              * We do allow players to disconnect even if they are in combat, but
-             * only if the most recent damage dealt to them are by npcs.
+             * only if their current aggressor is an npc. The gate is WHO is attacking,
+             * not whether damage landed — gating on the damage map let a target x-log
+             * through a PKer's opening misses/splashes.
              */
             val stopLogout =
-                timers.has(
-                    ACTIVE_COMBAT_TIMER,
-                ) && damageMap.getAll(type = EntityType.PLAYER, timeFrameMs = 10_000).isNotEmpty()
+                timers.has(ACTIVE_COMBAT_TIMER) &&
+                    (attr[LAST_HIT_BY_ATTR]?.get() is Player ||
+                        damageMap.getAll(type = EntityType.PLAYER, timeFrameMs = 10_000).isNotEmpty())
             val forceLogout = timers.exists(FORCE_DISCONNECTION_TIMER) && !timers.has(FORCE_DISCONNECTION_TIMER)
 
             if (!stopLogout || forceLogout) {

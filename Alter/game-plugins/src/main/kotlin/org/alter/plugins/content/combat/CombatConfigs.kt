@@ -90,6 +90,10 @@ object CombatConfigs {
                 // which the combat loop consults before re-arming CASTING_SPELL each attack.
                 pawn.attr.has(Combat.CASTING_SPELL) -> CombatClass.MAGIC
                 pawn.hasWeaponType(WeaponType.BOW, WeaponType.CHINCHOMPA, WeaponType.CROSSBOW, WeaponType.THROWN) -> CombatClass.RANGED
+                // Salamanders: scorch (0) is melee; blaze/flare fight at range. Both non-melee
+                // styles route through the ranged strategy — the previous unconditional MELEE
+                // class made the style/xp tables throw on every blaze/flare attack.
+                pawn.hasWeaponType(WeaponType.SALAMANDER) && pawn.getAttackStyle() != 0 -> CombatClass.RANGED
                 else -> CombatClass.MELEE
             }
         }
@@ -106,6 +110,9 @@ object CombatConfigs {
     fun canAutocast(player: Player): Boolean =
         player.hasWeaponType(WeaponType.MAGIC_STAFF, WeaponType.STAFF, WeaponType.TRIDENT)
 
+    /** OSRS: every standard/ancient combat spell casts at 5 ticks. */
+    private const val SPELL_CAST_SPEED = 5
+
     fun getAttackDelay(pawn: Pawn): Int {
         if (pawn is Npc) {
             return pawn.combatDef.attackSpeed
@@ -113,8 +120,19 @@ object CombatConfigs {
 
         if (pawn is Player) {
             val default = PLAYER_DEFAULT_ATTACK_SPEED
+            // OSRS: standard/ancient combat spells always cast at 5 ticks regardless of the
+            // weapon held; only powered staves (tridents) attack at the weapon's own speed.
+            // Without this, autocasting with a 4-tick wand barraged 25% faster than OSRS.
+            if (pawn.attr.has(Combat.CASTING_SPELL) && !pawn.hasWeaponType(WeaponType.TRIDENT)) {
+                return SPELL_CAST_SPEED
+            }
             val weapon = pawn.getEquipment(EquipmentType.WEAPON) ?: return default
             var speed = weapon.getDef().attackSpeed
+            if (speed <= 0) {
+                // A missing cache/override attack rate is -1 — that must not become a
+                // 1-tick weapon via the MIN_ATTACK_SPEED floor below.
+                speed = default
+            }
             // OSRS: the rapid ranged style attacks one tick faster than the weapon's base speed.
             if (getAttackStyle(pawn) == AttackStyle.RAPID) {
                 speed -= 1

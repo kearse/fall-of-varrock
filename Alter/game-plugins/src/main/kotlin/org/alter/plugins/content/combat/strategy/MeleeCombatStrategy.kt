@@ -108,7 +108,12 @@ object MeleeCombatStrategy : CombatStrategy {
                 player.addXp(Skills.DEFENCE, modDamage * 1.33 * multiplier)
                 player.addXp(Skills.HITPOINTS, modDamage * 1.33 * multiplier)
             }
-            else -> throw IllegalStateException("Unknown $mode in MeleeCombatStrategy.")
+            else -> {
+                // A weapon whose xp-mode table reports a non-melee mode while melee-attacking
+                // (e.g. salamander tables) must not throw — default to Attack xp.
+                player.addXp(Skills.ATTACK, modDamage * 4.0 * multiplier)
+                player.addXp(Skills.HITPOINTS, modDamage * 1.33 * multiplier)
+            }
         }
     }
 }

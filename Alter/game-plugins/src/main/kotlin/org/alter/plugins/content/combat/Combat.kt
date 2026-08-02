@@ -424,15 +424,17 @@ object Combat {
                     return false
                 }
 
-                // Single-combat: you can't pile a target who's already fighting another player,
+                // Single-combat: you can't pile a target who's already fighting another PLAYER,
                 // and the PJ timer keeps them protected for 20 ticks after their last exchange.
+                // NPC fights don't count here — a player killing green dragons in the single
+                // zone is exactly who single-way PvP exists to let you attack.
                 if (PvpZones.isSingle(target.tile)) {
-                    val theirTarget = target.getCombatTarget()
+                    val theirTarget = target.getCombatTarget()?.takeIf { it is Player }
                     if (theirTarget != null && theirTarget != pawn) {
                         pawn.message("${target.username} is already in combat.")
                         return false
                     }
-                    if (pjBlocked(pawn, target)) {
+                    if (pjBlocked(pawn, target, playersOnly = true)) {
                         pawn.message("${target.username} is already in combat.")
                         return false
                     }
@@ -445,20 +447,24 @@ object Combat {
     /**
      * True when [target] is under PJ protection against [aggressor]: their PJ timer is
      * running and [aggressor] is not the opponent they are currently exchanging with.
+     * With [playersOnly] (the PvP branch), only PLAYER opponents grant protection —
+     * being mid-fight with an NPC must not make you unattackable to PKers.
      */
     private fun pjBlocked(
         aggressor: Pawn,
         target: Pawn,
+        playersOnly: Boolean = false,
     ): Boolean {
         if (!target.timers.has(PJ_TIMER)) {
             return false
         }
-        val lastHitBy = target.attr[LAST_HIT_BY_ATTR]?.get()
-        val lastHit = target.attr[LAST_HIT_ATTR]?.get()
-        if (lastHitBy == null && lastHit == null) {
+        val partners =
+            listOfNotNull(target.attr[LAST_HIT_BY_ATTR]?.get(), target.attr[LAST_HIT_ATTR]?.get())
+                .filter { !playersOnly || it is Player }
+        if (partners.isEmpty()) {
             return false
         }
-        return aggressor != lastHitBy && aggressor != lastHit
+        return aggressor !in partners
     }
 
     private fun getStrategy(combatClass: CombatClass): CombatStrategy =
