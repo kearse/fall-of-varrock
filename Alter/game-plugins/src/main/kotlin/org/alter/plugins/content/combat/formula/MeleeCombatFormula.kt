@@ -36,14 +36,7 @@ object MeleeCombatFormula : CombatFormula {
     override fun getAccuracy(pawn: Pawn, target: Pawn, specialAttackMultiplier: Double): Double {
         val attack = getAttackRoll(pawn, target, specialAttackMultiplier)
         val defence = getDefenceRoll(pawn, target)
-
-        val accuracy: Double
-        if (attack > defence) {
-            accuracy = 1.0 - (defence + 2.0) / (2.0 * (attack + 1.0))
-        } else {
-            accuracy = attack / (2.0 * (defence + 1))
-        }
-        return accuracy
+        return CombatMath.hitChance(attack, defence)
     }
 
     override fun getMaxHit(pawn: Pawn, target: Pawn, specialAttackMultiplier: Double, specialPassiveMultiplier: Double): Int {

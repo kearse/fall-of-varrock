@@ -1,0 +1,39 @@
+package org.alter.plugins.content.combat.formula
+
+/**
+ * The pure OSRS combat math, shared by all three combat formulas and unit-testable
+ * without a live world (see CombatMathTests). Formulas per the OSRS Wiki
+ * (Damage per second/Melee):
+ *
+ *   effectiveLevel = floor( floor(visible × prayer) + styleBonus + 8 )   [× void, floored]
+ *   maxRoll        = effectiveLevel × (equipmentBonus + 64)
+ *   maxHit         = floor( 0.5 + effectiveStrength × (strengthBonus + 64) / 640 )
+ *   P(hit)         = attack > defence ? 1 − (defence + 2) / (2 × (attack + 1))
+ *                                     : attack / (2 × (defence + 1))
+ */
+object CombatMath {
+    fun hitChance(attackRoll: Int, defenceRoll: Int): Double =
+        if (attackRoll > defenceRoll) {
+            1.0 - (defenceRoll + 2.0) / (2.0 * (attackRoll + 1.0))
+        } else {
+            attackRoll / (2.0 * (defenceRoll + 1))
+        }
+
+    fun effectiveLevel(
+        visibleLevel: Int,
+        prayerMultiplier: Double = 1.0,
+        styleBonus: Int = 0,
+        voidMultiplier: Double = 1.0,
+    ): Double {
+        var level = Math.floor(visibleLevel * prayerMultiplier) + styleBonus + 8.0
+        if (voidMultiplier != 1.0) {
+            level = Math.floor(level * voidMultiplier)
+        }
+        return Math.floor(level)
+    }
+
+    fun maxRoll(effectiveLevel: Double, equipmentBonus: Double): Int = (effectiveLevel * (equipmentBonus + 64.0)).toInt()
+
+    fun baseMaxHit(effectiveStrength: Double, strengthBonus: Double): Int =
+        Math.floor(0.5 + effectiveStrength * (strengthBonus + 64.0) / 640.0).toInt()
+}
