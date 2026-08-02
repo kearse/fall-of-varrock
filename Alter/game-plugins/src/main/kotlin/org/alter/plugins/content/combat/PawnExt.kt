@@ -11,6 +11,7 @@ import org.alter.game.model.Tile
 import org.alter.game.model.attr.COMBAT_TARGET_FOCUS_ATTR
 import org.alter.game.model.combat.CombatClass
 import org.alter.game.model.combat.PawnHit
+import org.alter.game.model.entity.Npc
 import org.alter.game.model.entity.Pawn
 import org.alter.game.model.entity.Player
 import org.alter.game.model.entity.Projectile
@@ -18,6 +19,7 @@ import org.alter.game.model.queue.QueueTask
 import org.alter.game.model.timer.ACTIVE_COMBAT_TIMER
 import org.alter.plugins.content.combat.formula.CombatFormula
 import org.alter.plugins.content.combat.strategy.ranged.RangedProjectile
+import org.alter.plugins.content.mechanics.poison.Poison
 import java.lang.ref.WeakReference
 
 /**
@@ -108,6 +110,22 @@ fun Pawn.dealHit(
         hit.addAction {
             val pawn = this@dealHit
             target.damageMap.add(pawn, hit.hitmarks.sumOf { it.damage })
+        }
+        // NPC poison/venom chances from the combat def, rolled when a hit lands.
+        if (this is Npc) {
+            val def = combatDef
+            if (def.venomChance > 0.0 || def.poisonChance > 0.0) {
+                hit.addAction {
+                    if (!target.isDead()) {
+                        when {
+                            def.venomChance > 0.0 && world.randomDouble() < def.venomChance ->
+                                Poison.venom(target)
+                            def.poisonChance > 0.0 && world.randomDouble() < def.poisonChance ->
+                                Poison.poison(target, initialDamage = 6)
+                        }
+                    }
+                }
+            }
         }
     }
     return pawnHit

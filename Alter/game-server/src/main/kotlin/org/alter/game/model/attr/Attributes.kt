@@ -447,6 +447,12 @@ val LAST_HIT_BY_ATTR = AttributeKey<WeakReference<Pawn>>()
 val POISON_TICKS_LEFT_ATTR = AttributeKey<Int>(persistenceKey = "poison_ticks_left", resetOnDeath = true)
 
 /**
+ * The damage venom will deal on its next proc (6 at onset, +2 per proc, capped at 20).
+ * A value > 0 means the pawn is envenomed; venom shares the poison timer channel.
+ */
+val VENOM_DAMAGE_ATTR = AttributeKey<Int>(persistenceKey = "venom_damage", resetOnDeath = true)
+
+/**
  * The amount of antifire potion charges left.
  */
 val ANTIFIRE_POTION_CHARGES_ATTR = AttributeKey<Int>(persistenceKey = "antifire_potion_charges", resetOnDeath = true)

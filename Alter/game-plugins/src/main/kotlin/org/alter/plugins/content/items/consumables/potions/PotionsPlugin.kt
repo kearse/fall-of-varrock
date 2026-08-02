@@ -8,6 +8,7 @@ import org.alter.game.model.World
 import org.alter.game.model.attr.ANTIFIRE_POTION_CHARGES_ATTR
 import org.alter.game.model.attr.DRAGONFIRE_IMMUNITY_ATTR
 import org.alter.game.model.attr.POISON_TICKS_LEFT_ATTR
+import org.alter.game.model.attr.VENOM_DAMAGE_ATTR
 import org.alter.game.model.entity.Player
 import org.alter.game.model.timer.ANTIFIRE_TIMER
 import org.alter.game.model.timer.POISON_TIMER
@@ -212,9 +213,16 @@ class PotionsPlugin(
         p.sendRunEnergy(p.runEnergy.toInt())
     }
 
-    /** Cure existing poison/venom and grant immunity for [immunityTicks] poison ticks
-     *  (stored as a negative tick counter that counts back up to zero). */
+    /** Cure existing poison and grant immunity for [immunityTicks] poison ticks
+     *  (stored as a negative tick counter that counts back up to zero). Against venom,
+     *  only anti-venom clears it — a weaker cure converts the venom to regular poison
+     *  at its current damage, exactly as in OSRS. */
     private fun curePoison(p: Player, immunityTicks: Int) {
+        if (Poison.isEnvenomed(p) && immunityTicks < IMMUNITY_ANTIVENOM) {
+            Poison.convertVenomToPoison(p)
+            return
+        }
+        p.attr.remove(VENOM_DAMAGE_ATTR)
         p.attr[POISON_TICKS_LEFT_ATTR] = -immunityTicks
         p.timers[POISON_TIMER] = 1
         Poison.setHpOrb(p, Poison.OrbState.NONE)
@@ -233,11 +241,11 @@ class PotionsPlugin(
         const val POTION_DELAY_TICKS = 3
         const val MAX_RUN_ENERGY = 10000.0
 
-        // Poison-cure immunity in POISON_TIMER fires (each = 25 ticks ≈ 15s).
-        const val IMMUNITY_ANTIPOISON = 6   // 90s
-        const val IMMUNITY_SUPER = 24       // 6 min
-        const val IMMUNITY_ANTIDOTE = 36    // 9 min
-        const val IMMUNITY_ANTIVENOM = 48   // 12 min
+        // Poison-cure immunity in POISON_TIMER fires (each = 30 ticks = 18s).
+        const val IMMUNITY_ANTIPOISON = 5   // 90s
+        const val IMMUNITY_SUPER = 20       // 6 min
+        const val IMMUNITY_ANTIDOTE = 30    // 9 min
+        const val IMMUNITY_ANTIVENOM = 40   // 12 min
 
         // Antifire protection duration in game ticks (0.6s each).
         const val ANTIFIRE_REGULAR = 600          // 6 min
