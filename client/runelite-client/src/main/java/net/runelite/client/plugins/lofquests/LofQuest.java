@@ -32,14 +32,14 @@ enum LofQuest
 			new LofQuestStep(0, "Speak to the Recruiting Sergeant", "By the Lumbridge gate.", new WorldPoint(3217, 3220, 0)),
 			new LofQuestStep(1, "Clear the back woods", "Kill 5 goblins that slipped the defences.", new WorldPoint(3193, 3221, 0)),
 			new LofQuestStep(2, "Report back to the Sergeant", new WorldPoint(3217, 3220, 0)),
-			new LofQuestStep(3, "Buy your first rank from Duke Horacio", "He's in the market, by the Slayer Master.", new WorldPoint(3222, 3218, 0)),
-			new LofQuestStep(4, "Complete Vannaka's war-contract", "Take the contract, then slay the castle rats.", new WorldPoint(3219, 3215, 0)),
-			new LofQuestStep(5, "Report back to Vannaka", new WorldPoint(3219, 3215, 0)),
+			new LofQuestStep(3, "Buy your first rank from Duke Horacio", "He's in the market, by the Slayer Master.", new WorldPoint(3220, 3211, 0)),
+			new LofQuestStep(4, "Complete Vannaka's war-contract", "Take the contract, then slay the castle rats.", new WorldPoint(3222, 3212, 0)),
+			new LofQuestStep(5, "Report back to Vannaka", new WorldPoint(3222, 3212, 0)),
 			new LofQuestStep(6, "Mine copper and tin in The Mire", "The skilling grounds south-east of the castle.", new WorldPoint(3237, 3189, 0)),
 			new LofQuestStep(7, "Smelt a bronze bar", "At The Mire's furnace.", new WorldPoint(3237, 3192, 0)),
 			new LofQuestStep(8, "Smith a bronze dagger", "At The Mire's anvil.", new WorldPoint(3238, 3196, 0)),
 			new LofQuestStep(9, "Deliver the dagger to the Quartermaster", "The Supply Officer by the crypt in The Mire.", new WorldPoint(3248, 3193, 0)),
-			new LofQuestStep(10, "Report back to Vannaka for your reward", new WorldPoint(3219, 3215, 0))
+			new LofQuestStep(10, "Report back to Vannaka for your reward", new WorldPoint(3222, 3212, 0))
 		),
 		Arrays.asList(
 			"Citizen-soldier status (the war's contracts open up)",
@@ -57,10 +57,10 @@ enum LofQuest
 		6, // DONE ordinal (RANK was inserted at 5 — see WarPrepChain.Step)
 		Arrays.asList(
 			new LofQuestStep(1, "Train Prayer to 37", "Use the dragon bones on the Lumbridge church altar.", new WorldPoint(3242, 3207, 0)),
-			new LofQuestStep(2, "Return to Vannaka to be armed", "He kits you out for the tower.", new WorldPoint(3219, 3215, 0)),
+			new LofQuestStep(2, "Return to Vannaka to be armed", "He kits you out for the tower.", new WorldPoint(3222, 3212, 0)),
 			new LofQuestStep(3, "Clear the Wizard Tower", "Speak to the Void Knight at the bridge; take the grimoire from the Archmage.", new WorldPoint(3113, 3208, 0)),
-			new LofQuestStep(4, "Return to Vannaka with word of the grimoire", new WorldPoint(3219, 3215, 0)),
-			new LofQuestStep(5, "Buy your next rank from Duke Horacio", "Vannaka's purse covers it — heavier armour awaits.", new WorldPoint(3222, 3218, 0))
+			new LofQuestStep(4, "Return to Vannaka with word of the grimoire", new WorldPoint(3222, 3212, 0)),
+			new LofQuestStep(5, "Buy your next rank from Duke Horacio", "Vannaka's purse covers it — heavier armour awaits.", new WorldPoint(3220, 3211, 0))
 		),
 		Arrays.asList(
 			"Protect from Magic (Prayer 37)",
@@ -85,7 +85,7 @@ enum LofQuest
 			new LofQuestStep(2, "Thin out the rogues of Fallen Falador", "Cut down 30 cutthroats in the raid city's streets. Only the banks are safe — risk little.", new WorldPoint(3013, 3353, 0)),
 			new LofQuestStep(3, "Kill your first assigned Rogue Knight", "The Sergeant's marker leads to the camp; ::knights tracks the ladder.", null),
 			new LofQuestStep(4, "Return to the Recruiting Sergeant", "Report the knight's fall and claim your purse.", new WorldPoint(3217, 3220, 0)),
-			new LofQuestStep(5, "Rise to Knight at Duke Horacio", "The Sergeant's purse covers the climb — Soldier, then Knight.", new WorldPoint(3222, 3218, 0))
+			new LofQuestStep(5, "Rise to Knight at Duke Horacio", "The Sergeant's purse covers the climb — Soldier, then Knight.", new WorldPoint(3220, 3211, 0))
 		),
 		Arrays.asList(
 			"Knighthood — rune armour",
@@ -104,10 +104,10 @@ enum LofQuest
 		// World anchors are best-effort — TUNE against the live map.
 		Arrays.asList(
 			new LofQuestStep(1, "Train Ranged to 40", "Loose arrows on the front's foes — the goblin woods or Fallen Varrock.", new WorldPoint(3193, 3221, 0)),
-			new LofQuestStep(2, "Return to Vannaka for the marksman's kit", new WorldPoint(3219, 3215, 0)),
+			new LofQuestStep(2, "Return to Vannaka for the marksman's kit", new WorldPoint(3222, 3212, 0)),
 			new LofQuestStep(3, "Fell 20 enemies with a ranged weapon", "Bow, crossbow or thrown — Fallen Varrock's rogues will do.", new WorldPoint(3212, 3428, 0)),
-			new LofQuestStep(4, "Report back to Vannaka", new WorldPoint(3219, 3215, 0)),
-			new LofQuestStep(5, "Rise to Lord at Duke Horacio", "Vannaka's purse covers the climb — heavier armour and command await.", new WorldPoint(3222, 3218, 0))
+			new LofQuestStep(4, "Report back to Vannaka", new WorldPoint(3222, 3212, 0)),
+			new LofQuestStep(5, "Rise to Lord at Duke Horacio", "Vannaka's purse covers the climb — heavier armour and command await.", new WorldPoint(3220, 3211, 0))
 		),
 		Arrays.asList(
 			"The rank of Lord — dragon armour",
@@ -123,11 +123,11 @@ enum LofQuest
 			+ "a purse that raises you to Minister.",
 		6, // DONE ordinal (WarPrepSurvival.Step)
 		Arrays.asList(
-			new LofQuestStep(1, "Raise your Hitpoints to 60", "Hitpoints climbs as you fight — toughen up.", new WorldPoint(3222, 3220, 0)),
-			new LofQuestStep(2, "Return to General Zo for a survival kit", new WorldPoint(3222, 3220, 0)),
+			new LofQuestStep(1, "Raise your Hitpoints to 60", "Hitpoints climbs as you fight — toughen up.", new WorldPoint(3220, 3210, 0)),
+			new LofQuestStep(2, "Return to General Zo for a survival kit", new WorldPoint(3220, 3210, 0)),
 			new LofQuestStep(3, "Endure the Fight Cave to wave 6", "Enter with ::arena — manage your health and outlast it.", null),
-			new LofQuestStep(4, "Report back to General Zo", new WorldPoint(3222, 3220, 0)),
-			new LofQuestStep(5, "Rise to Minister at Duke Horacio", "General Zo's purse covers the climb.", new WorldPoint(3222, 3218, 0))
+			new LofQuestStep(4, "Report back to General Zo", new WorldPoint(3220, 3210, 0)),
+			new LofQuestStep(5, "Rise to Minister at Duke Horacio", "General Zo's purse covers the climb.", new WorldPoint(3220, 3211, 0))
 		),
 		Arrays.asList(
 			"The rank of Minister — within reach of the crown",
