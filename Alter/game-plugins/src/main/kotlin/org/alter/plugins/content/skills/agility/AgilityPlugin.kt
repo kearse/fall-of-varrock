@@ -370,7 +370,7 @@ class AgilityPlugin(
             locShape = o.objType,
             blockAccessFlags = def.clipMask,
         )
-        player.walkRoute(route, MovementQueue.StepType.NORMAL)
+        player.walkRoute(route, MovementQueue.StepType.NORMAL, force = true) // scripted course walk must move even if frozen
         var cycles = 0
         while (player.hasMoveDestination() && cycles++ < ARRIVE_GUARD) task.wait(1)
         return route.success && player.tile.isWithinRadius(o.tile, 2)

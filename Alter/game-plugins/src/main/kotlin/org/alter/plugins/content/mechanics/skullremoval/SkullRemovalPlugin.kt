@@ -30,5 +30,14 @@ class SkullRemovalPlugin(
             // syncOverhead clears the icon when keyless, matching the old behaviour.
             LootKeys.syncOverhead(player)
         }
+
+        // OSRS: dying clears your skull. This is a POST-death hook, so the death-drop
+        // calculation has already used the skulled state (keep-0 applies to THIS death,
+        // the skull is gone for the next one). syncOverhead re-derives the icon from the
+        // now-removed timer and the (confiscated) loot keys.
+        onPlayerDeath {
+            player.timers.remove(SKULL_ICON_DURATION_TIMER)
+            LootKeys.syncOverhead(player)
+        }
     }
 }
