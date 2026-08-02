@@ -51,7 +51,10 @@ case "$cmd" in
     compose ps
     ;;
   logs)
-    compose logs --tail="${TAIL:-200}" "$@"
+    # TAIL=200 misses anything older than ~20 min of game chatter; 3000 reaches back
+    # past a boot that happened within the last few hours, so `logs game` can answer
+    # "what did the server log at startup" without a disruptive restart.
+    compose logs --tail="${TAIL:-3000}" "$@"
     ;;
   dump-ge-locs)
     # READ-ONLY diagnostic: list the locs on the ORIGINAL Grand Exchange floor so
