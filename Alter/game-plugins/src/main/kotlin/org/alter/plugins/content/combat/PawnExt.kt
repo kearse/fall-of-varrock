@@ -3,9 +3,11 @@ package org.alter.plugins.content.combat
 import org.alter.api.EquipmentType
 import org.alter.api.HitType
 import org.alter.api.ProjectileType
+import org.alter.api.Skills
 import org.alter.api.WeaponType
 import org.alter.api.ext.getEquipment
 import org.alter.api.ext.hasWeaponType
+import org.alter.api.ext.heal
 import org.alter.api.ext.hit
 import org.alter.game.model.Tile
 import org.alter.game.model.attr.COMBAT_TARGET_FOCUS_ATTR
@@ -20,7 +22,44 @@ import org.alter.game.model.timer.ACTIVE_COMBAT_TIMER
 import org.alter.plugins.content.combat.formula.CombatFormula
 import org.alter.plugins.content.combat.strategy.ranged.RangedProjectile
 import org.alter.plugins.content.mechanics.poison.Poison
+import org.alter.plugins.content.mechanics.prayer.Prayer
+import org.alter.plugins.content.mechanics.prayer.Prayers
 import java.lang.ref.WeakReference
+
+/** OSRS redemption heal graphic. */
+private const val REDEMPTION_GFX = 436
+
+/**
+ * Read a combat stat's current level from any pawn type (players via SkillSet,
+ * NPCs via their NpcSkills stats).
+ */
+fun Pawn.currentCombatStat(
+    playerSkill: Int,
+    npcSkill: Int,
+): Int =
+    when (this) {
+        is Player -> getSkills().getCurrentLevel(playerSkill)
+        is Npc -> stats.getCurrentLevel(npcSkill)
+        else -> 0
+    }
+
+/**
+ * Drain a combat stat on any pawn type, floored at 0. Spec stat-drains (DWH, BGS,
+ * Statius, anchor…) matter most against NPCs — bosses — so this must not be
+ * player-only.
+ */
+fun Pawn.drainCombatStat(
+    playerSkill: Int,
+    npcSkill: Int,
+    amount: Int,
+) {
+    if (amount <= 0) return
+    when (this) {
+        is Player -> getSkills().alterCurrentLevel(playerSkill, -amount)
+        is Npc -> stats.setCurrentLevel(npcSkill, maxOf(0, stats.getCurrentLevel(npcSkill) - amount))
+        else -> {}
+    }
+}
 
 /**
  * @author Tom <rspsmods@gmail.com>
@@ -110,6 +149,25 @@ fun Pawn.dealHit(
         hit.addAction {
             val pawn = this@dealHit
             target.damageMap.add(pawn, hit.hitmarks.sumOf { it.damage })
+        }
+        hit.addAction {
+            val pawn = this@dealHit
+            val damage = hit.hitmarks.sumOf { it.damage }
+            // Smite: the attacker's overhead drains floor(damage / 4) prayer points from
+            // a player target.
+            if (damage > 0 && pawn is Player && target is Player && Prayers.isActive(pawn, Prayer.SMITE)) {
+                target.getSkills().decrementCurrentLevel(Skills.PRAYER, damage / 4, capped = false)
+            }
+            // Redemption: when a hit leaves the target alive below 10% HP, all their prayer
+            // points are consumed to heal floor(25% of their Prayer level).
+            if (target is Player && !target.isDead() && Prayers.isActive(target, Prayer.REDEMPTION) &&
+                target.getCurrentHp() > 0 && target.getCurrentHp() * 10 < target.getMaxHp() &&
+                target.getSkills().getCurrentLevel(Skills.PRAYER) > 0
+            ) {
+                target.graphic(REDEMPTION_GFX)
+                target.heal(Math.floor(target.getSkills().getBaseLevel(Skills.PRAYER) * 0.25).toInt())
+                target.getSkills().setCurrentLevel(Skills.PRAYER, 0)
+            }
         }
         // NPC poison/venom chances from the combat def, rolled when a hit lands.
         if (this is Npc) {

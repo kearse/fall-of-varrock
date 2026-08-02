@@ -10,13 +10,17 @@ import org.alter.game.model.combat.PawnHit
 import org.alter.game.model.combat.XpMode
 import org.alter.game.model.entity.*
 import org.alter.rscm.RSCM.getRSCM
+import org.alter.api.NpcSpecies
 import org.alter.plugins.content.combat.Combat
 import org.alter.plugins.content.combat.CombatConfigs
 import org.alter.plugins.content.combat.WeaponEffects
 import org.alter.plugins.content.combat.createProjectile
+import org.alter.plugins.content.combat.dealExactHit
 import org.alter.plugins.content.combat.dealHit
 import org.alter.plugins.content.combat.formula.RangedCombatFormula
+import org.alter.plugins.content.combat.strategy.ranged.BoltEnchantments
 import org.alter.plugins.content.combat.strategy.ranged.RangedProjectile
+import org.alter.plugins.content.mechanics.poison.Poison
 import org.alter.plugins.content.combat.strategy.ranged.ammo.Darts
 import org.alter.plugins.content.combat.strategy.ranged.ammo.Knives
 import org.alter.plugins.content.combat.strategy.ranged.weapon.BowType
@@ -166,20 +170,95 @@ object RangedCombatStrategy : CombatStrategy {
 
         val formula = RangedCombatFormula
         val accuracy = formula.getAccuracy(pawn, target)
-        val maxHit = formula.getMaxHit(pawn, target)
-        val landHit = accuracy >= world.randomDouble()
+        var maxHit = formula.getMaxHit(pawn, target)
+        var landHit = accuracy >= world.randomDouble()
         val hitDelay = getHitDelay(pawn.getCentreTile(), target.tile.transform(target.getSize() / 2, target.getSize() / 2))
+
+        // Enchanted-bolt procs, rolled per shot. Ruby and Diamond bypass the accuracy
+        // roll; the additive gem effects only matter when the shot lands.
+        var rubyProc = false
+        var boltEffect: BoltEnchantments.Effect? = null
+        if (pawn is Player && pawn.hasWeaponType(WeaponType.CROSSBOW)) {
+            val effect = BoltEnchantments.effectFor(pawn)
+            if (effect != null && world.random(99) < effect.procPercent) {
+                boltEffect = effect
+                val rangedLvl = pawn.getSkills().getCurrentLevel(Skills.RANGED)
+                when (effect) {
+                    BoltEnchantments.Effect.RUBY -> {
+                        rubyProc = true
+                        landHit = true
+                    }
+                    BoltEnchantments.Effect.DIAMOND -> {
+                        landHit = true
+                        maxHit = (maxHit * 1.15).toInt()
+                    }
+                    BoltEnchantments.Effect.OPAL -> maxHit += rangedLvl / 10
+                    BoltEnchantments.Effect.PEARL -> maxHit += rangedLvl / (if (isFiery(target)) 15 else 20)
+                    BoltEnchantments.Effect.DRAGONSTONE -> if (!isFiery(target)) maxHit += rangedLvl / 5
+                    BoltEnchantments.Effect.ONYX -> maxHit = (maxHit * 1.2).toInt()
+                    else -> {}
+                }
+            }
+        }
+
         val pawnHit =
-            pawn.dealHit(
-                target = target,
-                maxHit = maxHit,
-                landHit = landHit,
-                delay = hitDelay,
-                onHit = {
-                    ammoDropAction(it)
-                    WeaponEffects.applyOnHit(pawn, target, it)
-                },
-            )
+            if (rubyProc && pawn is Player) {
+                // Ruby "Blood Forfeit": the damage roll is replaced with 20% of the
+                // target's current HP (capped at 100), and the caster sacrifices 10%
+                // of their own current HP.
+                val sacrifice = BoltEnchantments.rubySacrifice(pawn.getCurrentHp())
+                if (sacrifice > 0) {
+                    pawn.setCurrentHp(pawn.getCurrentHp() - sacrifice)
+                }
+                pawn.dealExactHit(
+                    target = target,
+                    damage = BoltEnchantments.rubyDamage(target.getCurrentHp()),
+                    delay = hitDelay,
+                    onHit = {
+                        ammoDropAction(it)
+                        WeaponEffects.applyOnHit(pawn, target, it)
+                    },
+                )
+            } else {
+                pawn.dealHit(
+                    target = target,
+                    maxHit = maxHit,
+                    landHit = landHit,
+                    delay = hitDelay,
+                    onHit = {
+                        ammoDropAction(it)
+                        WeaponEffects.applyOnHit(pawn, target, it)
+                    },
+                )
+            }
+
+        // Bolt effects that trigger on the landing tick.
+        if (boltEffect != null && pawn is Player) {
+            val effect = boltEffect
+            pawnHit.hit.addAction {
+                val damage = hitmarks.sumOf { it.damage }
+                when (effect) {
+                    BoltEnchantments.Effect.EMERALD ->
+                        if (damage > 0) {
+                            Poison.poison(target, initialDamage = 2)
+                        }
+                    BoltEnchantments.Effect.ONYX ->
+                        if (damage > 0) {
+                            pawn.heal(damage / 4)
+                        }
+                    BoltEnchantments.Effect.SAPPHIRE ->
+                        if (damage > 0 && target is Player) {
+                            val drain = target.getSkills().getCurrentLevel(Skills.PRAYER) / 20
+                            if (drain > 0) {
+                                target.getSkills().decrementCurrentLevel(Skills.PRAYER, drain, capped = false)
+                                pawn.getSkills().alterCurrentLevel(Skills.PRAYER, drain / 2)
+                            }
+                        }
+                    else -> {}
+                }
+            }
+        }
+
         // XP is awarded when the hit lands (the projectile's arrival tick), from the
         // damage actually dealt (hitmarks are clamped to remaining HP at application).
         pawnHit.hit.addAction {
@@ -189,6 +268,8 @@ object RangedCombatStrategy : CombatStrategy {
             }
         }
     }
+
+    private fun isFiery(pawn: Pawn): Boolean = pawn is Npc && pawn.isSpecies(NpcSpecies.FIERY)
 
     fun getHitDelay(
         start: Tile,

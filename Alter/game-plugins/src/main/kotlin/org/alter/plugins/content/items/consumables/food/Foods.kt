@@ -63,7 +63,13 @@ object Foods {
         p.resetFacePawn()
 
         p.timers[delay] = food.tickDelay
-        p.timers[ATTACK_DELAY] = 5
+
+        // OSRS: eating extends an ACTIVE attack cooldown (+3 for normal food, +2 for
+        // karambwan; a shark + karambwan combo stacks to +5). If the weapon is already
+        // off cooldown, eating does not delay the next attack at all.
+        if (p.timers.has(ATTACK_DELAY)) {
+            p.timers[ATTACK_DELAY] = p.timers[ATTACK_DELAY] + if (food.comboFood) 2 else 3
+        }
 
         if (food == Food.KARAMBWAN) {
             // Eating Karambwans also blocks drinking potions.

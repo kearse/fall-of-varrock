@@ -166,6 +166,15 @@ open class Player(world: World) : Pawn(world) {
     var xpRate = 10.0
 
     /**
+     * PID processing priority: players are cycled each tick in ascending order of this
+     * value, and the world reshuffles it every 100-150 ticks (see [World.shufflePidsIfDue]).
+     * Lower value = processed first = wins same-tick races (whose hit applies first, who
+     * eats before damage lands). -1 means "not yet assigned" — given a random value on the
+     * player's first cycle after login.
+     */
+    var processingPriority = -1
+
+    /**
      * The last cycle that this client has received the MAP_BUILD_COMPLETE
      * message. This value is set to [World.currentCycle].
      *

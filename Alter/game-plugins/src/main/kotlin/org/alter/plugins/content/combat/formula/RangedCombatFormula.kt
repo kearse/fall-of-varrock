@@ -391,44 +391,8 @@ object RangedCombatFormula : CombatFormula {
         target: Pawn,
         base: Double,
     ): Double {
-        when {
-            player.hasWeaponType(WeaponType.CROSSBOW) && player.attr.has(Combat.BOLT_ENCHANTMENT_EFFECT) -> {
-                val dragonstone =
-                    player.hasEquipped(
-                        EquipmentType.AMMO,
-                        "item.dragonstone_bolts",
-                        "item.dragonstone_bolts_e",
-                        "item.dragonstone_dragon_bolts",
-                        "item.dragonstone_dragon_bolts_e",
-                    )
-                val opal =
-                    player.hasEquipped(
-                        EquipmentType.AMMO,
-                        "item.opal_bolts",
-                        "item.opal_bolts_e",
-                        "item.opal_dragon_bolts",
-                        "item.opal_dragon_bolts_e",
-                    )
-                val pearl =
-                    player.hasEquipped(
-                        EquipmentType.AMMO,
-                        "item.pearl_bolts",
-                        "item.pearl_bolts_e",
-                        "item.pearl_dragon_bolts",
-                        "item.pearl_dragon_bolts_e",
-                    )
-
-                when {
-                    dragonstone -> return base + Math.floor(player.getSkills().getCurrentLevel(Skills.RANGED) / 5.0)
-                    opal -> return base + Math.floor(player.getSkills().getCurrentLevel(Skills.RANGED) / 10.0)
-                    pearl ->
-                        return base +
-                            Math.floor(
-                                player.getSkills().getCurrentLevel(Skills.RANGED) / (if (isFiery(target)) 15.0 else 20.0),
-                            )
-                }
-            }
-        }
+        // Enchanted-bolt max-hit bonuses are handled by the per-shot proc roll in
+        // RangedCombatStrategy (see BoltEnchantments) — nothing passive remains here.
         return base
     }
 

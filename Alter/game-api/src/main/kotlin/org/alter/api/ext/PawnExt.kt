@@ -12,8 +12,12 @@ import org.alter.game.model.entity.Pawn
 import org.alter.game.model.entity.Player
 import org.alter.game.model.item.Item
 import org.alter.game.model.move.stopMovement
+import org.alter.game.model.timer.FREEZE_IMMUNITY_TIMER
 import org.alter.game.model.timer.FROZEN_TIMER
 import org.alter.game.model.timer.STUN_TIMER
+
+/** OSRS: after a freeze expires, the target cannot be re-frozen for 5 ticks (3s). */
+const val FREEZE_IMMUNITY_TICKS = 5
 
 fun Pawn.getCommandArgs(): Array<String> = attr[COMMAND_ARGS_ATTR]!!
 
@@ -58,11 +62,14 @@ fun Pawn.freeze(
     cycles: Int,
     onFreeze: () -> Unit,
 ) {
-    if (timers.has(FROZEN_TIMER)) {
+    // The immunity timer runs for the freeze duration + 5 ticks, so it also covers the
+    // "can't be re-frozen while frozen" case and the post-thaw immunity window.
+    if (timers.has(FROZEN_TIMER) || timers.has(FREEZE_IMMUNITY_TIMER)) {
         return
     }
     stopMovement()
     timers[FROZEN_TIMER] = cycles
+    timers[FREEZE_IMMUNITY_TIMER] = cycles + FREEZE_IMMUNITY_TICKS
     onFreeze()
 }
 

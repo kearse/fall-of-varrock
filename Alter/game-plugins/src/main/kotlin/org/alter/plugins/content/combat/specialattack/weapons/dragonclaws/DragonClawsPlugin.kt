@@ -54,8 +54,9 @@ class DragonClawsPlugin(
                 }
             }
 
+            // Two hitsplats land on the attack tick, two more one tick later, as in OSRS.
             for (i in 0 until 4) {
-                val delay = if (i < 2) 1 else 2
+                val delay = if (i < 2) 0 else 1
                 player.dealHit(target = target, maxHit = damages[i], landHit = damages[i] > 0, delay = delay)
             }
         }

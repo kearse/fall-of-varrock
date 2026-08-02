@@ -1,8 +1,11 @@
 package org.alter.plugins.content.combat.strategy
 
+import org.alter.api.NpcSkills
+import org.alter.api.PrayerIcon
 import org.alter.api.ProjectileType
 import org.alter.api.Skills
 import org.alter.api.ext.freeze
+import org.alter.api.ext.hasPrayerIcon
 import org.alter.api.ext.playSound
 import org.alter.game.model.Graphic
 import org.alter.game.model.Tile
@@ -14,10 +17,13 @@ import org.alter.plugins.content.combat.Combat
 import org.alter.plugins.content.combat.CombatConfigs
 import org.alter.plugins.content.combat.WeaponEffects
 import org.alter.plugins.content.combat.createProjectile
+import org.alter.plugins.content.combat.currentCombatStat
 import org.alter.plugins.content.combat.dealHit
+import org.alter.plugins.content.combat.drainCombatStat
 import org.alter.plugins.content.combat.formula.MagicCombatFormula
 import org.alter.plugins.content.combat.strategy.magic.CombatSpell
 import org.alter.plugins.content.magic.MagicSpells
+import org.alter.plugins.content.mechanics.poison.Poison
 
 /**
  * @author Tom <rspsmods@gmail.com>
@@ -77,9 +83,25 @@ object MagicCombatStrategy : CombatStrategy {
         val pawnHit =
             pawn.dealHit(target = target, maxHit = maxHit, landHit = landHit, delay = hitDelay) {
                 WeaponEffects.applyOnHit(pawn, target, it)
-                // Ancient ice spells root the target on a landed hit (freeze() self-guards re-freeze).
+                // Ancient ice spells root the target on a landed hit (freeze() self-guards
+                // re-freeze and the 5-tick post-thaw immunity). In PvP, Protect from Magic
+                // halves the freeze duration — read at hit application, as in OSRS.
                 if (landHit && spell.freezeTicks > 0) {
-                    target.freeze(spell.freezeTicks)
+                    var freezeTicks = spell.freezeTicks
+                    if (pawn is Player && target is Player && target.hasPrayerIcon(PrayerIcon.PROTECT_FROM_MAGIC)) {
+                        freezeTicks /= 2
+                    }
+                    target.freeze(freezeTicks)
+                }
+                // Smoke spells: 1-in-5 chance to poison (rush/burst at 2, blitz/barrage at 4).
+                if (landHit && spell in SMOKE_SPELLS && pawn.world.chance(1, 5)) {
+                    Poison.poison(target, initialDamage = if (spell in SMOKE_STRONG) 4 else 2)
+                }
+                // Shadow spells: drain the target's Attack (10% rush/burst, 15% blitz/barrage).
+                if (landHit && spell in SHADOW_SPELLS) {
+                    val pct = if (spell in SHADOW_STRONG) 0.15 else 0.10
+                    val current = target.currentCombatStat(Skills.ATTACK, NpcSkills.ATTACK)
+                    target.drainCombatStat(Skills.ATTACK, NpcSkills.ATTACK, (current * pct).toInt())
                 }
             }
         // Heal and XP happen when the hit LANDS (the projectile's arrival tick), from the
@@ -107,6 +129,14 @@ object MagicCombatStrategy : CombatStrategy {
     private val BLOOD_SPELLS = setOf(
         CombatSpell.BLOOD_RUSH, CombatSpell.BLOOD_BURST, CombatSpell.BLOOD_BLITZ, CombatSpell.BLOOD_BARRAGE,
     )
+    private val SMOKE_SPELLS = setOf(
+        CombatSpell.SMOKE_RUSH, CombatSpell.SMOKE_BURST, CombatSpell.SMOKE_BLITZ, CombatSpell.SMOKE_BARRAGE,
+    )
+    private val SMOKE_STRONG = setOf(CombatSpell.SMOKE_BLITZ, CombatSpell.SMOKE_BARRAGE)
+    private val SHADOW_SPELLS = setOf(
+        CombatSpell.SHADOW_RUSH, CombatSpell.SHADOW_BURST, CombatSpell.SHADOW_BLITZ, CombatSpell.SHADOW_BARRAGE,
+    )
+    private val SHADOW_STRONG = setOf(CombatSpell.SHADOW_BLITZ, CombatSpell.SHADOW_BARRAGE)
 
     fun getHitDelay(
         start: Tile,

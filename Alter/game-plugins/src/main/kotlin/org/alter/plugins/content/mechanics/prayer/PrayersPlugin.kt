@@ -13,6 +13,24 @@ class PrayersPlugin(
 ) : KotlinPlugin(r, world, server) {
         
     init {
+        /**
+         * Retribution: on death, deal up to floor(25% of the dead player's Prayer level)
+         * damage to their killer if the killer is adjacent-ish (3 tiles), before prayers
+         * are cleared by the death itself.
+         */
+        onPlayerPreDeath {
+            if (Prayers.isActive(player, Prayer.RETRIBUTION)) {
+                player.graphic(RETRIBUTION_GFX)
+                val killer = player.damageMap.getMostDamage()
+                if (killer != null && !killer.isDead() && killer.tile.isWithinRadius(player.tile, RETRIBUTION_RADIUS)) {
+                    val maxDamage = player.getSkills().getBaseLevel(Skills.PRAYER) / 4
+                    if (maxDamage > 0) {
+                        killer.hit(damage = world.random(maxDamage))
+                    }
+                }
+            }
+        }
+
         onPlayerDeath {
             Prayers.deactivateAll(player)
         }

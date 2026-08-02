@@ -1,7 +1,9 @@
 package org.alter.plugins.content.magic.teleblock
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import org.alter.api.PrayerIcon
 import org.alter.api.Skills
+import org.alter.api.ext.hasPrayerIcon
 import org.alter.api.ext.message
 import org.alter.api.ext.player
 import org.alter.game.Server
@@ -46,7 +48,14 @@ class TeleBlockPlugin(
             MagicSpells.removeRunes(caster, spell.items)
             caster.addXp(Skills.MAGIC, TELEBLOCK_XP)
             caster.animate(CAST_ANIM)
-            TeleBlock.apply(target)
+            // OSRS: Protect from Magic halves the teleblock to 2.5 minutes.
+            val ticks =
+                if (target.hasPrayerIcon(PrayerIcon.PROTECT_FROM_MAGIC)) {
+                    TeleBlock.DURATION_TICKS / 2
+                } else {
+                    TeleBlock.DURATION_TICKS
+                }
+            TeleBlock.apply(target, ticks)
             target.message("You have been teleblocked.")
             caster.message("You teleblock ${target.username}.")
         }

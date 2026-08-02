@@ -11,7 +11,7 @@ import org.alter.game.model.timer.TimerKey
 object TeleBlock {
     val TIMER = TimerKey()
 
-    /** OSRS: 5 minutes = 500 ticks (halved if the target was protecting Magic — refinement TODO). */
+    /** OSRS: 5 minutes = 500 ticks; halved by Protect from Magic at cast time (see TeleBlockPlugin). */
     const val DURATION_TICKS = 500
 
     fun isBlocked(p: Player): Boolean = p.timers.has(TIMER)

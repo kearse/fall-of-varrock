@@ -745,6 +745,28 @@ class World(val gameContext: GameContext, val devContext: DevContext) {
         }
     }
 
+    /**
+     * OSRS-style PID shuffle: every 100-150 ticks each player is dealt a fresh random
+     * processing priority, and [org.alter.game.task.PlayerCycleTask] cycles players in
+     * ascending priority order. This randomises who wins same-tick combat races instead
+     * of the fixed login-index order. Players who logged in since the last shuffle
+     * (priority -1) are dealt a priority immediately.
+     */
+    private var nextPidShuffleCycle = 0
+
+    fun shufflePidsIfDue() {
+        if (currentCycle >= nextPidShuffleCycle) {
+            nextPidShuffleCycle = currentCycle + PID_SHUFFLE_MIN_INTERVAL + random(PID_SHUFFLE_INTERVAL_VARIANCE)
+            players.forEach { it.processingPriority = random.nextInt(Int.MAX_VALUE) }
+        } else {
+            players.forEach {
+                if (it.processingPriority == -1) {
+                    it.processingPriority = random.nextInt(Int.MAX_VALUE)
+                }
+            }
+        }
+    }
+
     fun setNpcDefaults(npc: Npc) {
         val combatDef = plugins.npcCombatDefs.getOrDefault(npc.id, null) ?: NpcCombatDef.DEFAULT
         npc.combatDef = combatDef
@@ -821,6 +843,10 @@ class World(val gameContext: GameContext, val devContext: DevContext) {
 
     companion object {
         val logger = KotlinLogging.logger {}
+
+        /** PID reshuffle cadence: every 100-150 ticks (OSRS Wiki, Player identification number). */
+        private const val PID_SHUFFLE_MIN_INTERVAL = 100
+        private const val PID_SHUFFLE_INTERVAL_VARIANCE = 50
 
         /**
          * If the [rebootTimer] is active and is less than this value, we will

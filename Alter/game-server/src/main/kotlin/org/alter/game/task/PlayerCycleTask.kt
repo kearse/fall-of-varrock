@@ -17,7 +17,15 @@ class PlayerCycleTask : GameTask {
         world: World,
         service: GameService,
     ) {
-        world.players.forEach { p ->
+        /*
+         * PID order: cycle players in their shuffled processing-priority order so
+         * same-tick combat races (whose hit lands first, who eats before damage
+         * applies) are randomised per the OSRS PID system. Synchronization tasks
+         * keep their own stable order — only cycle logic is affected.
+         */
+        world.shufflePidsIfDue()
+        val ordered = world.players.entries.filterNotNull().sortedBy { it.processingPriority }
+        ordered.forEach { p ->
             val start = System.currentTimeMillis()
             /*
              * Isolate each player's cycle: one player's exception (e.g. a clientless bot hitting
