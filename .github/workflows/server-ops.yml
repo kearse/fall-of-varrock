@@ -26,7 +26,7 @@ on:
         type: choice
         required: true
         default: restart
-        options: [restart, redeploy, stop, start, status, logs, inspect-save, reset-save, inspect-route]
+        options: [restart, redeploy, stop, start, status, logs, dump-ge-locs, inspect-save, reset-save, inspect-route]
       service:
         description: "Which service (all = whole stack)"
         type: choice
