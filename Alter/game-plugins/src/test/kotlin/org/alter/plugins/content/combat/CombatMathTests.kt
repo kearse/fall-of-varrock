@@ -86,6 +86,18 @@ class CombatMathTests {
     }
 
     @Test
+    fun `dharok multiplier peaks near 2x at 1 hp and never penalises overheal`() {
+        // 1/99 HP: 1 + 0.98 * 0.99 = 1.9702 — a 47 base max becomes floor(47 * 1.9702) = 92.
+        val atOneHp = CombatMath.dharokMultiplier(maxHp = 99, currentHp = 1)
+        assertTrue(atOneHp > 1.9701 && atOneHp < 1.9703, "got $atOneHp")
+        assertEquals(92, Math.floor(47 * atOneHp).toInt())
+        // Full HP: no bonus.
+        assertEquals(1.0, CombatMath.dharokMultiplier(maxHp = 99, currentHp = 99))
+        // Overhealed above max HP (sara brew / anglerfish): never below 1.0.
+        assertEquals(1.0, CombatMath.dharokMultiplier(maxHp = 99, currentHp = 115))
+    }
+
+    @Test
     fun `ruby bolt maths match the wiki`() {
         // 20% of current HP, capped at 100.
         assertEquals(80, BoltEnchantments.rubyDamage(400))

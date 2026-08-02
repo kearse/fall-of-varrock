@@ -1,6 +1,8 @@
 package org.alter.plugins.content.mechanics.regen
 
 import org.alter.api.Skills
+import org.alter.api.ext.pawn
+import org.alter.api.ext.player
 import org.alter.game.Server
 import org.alter.game.model.World
 import org.alter.game.model.entity.Player

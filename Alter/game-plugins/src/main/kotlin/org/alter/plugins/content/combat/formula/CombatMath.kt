@@ -36,4 +36,15 @@ object CombatMath {
 
     fun baseMaxHit(effectiveStrength: Double, strengthBonus: Double): Int =
         Math.floor(0.5 + effectiveStrength * (strengthBonus + 64.0) / 640.0).toInt()
+
+    /**
+     * Dharok the Wretched's set effect: 1 + (lost HP / 100) × (max HP / 100)
+     * (OSRS Wiki, Dharok the Wretched's equipment). At 1/99 HP that's ×1.9702 —
+     * the famous 90+ hits. Overhealed HP (current above max) never penalises:
+     * lost HP is floored at zero.
+     */
+    fun dharokMultiplier(maxHp: Int, currentHp: Int): Double {
+        val lost = (maxHp - currentHp).coerceAtLeast(0) / 100.0
+        return 1.0 + (lost * (maxHp / 100.0))
+    }
 }

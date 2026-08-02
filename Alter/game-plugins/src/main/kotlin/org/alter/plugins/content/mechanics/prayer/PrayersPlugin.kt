@@ -11,7 +11,15 @@ class PrayersPlugin(
     world: World,
     server: Server
 ) : KotlinPlugin(r, world, server) {
-        
+
+    private companion object {
+        /** OSRS retribution explosion graphic. */
+        const val RETRIBUTION_GFX = 437
+
+        /** Tiles around the dying player the retribution damage can reach. */
+        const val RETRIBUTION_RADIUS = 3
+    }
+
     init {
         /**
          * Retribution: on death, deal up to floor(25% of the dead player's Prayer level)
