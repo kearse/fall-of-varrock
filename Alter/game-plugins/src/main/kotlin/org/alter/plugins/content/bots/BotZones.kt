@@ -113,6 +113,12 @@ object BotZones {
         "bronze_pker" to 4, "iron_pker" to 3, "steel_pker" to 2,
     ))
 
+    /** Port Sarim (SAFE, the docks): the port raiders' warband — a step up from the hideout,
+     *  matched to the camp's knights (black metal through the budget-pure bracket). */
+    private val T_PORT_SARIM = BotTier(listOf(
+        "black_pker" to 4, "mithril_pker" to 3, "adamant_pker" to 2, "budget_pure" to 1,
+    ))
+
     /** Wild Bandit Camp (deep wild, multi): the high-tier warband — maxers and wildy-set builds. */
     private val T_WILD_BANDIT_CAMP = BotTier(listOf(
         "max_main" to 2, "max_tent" to 2, "statius_bruiser" to 2, "morrigan_skirmisher" to 2, "rev_raider" to 2,
@@ -231,11 +237,26 @@ object BotZones {
                 allowSafe = true,
             ),
         )
-        // Camp 2 — the SIEGE OF PORT SARIM has NO ambient bot colony: the camp IS the battle scene
-        // (`areas/portsarim/PortSiegePlugin` — Knights of Lumbridge vs Rogue Raider NPC waves) plus
-        // the named ladder knights stationed there (`bots/knights/RogueKnights.PORT_SARIM`). Keeping
-        // roaming PKers out of it keeps the "kill 2-3 raiders to turn the tide" beat legible.
-        // (Fallen Falador needs no dedicated camp either — the raid-city colony below covers it.)
+        // Camp 2 — PORT SARIM (safe ground, the docks). The camp's ROGUE-HUNTING population: a
+        // small warband of tier rogues around the named ladder knights, feeding the camp-clearance
+        // gate exactly like every other camp. Deliberately separate from the SIEGE battle scene
+        // (`areas/portsarim/PortSiegePlugin` — Knights of Lumbridge vs Rogue Raider NPC waves):
+        // raids are their own triggered content and never mix with the Sergeant's hunt.
+        // (Fallen Falador needs no dedicated camp — the raid-city colony below covers it.)
+        add(
+            BotZoneConfig(
+                key = "port_sarim",
+                displayName = "Port Sarim rogues",
+                area = Area(3026, 3187, 3056, 3217),
+                tier = T_PORT_SARIM,
+                target = 3,
+                spacing = 4,
+                roamRadius = 6,
+                leashRadius = 16,
+                activationPadding = 24,
+                allowSafe = true,
+            ),
+        )
 
         // Camp 4 — the WILD BANDIT CAMP (deep wilderness, multi): the high-tier warband.
         add(

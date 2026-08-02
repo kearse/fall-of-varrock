@@ -51,6 +51,16 @@ open class PkBot(world: World, val loadout: BotLoadout) : Player(world) {
     var boundHunter: PlayerUID? = null
 
     /**
+     * PROVOCATION latch: the uid of the player who last started a fight with this bot. Set by
+     * [BotBrain] the moment it sees a player targeting this bot, cleared when the bot disengages.
+     * It is the carve-out that lets a bot the brain would otherwise never aggro (a passive named
+     * knight, a stood-down camp rogue facing a cleared hunter) keep fighting back for the whole
+     * fight — `BotBrain.eligible` re-runs every tick, so without the latch the bot would drop a
+     * player-started fight the instant the player's own target flickered.
+     */
+    var provokedBy: PlayerUID? = null
+
+    /**
      * Boss-knight max-HP override. MUST be applied via this + `setCurrentLevel(3, hp)` — never
      * `setBaseLevel` above 99, which indexes off the end of the 99-entry XP table. Overriding
      * [getMaxHp] here makes the brain's eat ratios, heal caps and the head-bar all use the boosted

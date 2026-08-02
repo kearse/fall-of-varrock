@@ -1,12 +1,9 @@
 package org.alter.plugins.content.bots.knights
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import org.alter.api.ext.clearHintArrow
 import org.alter.api.ext.getCommandArgs
 import org.alter.api.ext.message
 import org.alter.api.ext.player
-import org.alter.api.ext.setPlayerHintArrow
-import org.alter.api.ext.setTileHintArrow
 import org.alter.game.Server
 import org.alter.game.info.PlayerInfo
 import org.alter.game.model.PlayerUID
@@ -23,7 +20,7 @@ import org.alter.game.plugin.PluginRepository
 import org.alter.plugins.content.bots.BotLoadouts
 import org.alter.plugins.content.bots.BotManager
 import org.alter.plugins.content.bots.PkBot
-import org.alter.plugins.content.quests.QuestJournal
+import org.alter.plugins.content.hunt.TargetMarker
 import org.alter.rscm.RSCM.getRSCM
 
 private val logger = KotlinLogging.logger {}
@@ -40,11 +37,12 @@ private val logger = KotlinLogging.logger {}
  * the hunter nears the camp, despawned when they leave, respawned on a short cooldown after a kill
  * or a (very expected) hunter death, capped per camp.
  *
- * **Tracking arrow** (the quest-helper ask): while a knight is the player's active target and
- * guidance isn't muted, a native hint arrow leads them — a TILE arrow toward the camp from any
- * distance (edge/minimap arrow), flipping to a PLAYER arrow locked onto the live knight once it's
- * in scene (~15 tiles). Refreshed on the world tick, deduped so packets only go out on change.
- * Dying to a knight never clears the assignment — walk back and the arrow leads you straight in.
+ * **Tracking arrow** (the quest-helper ask): while a knight is the player's active target, the
+ * shared [TargetMarker] helper leads them — a TILE arrow toward the camp from any distance
+ * (edge/minimap arrow), flipping to a PLAYER arrow locked onto the live knight once it's in scene.
+ * This plugin only registers the ladder's claim ([TargetMarker.PRIORITY_LADDER]); the marker owns
+ * the drawing, deduping and the guidance mute. Dying to a knight never clears the assignment —
+ * walk back and the arrow leads you straight in.
  */
 class RogueKnightCampPlugin(
     r: PluginRepository,
@@ -61,15 +59,22 @@ class RogueKnightCampPlugin(
 
     private val hunts = HashMap<PlayerUID, Hunt>()
 
-    /** Last arrow state sent per player, so the poll only writes on change. */
-    private sealed class Arrow {
-        data object None : Arrow()
-        data class Camp(val x: Int, val z: Int) : Arrow()
-        data class Knight(val index: Int) : Arrow()
-    }
-    private val lastArrow = HashMap<PlayerUID, Arrow>()
+    /** Camp key each hunter was last gate-nudged at (session-only) — one nudge per camp visit. */
+    private val nudgedCamp = HashMap<PlayerUID, String>()
 
     init {
+        // The ladder's claim on the shared hunt marker. Camp gate still open: the arrow hunts the
+        // camp's TIER rogues (nearest live one in scene, the camp from afar) — the knight won't
+        // fight yet. Gate cleared: the live bound knight when it's up, the camp center otherwise.
+        TargetMarker.register(TargetMarker.PRIORITY_LADDER) { p ->
+            val def = RogueKnightLadder.activeDef(p) ?: return@register null
+            if (!CampClearance.cleared(p, def.camp)) {
+                TargetMarker.Mark(entity = CampClearance.nearestCampBot(p, def.camp), fallback = def.camp.center)
+            } else {
+                TargetMarker.Mark(entity = hunts[p.uid]?.bot, fallback = def.camp.center)
+            }
+        }
+
         val timer = TimerKey()
         onWorldInit { world.timers[timer] = TICK }
         onTimer(timer) {
@@ -95,6 +100,9 @@ class RogueKnightCampPlugin(
         onCommand("knights", description = "Show the Rogue Knight ladder and your hunt") {
             player.message(RogueKnightLadder.statusLine(player))
             if (!RogueKnightLadder.unlocked(player)) return@onCommand
+            RogueKnightLadder.activeDef(player)?.let { active ->
+                player.message(CampClearance.statusLine(player, active.camp))
+            }
             val rank = RogueKnightLadder.rank(player)
             val activeIdx = RogueKnightLadder.targetIdx(player)
             RogueKnights.LADDER.forEach { def ->
@@ -148,23 +156,34 @@ class RogueKnightCampPlugin(
         for ((uid, p) in online) {
             val def = RogueKnightLadder.activeDef(p) ?: continue
             maintainHunt(world, p, def, hunts.getOrPut(uid) { Hunt() })
-            updateArrow(p, def)
+            nudgeGate(uid, p, def)
         }
+        nudgedCamp.keys.retainAll(online.keys)
+    }
 
-        // Clear arrows for players who no longer have an active hunt (or logged off).
-        lastArrow.keys.toList().forEach { uid ->
-            val owner = online[uid]
-            if (owner == null) {
-                lastArrow.remove(uid)
-            } else if (RogueKnightLadder.activeDef(owner) == null && lastArrow[uid] != Arrow.None) {
-                owner.clearHintArrow()
-                lastArrow.remove(uid)
-            }
+    /** One heads-up per camp visit for a hunter arriving at a camp whose gate they haven't cleared. */
+    private fun nudgeGate(uid: PlayerUID, p: Player, def: RogueKnightDef) {
+        if (!p.tile.isWithinRadius(def.camp.center, ACTIVATION_RADIUS)) {
+            nudgedCamp.remove(uid) // left the camp — nudge again next visit
+            return
         }
+        if (CampClearance.cleared(p, def.camp) || nudgedCamp[uid] == def.camp.key) return
+        nudgedCamp[uid] = def.camp.key
+        val left = CampClearance.goal(def.camp) - CampClearance.kills(p, def.camp)
+        p.message("<col=801700>${def.camp.display.replaceFirstChar { it.uppercase() }} bristles at your approach.</col> Cut down <col=ffae00>$left</col> more of its rogues before ${def.name} will face you.")
     }
 
     /** Keep one live, bound instance of [def] while [p] is at its camp; stand down when they leave. */
     private fun maintainHunt(world: World, p: Player, def: RogueKnightDef, hunt: Hunt) {
+        // Camp gate ([CampClearance]): until the hunter has thinned this camp's tier rogues, its
+        // knight doesn't take the field at all — the camp reads "clear the rogues first", and the
+        // canEngage veto guards the edge cases (another hunter's instance, a goal raised later).
+        if (!CampClearance.cleared(p, def.camp)) {
+            hunt.bot?.let { if (it.index >= 0) BotManager.despawn(world, it) }
+            hunt.bot = null
+            return
+        }
+
         val bot = hunt.bot
 
         // The hunter's live instance must match the CURRENT target — switching farm targets swaps it.
@@ -272,33 +291,6 @@ class RogueKnightCampPlugin(
         }
     }
 
-    // ------------------------------------------------------------------ the tracking arrow
-
-    /** Hybrid arrow: PLAYER arrow on the live knight in scene, TILE arrow toward the camp from
-     *  anywhere else. Deduped per player; respects the Quest Journal guidance mute. */
-    private fun updateArrow(p: Player, def: RogueKnightDef) {
-        val desired: Arrow = when {
-            QuestJournal.muted(p) -> Arrow.None
-            else -> {
-                val bot = hunts[p.uid]?.bot
-                if (bot != null && bot.index >= 0 && !bot.isDead() &&
-                    bot.tile.isWithinRadius(p.tile, IN_SCENE_RADIUS)
-                ) {
-                    Arrow.Knight(bot.index)
-                } else {
-                    Arrow.Camp(def.camp.center.x, def.camp.center.z)
-                }
-            }
-        }
-        if (lastArrow[p.uid] == desired) return
-        lastArrow[p.uid] = desired
-        when (desired) {
-            is Arrow.None -> p.clearHintArrow()
-            is Arrow.Camp -> p.setTileHintArrow(desired.x, desired.z)
-            is Arrow.Knight -> p.setPlayerHintArrow(desired.index)
-        }
-    }
-
     private companion object {
         /** Upkeep cadence (game ticks) — matches the goblin-camp / world-spawn sweeps (~3s). */
         const val TICK = 5
@@ -323,8 +315,5 @@ class RogueKnightCampPlugin(
 
         /** Chase tether — generous, so a knight presses the fight but can't be dragged across the map. */
         const val KNIGHT_LEASH = 24
-
-        /** Within this range the arrow locks onto the knight itself (entity arrows render in scene). */
-        const val IN_SCENE_RADIUS = 15
     }
 }

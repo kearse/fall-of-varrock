@@ -55,6 +55,10 @@ object PvpZones {
     private val SINGLE: List<Area> = listOf(
         Area(3100, 3350, 3320, 3550),  // shallow core of the main wild
         Area(3245, 3214, 3267, 3256),  // east-Lum PK pocket is single combat
+        // The deep Rogue Knight camps fight 1v1: the ladder's tier hunts and boss duels stay fair
+        // even in the deep wild. Boxes mirror the BotZones colonies — TUNE together.
+        Area(3020, 3675, 3055, 3705),  // the Wild Bandit Camp
+        Area(2995, 3865, 3035, 3900),  // the Rogue Commander's Redoubt
     )
 
     /** Safe carve-outs INSIDE the red (everywhere OUTSIDE the red is already safe).

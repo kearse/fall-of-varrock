@@ -38,6 +38,9 @@ data class KnightCamp(
     val safe: Boolean,
     /** One-line directions the Sergeant (and ::knights) gives for finding the camp. */
     val directions: String,
+    /** Tier rogues a hunter must fell here before the camp's knights will fight them (and before
+     *  the tier stands down) — the [CampClearance] gate. TUNE; <= 0 disables the gate. */
+    val clearGoal: Int = 5,
 )
 
 data class RogueKnightDef(
