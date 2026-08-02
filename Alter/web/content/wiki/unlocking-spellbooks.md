@@ -23,7 +23,7 @@ Taking the grimoire on your first clear **permanently unlocks all three special 
 
 Once unlocked, switch anytime:
 
-- **Altar of the Occult** - in the Lumbridge market courtyard, on the south side next to the Royal Smith. Left-click **Venerate** for the picker menu, or right-click straight to **Ancient / Lunar / Arceuus**. The church's prayer altar is a short walk east, so a full book-and-prayers reset is one trip.
+- **Altar of the Occult** - on the north exit path out of the Lumbridge market courtyard, just past the teleport portal. Left-click **Venerate** for the picker menu, or right-click straight to **Ancient / Lunar / Arceuus**.
 - `::spellbook` - opens the same picker menu from anywhere
 - `::spellbook ancient` / `::spellbook lunar` / `::spellbook arceuus` / `::spellbook normal`
 
