@@ -115,6 +115,7 @@ fun Pawn.dealHit(
     maxHit: Int,
     landHit: Boolean,
     delay: Int,
+    respectsProtection: Boolean = true,
     onHit: (PawnHit) -> Unit = {},
 ): PawnHit {
     val hit =
@@ -134,9 +135,12 @@ fun Pawn.dealHit(
     // Overhead protection is evaluated on the tick the hit LANDS, against the class of
     // this attack — switching a protect prayer while a projectile is mid-flight works,
     // exactly as in OSRS (100% block vs NPC attackers, 40% reduction vs players).
-    val combatClass = CombatConfigs.getCombatClass(this)
-    hit.addDamageTransform { damage ->
-        Math.floor(damage * Combat.protectionDamageMultiplier(this, target, combatClass)).toInt()
+    // Prayer-piercing boss attacks pass respectsProtection = false.
+    if (respectsProtection) {
+        val combatClass = CombatConfigs.getCombatClass(this)
+        hit.addDamageTransform { damage ->
+            Math.floor(damage * Combat.protectionDamageMultiplier(this, target, combatClass)).toInt()
+        }
     }
 
     // No attacker-death cancel: OSRS lands projectiles that were launched before the

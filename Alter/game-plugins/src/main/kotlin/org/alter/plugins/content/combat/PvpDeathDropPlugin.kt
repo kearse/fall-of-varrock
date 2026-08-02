@@ -80,14 +80,25 @@ class PvpDeathDropPlugin(
         for (i in 0 until victim.equipment.capacity) victim.equipment[i]?.let { held += Triple(victim.equipment, i, it) }
         for (i in 0 until victim.inventory.capacity) victim.inventory[i]?.let { held += Triple(victim.inventory, i, it) }
 
-        // Untradeables never drop; the [keep] most valuable tradeables stay too. The rest is lost.
-        val lost = held.filter { it.third.getDef().isTradeable }
+        // Untradeables never drop; the [keep] most valuable ITEMS (units, not stacks) stay
+        // too. OSRS protects single items per keep slot — a stack of blood runes no longer
+        // shields the whole stack: up to [keep] units survive and the remainder drops.
+        var keepLeft = keep
+        val lostLoot = ArrayList<Item>()
+        held.filter { it.third.getDef().isTradeable }
             .sortedByDescending { unitValue(it.third) }
-            .drop(keep)
-        if (lost.isEmpty() && keyLoot.isEmpty()) return
+            .forEach { (container, slot, item) ->
+                val protected = minOf(keepLeft, item.amount)
+                keepLeft -= protected
+                val lostAmount = item.amount - protected
+                if (lostAmount > 0) {
+                    lostLoot += Item(item, lostAmount)
+                    container[slot] = if (protected > 0) Item(item, protected) else null
+                }
+            }
+        if (lostLoot.isEmpty() && keyLoot.isEmpty()) return
 
-        val loot = lost.map { it.third } + keyLoot
-        lost.forEach { (container, slot, _) -> container[slot] = null }
+        val loot = lostLoot + keyLoot
 
         val tile = victim.tile
         if (PvpZones.isWilderness(tile)) {

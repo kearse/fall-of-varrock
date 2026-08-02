@@ -11,6 +11,7 @@ import org.alter.game.model.entity.Npc
 import org.alter.game.model.entity.Pawn
 import org.alter.plugins.content.combat.Combat
 import org.alter.plugins.content.combat.createProjectile
+import org.alter.plugins.content.combat.dealHit
 import org.alter.plugins.content.combat.formula.MagicCombatFormula
 import org.alter.plugins.content.combat.formula.MeleeCombatFormula
 import org.alter.plugins.content.combat.formula.RangedCombatFormula
@@ -34,14 +35,13 @@ fun Npc.bossMelee(
     ignoresPrayer: Boolean = false,
 ): Boolean {
     prepareAttack(CombatClass.MELEE, style, AttackStyle.AGGRESSIVE)
-    val attacker = this
-    if (!ignoresPrayer && target.isProtectedFrom(CombatClass.MELEE)) {
-        target.hit(damage = 0, type = HitType.BLOCK, delay = 1).addAction { Combat.postDamage(attacker, target) }
-        return false
-    }
+    // Routed through dealHit so boss damage carries the FULL hit pipeline: protection
+    // prayers evaluated at hit-application (mid-flight overhead switches work), damage-map
+    // kill credit, Redemption/Vengeance/recoil, and post-damage retaliation. The return
+    // value is now accuracy-only — a prayer-blocked hit still "lands" for effect-gating,
+    // which matches OSRS (overheads block damage, not on-hit effects).
     val landed = MeleeCombatFormula.getAccuracy(this, target) >= world.randomDouble()
-    target.hit(damage = if (landed) world.random(maxHit) else 0, type = if (landed) HitType.HIT else HitType.BLOCK, delay = 1)
-        .addAction { Combat.postDamage(attacker, target) } // makes a Player target auto-retaliate (honours the toggle)
+    dealHit(target = target, maxHit = maxHit, landHit = landed, delay = 0, respectsProtection = !ignoresPrayer)
     return landed
 }
 
@@ -54,19 +54,13 @@ fun Npc.bossProjectile(
 ): Boolean {
     val style = if (combatClass == CombatClass.MAGIC) CombatStyle.MAGIC else CombatStyle.RANGED
     prepareAttack(combatClass, style, AttackStyle.ACCURATE)
-    val attacker = this
     world.spawn(createProjectile(target, gfx = gfx, startHeight = 43, endHeight = 31, delay = 41, angle = 15, steepness = 20))
     val delay = max(1, RangedCombatStrategy.getHitDelay(getFrontFacingTile(target), target.getCentreTile()) - 1)
-    if (!ignoresPrayer && target.isProtectedFrom(combatClass)) {
-        target.hit(damage = 0, type = HitType.BLOCK, delay = delay).addAction { Combat.postDamage(attacker, target) }
-        return false
-    }
     // Formula must match the style: MeleeCombatFormula THROWS on RANGED/MAGIC (only knows
     // stab/slash/crush), which used to kill the npc's combat queue on every unprotected hit.
     val formula = if (combatClass == CombatClass.MAGIC) MagicCombatFormula else RangedCombatFormula
     val landed = formula.getAccuracy(this, target) >= world.randomDouble()
-    target.hit(damage = if (landed) world.random(maxHit) else 0, type = if (landed) HitType.HIT else HitType.BLOCK, delay = delay)
-        .addAction { Combat.postDamage(attacker, target) } // makes a Player target auto-retaliate (honours the toggle)
+    dealHit(target = target, maxHit = maxHit, landHit = landed, delay = delay, respectsProtection = !ignoresPrayer)
     return landed
 }
 
