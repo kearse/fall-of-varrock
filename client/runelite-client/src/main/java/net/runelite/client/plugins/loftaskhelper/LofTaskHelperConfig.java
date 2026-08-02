@@ -56,12 +56,24 @@ public interface LofTaskHelperConfig extends Config
 		return true;
 	}
 
+	@ConfigItem(
+		keyName = "highlightTargets",
+		name = "Highlight assigned monsters",
+		description = "Outline your contract's monsters in the scene and dot them on the minimap once they're in "
+			+ "sight — every variant that counts for the kill is marked, and the arrow hands off to the outlines",
+		position = 5
+	)
+	default boolean highlightTargets()
+	{
+		return true;
+	}
+
 	@Alpha
 	@ConfigItem(
 		keyName = "arrowColor",
 		name = "Arrow colour",
-		description = "Colour of the task guidance arrows (cyan by default, so they never read as the gold quest arrows)",
-		position = 5
+		description = "Colour of the task guidance arrows and monster outlines (cyan by default, so they never read as the gold quest arrows)",
+		position = 6
 	)
 	default Color arrowColor()
 	{
