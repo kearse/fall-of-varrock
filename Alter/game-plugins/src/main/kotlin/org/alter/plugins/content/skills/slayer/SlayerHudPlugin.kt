@@ -22,6 +22,14 @@ import org.alter.game.plugin.PluginRepository
  *   bits 0-11   killed (task total - remaining; 0-4095)
  *   bits 12-23  total  (count originally assigned; 0-4095)
  * Packed 0 (no task, or a task just completed) hides the dial.
+ *
+ * Also publishes [GUIDE_VARP]: the active contract's hunting-ground tile from
+ * [SlayerHuntingGrounds], which the client's Task Helper (`loftaskhelper`) points its guidance
+ * arrow at. Packed layout (must match the client plugin):
+ *   bits 0-13   tile x
+ *   bits 14-27  tile z
+ *   bits 28-29  height
+ * Packed 0 (no task, or a task with no mapped hunting ground) hides the arrow.
  */
 class SlayerHudPlugin(
     r: PluginRepository,
@@ -52,11 +60,21 @@ class SlayerHudPlugin(
         }
 
         if (getVarp(VARP) != packed) setVarp(VARP, packed)
+
+        // The guide arrow follows the dial's active-task gate exactly, so the client can trust
+        // "target varp != 0" alone.
+        val ground = if (packed != 0 && npc != null) SlayerHuntingGrounds.of(npc) else null
+        val packedTile = ground?.let { it.x or (it.z shl 14) or (it.height shl 28) } ?: 0
+        if (getVarp(GUIDE_VARP) != packedTile) setVarp(GUIDE_VARP, packedTile)
     }
 
     private companion object {
         /** Packed slayer varp the client dial reads (4616 — next free after companion status 4613-4615). */
         const val VARP = 4616
+
+        /** Packed hunting-ground tile the client Task Helper arrow reads (4638 — free slot before the
+         *  kit editor's 4640+ block; keep docs/overlay-design-system.md §8 in step). */
+        const val GUIDE_VARP = 4638
         const val REFRESH_TICKS = 3 // ~1.8s; matches the war-progress cadence
     }
 }

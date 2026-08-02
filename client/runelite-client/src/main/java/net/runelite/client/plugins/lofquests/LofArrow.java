@@ -1,5 +1,7 @@
 /*
- * Arrow-drawing helpers for the Lof Quest Journal.
+ * Arrow-drawing helpers for the Lof Quest Journal — also reused by the Lof Task Helper
+ * (net.runelite.client.plugins.loftaskhelper). Stateless statics, so sharing is safe whichever
+ * of the two plugins is enabled.
  *
  * Adapted from the RuneLite Quest Helper plugin's DirectionArrow/QuestPerspective
  * (https://github.com/Zoinkwiz/quest-helper), used under its BSD 2-Clause license:
@@ -41,17 +43,17 @@ import net.runelite.api.Player;
 import net.runelite.api.Point;
 import net.runelite.api.coords.WorldPoint;
 
-final class LofArrow
+public final class LofArrow
 {
 	/** The big scene arrow, tip landing on (tipX, tipY). */
-	static void drawWorldArrow(Graphics2D graphics, Color color, int tipX, int tipY)
+	public static void drawWorldArrow(Graphics2D graphics, Color color, int tipX, int tipY)
 	{
 		Line2D.Double line = new Line2D.Double(tipX, tipY - 13, tipX, tipY);
 		drawArrow(graphics, line, color, 9, 4, 5);
 	}
 
 	/** The small minimap arrow along [line] (tail → tip). */
-	static void drawMinimapArrow(Graphics2D graphics, Line2D.Double line, Color color)
+	public static void drawMinimapArrow(Graphics2D graphics, Line2D.Double line, Color color)
 	{
 		drawArrow(graphics, line, color, 6, 2, 2);
 	}
@@ -93,7 +95,7 @@ final class LofArrow
 	 * A point on the minimap in the direction of [destination] from the player, rotated to the
 	 * minimap's current orientation — used to aim the edge arrow when the target is off-map.
 	 */
-	static Point getMinimapDirectionPoint(Client client, WorldPoint start, WorldPoint destination)
+	public static Point getMinimapDirectionPoint(Client client, WorldPoint start, WorldPoint destination)
 	{
 		Player player = client.getLocalPlayer();
 		if (player == null)
@@ -129,7 +131,7 @@ final class LofArrow
 	}
 
 	/** The edge-arrow segment: from 55px to 65px out of the player dot, toward [direction]. */
-	static Line2D.Double getEdgeLine(Point playerOnMinimap, Point direction)
+	public static Line2D.Double getEdgeLine(Point playerOnMinimap, Point direction)
 	{
 		double xDiff = playerOnMinimap.getX() - direction.getX();
 		double yDiff = direction.getY() - playerOnMinimap.getY();

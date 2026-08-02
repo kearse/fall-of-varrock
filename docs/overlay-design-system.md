@@ -280,6 +280,8 @@ Reusable pieces — reach for these before inventing a new one. Metrics above.
     **4634 dice bank coins (spendable = client inventory +
     this bank balance)** · **4635-4637 companion world-indices** (server→client; was double-claimed on
     4610-4612 over the quest varps, which pointed the guidance arrow at Duke Horacio) ·
+    **4638 slayer guide target** (packed hunting-ground tile x|z|height — the `loftaskhelper`
+    arrow; SlayerHudPlugin) ·
     **4640-4679 kit editor** (control + per-slot — was
     missing from this list; a parallel branch DID double-claim 4631 the same week — keep EVERY
     varp here).
