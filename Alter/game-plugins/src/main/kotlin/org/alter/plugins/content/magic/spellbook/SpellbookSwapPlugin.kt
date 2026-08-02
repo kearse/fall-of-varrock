@@ -66,9 +66,9 @@ class SpellbookSwapPlugin(
         }
 
         // ---- Altar of the Occult (Lumbridge market courtyard) ----
-        // A world copy of the POH occult altar (2x2), standing at the west end of the
-        // south-wall services line, facing SOUTH. The old south fountain tile (3221,3210)
-        // now hosts the Grand Exchange stand (GrandExchangeClickPlugin), and the NORTH
+        // A world copy of the POH occult altar (2x2), standing on the north exit path out
+        // of the courtyard, facing SOUTH. The old south fountain tile (3221,3210) now
+        // hosts the Grand Exchange stand (GrandExchangeClickPlugin), and the NORTH
         // fountain (3221,3226) is the teleport portal (TeleportPortalObjectPlugin) — do NOT
         // target either. Done in onWorldInit so the region/collision is loaded and the
         // (defensive) removal of any map-baked loc runs *before* the altar is placed —
@@ -147,12 +147,12 @@ class SpellbookSwapPlugin(
         /** Object 31858 — the variant whose cache actions are Venerate/Ancient/Lunar/Arceuus/Remove. */
         const val OCCULT_ALTAR = "object.altar_of_the_occult"
 
-        // West end of the courtyard's south-wall services line, one tile east of the Royal
-        // Smith (3213,3211) — 2x2 footprint 3215-3216 x 3211-3212. (The old south fountain
-        // tile @ 3221,3210 is now the GE stand; the north fountain @ 3221,3226 is the
-        // teleport portal — leave both alone.)
-        const val ALTAR_X = 3215
-        const val ALTAR_Z = 3211
+        // North exit path out of the courtyard, past the teleport portal — 2x2 footprint
+        // 3222-3223 x 3230-3231. (The old south fountain tile @ 3221,3210 is now the GE
+        // stand; the north fountain @ 3221,3226 is the teleport portal, and the campaign
+        // walk target @ 3222,3228 sits just south — clear of all three.)
+        const val ALTAR_X = 3222
+        const val ALTAR_Z = 3230
         const val ALTAR_TYPE = 10   // interactable-scenery loc slot (matches the fountain's type)
         const val SOUTH_ROT = 2     // model-verified in-game: rot 1 rendered EAST, so rot 0 = north
                                     // and rot 2 = the requested SOUTH facing (the occult-altar

@@ -53,7 +53,8 @@ class GrandExchangeClickPlugin(
 
         // The full Grand Exchange hub — the central 2x2 pillar ringed by clerk desks — rebuilt
         // tile-for-tile on the old south courtyard fountain's footprint (fountain 879, type 10,
-        // 2x2 @ 3221,3210 — the tile the Occult Altar stood on before it moved to 3215,3211).
+        // 2x2 @ 3221,3210 — the tile the Occult Altar stood on before it moved to the
+        // north exit path @ 3222,3230).
         // HUB_PARTS is a verbatim copy of the real GE's central structure (dump-ge-locs,
         // region 12598 pre-ruins cache, level-1 bridge tiles at 3162-3167 x 3487-3492): booth
         // walls 10061/10060/30389 (loc shape 0), desk corner pieces 10059/10062 (shapes 1/9),
