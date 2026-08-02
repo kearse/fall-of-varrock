@@ -178,6 +178,14 @@ object RangedCombatStrategy : CombatStrategy {
                 }
             }
         }
+        // Generic ranged NPCs fire the projectile their combat def declares.
+        if (pawn is Npc && pawn.combatDef.projectile != -1) {
+            val projectile = pawn.createProjectile(target, gfx = pawn.combatDef.projectile, type = ProjectileType.ARROW)
+            world.spawn(projectile)
+            if (pawn.combatDef.impactGfx != -1) {
+                target.graphic(pawn.combatDef.impactGfx, 92, projectile.lifespan)
+            }
+        }
         pawn.animate(animation)
 
         val formula = RangedCombatFormula

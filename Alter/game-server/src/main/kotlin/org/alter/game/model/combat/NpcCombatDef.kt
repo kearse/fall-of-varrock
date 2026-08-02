@@ -44,7 +44,16 @@ data class NpcCombatDef(
     val immunePoison: Boolean,
     val immuneVenom: Boolean,
     val immuneCannons: Boolean,
-    val immuneThralls: Boolean
+    val immuneThralls: Boolean,
+    /**
+     * The combat class this npc fights with (melee by default). RANGED/MAGIC npcs
+     * attack at range through the generic strategies — no bespoke plugin needed.
+     */
+    val combatClass: CombatClass = CombatClass.MELEE,
+    /** Projectile gfx for ranged/magic npcs (-1 = none). */
+    val projectile: Int = -1,
+    /** Impact gfx shown on the target for ranged/magic npcs (-1 = none). */
+    val impactGfx: Int = -1,
 ) {
     companion object {
         private const val DEFAULT_HITPOINTS = 10

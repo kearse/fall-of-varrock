@@ -174,9 +174,18 @@ class NpcCombatBuilder {
             immunePoison = immunePoison,
             immuneVenom = immuneVenom,
             immuneCannons = immuneCannons,
-            immuneThralls = immuneThralls
+            immuneThralls = immuneThralls,
+            combatClass = combatClass,
+            projectile = projectile,
+            impactGfx = projectileImpactGfx,
         )
     }
+
+    private var combatClass = org.alter.game.model.combat.CombatClass.MELEE
+
+    private var projectile = -1
+
+    private var projectileImpactGfx = -1
 
     fun setAttackSoundArea(attackSoundArea: Boolean) {
         defaultAttackSoundArea = attackSoundArea
@@ -502,6 +511,17 @@ class NpcCombatBuilder {
         immuneCannons = state
         return this
     }
+    fun setCombatClass(combatClass: org.alter.game.model.combat.CombatClass): NpcCombatBuilder {
+        this.combatClass = combatClass
+        return this
+    }
+
+    fun setProjectile(gfx: Int, impactGfx: Int = -1): NpcCombatBuilder {
+        this.projectile = gfx
+        this.projectileImpactGfx = impactGfx
+        return this
+    }
+
     fun setThrallsImmunity(state: Boolean): NpcCombatBuilder {
         check(!immuneThralls) { "Thralls immunity was already applied. ${Throwable().stackTrace[2].fileName}" +
                 "" +

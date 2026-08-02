@@ -51,7 +51,17 @@ object MagicCombatStrategy : CombatStrategy {
     ) {
         val world = pawn.world
 
-        val spell = pawn.attr[Combat.CASTING_SPELL]!!
+        val spell = pawn.attr[Combat.CASTING_SPELL]
+        if (spell == null) {
+            // Generic magic NPCs (combat-def class MAGIC) have no CombatSpell — they cast a
+            // plain magic attack: def animation + projectile, formula accuracy, level-derived
+            // max hit, full hit-pipeline bookkeeping via dealHit. Players never reach here
+            // without a spell (the combat class requires CASTING_SPELL).
+            if (pawn is Npc) {
+                genericNpcAttack(pawn, target)
+            }
+            return
+        }
         val projectile =
             pawn.createProjectile(
                 target,
@@ -137,6 +147,27 @@ object MagicCombatStrategy : CombatStrategy {
         CombatSpell.SHADOW_RUSH, CombatSpell.SHADOW_BURST, CombatSpell.SHADOW_BLITZ, CombatSpell.SHADOW_BARRAGE,
     )
     private val SHADOW_STRONG = setOf(CombatSpell.SHADOW_BLITZ, CombatSpell.SHADOW_BARRAGE)
+
+    private fun genericNpcAttack(pawn: Npc, target: Pawn) {
+        val world = pawn.world
+        pawn.animate(CombatConfigs.getAttackAnimation(pawn))
+        var lifespan = 0
+        if (pawn.combatDef.projectile != -1) {
+            val projectile = pawn.createProjectile(target, gfx = pawn.combatDef.projectile, type = ProjectileType.MAGIC)
+            world.spawn(projectile)
+            lifespan = projectile.lifespan
+        }
+        if (pawn.combatDef.impactGfx != -1) {
+            target.graphic(Graphic(pawn.combatDef.impactGfx, 92, lifespan))
+        }
+        val accuracy = MagicCombatFormula.getAccuracy(pawn, target)
+        // Level-derived max hit for generic casters: floor(0.5 + (magic + 9) * 64 / 640),
+        // i.e. roughly a tenth of the magic level — bespoke bosses override with their own
+        // combat plugins when they need exact wiki max hits.
+        val maxHit = Math.floor(0.5 + (pawn.stats.getCurrentLevel(NpcSkills.MAGIC) + 9.0) * 64.0 / 640.0).toInt().coerceAtLeast(1)
+        val landHit = accuracy >= world.randomDouble()
+        pawn.dealHit(target = target, maxHit = maxHit, landHit = landHit, delay = getHitDelay(pawn.getCentreTile(), target.getCentreTile()))
+    }
 
     fun getHitDelay(
         start: Tile,
