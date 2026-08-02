@@ -402,13 +402,15 @@ class LumbridgeShopHubPlugin(
             ShopTabs.Tab("Unf. potions", UNFINISHED_POTIONS, icon = "item.ranarr_potion_unf"),
             ShopTabs.Tab("Farm tools", FARM_TOOLS, icon = "item.rake"))
         singleVendor("npc.sawmill_operator", 3214, 3228, Direction.SOUTH, CONSTRUCTION) // planks/nails
-        tabVendor("npc.valaine", 3215, 3227, Direction.SOUTH,                        // boss/vote tickets
+        // Valaine mans the GE hub's desk ring (east slot of the south face), not the shop rows.
+        tabVendor("npc.valaine", 3222, 3209, Direction.SOUTH,                        // boss/vote tickets
             ShopTabs.Tab("Boss rewards", BOSS_REWARDS, icon = "item.boss_ticket"),
             ShopTabs.Tab("Vote rewards", VOTE_REWARDS, icon = "item.vote_ticket"),
             ShopTabs.Tab("Buy Vote Tickets", BUY_VOTE, icon = "item.vote_ticket"))
 
         // End-game / war cluster mans the GE hub's desk ring (Quartermaster @ 3223,3211,
-        // Slayer Master @ 3222,3212) and the Dice host @ 3224,3215 — spawned by their own plugins.
+        // Slayer Master @ 3222,3212, PK Shop @ 3223,3210, Royal Smith @ 3221,3209, plus
+        // Valaine above) and the Dice host @ 3224,3215 — spawned by their own plugins.
 
         // ---- store-type display names ----
         // The stock cache names (Zaff, Horvik, Gerrant, …) make the market hard to read — you
