@@ -35,8 +35,9 @@ class RoyalSmithPlugin(
     private val smithId = getRSCM(smith)
 
     init {
-        // The Royal Smith stands by the castle wall, west of the courtyard fountain. TUNE.
-        spawnNpc(smith, x = 3213, z = 3211, height = 0, walkRadius = 0, direction = Direction.NORTH)
+        // The Royal Smith mans the GE hub's desk ring — west slot of the south face, facing
+        // his south desks. TUNE.
+        spawnNpc(smith, x = 3221, z = 3209, height = 0, walkRadius = 0, direction = Direction.SOUTH)
         bindSmith()
     }
 
@@ -98,7 +99,7 @@ class RoyalSmithPlugin(
     }
 
     private companion object {
-        val SMITH_TILE = Tile(3213, 3211, 0) // keep in sync with the spawnNpc call above
+        val SMITH_TILE = Tile(3221, 3209, 0) // keep in sync with the spawnNpc call above
         const val FORGE_RADIUS = 10
     }
 }

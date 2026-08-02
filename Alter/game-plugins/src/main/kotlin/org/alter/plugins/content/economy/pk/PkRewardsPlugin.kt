@@ -18,6 +18,7 @@ import org.alter.plugins.content.economy.grandexchange.currencyBuyShop
 import org.alter.plugins.content.mechanics.shops.ItemCurrency
 import org.alter.plugins.content.mechanics.shops.ShopTabs
 import org.alter.plugins.content.mechanics.shops.bindVendorOptions
+import org.alter.plugins.content.war.WarNpcNames
 import org.alter.rscm.RSCM.getRSCM
 
 private val logger = KotlinLogging.logger {}
@@ -111,7 +112,11 @@ class PkRewardsPlugin(
         // Buy Blood Money for coins — sets the coin ceiling on the PvP gear this vendor sells.
         currencyBuyShop(BUY_BM, "item.blood_money", GeCurrencyPrices.BLOOD_MONEY)
 
-        spawnNpc(TRADER, 3208, 3211, 0, 0, Direction.NORTH) // services line (south wall), west end
+        // GE hub desk ring, east column — one tile south of the Quartermaster, facing his east
+        // desks. Shown as "PK Shop" (store-type name, like the shop hub's vendors) via
+        // extended-info — no cache edit; re-applied on respawn by the npc-spawn hook.
+        spawnNpc(TRADER, 3223, 3210, 0, 0, Direction.EAST)
+        onNpcSpawn(TRADER) { WarNpcNames.rename(npc, "PK Shop") }
         bindTrader(TRADER)
         onCommand("pkshop", description = "Open the PK Rewards (Blood Money) shops") {
             ShopTabs.open(player, traderTabs)
