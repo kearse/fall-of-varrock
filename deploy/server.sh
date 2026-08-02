@@ -56,6 +56,17 @@ case "$cmd" in
     # "what did the server log at startup" without a disruptive restart.
     compose logs --tail="${TAIL:-3000}" "$@"
     ;;
+  item-req-check)
+    # READ-ONLY diagnostic: run the boot-faithful ItemMetadataService population
+    # (same code path the live server uses at startup) against the LIVE cache in a
+    # throwaway container, then print the resulting equip skill requirements for a
+    # benchmark spread of classic gear. The running game is not touched.
+    # Ids: bronze/iron/steel/black/mith/addy/rune platebodies, steel full helm,
+    # green d'hide body, mystic robe top, rune scimitar, dragon scimitar.
+    echo "== item-req-check (live cache via the game service's own mount) =="
+    compose run --rm -T --no-deps --entrypoint bash game -c \
+      'java -cp "/app/lib/*" org.alter.tools.itemcheck.MetaReqCheckToolKt 1117 1115 1119 1125 1121 1123 1127 1157 1135 4091 1333 4587 2>&1 | tail -20'
+    ;;
   dump-ge-locs)
     # READ-ONLY diagnostic: list the locs on the ORIGINAL Grand Exchange floor so
     # the central-desk / booth object ids can be identified. Prefers the pristine
