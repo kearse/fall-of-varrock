@@ -29,7 +29,7 @@ All three combat styles climb the same ladder: each ranged/magic family is pegge
 
 ## Why gate armour?
 
-**Rank is the only armour requirement.** Armour has no skill-level requirements at all - a level-3 Lord can wear dragon, and a maxed Peasant cannot wear steel. (Weapons are the opposite: they keep their normal level requirements - 40 Attack for a rune scimitar - and are never rank-gated.) Your companions live under the same ceiling: they can't wear armour above **your** rank.
+**Armour needs both your levels and your rank.** All gear keeps its classic level requirements - 40 Defence for rune armour, 40 Attack for a rune scimitar - and armour is *additionally* rank-gated: a maxed Peasant still cannot wear steel, and a level-3 Lord still needs the Defence for dragon. There are no quest requirements on any armour or weapon. (Weapons are never rank-gated - levels alone decide what you can wield.) Your companions live under the same ceiling: they can't wear armour above **your** rank, and each piece is checked against the companion's own levels.
 
 The armour gate is the server's core progression brake: you can't buy your way into rune on day one - you climb the ladder, and each rung both marks your standing and funds the realm (rank fees are a major coin sink). It also means seeing someone in dragon tells you something real: they're a **Lord** at minimum.
 
