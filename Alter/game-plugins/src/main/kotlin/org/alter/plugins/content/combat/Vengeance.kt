@@ -40,10 +40,11 @@ object Vengeance {
      */
     fun onDamaged(victim: Pawn, attacker: Pawn, pawnHit: PawnHit) {
         if (victim !is Player || victim.attr[ACTIVE] != true) return
-        victim.attr[ACTIVE] = false
         val dealt = pawnHit.hit.hitmarks.sumOf { it.damage }
         val reflect = dealt * 3 / 4
+        // A miss or 0 must NOT consume the buff — vengeance waits for a real hit.
         if (reflect <= 0) return
+        victim.attr[ACTIVE] = false
         victim.forceChat("Taste vengeance!")
         // A plain hit (not routed through a combat strategy) so it never re-triggers this hook.
         attacker.hit(damage = reflect, attackersIndex = victim.index)

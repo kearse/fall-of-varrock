@@ -47,6 +47,27 @@ class KitsPlugin(
             openBankMode(player)
         }
 
+        // Quick-load: ::kit <1-3> re-arms straight from a saved slot with the bank open —
+        // no editor round-trip. Same conservative loader as the editor's Load button.
+        onCommand("kit", description = "Quick-load a saved kit at a bank (::kit 1-3)") {
+            val slot = player.getCommandArgs().getOrNull(0)?.toIntOrNull()
+            if (slot == null || slot !in 1..KitStorage.SLOT_COUNT) {
+                player.message("Usage: ::kit <1-${KitStorage.SLOT_COUNT}>")
+                return@onCommand
+            }
+            if (TrainingArena.kitted(player)) {
+                player.message("Hand the training kit back first (::unkit).")
+                return@onCommand
+            }
+            val kit = KitStorage.load(player)[slot - 1]
+            if (kit == null || kit.isEmpty()) {
+                player.message("Kit $slot is empty — build and save it with ::kits first.")
+                return@onCommand
+            }
+            loadFromBank(player, kit)
+            player.setSpellbook(spellbookOf(kit.book))
+        }
+
         onCommand("kitclick", description = "Kit editor interaction (client overlay channel)") {
             val args = player.getCommandArgs()
             when (args.getOrNull(0)) {
@@ -78,6 +99,13 @@ class KitsPlugin(
 
     private fun bankOpen(p: Player): Boolean =
         p.getInterfaceAt(InterfaceDestination.MAIN_SCREEN) == Bank.BANK_INTERFACE_ID
+
+    private fun spellbookOf(book: Int): org.alter.api.Spellbook =
+        when (book) {
+            KitSetup.BOOK_ANCIENTS -> org.alter.api.Spellbook.ANCIENTS
+            KitSetup.BOOK_LUNAR -> org.alter.api.Spellbook.LUNAR
+            else -> org.alter.api.Spellbook.NORMAL
+        }
 
     // ───────────────────────────── bank loader ─────────────────────────────
 

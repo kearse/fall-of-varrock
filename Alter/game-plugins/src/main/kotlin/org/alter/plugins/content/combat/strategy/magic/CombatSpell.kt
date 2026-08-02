@@ -267,7 +267,7 @@ enum class CombatSpell(
      */
     SMOKE_RUSH(
         id = 4629,
-        maxHit = 14,
+        maxHit = 13, // OSRS Smoke Rush
         castAnimation = 1978,
         castSound = 183,
         castGfx = null,
@@ -279,7 +279,7 @@ enum class CombatSpell(
 
     SHADOW_RUSH(
         id = 4630,
-        maxHit = 15,
+        maxHit = 14, // OSRS Shadow Rush
         castAnimation = 1978,
         castSound = 178,
         castGfx = null,
@@ -291,7 +291,7 @@ enum class CombatSpell(
 
     BLOOD_RUSH(
         id = 4632,
-        maxHit = 16,
+        maxHit = 15, // OSRS Blood Rush
         castAnimation = 1978,
         castSound = 106,
         castGfx = null,
@@ -303,7 +303,7 @@ enum class CombatSpell(
 
     ICE_RUSH(
         id = 4633,
-        maxHit = 17,
+        maxHit = 16, // OSRS Ice Rush
         castAnimation = 1978,
         castSound = 171,
         castGfx = null,
@@ -317,7 +317,7 @@ enum class CombatSpell(
 
     SMOKE_BURST(
         id = 4635,
-        maxHit = 18,
+        maxHit = 17, // OSRS Smoke Burst
         castAnimation = 1979,
         castSound = 183,
         castGfx = null,
@@ -329,7 +329,7 @@ enum class CombatSpell(
 
     SHADOW_BURST(
         id = 4636,
-        maxHit = 19,
+        maxHit = 18, // OSRS Shadow Burst
         castAnimation = 1979,
         castSound = 178,
         castGfx = null,
@@ -413,7 +413,7 @@ enum class CombatSpell(
         impactGfx = Graphic(id = 367, height = 0),
         autoCastId = 42,
         baseXp = 46.0,
-        freezeTicks = 25,
+        freezeTicks = 24, // OSRS: Ice Blitz freezes for 24 ticks (14.4s)
     ),
 
     SMOKE_BARRAGE(
@@ -463,7 +463,7 @@ enum class CombatSpell(
         autoCastId = 46,
         projectilEndHeight = 0,
         baseXp = 52.0,
-        freezeTicks = 33,
+        freezeTicks = 32, // OSRS: Ice Barrage freezes for 32 ticks (19.2s)
     ),
     ;
 

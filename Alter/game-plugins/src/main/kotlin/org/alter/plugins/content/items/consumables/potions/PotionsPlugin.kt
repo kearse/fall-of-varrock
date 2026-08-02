@@ -8,6 +8,7 @@ import org.alter.game.model.World
 import org.alter.game.model.attr.ANTIFIRE_POTION_CHARGES_ATTR
 import org.alter.game.model.attr.DRAGONFIRE_IMMUNITY_ATTR
 import org.alter.game.model.attr.POISON_TICKS_LEFT_ATTR
+import org.alter.game.model.attr.VENOM_DAMAGE_ATTR
 import org.alter.game.model.entity.Player
 import org.alter.game.model.timer.ANTIFIRE_TIMER
 import org.alter.game.model.timer.POISON_TIMER
@@ -38,6 +39,29 @@ class PotionsPlugin(
 
     private val doseByKey = HashMap<String, Dose>()
 
+    /** Divine boost effects by family base name, re-applied by the re-boost timer. */
+    private val divineEffects = HashMap<String, (Player) -> Unit>()
+
+    /**
+     * A divine potion family: applies [effect] immediately, deals the 10 HP sip cost
+     * (never below 1 HP; drinking at <= 10 HP applies no cost or effect, mirroring
+     * OSRS's refusal), and arms the re-boost that pins the stats for 5 minutes.
+     */
+    private fun divineFamily(base: String, effect: (Player) -> Unit) {
+        divineEffects[base] = effect
+        family(base) { p ->
+            if (p.getSkills().getCurrentLevel(Skills.HITPOINTS) <= DIVINE_SIP_COST) {
+                p.message("You need more than $DIVINE_SIP_COST Hitpoints to drink this potion.")
+                return@family
+            }
+            p.getSkills().decrementCurrentLevel(Skills.HITPOINTS, DIVINE_SIP_COST, capped = false)
+            effect(p)
+            p.attr[DIVINE_EFFECT_ATTR] = base
+            p.attr[DIVINE_FIRES_LEFT_ATTR] = DIVINE_REBOOST_FIRES
+            p.timers[DIVINE_REBOOST_TIMER] = DIVINE_REBOOST_INTERVAL
+        }
+    }
+
     init {
         // ---- Combat-stat boosts (+base, +pct of the relevant base level) -------------------
         family("attack_potion") { boost(it, Skills.ATTACK, 3, 0.10) }
@@ -57,20 +81,37 @@ class PotionsPlugin(
         family("bastion_potion") { boost(it, Skills.RANGED, 4, 0.10); boost(it, Skills.DEFENCE, 5, 0.15) }
         family("battlemage_potion") { boost(it, Skills.MAGIC, 4, 0.0); boost(it, Skills.DEFENCE, 5, 0.15) }
 
-        // ---- Divine variants — sold in shops (e.g. the vote shop's divine super combat) but were
-        // never wired, so drinking one was a silent no-op ("super combat potion does not increase
-        // stats"). Simplified: same boosts as their non-divine counterparts; the OSRS re-boost-
-        // every-15s (and 10hp sip cost) is not modelled.
-        family("divine_super_combat_potion") {
+        // ---- Divine variants: OSRS behaviour — the sip costs 10 HP (refused at 10 HP or
+        // less, handled inside divineFamily since the dose is already consumed) and the
+        // boost RE-APPLIES every 25 ticks for 5 minutes, keeping stats pinned at the cap.
+        divineFamily("divine_super_combat_potion") {
             boost(it, Skills.ATTACK, 5, 0.15); boost(it, Skills.STRENGTH, 5, 0.15); boost(it, Skills.DEFENCE, 5, 0.15)
         }
-        family("divine_super_attack_potion") { boost(it, Skills.ATTACK, 5, 0.15) }
-        family("divine_super_strength_potion") { boost(it, Skills.STRENGTH, 5, 0.15) }
-        family("divine_super_defence_potion") { boost(it, Skills.DEFENCE, 5, 0.15) }
-        family("divine_ranging_potion") { boost(it, Skills.RANGED, 5, 0.15) }
-        family("divine_magic_potion") { boost(it, Skills.MAGIC, 4, 0.0) }
-        family("divine_bastion_potion") { boost(it, Skills.RANGED, 4, 0.10); boost(it, Skills.DEFENCE, 5, 0.15) }
-        family("divine_battlemage_potion") { boost(it, Skills.MAGIC, 4, 0.0); boost(it, Skills.DEFENCE, 5, 0.15) }
+        divineFamily("divine_super_attack_potion") { boost(it, Skills.ATTACK, 5, 0.15) }
+        divineFamily("divine_super_strength_potion") { boost(it, Skills.STRENGTH, 5, 0.15) }
+        divineFamily("divine_super_defence_potion") { boost(it, Skills.DEFENCE, 5, 0.15) }
+        divineFamily("divine_ranging_potion") { boost(it, Skills.RANGED, 5, 0.15) }
+        divineFamily("divine_magic_potion") { boost(it, Skills.MAGIC, 4, 0.0) }
+        divineFamily("divine_bastion_potion") { boost(it, Skills.RANGED, 4, 0.10); boost(it, Skills.DEFENCE, 5, 0.15) }
+        divineFamily("divine_battlemage_potion") { boost(it, Skills.MAGIC, 4, 0.0); boost(it, Skills.DEFENCE, 5, 0.15) }
+
+        onTimer(DIVINE_REBOOST_TIMER) {
+            val p = pawn as? Player ?: return@onTimer
+            val family = p.attr[DIVINE_EFFECT_ATTR]
+            val firesLeft = p.attr[DIVINE_FIRES_LEFT_ATTR] ?: 0
+            val effect = family?.let { divineEffects[it] }
+            if (effect != null && firesLeft > 0 && !p.isDead()) {
+                effect(p)
+                p.attr[DIVINE_FIRES_LEFT_ATTR] = firesLeft - 1
+                p.timers[DIVINE_REBOOST_TIMER] = DIVINE_REBOOST_INTERVAL
+            } else {
+                p.attr.remove(DIVINE_EFFECT_ATTR)
+                p.attr.remove(DIVINE_FIRES_LEFT_ATTR)
+                if (effect != null) {
+                    p.message("Your divine potion's effect has worn off.")
+                }
+            }
+        }
         family("zamorak_brew") {
             boost(it, Skills.ATTACK, 2, 0.20); boost(it, Skills.STRENGTH, 2, 0.12)
             drainCurrent(it, Skills.DEFENCE, 2, 0.10)
@@ -212,9 +253,16 @@ class PotionsPlugin(
         p.sendRunEnergy(p.runEnergy.toInt())
     }
 
-    /** Cure existing poison/venom and grant immunity for [immunityTicks] poison ticks
-     *  (stored as a negative tick counter that counts back up to zero). */
+    /** Cure existing poison and grant immunity for [immunityTicks] poison ticks
+     *  (stored as a negative tick counter that counts back up to zero). Against venom,
+     *  only anti-venom clears it — a weaker cure converts the venom to regular poison
+     *  at its current damage, exactly as in OSRS. */
     private fun curePoison(p: Player, immunityTicks: Int) {
+        if (Poison.isEnvenomed(p) && immunityTicks < IMMUNITY_ANTIVENOM) {
+            Poison.convertVenomToPoison(p)
+            return
+        }
+        p.attr.remove(VENOM_DAMAGE_ATTR)
         p.attr[POISON_TICKS_LEFT_ATTR] = -immunityTicks
         p.timers[POISON_TIMER] = 1
         Poison.setHpOrb(p, Poison.OrbState.NONE)
@@ -233,11 +281,20 @@ class PotionsPlugin(
         const val POTION_DELAY_TICKS = 3
         const val MAX_RUN_ENERGY = 10000.0
 
-        // Poison-cure immunity in POISON_TIMER fires (each = 25 ticks ≈ 15s).
-        const val IMMUNITY_ANTIPOISON = 6   // 90s
-        const val IMMUNITY_SUPER = 24       // 6 min
-        const val IMMUNITY_ANTIDOTE = 36    // 9 min
-        const val IMMUNITY_ANTIVENOM = 48   // 12 min
+        // Divine potions: 10 HP per sip; the boost re-applies every 25 ticks (15s) for
+        // 5 minutes (20 fires) — OSRS Wiki, Divine super combat potion.
+        const val DIVINE_SIP_COST = 10
+        const val DIVINE_REBOOST_INTERVAL = 25
+        const val DIVINE_REBOOST_FIRES = 20
+        val DIVINE_REBOOST_TIMER = org.alter.game.model.timer.TimerKey()
+        val DIVINE_EFFECT_ATTR = org.alter.game.model.attr.AttributeKey<String>()
+        val DIVINE_FIRES_LEFT_ATTR = org.alter.game.model.attr.AttributeKey<Int>()
+
+        // Poison-cure immunity in POISON_TIMER fires (each = 30 ticks = 18s).
+        const val IMMUNITY_ANTIPOISON = 5   // 90s
+        const val IMMUNITY_SUPER = 20       // 6 min
+        const val IMMUNITY_ANTIDOTE = 30    // 9 min
+        const val IMMUNITY_ANTIVENOM = 40   // 12 min
 
         // Antifire protection duration in game ticks (0.6s each).
         const val ANTIFIRE_REGULAR = 600          // 6 min

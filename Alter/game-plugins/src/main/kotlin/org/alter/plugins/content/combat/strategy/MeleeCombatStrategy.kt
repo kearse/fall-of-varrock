@@ -65,13 +65,18 @@ object MeleeCombatStrategy : CombatStrategy {
         val maxHit = formula.getMaxHit(pawn, target)
         val landHit = accuracy >= world.randomDouble()
 
-        val damage =
-            pawn.dealHit(target = target, maxHit = maxHit, landHit = landHit, delay = 1) {
+        // Melee damage applies on the defender's next cycle (delay 0) — the OSRS "same
+        // tick" semantics. XP is awarded when the hit lands, from the damage actually
+        // dealt (hitmarks are clamped to remaining HP at application).
+        val pawnHit =
+            pawn.dealHit(target = target, maxHit = maxHit, landHit = landHit, delay = 0) {
                 WeaponEffects.applyOnHit(pawn, target, it)
-            }.hit.hitmarks.sumOf { it.damage }
-
-        if (damage > 0 && pawn.entityType.isPlayer) {
-            addCombatXp(pawn as Player, target, damage)
+            }
+        pawnHit.hit.addAction {
+            val damage = hitmarks.sumOf { it.damage }
+            if (damage > 0 && pawn.entityType.isPlayer) {
+                addCombatXp(pawn as Player, target, damage)
+            }
         }
     }
 
@@ -80,7 +85,7 @@ object MeleeCombatStrategy : CombatStrategy {
         target: Pawn,
         damage: Int,
     ) {
-        val modDamage = if (target.entityType.isNpc) Math.min(target.getCurrentHp(), damage) else damage
+        val modDamage = damage
         val mode = CombatConfigs.getXpMode(player)
         val multiplier = if (target is Npc) Combat.getNpcXpMultiplier(target) else 1.0
 
@@ -103,7 +108,12 @@ object MeleeCombatStrategy : CombatStrategy {
                 player.addXp(Skills.DEFENCE, modDamage * 1.33 * multiplier)
                 player.addXp(Skills.HITPOINTS, modDamage * 1.33 * multiplier)
             }
-            else -> throw IllegalStateException("Unknown $mode in MeleeCombatStrategy.")
+            else -> {
+                // A weapon whose xp-mode table reports a non-melee mode while melee-attacking
+                // (e.g. salamander tables) must not throw — default to Attack xp.
+                player.addXp(Skills.ATTACK, modDamage * 4.0 * multiplier)
+                player.addXp(Skills.HITPOINTS, modDamage * 1.33 * multiplier)
+            }
         }
     }
 }

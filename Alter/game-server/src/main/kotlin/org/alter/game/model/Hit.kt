@@ -41,6 +41,59 @@ class Hit private constructor(val hitmarks: List<Hitmark>, val hitbar: Hitbar?, 
     internal var cancelCondition: () -> Boolean = { false }
 
     /**
+     * Transforms applied to each hitmark's damage at APPLICATION time — the tick the
+     * hit actually lands, not the tick it was calculated. This is how overhead
+     * protection prayers can be switched while a projectile is mid-flight and still
+     * reduce the damage.
+     */
+    internal val damageTransforms = mutableListOf<(Int) -> Int>()
+
+    /**
+     * @see damageTransforms
+     */
+    fun addDamageTransform(transform: (Int) -> Int): Hit {
+        damageTransforms.add(transform)
+        return this
+    }
+
+    /**
+     * One defender-cycle of delay countdown. Returns true when the hit is due to
+     * apply this cycle (a hit with delay N lands on the N-th cycle after queueing).
+     */
+    fun tickCountdown(): Boolean {
+        if (damageDelay > 0) {
+            damageDelay--
+            return false
+        }
+        return true
+    }
+
+    fun isCancelled(): Boolean = cancelCondition()
+
+    /**
+     * Application-time damage resolution for one hitmark: run [damageTransforms] in
+     * order, clamp to [currentHp], write the result back and return it.
+     */
+    fun transformedDamage(
+        hitmark: Hitmark,
+        currentHp: Int,
+    ): Int {
+        var damage = hitmark.damage
+        for (transform in damageTransforms) {
+            damage = transform(damage)
+        }
+        if (damage > currentHp) {
+            damage = currentHp
+        }
+        hitmark.damage = damage
+        return damage
+    }
+
+    fun runActions() {
+        actions.forEach { action -> action(this) }
+    }
+
+    /**
      * @see actions
      */
     fun addAction(action: Hit.() -> Unit): Hit {

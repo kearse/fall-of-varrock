@@ -1,12 +1,14 @@
 package org.alter.plugins.content.combat.specialattack.weapons.statiuswarhammer
 
+import org.alter.api.NpcSkills
 import org.alter.api.Skills
 import org.alter.game.Server
 import org.alter.game.model.World
-import org.alter.game.model.entity.Player
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
+import org.alter.plugins.content.combat.currentCombatStat
 import org.alter.plugins.content.combat.dealHit
+import org.alter.plugins.content.combat.drainCombatStat
 import org.alter.plugins.content.combat.formula.MeleeCombatFormula
 import org.alter.plugins.content.combat.specialattack.SpecialAttacks
 
@@ -31,13 +33,14 @@ class StatiusWarhammerPlugin(
             val maxHit = MeleeCombatFormula.getMaxHit(player, target, specialAttackMultiplier = 1.25)
             val accuracy = MeleeCombatFormula.getAccuracy(player, target, specialAttackMultiplier = 1.25)
             val landHit = accuracy >= world.randomDouble()
-            player.dealHit(target = target, maxHit = maxHit, landHit = landHit, delay = 1)
+            val victim = target
+            val pawnHit = player.dealHit(target = victim, maxHit = maxHit, landHit = landHit, delay = 0)
 
             if (landHit) {
-                val victim = target
-                if (victim is Player) {
-                    val current = victim.getSkills().getCurrentLevel(Skills.DEFENCE)
-                    victim.getSkills().setCurrentLevel(Skills.DEFENCE, (current * 0.70).toInt())
+                // Drains 30% of the target's current Defence on hit — NPCs included.
+                pawnHit.hit.addAction {
+                    val current = victim.currentCombatStat(Skills.DEFENCE, NpcSkills.DEFENCE)
+                    victim.drainCombatStat(Skills.DEFENCE, NpcSkills.DEFENCE, (current * 0.30).toInt())
                 }
             }
         }

@@ -173,6 +173,10 @@ object EquipAction {
                 p.equipment[equipSlot] = Item(replace.id, add + replace.amount)
             }
 
+            // Recalculate bonuses NOW, not on the next cycle: an attack fired from the
+            // combat queue this same tick must use the just-equipped gear's stats —
+            // this is what makes OSRS-style one-tick gear switching work.
+            p.calculateBonuses()
             PlayerInfo(p).syncAppearance()
             plugins.executeEquipSlot(p, equipSlot)
             plugins.executeEquipItem(p, replace.id)
@@ -270,6 +274,8 @@ object EquipAction {
                 }
 
                 p.equipment[equipSlot] = newEquippedItem
+                // Same-tick bonus refresh — see the stackable branch above.
+                p.calculateBonuses()
                 PlayerInfo(p).syncAppearance()
                 plugins.executeEquipSlot(p, equipSlot)
                 plugins.executeEquipItem(p, newEquippedItem.id)
@@ -295,9 +301,12 @@ object EquipAction {
         if (addition.getLeftOver() == 0) {
             addition.items.firstOrNull()?.item?.copyAttr(item)
             p.equipment[equipmentSlot] = null
+            // Same-tick bonus refresh — see equip().
+            p.calculateBonuses()
         } else {
             val leftover = Item(item, addition.getLeftOver())
             p.equipment[equipmentSlot] = leftover
+            p.calculateBonuses()
         }
 
         PlayerInfo(p).syncAppearance()

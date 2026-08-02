@@ -78,7 +78,17 @@ class PkStatsPlugin(
         onPlayerPreDeath {
             val victim = player
             val killer = victim.attr[KILLER_ATTR]?.get() as? Player ?: return@onPlayerPreDeath
-            if (killer === victim || killer is PkBot || victim is PkBot) return@onPlayerPreDeath // real-vs-real only
+            if (killer === victim) return@onPlayerPreDeath
+
+            // PK QoL: every PvP kill — bot targets included — refills the killer's special
+            // attack. Runs BEFORE the real-vs-real guard below so bot kills count for it
+            // (elo/kill-count stays real players only).
+            if (killer !is PkBot) {
+                org.alter.plugins.content.interfaces.attack.AttackTab.setEnergy(killer, 100)
+                killer.message("<col=801700>Your special attack energy has been restored.</col>")
+            }
+
+            if (killer is PkBot || victim is PkBot) return@onPlayerPreDeath // real-vs-real only
 
             val ke = killer.elo()
             val ve = victim.elo()

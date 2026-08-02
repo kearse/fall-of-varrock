@@ -8,6 +8,7 @@ import org.alter.plugins.content.combat.dealHit
 import org.alter.plugins.content.combat.fireAmmoProjectile
 import org.alter.plugins.content.combat.formula.RangedCombatFormula
 import org.alter.plugins.content.combat.specialattack.SpecialAttacks
+import org.alter.plugins.content.combat.strategy.RangedCombatStrategy
 
 /**
  * Magic shortbow (861) special attack: "Snapshot".
@@ -24,10 +25,13 @@ class MagicShortbowPlugin(
             player.animate(id = 1074)
             player.fireAmmoProjectile(target)
 
+            // OSRS Snapshot: two arrows with 10% reduced accuracy, landing on the normal
+            // ranged hit-delay tick for the distance (both together).
+            val delay = RangedCombatStrategy.getHitDelay(player.getCentreTile(), target.getCentreTile())
             for (i in 0 until 2) {
                 val maxHit = RangedCombatFormula.getMaxHit(player, target, specialAttackMultiplier = 1.0)
-                val accuracy = RangedCombatFormula.getAccuracy(player, target, specialAttackMultiplier = 1.0)
-                player.dealHit(target = target, maxHit = maxHit, landHit = accuracy >= world.randomDouble(), delay = 2 + i)
+                val accuracy = RangedCombatFormula.getAccuracy(player, target, specialAttackMultiplier = 0.9)
+                player.dealHit(target = target, maxHit = maxHit, landHit = accuracy >= world.randomDouble(), delay = delay)
             }
         }
     }

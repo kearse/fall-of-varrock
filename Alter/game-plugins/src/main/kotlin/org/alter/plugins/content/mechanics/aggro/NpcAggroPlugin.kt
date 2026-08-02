@@ -60,30 +60,34 @@ val defaultAggressiveness: (Npc, Player) -> Boolean = boolean@{ n, p ->
 }
 
 fun checkRadius(npc: Npc) {
+    /*
+     * Iterate PLAYERS and reverse-check distance instead of scanning every tile in the
+     * aggro square: the old (2r+1)^2 chunk probe ran ~81-841 tile lookups per aggressive
+     * NPC every few ticks (thousands per tick near spawn clusters), and its loop order
+     * always aggroed the south-west-most player. There are always far fewer players
+     * than tiles, the Chebyshev reject is two comparisons, and nearest-first matches
+     * OSRS hunt behaviour.
+     */
     val radius = npc.combatDef.aggressiveRadius
-
-    mainLoop@
-    for (x in -radius..radius) {
-        for (z in -radius..radius) {
-            val tile = npc.tile.transform(x, z)
-            val chunk = world.chunks.get(tile, createIfNeeded = false) ?: continue
-
-            val players = chunk.getEntities<Player>(tile, EntityType.PLAYER, EntityType.CLIENT)
-            if (players.isEmpty()) {
-                continue
-            }
-
-            val targets = players.filter { canAttack(npc, it) }
-            if (targets.isEmpty()) {
-                continue
-            }
-
-            val target = targets.random()
-            if (npc.getCombatTarget() != target) {
-                npc.attack(target)
-            }
-            break@mainLoop
+    var best: Player? = null
+    var bestDist = Int.MAX_VALUE
+    world.players.forEach { p ->
+        if (p.tile.height != npc.tile.height) {
+            return@forEach
         }
+        val dist = npc.tile.getChebyshevDistance(p.tile)
+        if (dist > radius || dist >= bestDist) {
+            return@forEach
+        }
+        if (!canAttack(npc, p)) {
+            return@forEach
+        }
+        best = p
+        bestDist = dist
+    }
+    val target = best ?: return
+    if (npc.getCombatTarget() != target) {
+        npc.attack(target)
     }
 }
 

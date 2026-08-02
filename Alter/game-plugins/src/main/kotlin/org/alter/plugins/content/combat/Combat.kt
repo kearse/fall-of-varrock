@@ -16,6 +16,7 @@ import org.alter.game.model.entity.Player
 import org.alter.game.model.queue.QueueTask
 import org.alter.game.model.timer.ACTIVE_COMBAT_TIMER
 import org.alter.game.model.timer.ATTACK_DELAY
+import org.alter.game.model.timer.TimerKey
 import org.alter.api.cfg.Varbit
 import org.alter.plugins.content.combat.strategy.CombatStrategy
 import org.alter.plugins.content.interfaces.attack.AttackTab
@@ -32,10 +33,17 @@ object Combat {
     val CASTING_SPELL = AttributeKey<CombatSpell>()
     val DAMAGE_DEAL_MULTIPLIER = AttributeKey<Double>()
     val DAMAGE_TAKE_MULTIPLIER = AttributeKey<Double>()
-    val BOLT_ENCHANTMENT_EFFECT = AttributeKey<Boolean>()
     const val PRIORITY_PID_VARP = 1075
     const val SELECTED_AUTOCAST_VARBIT = 276
     const val DEFENSIVE_MAGIC_CAST_VARBIT = 2668
+
+    /**
+     * OSRS PJ timer: for [PJ_TICKS] (12 seconds) after a combat exchange, a combatant in
+     * single-way combat can only be attacked by their current opponent. Refreshed on every
+     * attack for both participants, so an active fight can't be interrupted.
+     */
+    val PJ_TIMER = TimerKey()
+    const val PJ_TICKS = 20
 
     fun reset(pawn: Pawn) {
         pawn.attr.remove(COMBAT_TARGET_FOCUS_ATTR)
@@ -85,10 +93,13 @@ object Combat {
     ) {
         pawn.timers[ATTACK_DELAY] = CombatConfigs.getAttackDelay(pawn)
         target.timers[ACTIVE_COMBAT_TIMER] = 17 // 10,2 seconds
-        pawn.attr[BOLT_ENCHANTMENT_EFFECT] = false
 
         pawn.attr[LAST_HIT_ATTR] = WeakReference(target)
         target.attr[LAST_HIT_BY_ATTR] = WeakReference(pawn)
+
+        // Both participants get PJ protection while the exchange is live.
+        pawn.timers[PJ_TIMER] = PJ_TICKS
+        target.timers[PJ_TIMER] = PJ_TICKS
 
         if (pawn.attr.has(CASTING_SPELL) && pawn is Player && pawn.getVarbit(SELECTED_AUTOCAST_VARBIT) == 0) {
             reset(pawn)
@@ -148,6 +159,13 @@ object Combat {
             }
         }
 
+        // A hit can land after its attacker died (projectiles are not cancelled by the
+        // attacker's death) — the block animation above is right, but nobody should
+        // auto-retaliate against a corpse.
+        if (pawn.isDead()) {
+            return
+        }
+
         if (target.lock.canAttack()) {
             if (target.entityType.isNpc) {
                 if (!target.attr.has(COMBAT_TARGET_FOCUS_ATTR) || target.attr[COMBAT_TARGET_FOCUS_ATTR]!!.get() != pawn) {
@@ -162,6 +180,29 @@ object Combat {
                 }
             }
         }
+    }
+
+    /**
+     * OSRS overhead-protection rule: the matching protect prayer blocks 100% of the damage
+     * dealt by an NPC attacker but only 40% of the damage dealt by a player attacker
+     * (accuracy is unaffected in both cases). Bespoke prayer-piercing bosses bypass the
+     * formulas entirely via BossCombat, so no pierce flag is needed here.
+     */
+    fun protectionDamageMultiplier(
+        attacker: Pawn,
+        target: Pawn,
+        combatClass: CombatClass,
+    ): Double {
+        val icon =
+            when (combatClass) {
+                CombatClass.MELEE -> PrayerIcon.PROTECT_FROM_MELEE
+                CombatClass.RANGED -> PrayerIcon.PROTECT_FROM_MISSILES
+                CombatClass.MAGIC -> PrayerIcon.PROTECT_FROM_MAGIC
+            }
+        if (!target.hasPrayerIcon(icon)) {
+            return 1.0
+        }
+        return if (attacker.entityType.isPlayer) 0.6 else 0.0
     }
 
     fun getNpcXpMultiplier(npc: Npc): Double {
@@ -306,6 +347,12 @@ object Combat {
                 return false
             }
 
+            // Single-way combat + PJ timer apply to aggressive NPCs too: a monster can't
+            // pile a player who is mid-fight with someone else.
+            if (pawn is Npc && PvpZones.isSingle(target.tile) && pjBlocked(pawn, target)) {
+                return false
+            }
+
             // Castle Wars outranks every other rule (including the bot bypass below): opposite-team
             // pairs in the SAME game may fight anywhere in the arena, but a teammate may NEVER be
             // attacked — not even by a filler bot — and outsiders can't touch participants at all.
@@ -388,10 +435,17 @@ object Combat {
                     return false
                 }
 
-                // Single-combat: you can't pile a target who's already fighting another player.
+                // Single-combat: you can't pile a target who's already fighting another PLAYER,
+                // and the PJ timer keeps them protected for 20 ticks after their last exchange.
+                // NPC fights don't count here — a player killing green dragons in the single
+                // zone is exactly who single-way PvP exists to let you attack.
                 if (PvpZones.isSingle(target.tile)) {
-                    val theirTarget = target.getCombatTarget()
+                    val theirTarget = target.getCombatTarget()?.takeIf { it is Player }
                     if (theirTarget != null && theirTarget != pawn) {
+                        pawn.message("${target.username} is already in combat.")
+                        return false
+                    }
+                    if (pjBlocked(pawn, target, playersOnly = true)) {
                         pawn.message("${target.username} is already in combat.")
                         return false
                     }
@@ -399,6 +453,29 @@ object Combat {
             }
         }
         return true
+    }
+
+    /**
+     * True when [target] is under PJ protection against [aggressor]: their PJ timer is
+     * running and [aggressor] is not the opponent they are currently exchanging with.
+     * With [playersOnly] (the PvP branch), only PLAYER opponents grant protection —
+     * being mid-fight with an NPC must not make you unattackable to PKers.
+     */
+    private fun pjBlocked(
+        aggressor: Pawn,
+        target: Pawn,
+        playersOnly: Boolean = false,
+    ): Boolean {
+        if (!target.timers.has(PJ_TIMER)) {
+            return false
+        }
+        val partners =
+            listOfNotNull(target.attr[LAST_HIT_BY_ATTR]?.get(), target.attr[LAST_HIT_ATTR]?.get())
+                .filter { !playersOnly || it is Player }
+        if (partners.isEmpty()) {
+            return false
+        }
+        return aggressor !in partners
     }
 
     private fun getStrategy(combatClass: CombatClass): CombatStrategy =

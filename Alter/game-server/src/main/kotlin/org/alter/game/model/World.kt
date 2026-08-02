@@ -745,10 +745,43 @@ class World(val gameContext: GameContext, val devContext: DevContext) {
         }
     }
 
+    /**
+     * OSRS-style PID shuffle: every 100-150 ticks each player is dealt a fresh random
+     * processing priority, and [org.alter.game.task.PlayerCycleTask] cycles players in
+     * ascending priority order. This randomises who wins same-tick combat races instead
+     * of the fixed login-index order. Players who logged in since the last shuffle
+     * (priority -1) are dealt a priority immediately.
+     */
+    private var nextPidShuffleCycle = 0
+
+    fun shufflePidsIfDue() {
+        if (currentCycle >= nextPidShuffleCycle) {
+            nextPidShuffleCycle = currentCycle + PID_SHUFFLE_MIN_INTERVAL + random(PID_SHUFFLE_INTERVAL_VARIANCE)
+            players.forEach { it.processingPriority = random.nextInt(Int.MAX_VALUE) }
+        } else {
+            players.forEach {
+                if (it.processingPriority == -1) {
+                    it.processingPriority = random.nextInt(Int.MAX_VALUE)
+                }
+            }
+        }
+    }
+
     fun setNpcDefaults(npc: Npc) {
         val combatDef = plugins.npcCombatDefs.getOrDefault(npc.id, null) ?: NpcCombatDef.DEFAULT
         npc.combatDef = combatDef
         npc.combatDef.bonuses.forEachIndexed { index, bonus -> npc.equipmentBonuses[index] = bonus }
+        // The combat formulas read npc.stats, which initialise to level 1 — without this copy
+        // every monster fought at level 1 regardless of what its combat def registered.
+        // Index order matches NpcSkills: 0=attack, 1=strength, 2=defence, 3=magic, 4=ranged.
+        // Zero levels are skipped so content that stats an npc by hand isn't clobbered on respawn.
+        intArrayOf(combatDef.attack, combatDef.strength, combatDef.defence, combatDef.magic, combatDef.ranged)
+            .forEachIndexed { index, level ->
+                if (level > 0) {
+                    npc.stats.setMaxLevel(index, level)
+                    npc.stats.setCurrentLevel(index, level)
+                }
+            }
         npc.respawns = combatDef.respawnDelay > 0
         npc.setCurrentHp(npc.combatDef.hitpoints)
     }
@@ -810,6 +843,10 @@ class World(val gameContext: GameContext, val devContext: DevContext) {
 
     companion object {
         val logger = KotlinLogging.logger {}
+
+        /** PID reshuffle cadence: every 100-150 ticks (OSRS Wiki, Player identification number). */
+        private const val PID_SHUFFLE_MIN_INTERVAL = 100
+        private const val PID_SHUFFLE_INTERVAL_VARIANCE = 50
 
         /**
          * If the [rebootTimer] is active and is less than this value, we will

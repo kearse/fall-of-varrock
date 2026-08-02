@@ -34,7 +34,13 @@ val FORCE_DISCONNECTION_TIMER = TimerKey()
 /**
  * Timer key set when frozen.
  */
-val FROZEN_TIMER = TimerKey()
+val FROZEN_TIMER = TimerKey(resetOnDeath = true) // OSRS: dying unfreezes you
+
+/**
+ * Runs for the freeze duration plus five ticks: while it is active a pawn cannot be
+ * frozen again, giving the OSRS 5-tick re-freeze immunity window after thawing.
+ */
+val FREEZE_IMMUNITY_TIMER = TimerKey(resetOnDeath = true)
 
 /**
  * Timer key set when stunned.

@@ -1,6 +1,7 @@
 package org.alter.plugins.content.combat.formula
 
 import org.alter.game.model.combat.AttackStyle
+import org.alter.game.model.combat.CombatClass
 import org.alter.game.model.combat.CombatStyle
 import org.alter.game.model.entity.Npc
 import org.alter.game.model.entity.Pawn
@@ -11,6 +12,7 @@ import org.alter.plugins.content.combat.Combat
 import org.alter.plugins.content.combat.CombatConfigs
 import org.alter.plugins.content.mechanics.prayer.Prayer
 import org.alter.plugins.content.mechanics.prayer.Prayers
+import org.alter.plugins.content.skills.slayer.SlayerCombat
 
 /**
  * @author Tom <rspsmods@gmail.com>
@@ -34,14 +36,7 @@ object MeleeCombatFormula : CombatFormula {
     override fun getAccuracy(pawn: Pawn, target: Pawn, specialAttackMultiplier: Double): Double {
         val attack = getAttackRoll(pawn, target, specialAttackMultiplier)
         val defence = getDefenceRoll(pawn, target)
-
-        val accuracy: Double
-        if (attack > defence) {
-            accuracy = 1.0 - (defence + 2.0) / (2.0 * (attack + 1.0))
-        } else {
-            accuracy = attack / (2.0 * (defence + 1))
-        }
-        return accuracy
+        return CombatMath.hitChance(attack, defence)
     }
 
     override fun getMaxHit(pawn: Pawn, target: Pawn, specialAttackMultiplier: Double, specialPassiveMultiplier: Double): Int {
@@ -52,6 +47,8 @@ object MeleeCombatFormula : CombatFormula {
         if (pawn is Player) {
             base = applyStrengthSpecials(pawn, target, base, specialAttackMultiplier, specialPassiveMultiplier)
         }
+        // Overhead protection is NOT part of the max hit: it's applied to the rolled
+        // damage at hit-application time (see dealHit), so mid-flight prayer switches work.
         return base
     }
 
@@ -67,7 +64,9 @@ object MeleeCombatFormula : CombatFormula {
     }
 
     private fun getDefenceRoll(pawn: Pawn, target: Pawn): Int {
-        val a = if (pawn is Player) getEffectiveDefenceLevel(pawn) else if (pawn is Npc) getEffectiveDefenceLevel(pawn) else 0.0
+        // The defence roll belongs to the TARGET: their effective Defence level (own prayers,
+        // style bonus, boosts) against the defence bonus matching the attacker's damage type.
+        val a = if (target is Player) getEffectiveDefenceLevel(target) else if (target is Npc) getEffectiveDefenceLevel(target) else 0.0
         val b = getEquipmentDefenceBonus(pawn, target)
 
         var maxRoll = a * (b + 64.0)
@@ -78,16 +77,11 @@ object MeleeCombatFormula : CombatFormula {
     private fun applyStrengthSpecials(player: Player, target: Pawn, base: Int, specialAttackMultiplier: Double, specialPassiveMultiplier: Double): Int {
         var hit = base.toDouble()
 
-        hit *= getEquipmentMultiplier(player)
+        hit *= getEquipmentMultiplier(player, target)
         hit = Math.floor(hit)
 
         hit *= specialAttackMultiplier
         hit = Math.floor(hit)
-
-        if (target.hasPrayerIcon(PrayerIcon.PROTECT_FROM_MELEE)) {
-            hit *= 0.6
-            hit = Math.floor(hit)
-        }
 
         if (specialPassiveMultiplier == 1.0) {
             hit = applyPassiveMultiplier(player, target, hit)
@@ -109,7 +103,7 @@ object MeleeCombatFormula : CombatFormula {
     private fun applyAttackSpecials(player: Player, target: Pawn, base: Double, specialAttackMultiplier: Double): Double {
         var hit = base
 
-        hit *= getEquipmentMultiplier(player)
+        hit *= getEquipmentMultiplier(player, target)
         hit = Math.floor(hit)
 
         hit *= (if (player.hasEquipped(EquipmentType.WEAPON, "item.arclight") && isDemon(target)) 1.7 else specialAttackMultiplier)
@@ -143,7 +137,9 @@ object MeleeCombatFormula : CombatFormula {
             CombatStyle.STAB -> BonusSlot.ATTACK_STAB
             CombatStyle.SLASH -> BonusSlot.ATTACK_SLASH
             CombatStyle.CRUSH -> BonusSlot.ATTACK_CRUSH
-            else -> throw IllegalStateException("Invalid combat style. $combatStyle")
+            // NONE/odd styles must not throw mid-hit (it wedges the combat queue) — crush
+            // is the unarmed default.
+            else -> BonusSlot.ATTACK_CRUSH
         }
         return pawn.getBonus(bonus).toDouble()
     }
@@ -154,7 +150,7 @@ object MeleeCombatFormula : CombatFormula {
             CombatStyle.STAB -> BonusSlot.DEFENCE_STAB
             CombatStyle.SLASH -> BonusSlot.DEFENCE_SLASH
             CombatStyle.CRUSH -> BonusSlot.DEFENCE_CRUSH
-            else -> throw IllegalStateException("Invalid combat style. $combatStyle")
+            else -> BonusSlot.DEFENCE_CRUSH
         }
         return target.getBonus(bonus).toDouble()
     }
@@ -212,23 +208,13 @@ object MeleeCombatFormula : CombatFormula {
         return Math.floor(effectiveLevel)
     }
 
-    private fun getEffectiveStrengthLevel(npc: Npc): Double {
-        var effectiveLevel = npc.stats.getCurrentLevel(NpcSkills.STRENGTH).toDouble()
-        effectiveLevel += 8
-        return effectiveLevel
-    }
+    // NPC effective levels are level + 9: the standard +8 plus the implicit +1 style base
+    // every NPC has (OSRS Wiki, Damage per second/Melee).
+    private fun getEffectiveStrengthLevel(npc: Npc): Double = npc.stats.getCurrentLevel(NpcSkills.STRENGTH) + 9.0
 
-    private fun getEffectiveAttackLevel(npc: Npc): Double {
-        var effectiveLevel = npc.stats.getCurrentLevel(NpcSkills.ATTACK).toDouble()
-        effectiveLevel += 8
-        return effectiveLevel
-    }
+    private fun getEffectiveAttackLevel(npc: Npc): Double = npc.stats.getCurrentLevel(NpcSkills.ATTACK) + 9.0
 
-    private fun getEffectiveDefenceLevel(npc: Npc): Double {
-        var effectiveLevel = npc.stats.getCurrentLevel(NpcSkills.DEFENCE).toDouble()
-        effectiveLevel += 8
-        return effectiveLevel
-    }
+    private fun getEffectiveDefenceLevel(npc: Npc): Double = npc.stats.getCurrentLevel(NpcSkills.DEFENCE) + 9.0
 
     private fun getPrayerStrengthMultiplier(player: Player): Double = when {
         Prayers.isActive(player, Prayer.BURST_OF_STRENGTH) -> 1.05
@@ -259,24 +245,39 @@ object MeleeCombatFormula : CombatFormula {
         else -> 1.0
     }
 
-    private fun getEquipmentMultiplier(player: Player): Double = when {
-        player.hasEquipped(EquipmentType.AMULET, "item.salve_amulet") -> 7.0 / 6.0 // These should only apply if the target is undead..
-        player.hasEquipped(EquipmentType.AMULET, "item.salve_amulet_e") -> 1.2 // These should only apply if the target is undead..
-        // TODO: this should only apply when target is slayer task?
-        player.hasEquipped(EquipmentType.HEAD, *BLACK_MASKS) || player.hasEquipped(EquipmentType.HEAD, *BLACK_MASKS_I) -> 7.0 / 6.0 // This should only apply if you have the target || his category as a Slayer Task
-        else -> 1.0
+    /**
+     * Salve amulets only work against the undead; black masks only against the wearer's
+     * current Slayer assignment. Salve takes precedence and never stacks with the mask.
+     */
+    private fun getEquipmentMultiplier(player: Player, target: Pawn): Double {
+        val undead = isUndead(target)
+        return when {
+            undead && player.hasEquipped(EquipmentType.AMULET, "item.salve_amulet_e") -> 1.2
+            undead && player.hasEquipped(EquipmentType.AMULET, "item.salve_amulet") -> 7.0 / 6.0
+            (player.hasEquipped(EquipmentType.HEAD, *BLACK_MASKS) || player.hasEquipped(EquipmentType.HEAD, *BLACK_MASKS_I)) &&
+                SlayerCombat.isOnTaskAgainst(player, target) -> 7.0 / 6.0
+            else -> 1.0
+        }
+    }
+
+    private fun isUndead(pawn: Pawn): Boolean {
+        if (pawn.entityType.isNpc) {
+            return (pawn as Npc).isSpecies(NpcSpecies.UNDEAD)
+        }
+        return false
     }
 
     private fun applyPassiveMultiplier(pawn: Pawn, target: Pawn, base: Double): Double {
         if (pawn is Player) {
             val world = pawn.world
             val multiplier = when {
-                pawn.hasEquipped(EquipmentType.AMULET, "item.berserker_necklace") -> 1.2
-                isWearingDharok(pawn) -> {
-                    val lost = (pawn.getMaxHp() - pawn.getCurrentHp()) / 100.0
-                    val max = pawn.getMaxHp() / 100.0
-                    1.0 + (lost * max)
-                }
+                // OSRS: the berserker necklace only boosts obsidian melee weapons.
+                pawn.hasEquipped(EquipmentType.AMULET, "item.berserker_necklace") &&
+                    pawn.hasEquipped(
+                        EquipmentType.WEAPON,
+                        "item.tzhaarketom", "item.tzhaarketem", "item.toktzxilak", "item.toktzxilek",
+                    ) -> 1.2
+                isWearingDharok(pawn) -> CombatMath.dharokMultiplier(pawn.getMaxHp(), pawn.getCurrentHp())
                 pawn.hasEquipped(EquipmentType.WEAPON, "item.gadderhammer") && isShade(target) -> if (world.chance(1, 20)) 2.0 else 1.25
                 pawn.hasEquipped(EquipmentType.WEAPON, "item.keris", "item.kerisp") && (isKalphite(target) || isScarab(target)) -> if (world.chance(1, 51)) 3.0 else (4.0 / 3.0)
                 else -> 1.0

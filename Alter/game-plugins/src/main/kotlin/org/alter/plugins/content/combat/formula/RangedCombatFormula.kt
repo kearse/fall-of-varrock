@@ -3,6 +3,7 @@ package org.alter.plugins.content.combat.formula
 import org.alter.api.*
 import org.alter.api.ext.*
 import org.alter.game.model.combat.AttackStyle
+import org.alter.game.model.combat.CombatClass
 import org.alter.game.model.entity.Npc
 import org.alter.game.model.entity.Pawn
 import org.alter.game.model.entity.Player
@@ -10,6 +11,7 @@ import org.alter.plugins.content.combat.Combat
 import org.alter.plugins.content.combat.CombatConfigs
 import org.alter.plugins.content.mechanics.prayer.Prayer
 import org.alter.plugins.content.mechanics.prayer.Prayers
+import org.alter.plugins.content.skills.slayer.SlayerCombat
 
 /**
  * @author Tom <rspsmods@gmail.com>
@@ -57,14 +59,7 @@ object RangedCombatFormula : CombatFormula {
     ): Double {
         val attack = getAttackRoll(pawn, target, specialAttackMultiplier)
         val defence = getDefenceRoll(pawn, target)
-
-        val accuracy: Double
-        if (attack > defence) {
-            accuracy = 1.0 - (defence + 2.0) / (2.0 * (attack + 1.0))
-        } else {
-            accuracy = attack / (2.0 * (defence + 1))
-        }
-        return accuracy
+        return CombatMath.hitChance(attack, defence)
     }
 
     override fun getMaxHit(
@@ -87,6 +82,8 @@ object RangedCombatFormula : CombatFormula {
         if (pawn is Player) {
             base = applyRangedSpecials(pawn, target, base, specialAttackMultiplier, specialPassiveMultiplier)
         }
+        // Overhead protection is NOT part of the max hit: it's applied to the rolled
+        // damage at hit-application time (see dealHit), so mid-flight prayer switches work.
         return base
     }
 
@@ -116,11 +113,13 @@ object RangedCombatFormula : CombatFormula {
         pawn: Pawn,
         target: Pawn,
     ): Int {
+        // The defence roll belongs to the TARGET: their effective Defence level (own prayers,
+        // style bonus, boosts) against their ranged defence bonus.
         val a =
-            if (pawn is Player) {
-                getEffectiveDefenceLevel(pawn)
-            } else if (pawn is Npc) {
-                getEffectiveDefenceLevel(pawn)
+            if (target is Player) {
+                getEffectiveDefenceLevel(target)
+            } else if (target is Npc) {
+                getEffectiveDefenceLevel(target)
             } else {
                 0.0
             }
@@ -140,7 +139,7 @@ object RangedCombatFormula : CombatFormula {
     ): Int {
         var hit = base.toDouble()
 
-        hit *= getEquipmentMultiplier(player)
+        hit *= getEquipmentMultiplier(player, target)
         hit = Math.floor(hit)
 
         if (specialAttackMultiplier == 1.0) {
@@ -148,20 +147,8 @@ object RangedCombatFormula : CombatFormula {
                 when {
                     player.hasEquipped(EquipmentType.WEAPON, "item.dragon_hunter_crossbow") && isDragon(target) -> 1.3
                     player.hasEquipped(EquipmentType.WEAPON, "item.twisted_bow") && target.entityType.isNpc -> {
-                        // TODO: cap inside Chambers of Xeric is 350
-                        val cap = 250.0
-                        val magic =
-                            when (target) {
-                                is Player -> target.getSkills().getCurrentLevel(Skills.MAGIC)
-                                is Npc -> target.stats.getCurrentLevel(NpcSkills.MAGIC)
-                                else -> throw IllegalStateException("Invalid pawn type. [$target]")
-                            }
-                        val modifier =
-                            Math.min(
-                                cap,
-                                250.0 + (((magic * 3.0) - 14.0) / 100.0) - (Math.pow((((magic * 3.0) / 10.0) - 140.0), 2.0) / 100.0),
-                            )
-                        modifier
+                        // TODO: cap inside Chambers of Xeric is 350%
+                        CombatMath.twistedBowDamageModifier(targetMagic(target))
                     }
                     else -> 1.0
                 }
@@ -169,11 +156,6 @@ object RangedCombatFormula : CombatFormula {
             hit = Math.floor(hit)
         } else {
             hit *= specialAttackMultiplier
-            hit = Math.floor(hit)
-        }
-
-        if (target.hasPrayerIcon(PrayerIcon.PROTECT_FROM_MISSILES)) {
-            hit *= 0.6
             hit = Math.floor(hit)
         }
 
@@ -202,7 +184,7 @@ object RangedCombatFormula : CombatFormula {
     ): Double {
         var hit = base
 
-        hit *= getEquipmentMultiplier(player)
+        hit *= getEquipmentMultiplier(player, target)
         hit = Math.floor(hit)
 
         if (specialAttackMultiplier == 1.0) {
@@ -210,20 +192,8 @@ object RangedCombatFormula : CombatFormula {
                 when {
                     player.hasEquipped(EquipmentType.WEAPON, "item.dragon_hunter_crossbow") && isDragon(target) -> 1.3
                     player.hasEquipped(EquipmentType.WEAPON, "item.twisted_bow") && target.entityType.isNpc -> {
-                        // TODO: cap inside Chambers of Xeric is 250
-                        val cap = 140.0
-                        val magic =
-                            when (target) {
-                                is Player -> target.getSkills().getCurrentLevel(Skills.MAGIC)
-                                is Npc -> target.stats.getCurrentLevel(NpcSkills.MAGIC)
-                                else -> throw IllegalStateException("Invalid pawn type. [$target]")
-                            }
-                        val modifier =
-                            Math.min(
-                                cap,
-                                140.0 + (((magic * 3.0) - 10.0) / 100.0) - (Math.pow((((magic * 3.0) / 10.0) - 100.0), 2.0) / 100.0),
-                            )
-                        modifier
+                        // TODO: cap inside Chambers of Xeric is 250%
+                        CombatMath.twistedBowAccuracyModifier(targetMagic(target))
                     }
                     else -> 1.0
                 }
@@ -236,6 +206,13 @@ object RangedCombatFormula : CombatFormula {
 
         return hit
     }
+
+    private fun targetMagic(target: Pawn): Int =
+        when (target) {
+            is Player -> target.getSkills().getCurrentLevel(Skills.MAGIC)
+            is Npc -> target.stats.getCurrentLevel(NpcSkills.MAGIC)
+            else -> 0
+        }
 
     private fun applyDefenceSpecials(
         target: Pawn,
@@ -325,23 +302,13 @@ object RangedCombatFormula : CombatFormula {
         return Math.floor(effectiveLevel)
     }
 
-    private fun getEffectiveRangedLevel(npc: Npc): Double {
-        var effectiveLevel = npc.stats.getCurrentLevel(NpcSkills.RANGED).toDouble()
-        effectiveLevel += 8
-        return effectiveLevel
-    }
+    // NPC effective levels are level + 9: the standard +8 plus the implicit +1 style base
+    // every NPC has (OSRS Wiki, Damage per second/Ranged).
+    private fun getEffectiveRangedLevel(npc: Npc): Double = npc.stats.getCurrentLevel(NpcSkills.RANGED) + 9.0
 
-    private fun getEffectiveAttackLevel(npc: Npc): Double {
-        var effectiveLevel = npc.stats.getCurrentLevel(NpcSkills.RANGED).toDouble()
-        effectiveLevel += 8
-        return effectiveLevel
-    }
+    private fun getEffectiveAttackLevel(npc: Npc): Double = npc.stats.getCurrentLevel(NpcSkills.RANGED) + 9.0
 
-    private fun getEffectiveDefenceLevel(npc: Npc): Double {
-        var effectiveLevel = npc.stats.getCurrentLevel(NpcSkills.DEFENCE).toDouble()
-        effectiveLevel += 8
-        return effectiveLevel
-    }
+    private fun getEffectiveDefenceLevel(npc: Npc): Double = npc.stats.getCurrentLevel(NpcSkills.DEFENCE) + 9.0
 
     private fun getPrayerRangedMultiplier(player: Player): Double =
         when {
@@ -373,61 +340,35 @@ object RangedCombatFormula : CombatFormula {
             else -> 1.0
         }
 
-    private fun getEquipmentMultiplier(player: Player): Double =
-        when {
-            player.hasEquipped(EquipmentType.AMULET, "item.salve_amulet") -> 7.0 / 6.0
-            player.hasEquipped(EquipmentType.AMULET, "item.salve_amulet_e") -> 1.2
-            player.hasEquipped(EquipmentType.AMULET, "item.salve_amuleti") -> 1.15
-            player.hasEquipped(EquipmentType.AMULET, "item.salve_amuletei") -> 1.2
-            // TODO: this should only apply when target is slayer task?
-            player.hasEquipped(EquipmentType.HEAD, *BLACK_MASKS) -> 7.0 / 6.0
-            player.hasEquipped(EquipmentType.HEAD, *BLACK_MASKS_I) -> 1.15
+    /**
+     * Only the imbued salve variants and imbued black mask work with ranged in OSRS
+     * (the regular salve/mask are melee-only). Salve requires an undead target, the
+     * mask requires the current Slayer assignment, and salve takes precedence.
+     */
+    private fun getEquipmentMultiplier(player: Player, target: Pawn): Double {
+        val undead = isUndead(target)
+        return when {
+            undead && player.hasEquipped(EquipmentType.AMULET, "item.salve_amuletei") -> 1.2
+            undead && player.hasEquipped(EquipmentType.AMULET, "item.salve_amuleti") -> 1.15
+            player.hasEquipped(EquipmentType.HEAD, *BLACK_MASKS_I) && SlayerCombat.isOnTaskAgainst(player, target) -> 1.15
             else -> 1.0
         }
+    }
+
+    private fun isUndead(pawn: Pawn): Boolean {
+        if (pawn.entityType.isNpc) {
+            return (pawn as Npc).isSpecies(NpcSpecies.UNDEAD)
+        }
+        return false
+    }
 
     private fun applyPassiveMultiplier(
         player: Player,
         target: Pawn,
         base: Double,
     ): Double {
-        when {
-            player.hasWeaponType(WeaponType.CROSSBOW) && player.attr.has(Combat.BOLT_ENCHANTMENT_EFFECT) -> {
-                val dragonstone =
-                    player.hasEquipped(
-                        EquipmentType.AMMO,
-                        "item.dragonstone_bolts",
-                        "item.dragonstone_bolts_e",
-                        "item.dragonstone_dragon_bolts",
-                        "item.dragonstone_dragon_bolts_e",
-                    )
-                val opal =
-                    player.hasEquipped(
-                        EquipmentType.AMMO,
-                        "item.opal_bolts",
-                        "item.opal_bolts_e",
-                        "item.opal_dragon_bolts",
-                        "item.opal_dragon_bolts_e",
-                    )
-                val pearl =
-                    player.hasEquipped(
-                        EquipmentType.AMMO,
-                        "item.pearl_bolts",
-                        "item.pearl_bolts_e",
-                        "item.pearl_dragon_bolts",
-                        "item.pearl_dragon_bolts_e",
-                    )
-
-                when {
-                    dragonstone -> return base + Math.floor(player.getSkills().getCurrentLevel(Skills.RANGED) / 5.0)
-                    opal -> return base + Math.floor(player.getSkills().getCurrentLevel(Skills.RANGED) / 10.0)
-                    pearl ->
-                        return base +
-                            Math.floor(
-                                player.getSkills().getCurrentLevel(Skills.RANGED) / (if (isFiery(target)) 15.0 else 20.0),
-                            )
-                }
-            }
-        }
+        // Enchanted-bolt max-hit bonuses are handled by the per-shot proc roll in
+        // RangedCombatStrategy (see BoltEnchantments) — nothing passive remains here.
         return base
     }
 

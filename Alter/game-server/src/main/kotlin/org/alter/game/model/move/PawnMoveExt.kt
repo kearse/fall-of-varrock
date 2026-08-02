@@ -6,6 +6,7 @@ import org.alter.game.model.Tile
 import org.alter.game.model.attr.CLIENT_KEY_COMBINATION
 import org.alter.game.model.entity.*
 import org.alter.game.model.move.MovementQueue.StepType
+import org.alter.game.model.timer.FROZEN_TIMER
 import org.alter.game.model.priv.Privilege
 import org.rsmod.routefinder.Route
 import org.rsmod.routefinder.RouteCoordinates
@@ -58,14 +59,30 @@ fun Pawn.setMapFlag(
 fun Pawn.walkRoute(
     route: Route,
     stepType: StepType,
+    force: Boolean = false,
 ) {
-    walkRoute(route.toTileQueue(), stepType)
+    walkRoute(route.toTileQueue(), stepType, force)
 }
 
 fun Pawn.walkRoute(
     path: Queue<Tile>,
     stepType: StepType,
+    force: Boolean = false,
 ) {
+    /*
+     * The freeze gate lives at this funnel because every movement source flows through
+     * it — map clicks (walkTo), combat chasing (CombatPlugin), and entity/object
+     * interaction walks (PawnPathAction/ObjectPathAction). A frozen pawn can still
+     * attack, switch and eat; it just cannot move — which is what makes ice spells,
+     * dragon spear and the duel countdown actually root their target. Scripted walks
+     * that must move a possibly-frozen pawn (agility courses, cutscenes) pass
+     * [force] = true. Teleports (moveTo) bypass the queue entirely and stay unaffected.
+     */
+    if (!force && timers.has(FROZEN_TIMER)) {
+        setMapFlag()
+        movementQueue.clear()
+        return
+    }
     if (path.isEmpty()) {
         setMapFlag()
         return
@@ -120,6 +137,14 @@ fun Pawn.walkTo(
     targetY: Int,
     stepType: StepType = StepType.NORMAL,
 ) {
+    // Frozen: refuse before the route-finder runs (saves the pathfind) and tell the
+    // player why — mirrors ObjectPathAction's existing frozen handling.
+    if (timers.has(FROZEN_TIMER)) {
+        if (this is Player) {
+            writeMessage(Entity.MAGIC_STOPS_YOU_FROM_MOVING)
+        }
+        return
+    }
     if (this is Player) {
         if (!lock.canMove()) {
             /**
@@ -162,5 +187,8 @@ fun Pawn.hasMoveDestination(): Boolean = movementQueue.hasDestination()
  * [org.alter.game.model.World.canTraverse]); this does no path search of its own.
  */
 fun Pawn.stepTo(tile: Tile, stepType: StepType = StepType.NORMAL) {
+    if (timers.has(FROZEN_TIMER)) {
+        return // frozen NPCs don't wander
+    }
     movementQueue.addStep(tile, stepType)
 }

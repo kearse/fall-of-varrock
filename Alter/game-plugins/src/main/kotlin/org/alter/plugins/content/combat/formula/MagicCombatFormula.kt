@@ -3,6 +3,7 @@ package org.alter.plugins.content.combat.formula
 import org.alter.api.*
 import org.alter.api.ext.*
 import org.alter.game.model.combat.AttackStyle
+import org.alter.game.model.combat.CombatClass
 import org.alter.game.model.entity.Npc
 import org.alter.game.model.entity.Pawn
 import org.alter.game.model.entity.Player
@@ -11,6 +12,7 @@ import org.alter.plugins.content.combat.CombatConfigs
 import org.alter.plugins.content.combat.strategy.magic.CombatSpell
 import org.alter.plugins.content.mechanics.prayer.Prayer
 import org.alter.plugins.content.mechanics.prayer.Prayers
+import org.alter.plugins.content.skills.slayer.SlayerCombat
 
 /**
  * @author Tom <rspsmods@gmail.com>
@@ -70,23 +72,16 @@ object MagicCombatFormula : CombatFormula {
         target: Pawn,
         specialAttackMultiplier: Double,
     ): Double {
-        val attack = getAttackRoll(pawn)
+        val attack = getAttackRoll(pawn, target)
         val defence =
             if (target is Player) {
                 getDefenceRoll(target)
             } else if (target is Npc) {
-                getDefenceRoll(pawn, target)
+                getDefenceRoll(target)
             } else {
                 throw IllegalArgumentException("Unhandled pawn.")
             }
-
-        val accuracy: Double
-        if (attack > defence) {
-            accuracy = 1.0 - (defence + 2.0) / (2.0 * (attack + 1.0))
-        } else {
-            accuracy = attack / (2.0 * (defence + 1))
-        }
-        return accuracy
+        return CombatMath.hitChance(attack, defence)
     }
 
     override fun getMaxHit(
@@ -152,12 +147,14 @@ object MagicCombatFormula : CombatFormula {
             }
 
             if (target is Npc) {
-                if (pawn.hasEquipped(EquipmentType.HEAD, *BLACK_MASKS_I) || pawn.hasEquipped(EquipmentType.HEAD, *SLAYER_HELM_I)) {
-                    // TODO: check if on slayer task and target is slayer task
-                    hit *= 1.15
-                    hit = Math.floor(hit)
-                } else if (pawn.hasEquipped(EquipmentType.AMULET, "item.salve_amuletei") && target.isSpecies(NpcSpecies.UNDEAD)) {
+                // Salve (undead) takes precedence over the on-task mask/helm; the two never stack.
+                if (pawn.hasEquipped(EquipmentType.AMULET, "item.salve_amuletei") && target.isSpecies(NpcSpecies.UNDEAD)) {
                     hit *= 1.20
+                    hit = Math.floor(hit)
+                } else if ((pawn.hasEquipped(EquipmentType.HEAD, *BLACK_MASKS_I) || pawn.hasEquipped(EquipmentType.HEAD, *SLAYER_HELM_I)) &&
+                    SlayerCombat.isOnTaskAgainst(pawn, target)
+                ) {
+                    hit *= 1.15
                     hit = Math.floor(hit)
                 }
             }
@@ -170,16 +167,15 @@ object MagicCombatFormula : CombatFormula {
         hit *= getDamageDealMultiplier(pawn)
         hit = Math.floor(hit)
 
-        // Protect from Magic cuts incoming magic damage by 40% — was missing entirely (melee and
-        // ranged already do this), so the prayer did nothing in PvP/PvM until now.
-        if (target.hasPrayerIcon(PrayerIcon.PROTECT_FROM_MAGIC)) {
-            hit = Math.floor(hit * 0.6)
-        }
-
+        // Overhead protection is NOT part of the max hit: it's applied to the rolled
+        // damage at hit-application time (see dealHit), so mid-flight prayer switches work.
         return hit.toInt()
     }
 
-    private fun getAttackRoll(pawn: Pawn): Int {
+    private fun getAttackRoll(
+        pawn: Pawn,
+        target: Pawn,
+    ): Int {
         val a =
             if (pawn is Player) {
                 getEffectiveAttackLevel(pawn)
@@ -192,23 +188,15 @@ object MagicCombatFormula : CombatFormula {
 
         var maxRoll = a * (b + 64.0)
         if (pawn is Player) {
-            maxRoll = applyAttackSpecials(pawn, maxRoll)
+            maxRoll = applyAttackSpecials(pawn, target, maxRoll)
         }
         return maxRoll.toInt()
     }
 
-    private fun getDefenceRoll(
-        pawn: Pawn,
-        target: Npc,
-    ): Int {
-        val a =
-            if (pawn is Player) {
-                getEffectiveDefenceLevel(pawn)
-            } else if (pawn is Npc) {
-                getEffectiveDefenceLevel(pawn)
-            } else {
-                0.0
-            }
+    private fun getDefenceRoll(target: Npc): Int {
+        // OSRS: an NPC's magic evasion rolls off its MAGIC level (not Defence), +9 for the
+        // implicit style base, against its magic defence bonus.
+        val a = target.stats.getCurrentLevel(NpcSkills.MAGIC) + 9.0
         val b = getEquipmentDefenceBonus(target)
 
         val maxRoll = a * (b + 64.0)
@@ -237,11 +225,12 @@ object MagicCombatFormula : CombatFormula {
 
     private fun applyAttackSpecials(
         player: Player,
+        target: Pawn,
         base: Double,
     ): Double {
         var hit = base
 
-        hit *= getEquipmentMultiplier(player)
+        hit *= getEquipmentMultiplier(player, target)
         hit = Math.floor(hit)
 
         if (player.hasEquipped(EquipmentType.WEAPON, "item.mystic_smoke_staff")) {
@@ -255,11 +244,13 @@ object MagicCombatFormula : CombatFormula {
     private fun getEffectiveAttackLevel(player: Player): Double {
         var effectiveLevel = Math.floor(player.getSkills().getCurrentLevel(Skills.MAGIC) * getPrayerAttackMultiplier(player))
 
+        // Style bonuses only exist for powered staves in OSRS: accurate +2, longrange +1.
+        // Standard-spellbook casts take no style bonus (defensive casting affects XP only).
         if (player.hasWeaponType(WeaponType.TRIDENT)) {
             effectiveLevel +=
                 when (CombatConfigs.getAttackStyle(player)) {
-                    AttackStyle.ACCURATE -> 3.0
-                    AttackStyle.CONTROLLED -> 1.0
+                    AttackStyle.ACCURATE -> 2.0
+                    AttackStyle.LONG_RANGE -> 1.0
                     else -> 0.0
                 }
         }
@@ -290,17 +281,8 @@ object MagicCombatFormula : CombatFormula {
         return Math.floor(effectiveLevel)
     }
 
-    private fun getEffectiveAttackLevel(npc: Npc): Double {
-        var effectiveLevel = npc.stats.getCurrentLevel(NpcSkills.MAGIC).toDouble()
-        effectiveLevel += 8
-        return effectiveLevel
-    }
-
-    private fun getEffectiveDefenceLevel(npc: Npc): Double {
-        var effectiveLevel = npc.stats.getCurrentLevel(NpcSkills.DEFENCE).toDouble()
-        effectiveLevel += 8
-        return effectiveLevel
-    }
+    // NPC effective magic level is level + 9: the standard +8 plus the implicit +1 style base.
+    private fun getEffectiveAttackLevel(npc: Npc): Double = npc.stats.getCurrentLevel(NpcSkills.MAGIC) + 9.0
 
     private fun getEquipmentAttackBonus(pawn: Pawn): Double {
         return pawn.getBonus(BonusSlot.ATTACK_MAGIC).toDouble()
@@ -310,17 +292,27 @@ object MagicCombatFormula : CombatFormula {
         return target.getBonus(BonusSlot.DEFENCE_MAGIC).toDouble()
     }
 
-    private fun getEquipmentMultiplier(player: Player): Double =
-        when {
-            player.hasEquipped(EquipmentType.AMULET, "item.salve_amulet") -> 7.0 / 6.0
-            player.hasEquipped(EquipmentType.AMULET, "item.salve_amulet_e") -> 1.2
-            player.hasEquipped(EquipmentType.AMULET, "item.salve_amuleti") -> 1.15
-            player.hasEquipped(EquipmentType.AMULET, "item.salve_amuletei") -> 1.2
-            // TODO: this should only apply when target is slayer task?
-            player.hasEquipped(EquipmentType.HEAD, *BLACK_MASKS) -> 7.0 / 6.0
-            player.hasEquipped(EquipmentType.HEAD, *BLACK_MASKS_I) -> 1.15
+    /**
+     * Only the imbued salve variants and imbued black mask work with magic in OSRS
+     * (the regular salve/mask are melee-only). Salve requires an undead target, the
+     * mask requires the current Slayer assignment, and salve takes precedence.
+     */
+    private fun getEquipmentMultiplier(player: Player, target: Pawn): Double {
+        val undead = isUndead(target)
+        return when {
+            undead && player.hasEquipped(EquipmentType.AMULET, "item.salve_amuletei") -> 1.2
+            undead && player.hasEquipped(EquipmentType.AMULET, "item.salve_amuleti") -> 1.15
+            player.hasEquipped(EquipmentType.HEAD, *BLACK_MASKS_I) && SlayerCombat.isOnTaskAgainst(player, target) -> 1.15
             else -> 1.0
         }
+    }
+
+    private fun isUndead(pawn: Pawn): Boolean {
+        if (pawn.entityType.isNpc) {
+            return (pawn as Npc).isSpecies(NpcSpecies.UNDEAD)
+        }
+        return false
+    }
 
     private fun getPrayerAttackMultiplier(player: Player): Double =
         when {
