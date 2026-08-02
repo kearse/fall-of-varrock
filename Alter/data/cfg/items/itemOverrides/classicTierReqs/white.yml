@@ -1,0 +1,202 @@
+# Classic equip requirements for white-tier gear (level 10).
+# GENERATED from item.rscm names — the rev-228 cache carries no skill
+# params on sub-rune metal gear, so without these overrides the server
+# has nothing to enforce. tradeable: true preserves the cache flag
+# (override docs default tradeable to false).
+# white_med_helm
+id: 6621
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 10
+---
+# white_full_helm
+id: 6623
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 10
+---
+# white_chainbody
+id: 6615
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 10
+---
+# white_platebody
+id: 6617
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 10
+---
+# white_platelegs
+id: 6625
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 10
+---
+# white_plateskirt
+id: 6627
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 10
+---
+# white_sq_shield
+id: 6631
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 10
+---
+# white_kiteshield
+id: 6633
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 10
+---
+# white_boots
+id: 6619
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 10
+---
+# white_dagger
+id: 6591
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 10
+---
+# white_daggerp
+id: 6593
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 10
+---
+# white_daggerp_6595
+id: 6595
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 10
+---
+# white_daggerp_6597
+id: 6597
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 10
+---
+# white_sword
+id: 6605
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 10
+---
+# white_longsword
+id: 6607
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 10
+---
+# white_scimitar
+id: 6611
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 10
+---
+# white_mace
+id: 6601
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 10
+---
+# white_warhammer
+id: 6613
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 10
+---
+# white_battleaxe
+id: 6589
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 10
+---
+# white_2h_sword
+id: 6609
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 10
+---
+# white_halberd
+id: 6599
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 10
+---
+# white_claws
+id: 6587
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 10

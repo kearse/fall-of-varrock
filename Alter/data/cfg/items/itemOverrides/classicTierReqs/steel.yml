@@ -1,0 +1,647 @@
+# Classic equip requirements for steel-tier gear (level 5).
+# GENERATED from item.rscm names — the rev-228 cache carries no skill
+# params on sub-rune metal gear, so without these overrides the server
+# has nothing to enforce. tradeable: true preserves the cache flag
+# (override docs default tradeable to false).
+# steel_med_helm
+id: 1141
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 5
+---
+# steel_full_helm
+id: 1157
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 5
+---
+# steel_full_helm_t
+id: 20193
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 5
+---
+# steel_full_helm_g
+id: 20178
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 5
+---
+# steel_chainbody
+id: 1105
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 5
+---
+# steel_platebody
+id: 1119
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 5
+---
+# steel_platebody_t
+id: 20184
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 5
+---
+# steel_platebody_g
+id: 20169
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 5
+---
+# steel_platelegs
+id: 1069
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 5
+---
+# steel_platelegs_t
+id: 20187
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 5
+---
+# steel_platelegs_g
+id: 20172
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 5
+---
+# steel_plateskirt
+id: 1083
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 5
+---
+# steel_plateskirt_t
+id: 20190
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 5
+---
+# steel_plateskirt_g
+id: 20175
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 5
+---
+# steel_sq_shield
+id: 1177
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 5
+---
+# steel_kiteshield
+id: 1193
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 5
+---
+# steel_kiteshield_8746
+id: 8746
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 5
+---
+# steel_kiteshield_8748
+id: 8748
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 5
+---
+# steel_kiteshield_8750
+id: 8750
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 5
+---
+# steel_kiteshield_8752
+id: 8752
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 5
+---
+# steel_kiteshield_8754
+id: 8754
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 5
+---
+# steel_kiteshield_8756
+id: 8756
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 5
+---
+# steel_kiteshield_8758
+id: 8758
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 5
+---
+# steel_kiteshield_8760
+id: 8760
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 5
+---
+# steel_kiteshield_8762
+id: 8762
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 5
+---
+# steel_kiteshield_8764
+id: 8764
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 5
+---
+# steel_kiteshield_8766
+id: 8766
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 5
+---
+# steel_kiteshield_8768
+id: 8768
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 5
+---
+# steel_kiteshield_8770
+id: 8770
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 5
+---
+# steel_kiteshield_8772
+id: 8772
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 5
+---
+# steel_kiteshield_8774
+id: 8774
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 5
+---
+# steel_kiteshield_8776
+id: 8776
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 5
+---
+# steel_kiteshield_t
+id: 20196
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 5
+---
+# steel_kiteshield_g
+id: 20181
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 5
+---
+# steel_boots
+id: 4123
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 5
+---
+# steel_dagger
+id: 1207
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 5
+---
+# steel_daggerp
+id: 1223
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 5
+---
+# steel_daggerp_5672
+id: 5672
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 5
+---
+# steel_daggerp_5690
+id: 5690
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 5
+---
+# steel_sword
+id: 1281
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 5
+---
+# steel_longsword
+id: 1295
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 5
+---
+# steel_scimitar
+id: 1325
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 5
+---
+# steel_mace
+id: 1424
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 5
+---
+# steel_warhammer
+id: 1339
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 5
+---
+# steel_battleaxe
+id: 1365
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 5
+---
+# steel_2h_sword
+id: 1311
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 5
+---
+# steel_axe
+id: 1353
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 5
+---
+# steel_felling_axe
+id: 28202
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 5
+---
+# steel_halberd
+id: 3194
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 5
+---
+# steel_spear
+id: 1241
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 5
+---
+# steel_spearp
+id: 1255
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 5
+---
+# steel_spearp_5708
+id: 5708
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 5
+---
+# steel_spearp_5722
+id: 5722
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 5
+---
+# steel_spearkp
+id: 3172
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 5
+---
+# steel_hasta
+id: 11371
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 5
+---
+# steel_hastap
+id: 11393
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 5
+---
+# steel_hastap_11396
+id: 11396
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 5
+---
+# steel_hastap_11398
+id: 11398
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 5
+---
+# steel_claws
+id: 3097
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 5
+---
+# steel_pickaxe
+id: 1269
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 5
+---
+# steel_knife
+id: 865
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "ranged"
+      level: 5
+---
+# steel_knifep
+id: 872
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "ranged"
+      level: 5
+---
+# steel_knifep_5656
+id: 5656
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "ranged"
+      level: 5
+---
+# steel_knifep_5663
+id: 5663
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "ranged"
+      level: 5
+---
+# steel_dart
+id: 808
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "ranged"
+      level: 5
+---
+# steel_dartp
+id: 814
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "ranged"
+      level: 5
+---
+# steel_dartp_5630
+id: 5630
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "ranged"
+      level: 5
+---
+# steel_dartp_5637
+id: 5637
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "ranged"
+      level: 5
+---
+# steel_thrownaxe
+id: 802
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "ranged"
+      level: 5
+---
+# steel_defender
+id: 8846
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 5
+    - skill: "defence"
+      level: 5
+---
+# steel_defender_l
+id: 24138
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 5
+    - skill: "defence"
+      level: 5

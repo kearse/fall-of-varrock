@@ -1,0 +1,458 @@
+# Classic equip requirements for black-tier gear (level 10).
+# GENERATED from item.rscm names — the rev-228 cache carries no skill
+# params on sub-rune metal gear, so without these overrides the server
+# has nothing to enforce. tradeable: true preserves the cache flag
+# (override docs default tradeable to false).
+# black_med_helm
+id: 1151
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 10
+---
+# black_full_helm
+id: 1165
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 10
+---
+# black_full_helm_t
+id: 2587
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 10
+---
+# black_full_helm_g
+id: 2595
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 10
+---
+# black_chainbody
+id: 1107
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 10
+---
+# black_platebody
+id: 1125
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 10
+---
+# black_platebody_t
+id: 2583
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 10
+---
+# black_platebody_g
+id: 2591
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 10
+---
+# black_platelegs
+id: 1077
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 10
+---
+# black_platelegs_t
+id: 2585
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 10
+---
+# black_platelegs_g
+id: 2593
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 10
+---
+# black_plateskirt
+id: 1089
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 10
+---
+# black_plateskirt_t
+id: 3472
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 10
+---
+# black_plateskirt_g
+id: 3473
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 10
+---
+# black_sq_shield
+id: 1179
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 10
+---
+# black_kiteshield
+id: 1195
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 10
+---
+# black_kiteshield_t
+id: 2589
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 10
+---
+# black_kiteshield_g
+id: 2597
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 10
+---
+# black_boots
+id: 4125
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 10
+---
+# black_dagger
+id: 1217
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 10
+---
+# black_daggerp
+id: 1233
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 10
+---
+# black_daggerp_5682
+id: 5682
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 10
+---
+# black_daggerp_5700
+id: 5700
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 10
+---
+# black_sword
+id: 1283
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 10
+---
+# black_longsword
+id: 1297
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 10
+---
+# black_scimitar
+id: 1327
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 10
+---
+# black_mace
+id: 1426
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 10
+---
+# black_warhammer
+id: 1341
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 10
+---
+# black_battleaxe
+id: 1367
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 10
+---
+# black_2h_sword
+id: 1313
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 10
+---
+# black_axe
+id: 1361
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 10
+---
+# black_felling_axe
+id: 28205
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 10
+---
+# black_halberd
+id: 3196
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 10
+---
+# black_spear
+id: 4580
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 10
+---
+# black_spearp
+id: 4582
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 10
+---
+# black_spearp_5734
+id: 5734
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 10
+---
+# black_spearp_5736
+id: 5736
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 10
+---
+# black_spearkp
+id: 4584
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 10
+---
+# black_claws
+id: 3098
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 10
+---
+# black_pickaxe
+id: 12297
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 10
+---
+# black_knife
+id: 869
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "ranged"
+      level: 10
+---
+# black_knifep
+id: 874
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "ranged"
+      level: 10
+---
+# black_knifep_5658
+id: 5658
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "ranged"
+      level: 10
+---
+# black_knifep_5665
+id: 5665
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "ranged"
+      level: 10
+---
+# black_dart
+id: 3093
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "ranged"
+      level: 10
+---
+# black_dartp
+id: 3094
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "ranged"
+      level: 10
+---
+# black_dartp_5631
+id: 5631
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "ranged"
+      level: 10
+---
+# black_dartp_5638
+id: 5638
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "ranged"
+      level: 10
+---
+# black_defender
+id: 8847
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 10
+    - skill: "defence"
+      level: 10
+---
+# black_defender_l
+id: 24139
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 10
+    - skill: "defence"
+      level: 10

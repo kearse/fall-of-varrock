@@ -1,0 +1,748 @@
+# Classic equip requirements for rune-tier gear (level 40).
+# GENERATED from item.rscm names — the rev-228 cache carries no skill
+# params on sub-rune metal gear, so without these overrides the server
+# has nothing to enforce. tradeable: true preserves the cache flag
+# (override docs default tradeable to false).
+# rune_med_helm
+id: 1147
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 40
+---
+# rune_full_helm
+id: 1163
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 40
+---
+# rune_full_helm_t
+id: 2627
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 40
+---
+# rune_full_helm_g
+id: 2619
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 40
+---
+# rune_chainbody
+id: 1113
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 40
+---
+# rune_platebody
+id: 1127
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 40
+---
+# rune_platebody_20421
+id: 20421
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 40
+---
+# rune_platebody_t
+id: 2623
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 40
+---
+# rune_platebody_g
+id: 2615
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 40
+---
+# rune_platelegs
+id: 1079
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 40
+---
+# rune_platelegs_20422
+id: 20422
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 40
+---
+# rune_platelegs_t
+id: 2625
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 40
+---
+# rune_platelegs_g
+id: 2617
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 40
+---
+# rune_plateskirt
+id: 1093
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 40
+---
+# rune_plateskirt_t
+id: 3477
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 40
+---
+# rune_plateskirt_g
+id: 3476
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 40
+---
+# rune_sq_shield
+id: 1185
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 40
+---
+# rune_kiteshield
+id: 1201
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 40
+---
+# rune_kiteshield_8714
+id: 8714
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 40
+---
+# rune_kiteshield_8716
+id: 8716
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 40
+---
+# rune_kiteshield_8718
+id: 8718
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 40
+---
+# rune_kiteshield_8720
+id: 8720
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 40
+---
+# rune_kiteshield_8722
+id: 8722
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 40
+---
+# rune_kiteshield_8724
+id: 8724
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 40
+---
+# rune_kiteshield_8726
+id: 8726
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 40
+---
+# rune_kiteshield_8728
+id: 8728
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 40
+---
+# rune_kiteshield_8730
+id: 8730
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 40
+---
+# rune_kiteshield_8732
+id: 8732
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 40
+---
+# rune_kiteshield_8734
+id: 8734
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 40
+---
+# rune_kiteshield_8736
+id: 8736
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 40
+---
+# rune_kiteshield_8738
+id: 8738
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 40
+---
+# rune_kiteshield_8740
+id: 8740
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 40
+---
+# rune_kiteshield_8742
+id: 8742
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 40
+---
+# rune_kiteshield_8744
+id: 8744
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 40
+---
+# rune_kiteshield_t
+id: 2629
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 40
+---
+# rune_kiteshield_g
+id: 2621
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 40
+---
+# rune_boots
+id: 4131
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 40
+---
+# rune_dagger
+id: 1213
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 40
+---
+# rune_daggerp
+id: 1229
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 40
+---
+# rune_daggerp_5678
+id: 5678
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 40
+---
+# rune_daggerp_5696
+id: 5696
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 40
+---
+# rune_sword
+id: 1289
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 40
+---
+# rune_longsword
+id: 1303
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 40
+---
+# rune_longsword_6897
+id: 6897
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 40
+---
+# rune_scimitar
+id: 1333
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 40
+---
+# rune_scimitar_20402
+id: 20402
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 40
+---
+# rune_scimitar_23330
+id: 23330
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 40
+---
+# rune_scimitar_23332
+id: 23332
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 40
+---
+# rune_scimitar_23334
+id: 23334
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 40
+---
+# rune_scimitar_26262
+id: 26262
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 40
+---
+# rune_mace
+id: 1432
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 40
+---
+# rune_warhammer
+id: 1347
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 40
+---
+# rune_battleaxe
+id: 1373
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 40
+---
+# rune_battleaxe_20552
+id: 20552
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 40
+---
+# rune_2h_sword
+id: 1319
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 40
+---
+# rune_2h_sword_20555
+id: 20555
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 40
+---
+# rune_axe
+id: 1359
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 40
+---
+# rune_felling_axe
+id: 28214
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 40
+---
+# rune_halberd
+id: 3202
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 40
+---
+# rune_spear
+id: 1247
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 40
+---
+# rune_spearp
+id: 1261
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 40
+---
+# rune_spearp_5714
+id: 5714
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 40
+---
+# rune_spearp_5728
+id: 5728
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 40
+---
+# rune_spearkp
+id: 3175
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 40
+---
+# rune_hasta
+id: 11377
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 40
+---
+# rune_hastap
+id: 11414
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 40
+---
+# rune_hastap_11417
+id: 11417
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 40
+---
+# rune_hastap_11419
+id: 11419
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 40
+---
+# rune_claws
+id: 3101
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 40
+---
+# rune_pickaxe
+id: 1275
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 40
+---
+# rune_knife
+id: 868
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "ranged"
+      level: 40
+---
+# rune_knifep
+id: 876
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "ranged"
+      level: 40
+---
+# rune_knifep_5660
+id: 5660
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "ranged"
+      level: 40
+---
+# rune_knifep_5667
+id: 5667
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "ranged"
+      level: 40
+---
+# rune_dart
+id: 811
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "ranged"
+      level: 40
+---
+# rune_dartp
+id: 817
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "ranged"
+      level: 40
+---
+# rune_dartp_5634
+id: 5634
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "ranged"
+      level: 40
+---
+# rune_dartp_5641
+id: 5641
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "ranged"
+      level: 40
+---
+# rune_thrownaxe
+id: 805
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "ranged"
+      level: 40
+---
+# rune_defender
+id: 8850
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 40
+    - skill: "defence"
+      level: 40
+---
+# rune_defender_27185
+id: 27185
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 40
+    - skill: "defence"
+      level: 40
+---
+# rune_defender_l
+id: 24142
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 40
+    - skill: "defence"
+      level: 40
