@@ -33,7 +33,7 @@ private val logger = KotlinLogging.logger {}
  *  - `::lofgeclose`                                → close the window
  *
  * Opened by the Grand Exchange clerk (npc.grand_exchange_clerk), the GE hub desks on the old
- * south fountain site (ring at 3219-3224 x 3208-3213), or `::ge`. Offer creation reuses the
+ * south fountain site (ring at 3221-3226 x 3208-3213), or `::ge`. Offer creation reuses the
  * native item search (`searchItemInput`, the `::item` box); quantity/price are set in the overlay and
  * arrive on the confirm token. All engine calls are the dupe-safe escrow paths.
  */
@@ -59,11 +59,11 @@ class GrandExchangeClickPlugin(
         // the 10063 pillar (shape 10, 2x2) and two shape-22 floor decors. Each part MUST keep
         // its dumped shape — a loc only draws in the shape slot its models are keyed to, which
         // is why earlier type-10 spawns of the booth ids (and plain ::obj) were invisible.
-        // The anchor puts the pillar exactly on the fountain tile, so the fountain removal
-        // (same tile+slot, remove FIRST) still applies. NOTE: the NORTH fountain (3221,3226)
+        // The old fountain (anchor 3221,3210) is removed first regardless of where the hub
+        // anchor sits — the ring overlaps its footprint. NOTE: the NORTH fountain (3221,3226)
         // is the teleport portal — do NOT target it.
         onWorldInit {
-            world.getObject(Tile(HUB_X + 2, HUB_Z + 2, 0), type = FOUNTAIN_TYPE)?.let { world.remove(it) }
+            world.getObject(Tile(FOUNTAIN_X, FOUNTAIN_Z, 0), type = FOUNTAIN_TYPE)?.let { world.remove(it) }
             HUB_PARTS.forEach { p ->
                 world.spawn(DynamicObject(getRSCM(p.obj), type = p.type, rot = p.rot, Tile(HUB_X + p.dx, HUB_Z + p.dz, 0)))
             }
@@ -219,11 +219,16 @@ class GrandExchangeClickPlugin(
         const val BOOTH_10060 = "object.grand_exchange_booth"
         const val BOOTH_30389 = "object.null_30389"
 
-        // Ring SW corner: the 6x6 hub spans 3219-3224 x 3208-3213, putting the 2x2 pillar
-        // (dx 2, dz 2) exactly on the old SOUTH fountain's tile (3221,3210). (The north
-        // fountain @ 3221,3226 is the teleport portal — leave it alone.)
-        const val HUB_X = 3219
+        // Ring SW corner: the 6x6 hub spans 3221-3226 x 3208-3213. Originally anchored two
+        // tiles further west (pillar on the fountain tile), but the courtyard hill starts
+        // around x<=3220 and the ring's west wall floated at the slope's height — so the
+        // whole hub sits shifted east on the flat ground by the path. The old SOUTH
+        // fountain's 2x2 footprint (anchor 3221,3210) is inside the ring and removed below.
+        // (The north fountain @ 3221,3226 is the teleport portal — leave it alone.)
+        const val HUB_X = 3221
         const val HUB_Z = 3208
+        const val FOUNTAIN_X = 3221
+        const val FOUNTAIN_Z = 3210
         const val FOUNTAIN_TYPE = 10 // the fountain's own loc slot, removed before spawning
 
         /** One loc of the hub: rscm key + offset from (HUB_X, HUB_Z) + its dumped shape/rot. */
