@@ -44,8 +44,9 @@ class GrandExchangeClickPlugin(
 ) : KotlinPlugin(r, world, server) {
 
     init {
-        // The GE clerk in the Lumbridge market (the tile the Trading Post reserved for it).
-        runCatching { spawnNpc(CLERK, 3214, 3219, 0, 0, Direction.NORTH) }
+        // The GE clerk inside the hub's desk ring — west slot of the north face, behind the
+        // north desks, facing the players outside.
+        runCatching { spawnNpc(CLERK, 3221, 3212, 0, 0, Direction.NORTH) }
             .onFailure { logger.warn { "grand-exchange: could not spawn $CLERK; use ::ge." } }
         bindClerk(CLERK)
         onCommand("ge", description = "Open the Grand Exchange") { GrandExchangeWindow.stream(player) }

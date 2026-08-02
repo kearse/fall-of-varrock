@@ -101,7 +101,7 @@ class SlayerPlugin(
     // Vannaka — Turael/Mazchna have no click options in this cache; Vannaka has
     // [Talk-to, Assignment, Trade, Rewards].
     private val master = "npc.vannaka"
-    private val masterTile = Triple(3214, 3218, 0) // commerce block (2x2), SE tile — beside the Duke/Trading Post
+    private val masterTile = Triple(3222, 3212, 0) // GE hub desk ring — east slot of the north face, beside the clerk
     private val rewardShop = "War Rewards"
 
     /** Resolved master id, passed to every dialogue line explicitly: the contract window's
@@ -150,7 +150,7 @@ class SlayerPlugin(
     init {
         buildRewardShop()
 
-        spawnNpc(master, x = masterTile.first, z = masterTile.second, height = masterTile.third, walkRadius = 0, direction = Direction.EAST)
+        spawnNpc(master, x = masterTile.first, z = masterTile.second, height = masterTile.third, walkRadius = 0, direction = Direction.NORTH)
         bindTalk()
 
         // Track every player kill against the killer's active task (cheap: non-player

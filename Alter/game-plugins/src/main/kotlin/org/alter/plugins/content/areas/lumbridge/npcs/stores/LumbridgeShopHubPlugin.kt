@@ -407,8 +407,8 @@ class LumbridgeShopHubPlugin(
             ShopTabs.Tab("Vote rewards", VOTE_REWARDS, icon = "item.vote_ticket"),
             ShopTabs.Tab("Buy Vote Tickets", BUY_VOTE, icon = "item.vote_ticket"))
 
-        // End-game / war cluster sits just south of the west column (Quartermaster @ 3219,3216,
-        // Slayer Master @ 3219,3215) and the Dice host @ 3224,3215 — spawned by their own plugins.
+        // End-game / war cluster mans the GE hub's desk ring (Quartermaster @ 3223,3211,
+        // Slayer Master @ 3222,3212) and the Dice host @ 3224,3215 — spawned by their own plugins.
 
         // ---- store-type display names ----
         // The stock cache names (Zaff, Horvik, Gerrant, …) make the market hard to read — you

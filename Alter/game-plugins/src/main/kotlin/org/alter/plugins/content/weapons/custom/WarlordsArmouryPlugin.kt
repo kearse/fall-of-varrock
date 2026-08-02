@@ -249,9 +249,9 @@ class WarlordsArmouryPlugin(
         // Buy Boss Tickets for coins — sets the coin ceiling on everything this vendor sells.
         currencyBuyShop(BUY_TICKETS, "item.boss_ticket", GeCurrencyPrices.BOSS_TICKET)
 
-        // Quartermaster vendor — end-game cluster just south of the shop hub's west column.
-        // Gear OUT (the armoury), supplies IN (the §3B war-supply sink).
-        spawnNpc("npc.quartermaster", 3213, 3218, 0, 0, Direction.SOUTH)
+        // Quartermaster vendor — inside the GE hub's desk ring, east of the pillar, facing his
+        // east desks. Gear OUT (the armoury), supplies IN (the §3B war-supply sink).
+        spawnNpc("npc.quartermaster", 3223, 3211, 0, 0, Direction.EAST)
         bindVendor("npc.quartermaster")
 
         onCommand("armoury", Privilege.ADMIN_POWER, description = "Open the Warlord's Armoury") {
