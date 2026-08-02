@@ -3,6 +3,7 @@ package org.alter.plugins.content.economy.grandexchange
 import dev.openrune.cache.CacheManager.getNpc
 import dev.openrune.cache.CacheManager.getObject
 import io.github.oshai.kotlinlogging.KotlinLogging
+import org.alter.api.ext.chatNpc
 import org.alter.api.ext.getCommandArgs
 import org.alter.api.ext.inputInt
 import org.alter.api.ext.message
@@ -14,6 +15,8 @@ import org.alter.game.model.Direction
 import org.alter.game.model.Tile
 import org.alter.game.model.World
 import org.alter.game.model.entity.DynamicObject
+import org.alter.game.model.entity.Player
+import org.alter.game.model.queue.QueueTask
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
 import org.alter.rscm.RSCM.getRSCM
@@ -167,25 +170,40 @@ class GrandExchangeClickPlugin(
         onCommand("gecloseclick", description = "GE window: close") { GrandExchangeWindow.close(player) }
     }
 
-    /** Bind the clerk's click options: the main open (Exchange/Talk-to/…) and, when the cache def carries
-     *  it, a separate "History" option that opens straight to the History tab. */
+    /** Bind the clerk's click options: Talk-to gets his survivor story before the dashboard,
+     *  Exchange/Trade open it straight, and, when the cache def carries it, a separate "History"
+     *  option opens straight to the History tab. */
     private fun bindClerk(npc: String) {
         val acts = try {
             getNpc(getRSCM(npc)).actions.filterNotNull().filter { it.isNotBlank() }
         } catch (e: Exception) { emptyList() }
-        // Prefer a real open option; don't let "history" be picked as the primary open.
-        val opt = listOf("exchange", "trade", "talk-to", "view-offers").firstNotNullOfOrNull { want ->
+        // Talk-to: the story of how he survived the fall of Varrock, then the dashboard.
+        val talk = acts.firstOrNull { it.equals("talk-to", ignoreCase = true) }
+        talk?.let { onNpcOption(npc, option = it) { player.queue { clerkChat(player) } } }
+        // Prefer a real open option; don't let "history" (or the story) be picked as the primary open.
+        val opt = listOf("exchange", "trade", "view-offers").firstNotNullOfOrNull { want ->
             acts.firstOrNull { it.equals(want, ignoreCase = true) }
-        } ?: acts.firstOrNull { !it.equals("history", ignoreCase = true) }
+        } ?: acts.firstOrNull { !it.equals("history", ignoreCase = true) && !it.equals("talk-to", ignoreCase = true) }
         if (opt != null) {
             onNpcOption(npc, option = opt) { GrandExchangeWindow.stream(player) }
-        } else {
+        } else if (talk == null) {
             logger.warn { "grand-exchange: '$npc' has no open option; use ::ge." }
         }
         // Bind "History" only if the def actually has it — onNpcOption throws on a missing option.
         acts.firstOrNull { it.equals("history", ignoreCase = true) }?.let { hist ->
             onNpcOption(npc, option = hist) { GrandExchangeWindow.streamHistory(player) }
         }
+    }
+
+    /** Resolved clerk id, passed to every dialogue line explicitly (SlayerPlugin pattern). */
+    private val clerkId: Int by lazy { runCatching { getRSCM(CLERK) }.getOrDefault(-1) }
+
+    /** Talk-to: how the clerk missed the fall of Varrock — then straight into the dashboard. */
+    private suspend fun QueueTask.clerkChat(player: Player) {
+        chatNpc(player, "Funny thing, fate. The day the demons took Varrock, I<br>called off sick — a mad case of the shits. Couldn't get ten<br>paces from the privy, never mind man my desk.", npc = clerkId, title = "Grand Exchange Clerk")
+        chatNpc(player, "Every clerk who clocked in that morning never clocked<br>out. The shits saved my life.", npc = clerkId, title = "Grand Exchange Clerk")
+        chatNpc(player, "So now I run the market. Someone has to keep the coin<br>moving for the war — let's see the board.", npc = clerkId, title = "Grand Exchange Clerk")
+        GrandExchangeWindow.stream(player)
     }
 
     /** Bind the booth's click options the same defensive way as [bindClerk]: probe the cache def
