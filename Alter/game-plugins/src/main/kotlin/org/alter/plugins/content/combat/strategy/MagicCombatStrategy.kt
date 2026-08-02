@@ -74,26 +74,31 @@ object MagicCombatStrategy : CombatStrategy {
         val landHit = accuracy >= world.randomDouble()
 
         val hitDelay = getHitDelay(pawn.getCentreTile(), target.getCentreTile())
-        val damage =
+        val pawnHit =
             pawn.dealHit(target = target, maxHit = maxHit, landHit = landHit, delay = hitDelay) {
                 WeaponEffects.applyOnHit(pawn, target, it)
                 // Ancient ice spells root the target on a landed hit (freeze() self-guards re-freeze).
                 if (landHit && spell.freezeTicks > 0) {
                     target.freeze(spell.freezeTicks)
                 }
-            }.hit.hitmarks.sumOf { it.damage }
-
-        // Ancient blood spells heal the caster for a fraction of the damage dealt (the signature
-        // "blood mage" sustain). Caps at the caster's max HP — no overheal in PvP.
-        if (landHit && damage > 0 && spell in BLOOD_SPELLS) {
-            val heal = (damage * BLOOD_HEAL_RATIO).toInt()
-            if (heal > 0) {
-                pawn.setCurrentHp(minOf(pawn.getMaxHp(), pawn.getCurrentHp() + heal))
             }
-        }
+        // Heal and XP happen when the hit LANDS (the projectile's arrival tick), from the
+        // damage actually dealt. Splashes still award the base cast xp.
+        pawnHit.hit.addAction {
+            val damage = hitmarks.sumOf { it.damage }
 
-        if (damage >= 0 && pawn.entityType.isPlayer) {
-            addCombatXp(pawn as Player, target, damage, spell)
+            // Ancient blood spells heal the caster for a fraction of the damage dealt (the signature
+            // "blood mage" sustain). Caps at the caster's max HP — no overheal in PvP.
+            if (landHit && damage > 0 && spell in BLOOD_SPELLS) {
+                val heal = (damage * BLOOD_HEAL_RATIO).toInt()
+                if (heal > 0) {
+                    pawn.setCurrentHp(minOf(pawn.getMaxHp(), pawn.getCurrentHp() + heal))
+                }
+            }
+
+            if (pawn.entityType.isPlayer) {
+                addCombatXp(pawn as Player, target, damage, spell)
+            }
         }
     }
 
@@ -107,8 +112,9 @@ object MagicCombatStrategy : CombatStrategy {
         start: Tile,
         target: Tile,
     ): Int {
-        val distance = start.getDistance(target)
-        return 2 + Math.floor((1.0 + distance) / 3.0).toInt()
+        // OSRS magic hit delay: 1 + floor((1 + chebyshev distance) / 3) ticks.
+        val distance = start.getChebyshevDistance(target)
+        return 1 + Math.floor((1.0 + distance) / 3.0).toInt()
     }
 
     private fun addCombatXp(
@@ -117,7 +123,7 @@ object MagicCombatStrategy : CombatStrategy {
         damage: Int,
         spell: CombatSpell,
     ) {
-        val modDamage = if (target.entityType.isNpc) Math.min(target.getCurrentHp(), damage) else damage
+        val modDamage = damage
         val mode = CombatConfigs.getXpMode(player)
         val multiplier = if (target is Npc) Combat.getNpcXpMultiplier(target) else 1.0
         val baseXp = spell.baseXp

@@ -41,6 +41,22 @@ class Hit private constructor(val hitmarks: List<Hitmark>, val hitbar: Hitbar?, 
     internal var cancelCondition: () -> Boolean = { false }
 
     /**
+     * Transforms applied to each hitmark's damage at APPLICATION time — the tick the
+     * hit actually lands, not the tick it was calculated. This is how overhead
+     * protection prayers can be switched while a projectile is mid-flight and still
+     * reduce the damage.
+     */
+    internal val damageTransforms = mutableListOf<(Int) -> Int>()
+
+    /**
+     * @see damageTransforms
+     */
+    fun addDamageTransform(transform: (Int) -> Int): Hit {
+        damageTransforms.add(transform)
+        return this
+    }
+
+    /**
      * @see actions
      */
     fun addAction(action: Hit.() -> Unit): Hit {

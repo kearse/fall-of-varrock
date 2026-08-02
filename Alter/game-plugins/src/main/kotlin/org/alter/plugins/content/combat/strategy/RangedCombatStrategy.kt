@@ -169,7 +169,7 @@ object RangedCombatStrategy : CombatStrategy {
         val maxHit = formula.getMaxHit(pawn, target)
         val landHit = accuracy >= world.randomDouble()
         val hitDelay = getHitDelay(pawn.getCentreTile(), target.tile.transform(target.getSize() / 2, target.getSize() / 2))
-        val damage =
+        val pawnHit =
             pawn.dealHit(
                 target = target,
                 maxHit = maxHit,
@@ -179,10 +179,14 @@ object RangedCombatStrategy : CombatStrategy {
                     ammoDropAction(it)
                     WeaponEffects.applyOnHit(pawn, target, it)
                 },
-            ).hit.hitmarks.sumOf { it.damage }
-
-        if (damage > 0 && pawn.entityType.isPlayer) {
-            addCombatXp(pawn as Player, target, damage)
+            )
+        // XP is awarded when the hit lands (the projectile's arrival tick), from the
+        // damage actually dealt (hitmarks are clamped to remaining HP at application).
+        pawnHit.hit.addAction {
+            val damage = hitmarks.sumOf { it.damage }
+            if (damage > 0 && pawn.entityType.isPlayer) {
+                addCombatXp(pawn as Player, target, damage)
+            }
         }
     }
 
@@ -190,8 +194,9 @@ object RangedCombatStrategy : CombatStrategy {
         start: Tile,
         target: Tile,
     ): Int {
-        val distance = start.getDistance(target)
-        return 2 + (Math.floor((3.0 + distance) / 6.0)).toInt()
+        // OSRS ranged hit delay: 1 + floor((3 + chebyshev distance) / 6) ticks.
+        val distance = start.getChebyshevDistance(target)
+        return 1 + (Math.floor((3.0 + distance) / 6.0)).toInt()
     }
 
     private fun addCombatXp(
@@ -199,7 +204,7 @@ object RangedCombatStrategy : CombatStrategy {
         target: Pawn,
         damage: Int,
     ) {
-        val modDamage = if (target.entityType.isNpc) Math.min(target.getCurrentHp(), damage) else damage
+        val modDamage = damage
         val mode = CombatConfigs.getXpMode(player)
         val multiplier = if (target is Npc) Combat.getNpcXpMultiplier(target) else 1.0
 

@@ -54,7 +54,8 @@ object MeleeCombatFormula : CombatFormula {
         if (pawn is Player) {
             base = applyStrengthSpecials(pawn, target, base, specialAttackMultiplier, specialPassiveMultiplier)
         }
-        base = Math.floor(base * Combat.protectionDamageMultiplier(pawn, target, CombatClass.MELEE)).toInt()
+        // Overhead protection is NOT part of the max hit: it's applied to the rolled
+        // damage at hit-application time (see dealHit), so mid-flight prayer switches work.
         return base
     }
 

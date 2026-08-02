@@ -90,6 +90,14 @@ fun Pawn.dealHit(
 
     val pawnHit = PawnHit(hit, landHit)
 
+    // Overhead protection is evaluated on the tick the hit LANDS, against the class of
+    // this attack — switching a protect prayer while a projectile is mid-flight works,
+    // exactly as in OSRS (100% block vs NPC attackers, 40% reduction vs players).
+    val combatClass = CombatConfigs.getCombatClass(this)
+    hit.addDamageTransform { damage ->
+        Math.floor(damage * Combat.protectionDamageMultiplier(this, target, combatClass)).toInt()
+    }
+
     hit.setCancelIf { isDead() }
     hit.addAction { onHit(pawnHit) }
     hit.addAction {
@@ -120,6 +128,11 @@ fun Pawn.dealExactHit(
 ): PawnHit {
     val hit = target.hit(damage = damage, delay = delay, attackersIndex = this.index)
     val pawnHit = PawnHit(hit, landed = true)
+
+    val combatClass = CombatConfigs.getCombatClass(this)
+    hit.addDamageTransform { dmg ->
+        Math.floor(dmg * Combat.protectionDamageMultiplier(this, target, combatClass)).toInt()
+    }
 
     hit.setCancelIf { isDead() }
     hit.addAction { onHit(pawnHit) }

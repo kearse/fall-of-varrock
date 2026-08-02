@@ -89,7 +89,8 @@ object RangedCombatFormula : CombatFormula {
         if (pawn is Player) {
             base = applyRangedSpecials(pawn, target, base, specialAttackMultiplier, specialPassiveMultiplier)
         }
-        base = Math.floor(base * Combat.protectionDamageMultiplier(pawn, target, CombatClass.RANGED)).toInt()
+        // Overhead protection is NOT part of the max hit: it's applied to the rolled
+        // damage at hit-application time (see dealHit), so mid-flight prayer switches work.
         return base
     }
 

@@ -310,15 +310,27 @@ abstract class Pawn(val world: World) : Entity() {
         hit: Hit,
         hitIterator: MutableIterator<Hit>,
     ): Boolean {
+        /*
+         * A hit with a damage delay of N lands N ticks after it was queued: each of the
+         * defender's cycles counts the delay down, and the hit applies on the cycle the
+         * counter reaches zero. This is what makes ranged/magic projectile travel time,
+         * tick-eating and hit-stacking real — previously the delay was visual only and
+         * every hit applied on the defender's next cycle.
+         */
+        if (hit.damageDelay > 0) {
+            hit.damageDelay--
+            return false
+        }
         if (lock.delaysDamage()) {
-            /**
-             * @TODO Need to confirm that this block is true.
-             */
-            hit.damageDelay = Math.max(0, hit.damageDelay - 1)
             return false
         }
         if (!hit.cancelCondition()) {
             for (hitmark in hit.hitmarks) {
+                // Application-time damage transforms (e.g. overhead protection prayers,
+                // evaluated against the defender's prayers on the landing tick).
+                for (transform in hit.damageTransforms) {
+                    hitmark.damage = transform(hitmark.damage)
+                }
                 val hp = getCurrentHp()
                 if (hitmark.damage > hp) {
                     hitmark.damage = hp

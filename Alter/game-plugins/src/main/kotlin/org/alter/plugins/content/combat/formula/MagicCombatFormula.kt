@@ -174,8 +174,8 @@ object MagicCombatFormula : CombatFormula {
         hit *= getDamageDealMultiplier(pawn)
         hit = Math.floor(hit)
 
-        hit = Math.floor(hit * Combat.protectionDamageMultiplier(pawn, target, CombatClass.MAGIC))
-
+        // Overhead protection is NOT part of the max hit: it's applied to the rolled
+        // damage at hit-application time (see dealHit), so mid-flight prayer switches work.
         return hit.toInt()
     }
 
