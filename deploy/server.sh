@@ -7,6 +7,7 @@
 #   server.sh start [service]      start the whole stack (or one service)
 #   server.sh status               container states + currently deployed tag
 #   server.sh logs [service]       last 200 lines (TAIL=500 server.sh logs game)
+#   server.sh dump-ge-locs         READ-ONLY: list the original GE floor's loc ids
 #   server.sh inspect-save <user>  READ-ONLY: dump a player's on-disk save files
 #   server.sh reset-save <user>    move a corrupt save aside (reversible; never deletes)
 #   server.sh inspect-route [user] READ-ONLY: dump a recorded ::recroute march path
@@ -51,6 +52,29 @@ case "$cmd" in
     ;;
   logs)
     compose logs --tail="${TAIL:-200}" "$@"
+    ;;
+  dump-ge-locs)
+    # READ-ONLY diagnostic: list the locs on the ORIGINAL Grand Exchange floor so
+    # the central-desk / booth object ids can be identified. Prefers the pristine
+    # cache.preloc backup (the live cache has the GE gutted by the ruins edit);
+    # falls back to the live cache. Runs the mapDump tool that ships in the game
+    # image inside a throwaway container — the running game is not touched.
+    SRC=/opt/kol/runtime/cache.preloc
+    [ -d "$SRC" ] || SRC=/opt/kol/runtime/cache
+    echo "== GE loc dump (source cache: $SRC) =="
+    TMP=$(mktemp)
+    compose run --rm -T --no-deps \
+      -v "$SRC":/app/bin/data/cache:ro \
+      --entrypoint bash game -c \
+      'java -cp "/app/lib/*" org.alter.tools.mapdump.MapDumpToolKt region 12598 >/dev/null 2>&1 || true; cat data/mapdump/r12598_*.txt 2>/dev/null || echo NO_DUMP' \
+      > "$TMP"
+    head -4 "$TMP"
+    echo "-- columns: x z level id name type rot sizeX sizeY --"
+    echo "-- multi-tile locs anywhere in the region (level 0) --"
+    awk -F'\t' 'NF>=9 && $3==0 && ($8>1 || $9>1)' "$TMP"
+    echo "-- any GE booth/display/portal ids anywhere, any level --"
+    awk -F'\t' 'NF>=9 && ($4==10060 || $4==10061 || $4==30390 || $4==31939 || $4==33093 || $4==33099 || $4==33105)' "$TMP"
+    rm -f "$TMP"
     ;;
   inspect-save)
     # READ-ONLY. Dump whatever the game has on disk for a player so a corrupt

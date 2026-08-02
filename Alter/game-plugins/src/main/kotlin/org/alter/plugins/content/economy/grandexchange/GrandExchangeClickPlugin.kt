@@ -50,29 +50,24 @@ class GrandExchangeClickPlugin(
         bindClerk(CLERK)
         onCommand("ge", description = "Open the Grand Exchange") { GrandExchangeWindow.stream(player) }
 
-        // The GE booth on the old south courtyard fountain's footprint (fountain 879, type 10,
+        // The GE stand on the old south courtyard fountain's footprint (fountain 879, type 10,
         // 2x2 @ 3221,3210 — the tile the Occult Altar stood on before it moved to 3215,3211).
-        // The booth id is picked at boot from BOOTH_CANDIDATES by [pickVisibleBooth]: the first
-        // pick, object 10060, spawned fine server-side but never rendered — a def only draws if
-        // it has real objectModels and no varbit/varp transform (see MapDumpTool's `objinfo`
-        // verdicts and the FarmingPlugin flowerbed precedent), so we now check that up front.
-        // Done in onWorldInit so the region/collision is loaded, and the fountain removal runs
-        // *before* the booth is placed — same tile+slot, so the other order would clear the
-        // booth instead (AlkharidGate/MiningPlugin boot pattern). NOTE: the NORTH fountain
-        // (3221,3226) is the teleport portal — do NOT target it.
-        val booth = pickVisibleBooth()
-        if (booth != null) {
-            logger.info { "grand-exchange: booth def '$booth' picked for the old fountain tile." }
-            onWorldInit {
-                world.getObject(Tile(BOOTH_X, BOOTH_Z, 0), type = BOOTH_TYPE)?.let { world.remove(it) }
-                world.spawn(DynamicObject(getRSCM(booth), type = BOOTH_TYPE, rot = BOOTH_ROT, Tile(BOOTH_X, BOOTH_Z, 0)))
-            }
-            bindBooth(booth)
-        } else {
-            // No renderable def in the cache: leave the fountain standing rather than clear the
-            // tile for a booth that can't be seen. The clerk and ::ge still open the GE.
-            logger.warn { "grand-exchange: no renderable booth def among $BOOTH_CANDIDATES; use ::ge." }
+        // CRITICAL SHAPE LESSON (dump-ge-locs, region 12598 pre-ruins cache): the real GE
+        // booths are WALL-shaped locs — e.g. "3164 3487 lvl1 10061 type=0 rot=1" — not
+        // type-10 scenery. A loc only draws when spawned in the shape slot its models are
+        // keyed to, which is why every type-10 spawn of 10060/10061/30390 (and plain ::obj,
+        // which defaults to type 10) was invisible. So: spawn a pair of booth WALLS (type 0)
+        // on the fountain footprint's south edge, exactly like the GE's own south-side desks
+        // (which use rot 1 with players approaching from the south).
+        // The fountain removal (its own slot, type 10) still runs first in onWorldInit so
+        // the stand isn't buried in the fountain model. NOTE: the NORTH fountain (3221,3226)
+        // is the teleport portal — do NOT target it.
+        onWorldInit {
+            world.getObject(Tile(BOOTH_X, BOOTH_Z, 0), type = FOUNTAIN_TYPE)?.let { world.remove(it) }
+            world.spawn(DynamicObject(getRSCM(BOOTH), type = BOOTH_TYPE, rot = BOOTH_ROT, Tile(BOOTH_X, BOOTH_Z, 0)))
+            world.spawn(DynamicObject(getRSCM(BOOTH), type = BOOTH_TYPE, rot = BOOTH_ROT, Tile(BOOTH_X + 1, BOOTH_Z, 0)))
         }
+        bindBooth(BOOTH)
 
         // New offer: the reliable native flow (Buy/Sell dialog → the ::item search → two number
         // entries), then create + re-stream the board. (A drawn in-window setup box is a v2 polish.)
@@ -189,16 +184,6 @@ class GrandExchangeClickPlugin(
         }
     }
 
-    /** First candidate whose def would actually draw: real models, no varbit/varp transform.
-     *  (A transform def is invisible until its varbit/varp is set — the trap object 10060 fell
-     *  into. Same render-relevance fields MapDumpTool's `objinfo` prints.) */
-    private fun pickVisibleBooth(): String? = BOOTH_CANDIDATES.firstOrNull { key ->
-        runCatching {
-            val def = getObject(getRSCM(key))
-            def.objectModels?.isNotEmpty() == true && def.varbit == -1 && def.varp == -1
-        }.getOrDefault(false)
-    }
-
     /** Bind the booth's click options the same defensive way as [bindClerk]: probe the cache def
      *  first (onObjOption throws on a missing option), prefer a real open verb, and bind the
      *  History/Collect extras only when the def carries them. */
@@ -226,20 +211,18 @@ class GrandExchangeClickPlugin(
     private companion object {
         const val CLERK = "npc.grand_exchange_clerk"
 
-        /** GE booth defs to try, most-preferred first; [pickVisibleBooth] takes the first one
-         *  that actually renders. (object.grand_exchange_booth / 10060 is deliberately absent:
-         *  it spawned but never drew in this cache.) */
-        val BOOTH_CANDIDATES = listOf(
-            "object.grand_exchange_booth_30390",  // the modern GE booth — expected pick
-            "object.grand_exchange_booth_10061",
-            "object.grand_exchange_display",      // freestanding display piece, last resort
-        )
+        /** Object 10061 — the id the GE's own player-facing desks use (map-verified). */
+        const val BOOTH = "object.grand_exchange_booth_10061"
 
-        // SW corner of the old SOUTH courtyard fountain (879, 2x2) — the booth takes its
-        // footprint. (The north fountain @ 3221,3226 is the teleport portal — leave it alone.)
+        // SW corner of the old SOUTH courtyard fountain (879, 2x2) — the booth pair sits on
+        // its south edge. (The north fountain @ 3221,3226 is the teleport portal — leave it
+        // alone.)
         const val BOOTH_X = 3221
         const val BOOTH_Z = 3210
-        const val BOOTH_TYPE = 10   // interactable-scenery loc slot (matches the fountain's type)
-        const val BOOTH_ROT = 0     // cosmetic: face the teleport hub to the north; tune in-game via ::obj
+        const val FOUNTAIN_TYPE = 10 // the fountain's own loc slot, removed before spawning
+        const val BOOTH_TYPE = 0    // WALL_STRAIGHT — the shape the GE map places 10061 as;
+                                    // any other slot renders nothing (see init comment)
+        const val BOOTH_ROT = 1     // matches the GE's south-side desks (3164,3487 rot 1);
+                                    // players approach from the south — tune via ::obj 10061 0 <rot>
     }
 }
