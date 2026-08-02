@@ -32,8 +32,8 @@ private val logger = KotlinLogging.logger {}
  *  - `::lofgecancel <box>`                         → abort an offer
  *  - `::lofgeclose`                                → close the window
  *
- * Opened by the Grand Exchange clerk (npc.grand_exchange_clerk), the GE booth on the old south
- * fountain tile (3221,3210), or `::ge`. Offer creation reuses the
+ * Opened by the Grand Exchange clerk (npc.grand_exchange_clerk), the GE hub desks on the old
+ * south fountain site (ring at 3219-3224 x 3208-3213), or `::ge`. Offer creation reuses the
  * native item search (`searchItemInput`, the `::item` box); quantity/price are set in the overlay and
  * arrive on the confirm token. All engine calls are the dupe-safe escrow paths.
  */
@@ -50,24 +50,27 @@ class GrandExchangeClickPlugin(
         bindClerk(CLERK)
         onCommand("ge", description = "Open the Grand Exchange") { GrandExchangeWindow.stream(player) }
 
-        // The GE stand on the old south courtyard fountain's footprint (fountain 879, type 10,
+        // The full Grand Exchange hub — the central 2x2 pillar ringed by clerk desks — rebuilt
+        // tile-for-tile on the old south courtyard fountain's footprint (fountain 879, type 10,
         // 2x2 @ 3221,3210 — the tile the Occult Altar stood on before it moved to 3215,3211).
-        // CRITICAL SHAPE LESSON (dump-ge-locs, region 12598 pre-ruins cache): the real GE
-        // booths are WALL-shaped locs — e.g. "3164 3487 lvl1 10061 type=0 rot=1" — not
-        // type-10 scenery. A loc only draws when spawned in the shape slot its models are
-        // keyed to, which is why every type-10 spawn of 10060/10061/30390 (and plain ::obj,
-        // which defaults to type 10) was invisible. So: spawn a pair of booth WALLS (type 0)
-        // on the fountain footprint's south edge, exactly like the GE's own south-side desks
-        // (which use rot 1 with players approaching from the south).
-        // The fountain removal (its own slot, type 10) still runs first in onWorldInit so
-        // the stand isn't buried in the fountain model. NOTE: the NORTH fountain (3221,3226)
+        // HUB_PARTS is a verbatim copy of the real GE's central structure (dump-ge-locs,
+        // region 12598 pre-ruins cache, level-1 bridge tiles at 3162-3167 x 3487-3492): booth
+        // walls 10061/10060/30389 (loc shape 0), desk corner pieces 10059/10062 (shapes 1/9),
+        // the 10063 pillar (shape 10, 2x2) and two shape-22 floor decors. Each part MUST keep
+        // its dumped shape — a loc only draws in the shape slot its models are keyed to, which
+        // is why earlier type-10 spawns of the booth ids (and plain ::obj) were invisible.
+        // The anchor puts the pillar exactly on the fountain tile, so the fountain removal
+        // (same tile+slot, remove FIRST) still applies. NOTE: the NORTH fountain (3221,3226)
         // is the teleport portal — do NOT target it.
         onWorldInit {
-            world.getObject(Tile(BOOTH_X, BOOTH_Z, 0), type = FOUNTAIN_TYPE)?.let { world.remove(it) }
-            world.spawn(DynamicObject(getRSCM(BOOTH), type = BOOTH_TYPE, rot = BOOTH_ROT, Tile(BOOTH_X, BOOTH_Z, 0)))
-            world.spawn(DynamicObject(getRSCM(BOOTH), type = BOOTH_TYPE, rot = BOOTH_ROT, Tile(BOOTH_X + 1, BOOTH_Z, 0)))
+            world.getObject(Tile(HUB_X + 2, HUB_Z + 2, 0), type = FOUNTAIN_TYPE)?.let { world.remove(it) }
+            HUB_PARTS.forEach { p ->
+                world.spawn(DynamicObject(getRSCM(p.obj), type = p.type, rot = p.rot, Tile(HUB_X + p.dx, HUB_Z + p.dz, 0)))
+            }
         }
-        bindBooth(BOOTH)
+        bindBooth(BOOTH_10061)
+        bindBooth(BOOTH_10060)
+        bindBooth(BOOTH_30389)
 
         // New offer: the reliable native flow (Buy/Sell dialog → the ::item search → two number
         // entries), then create + re-stream the board. (A drawn in-window setup box is a v2 polish.)
@@ -211,18 +214,49 @@ class GrandExchangeClickPlugin(
     private companion object {
         const val CLERK = "npc.grand_exchange_clerk"
 
-        /** Object 10061 — the id the GE's own player-facing desks use (map-verified). */
-        const val BOOTH = "object.grand_exchange_booth_10061"
+        // The clickable desk ids in the hub (all bound to open the GE, def-probed first).
+        const val BOOTH_10061 = "object.grand_exchange_booth_10061"
+        const val BOOTH_10060 = "object.grand_exchange_booth"
+        const val BOOTH_30389 = "object.null_30389"
 
-        // SW corner of the old SOUTH courtyard fountain (879, 2x2) — the booth pair sits on
-        // its south edge. (The north fountain @ 3221,3226 is the teleport portal — leave it
-        // alone.)
-        const val BOOTH_X = 3221
-        const val BOOTH_Z = 3210
+        // Ring SW corner: the 6x6 hub spans 3219-3224 x 3208-3213, putting the 2x2 pillar
+        // (dx 2, dz 2) exactly on the old SOUTH fountain's tile (3221,3210). (The north
+        // fountain @ 3221,3226 is the teleport portal — leave it alone.)
+        const val HUB_X = 3219
+        const val HUB_Z = 3208
         const val FOUNTAIN_TYPE = 10 // the fountain's own loc slot, removed before spawning
-        const val BOOTH_TYPE = 0    // WALL_STRAIGHT — the shape the GE map places 10061 as;
-                                    // any other slot renders nothing (see init comment)
-        const val BOOTH_ROT = 1     // matches the GE's south-side desks (3164,3487 rot 1);
-                                    // players approach from the south — tune via ::obj 10061 0 <rot>
+
+        /** One loc of the hub: rscm key + offset from (HUB_X, HUB_Z) + its dumped shape/rot. */
+        data class HubPart(val obj: String, val dx: Int, val dz: Int, val type: Int, val rot: Int)
+
+        /** Verbatim from dump-ge-locs (GE ring at 3162,3487 → offsets), row by row south→north. */
+        val HUB_PARTS = listOf(
+            // south face: corners + the two south desks (players approach from here)
+            HubPart("object.null_10059", 1, 0, 1, 1),
+            HubPart(BOOTH_10061, 2, 0, 0, 1),
+            HubPart(BOOTH_10061, 3, 0, 0, 1),
+            HubPart("object.null_10059", 4, 0, 1, 0),
+            HubPart("object.null_16458", 5, 0, 22, 0),
+            HubPart("object.null_10059", 0, 1, 1, 1),
+            HubPart("object.null_10059", 1, 1, 9, 1),
+            HubPart("object.null_10062", 4, 1, 9, 0),
+            HubPart("object.null_10059", 5, 1, 1, 0),
+            // middle rows: west/east desks + the central 2x2 pillar
+            HubPart(BOOTH_10060, 0, 2, 0, 2),
+            HubPart("object.null_10063", 2, 2, 10, 0),
+            HubPart(BOOTH_10060, 5, 2, 0, 0),
+            HubPart(BOOTH_30389, 0, 3, 0, 2),
+            HubPart(BOOTH_10060, 5, 3, 0, 0),
+            // north face: corners + the two north desks
+            HubPart("object.null_10059", 0, 4, 1, 2),
+            HubPart("object.null_10059", 1, 4, 9, 2),
+            HubPart("object.null_10059", 4, 4, 9, 3),
+            HubPart("object.null_10059", 5, 4, 1, 3),
+            HubPart("object.null_2738", 0, 5, 22, 0),
+            HubPart("object.null_10059", 1, 5, 1, 2),
+            HubPart(BOOTH_10061, 2, 5, 0, 3),
+            HubPart(BOOTH_10061, 3, 5, 0, 3),
+            HubPart("object.null_10059", 4, 5, 1, 3),
+        )
     }
 }
