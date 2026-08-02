@@ -1,6 +1,7 @@
 package org.alter.plugins.content.combat.strategy
 
 import org.alter.api.EquipmentType
+import org.alter.api.ProjectileType
 import org.alter.api.Skills
 import org.alter.api.WeaponType
 import org.alter.api.ext.*
