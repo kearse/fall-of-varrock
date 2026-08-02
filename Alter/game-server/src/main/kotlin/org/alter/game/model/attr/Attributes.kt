@@ -453,6 +453,12 @@ val POISON_TICKS_LEFT_ATTR = AttributeKey<Int>(persistenceKey = "poison_ticks_le
 val VENOM_DAMAGE_ATTR = AttributeKey<Int>(persistenceKey = "venom_damage", resetOnDeath = true)
 
 /**
+ * Reflected-damage points left on the currently worn ring of recoil (40 when fresh).
+ * Cleared when the ring shatters. Persists across sessions like the ring itself.
+ */
+val RECOIL_DAMAGE_LEFT_ATTR = AttributeKey<Int>(persistenceKey = "recoil_damage_left")
+
+/**
  * The amount of antifire potion charges left.
  */
 val ANTIFIRE_POTION_CHARGES_ATTR = AttributeKey<Int>(persistenceKey = "antifire_potion_charges", resetOnDeath = true)

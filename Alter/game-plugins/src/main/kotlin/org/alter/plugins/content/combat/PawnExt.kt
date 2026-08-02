@@ -147,47 +147,59 @@ fun Pawn.dealHit(
         Combat.postDamage(pawn, target)
     }
     if (landHit) {
-        hit.addAction {
-            val pawn = this@dealHit
-            target.damageMap.add(pawn, hit.hitmarks.sumOf { it.damage })
+        attachLandedBookkeeping(hit, target)
+    }
+    return pawnHit
+}
+
+/**
+ * The bookkeeping every LANDED combat hit owes, attached as application-time actions:
+ * damage-map credit (kill attribution), Smite drain, Redemption trigger and the NPC
+ * poison/venom roll. Shared by [dealHit] and [dealExactHit] so guaranteed-damage
+ * specials (Voidwaker, ruby bolts, saradomin sword) carry identical semantics.
+ */
+private fun Pawn.attachLandedBookkeeping(
+    hit: org.alter.game.model.Hit,
+    target: Pawn,
+) {
+    val attacker = this
+    hit.addAction {
+        target.damageMap.add(attacker, hitmarks.sumOf { it.damage })
+    }
+    hit.addAction {
+        val damage = hitmarks.sumOf { it.damage }
+        // Smite: the attacker's overhead drains floor(damage / 4) prayer points from
+        // a player target.
+        if (damage > 0 && attacker is Player && target is Player && Prayers.isActive(attacker, Prayer.SMITE)) {
+            target.getSkills().decrementCurrentLevel(Skills.PRAYER, damage / 4, capped = false)
         }
-        hit.addAction {
-            val pawn = this@dealHit
-            val damage = hit.hitmarks.sumOf { it.damage }
-            // Smite: the attacker's overhead drains floor(damage / 4) prayer points from
-            // a player target.
-            if (damage > 0 && pawn is Player && target is Player && Prayers.isActive(pawn, Prayer.SMITE)) {
-                target.getSkills().decrementCurrentLevel(Skills.PRAYER, damage / 4, capped = false)
-            }
-            // Redemption: when a hit leaves the target alive below 10% HP, all their prayer
-            // points are consumed to heal floor(25% of their Prayer level).
-            if (target is Player && !target.isDead() && Prayers.isActive(target, Prayer.REDEMPTION) &&
-                target.getCurrentHp() > 0 && target.getCurrentHp() * 10 < target.getMaxHp() &&
-                target.getSkills().getCurrentLevel(Skills.PRAYER) > 0
-            ) {
-                target.graphic(REDEMPTION_GFX)
-                target.heal(Math.floor(target.getSkills().getBaseLevel(Skills.PRAYER) * 0.25).toInt())
-                target.getSkills().setCurrentLevel(Skills.PRAYER, 0)
-            }
+        // Redemption: when a hit leaves the target alive below 10% HP, all their prayer
+        // points are consumed to heal floor(25% of their Prayer level).
+        if (target is Player && !target.isDead() && Prayers.isActive(target, Prayer.REDEMPTION) &&
+            target.getCurrentHp() > 0 && target.getCurrentHp() * 10 < target.getMaxHp() &&
+            target.getSkills().getCurrentLevel(Skills.PRAYER) > 0
+        ) {
+            target.graphic(REDEMPTION_GFX)
+            target.heal(Math.floor(target.getSkills().getBaseLevel(Skills.PRAYER) * 0.25).toInt())
+            target.getSkills().setCurrentLevel(Skills.PRAYER, 0)
         }
-        // NPC poison/venom chances from the combat def, rolled when a hit lands.
-        if (this is Npc) {
-            val def = combatDef
-            if (def.venomChance > 0.0 || def.poisonChance > 0.0) {
-                hit.addAction {
-                    if (!target.isDead()) {
-                        when {
-                            def.venomChance > 0.0 && world.randomDouble() < def.venomChance ->
-                                Poison.venom(target)
-                            def.poisonChance > 0.0 && world.randomDouble() < def.poisonChance ->
-                                Poison.poison(target, initialDamage = 6)
-                        }
+    }
+    // NPC poison/venom chances from the combat def, rolled when a hit lands.
+    if (attacker is Npc) {
+        val def = attacker.combatDef
+        if (def.venomChance > 0.0 || def.poisonChance > 0.0) {
+            hit.addAction {
+                if (!target.isDead()) {
+                    when {
+                        def.venomChance > 0.0 && attacker.world.randomDouble() < def.venomChance ->
+                            Poison.venom(target)
+                        def.poisonChance > 0.0 && attacker.world.randomDouble() < def.poisonChance ->
+                            Poison.poison(target, initialDamage = 6)
                     }
                 }
             }
         }
     }
-    return pawnHit
 }
 
 /**
@@ -217,10 +229,7 @@ fun Pawn.dealExactHit(
         val pawn = this@dealExactHit
         Combat.postDamage(pawn, target)
     }
-    hit.addAction {
-        val pawn = this@dealExactHit
-        target.damageMap.add(pawn, hit.hitmarks.sumOf { it.damage })
-    }
+    attachLandedBookkeeping(hit, target)
     return pawnHit
 }
 

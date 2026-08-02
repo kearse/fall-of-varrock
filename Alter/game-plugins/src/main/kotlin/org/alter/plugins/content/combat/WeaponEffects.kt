@@ -56,10 +56,11 @@ object WeaponEffects {
         target: Pawn,
         pawnHit: PawnHit,
     ) {
-        // Victim-side first: Vengeance reflects 75% of this hit back to the attacker. Must run
-        // before the attacker-only early-returns below (the victim, not the attacker, is venged,
-        // and the attacker may be an NPC with no weapon effect).
+        // Victim-side first: Vengeance and the ring of recoil react to the hit the TARGET
+        // just took. Must run before the attacker-only early-returns below (the victim,
+        // not the attacker, owns these effects, and the attacker may be an NPC).
         Vengeance.onDamaged(victim = target, attacker = pawn, pawnHit = pawnHit)
+        RingOfRecoil.onDamaged(victim = target, attacker = pawn, pawnHit = pawnHit)
 
         if (pawn !is Player) return
         val weapon = pawn.getEquipment(EquipmentType.WEAPON) ?: return
