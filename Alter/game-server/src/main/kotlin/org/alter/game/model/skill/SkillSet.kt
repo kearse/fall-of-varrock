@@ -133,8 +133,10 @@ class SkillSet(val maxSkills: Int) {
                 capValue < 0 -> Math.max(getCurrentLevel(skill) + value, getBaseLevel(skill) + capValue)
                 else -> Math.min(getBaseLevel(skill), getCurrentLevel(skill) + value)
             }
-        val newLevel = Math.max(0, altered)
         val curLevel = getCurrentLevel(skill)
+        // A positive alter (boost/restore) must never lower the level: a stat already above
+        // this alter's cap (e.g. super combat, sara brew overheal) is left untouched.
+        val newLevel = if (value >= 0) Math.max(curLevel, Math.max(0, altered)) else Math.max(0, altered)
 
         if (newLevel != curLevel) {
             setCurrentLevel(skill = skill, level = newLevel)

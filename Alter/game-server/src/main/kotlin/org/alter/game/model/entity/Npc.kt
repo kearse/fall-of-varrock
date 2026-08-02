@@ -274,8 +274,10 @@ class Npc private constructor(val id: Int, world: World, val spawnTile: Tile) : 
                     capValue < 0 -> Math.max(getCurrentLevel(skill) + value, getMaxLevel(skill) + capValue)
                     else -> Math.min(getMaxLevel(skill), getCurrentLevel(skill) + value)
                 }
-            val newLevel = Math.max(0, altered)
             val curLevel = getCurrentLevel(skill)
+            // A positive alter (boost/restore) must never lower the level: a stat already above
+            // this alter's cap is left untouched (mirrors SkillSet.alterCurrentLevel).
+            val newLevel = if (value >= 0) Math.max(curLevel, Math.max(0, altered)) else Math.max(0, altered)
 
             if (newLevel != curLevel) {
                 setCurrentLevel(skill = skill, level = newLevel)
