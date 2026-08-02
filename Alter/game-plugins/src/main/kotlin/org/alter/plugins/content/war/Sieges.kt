@@ -98,9 +98,9 @@ object Sieges {
         // his death no longer fells the city (that mechanic was removed). Decorative/NPC role for
         // now. Inside [LUMBRIDGE_KEEP], so the war never reaches him. TUNE in-game.
         zoNpc = "npc.melee_combat_tutor",
-        // One tile north of the Recruiting Sergeant (3217,3220), just inside the Lumbridge gate,
-        // clear of the rejuvenation pool's 3x3 basin (3216..3218 — RejuvenationPoolPlugin).
-        zoTile = Tile(3217, 3221, 0),
+        // Inside the GE hub's desk ring, west column — one tile south of Duke Horacio
+        // (3220,3211), against the 2x2 pillar (3221-3222 x 3210-3211).
+        zoTile = Tile(3220, 3210, 0),
         zoDef = zoDef,
         // ONE prong: the camp east of the river marches WEST over the south bridge into the castle.
         // The flow field does the real routing (the bridge is opened in bridgeSpans); these waypoints

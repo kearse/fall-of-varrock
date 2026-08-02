@@ -371,9 +371,9 @@ class AttackDirector(
         val npc = Npc(getRSCM(config.zoNpc), config.zoTile, world)
         npc.routeLogic = 1
         // MUST be before world.spawn: the client avatar takes its facing at alloc time, so a
-        // direction set after spawn never renders. Same spawn direction as the Recruiting
-        // Sergeant one tile south, so the pair stand facing the same way.
-        npc.lastFacingDirection = Direction.EAST
+        // direction set after spawn never renders. Faces his west desks in the GE hub's ring,
+        // same as Duke Horacio one tile north — the pair stand facing the same way.
+        npc.lastFacingDirection = Direction.WEST
         world.spawn(npc)
         // MUST be after world.spawn: setNpcDefaults() resets combatDef + HP to the cache default on
         // spawn, so applying Zo's tanky boss stats earlier would be silently clobbered (the bug
