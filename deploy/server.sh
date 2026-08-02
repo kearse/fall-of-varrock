@@ -69,9 +69,11 @@ case "$cmd" in
       'java -cp "/app/lib/*" org.alter.tools.mapdump.MapDumpToolKt region 12598 >/dev/null 2>&1 || true; cat data/mapdump/r12598_*.txt 2>/dev/null || echo NO_DUMP' \
       > "$TMP"
     head -4 "$TMP"
-    echo "-- locs on the central GE floor (x 3158-3172, z 3482-3496, level 0) --"
     echo "-- columns: x z level id name type rot sizeX sizeY --"
-    awk -F'\t' 'NF>=9 && $3==0 && $1>=3158 && $1<=3172 && $2>=3482 && $2<=3496' "$TMP"
+    echo "-- multi-tile locs anywhere in the region (level 0) --"
+    awk -F'\t' 'NF>=9 && $3==0 && ($8>1 || $9>1)' "$TMP"
+    echo "-- any GE booth/display/portal ids anywhere, any level --"
+    awk -F'\t' 'NF>=9 && ($4==10060 || $4==10061 || $4==30390 || $4==31939 || $4==33093 || $4==33099 || $4==33105)' "$TMP"
     rm -f "$TMP"
     ;;
   inspect-save)
