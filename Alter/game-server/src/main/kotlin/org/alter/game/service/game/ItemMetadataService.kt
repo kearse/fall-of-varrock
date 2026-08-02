@@ -118,11 +118,11 @@ class ItemMetadataService : Service {
                         def.getValidatedParam(ParamMapper.item.PRAYER_BONUS),
                     )
 
-                // Only WEAPONS (equip slot 3) keep their cache skill-level requirements. Armour and
-                // every other worn slot has NO level requirement on this server — wearing armour is
-                // gated by the player's bought feudal rank instead (TitlePlugin's armour-tier gate,
-                // see Title.kt / docs/war-system-design.md).
-                if (def.equipSlot == 3 && def.params?.containsKey(ParamMapper.item.PRIMARY_SKILL) == true) {
+                // EVERY equippable item keeps its classic cache skill-level requirements — weapons
+                // AND armour (40 Defence for rune, 60 Attack for a dragon scimitar, ...). Armour is
+                // ADDITIONALLY gated by the player's bought feudal rank (TitlePlugin's armour-tier
+                // gate, see Title.kt / docs/war-system-design.md) — both checks must pass.
+                if (def.equipSlot >= 0 && def.params?.containsKey(ParamMapper.item.PRIMARY_SKILL) == true) {
                     // Only write requirement pairs whose skill param actually exists in the cache.
                     // Unconditional puts used the 0-defaults for absent secondary/tertiary/quaternary
                     // pairs, writing (skill=0, level=0) — which overwrote the attack (skill id 0)
@@ -130,10 +130,13 @@ class ItemMetadataService : Service {
                     def.skillReqs = Byte2ByteOpenHashMap().apply {
                         fun putReq(skillParam: Int, levelParam: Int) {
                             if (def.params?.containsKey(skillParam) == true) {
-                                put(
-                                    def.getValidatedParam(skillParam).toByte(),
-                                    def.getValidatedParam(levelParam).toByte()
-                                )
+                                // Only real skill ids (0-22). Anything outside that range is a
+                                // quest/pseudo requirement — this server has NO quest requirements
+                                // on gear, and an out-of-range id would OOB the skill tables.
+                                val skill = def.getValidatedParam(skillParam)
+                                if (skill in 0..22) {
+                                    put(skill.toByte(), def.getValidatedParam(levelParam).toByte())
+                                }
                             }
                         }
                         putReq(ParamMapper.item.PRIMARY_SKILL, ParamMapper.item.PRIMARY_LEVEL)
@@ -144,7 +147,7 @@ class ItemMetadataService : Service {
                     wearReqCount++
                 }
             }
-            logger.info { "Loaded equip skill requirements for $wearReqCount weapons (armour is feudal-rank gated, not level gated)." }
+            logger.info { "Loaded classic equip skill requirements for $wearReqCount items (armour is additionally feudal-rank gated)." }
 
             /**
              * Loads and assigns render animations to item definitions from external JSON files.
@@ -304,9 +307,9 @@ class ItemMetadataService : Service {
                 }
             }
 
-            // Same rule as the cache load above: YAML-override skill reqs only apply to weapons —
-            // armour is feudal-rank gated, not level gated (TitlePlugin).
-            if (equipment.skillReqs != null && def.equipSlot == 3) {
+            // Same rule as the cache load above: YAML-override skill reqs apply to any equippable
+            // item — weapons and armour alike (armour is additionally rank-gated by TitlePlugin).
+            if (equipment.skillReqs != null) {
                 val reqs = Byte2ByteOpenHashMap()
                 equipment.skillReqs.filter { it.skill != null }.forEach { req ->
                     reqs[getSkillId(req.skill!!)] = req.level!!.toByte()

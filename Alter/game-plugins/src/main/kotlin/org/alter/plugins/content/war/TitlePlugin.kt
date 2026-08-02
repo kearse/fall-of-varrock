@@ -31,8 +31,8 @@ class TitlePlugin(
 
         // Block wearing armour above your rank: checked right after it equips, then
         // stripped back off with a message (no per-item cache registration needed).
-        // Rank is the ONLY armour requirement — armour skill-level reqs are stripped
-        // at load (ItemMetadataService); weapons keep theirs.
+        // Rank is an ADDITIONAL armour requirement — the classic skill-level reqs
+        // (ItemMetadataService) are enforced first by EquipAction, then this gate.
         for (slot in RANK_GATED_ARMOUR_SLOTS) {
             onEquipToSlot(slot) {
                 val item = player.equipment[slot] ?: return@onEquipToSlot
@@ -50,7 +50,7 @@ class TitlePlugin(
         // ::title — show rank, what you can wear, and the next rank's price.
         onCommand("title", description = "Show your rank, armour tier, and next rank cost") {
             val t = player.title
-            player.message("Rank: <col=ffae00>${t.display}</col> — you may wear up to <col=ff9040>${t.maxTier.display}</col> armour. Rank, not levels, is the armour requirement.")
+            player.message("Rank: <col=ffae00>${t.display}</col> — you may wear up to <col=ff9040>${t.maxTier.display}</col> armour. You must also meet the armour's usual level requirements.")
             if (t.companions > 0) {
                 player.message("Your rank may field <col=ffae00>${t.companions}</col> soldier companion${if (t.companions > 1) "s" else ""} (General Zo).")
             }

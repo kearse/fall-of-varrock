@@ -78,9 +78,10 @@ object CompanionGear {
 
     /**
      * True unless [itemId] is rank-gated metal armour above the OWNER's feudal rank ceiling.
-     * Armour has no level requirements on this server — rank is THE armour requirement — so a
-     * companion's armour is capped by its owner's rank, exactly like the owner's own worn gear.
-     * Weapons and non-tiered armour (hide/leather etc.) always pass.
+     * Rank is an ADDITIONAL armour requirement on top of the classic skill-level reqs (checked
+     * separately against the companion's own levels) — so a companion's armour is capped by its
+     * owner's rank, exactly like the owner's own worn gear. Weapons and non-tiered armour
+     * (hide/leather etc.) always pass.
      */
     fun rankAllowsArmour(owner: Player, itemId: Int): Boolean {
         val def = runCatching { getItem(itemId) }.getOrNull() ?: return false
@@ -175,8 +176,9 @@ object CompanionGear {
             return
         }
 
-        // Armour is feudal-rank gated, not level gated — a companion's armour ceiling is its OWNER's
-        // rank (same TitlePlugin gate the owner faces, else a Knight could dress his soldier in dragon).
+        // Armour is ALSO feudal-rank gated (on top of the level check above) — a companion's armour
+        // ceiling is its OWNER's rank (same TitlePlugin gate the owner faces, else a Knight could
+        // dress his soldier in dragon).
         if (!rankAllowsArmour(owner, itemId)) {
             val tier = armourTier(def.name)!!
             owner.message("<col=801700>You must be a ${Title.forTier(tier).display} before your companions may wear ${itemName(itemId)}.</col>")

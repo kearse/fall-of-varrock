@@ -24,9 +24,10 @@ enum class ArmourTier(val display: String) {
  * Ranks are **bought with coins** from Duke Horacio (not earned passively). Coins
  * come from fighting goblins and from skilling + selling to the general store.
  *
- * Rank is the ONLY armour requirement on this server — armour has no skill-level
- * requirements (stripped in ItemMetadataService; weapons keep theirs). Each rank
- * unlocks a higher [maxTier] of armour, and the ladder carries the other perks too:
+ * Rank is an ADDITIONAL armour requirement on top of the classic skill-level
+ * requirements (loaded for all gear in ItemMetadataService — 40 Defence for rune
+ * etc.). Each rank unlocks a higher [maxTier] of armour, and the ladder carries
+ * the other perks too:
  *
  *  - Peasant (free): bronze & iron armour
  *  - Commoner (10k): steel armour
@@ -127,9 +128,9 @@ fun Player.canWear(tier: ArmourTier): Boolean = title.maxTier.ordinal >= tier.or
 
 /**
  * The worn equipment slots the feudal armour gate covers. Weapons are deliberately NOT here —
- * they keep their skill-level requirements; armour's only requirement is rank. Shared by
- * [TitlePlugin] (the player's own equip gate) and the companion gear paths (a companion's
- * armour ceiling is its owner's rank).
+ * they are gated by skill levels alone, never by rank; armour needs BOTH its classic skill
+ * levels and the rank. Shared by [TitlePlugin] (the player's own equip gate) and the companion
+ * gear paths (a companion's armour ceiling is its owner's rank).
  */
 val RANK_GATED_ARMOUR_SLOTS = setOf(
     EquipmentType.HEAD.id, EquipmentType.CHEST.id, EquipmentType.SHIELD.id,
