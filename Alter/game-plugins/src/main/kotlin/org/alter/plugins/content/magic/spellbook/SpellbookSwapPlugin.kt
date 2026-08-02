@@ -67,7 +67,7 @@ class SpellbookSwapPlugin(
 
         // ---- Altar of the Occult (Lumbridge market courtyard) ----
         // A world copy of the POH occult altar (2x2), standing on the north exit path out
-        // of the courtyard, facing SOUTH. The old south fountain tile (3221,3210) now
+        // of the courtyard, facing NORTH. The old south fountain tile (3221,3210) now
         // hosts the Grand Exchange stand (GrandExchangeClickPlugin), and the NORTH
         // fountain (3221,3226) is the teleport portal (TeleportPortalObjectPlugin) — do NOT
         // target either. Done in onWorldInit so the region/collision is loaded and the
@@ -78,7 +78,7 @@ class SpellbookSwapPlugin(
         // without ::spellbook. Same Mage Tower gate via [switchTo].
         onWorldInit {
             world.getObject(Tile(ALTAR_X, ALTAR_Z, 0), type = ALTAR_TYPE)?.let { world.remove(it) }
-            world.spawn(DynamicObject(getRSCM(OCCULT_ALTAR), type = ALTAR_TYPE, rot = SOUTH_ROT, Tile(ALTAR_X, ALTAR_Z, 0)))
+            world.spawn(DynamicObject(getRSCM(OCCULT_ALTAR), type = ALTAR_TYPE, rot = NORTH_ROT, Tile(ALTAR_X, ALTAR_Z, 0)))
         }
         onObjOption(obj = OCCULT_ALTAR, option = "Venerate") { openMenu(player) }
         onObjOption(obj = OCCULT_ALTAR, option = "Ancient") { switchTo(player, Spellbook.ANCIENTS) }
@@ -154,9 +154,10 @@ class SpellbookSwapPlugin(
         const val ALTAR_X = 3222
         const val ALTAR_Z = 3230
         const val ALTAR_TYPE = 10   // interactable-scenery loc slot (matches the fountain's type)
-        const val SOUTH_ROT = 2     // model-verified in-game: rot 1 rendered EAST, so rot 0 = north
-                                    // and rot 2 = the requested SOUTH facing (the occult-altar
-                                    // model's base orientation is offset one step from the
-                                    // Direction.NORTH -> rot 1 convention)
+        const val NORTH_ROT = 0     // model-verified in-game: rot 1 rendered EAST, so rot 0 = north
+                                    // and rot 2 = south (the occult-altar model's base
+                                    // orientation is offset one step from the
+                                    // Direction.NORTH -> rot 1 convention); flipped 180°
+                                    // from the old south facing on request
     }
 }
