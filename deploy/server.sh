@@ -70,10 +70,9 @@ case "$cmd" in
       > "$TMP"
     head -4 "$TMP"
     echo "-- columns: x z level id name type rot sizeX sizeY --"
-    echo "-- multi-tile locs anywhere in the region (level 0) --"
-    awk -F'\t' 'NF>=9 && $3==0 && ($8>1 || $9>1)' "$TMP"
-    echo "-- any GE booth/display/portal ids anywhere, any level --"
-    awk -F'\t' 'NF>=9 && ($4==10060 || $4==10061 || $4==30390 || $4==31939 || $4==33093 || $4==33099 || $4==33105)' "$TMP"
+    echo "-- ALL level-1 locs around the central GE hub (x 3155-3175, z 3480-3500) --"
+    echo "-- (the central desk ring + pillar live on bridge-flagged tiles at level 1) --"
+    awk -F'\t' 'NF>=9 && $3==1 && $1>=3155 && $1<=3175 && $2>=3480 && $2<=3500' "$TMP"
     rm -f "$TMP"
     ;;
   inspect-save)
