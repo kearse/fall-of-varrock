@@ -1,0 +1,503 @@
+# Classic equip requirements for mithril-tier gear (level 20).
+# GENERATED from item.rscm names — the rev-228 cache carries no skill
+# params on sub-rune metal gear, so without these overrides the server
+# has nothing to enforce. tradeable: true preserves the cache flag
+# (override docs default tradeable to false).
+# mithril_med_helm
+id: 1143
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 20
+---
+# mithril_full_helm
+id: 1159
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 20
+---
+# mithril_full_helm_t
+id: 12293
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 20
+---
+# mithril_full_helm_g
+id: 12283
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 20
+---
+# mithril_chainbody
+id: 1109
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 20
+---
+# mithril_platebody
+id: 1121
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 20
+---
+# mithril_platebody_t
+id: 12287
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 20
+---
+# mithril_platebody_g
+id: 12277
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 20
+---
+# mithril_platelegs
+id: 1071
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 20
+---
+# mithril_platelegs_t
+id: 12289
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 20
+---
+# mithril_platelegs_g
+id: 12279
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 20
+---
+# mithril_plateskirt
+id: 1085
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 20
+---
+# mithril_plateskirt_t
+id: 12295
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 20
+---
+# mithril_plateskirt_g
+id: 12285
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 20
+---
+# mithril_sq_shield
+id: 1181
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 20
+---
+# mithril_kiteshield
+id: 1197
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 20
+---
+# mithril_kiteshield_t
+id: 12291
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 20
+---
+# mithril_kiteshield_g
+id: 12281
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 20
+---
+# mithril_boots
+id: 4127
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 20
+---
+# mithril_dagger
+id: 1209
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 20
+---
+# mithril_daggerp
+id: 1225
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 20
+---
+# mithril_daggerp_5674
+id: 5674
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 20
+---
+# mithril_daggerp_5692
+id: 5692
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 20
+---
+# mithril_sword
+id: 1285
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 20
+---
+# mithril_longsword
+id: 1299
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 20
+---
+# mithril_scimitar
+id: 1329
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 20
+---
+# mithril_mace
+id: 1428
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 20
+---
+# mithril_warhammer
+id: 1343
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 20
+---
+# mithril_battleaxe
+id: 1369
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 20
+---
+# mithril_2h_sword
+id: 1315
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 20
+---
+# mithril_axe
+id: 1355
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 20
+---
+# mithril_felling_axe
+id: 28208
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 20
+---
+# mithril_halberd
+id: 3198
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 20
+---
+# mithril_spear
+id: 1243
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 20
+---
+# mithril_spearp
+id: 1257
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 20
+---
+# mithril_spearp_5710
+id: 5710
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 20
+---
+# mithril_spearp_5724
+id: 5724
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 20
+---
+# mithril_spearkp
+id: 3173
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 20
+---
+# mithril_hasta
+id: 11373
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 20
+---
+# mithril_hastap
+id: 11400
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 20
+---
+# mithril_hastap_11403
+id: 11403
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 20
+---
+# mithril_hastap_11405
+id: 11405
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 20
+---
+# mithril_claws
+id: 3099
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 20
+---
+# mithril_pickaxe
+id: 1273
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 20
+---
+# mithril_knife
+id: 866
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "ranged"
+      level: 20
+---
+# mithril_knifep
+id: 873
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "ranged"
+      level: 20
+---
+# mithril_knifep_5657
+id: 5657
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "ranged"
+      level: 20
+---
+# mithril_knifep_5664
+id: 5664
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "ranged"
+      level: 20
+---
+# mithril_dart
+id: 809
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "ranged"
+      level: 20
+---
+# mithril_dartp
+id: 815
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "ranged"
+      level: 20
+---
+# mithril_dartp_5632
+id: 5632
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "ranged"
+      level: 20
+---
+# mithril_dartp_5639
+id: 5639
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "ranged"
+      level: 20
+---
+# mithril_thrownaxe
+id: 803
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "ranged"
+      level: 20
+---
+# mithril_defender
+id: 8848
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 20
+    - skill: "defence"
+      level: 20
+---
+# mithril_defender_l
+id: 24140
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 20
+    - skill: "defence"
+      level: 20

@@ -1,0 +1,692 @@
+# Classic equip requirements for adamant-tier gear (level 30).
+# GENERATED from item.rscm names — the rev-228 cache carries no skill
+# params on sub-rune metal gear, so without these overrides the server
+# has nothing to enforce. tradeable: true preserves the cache flag
+# (override docs default tradeable to false).
+# adamant_med_helm
+id: 1145
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 30
+---
+# adamant_med_helm_6895
+id: 6895
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 30
+---
+# adamant_full_helm
+id: 1161
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 30
+---
+# adamant_full_helm_20561
+id: 20561
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 30
+---
+# adamant_full_helm_t
+id: 2605
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 30
+---
+# adamant_full_helm_g
+id: 2613
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 30
+---
+# adamant_chainbody
+id: 1111
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 30
+---
+# adamant_platebody
+id: 1123
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 30
+---
+# adamant_platebody_20415
+id: 20415
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 30
+---
+# adamant_platebody_t
+id: 2599
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 30
+---
+# adamant_platebody_g
+id: 2607
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 30
+---
+# adamant_platelegs
+id: 1073
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 30
+---
+# adamant_platelegs_20416
+id: 20416
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 30
+---
+# adamant_platelegs_t
+id: 2601
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 30
+---
+# adamant_platelegs_g
+id: 2609
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 30
+---
+# adamant_plateskirt
+id: 1091
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 30
+---
+# adamant_plateskirt_t
+id: 3474
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 30
+---
+# adamant_plateskirt_g
+id: 3475
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 30
+---
+# adamant_sq_shield
+id: 1183
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 30
+---
+# adamant_kiteshield
+id: 1199
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 30
+---
+# adamant_kiteshield_6894
+id: 6894
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 30
+---
+# adamant_kiteshield_22127
+id: 22127
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 30
+---
+# adamant_kiteshield_22129
+id: 22129
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 30
+---
+# adamant_kiteshield_22131
+id: 22131
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 30
+---
+# adamant_kiteshield_22133
+id: 22133
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 30
+---
+# adamant_kiteshield_22135
+id: 22135
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 30
+---
+# adamant_kiteshield_22137
+id: 22137
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 30
+---
+# adamant_kiteshield_22139
+id: 22139
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 30
+---
+# adamant_kiteshield_22141
+id: 22141
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 30
+---
+# adamant_kiteshield_22143
+id: 22143
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 30
+---
+# adamant_kiteshield_22145
+id: 22145
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 30
+---
+# adamant_kiteshield_22147
+id: 22147
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 30
+---
+# adamant_kiteshield_22149
+id: 22149
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 30
+---
+# adamant_kiteshield_22151
+id: 22151
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 30
+---
+# adamant_kiteshield_22153
+id: 22153
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 30
+---
+# adamant_kiteshield_22155
+id: 22155
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 30
+---
+# adamant_kiteshield_22157
+id: 22157
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 30
+---
+# adamant_kiteshield_t
+id: 2603
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 30
+---
+# adamant_kiteshield_g
+id: 2611
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 30
+---
+# adamant_boots
+id: 4129
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 30
+---
+# adamant_dagger
+id: 1211
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 30
+---
+# adamant_daggerp
+id: 1227
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 30
+---
+# adamant_daggerp_5676
+id: 5676
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 30
+---
+# adamant_daggerp_5694
+id: 5694
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 30
+---
+# adamant_sword
+id: 1287
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 30
+---
+# adamant_longsword
+id: 1301
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 30
+---
+# adamant_scimitar
+id: 1331
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 30
+---
+# adamant_mace
+id: 1430
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 30
+---
+# adamant_warhammer
+id: 1345
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 30
+---
+# adamant_battleaxe
+id: 1371
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 30
+---
+# adamant_2h_sword
+id: 1317
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 30
+---
+# adamant_axe
+id: 1357
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 30
+---
+# adamant_felling_axe
+id: 28211
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 30
+---
+# adamant_halberd
+id: 3200
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 30
+---
+# adamant_spear
+id: 1245
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 30
+---
+# adamant_spearp
+id: 1259
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 30
+---
+# adamant_spearp_5712
+id: 5712
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 30
+---
+# adamant_spearp_5726
+id: 5726
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 30
+---
+# adamant_spearkp
+id: 3174
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 30
+---
+# adamant_hasta
+id: 11375
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 30
+---
+# adamant_hastap
+id: 11407
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 30
+---
+# adamant_hastap_11410
+id: 11410
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 30
+---
+# adamant_hastap_11412
+id: 11412
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 30
+---
+# adamant_claws
+id: 3100
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 30
+---
+# adamant_pickaxe
+id: 1271
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 30
+---
+# adamant_knife
+id: 867
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "ranged"
+      level: 30
+---
+# adamant_knifep
+id: 875
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "ranged"
+      level: 30
+---
+# adamant_knifep_5659
+id: 5659
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "ranged"
+      level: 30
+---
+# adamant_knifep_5666
+id: 5666
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "ranged"
+      level: 30
+---
+# adamant_dart
+id: 810
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "ranged"
+      level: 30
+---
+# adamant_dartp
+id: 816
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "ranged"
+      level: 30
+---
+# adamant_dartp_5633
+id: 5633
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "ranged"
+      level: 30
+---
+# adamant_dartp_5640
+id: 5640
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "ranged"
+      level: 30
+---
+# adamant_thrownaxe
+id: 804
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "ranged"
+      level: 30
+---
+# adamant_defender
+id: 8849
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 30
+    - skill: "defence"
+      level: 30
+---
+# adamant_defender_l
+id: 24141
+tradeable: true
+
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 30
+    - skill: "defence"
+      level: 30
