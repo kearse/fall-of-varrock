@@ -103,7 +103,7 @@ object SupplyDepot {
     }
 
     /** The Quartermaster's two posts: the shop hub and the tutorial post in The Mire crypt. */
-    val POSTS = listOf(Tile(3219, 3216, 0), Tile(3248, 3193, 0))
+    val POSTS = listOf(Tile(3223, 3211, 0), Tile(3248, 3193, 0))
     private const val POST_RADIUS = 10
 
     /**

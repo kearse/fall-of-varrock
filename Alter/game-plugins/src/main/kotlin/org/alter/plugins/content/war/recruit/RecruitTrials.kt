@@ -84,8 +84,8 @@ object RecruitTrials {
     private const val QUARTERMASTER_NPC = "npc.quartermaster" // the Supply Officer in The Mire crypt
     // anchor = (x, z, PLANE the npc stands on). Plane drives the floor-aware routing in pointAtNpc.
     private val SERGEANT_TILE = Triple(3217, 3220, 0)
-    private val DUKE_TILE = Triple(3213, 3219, 0) // Duke stands in the commerce block on the ground floor
-    private val VANNAKA_TILE = Triple(3219, 3215, 0)
+    private val DUKE_TILE = Triple(3220, 3211, 0) // Duke stands in the GE hub's desk ring, west of the pillar
+    private val VANNAKA_TILE = Triple(3222, 3212, 0) // GE hub desk ring, north face
     private val QUARTERMASTER_TILE = Triple(3248, 3193, 0) // Supply Officer's post by the crypt in The Mire
 
     // FIGHT has no single npc to track (a field of goblins), so it uses a tile arrow. TUNABLE.

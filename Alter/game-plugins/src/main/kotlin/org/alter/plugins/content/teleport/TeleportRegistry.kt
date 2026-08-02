@@ -135,7 +135,7 @@ object TeleportRegistry {
         soon("ferox_enclave", "Ferox Enclave", WILDERNESS),
 
         // ── 🩸 Slayer ──────────────────────────────────────────────────────────
-        built("slayer_master", "Slayer Master", SLAYER, Tile(3219, 3216, 0), SAFE_ZONE), // Vannaka
+        built("slayer_master", "Slayer Master", SLAYER, Tile(3222, 3214, 0), SAFE_ZONE), // in front of Vannaka's GE-hub desk
         soon("slayer_cave", "Slayer Cave", SLAYER),
         soon("resource_contracts", "Resource Contracts", SLAYER),
 

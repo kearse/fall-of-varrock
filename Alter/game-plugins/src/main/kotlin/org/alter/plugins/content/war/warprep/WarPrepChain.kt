@@ -87,12 +87,12 @@ object WarPrepChain {
     // Void Knight (the Wizard Tower game-master, mainland end of the bridge) is the Magic
     // objective. (x, z, plane) — plane drives floor-aware routing.
     private const val VANNAKA_NPC = "npc.vannaka"
-    private val VANNAKA_TILE = Triple(3219, 3215, 0)
+    private val VANNAKA_TILE = Triple(3222, 3212, 0) // GE hub desk ring, north face
     private val CHURCH_ALTAR_TILE = Triple(3242, 3207, 0) // Lumbridge church altar (PrayerAltarPlugin's home altar)
     private const val KNIGHT_NPC = "npc.void_knight"
     private val KNIGHT_TILE = Triple(3113, 3208, 0) // WizardTowerPlugin's knight spawn
     private const val DUKE_NPC = "npc.duke_horacio"
-    private val DUKE_TILE = Triple(3213, 3219, 0) // RecruitTrials' Duke anchor (commerce block, ground floor)
+    private val DUKE_TILE = Triple(3220, 3211, 0) // RecruitTrials' Duke anchor (GE hub desk ring, west of the pillar)
 
     private const val ARROW_HEIGHT = 130
     private const val NEAR_TILES = 14

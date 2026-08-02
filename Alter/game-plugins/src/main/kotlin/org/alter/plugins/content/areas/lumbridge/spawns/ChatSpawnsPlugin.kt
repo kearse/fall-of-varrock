@@ -26,9 +26,9 @@ class ChatSpawnsPlugin(
 
         // Castle - inside
         spawnNpc("npc.banker_2897", 3209, 3222, 2, 0, Direction.SOUTH)
-        // Duke Horacio — the feudal rank vendor. On the GROUND floor in the market near the other
-        // vendors, pinned (walkRadius 0) so he never wanders off, facing EAST.
-        spawnNpc("npc.duke_horacio", 3213, 3219, 0, 0, Direction.NORTH)
+        // Duke Horacio — the feudal rank vendor. Inside the GE hub's desk ring, west of the
+        // pillar, pinned (walkRadius 0) so he never wanders off, facing his west desks.
+        spawnNpc("npc.duke_horacio", 3220, 3211, 0, 0, Direction.WEST)
 
         // Combat/woodsman tutors removed to declutter the Lumbridge surface.
         // NB: do NOT re-add npc.melee_combat_tutor here — that id is repurposed as General Zo,
