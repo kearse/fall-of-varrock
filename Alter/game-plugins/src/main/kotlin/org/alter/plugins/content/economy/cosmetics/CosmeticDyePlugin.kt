@@ -15,6 +15,7 @@ import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
 import org.alter.plugins.content.mechanics.shops.CoinCurrency
 import org.alter.plugins.content.mechanics.shops.bindVendorOptions
+import org.alter.plugins.content.war.WarNpcNames
 import org.alter.rscm.RSCM.getRSCM
 
 private val logger = KotlinLogging.logger {}
@@ -53,6 +54,9 @@ class CosmeticDyePlugin(
         // Optional vendor (the OSRS dye witch); ::dyes is the guaranteed opener regardless.
         if (res("npc.aggie") != null) {
             spawnNpc("npc.aggie", x = 3211, z = 3211, height = 0, walkRadius = 0, direction = Direction.NORTH)
+            // Shown as "Cosmetics" (store-type name, like the shop hub's vendors) via
+            // extended-info — no cache edit; re-applied on respawn by the npc-spawn hook.
+            onNpcSpawn("npc.aggie") { WarNpcNames.rename(npc, "Cosmetics") }
             bind("npc.aggie")
         }
         onCommand("dyes", description = "Open the Cosmetic Dyes shop") { player.openShop(SHOP) }

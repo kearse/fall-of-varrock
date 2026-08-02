@@ -10,6 +10,7 @@ import org.alter.game.model.entity.Player
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
 import org.alter.plugins.content.mechanics.shops.bindVendorOptions
+import org.alter.plugins.content.war.WarNpcNames
 import org.alter.rscm.RSCM.getRSCM
 
 private val logger = KotlinLogging.logger {}
@@ -75,6 +76,9 @@ class GamblingPlugin(
 
     init {
         spawnNpc(HOST, 3212, 3211, 0, 0, Direction.NORTH) // services line (south wall)
+        // Shown as "Gambler" (the cache name is "Bartender") via extended-info — no cache
+        // edit; re-applied on respawn by the npc-spawn hook.
+        onNpcSpawn(HOST) { WarNpcNames.rename(npc, "Gambler") }
         // Bind EVERY vendor option (Talk-to AND Gamble/Trade) so none is a dead click on the host.
         if (!bindVendorOptions(HOST) { DiceMenu.open(player) }) {
             logger.warn { "gambling: '$HOST' has no click options; use ::gamble." }
