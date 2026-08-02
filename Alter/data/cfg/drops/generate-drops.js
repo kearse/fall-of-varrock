@@ -22,57 +22,67 @@ const OUT = process.argv[3] || "npc_drops.json";
 const db = JSON.parse(fs.readFileSync(SRC, "utf8"));
 
 // Curated tables for monsters whose osrsbox entry is broken. osrsbox glues every wiki
-// variant of a multi-variant page into ONE drop list per id: every "Zombie" id carries the
+// variant of a multi-variant page into ONE drop list per id: every "Zombie" id carried the
 // union of all seven level-13..53 tables (148 rows — five separate 100% Bones lines, the
 // Rag-and-Bone-Man-quest-only Zombie bone at 1/4, triplicate herb/coin blocks), so each
-// kill rained several variants' worth of loot. Since our roaming zombies live in the
-// wilderness zone (the fallen city streets + the Mire), every Zombie id gets the one
-// wilderness variant instead: the block inside the union carrying the wilderness-only
-// tertiaries (Dark fishing bait/Larran's key/Slayer's enchantment mark those rows), i.e.
-// the level-24 Chaos Temple/Graveyard of Shadows zombie, plus the standard 1/128 gem
-// table also present in the union. Rows keep the exact osrsbox rarities; the quest-only
-// Zombie bone is dropped. Keyed by lowercased monster name; same row shape as the output.
+// kill rained several variants' worth of loot; "Zombie pirate" and "Monkey Zombie" had the
+// same merged-union bug. Keyed by lowercased monster name; same row shape as the output.
+//
+// Zombies and zombie pirates both get the modern wilderness Chaos Temple **Zombie pirate**
+// table (the 2024 post-nerf one, flattened from its weighted form: 50% nothing pre-roll,
+// then 1 pick from a 173-weight main table — so a weight-12 row lands at 6/173, the three
+// dragon weapons at 1/346 each). Our roaming zombies live in the wilderness zone (the
+// fallen city streets + the Mire), so the wildy-pirate loot line is the fit: big coin
+// stacks, blighted supplies, rune gear, and a real shot at dragon dagger/longsword/scim.
+// Omitted from the real table: Zombie pirate key 1/24 (its Locker isn't content here).
+// Kept: Teleport anchoring scroll 1/20000 and Adamant seeds as rare/flavor drops.
+const ZOMBIE_PIRATE_ROWS = [
+  [526, 1, 1, 1, 1], // Bones (always)
+  [565, 0.0115607, 30, 60, 1], // Blood rune
+  [560, 0.0115607, 30, 90, 1], // Death rune
+  [562, 0.0115607, 30, 90, 1], // Chaos rune
+  [558, 0.0115607, 30, 90, 1], // Mind rune
+  [1391, 0.0231214, 1, 3, 1], // Battlestaff
+  [1123, 0.017341, 1, 1, 1], // Adamant platebody
+  [1147, 0.017341, 1, 1, 1], // Rune med helm
+  [1347, 0.017341, 1, 1, 1], // Rune warhammer
+  [1373, 0.017341, 1, 1, 1], // Rune battleaxe
+  [1303, 0.017341, 1, 1, 1], // Rune longsword
+  [1289, 0.017341, 1, 1, 1], // Rune sword
+  [1432, 0.017341, 1, 1, 1], // Rune mace
+  [1215, 0.00289017, 1, 1, 1], // Dragon dagger (1/346)
+  [1305, 0.00289017, 1, 1, 1], // Dragon longsword (1/346)
+  [4587, 0.00289017, 1, 1, 1], // Dragon scimitar (1/346)
+  [24607, 0.0346821, 10, 30, 1], // Blighted ancient ice sack
+  [24592, 0.0346821, 5, 15, 1], // Blighted anglerfish
+  [24589, 0.0346821, 5, 15, 1], // Blighted manta ray
+  [24595, 0.0346821, 5, 15, 1], // Blighted karambwan
+  [24598, 0.0346821, 1, 3, 1], // Blighted super restore(4)
+  [995, 0.0346821, 1000, 8000, 1], // Coins
+  [2, 0.0346821, 20, 100, 1], // Cannonball
+  [444, 0.0346821, 5, 15, 1], // Gold ore
+  [29458, 0.0231214, 5, 10, 1], // Adamant seeds
+  [29455, 0.00005, 1, 1, 1], // Teleport anchoring scroll (1/20000)
+  [6807, 0.0002, 1, 1, 1], // Zombie champion scroll (1/5000)
+];
+
 const CURATED = {
+  // Street/Mire zombies additionally keep the wildy-slayer tertiaries (they're the
+  // Slayer-contract "Zombies" target; zombie pirates are not).
   zombie: [
-    [526, 1, 1, 1, 1], // Bones (always)
-    [995, 0.3125, 10, 10, 1], // Coins
-    [995, 0.164063, 18, 18, 1], // Coins
-    [1420, 0.0234375, 1, 1, 1], // Iron mace
-    [1203, 0.015625, 1, 1, 1], // Iron dagger
-    [1189, 0.0078125, 1, 1, 1], // Bronze kiteshield
-    [888, 0.0234375, 1, 1, 1], // Mithril arrow
-    [556, 0.0234375, 4, 4, 1], // Air rune
-    [559, 0.015625, 3, 3, 1], // Body rune
-    [562, 0.0078125, 4, 4, 1], // Chaos rune
-    [564, 0.0078125, 2, 2, 1], // Cosmic rune
-    [554, 0.0078125, 7, 7, 1], // Fire rune
-    [199, 0.0584795, 1, 1, 1], // Grimy guam leaf
-    [201, 0.0438596, 1, 1, 1], // Grimy marrentill
-    [203, 0.0330033, 1, 1, 1], // Grimy tarromin
-    [205, 0.025641, 1, 1, 1], // Grimy harralander
-    [207, 0.0201613, 1, 1, 1], // Grimy ranarr weed
-    [209, 0.0146413, 1, 1, 1], // Grimy irit leaf
-    [211, 0.010989, 1, 1, 1], // Grimy avantoe
-    [213, 0.00915751, 1, 1, 1], // Grimy kwuarm
-    [215, 0.00732601, 1, 1, 1], // Grimy cadantine
-    [2485, 0.00549451, 1, 1, 1], // Grimy lantadyme
-    [217, 0.00549451, 1, 1, 1], // Grimy dwarf weed
-    [1623, 0.00195313, 1, 1, 1], // Uncut sapphire (gem table)
-    [1621, 0.000976563, 1, 1, 1], // Uncut emerald (gem table)
-    [1619, 0.000488281, 1, 1, 1], // Uncut ruby (gem table)
-    [1452, 0.000183091, 1, 1, 1], // Chaos talisman (gem table)
-    [1462, 0.000183091, 1, 1, 1], // Nature talisman (gem table)
-    [1617, 0.00012207, 1, 1, 1], // Uncut diamond (gem table)
-    [830, 0.0000610352, 5, 5, 1], // Rune javelin (gem table)
-    [987, 0.0000610352, 1, 1, 1], // Loop half of key (gem table)
-    [985, 0.0000610352, 1, 1, 1], // Tooth half of key (gem table)
-    [1247, 0.0000038147, 1, 1, 1], // Rune spear (gem table)
-    [2366, 0.00000190735, 1, 1, 1], // Shield left half (gem table)
-    [1249, 0.0000014304, 1, 1, 1], // Dragon spear (gem table)
-    [21257, 0.00332226, 1, 1, 1], // Slayer's enchantment
-    [23490, 0.000798085, 1, 1, 1], // Larran's key
-    [6807, 0.0002, 1, 1, 1], // Zombie champion scroll
+    ...ZOMBIE_PIRATE_ROWS,
+    [21257, 0.00332226, 1, 1, 1], // Slayer's enchantment (1/301)
+    [23490, 0.000798085, 1, 1, 1], // Larran's key (1/1253)
   ],
+  "zombie pirate": ZOMBIE_PIRATE_ROWS,
+};
+
+// Per-id curated tables (checked before CURATED): the Monkey Zombie union gave every kill
+// BOTH sizes of zombie monkey bones plus a Monkey paw; each variant drops only its own bones.
+const CURATED_BY_ID = {
+  5281: [[3185, 1, 1, 1, 1]], // Monkey Zombie lvl 98 — Monkey bones (small zombie)
+  5283: [[3185, 1, 1, 1, 1]], // Monkey Zombie lvl 82 — Monkey bones (small zombie)
+  5282: [[3186, 1, 1, 1, 1]], // Monkey Zombie lvl 129 — Monkey bones (large zombie)
 };
 
 function parseQty(q) {
@@ -93,7 +103,7 @@ for (const key of Object.keys(db)) {
   if (!Array.isArray(m.drops) || m.drops.length === 0) continue;
   if (typeof m.id !== "number") continue;
 
-  const curated = CURATED[String(m.name || "").toLowerCase().trim()];
+  const curated = CURATED_BY_ID[m.id] || CURATED[String(m.name || "").toLowerCase().trim()];
   if (curated) {
     byId[m.id] = curated;
     monstersOut++;
