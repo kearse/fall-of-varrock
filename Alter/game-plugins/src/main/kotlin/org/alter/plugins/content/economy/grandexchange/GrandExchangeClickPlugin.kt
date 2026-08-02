@@ -52,15 +52,27 @@ class GrandExchangeClickPlugin(
 
         // The GE booth on the old south courtyard fountain's footprint (fountain 879, type 10,
         // 2x2 @ 3221,3210 — the tile the Occult Altar stood on before it moved to 3215,3211).
+        // The booth id is picked at boot from BOOTH_CANDIDATES by [pickVisibleBooth]: the first
+        // pick, object 10060, spawned fine server-side but never rendered — a def only draws if
+        // it has real objectModels and no varbit/varp transform (see MapDumpTool's `objinfo`
+        // verdicts and the FarmingPlugin flowerbed precedent), so we now check that up front.
         // Done in onWorldInit so the region/collision is loaded, and the fountain removal runs
         // *before* the booth is placed — same tile+slot, so the other order would clear the
         // booth instead (AlkharidGate/MiningPlugin boot pattern). NOTE: the NORTH fountain
         // (3221,3226) is the teleport portal — do NOT target it.
-        onWorldInit {
-            world.getObject(Tile(BOOTH_X, BOOTH_Z, 0), type = BOOTH_TYPE)?.let { world.remove(it) }
-            world.spawn(DynamicObject(getRSCM(BOOTH), type = BOOTH_TYPE, rot = BOOTH_ROT, Tile(BOOTH_X, BOOTH_Z, 0)))
+        val booth = pickVisibleBooth()
+        if (booth != null) {
+            logger.info { "grand-exchange: booth def '$booth' picked for the old fountain tile." }
+            onWorldInit {
+                world.getObject(Tile(BOOTH_X, BOOTH_Z, 0), type = BOOTH_TYPE)?.let { world.remove(it) }
+                world.spawn(DynamicObject(getRSCM(booth), type = BOOTH_TYPE, rot = BOOTH_ROT, Tile(BOOTH_X, BOOTH_Z, 0)))
+            }
+            bindBooth(booth)
+        } else {
+            // No renderable def in the cache: leave the fountain standing rather than clear the
+            // tile for a booth that can't be seen. The clerk and ::ge still open the GE.
+            logger.warn { "grand-exchange: no renderable booth def among $BOOTH_CANDIDATES; use ::ge." }
         }
-        bindBooth(BOOTH)
 
         // New offer: the reliable native flow (Buy/Sell dialog → the ::item search → two number
         // entries), then create + re-stream the board. (A drawn in-window setup box is a v2 polish.)
@@ -177,6 +189,16 @@ class GrandExchangeClickPlugin(
         }
     }
 
+    /** First candidate whose def would actually draw: real models, no varbit/varp transform.
+     *  (A transform def is invisible until its varbit/varp is set — the trap object 10060 fell
+     *  into. Same render-relevance fields MapDumpTool's `objinfo` prints.) */
+    private fun pickVisibleBooth(): String? = BOOTH_CANDIDATES.firstOrNull { key ->
+        runCatching {
+            val def = getObject(getRSCM(key))
+            def.objectModels?.isNotEmpty() == true && def.varbit == -1 && def.varp == -1
+        }.getOrDefault(false)
+    }
+
     /** Bind the booth's click options the same defensive way as [bindClerk]: probe the cache def
      *  first (onObjOption throws on a missing option), prefer a real open verb, and bind the
      *  History/Collect extras only when the def carries them. */
@@ -204,8 +226,14 @@ class GrandExchangeClickPlugin(
     private companion object {
         const val CLERK = "npc.grand_exchange_clerk"
 
-        /** Object 10060 — the classic GE clerk booth. */
-        const val BOOTH = "object.grand_exchange_booth"
+        /** GE booth defs to try, most-preferred first; [pickVisibleBooth] takes the first one
+         *  that actually renders. (object.grand_exchange_booth / 10060 is deliberately absent:
+         *  it spawned but never drew in this cache.) */
+        val BOOTH_CANDIDATES = listOf(
+            "object.grand_exchange_booth_30390",  // the modern GE booth — expected pick
+            "object.grand_exchange_booth_10061",
+            "object.grand_exchange_display",      // freestanding display piece, last resort
+        )
 
         // SW corner of the old SOUTH courtyard fountain (879, 2x2) — the booth takes its
         // footprint. (The north fountain @ 3221,3226 is the teleport portal — leave it alone.)
