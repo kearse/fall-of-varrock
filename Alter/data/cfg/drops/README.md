@@ -23,4 +23,12 @@ curl -L -o osrsbox-monsters.json https://raw.githubusercontent.com/osrsbox/osrsb
 node generate-drops.js
 ```
 
-Current snapshot: **2383 monster tables, 73,089 drop rows, 737 name aliases**.
+Current snapshot: **2383 monster tables, 65,719 drop rows, 737 name aliases**.
+
+## Curated overrides
+osrsbox merges every variant of a multi-variant wiki page into one drop list per npc id
+(e.g. every "Zombie" id carried the union of all seven level-13..53 tables — five 100%
+Bones lines per kill). `generate-drops.js` has a `CURATED` map (keyed by monster name)
+that replaces such broken entries at generation time; zombies use the wilderness
+(level-24 Chaos Temple / Graveyard of Shadows) variant, matching the wilderness zone our
+street zombies roam. Overrides survive regeneration — add new ones to `CURATED`.
