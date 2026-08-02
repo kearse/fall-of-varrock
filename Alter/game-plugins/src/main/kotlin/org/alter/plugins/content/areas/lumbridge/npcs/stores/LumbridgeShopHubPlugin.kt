@@ -368,31 +368,32 @@ class LumbridgeShopHubPlugin(
         // Buy Vote Tickets for coins — sets the coin ceiling on the vote-reward gear.
         currencyBuyShop(BUY_VOTE, "item.vote_ticket", GeCurrencyPrices.VOTE_TICKET)
 
-        // Two facing rows in the open courtyard pocket east of the castle's east wall
-        // (the wall is x=3217 — NOT walkable; players walk the aisle x3220-3223 between
-        // the rows). All tiles verified walkable against the cache collision dump.
+        // One vendor row along the courtyard's north side (z=3228, all facing SOUTH at the
+        // aisle), ordered combat first — Melee, Ranged, Magic — then Prayer and the skilling
+        // shops. The last slot wraps onto the corner tile @3215,3227 (Valaine's old post —
+        // verified walkable; 3215-3216 @ z=3228 are not part of the row).
 
-        // ---- West row (x=3219), facing EAST toward the aisle: gear + prayer/crafting ----
+        // ---- Combat shops ----
         tabVendor("npc.horvik", 3207, 3228, Direction.SOUTH,                         // weapons + rank armour
             ShopTabs.Tab("Weapons", MELEE_WEAPONS, icon = "item.rune_longsword"),
             ShopTabs.Tab("Rank armour", icon = "item.rune_platebody") { ApprenticeArmoury.open(it) })
         singleVendor("npc.lowe", 3208, 3228, Direction.SOUTH, RANGED_GEAR)
         // Zaff: Trade opens the store; Talk-to keeps the rune-altar lift dialogue.
-        spawnNpc("npc.zaff", 3216, 3226, 0, 0, Direction.SOUTH)
+        spawnNpc("npc.zaff", 3209, 3228, 0, 0, Direction.SOUTH)
         bindVendorTalkAndTrade("npc.zaff",
             talk = { player.queue { zaffTalk(player) } },
             trade = { openOrClosed(player, MAGIC_STORE) })
-        singleVendor("npc.monk", 3209, 3228, Direction.SOUTH, BONES)                 // bones (Prayer)
-        singleVendor("npc.gem_trader", 3210, 3228, Direction.SOUTH, CRAFTING)        // crafting/jewellery
 
-        // ---- East row (x=3224), facing WEST toward the aisle: skilling + economy ----
-        tabVendor("npc.wydin", 3211, 3228, Direction.SOUTH,                          // tools + materials
+        // ---- Prayer + skilling shops ----
+        singleVendor("npc.monk", 3210, 3228, Direction.SOUTH, BONES)                 // bones (Prayer)
+        singleVendor("npc.gem_trader", 3211, 3228, Direction.SOUTH, CRAFTING)        // crafting/jewellery
+        tabVendor("npc.wydin", 3212, 3228, Direction.SOUTH,                          // tools + materials
             ShopTabs.Tab("Tools", SKILL_TOOLS, icon = "item.rune_pickaxe"),
             ShopTabs.Tab("Materials", SKILL_MATERIALS, icon = "item.iron_ore"))
-        tabVendor("npc.gerrant", 3212, 3228, Direction.SOUTH,                        // fishing + fish
+        tabVendor("npc.gerrant", 3213, 3228, Direction.SOUTH,                        // fishing + fish
             ShopTabs.Tab("Supplies", FISHING_SUPPLIES, icon = "item.fishing_rod"),
             ShopTabs.Tab("Fish", FISH, icon = "item.swordfish"))
-        tabVendor("npc.jatix", 3213, 3228, Direction.SOUTH,                          // seeds + herblore
+        tabVendor("npc.jatix", 3214, 3228, Direction.SOUTH,                          // seeds + herblore
             ShopTabs.Tab("Allotment seeds", ALLOTMENT_SEEDS, icon = "item.potato_seed"),
             ShopTabs.Tab("Herb seeds", HERB_SEEDS, icon = "item.ranarr_seed"),
             ShopTabs.Tab("Tree seeds", TREE_SEEDS, icon = "item.acorn"),
@@ -401,7 +402,7 @@ class LumbridgeShopHubPlugin(
             ShopTabs.Tab("Secondaries", SECONDARIES, icon = "item.eye_of_newt"),
             ShopTabs.Tab("Unf. potions", UNFINISHED_POTIONS, icon = "item.ranarr_potion_unf"),
             ShopTabs.Tab("Farm tools", FARM_TOOLS, icon = "item.rake"))
-        singleVendor("npc.sawmill_operator", 3214, 3228, Direction.SOUTH, CONSTRUCTION) // planks/nails
+        singleVendor("npc.sawmill_operator", 3215, 3227, Direction.SOUTH, CONSTRUCTION) // planks/nails
         // Valaine mans the GE hub's desk ring (east slot of the south face), not the shop rows.
         tabVendor("npc.valaine", 3222, 3209, Direction.SOUTH,                        // boss/vote tickets
             ShopTabs.Tab("Boss rewards", BOSS_REWARDS, icon = "item.boss_ticket"),
