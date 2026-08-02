@@ -333,6 +333,17 @@ object Combat {
                 return false
             }
 
+            // Rogue Knight camp gate: a named knight refuses any real player who hasn't thinned
+            // its camp's tier rogues yet ([CampClearance]). Must run BEFORE the bot bypass below,
+            // which would otherwise wave the attack straight through. Because canEngage re-runs
+            // every combat cycle, the gate also ends an in-progress fight the moment it applies;
+            // the veto message is throttled inside the check.
+            if (pawn is Player &&
+                org.alter.plugins.content.bots.knights.CampClearance.blocksBossEngagement(pawn, target)
+            ) {
+                return false
+            }
+
             // PKer bots are attackable anywhere (no wilderness gate, no level range), and they
             // may attack players anywhere. Real player-vs-player keeps the normal rules.
             //

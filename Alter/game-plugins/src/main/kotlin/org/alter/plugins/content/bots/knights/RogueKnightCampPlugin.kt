@@ -59,12 +59,20 @@ class RogueKnightCampPlugin(
 
     private val hunts = HashMap<PlayerUID, Hunt>()
 
+    /** Camp key each hunter was last gate-nudged at (session-only) — one nudge per camp visit. */
+    private val nudgedCamp = HashMap<PlayerUID, String>()
+
     init {
-        // The ladder's claim on the shared hunt marker: the live bound knight when it's up
-        // (the marker locks on in scene), the camp center otherwise.
+        // The ladder's claim on the shared hunt marker. Camp gate still open: the arrow hunts the
+        // camp's TIER rogues (nearest live one in scene, the camp from afar) — the knight won't
+        // fight yet. Gate cleared: the live bound knight when it's up, the camp center otherwise.
         TargetMarker.register(TargetMarker.PRIORITY_LADDER) { p ->
             val def = RogueKnightLadder.activeDef(p) ?: return@register null
-            TargetMarker.Mark(entity = hunts[p.uid]?.bot, fallback = def.camp.center)
+            if (!CampClearance.cleared(p, def.camp)) {
+                TargetMarker.Mark(entity = CampClearance.nearestCampBot(p, def.camp), fallback = def.camp.center)
+            } else {
+                TargetMarker.Mark(entity = hunts[p.uid]?.bot, fallback = def.camp.center)
+            }
         }
 
         val timer = TimerKey()
@@ -92,6 +100,9 @@ class RogueKnightCampPlugin(
         onCommand("knights", description = "Show the Rogue Knight ladder and your hunt") {
             player.message(RogueKnightLadder.statusLine(player))
             if (!RogueKnightLadder.unlocked(player)) return@onCommand
+            RogueKnightLadder.activeDef(player)?.let { active ->
+                player.message(CampClearance.statusLine(player, active.camp))
+            }
             val rank = RogueKnightLadder.rank(player)
             val activeIdx = RogueKnightLadder.targetIdx(player)
             RogueKnights.LADDER.forEach { def ->
@@ -145,11 +156,34 @@ class RogueKnightCampPlugin(
         for ((uid, p) in online) {
             val def = RogueKnightLadder.activeDef(p) ?: continue
             maintainHunt(world, p, def, hunts.getOrPut(uid) { Hunt() })
+            nudgeGate(uid, p, def)
         }
+        nudgedCamp.keys.retainAll(online.keys)
+    }
+
+    /** One heads-up per camp visit for a hunter arriving at a camp whose gate they haven't cleared. */
+    private fun nudgeGate(uid: PlayerUID, p: Player, def: RogueKnightDef) {
+        if (!p.tile.isWithinRadius(def.camp.center, ACTIVATION_RADIUS)) {
+            nudgedCamp.remove(uid) // left the camp — nudge again next visit
+            return
+        }
+        if (CampClearance.cleared(p, def.camp) || nudgedCamp[uid] == def.camp.key) return
+        nudgedCamp[uid] = def.camp.key
+        val left = CampClearance.goal(def.camp) - CampClearance.kills(p, def.camp)
+        p.message("<col=801700>${def.camp.display.replaceFirstChar { it.uppercase() }} bristles at your approach.</col> Cut down <col=ffae00>$left</col> more of its rogues before ${def.name} will face you.")
     }
 
     /** Keep one live, bound instance of [def] while [p] is at its camp; stand down when they leave. */
     private fun maintainHunt(world: World, p: Player, def: RogueKnightDef, hunt: Hunt) {
+        // Camp gate ([CampClearance]): until the hunter has thinned this camp's tier rogues, its
+        // knight doesn't take the field at all — the camp reads "clear the rogues first", and the
+        // canEngage veto guards the edge cases (another hunter's instance, a goal raised later).
+        if (!CampClearance.cleared(p, def.camp)) {
+            hunt.bot?.let { if (it.index >= 0) BotManager.despawn(world, it) }
+            hunt.bot = null
+            return
+        }
+
         val bot = hunt.bot
 
         // The hunter's live instance must match the CURRENT target — switching farm targets swaps it.

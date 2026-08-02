@@ -12,6 +12,7 @@ import org.alter.game.model.entity.Player
 import org.alter.game.model.queue.QueueTask
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
+import org.alter.plugins.content.bots.knights.CampClearance
 import org.alter.plugins.content.bots.knights.RogueKnightLadder
 import org.alter.plugins.content.mechanics.onboarding.FirstLoginFlow
 import org.alter.plugins.content.war.address
@@ -201,6 +202,7 @@ class RecruitTrialsPlugin(
                         if (target != null) {
                             chatNpc(p, "The rank and file are thinned. Now for the ladder, ${p.address}: ${target.briefLine}", npc = s, title = "Recruiting Sergeant")
                             chatNpc(p, "You'll find the cur at <col=801700>${target.camp.display}</col> — ${target.camp.directions} The marker will lead you; <col=ffae00>::knights</col> tracks the hunt.", npc = s, title = "Recruiting Sergeant")
+                            chatNpc(p, "Mind: the camp guards its own. Cut down <col=ffae00>${CampClearance.goal(target.camp)}</col> of its rogues first — only then will the knight take the field against you.", npc = s, title = "Recruiting Sergeant")
                             chatNpc(p, "Expect to lose a fight or two before you take them — every knight on this ladder guards the gear that beats the next one. Dying is training. Going back is winning.", npc = s, title = "Recruiting Sergeant")
                         } else {
                             chatNpc(p, "Your first Rogue Knight waits — <col=ffae00>::knights</col> shows the hunt, the marker leads the way.", npc = s, title = "Recruiting Sergeant")
@@ -235,6 +237,9 @@ class RecruitTrialsPlugin(
                                 } else {
                                     chatNpc(p, "Your mark: ${target.briefLine}", npc = s, title = "Recruiting Sergeant")
                                     chatNpc(p, "Find them at <col=801700>${target.camp.display}</col> — ${target.camp.directions} The marker leads; <col=ffae00>::knights</col> lists the whole ladder, and any beaten knight can be farmed again.", npc = s, title = "Recruiting Sergeant")
+                                    if (!CampClearance.cleared(p, target.camp)) {
+                                        chatNpc(p, "The camp guards its own: ${CampClearance.statusLine(p, target.camp)}", npc = s, title = "Recruiting Sergeant")
+                                    }
                                 }
                             }
                             return

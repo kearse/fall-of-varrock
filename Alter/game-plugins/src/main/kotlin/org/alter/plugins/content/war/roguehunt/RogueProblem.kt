@@ -62,7 +62,7 @@ object RogueProblem {
         NONE("(not started)"),
         BRIEF("Speak to the Recruiting Sergeant about the rogues overrunning Fallen Falador."),
         HUNT("Cut down $HUNT_GOAL rogues in the streets of Fallen Falador — the tally is quest-scoped; ::rogueproblem tracks it."),
-        KNIGHT("Hunt down your first assigned Rogue Knight — ::knights shows the hunt and the marker leads the way."),
+        KNIGHT("Thin your assigned Rogue Knight's camp, then cut the knight down — ::knights tracks both and the marker leads the way."),
         REPORT("Return to the Recruiting Sergeant with word of the knight's fall."),
         RANK("Take your purse to Duke Horacio and climb to Knight — a companion and the wilderness await."),
         DONE("The Rogue Problem — Knighthood earned. Muster a companion from General Zo, then keep climbing the Rogue Knight ladder (::knights)."),

@@ -12,6 +12,7 @@ import org.alter.game.model.entity.GroundItem
 import org.alter.game.model.entity.Player
 import org.alter.game.model.item.Item
 import org.alter.game.model.timer.TimerKey
+import org.alter.plugins.content.bots.knights.CampClearance
 import org.alter.plugins.content.combat.PvpZones
 import org.alter.plugins.content.economy.pk.LootKeys
 import org.alter.plugins.content.quests.QuestJournal
@@ -140,6 +141,9 @@ class BotCombatPlugin(
         if (!RogueHunt.isRogue(bot.username)) return
         RogueHunt.onKill(hunter)      // lifetime milestone tally (Recruiting Sergeant bounties)
         RogueProblem.onRogueKill(hunter) // Act II quest HUNT step, if the hunter is on it
+        // A camp's tier rogue also ticks that camp's clearance gate (thin the camp → its knights
+        // will fight you and its tier stands down). Bosses/companions resolve to no camp.
+        CampClearance.campOf(bot)?.let { CampClearance.creditKill(hunter, it) }
         QuestJournal.sync(hunter)     // push the counter to the client immediately
     }
 

@@ -4,6 +4,7 @@ import org.alter.api.EquipmentType
 import org.alter.api.PrayerIcon
 import org.alter.api.ext.setVarp
 import org.alter.game.model.Tile
+import org.alter.game.model.attr.KNIGHT_KEY_ATTR
 import org.alter.game.model.World
 import org.alter.game.model.combat.CombatClass
 import org.alter.game.model.entity.Player
@@ -17,6 +18,7 @@ import org.alter.plugins.content.combat.Combat
 import org.alter.plugins.content.combat.CombatConfigs
 import org.alter.plugins.content.combat.PvpZones
 import org.alter.plugins.content.combat.getCombatTarget
+import org.alter.plugins.content.bots.knights.CampClearance
 import org.alter.plugins.content.combat.strategy.magic.CombatSpell
 import org.alter.plugins.content.interfaces.attack.AttackTab
 import org.alter.plugins.content.mechanics.prayer.Prayer
@@ -155,6 +157,7 @@ object BotBrain {
             Combat.reset(bot)
             bot.resetFacePawn()
         }
+        bot.provokedBy = null // the fight is over — a passive/stood-down bot goes back to ignoring
     }
 
     /** Idle wander: occasionally walk to a nearby walkable tile within [PkBot.roamRadius] of home. */
@@ -180,10 +183,9 @@ object BotBrain {
         var bestDist = Int.MAX_VALUE
         world.players.forEach { p ->
             if (!eligible(bot, p)) return@forEach
-            // Anti-gang: don't join if the player already has their share of PKers on them (single
-            // combat = a lone 1v1 duel; multi = at most [MAX_MULTI_ATTACKERS]). Only gates NEW
-            // acquisitions — a bot already fighting keeps its target, so no thrash.
-            if (attackersOn(world, bot, p) >= attackerCap(p)) return@forEach
+            // Anti-gang: don't join a player who already has their share of PKers on them. Only
+            // gates NEW acquisitions — a bot already fighting keeps its target, so no thrash.
+            if (attackersOn(world, bot, p) >= attackerCap(bot, p)) return@forEach
             val dist = bot.tile.getDistance(p.tile)
             if (dist < bestDist) {
                 bestDist = dist
@@ -194,8 +196,19 @@ object BotBrain {
         return best
     }
 
-    /** How many bots may fight one player at once: single-combat is a strict 1v1; multi allows a few. */
-    private fun attackerCap(p: Player): Int = if (PvpZones.isSingle(p.tile)) 1 else MAX_MULTI_ATTACKERS
+    /**
+     * How many bots may fight one player at once. Single-combat ground (which now includes every
+     * deep Rogue Knight camp — see [PvpZones]) is a strict 1v1. The SAFE learning camps (Bandit
+     * Hideout, Port Sarim) sit outside the wilderness where singles rules can't apply, so their
+     * colony rogues enforce the 1v1 themselves — fresh players learning to fight PKers should
+     * never be piled. Open multi wilderness has NO artificial cap (OSRS-style); the spawn-side
+     * density cap ([BotColony]'s MAX_BOTS_NEAR_PLAYER) is what keeps pile-ons bounded there.
+     */
+    private fun attackerCap(bot: PkBot, p: Player): Int = when {
+        PvpZones.isSingle(p.tile) -> 1
+        CampClearance.campOf(bot)?.safe == true -> 1
+        else -> Int.MAX_VALUE
+    }
 
     /** Count of OTHER live PKer bots currently targeting [p]. */
     private fun attackersOn(world: World, self: PkBot, p: Player): Int {
@@ -206,19 +219,46 @@ object BotBrain {
         return n
     }
 
-    private fun eligible(bot: PkBot, p: Player): Boolean =
-        p !is PkBot && p.isOnline && !p.invisible &&
-            // A named-knight instance is bound to ONE hunter: it never aggros anyone else, so the
-            // per-hunter duplicates at a busy camp each fight their own duel (see [PkBot.boundHunter]).
-            (bot.boundHunter == null || p.uid == bot.boundHunter) &&
-            p.tile.isWithinRadius(bot.tile, AGGRO_RANGE) &&
-            (bot.leashRadius <= 0 || p.tile.isWithinRadius(bot.homeTile, bot.leashRadius)) &&
-            // PKers only fight in the PvP wild: never aggro (or chase) a player standing on a safe tile,
-            // including the safe carve-outs inside the red (banks / GE / town cores). In the wild itself
-            // rank gives no cover — everyone there is fair game. A dedicated ambusher ([PkBot.ambushEverywhere])
-            // overrides this to hunt on its safe-tile post (e.g. the goblin-camp PKer).
-            (bot.ambushEverywhere || PvpZones.isWilderness(p.tile)) &&
-            Combat.canEngage(bot, p)
+    private fun eligible(bot: PkBot, p: Player): Boolean {
+        if (p is PkBot || !p.isOnline || p.invisible) return false
+        // A named-knight instance is bound to ONE hunter: it never aggros anyone else, so the
+        // per-hunter duplicates at a busy camp each fight their own duel (see [PkBot.boundHunter]).
+        if (bot.boundHunter != null && p.uid != bot.boundHunter) return false
+        if (!p.tile.isWithinRadius(bot.tile, AGGRO_RANGE)) return false
+        if (bot.leashRadius > 0 && !p.tile.isWithinRadius(bot.homeTile, bot.leashRadius)) return false
+        // PKers only fight in the PvP wild: never aggro (or chase) a player standing on a safe tile,
+        // including the safe carve-outs inside the red (banks / GE / town cores). In the wild itself
+        // rank gives no cover — everyone there is fair game. A dedicated ambusher ([PkBot.ambushEverywhere])
+        // overrides this to hunt on its safe-tile post (e.g. the goblin-camp PKer).
+        if (!bot.ambushEverywhere && !PvpZones.isWilderness(p.tile)) return false
+
+        if (!provoked(bot, p)) {
+            // Named knights NEVER open a fight — a boss waits at its camp until its hunter strikes
+            // first (the provocation latch above then keeps it swinging for the whole duel).
+            if (bot.attr[KNIGHT_KEY_ATTR] != null) return false
+            // A camp's tier rogues hunt only players who haven't thinned that camp yet: clear the
+            // gate ([CampClearance]) and they stand down for good — though they still answer a
+            // fight the cleared player starts, via the same provocation latch.
+            val camp = CampClearance.campOf(bot)
+            if (camp != null && CampClearance.cleared(p, camp)) return false
+        }
+        return Combat.canEngage(bot, p)
+    }
+
+    /**
+     * True while [p] owns the fight with [bot] — they're targeting it now, or did earlier this
+     * engagement ([PkBot.provokedBy], cleared on [disengage]). A dead provoker drops the latch so
+     * a passive boss doesn't jump its returning hunter after a death — walking back is a fresh,
+     * player-initiated engagement.
+     */
+    private fun provoked(bot: PkBot, p: Player): Boolean {
+        if (p.isDead()) {
+            if (bot.provokedBy == p.uid) bot.provokedBy = null
+            return false
+        }
+        if (p.getCombatTarget() === bot) bot.provokedBy = p.uid
+        return bot.provokedBy == p.uid
+    }
 
     // --- prayer (defence + offence) ---
 
@@ -423,9 +463,6 @@ object BotBrain {
 
     /** How far (tiles) a bot will engage — matches the engine's 15-tile view/engage cap. */
     private const val AGGRO_RANGE = 15
-
-    /** Max PKers that may pile on one player in MULTI-combat (single-combat is always a strict 1v1). */
-    private const val MAX_MULTI_ATTACKERS = 2
 
     private val PREFERRED_OFFENCE = listOf(BotStyle.MAGIC, BotStyle.RANGED, BotStyle.MELEE)
 }
