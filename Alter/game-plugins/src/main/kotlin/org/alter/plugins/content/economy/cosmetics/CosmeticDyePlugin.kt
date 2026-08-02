@@ -2,6 +2,7 @@ package org.alter.plugins.content.economy.cosmetics
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.alter.api.ext.message
+import org.alter.api.ext.npc
 import org.alter.api.ext.openShop
 import org.alter.api.ext.player
 import org.alter.game.Server
