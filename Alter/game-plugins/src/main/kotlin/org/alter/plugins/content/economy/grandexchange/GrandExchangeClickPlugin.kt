@@ -33,7 +33,7 @@ private val logger = KotlinLogging.logger {}
  *  - `::lofgeclose`                                → close the window
  *
  * Opened by the Grand Exchange clerk (npc.grand_exchange_clerk), the GE hub desks on the old
- * south fountain site (ring at 3221-3226 x 3208-3213), or `::ge`. Offer creation reuses the
+ * south fountain site (ring at 3219-3224 x 3208-3213), or `::ge`. Offer creation reuses the
  * native item search (`searchItemInput`, the `::item` box); quantity/price are set in the overlay and
  * arrive on the confirm token. All engine calls are the dupe-safe escrow paths.
  */
@@ -220,13 +220,14 @@ class GrandExchangeClickPlugin(
         const val BOOTH_10060 = "object.grand_exchange_booth"
         const val BOOTH_30389 = "object.null_30389"
 
-        // Ring SW corner: the 6x6 hub spans 3221-3226 x 3208-3213. Originally anchored two
-        // tiles further west (pillar on the fountain tile), but the courtyard hill starts
-        // around x<=3220 and the ring's west wall floated at the slope's height — so the
-        // whole hub sits shifted east on the flat ground by the path. The old SOUTH
-        // fountain's 2x2 footprint (anchor 3221,3210) is inside the ring and removed below.
+        // Ring SW corner: the 6x6 hub spans 3219-3224 x 3208-3213, putting the 2x2 pillar
+        // (dx 2, dz 2) on the old SOUTH fountain's tile (3221,3210). The courtyard hill
+        // starts around x<=3220, so the ring's west wall renders a step up the slope —
+        // owner-accepted: this placement was preferred over shifting the hub east onto
+        // fully flat ground (tried at HUB_X=3221 and reverted). A real fix would flatten
+        // those hill tiles via the terrain-cache workflow (per-tile terrain splicing).
         // (The north fountain @ 3221,3226 is the teleport portal — leave it alone.)
-        const val HUB_X = 3221
+        const val HUB_X = 3219
         const val HUB_Z = 3208
         const val FOUNTAIN_X = 3221
         const val FOUNTAIN_Z = 3210
