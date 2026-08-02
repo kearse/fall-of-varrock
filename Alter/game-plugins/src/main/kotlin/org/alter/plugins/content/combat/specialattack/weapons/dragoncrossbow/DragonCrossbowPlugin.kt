@@ -1,5 +1,6 @@
 package org.alter.plugins.content.combat.specialattack.weapons.dragoncrossbow
 
+import org.alter.api.ext.isMulti
 import org.alter.game.Server
 import org.alter.game.model.World
 import org.alter.game.model.entity.Npc
