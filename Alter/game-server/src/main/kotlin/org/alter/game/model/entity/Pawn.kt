@@ -317,24 +317,28 @@ abstract class Pawn(val world: World) : Entity() {
          * tick-eating and hit-stacking real — previously the delay was visual only and
          * every hit applied on the defender's next cycle.
          */
-        if (hit.damageDelay > 0) {
-            hit.damageDelay--
+        if (!hit.tickCountdown()) {
             return false
         }
         if (lock.delaysDamage()) {
             return false
         }
-        if (!hit.cancelCondition()) {
+        /*
+         * A cancelled hit must be REMOVED, not skipped: leaving it in [pendingHits]
+         * re-tested it forever (an unbounded leak), and a cancel condition that later
+         * flipped back — e.g. an attacker who died and respawned — would land the stale
+         * hit minutes later.
+         */
+        if (hit.isCancelled()) {
+            hitIterator.remove()
+            return false
+        }
+        run {
             for (hitmark in hit.hitmarks) {
-                // Application-time damage transforms (e.g. overhead protection prayers,
-                // evaluated against the defender's prayers on the landing tick).
-                for (transform in hit.damageTransforms) {
-                    hitmark.damage = transform(hitmark.damage)
-                }
                 val hp = getCurrentHp()
-                if (hitmark.damage > hp) {
-                    hitmark.damage = hp
-                }
+                // Application-time damage transforms (e.g. overhead protection prayers,
+                // evaluated against the defender's prayers on the landing tick) + HP clamp.
+                hit.transformedDamage(hitmark, hp)
                 if (entityType.isNpc) {
                     val npc = this as Npc
                     NpcInfo(npc).addHitMark(
@@ -381,7 +385,7 @@ abstract class Pawn(val world: World) : Entity() {
                  * terminate all queues and begin the death logic.
                  */
                 if (getCurrentHp() <= 0) {
-                    hit.actions.forEach { action -> action(hit) }
+                    hit.runActions()
                     if (entityType.isPlayer) {
                         executePlugin(PlayerDeathAction.deathPlugin)
                     } else {
@@ -391,7 +395,7 @@ abstract class Pawn(val world: World) : Entity() {
                     return true
                 }
             }
-            hit.actions.forEach { action -> action(hit) }
+            hit.runActions()
             hitIterator.remove()
         }
         return false

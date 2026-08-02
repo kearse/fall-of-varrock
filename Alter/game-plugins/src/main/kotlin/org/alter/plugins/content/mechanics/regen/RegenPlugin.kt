@@ -32,25 +32,32 @@ class RegenPlugin(
             player.timers[BOOST_DECAY_TIMER] = boostDecayPeriod(player)
         }
 
+        // The timers must ALWAYS re-arm — only the effect is gated on being alive. A timer
+        // that fired mid-death-sequence previously vanished for the rest of the session
+        // (no HP regen / stat restore / boost decay until relog).
         onTimer(HP_REGEN_TIMER) {
             val p = pawn
-            if (p is Player && !p.isDead()) {
-                // capped increment: heals only while below base, never lowers an overheal
-                p.getSkills().incrementCurrentLevel(Skills.HITPOINTS, 1, capped = true)
+            if (p is Player) {
+                if (!p.isDead()) {
+                    // capped increment: heals only while below base, never lowers an overheal
+                    p.getSkills().incrementCurrentLevel(Skills.HITPOINTS, 1, capped = true)
+                }
                 p.timers[HP_REGEN_TIMER] = hpRegenPeriod(p)
             }
         }
 
         onTimer(STAT_RESTORE_TIMER) {
             val p = pawn
-            if (p is Player && !p.isDead()) {
-                val skills = p.getSkills()
-                for (skill in 0 until skills.maxSkills) {
-                    if (skill == Skills.HITPOINTS || skill == Skills.PRAYER) {
-                        continue
-                    }
-                    if (skills.getCurrentLevel(skill) < skills.getBaseLevel(skill)) {
-                        skills.incrementCurrentLevel(skill, 1, capped = true)
+            if (p is Player) {
+                if (!p.isDead()) {
+                    val skills = p.getSkills()
+                    for (skill in 0 until skills.maxSkills) {
+                        if (skill == Skills.HITPOINTS || skill == Skills.PRAYER) {
+                            continue
+                        }
+                        if (skills.getCurrentLevel(skill) < skills.getBaseLevel(skill)) {
+                            skills.incrementCurrentLevel(skill, 1, capped = true)
+                        }
                     }
                 }
                 p.timers[STAT_RESTORE_TIMER] = statRestorePeriod(p)
@@ -59,15 +66,17 @@ class RegenPlugin(
 
         onTimer(BOOST_DECAY_TIMER) {
             val p = pawn
-            if (p is Player && !p.isDead()) {
-                val skills = p.getSkills()
-                for (skill in 0 until skills.maxSkills) {
-                    if (skill == Skills.PRAYER) {
-                        continue
-                    }
-                    val current = skills.getCurrentLevel(skill)
-                    if (current > skills.getBaseLevel(skill)) {
-                        skills.setCurrentLevel(skill, current - 1)
+            if (p is Player) {
+                if (!p.isDead()) {
+                    val skills = p.getSkills()
+                    for (skill in 0 until skills.maxSkills) {
+                        if (skill == Skills.PRAYER) {
+                            continue
+                        }
+                        val current = skills.getCurrentLevel(skill)
+                        if (current > skills.getBaseLevel(skill)) {
+                            skills.setCurrentLevel(skill, current - 1)
+                        }
                     }
                 }
                 p.timers[BOOST_DECAY_TIMER] = boostDecayPeriod(p)

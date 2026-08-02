@@ -47,4 +47,26 @@ object CombatMath {
         val lost = (maxHp - currentHp).coerceAtLeast(0) / 100.0
         return 1.0 + (lost * (maxHp / 100.0))
     }
+
+    /**
+     * Twisted bow damage modifier as a MULTIPLIER (the wiki formula yields a
+     * percentage — dividing by 100 here is what stops the bow one-shotting the
+     * game). Capped at [capPercent] (250 outside the Chambers of Xeric, 350
+     * inside) and floored at 0 for very low target magic.
+     */
+    fun twistedBowDamageModifier(targetMagic: Int, capPercent: Double = 250.0): Double {
+        val magic = targetMagic.toDouble()
+        val percent = 250.0 + ((magic * 3.0) - 14.0) / 100.0 - Math.pow(((magic * 3.0) / 10.0) - 140.0, 2.0) / 100.0
+        return percent.coerceIn(0.0, capPercent) / 100.0
+    }
+
+    /**
+     * Twisted bow accuracy modifier as a multiplier — same shape, capped at
+     * [capPercent] (140 outside CoX, 250 inside), floored at 0.
+     */
+    fun twistedBowAccuracyModifier(targetMagic: Int, capPercent: Double = 140.0): Double {
+        val magic = targetMagic.toDouble()
+        val percent = 140.0 + ((magic * 3.0) - 10.0) / 100.0 - Math.pow(((magic * 3.0) / 10.0) - 100.0, 2.0) / 100.0
+        return percent.coerceIn(0.0, capPercent) / 100.0
+    }
 }

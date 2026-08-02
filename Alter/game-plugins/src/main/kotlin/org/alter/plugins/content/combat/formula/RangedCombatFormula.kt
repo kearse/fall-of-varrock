@@ -147,20 +147,8 @@ object RangedCombatFormula : CombatFormula {
                 when {
                     player.hasEquipped(EquipmentType.WEAPON, "item.dragon_hunter_crossbow") && isDragon(target) -> 1.3
                     player.hasEquipped(EquipmentType.WEAPON, "item.twisted_bow") && target.entityType.isNpc -> {
-                        // TODO: cap inside Chambers of Xeric is 350
-                        val cap = 250.0
-                        val magic =
-                            when (target) {
-                                is Player -> target.getSkills().getCurrentLevel(Skills.MAGIC)
-                                is Npc -> target.stats.getCurrentLevel(NpcSkills.MAGIC)
-                                else -> throw IllegalStateException("Invalid pawn type. [$target]")
-                            }
-                        val modifier =
-                            Math.min(
-                                cap,
-                                250.0 + (((magic * 3.0) - 14.0) / 100.0) - (Math.pow((((magic * 3.0) / 10.0) - 140.0), 2.0) / 100.0),
-                            )
-                        modifier
+                        // TODO: cap inside Chambers of Xeric is 350%
+                        CombatMath.twistedBowDamageModifier(targetMagic(target))
                     }
                     else -> 1.0
                 }
@@ -204,20 +192,8 @@ object RangedCombatFormula : CombatFormula {
                 when {
                     player.hasEquipped(EquipmentType.WEAPON, "item.dragon_hunter_crossbow") && isDragon(target) -> 1.3
                     player.hasEquipped(EquipmentType.WEAPON, "item.twisted_bow") && target.entityType.isNpc -> {
-                        // TODO: cap inside Chambers of Xeric is 250
-                        val cap = 140.0
-                        val magic =
-                            when (target) {
-                                is Player -> target.getSkills().getCurrentLevel(Skills.MAGIC)
-                                is Npc -> target.stats.getCurrentLevel(NpcSkills.MAGIC)
-                                else -> throw IllegalStateException("Invalid pawn type. [$target]")
-                            }
-                        val modifier =
-                            Math.min(
-                                cap,
-                                140.0 + (((magic * 3.0) - 10.0) / 100.0) - (Math.pow((((magic * 3.0) / 10.0) - 100.0), 2.0) / 100.0),
-                            )
-                        modifier
+                        // TODO: cap inside Chambers of Xeric is 250%
+                        CombatMath.twistedBowAccuracyModifier(targetMagic(target))
                     }
                     else -> 1.0
                 }
@@ -230,6 +206,13 @@ object RangedCombatFormula : CombatFormula {
 
         return hit
     }
+
+    private fun targetMagic(target: Pawn): Int =
+        when (target) {
+            is Player -> target.getSkills().getCurrentLevel(Skills.MAGIC)
+            is Npc -> target.stats.getCurrentLevel(NpcSkills.MAGIC)
+            else -> 0
+        }
 
     private fun applyDefenceSpecials(
         target: Pawn,

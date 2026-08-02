@@ -139,7 +139,8 @@ fun Pawn.dealHit(
         Math.floor(damage * Combat.protectionDamageMultiplier(this, target, combatClass)).toInt()
     }
 
-    hit.setCancelIf { isDead() }
+    // No attacker-death cancel: OSRS lands projectiles that were launched before the
+    // attacker died (Combat.postDamage guards against retaliating at the corpse).
     hit.addAction { onHit(pawnHit) }
     hit.addAction {
         val pawn = this@dealHit
@@ -210,7 +211,7 @@ fun Pawn.dealExactHit(
         Math.floor(dmg * Combat.protectionDamageMultiplier(this, target, combatClass)).toInt()
     }
 
-    hit.setCancelIf { isDead() }
+    // No attacker-death cancel — see dealHit.
     hit.addAction { onHit(pawnHit) }
     hit.addAction {
         val pawn = this@dealExactHit

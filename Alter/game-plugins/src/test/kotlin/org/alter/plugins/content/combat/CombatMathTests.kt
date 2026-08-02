@@ -98,6 +98,25 @@ class CombatMathTests {
     }
 
     @Test
+    fun `twisted bow modifiers are percentages capped at wiki ceilings`() {
+        // Damage: never above 2.5x (250%) and never negative — the sanity bound that
+        // catches the "percentage used as raw multiplier" class of bug.
+        for (magic in 0..1000 step 10) {
+            val dmg = CombatMath.twistedBowDamageModifier(magic)
+            assertTrue(dmg in 0.0..2.5, "damage modifier $dmg at magic $magic")
+            val acc = CombatMath.twistedBowAccuracyModifier(magic)
+            assertTrue(acc in 0.0..1.4, "accuracy modifier $acc at magic $magic")
+        }
+        // Golden points from the wiki formula: magic 250 -> 215.11% damage, capped 140% accuracy.
+        val dmg250 = CombatMath.twistedBowDamageModifier(250)
+        assertTrue(dmg250 > 2.151 && dmg250 < 2.152, "got $dmg250")
+        assertEquals(1.4, CombatMath.twistedBowAccuracyModifier(250))
+        // Low-magic targets: weak, not negative.
+        val dmg1 = CombatMath.twistedBowDamageModifier(1)
+        assertTrue(dmg1 > 0.54 && dmg1 < 0.56, "got $dmg1")
+    }
+
+    @Test
     fun `ruby bolt maths match the wiki`() {
         // 20% of current HP, capped at 100.
         assertEquals(80, BoltEnchantments.rubyDamage(400))

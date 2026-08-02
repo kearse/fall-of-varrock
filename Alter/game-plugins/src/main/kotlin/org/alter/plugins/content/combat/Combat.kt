@@ -159,6 +159,13 @@ object Combat {
             }
         }
 
+        // A hit can land after its attacker died (projectiles are not cancelled by the
+        // attacker's death) — the block animation above is right, but nobody should
+        // auto-retaliate against a corpse.
+        if (pawn.isDead()) {
+            return
+        }
+
         if (target.lock.canAttack()) {
             if (target.entityType.isNpc) {
                 if (!target.attr.has(COMBAT_TARGET_FOCUS_ATTR) || target.attr[COMBAT_TARGET_FOCUS_ATTR]!!.get() != pawn) {
