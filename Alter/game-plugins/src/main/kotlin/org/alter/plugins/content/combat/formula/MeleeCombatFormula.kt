@@ -271,7 +271,12 @@ object MeleeCombatFormula : CombatFormula {
         if (pawn is Player) {
             val world = pawn.world
             val multiplier = when {
-                pawn.hasEquipped(EquipmentType.AMULET, "item.berserker_necklace") -> 1.2
+                // OSRS: the berserker necklace only boosts obsidian melee weapons.
+                pawn.hasEquipped(EquipmentType.AMULET, "item.berserker_necklace") &&
+                    pawn.hasEquipped(
+                        EquipmentType.WEAPON,
+                        "item.tzhaarketom", "item.tzhaarketem", "item.toktzxilak", "item.toktzxilek",
+                    ) -> 1.2
                 isWearingDharok(pawn) -> CombatMath.dharokMultiplier(pawn.getMaxHp(), pawn.getCurrentHp())
                 pawn.hasEquipped(EquipmentType.WEAPON, "item.gadderhammer") && isShade(target) -> if (world.chance(1, 20)) 2.0 else 1.25
                 pawn.hasEquipped(EquipmentType.WEAPON, "item.keris", "item.kerisp") && (isKalphite(target) || isScarab(target)) -> if (world.chance(1, 51)) 3.0 else (4.0 / 3.0)

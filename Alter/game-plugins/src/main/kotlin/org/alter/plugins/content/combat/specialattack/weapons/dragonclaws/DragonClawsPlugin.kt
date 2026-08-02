@@ -28,31 +28,15 @@ class DragonClawsPlugin(
             val maxHit = MeleeCombatFormula.getMaxHit(player, target, specialAttackMultiplier = 1.0)
             val accuracy = MeleeCombatFormula.getAccuracy(player, target, specialAttackMultiplier = 1.0)
 
-            val damages = intArrayOf(0, 0, 0, 0)
-            var rolled = false
-            for (i in 0 until 4) {
-                if (accuracy >= world.randomDouble()) {
-                    // First successful accuracy roll: big hit, remaining cascade by halving.
-                    var dmg = world.random((maxHit / 2)..maxHit)
-                    damages[i] = dmg
-                    for (j in i + 1 until 4) {
-                        dmg /= 2
-                        damages[j] = dmg
-                    }
-                    // Push any rounding remainder into the final hit.
-                    rolled = true
-                    break
-                }
-            }
-            if (!rolled) {
-                // All four accuracy rolls failed - small consolation damage.
-                if (world.randomDouble() < 0.25) {
-                    damages[2] = 1
-                    damages[3] = 1
-                } else {
-                    damages[3] = 1
-                }
-            }
+            // The exact OSRS 4-roll damage table (see DragonClawsSpec).
+            val rolls = BooleanArray(4) { accuracy >= world.randomDouble() }
+            val damages =
+                DragonClawsSpec.rollDamages(
+                    maxHit = maxHit,
+                    rolls = rolls,
+                    roll = { range -> range.first + world.random(range.last - range.first) },
+                    chance = { world.randomDouble() },
+                )
 
             // Two hitsplats land on the attack tick, two more one tick later, as in OSRS.
             for (i in 0 until 4) {

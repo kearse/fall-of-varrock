@@ -47,7 +47,7 @@ object RangedCombatStrategy : CombatStrategy {
                     getRSCM("item.craws_bow"), getRSCM("item.craws_bow_u") -> 10
                     getRSCM("item.chinchompa_10033"), getRSCM("item.red_chinchompa_10034"), getRSCM("item.black_chinchompa") -> 9
                     in Bows.LONG_BOWS -> 9
-                    in Knives.KNIVES -> 6
+                    in Knives.KNIVES -> 4 // OSRS: throwing knives attack from 4 tiles
                     in Darts.DARTS -> 3
                     in Bows.CRYSTAL_BOWS -> 10
                     else -> DEFAULT_ATTACK_RANGE
@@ -148,14 +148,26 @@ object RangedCombatStrategy : CombatStrategy {
              * dropped ammo lands owned by its uid where the owner can never reclaim it.
              */
             if (pawn !is PkBot && ammo != null && (ammoProjectile == null || !ammoProjectile.breakOnImpact())) {
+                // Per-cape ammo outcome bands (one roll): Ava's assembler keeps 100% (it
+                // previously still broke 20% because the break roll was independent);
+                // accumulator keeps 72%, drops 8%, breaks 20%; no device drops 80%/breaks 20%.
                 val chance = world.random(99)
-                val breakAmmo = chance in 0..19
-                val dropAmmo =
-                    when {
-                        pawn.hasEquipped(EquipmentType.CAPE, "item.avas_accumulator") -> chance in 20..27
-                        pawn.hasEquipped(EquipmentType.CAPE, "item.avas_assembler") -> false
-                        else -> !breakAmmo
+                val breakAmmo: Boolean
+                val dropAmmo: Boolean
+                when {
+                    pawn.hasEquipped(EquipmentType.CAPE, "item.avas_assembler") -> {
+                        breakAmmo = false
+                        dropAmmo = false
                     }
+                    pawn.hasEquipped(EquipmentType.CAPE, "item.avas_accumulator") -> {
+                        breakAmmo = chance in 0..19
+                        dropAmmo = chance in 20..27
+                    }
+                    else -> {
+                        breakAmmo = chance in 0..19
+                        dropAmmo = !breakAmmo
+                    }
+                }
 
                 val amount = 1
                 if (breakAmmo || dropAmmo) {
@@ -202,7 +214,11 @@ object RangedCombatStrategy : CombatStrategy {
         }
 
         val pawnHit =
-            if (rubyProc && pawn is Player) {
+            if (rubyProc && pawn is Player &&
+                // OSRS: Blood Forfeit never procs while the caster is at or below 10% HP —
+                // you cannot ruby-bolt yourself to death.
+                pawn.getCurrentHp() * 10 > pawn.getMaxHp()
+            ) {
                 // Ruby "Blood Forfeit": the damage roll is replaced with 20% of the
                 // target's current HP (capped at 100), and the caster sacrifices 10%
                 // of their own current HP.
@@ -240,7 +256,8 @@ object RangedCombatStrategy : CombatStrategy {
                 when (effect) {
                     BoltEnchantments.Effect.EMERALD ->
                         if (damage > 0) {
-                            Poison.poison(target, initialDamage = 2)
+                            // OSRS: emerald bolts' Magical Poison starts at 5.
+                            Poison.poison(target, initialDamage = 5)
                         }
                     BoltEnchantments.Effect.ONYX ->
                         if (damage > 0) {
@@ -251,7 +268,8 @@ object RangedCombatStrategy : CombatStrategy {
                             val drain = target.getSkills().getCurrentLevel(Skills.PRAYER) / 20
                             if (drain > 0) {
                                 target.getSkills().decrementCurrentLevel(Skills.PRAYER, drain, capped = false)
-                                pawn.getSkills().alterCurrentLevel(Skills.PRAYER, drain / 2)
+                                // OSRS: the caster regains a quarter of what was drained.
+                                pawn.getSkills().alterCurrentLevel(Skills.PRAYER, drain / 4)
                             }
                         }
                     else -> {}
