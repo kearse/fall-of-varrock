@@ -29,6 +29,12 @@ object Poison {
         pawn: Pawn,
         initialDamage: Int,
     ): Boolean {
+        // Immunity is enforced HERE, not only in the item-use wrapper: NPC poisonChance,
+        // emerald bolts and smoke spells all call this directly and were bypassing
+        // serpentine helms / immunePoison NPCs.
+        if (isImmune(pawn)) {
+            return false
+        }
         if (isEnvenomed(pawn)) {
             return false // venom outranks poison; the two share one timer and never coexist
         }

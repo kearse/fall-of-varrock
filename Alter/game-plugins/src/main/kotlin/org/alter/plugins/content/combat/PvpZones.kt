@@ -85,8 +85,12 @@ object PvpZones {
      * references this object back, but bots/plugins touch [mainWilderness] during their own
      * class init and we must not force RaidCities' tables to build before the RSCM is up.
      */
-    private val raidCities: List<Pair<Area, Int>>
-        get() = org.alter.plugins.content.raidzones.RaidCities.all.map { it.area to it.raidWildLevel }
+    // by lazy keeps the classload-order safety the getter provided while caching the list:
+    // every zone classification (per-player overlay ticks, every attack) consulted this,
+    // rebuilding the mapped list each call.
+    private val raidCities: List<Pair<Area, Int>> by lazy {
+        org.alter.plugins.content.raidzones.RaidCities.all.map { it.area to it.raidWildLevel }
+    }
 
     private fun inRed(t: Tile): Boolean = WILDERNESS.any { it.contains(t) } || raidCities.any { it.first.contains(t) }
     private fun inCarveout(t: Tile): Boolean = SAFE_INSIDE_RED.any { it.contains(t) } || safeDynamic.any { it.contains(t) }
