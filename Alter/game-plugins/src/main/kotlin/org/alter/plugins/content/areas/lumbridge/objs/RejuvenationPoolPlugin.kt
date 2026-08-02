@@ -18,19 +18,17 @@ import org.alter.rscm.RSCM.getRSCM
 private val logger = KotlinLogging.logger {}
 
 /**
- * **Home Rejuvenation pools** — POH-style Pools of Rejuvenation on the opened Lumbridge castle
- * ground floor (home hangout space). "Drink" restores the player completely: Hitpoints, Prayer,
- * run energy, special attack energy, and cures poison/venom — the Ferox/ornate-pool treatment,
- * free at home.
+ * **Home Rejuvenation pool** — a POH-style Pool of Rejuvenation on the opened Lumbridge castle
+ * ground floor (home hangout space); [POOL_SW_TILES] takes more if wanted. "Drink" restores the
+ * player completely: Hitpoints, Prayer, run energy, special attack energy, and cures
+ * poison/venom — the Ferox/ornate-pool treatment, free at home.
  *
  * Placement: POH pools are 3x3, so each SW spawn corner in [POOL_SW_TILES] sits one tile SW of
- * its requested centre. Pool 1 is centred on (3217,3217,0); its footprint (3216..3218 square)
- * covers the old (3218,3218) tile, so the onboarding stage tile
- * ([org.alter.plugins.content.mechanics.onboarding.FirstLoginFlow]) and General Zo's post
- * ([org.alter.plugins.content.war.Sieges]) both stepped east out of the water. Pool 2 is centred
- * on (3224,3224,0), the open floor toward the courtyard's NE. If a pool renders smaller than 3x3
- * in-game, nudge its SW tile back toward its centre — cosmetic TUNE, same as every other
- * home-hub placement.
+ * its requested centre. The pool is centred on (3224,3224,0), the open floor toward the
+ * courtyard's NE. (An earlier second pool centred on (3217,3217) was removed; the onboarding
+ * stage tile is back on its original (3218,3218) spot now that nothing stands there.) If a pool
+ * renders smaller than 3x3 in-game, nudge its SW tile back toward its centre — cosmetic TUNE,
+ * same as every other home-hub placement.
  *
  * The cache can't be read at authoring time, so the click verb is bound defensively like
  * [org.alter.plugins.content.mechanics.prayer.PrayerAltarPlugin]'s altars: a missing verb logs
@@ -95,7 +93,6 @@ class RejuvenationPoolPlugin(
 
         // SW corner of each 3x3 basin -> centred on the requested tiles.
         val POOL_SW_TILES = listOf(
-            Tile(3216, 3216, 0), // centred on (3217,3217)
             Tile(3223, 3223, 0), // centred on (3224,3224)
         )
 
