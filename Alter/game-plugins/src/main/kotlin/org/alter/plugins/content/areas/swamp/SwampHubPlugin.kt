@@ -74,15 +74,15 @@ class SwampHubPlugin(
 
     /**
      * The Mire is a cleared graveyard, so the dead don't rest easy: a small cluster of zombies rises
-     * at the south-east fringe, by the crypt and the mines road. Reachable through the safe route with
+     * on the open grass south-west of the yard house. Reachable through the safe route with
      * everything else in the Mire. This fills a real content gap — the Slayer roster assigns zombies,
      * but the OSRS spawn dump has none within reach of home, so a "kill zombies" contract had nowhere
      * to be filled. `npc.zombie` (id 26) is in the world dump, so WorldSpawnsPlugin already registers
      * its real combat def (22 hp, aggressive within [WorldSpawns.AGGRO_RADIUS]=4); this bespoke spawn
      * inherits it. Kills credit the Slayer task by name (see SlayerPlugin.onKill).
      *
-     * TUNABLE: these tiles were placed against the SE fringe, clear of the skilling stations and the
-     * fishing spots so aggression never bleeds into a skiller — nudge them if any land on scenery.
+     * TUNABLE: these tiles sit on the open grass SW of the house, clear of the skilling stations and
+     * the fishing spots so aggression never bleeds into a skiller — nudge them if any land on scenery.
      */
     private fun spawnUndeadCorner() {
         if (!runCatching { getRSCM(ZOMBIE) }.isSuccess) {
@@ -92,7 +92,7 @@ class SwampHubPlugin(
         UNDEAD_TILES.forEach { t ->
             spawnNpc(ZOMBIE, x = t.x, z = t.z, height = t.height, walkRadius = 4, direction = Direction.WEST)
         }
-        logger.info { "swamp-hub: undead corner ready (${UNDEAD_TILES.size} zombies at the SE graveyard fringe)." }
+        logger.info { "swamp-hub: undead corner ready (${UNDEAD_TILES.size} zombies on the grass SW of the yard house)." }
     }
 
     /** Clear the graveyard's grave-clutter so the yard reads as a clean war-supply workshop: removes ALL
@@ -174,11 +174,14 @@ class SwampHubPlugin(
         /** Slayer-roster zombie (id 26); in the world dump, so its combat def is already registered. */
         const val ZOMBIE = "npc.zombie"
 
-        /** Where the undead rise — the SE graveyard fringe, just SOUTH of the [YARD] box (z<3188) on the
-         *  mines road, clear of the east dead tree (3253,3197) and every skilling station. TUNABLE. */
+        /** Where the undead rise — the open grass just SOUTH-WEST of the yard house, around (3231,3191).
+         *  (They used to rise on the SE fringe by the mines road, but that pocket isn't walkable from the
+         *  yard — players could see the zombies and never reach them.) Kept between the rock line (x3237+)
+         *  east and the fishing shore (x<=3218) west, so a walkRadius-4 wander never bleeds aggression
+         *  into a skilling station. TUNABLE. */
         val UNDEAD_TILES = listOf(
-            Tile(3249, 3185, 0), Tile(3251, 3186, 0), Tile(3250, 3183, 0),
-            Tile(3252, 3185, 0), Tile(3248, 3184, 0),
+            Tile(3231, 3191, 0), Tile(3229, 3190, 0), Tile(3232, 3192, 0),
+            Tile(3230, 3188, 0), Tile(3232, 3189, 0),
         )
     }
 }

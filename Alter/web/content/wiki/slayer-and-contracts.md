@@ -12,6 +12,8 @@ updated: 2026-07-04
 
 Right-click Vannaka → **Assignment** for a task. The starter roster runs from goblins, rats and chickens up through skeletons, zombies and guards, in batches of roughly 15-45 kills. Kills auto-track - check progress anytime with `::slayer`.
 
+While a task is active, the client's **Task Helper** plugin points a cyan arrow (scene + minimap) at your target's hunting ground, captioned with your kill count; the Slayer dial in the top-left dial column tracks the same progress. Prefer to hunt unaided? Toggle **Lof Task Helper** off in the plugin list. `::slayertele` still teleports you straight there.
+
 Completing tasks pays **War Effort**, with a bonus that grows every fifth completion in a streak - so keeping a streak alive matters. Spend it in Vannaka's **Rewards** shop.
 
 ## Resource contracts
