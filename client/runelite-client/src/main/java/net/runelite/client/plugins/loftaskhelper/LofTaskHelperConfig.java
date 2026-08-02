@@ -46,22 +46,11 @@ public interface LofTaskHelperConfig extends Config
 	}
 
 	@ConfigItem(
-		keyName = "hideOnArrival",
-		name = "Hide on arrival",
-		description = "Drop the arrows once you reach the hunting ground — the monsters around you are guidance enough",
-		position = 4
-	)
-	default boolean hideOnArrival()
-	{
-		return true;
-	}
-
-	@ConfigItem(
 		keyName = "highlightTargets",
 		name = "Highlight assigned monsters",
 		description = "Outline your contract's monsters in the scene and dot them on the minimap once they're in "
 			+ "sight — every variant that counts for the kill is marked, and the arrow hands off to the outlines",
-		position = 5
+		position = 4
 	)
 	default boolean highlightTargets()
 	{

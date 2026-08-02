@@ -56,8 +56,9 @@ public class LofTaskHelperPlugin extends Plugin
 	 *  same way. */
 	static final int VARP_TARGET_NPC = 4639;
 
-	/** Tiles from the player within which a target counts as "in sight" / "arrived", at which
-	 *  point the arrow hands off to the on-creature highlight (mirrors the Quest Journal). */
+	/** Tiles from the player within which a highlighted target counts as "in sight" (≈ the
+	 *  viewport), at which point the arrow hands off to the on-creature highlight (mirrors the
+	 *  Quest Journal's rat hand-off). */
 	private static final int IN_SIGHT_RADIUS = 15;
 
 	@Inject
@@ -138,18 +139,10 @@ public class LofTaskHelperPlugin extends Plugin
 		{
 			return null; // contract has no mapped hunting ground
 		}
-		WorldPoint target = new WorldPoint(packed & 0x3FFF, (packed >> 14) & 0x3FFF, (packed >> 28) & 0x3);
-		if (config.hideOnArrival())
-		{
-			Player local = client.getLocalPlayer();
-			WorldPoint playerLoc = local != null ? local.getWorldLocation() : null;
-			// Chebyshev distance; off-plane reads as Integer.MAX_VALUE and never counts as arrived.
-			if (playerLoc != null && playerLoc.distanceTo(target) <= IN_SIGHT_RADIUS)
-			{
-				return null;
-			}
-		}
-		return target;
+		// NOTE: no blind "hide when near the anchor tile" — the first release had one, and the
+		// arrow vanishing with nothing taking over read as a bug. The arrow only steps aside for
+		// the creature highlight above; with highlights off it stays up until the contract's done.
+		return new WorldPoint(packed & 0x3FFF, (packed >> 14) & 0x3FFF, (packed >> 28) & 0x3);
 	}
 
 	/** The arrow's kill-count caption, e.g. "12/30" (null = no active contract). */
