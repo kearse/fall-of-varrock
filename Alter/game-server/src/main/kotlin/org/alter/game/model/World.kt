@@ -20,6 +20,9 @@ import org.alter.game.fs.DefinitionSet
 import org.alter.game.fs.ObjectExamineHolder
 import org.alter.game.model.attr.AttributeMap
 import org.alter.game.model.collision.isClipped
+import org.alter.game.model.combat.AttackStyle
+import org.alter.game.model.combat.CombatClass
+import org.alter.game.model.combat.CombatStyle
 import org.alter.game.model.combat.NpcCombatDef
 import org.alter.game.model.entity.*
 import org.alter.game.model.instance.InstancedMapAllocator
@@ -783,6 +786,20 @@ class World(val gameContext: GameContext, val devContext: DevContext) {
                 }
             }
         npc.respawns = combatDef.respawnDelay > 0
+        // Fight with the class the def declares: RANGED/MAGIC npcs use the generic
+        // strategies with matching style bookkeeping (melee stays the default).
+        npc.combatClass = combatDef.combatClass
+        when (combatDef.combatClass) {
+            CombatClass.RANGED -> {
+                npc.combatStyle = CombatStyle.RANGED
+                npc.attackStyle = AttackStyle.ACCURATE
+            }
+            CombatClass.MAGIC -> {
+                npc.combatStyle = CombatStyle.MAGIC
+                npc.attackStyle = AttackStyle.ACCURATE
+            }
+            else -> {}
+        }
         npc.setCurrentHp(npc.combatDef.hitpoints)
     }
 

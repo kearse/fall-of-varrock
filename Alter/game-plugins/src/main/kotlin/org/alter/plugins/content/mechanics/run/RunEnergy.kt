@@ -26,7 +26,8 @@ object RunEnergy {
     const val RUN_ENABLED_VARP = Varp.RUN_MODE_VARP
 
     fun toggle(p: Player) {
-        if (p.runEnergy >= 100.0) {
+        // runEnergy is on a 0..10000 scale; the old >= 100.0 check let run be enabled at 1%.
+        if (p.runEnergy > 0.0) {
             p.toggleVarp(RUN_ENABLED_VARP)
         } else {
             p.setVarp(RUN_ENABLED_VARP, 0)
@@ -34,11 +35,19 @@ object RunEnergy {
         }
     }
 
+    /**
+     * OSRS rates on the 0..10000 scale (OSRS Wiki, Energy): drain per running tick is
+     * 67 + 67 x clamp(weight, 0..64)/64 (so 0 kg -> ~0.67%/tick, 64+ kg -> ~1.34%/tick),
+     * stamina cuts drain by 70%. Restore per non-running tick is (floor(agility/6) + 8)
+     * hundredths of a percent, +30% with full graceful. The previous restore expression
+     * was computed then discarded in favour of a flat +5%/tick (0->100% in 12 seconds,
+     * agility/graceful/weight all no-ops).
+     */
     fun drain(p: Player) {
         if (p.isRunning() && p.hasMoveDestination()) {
             if (!p.hasStorageBit(INFINITE_VARS_STORAGE, InfiniteVarsType.RUN)) {
-                val weight = max(0.0, p.weight)
-                var decrement = (min(weight, 6400.0) / 10000.0) + 64.0
+                val weight = min(64.0, max(0.0, p.weight))
+                var decrement = 67.0 + (67.0 * weight / 64.0)
                 if (p.timers.has(STAMINA_BOOST)) {
                     decrement *= 0.3
                 }
@@ -49,11 +58,11 @@ object RunEnergy {
                 p.sendRunEnergy(p.runEnergy.toInt())
             }
         } else if (p.runEnergy < 10000.0 && p.lock.canRestoreRunEnergy()) {
-            var recovery = (800.0 + (p.getSkills().getCurrentLevel(Skills.AGILITY) * 100 / 600.0)) / 10000.0
+            var recovery = (p.getSkills().getCurrentLevel(Skills.AGILITY) / 6 + 8).toDouble()
             if (isWearingFullGrace(p)) {
-                recovery *= 130
+                recovery *= 1.3
             }
-            p.runEnergy = min(10000.0, (p.runEnergy + 500))
+            p.runEnergy = min(10000.0, (p.runEnergy + recovery))
             p.sendRunEnergy(p.runEnergy.toInt())
         }
     }

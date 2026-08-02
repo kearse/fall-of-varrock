@@ -1,6 +1,7 @@
 package org.alter.plugins.content.combat.strategy
 
 import org.alter.api.EquipmentType
+import org.alter.api.ProjectileType
 import org.alter.api.Skills
 import org.alter.api.WeaponType
 import org.alter.api.ext.*
@@ -176,6 +177,14 @@ object RangedCombatStrategy : CombatStrategy {
                 if (dropAmmo) {
                     ammoDropAction = { world.spawn(GroundItem(ammo.id, amount, target.tile, pawn)) }
                 }
+            }
+        }
+        // Generic ranged NPCs fire the projectile their combat def declares.
+        if (pawn is Npc && pawn.combatDef.projectile != -1) {
+            val projectile = pawn.createProjectile(target, gfx = pawn.combatDef.projectile, type = ProjectileType.ARROW)
+            world.spawn(projectile)
+            if (pawn.combatDef.impactGfx != -1) {
+                target.graphic(pawn.combatDef.impactGfx, 92, projectile.lifespan)
             }
         }
         pawn.animate(animation)

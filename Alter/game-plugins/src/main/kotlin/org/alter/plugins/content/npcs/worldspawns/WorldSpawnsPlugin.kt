@@ -246,6 +246,19 @@ class WorldSpawnsPlugin(
                         aggressiveTimer = 200,
                         slayerReq = stats[8],
                         slayerXp = stats[9].toDouble(),
+                        // Optional 11th column: attack style (0 melee, 1 ranged, 2 magic).
+                        // Ranged/magic monsters fight at range through the generic strategies
+                        // with a default projectile; absent = melee, as before.
+                        combatClass = when (stats.getOrNull(10)) {
+                            1 -> org.alter.game.model.combat.CombatClass.RANGED
+                            2 -> org.alter.game.model.combat.CombatClass.MAGIC
+                            else -> org.alter.game.model.combat.CombatClass.MELEE
+                        },
+                        projectile = when (stats.getOrNull(10)) {
+                            1 -> DEFAULT_RANGED_PROJECTILE
+                            2 -> DEFAULT_MAGIC_PROJECTILE
+                            else -> -1
+                        },
                     )
                 }
                 false
@@ -627,6 +640,11 @@ class WorldSpawnsPlugin(
         const val MAX_UNSTATTED_LEVEL = 20 // stat-less monsters above this are pruned, not 10hp piñatas
         const val AGGRO_RADIUS = 4
         const val FALLBACK_DEATH = 836 // generic death animation
+
+        // Default projectile gfx for style-column monsters: the classic arrow (1064)
+        // and the wind-strike bolt (91). Bespoke content overrides via its own defs.
+        const val DEFAULT_RANGED_PROJECTILE = 1064
+        const val DEFAULT_MAGIC_PROJECTILE = 91
 
         // ---- Fallen Varrock (see applyFallenVarrock) ----
         /** The walled city + gates. TUNABLE — everything inside is "the fallen city". */
