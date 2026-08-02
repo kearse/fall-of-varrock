@@ -279,6 +279,13 @@ val SLAYER_TASK_TOTAL_ATTR = AttributeKey<Int>("slayer_task_total")
 val SLAYER_STREAK_ATTR = AttributeKey<Int>("slayer_streak")
 
 /**
+ * The npc key of the combat contract the player was *last* assigned, so the next assignment
+ * can avoid handing out the same monster twice in a row (mirrors
+ * [RESOURCE_CONTRACT_LAST_ATTR] on the gathering side). Persistent.
+ */
+val SLAYER_TASK_LAST_ATTR = AttributeKey<String>("slayer_task_last")
+
+/**
  * The player's active **Resource contract** from Vannaka (master design brief §2 — Slayer becomes
  * War Contracts). [RESOURCE_CONTRACT_ITEM_ATTR] is the RSCM item key to gather (ore/log/fish);
  * [RESOURCE_CONTRACT_LEFT_ATTR] the remaining count. Rewards coin + War Effort on completion. Held

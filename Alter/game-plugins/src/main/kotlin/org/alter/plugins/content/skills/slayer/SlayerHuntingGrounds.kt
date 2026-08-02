@@ -27,6 +27,13 @@ object SlayerHuntingGrounds {
         "npc.chicken" to Tile(3172, 3293, 0),      // the farm pen
         "npc.guard" to Tile(3221, 3222, 0),        // castle guards
         "npc.zombie" to Tile(3231, 3191, 0),       // the Mire undead corner, SW of the yard house (SwampHubPlugin)
+        // ── Rank-tiered contracts (SlayerTasks minTitle) ──
+        "npc.hobgoblin" to Tile(2910, 3287, 0),    // the hobgoblin peninsula, south of the crafting guild
+        "npc.dark_wizard" to Tile(2907, 3335, 0),  // the wizards' stone circle, south-west of Falador
+        "npc.black_knight" to Tile(3025, 3514, 0), // the Black Knights' grounds, north of fallen Falador
+        "npc.hill_giant" to Tile(3375, 3148, 0),   // the giant camp east of Al Kharid
+        "npc.lesser_demon" to Tile(3165, 3482, 0), // the demolished Grand Exchange (WorldSpawnsPlugin demons)
+        "npc.greater_demon" to Tile(3230, 3428, 0),// fallen Varrock's east street — raid-city ground, go armed
     )
 
     fun of(npcKey: String): Tile? = grounds[npcKey]

@@ -12,6 +12,8 @@ updated: 2026-07-04
 
 Right-click Vannaka → **Assignment** for a task. The starter roster runs from goblins, rats and chickens up through skeletons, zombies and guards, in batches of roughly 15-45 kills. Kills auto-track - check progress anytime with `::slayer`.
 
+Assignments scale with **you**: trivial monsters retire from the pool as your combat level grows, and each feudal rank bought from Duke Horacio unlocks tougher, better-paying contracts - hobgoblins and dark wizards at Commoner, Black Knights and Hill Giants at Squire, then the demons that overran the fallen cities at Soldier and Knight. Vannaka leans toward the best tier you've unlocked, and never hands you the same monster twice in a row (unless it's the only task you qualify for).
+
 While a task is active, the client's **Task Helper** plugin points a cyan arrow (scene + minimap) at your target's hunting ground, captioned with your kill count - and once the monsters are in sight, the arrow hands off to cyan **outlines on the monsters themselves** (with minimap dots), covering every variant that counts for the kill. The Slayer dial in the top-left dial column tracks the same progress. Prefer to hunt unaided? Toggle **Lof Task Helper** off in the plugin list. `::slayertele` still teleports you straight there.
 
 Completing tasks pays **War Effort**, with a bonus that grows every fifth completion in a streak - so keeping a streak alive matters. Spend it in Vannaka's **Rewards** shop.
