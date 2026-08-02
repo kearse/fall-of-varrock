@@ -17,6 +17,7 @@ import org.alter.game.model.move.moveTo
 import org.alter.game.model.attr.KILLER_ATTR
 import org.alter.game.model.attr.SLAYER_INTRO_DONE_ATTR
 import org.alter.game.model.attr.SLAYER_STREAK_ATTR
+import org.alter.game.model.attr.SLAYER_TASK_LAST_ATTR
 import org.alter.game.model.attr.SLAYER_TASK_LEFT_ATTR
 import org.alter.game.model.attr.SLAYER_TASK_NPC_ATTR
 import org.alter.game.model.attr.SLAYER_TASK_TOTAL_ATTR
@@ -34,6 +35,7 @@ import org.alter.plugins.content.economy.addPoints
 import org.alter.plugins.content.economy.points
 import org.alter.plugins.content.war.address
 import org.alter.plugins.content.war.recruit.RecruitTrials
+import org.alter.plugins.content.war.title
 import org.alter.plugins.content.war.warprep.WarPrepChain
 import org.alter.plugins.content.war.warprep.WarPrepRanged
 import org.alter.rscm.RSCM.getRSCM
@@ -457,31 +459,58 @@ class SlayerPlugin(
             say(p, "Orders first, ${p.address}. ${RecruitTrials.step(p).objective}")
             return
         }
-        // The random pool excludes script-only contracts (e.g. the tutorial rats). Prefer tasks in the
-        // player's combat BAND (min..max) so trivial monsters retire for stronger players; if that
-        // leaves nothing (a very high level), fall back to any task they meet the floor for so the
-        // master is never empty-handed.
-        val pool = tasks.values.filter { it.assignable }
-        val eligible = pool.filter { p.combatLevel in it.minCombat..it.maxCombat }
+        // The random pool excludes script-only contracts (e.g. the tutorial rats) and everything above
+        // the player's RANK — rank gates the contract, exactly like resource contracts. Within that,
+        // prefer tasks in the player's combat BAND (min..max) so trivial monsters retire for stronger
+        // players; if that leaves nothing (a very high level), fall back to any task they meet the
+        // floor for so the master is never empty-handed.
+        val pool = tasks.values.filter { it.assignable && p.title.ordinal >= it.minTitle.ordinal }
+        var eligible = pool.filter { p.combatLevel in it.minCombat..it.maxCombat }
             .ifEmpty { pool.filter { p.combatLevel >= it.minCombat } }
         if (eligible.isEmpty()) {
             say(p, "I've nothing for you right now.")
             return
         }
-        val task = weightedPick(eligible)
+        // Never the same monster twice running — unless it's the only task they qualify for
+        // (mirrors the resource-contract rule; "zombies, then zombies again" was the complaint).
+        val last = p.attr[SLAYER_TASK_LAST_ATTR]
+        if (last != null && eligible.size > 1) {
+            eligible.filter { it.npcName != last }.let { if (it.isNotEmpty()) eligible = it }
+        }
+        val task = weightedPick(p, eligible)
         val amount = world.random(task.amount)
         p.attr[SLAYER_TASK_NPC_ATTR] = task.npcName
         p.attr[SLAYER_TASK_LEFT_ATTR] = amount
         p.attr[SLAYER_TASK_TOTAL_ATTR] = amount
+        p.attr[SLAYER_TASK_LAST_ATTR] = task.npcName
         say(p, "Your task: slay <col=801700>$amount ${task.display}</col>. Good hunting.")
+        // The combat faucet advertises the rank ladder too (mirrors richerWorkAwaits on the
+        // resource side): their blade already qualifies for deadlier, rank-gated contracts.
+        if (tasks.values.any { it.assignable && it.minTitle.ordinal > p.title.ordinal && p.combatLevel >= it.minCombat }) {
+            say(p, "And ${p.address} — you fight better than this contract pays. Buy your next rank from <col=801700>Duke Horacio</col> and I'll sign you onto deadlier work.")
+        }
     }
 
-    /** Weighted random pick over [eligible] by each task's [SlayerTask.weight]. */
-    private fun weightedPick(eligible: List<SlayerTask>): SlayerTask {
-        val total = eligible.sumOf { it.weight.coerceAtLeast(1) }
+    /**
+     * Weighted random pick over [eligible] by each task's [SlayerTask.weight], boosted toward the
+     * best rank tier the player has unlocked (×3 for their top tier present, ×2 for the tier below)
+     * so ranking up visibly upgrades the work — without ever emptying the lower-tier variety the
+     * way a hard tier cut would. For a Peasant every task is tier 0, so the boost cancels out.
+     */
+    private fun weightedPick(p: Player, eligible: List<SlayerTask>): SlayerTask {
+        val topTier = eligible.maxOf { it.minTitle.ordinal }
+        fun weightOf(t: SlayerTask): Int {
+            val base = t.weight.coerceAtLeast(1)
+            return when (t.minTitle.ordinal) {
+                topTier -> base * 3
+                topTier - 1 -> base * 2
+                else -> base
+            }
+        }
+        val total = eligible.sumOf { weightOf(it) }
         var roll = world.random(total - 1)
         for (t in eligible) {
-            roll -= t.weight.coerceAtLeast(1)
+            roll -= weightOf(t)
             if (roll < 0) return t
         }
         return eligible.last()
@@ -492,7 +521,7 @@ class SlayerPlugin(
         val left = p.attr[SLAYER_TASK_LEFT_ATTR] ?: 0
         val task = current?.let { tasks[it] }
         if (task == null || left <= 0) {
-            p.message("You don't have a Slayer task. See Turael in Lumbridge for one.")
+            p.message("You don't have a Slayer task. See Vannaka in Lumbridge for one.")
         } else {
             p.message("Slayer task: <col=801700>$left ${task.display}</col> remaining. (streak ${p.attr[SLAYER_STREAK_ATTR] ?: 0})")
         }
