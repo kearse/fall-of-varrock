@@ -213,7 +213,7 @@ public class LofQuestsPlugin extends Plugin
 			return null;
 		}
 		// The arrow only leads you TO the objective. Once a highlighted target creature is in sight
-		// the outline/minimap dot is guidance enough, so the arrow (and its tile marker) get out of the
+		// the tile highlight/minimap dot is guidance enough, so the arrow (and its tile marker) get out of the
 		// way — mirroring RuneLite Quest Helper, which drops the arrow once the NPC is on screen. Only
 		// applies while the creature highlight is actually on to hand off to.
 		if (config.highlightObjectiveNpcs() && objectiveNpcInSight())
@@ -285,7 +285,7 @@ public class LofQuestsPlugin extends Plugin
 	 * Highlighter for the shared NPC-overlay service. Returns a highlight for any NPC a quest could
 	 * ever flag as a target (a stable membership gate — the rat is captured on spawn regardless of
 	 * quest state); the live show/hide is deferred to the {@link #highlightsNpc} render predicate so
-	 * the outline appears only while that objective is actually active.
+	 * the tile highlight appears only while that objective is actually active.
 	 */
 	private HighlightedNpc highlightObjectiveNpc(NPC npc)
 	{
@@ -296,7 +296,6 @@ public class LofQuestsPlugin extends Plugin
 		return HighlightedNpc.builder()
 			.npc(npc)
 			.highlightColor(config.arrowColor())
-			.outline(true)
 			.tile(true)
 			.render(n -> highlightsNpc(n.getId()))
 			.build();

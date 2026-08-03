@@ -340,7 +340,7 @@ enum LofQuest
 	}
 
 	/**
-	 * NPC ids to highlight in the scene (outline + tile) and dot on the minimap for the active step
+	 * NPC ids to highlight in the scene (tile marker) and dot on the minimap for the active step
 	 * — small, mobile targets a fixed-tile arrow can't pin down. Empty for steps with no such target.
 	 */
 	int[] currentHighlightNpcIds(Client client)

@@ -3,7 +3,7 @@
  *
  * A Quest-Helper-style guide for Vannaka's combat contracts (the Slayer tasks): guidance arrows in
  * the scene and on the minimap point the way to the active contract's hunting ground, and the
- * assigned monsters themselves are outlined (scene + minimap dot) once you're among them — the same
+ * assigned monsters' tiles are highlighted (scene + minimap dot) once you're among them — the same
  * hand-off the Quest Journal does for the castle rats. The arrows use their own colour (cyan by
  * default) so they can't be mistaken for the gold Quest Journal arrows, and the whole thing is an
  * ordinary plugin — toggle it off in the plugin list to hunt unaided.
@@ -38,7 +38,7 @@ import net.runelite.client.util.Text;
 
 @PluginDescriptor(
 	name = "Lof Task Helper",
-	description = "Points guidance arrows at your active war-contract's hunting ground and outlines the assigned monsters; the war-dial row tracks the kills.",
+	description = "Points guidance arrows at your active war-contract's hunting ground and highlights the assigned monsters' tiles; the war-dial row tracks the kills.",
 	tags = {"lof", "slayer", "task", "contract", "assignment", "helper", "guide", "arrow", "highlight"},
 	enabledByDefault = true
 )
@@ -127,7 +127,7 @@ public class LofTaskHelperPlugin extends Plugin
 		{
 			return null; // no active contract
 		}
-		// Once an outlined target creature is in sight the highlight is guidance enough, so the
+		// Once a highlighted target creature is in sight the tile marker is guidance enough, so the
 		// arrow gets out of the way — mirroring the Quest Journal's rat hand-off. Only applies
 		// while the creature highlight is actually on to hand off to.
 		if (config.highlightTargets() && targetNpcInSight())
@@ -159,12 +159,12 @@ public class LofTaskHelperPlugin extends Plugin
 	}
 
 	/**
-	 * Highlighter for the shared NPC-overlay service: outline + tile + minimap dot for every npc
+	 * Highlighter for the shared NPC-overlay service: tile highlight + minimap dot for every npc
 	 * whose cache name matches the active contract's target. Membership is dynamic (the contract
 	 * changes), so {@link #onVarbitChanged} rebuilds the service on every contract change; the
 	 * render predicate re-checks live so a completed task blanks immediately. Note the service
 	 * gives each npc at most ONE highlight (first registered highlighter wins) — so the tutorial
-	 * rats, which the Quest Journal also outlines, are never double-drawn.
+	 * rats, which the Quest Journal also highlights, are never double-drawn.
 	 */
 	private HighlightedNpc highlightTargetNpc(NPC npc)
 	{
@@ -175,7 +175,6 @@ public class LofTaskHelperPlugin extends Plugin
 		return HighlightedNpc.builder()
 			.npc(npc)
 			.highlightColor(config.arrowColor())
-			.outline(true)
 			.tile(true)
 			.render(n -> config.highlightTargets() && isTargetNpc(n))
 			.build();
