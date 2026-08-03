@@ -1,6 +1,8 @@
 package org.alter.plugins.content.kits
 
 import org.alter.api.EquipmentType
+import org.alter.api.Spellbook
+import org.alter.api.ext.getSpellbook
 import org.alter.api.ext.message
 import org.alter.api.ext.setVarp
 import org.alter.game.model.entity.Player
@@ -143,6 +145,31 @@ object KitEditor {
         if (s.mode == Mode.LMS) return
         if (slot !in 0 until KitSetup.INV_SIZE) return
         s.kit.inv.remove(slot)
+        publish(s)
+    }
+
+    /** "Wearing" — snapshot the player's REAL worn gear + carried inventory (and current
+     *  spellbook) into the editor, as a starting point to tweak and save. Bank mode only:
+     *  a training kit is loaner gear and must stay within the armoury pool. */
+    fun loadCurrent(p: Player) {
+        val s = sessions[p.index] ?: return
+        if (s.mode != Mode.BANK) return
+        s.kit.gear.clear()
+        s.kit.inv.clear()
+        for (slotId in SLOT_IDS) {
+            val worn = p.equipment[slotId] ?: continue
+            s.kit.gear[slotId] = Item(worn.id, worn.amount.coerceIn(1, KitSetup.MAX_QTY))
+        }
+        for (i in 0 until minOf(p.inventory.capacity, KitSetup.INV_SIZE)) {
+            val carried = p.inventory[i] ?: continue
+            s.kit.inv[i] = Item(carried.id, carried.amount.coerceIn(1, KitSetup.MAX_QTY))
+        }
+        s.kit.book = when (p.getSpellbook()) {
+            Spellbook.ANCIENTS -> KitSetup.BOOK_ANCIENTS
+            Spellbook.LUNAR -> KitSetup.BOOK_LUNAR
+            else -> KitSetup.BOOK_STANDARD
+        }
+        if (s.kit.isEmpty()) p.message("You're not wearing or carrying anything to copy.")
         publish(s)
     }
 

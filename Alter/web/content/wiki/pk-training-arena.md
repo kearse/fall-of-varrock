@@ -23,7 +23,7 @@ He offers you two ways to fight:
   preset, then change absolutely anything: every worn slot and all 28 inventory slots are yours to
   edit from the armoury, with your spellbook and the bot's difficulty on the same screen. **Save**
   up to three custom kits to your account - they're waiting on every visit (and can be loaded from
-  your own bank anywhere with `::kits`, see below).
+  your own bank anywhere with `::kit`, see below).
 - **Bring your own gear** - spar in your own setup.
 
 Then the bout runs **just like a real duel**: you're teleported into a **private copy of the
@@ -77,13 +77,18 @@ the pit and rejoin you the moment the round ends.
 Start on **Easy** to get your switches clean, then move up. When you're done, just walk out of the
 arena - the gear stays with Ardan, and whatever you learned comes with you.
 
-## Loading kits from your bank (anywhere)
+## Building, saving and loading kits (::kit)
 
-The same saved kits do double duty outside the arena. Type `::kits` **with your bank open** and
-the kit editor appears in bank mode: pick a saved kit (or build one from your bank's items) and
-press **Load kit** - everything you're carrying is deposited, then the kit is withdrawn and
-equipped **from your own bank in one click**, exact slot layout and all.
+The same saved kits do double duty outside the arena. Type `::kit` (or `::kits`) **anywhere** and
+the kit editor appears in bank mode: pick a saved kit, build one from your bank's items (the
+palette shows your bank as of your last visit), or press **Wearing** to copy your current worn
+gear and inventory - the full setup, spellbook included - into the editor. Tweak it however you
+like, then press **S** to save it to one of your three kit slots.
+
+**Load kit** is the one thing that still needs your bank open: everything you're carrying is
+deposited, then the kit is withdrawn and equipped **from your own bank in one click**, exact slot
+layout and all. In a hurry? `::kit <1-3>` skips the editor and loads that saved slot directly.
 
 Bank mode never creates items: anything the kit lists that **isn't in your bank is skipped** and
 reported, and gear you don't meet the requirements for stays in your pack instead of being worn.
-It only works at a bank - the kit screen is a loadout tool, not a portable bank.
+Loading only works at a bank - the kit screen is a loadout tool, not a portable bank.

@@ -54,6 +54,10 @@ class LofKitMouseListener extends MouseAdapter
 		{
 			overlay.pageDelta(1);
 		}
+		else if (hit == LofKitOverlay.CURRENT)
+		{
+			plugin.sendAction("cur");
+		}
 		else if (hit >= LofKitOverlay.PAL_BASE)
 		{
 			final int id = overlay.palItemIdAt(hit - LofKitOverlay.PAL_BASE);

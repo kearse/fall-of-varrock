@@ -20,18 +20,21 @@ private val logger = KotlinLogging.logger {}
  *
  * Two ways in:
  *  - The **PK trainer** opens the editor in TRAINING mode (loaner gear — see PkTrainingArenaPlugin).
- *  - `::kits` at a **bank** opens it in BANK mode: build/save kits, then **Load kit** deposits
- *    everything you're carrying and re-arms you from your own bank in one click. Only items
- *    actually in your bank are withdrawn — anything missing is skipped and reported. Nothing is
- *    ever created; requirements still apply (an item you can't wear stays in your inventory).
+ *  - `::kit` (or `::kits`) opens it in BANK mode **anywhere**: browse, build (the palette is the
+ *    client's cached view of your bank), copy your current setup ("Wearing"), and save kits from
+ *    any location. Only **Load kit** — which deposits everything you're carrying and re-arms you
+ *    from your own bank in one click — still requires the bank to be open; anything else would be
+ *    a portable bank. Only items actually in your bank are withdrawn — anything missing is skipped
+ *    and reported. Nothing is ever created; requirements still apply (an item you can't wear stays
+ *    in your inventory).
  *
  * Input routing: the client overlay sends `::kit <action>` (public chat, suppressed and routed to
  * the `kitclick` command by MessagePublicHandler — the lofduel/lofstake pattern).
  *
  * Actions: `a <id>` add item · `re <i>` / `ri <i>` clear worn/inventory slot · `p <0|1>` preset ·
- * `k <0-2>` load saved · `s <0-2>` save · `b <0-2>` spellbook · `d <0-2>` difficulty ·
- * `start` begin training bout · `load` bank-load · `x` close · a bare number = `::kit <n>`
- * quick-load (typed commands can arrive down this channel too).
+ * `k <0-2>` load saved · `s <0-2>` save · `cur` copy current worn+carried setup · `b <0-2>`
+ * spellbook · `d <0-2>` difficulty · `start` begin training bout · `load` bank-load · `x` close ·
+ * a bare number = `::kit <n>` quick-load (typed commands can arrive down this channel too).
  */
 class KitsPlugin(
     r: PluginRepository,
@@ -44,14 +47,14 @@ class KitsPlugin(
 
         onLogout { KitEditor.close(player) }
 
-        onCommand("kits", description = "Open the kit loadout editor (load kits at a bank)") {
-            openBankMode(player)
+        onCommand("kits", description = "Open the kit loadout editor (loading needs a bank)") {
+            openEditor(player)
         }
 
-        // Quick-load: ::kit <1-3> re-arms straight from a saved slot with the bank open —
-        // no editor round-trip. Same conservative loader as the editor's Load button.
-        onCommand("kit", description = "Quick-load a saved kit at a bank (::kit 1-3)") {
-            quickLoad(player, player.getCommandArgs().getOrNull(0))
+        // Bare ::kit opens the editor anywhere (browse/build/save kits);
+        // ::kit <1-3> re-arms straight from a saved slot with no editor round-trip.
+        onCommand("kit", description = "Open the kit editor; ::kit <1-3> quick-loads a saved kit at a bank") {
+            kitCommand(player, player.getCommandArgs().getOrNull(0))
         }
 
         onCommand("kitclick", description = "Kit editor interaction (client overlay channel)") {
@@ -63,25 +66,30 @@ class KitsPlugin(
                 "p" -> args.getOrNull(1)?.toIntOrNull()?.let { KitEditor.loadPreset(player, it) }
                 "k" -> args.getOrNull(1)?.toIntOrNull()?.let { KitEditor.loadSaved(player, it) }
                 "s" -> args.getOrNull(1)?.toIntOrNull()?.let { KitEditor.saveKit(player, it) }
+                "cur" -> KitEditor.loadCurrent(player)
                 "b" -> args.getOrNull(1)?.toIntOrNull()?.let { KitEditor.setBook(player, it) }
                 "d" -> args.getOrNull(1)?.toIntOrNull()?.let { KitEditor.setDiff(player, it) }
                 "start" -> KitEditor.start(player)
                 "load" -> KitEditor.load(player)
                 "done" -> KitEditor.done(player)
                 "x" -> KitEditor.close(player)
-                // "::kit 1" typed in chat can be swallowed by MessagePublicHandler's overlay
-                // channel (public-chat route) and land HERE instead of the ::kit command —
-                // treat a bare number as the quick-load so both routes work identically.
-                else -> quickLoad(player, args.getOrNull(0))
+                // "::kit" / "::kit 1" typed in chat can be swallowed by MessagePublicHandler's
+                // overlay channel (public-chat route) and land HERE instead of the ::kit
+                // command — fall through to the same handler so both routes work identically.
+                else -> kitCommand(player, args.getOrNull(0))
             }
         }
     }
 
-    /** `::kit <slot>` — load a saved kit from the bank without opening the editor. */
-    private fun quickLoad(p: Player, arg: String?) {
-        val slot = arg?.toIntOrNull()
+    /** Bare `::kit` opens the editor; `::kit <slot>` quick-loads that saved kit from the bank. */
+    private fun kitCommand(p: Player, arg: String?) {
+        if (arg == null) {
+            openEditor(p)
+            return
+        }
+        val slot = arg.toIntOrNull()
         if (slot == null || slot !in 1..KitStorage.SLOT_COUNT) {
-            p.message("Usage: ::kit <1-${KitStorage.SLOT_COUNT}> — loads that saved kit while your bank is open.")
+            p.message("Usage: ::kit opens the kit editor; ::kit <1-${KitStorage.SLOT_COUNT}> quick-loads that saved kit at a bank.")
             return
         }
         if (TrainingArena.kitted(p)) {
@@ -97,13 +105,11 @@ class KitsPlugin(
         p.setSpellbook(spellbookOf(kit.book))
     }
 
-    private fun openBankMode(p: Player) {
+    /** Open the editor in bank mode. Works anywhere — browsing, building, copying your current
+     *  setup and saving are location-free; only Load kit (the bank withdrawal) checks the bank. */
+    private fun openEditor(p: Player) {
         if (KitEditor.isOpen(p)) return
         if (TrainingArena.kitted(p)) { p.message("Hand the training kit back first (::unkit)."); return }
-        if (!bankOpen(p)) {
-            p.message("Open your bank first — kits load from your own bank. (You can still edit kits at the trainer.)")
-            return
-        }
         KitEditor.open(p, KitEditor.Mode.BANK, onLoad = { kit -> loadFromBank(p, kit) })
     }
 

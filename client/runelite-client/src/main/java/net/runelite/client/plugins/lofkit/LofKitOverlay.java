@@ -51,6 +51,7 @@ class LofKitOverlay extends Overlay
 	static final int ACTION = 2;      // Start bout (training) / Load kit (bank)
 	static final int PAGE_PREV = 3;
 	static final int PAGE_NEXT = 4;
+	static final int CURRENT = 5;      // copy worn gear + inventory into the editor (bank mode)
 	static final int EQUIP_BASE = 100; // + doll index (0..10)
 	static final int INV_BASE = 140;   // + inventory slot (0..27)
 	static final int PRESET_BASE = 300; // + 0 Dharok's, 1 NH
@@ -226,6 +227,11 @@ class LofKitOverlay extends Overlay
 		return new Rectangle(r.x + r.width + 2, r.y, 20, PRESET_H);
 	}
 
+	private Rectangle currentRect(int ox, int oy) // bank mode: copy the real worn+carried setup
+	{
+		return new Rectangle(ox + PAD + 402, oy + PRESET_Y, 62, PRESET_H);
+	}
+
 	private Rectangle dollRect(int ox, int oy, int i)
 	{
 		final int x = ox + DOLL_X + DOLL_COL[i] * (DOLL_SZ + DOLL_GAP);
@@ -280,6 +286,7 @@ class LofKitOverlay extends Overlay
 				if (kitLoadRect(ox, oy, i).contains(p)) return KITLOAD_BASE + i;
 				if (kitSaveRect(ox, oy, i).contains(p)) return KITSAVE_BASE + i;
 			}
+			if (!training && currentRect(ox, oy).contains(p)) return CURRENT;
 			// In LMS mode the doll + inventory are a read-only preview of the category picks.
 			for (int i = 0; i < EQUIP_SLOTS; i++) if (dollRect(ox, oy, i).contains(p)) return EQUIP_BASE + i;
 			for (int i = 0; i < INV_SIZE; i++) if (invRect(ox, oy, i).contains(p)) return INV_BASE + i;
@@ -409,6 +416,12 @@ class LofKitOverlay extends Overlay
 				if (lr.contains(mouse)) hover = filled ? "Load your saved kit " + (i + 1) : "Empty — press S to save the current setup here";
 				if (sr.contains(mouse)) hover = "Save the current setup to kit slot " + (i + 1);
 			}
+			if (!training)
+			{
+				final Rectangle cr = currentRect(ox, oy);
+				chip(g, cr, "Wearing", false, cr.contains(mouse));
+				if (cr.contains(mouse)) hover = "Copy what you're wearing & carrying into the editor";
+			}
 		}
 		else
 		{
@@ -477,7 +490,7 @@ class LofKitOverlay extends Overlay
 			g.setFont(FontManager.getRunescapeSmallFont());
 			if (pal.length == 0)
 			{
-				LofTheme.shadowText(g, "Open your bank to browse items.", ox + PAL_X, palTop(oy) + 14, LofTheme.TEXT_DIM);
+				LofTheme.shadowText(g, "Visit a bank once to browse it here.", ox + PAL_X, palTop(oy) + 14, LofTheme.TEXT_DIM);
 			}
 			chip(g, pagePrevRect(ox, oy), "<", false, pagePrevRect(ox, oy).contains(mouse));
 			chip(g, pageNextRect(ox, oy), ">", false, pageNextRect(ox, oy).contains(mouse));
