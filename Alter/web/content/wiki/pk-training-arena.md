@@ -23,7 +23,7 @@ He offers you two ways to fight:
   preset, then change absolutely anything: every worn slot and all 28 inventory slots are yours to
   edit from the armoury, with your spellbook and the bot's difficulty on the same screen. **Save**
   up to three custom kits to your account - they're waiting on every visit (and can be loaded from
-  your own bank anywhere with `::kits`, see below).
+  your own bank anywhere with `::kit`, see below).
 - **Bring your own gear** - spar in your own setup.
 
 Then the bout runs **just like a real duel**: you're teleported into a **private copy of the
@@ -79,10 +79,11 @@ arena - the gear stays with Ardan, and whatever you learned comes with you.
 
 ## Loading kits from your bank (anywhere)
 
-The same saved kits do double duty outside the arena. Type `::kits` **with your bank open** and
-the kit editor appears in bank mode: pick a saved kit (or build one from your bank's items) and
-press **Load kit** - everything you're carrying is deposited, then the kit is withdrawn and
-equipped **from your own bank in one click**, exact slot layout and all.
+The same saved kits do double duty outside the arena. Type `::kit` (or `::kits`) **with your bank
+open** and the kit editor appears in bank mode: pick a saved kit (or build one from your bank's
+items) and press **Load kit** - everything you're carrying is deposited, then the kit is withdrawn
+and equipped **from your own bank in one click**, exact slot layout and all. In a hurry?
+`::kit <1-3>` skips the editor and loads that saved slot directly.
 
 Bank mode never creates items: anything the kit lists that **isn't in your bank is skipped** and
 reported, and gear you don't meet the requirements for stays in your pack instead of being worn.

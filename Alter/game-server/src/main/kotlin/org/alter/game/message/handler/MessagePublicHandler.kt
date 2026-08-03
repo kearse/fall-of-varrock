@@ -231,6 +231,12 @@ class MessagePublicHandler : MessageHandler<MessagePublic> {
                     client.world.plugins.executeCommand(client, "kitclick", parts.drop(1).toTypedArray())
                     return
                 }
+                // Typed "::kits" (open the kit editor at a bank) arrives down this channel too —
+                // without a branch it would broadcast as public chat and never run.
+                "kits" -> {
+                    client.world.plugins.executeCommand(client, "kits", parts.drop(1).toTypedArray())
+                    return
+                }
                 // Custom shop window (lofshop): switch tab / buy an item / close, suppress chat.
                 "shoptab" -> {
                     client.world.plugins.executeCommand(client, "shoptabclick", parts.drop(1).toTypedArray())

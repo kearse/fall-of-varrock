@@ -20,7 +20,7 @@ private val logger = KotlinLogging.logger {}
  *
  * Two ways in:
  *  - The **PK trainer** opens the editor in TRAINING mode (loaner gear — see PkTrainingArenaPlugin).
- *  - `::kits` at a **bank** opens it in BANK mode: build/save kits, then **Load kit** deposits
+ *  - `::kit` (or `::kits`) at a **bank** opens it in BANK mode: build/save kits, then **Load kit** deposits
  *    everything you're carrying and re-arms you from your own bank in one click. Only items
  *    actually in your bank are withdrawn — anything missing is skipped and reported. Nothing is
  *    ever created; requirements still apply (an item you can't wear stays in your inventory).
@@ -48,10 +48,10 @@ class KitsPlugin(
             openBankMode(player)
         }
 
-        // Quick-load: ::kit <1-3> re-arms straight from a saved slot with the bank open —
-        // no editor round-trip. Same conservative loader as the editor's Load button.
-        onCommand("kit", description = "Quick-load a saved kit at a bank (::kit 1-3)") {
-            quickLoad(player, player.getCommandArgs().getOrNull(0))
+        // Bare ::kit opens the editor (pick a saved kit or build one from the bank);
+        // ::kit <1-3> re-arms straight from a saved slot with no editor round-trip.
+        onCommand("kit", description = "Open the kit editor at a bank; ::kit <1-3> quick-loads a saved kit") {
+            kitCommand(player, player.getCommandArgs().getOrNull(0))
         }
 
         onCommand("kitclick", description = "Kit editor interaction (client overlay channel)") {
@@ -69,19 +69,23 @@ class KitsPlugin(
                 "load" -> KitEditor.load(player)
                 "done" -> KitEditor.done(player)
                 "x" -> KitEditor.close(player)
-                // "::kit 1" typed in chat can be swallowed by MessagePublicHandler's overlay
-                // channel (public-chat route) and land HERE instead of the ::kit command —
-                // treat a bare number as the quick-load so both routes work identically.
-                else -> quickLoad(player, args.getOrNull(0))
+                // "::kit" / "::kit 1" typed in chat can be swallowed by MessagePublicHandler's
+                // overlay channel (public-chat route) and land HERE instead of the ::kit
+                // command — fall through to the same handler so both routes work identically.
+                else -> kitCommand(player, args.getOrNull(0))
             }
         }
     }
 
-    /** `::kit <slot>` — load a saved kit from the bank without opening the editor. */
-    private fun quickLoad(p: Player, arg: String?) {
-        val slot = arg?.toIntOrNull()
+    /** Bare `::kit` opens the editor; `::kit <slot>` quick-loads that saved kit from the bank. */
+    private fun kitCommand(p: Player, arg: String?) {
+        if (arg == null) {
+            openBankMode(p)
+            return
+        }
+        val slot = arg.toIntOrNull()
         if (slot == null || slot !in 1..KitStorage.SLOT_COUNT) {
-            p.message("Usage: ::kit <1-${KitStorage.SLOT_COUNT}> — loads that saved kit while your bank is open.")
+            p.message("Usage: ::kit opens the kit editor; ::kit <1-${KitStorage.SLOT_COUNT}> quick-loads that saved kit. Both need your bank open.")
             return
         }
         if (TrainingArena.kitted(p)) {
