@@ -30,7 +30,8 @@ private val logger = KotlinLogging.logger {}
  *
  * Actions: `a <id>` add item · `re <i>` / `ri <i>` clear worn/inventory slot · `p <0|1>` preset ·
  * `k <0-2>` load saved · `s <0-2>` save · `b <0-2>` spellbook · `d <0-2>` difficulty ·
- * `start` begin training bout · `load` bank-load · `x` close.
+ * `start` begin training bout · `load` bank-load · `x` close · a bare number = `::kit <n>`
+ * quick-load (typed commands can arrive down this channel too).
  */
 class KitsPlugin(
     r: PluginRepository,
@@ -50,22 +51,7 @@ class KitsPlugin(
         // Quick-load: ::kit <1-3> re-arms straight from a saved slot with the bank open —
         // no editor round-trip. Same conservative loader as the editor's Load button.
         onCommand("kit", description = "Quick-load a saved kit at a bank (::kit 1-3)") {
-            val slot = player.getCommandArgs().getOrNull(0)?.toIntOrNull()
-            if (slot == null || slot !in 1..KitStorage.SLOT_COUNT) {
-                player.message("Usage: ::kit <1-${KitStorage.SLOT_COUNT}>")
-                return@onCommand
-            }
-            if (TrainingArena.kitted(player)) {
-                player.message("Hand the training kit back first (::unkit).")
-                return@onCommand
-            }
-            val kit = KitStorage.load(player)[slot - 1]
-            if (kit == null || kit.isEmpty()) {
-                player.message("Kit $slot is empty — build and save it with ::kits first.")
-                return@onCommand
-            }
-            loadFromBank(player, kit)
-            player.setSpellbook(spellbookOf(kit.book))
+            quickLoad(player, player.getCommandArgs().getOrNull(0))
         }
 
         onCommand("kitclick", description = "Kit editor interaction (client overlay channel)") {
@@ -83,8 +69,32 @@ class KitsPlugin(
                 "load" -> KitEditor.load(player)
                 "done" -> KitEditor.done(player)
                 "x" -> KitEditor.close(player)
+                // "::kit 1" typed in chat can be swallowed by MessagePublicHandler's overlay
+                // channel (public-chat route) and land HERE instead of the ::kit command —
+                // treat a bare number as the quick-load so both routes work identically.
+                else -> quickLoad(player, args.getOrNull(0))
             }
         }
+    }
+
+    /** `::kit <slot>` — load a saved kit from the bank without opening the editor. */
+    private fun quickLoad(p: Player, arg: String?) {
+        val slot = arg?.toIntOrNull()
+        if (slot == null || slot !in 1..KitStorage.SLOT_COUNT) {
+            p.message("Usage: ::kit <1-${KitStorage.SLOT_COUNT}> — loads that saved kit while your bank is open.")
+            return
+        }
+        if (TrainingArena.kitted(p)) {
+            p.message("Hand the training kit back first (::unkit).")
+            return
+        }
+        val kit = KitStorage.load(p)[slot - 1]
+        if (kit == null || kit.isEmpty()) {
+            p.message("Kit $slot is empty — build and save it with ::kits first.")
+            return
+        }
+        loadFromBank(p, kit)
+        p.setSpellbook(spellbookOf(kit.book))
     }
 
     private fun openBankMode(p: Player) {
