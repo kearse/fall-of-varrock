@@ -38,10 +38,10 @@ object RunEnergy {
     /**
      * OSRS rates on the 0..10000 scale (OSRS Wiki, Energy): drain per running tick is
      * 67 + 67 x clamp(weight, 0..64)/64 (so 0 kg -> ~0.67%/tick, 64+ kg -> ~1.34%/tick),
-     * stamina cuts drain by 70%. Restore per non-running tick is (floor(agility/6) + 8)
-     * hundredths of a percent, +30% with full graceful. The previous restore expression
-     * was computed then discarded in favour of a flat +5%/tick (0->100% in 12 seconds,
-     * agility/graceful/weight all no-ops).
+     * stamina cuts drain by 70%. OSRS restore per non-running tick is (floor(agility/6) + 8)
+     * hundredths of a percent, +30% with full graceful; this server restores at 2x that
+     * rate by default. The previous restore expression was computed then discarded in
+     * favour of a flat +5%/tick (0->100% in 12 seconds, agility/graceful/weight all no-ops).
      */
     fun drain(p: Player) {
         if (p.isRunning() && p.hasMoveDestination()) {
@@ -58,7 +58,8 @@ object RunEnergy {
                 p.sendRunEnergy(p.runEnergy.toInt())
             }
         } else if (p.runEnergy < 10000.0 && p.lock.canRestoreRunEnergy()) {
-            var recovery = (p.getSkills().getCurrentLevel(Skills.AGILITY) / 6 + 8).toDouble()
+            // Restores at 2x the OSRS rate by default.
+            var recovery = (p.getSkills().getCurrentLevel(Skills.AGILITY) / 6 + 8).toDouble() * 2.0
             if (isWearingFullGrace(p)) {
                 recovery *= 1.3
             }
