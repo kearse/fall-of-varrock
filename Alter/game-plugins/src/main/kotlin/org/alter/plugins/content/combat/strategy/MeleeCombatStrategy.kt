@@ -87,7 +87,7 @@ object MeleeCombatStrategy : CombatStrategy {
     ) {
         val modDamage = damage
         val mode = CombatConfigs.getXpMode(player)
-        val multiplier = if (target is Npc) Combat.getNpcXpMultiplier(target) else 1.0
+        val multiplier = Combat.COMBAT_XP_MULTIPLIER * (if (target is Npc) Combat.getNpcXpMultiplier(target) else 1.0)
 
         when (mode) {
             XpMode.ATTACK -> {

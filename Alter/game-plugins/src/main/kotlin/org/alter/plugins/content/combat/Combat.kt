@@ -205,6 +205,14 @@ object Combat {
         return if (attacker.entityType.isPlayer) 0.6 else 0.0
     }
 
+    /**
+     * Server-wide multiplier on all damage-based combat XP (melee, ranged and magic,
+     * including spell base XP). Applied on top of the per-NPC bonus from
+     * [getNpcXpMultiplier] and the global [Player.xpRate], so this is the single dial
+     * for combat training speed without touching skilling rates.
+     */
+    const val COMBAT_XP_MULTIPLIER = 2.0
+
     fun getNpcXpMultiplier(npc: Npc): Double {
         val attackLvl = npc.stats.getMaxLevel(NpcSkills.ATTACK)
         val strengthLvl = npc.stats.getMaxLevel(NpcSkills.STRENGTH)
