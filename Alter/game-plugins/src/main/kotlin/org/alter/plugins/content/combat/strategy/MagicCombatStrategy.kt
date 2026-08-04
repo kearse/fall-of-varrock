@@ -186,8 +186,8 @@ object MagicCombatStrategy : CombatStrategy {
     ) {
         val modDamage = damage
         val mode = CombatConfigs.getXpMode(player)
-        val multiplier = if (target is Npc) Combat.getNpcXpMultiplier(target) else 1.0
-        val baseXp = spell.baseXp
+        val multiplier = Combat.COMBAT_XP_MULTIPLIER * (if (target is Npc) Combat.getNpcXpMultiplier(target) else 1.0)
+        val baseXp = spell.baseXp * Combat.COMBAT_XP_MULTIPLIER
 
         // getXpMode() reports the *melee* xp mode for staves (bash/pound/focus), so the
         // defensive-cast decision can't hang off it — the old `mode == MAGIC` gate made
