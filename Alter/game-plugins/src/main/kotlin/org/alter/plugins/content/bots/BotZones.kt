@@ -113,6 +113,17 @@ object BotZones {
         "bronze_pker" to 4, "iron_pker" to 3, "steel_pker" to 2,
     ))
 
+    /** Draynor outskirts (SAFE): the road rabble on the coast road south of the village — a
+     *  half-step up from the hideout on the hunt's safe road west. */
+    private val T_DRAYNOR = BotTier(listOf(
+        "iron_pker" to 3, "steel_pker" to 4, "black_pker" to 2,
+    ))
+
+    /** South of Port Sarim (SAFE, the jail road): the last safe rung before the docks warband. */
+    private val T_SARIM_ROAD = BotTier(listOf(
+        "black_pker" to 4, "mithril_pker" to 3, "adamant_pker" to 1,
+    ))
+
     /** Port Sarim (SAFE, the docks): the port raiders' warband — a step up from the hideout,
      *  matched to the camp's knights (black metal through the budget-pure bracket). */
     private val T_PORT_SARIM = BotTier(listOf(
@@ -229,6 +240,40 @@ object BotZones {
                 displayName = "Bandit Hideout",
                 area = Area(3095, 3215, 3125, 3245),
                 tier = T_BANDIT_HIDEOUT,
+                target = 3,
+                spacing = 4,
+                roamRadius = 6,
+                leashRadius = 16,
+                activationPadding = 24,
+                allowSafe = true,
+            ),
+        )
+        // THE SAFE ROAD WEST — stepping-stone hunting camps between the hideout and Port Sarim
+        // (RogueKnights.DRAYNOR / SARIM_ROAD; no ladder knight is stationed at either). The Act II
+        // hunt counts rogue-family kills anywhere, so a fresh Squire can fill the whole tally on
+        // reclaim-death ground along this road instead of marching straight into raid-city Falador.
+        add(
+            BotZoneConfig(
+                key = "draynor",
+                displayName = "Draynor rogues",
+                // Southern outskirts + coast road; top edge stays south of the bank (z3240+). TUNE.
+                area = Area(3068, 3210, 3094, 3239),
+                tier = T_DRAYNOR,
+                target = 3,
+                spacing = 4,
+                roamRadius = 6,
+                leashRadius = 16,
+                activationPadding = 24,
+                allowSafe = true,
+            ),
+        )
+        add(
+            BotZoneConfig(
+                key = "sarim_road",
+                displayName = "Port Sarim south road",
+                // The jail + the road south toward Mudskipper Point. TUNE.
+                area = Area(3000, 3150, 3030, 3180),
+                tier = T_SARIM_ROAD,
                 target = 3,
                 spacing = 4,
                 roamRadius = 6,

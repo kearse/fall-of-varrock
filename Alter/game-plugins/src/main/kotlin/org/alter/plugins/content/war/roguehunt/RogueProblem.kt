@@ -14,9 +14,12 @@ import org.alter.rscm.RSCM.getRSCM
  * **The Rogue Problem** — the Act II quest (story-and-grind-design §4) that answers "what now?"
  * the moment the [WarPrepChain] (Wizard Tower / War-Prep I — Magic) finishes at the Squire rung.
  * It is the guided bridge across the **Squire → Knight** climb that the roadmap otherwise leaves as
- * an open-ended grind: the Recruiting Sergeant sends the new Squire into **Fallen Falador** (where
- * the cutthroats fled when demons took Varrock — see `WorldSpawnsPlugin.applyFallenFalador`) to
- * thin its cutthroats, then opens the **Rogue Knight ladder** (`bots/knights/`) with the player's
+ * an open-ended grind: the Recruiting Sergeant sets the new Squire on the rogue rank and file —
+ * huntable on the SAFE road camps west of Lumbridge (the jail hideout, Draynor, south of Port
+ * Sarim — see `BotZones`) or, denser but lawless, in **Fallen Falador** (where the cutthroats fled
+ * when demons took Varrock — see `WorldSpawnsPlugin.applyFallenFalador`; the city is a raid-city
+ * PvP ground, which was farming fresh Squires when the quest steered them there first) —
+ * then opens the **Rogue Knight ladder** (`bots/knights/`) with the player's
  * first assigned named knight — kill it, and he pays a purse that covers the last rungs to
  * **Knight**, which unlocks the player's first **companion** and the real wilderness / PK loop.
  * The ladder itself keeps assigning harder and harder knights long after this quest closes. This
@@ -34,7 +37,8 @@ object RogueProblem {
     val TIMER = TimerKey()
     private const val POLL_TICKS = 3
 
-    /** Rogues to fell in Fallen Falador for the HUNT step (quest-scoped, not the lifetime tally). TUNE. */
+    /** Rogues to fell for the HUNT step — any rogue-family kill counts, anywhere in the world
+     *  (quest-scoped, not the lifetime tally). TUNE. */
     const val HUNT_GOAL = 30
 
     private const val COINS = "item.coins_995"
@@ -61,7 +65,7 @@ object RogueProblem {
     enum class Step(val objective: String) {
         NONE("(not started)"),
         BRIEF("Speak to the Recruiting Sergeant about the rogues overrunning Fallen Falador."),
-        HUNT("Cut down $HUNT_GOAL rogues in the streets of Fallen Falador — the tally is quest-scoped; ::rogueproblem tracks it."),
+        HUNT("Cut down $HUNT_GOAL of the rogue family — kills count anywhere. Hunt the safe road camps first (the jail west of Lumbridge, Draynor, south of Port Sarim); Fallen Falador is richer hunting but lawless raid ground. ::rogueproblem tracks it."),
         KNIGHT("Thin your assigned Rogue Knight's camp, then cut the knight down — ::knights tracks both and the marker leads the way."),
         REPORT("Return to the Recruiting Sergeant with word of the knight's fall."),
         RANK("Take your purse to Duke Horacio and climb to Knight — a companion and the wilderness await."),
@@ -180,7 +184,7 @@ object RogueProblem {
     /** One-line progress report (`::rogueproblem` and the Sergeant's chatter). */
     fun statusLine(p: Player): String = when (step(p)) {
         Step.NONE -> "The Rogue Problem: finish the War-Prep chain first."
-        Step.HUNT -> "The Rogue Problem: <col=801700>${huntKills(p)}/$HUNT_GOAL</col> rogues felled in Fallen Falador."
+        Step.HUNT -> "The Rogue Problem: <col=801700>${huntKills(p)}/$HUNT_GOAL</col> of the rogue family felled."
         Step.DONE -> "The Rogue Problem: <col=4f9b4f>complete</col> — the streets fear you."
         else -> "The Rogue Problem — current objective: ${step(p).objective}"
     }

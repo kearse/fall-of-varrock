@@ -81,7 +81,26 @@ object RogueKnights {
         display = "the Bandit Hideout",
         center = Tile(3110, 3230),
         safe = true,
-        directions = "west out of Lumbridge, past the mill — the hideout squats on the road to Draynor.",
+        directions = "west out of Lumbridge, past the mill — the hideout squats by the jail on the road to Draynor.",
+    )
+    // The two SAFE ROAD camps between the hideout and Port Sarim. No ladder knight is stationed at
+    // either — they exist so the Act II hunt (RogueProblem.HUNT counts rogue-family kills anywhere)
+    // has a stepping-stone route of reclaim-death ground the whole way west, instead of marching a
+    // fresh Squire straight into raid-city Falador. Being CAMPS entries gives their colonies the
+    // full safe-camp behaviour (1v1 attacker cap, aggro-until-cleared, then stand-down).
+    val DRAYNOR = KnightCamp(
+        key = "draynor",
+        display = "the Draynor outskirts",
+        center = Tile(3081, 3225),
+        safe = true,
+        directions = "the coast road on Draynor's southern edge — the rabble prowl between the village and Port Sarim.",
+    )
+    val SARIM_ROAD = KnightCamp(
+        key = "sarim_road",
+        display = "the road south of Port Sarim",
+        center = Tile(3015, 3165),
+        safe = true,
+        directions = "south out of Port Sarim, past the jail — they work the road toward Mudskipper Point.",
     )
     val PORT_SARIM = KnightCamp(
         key = "port_sarim",
@@ -112,7 +131,7 @@ object RogueKnights {
         directions = "the deepest wilderness, near the old mage arena — the Commander's elite hold the walls.",
     )
 
-    val CAMPS = listOf(BANDIT_HIDEOUT, PORT_SARIM, FALLEN_VARROCK, WILD_BANDIT_CAMP, ROGUE_REDOUBT)
+    val CAMPS = listOf(BANDIT_HIDEOUT, DRAYNOR, SARIM_ROAD, PORT_SARIM, FALLEN_VARROCK, WILD_BANDIT_CAMP, ROGUE_REDOUBT)
 
     // ---- the ladder (rank == index; ~14 now, add more freely — numbers/items TUNE) ----
 
