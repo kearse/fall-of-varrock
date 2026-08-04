@@ -74,15 +74,16 @@ enum LofQuest
 		"The Rogue Problem",
 		"Lumbridge holds, but when the demons took Varrock its rogues, muggers and highwaymen — led "
 			+ "by deserters who style themselves Rogue Knights — fled west and overran Fallen "
-			+ "Falador. The Recruiting Sergeant sends the new Squire into its lawless streets to "
-			+ "thin the cutthroats, then opens the Rogue Knight ladder with your first named "
+			+ "Falador. The Recruiting Sergeant sets the new Squire on their rank and file — the "
+			+ "safe road camps west of Lumbridge, or Falador's lawless streets for the bold — then "
+			+ "opens the Rogue Knight ladder with your first named "
 			+ "assignment. Break them and the purse earns your Knighthood — your first companion, "
 			+ "and the right to hunt the wilderness.",
 		6, // DONE ordinal (RogueProblem.Step)
 		// World anchors are best-effort tiles — TUNE against the live map.
 		Arrays.asList(
 			new LofQuestStep(1, "Speak to the Recruiting Sergeant", "He has harder work now you're a Squire — by the Lumbridge gate.", new WorldPoint(3217, 3220, 0)),
-			new LofQuestStep(2, "Thin out the rogues of Fallen Falador", "Cut down 30 cutthroats in the raid city's streets. Only the banks are safe — risk little.", new WorldPoint(3013, 3353, 0)),
+			new LofQuestStep(2, "Thin out the rogue rank and file", "Cut down 30 of the rogue family — kills count anywhere. Safest: the road camps at the jail west of Lumbridge, Draynor and south of Port Sarim. Fallen Falador is denser but a raid city — only its banks are safe.", new WorldPoint(3110, 3230, 0)),
 			new LofQuestStep(3, "Kill your first assigned Rogue Knight", "The Sergeant's marker leads to the camp; ::knights tracks the ladder.", null),
 			new LofQuestStep(4, "Return to the Recruiting Sergeant", "Report the knight's fall and claim your purse.", new WorldPoint(3217, 3220, 0)),
 			new LofQuestStep(5, "Rise to Knight at Duke Horacio", "The Sergeant's purse covers the climb — Soldier, then Knight.", new WorldPoint(3220, 3211, 0))

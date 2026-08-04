@@ -74,9 +74,14 @@ object CampClearance {
         val goal = goal(camp)
         if (count >= goal) {
             val boss = RogueKnightLadder.activeDef(p)?.takeIf { it.camp == camp }
-            val face = boss?.let { "<col=ffae00>${it.name}</col> will face you now" }
-                ?: "its knights will face you now"
-            p.message("<col=4f9b4f>${camp.display.replaceFirstChar { it.uppercase() }} is thinned</col> — its rogues want no more of you, and $face.")
+            // Knightless road camps (Draynor, the Sarim road) have no boss to promise — the
+            // stand-down is the whole prize there.
+            val face = when {
+                boss != null -> ", and <col=ffae00>${boss.name}</col> will face you now"
+                RogueKnights.LADDER.any { it.camp == camp } -> ", and its knights will face you now"
+                else -> ""
+            }
+            p.message("<col=4f9b4f>${camp.display.replaceFirstChar { it.uppercase() }} is thinned</col> — its rogues want no more of you$face.")
         } else if (RogueKnightLadder.unlocked(p)) {
             p.message("<col=801700>Camp gate:</col> $count/$goal of ${camp.display}'s rogues thinned.")
         }

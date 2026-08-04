@@ -3,7 +3,7 @@ title: The Rogue Knights - the PK ladder
 category: PvP & Wilderness
 summary: Fourteen named boss PKers across five organized camps. The Sergeant assigns them weakest to strongest - each one you beat unlocks the gear for the next, all the way to AGS-class loot.
 order: 6
-updated: 2026-07-31
+updated: 2026-08-04
 infobox: Type = Boss ladder (repeatable); Start = The Rogue Problem quest (auto); Giver = Recruiting Sergeant (Lumbridge gate); Length = 14 knights, 5 camps; Tracking = Hint arrow + ::knights; Reward = PK gear per knight, up to AGS / dragon claws / Ancient Warrior sets
 ---
 
@@ -29,6 +29,8 @@ The deserters who lead Varrock's rogues style themselves **Rogue Knights** - a l
 | **Rogue Commander's Redoubt** | the deepest wild, near the old mage arena | **Wilderness** (multi) | The elite guard - Vesta, Zuriel, and the Commander himself |
 
 Most camps also have an **ambient warband** of regular Rogue Knights in that band's gear prowling it - fodder, loot and practice around the named fights. The two low camps sit on reclaim-safe ground (die, walk back, try again); from Fallen Varrock onward you're on PvP ground, so carry a cheap kit until a fight is learned.
+
+Two more warbands hold the **safe road west** without a named knight: **Draynor's southern outskirts** and the **road south of Port Sarim** (past the jail). They're hunting grounds, not ladder stops - every kill there feeds the rogue tally and [The Rogue Problem](/wiki/the-rogue-problem)'s hunt on reclaim-safe ground, and once you thin a warband it stops attacking you on sight for good.
 
 ## Holding the port
 
