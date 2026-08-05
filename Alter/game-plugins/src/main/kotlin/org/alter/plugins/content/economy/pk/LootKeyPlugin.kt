@@ -24,9 +24,9 @@ import org.bson.Document
 private val logger = KotlinLogging.logger {}
 
 /**
- * **Wilderness loot keys** (OSRS-style). When a real player kills another player (or a PKer bot)
- * in the wilderness, the victim's lost items are sealed into a **loot key** placed in the killer's
- * inventory instead of scattering on the ground.
+ * **Loot keys** (OSRS-style). When a real player kills another player (or a PKer bot) —
+ * ANYWHERE, wilderness and safe zones alike — the victim's lost items are sealed into a
+ * **loot key** placed in the killer's inventory instead of scattering on the ground.
  *
  *  - **Claiming works like rev-228 OSRS:** the **Loot Chest** at the Lumbridge market opens the
  *    stock Wilderness Loot Key popup showing ONE key at a time (oldest first — see
@@ -39,17 +39,16 @@ private val logger = KotlinLogging.logger {}
  *    [Document], decode never throws). The key ITEM is just a handle — `::lootkeys` re-issues a
  *    lost handle as long as the bundle exists.
  *  - **Dying loses your unclaimed keys** (OSRS): on any non-safe death the handles are destroyed
- *    and the sealed contents join the rest of your lost loot — in the wilderness your killer gets
- *    them (sealed into THEIR key), elsewhere they land on your reclaim pile
+ *    and the sealed contents join the rest of your lost loot — a player killer gets them (sealed
+ *    into THEIR key), otherwise they land on your reclaim pile
  *    ([org.alter.plugins.content.combat.PvpDeathDropPlugin.dropOnDeath] calls [LootKeys.confiscate]).
- *
- * Only wilderness kills mint keys — safe-zone bot kills (road highwaymen) still drop their full
- * kit on the ground as before.
  */
 object LootKeys {
     const val MAX_KEYS = 5
 
-    /** Skull icons 8..12 = the PK skull carrying 1..5 loot keys (RuneLite `SkullIcon.LOOT_KEYS_*`). */
+    /** Head icons 8..12 = carrying 1..5 loot keys (RuneLite `SkullIcon.LOOT_KEYS_*`). The stock
+     *  cache draws these as a skull with keys hanging under it — the HeadIconsTool cache edit
+     *  (org.alter.tools.headicons) erases the skull pixels so players see JUST the keys. */
     private const val KEYED_SKULL_BASE = 8
 
     /** A key holds up to this many item stacks (OSRS) — the excess ground-drops at the kill. */
@@ -238,9 +237,10 @@ object LootKeys {
     }
 
     /**
-     * Keys-above-head (OSRS): while carrying loot keys the skull becomes the keyed variant
-     * (icons 8..12 for 1..5 keys). With none left, fall back to the plain white skull while the
-     * PK skull timer still runs, else clear the icon. Called on every key mutation and at login.
+     * Keys-above-head: while carrying loot keys the overhead shows the key icon (icons 8..12
+     * for 1..5 keys — repainted keys-only in the cache, no skull). With none left, fall back to
+     * the plain white skull while the PK skull timer still runs, else clear the icon. Called on
+     * every key mutation and at login.
      */
     fun syncOverhead(p: Player, count: Int = load(p).size) {
         val icon = when {
@@ -323,7 +323,7 @@ class LootKeyPlugin(
         onCommand("lootkeys", description = "List your loot keys / recover a lost key handle") {
             val bundles = LootKeys.load(player)
             if (bundles.isEmpty()) {
-                player.message("You have no loot keys. Kill someone in the wilderness to earn one.")
+                player.message("You have no loot keys. Kill another player to earn one.")
                 return@onCommand
             }
             bundles.forEachIndexed { i, b ->

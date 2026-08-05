@@ -13,7 +13,6 @@ import org.alter.game.model.entity.Player
 import org.alter.game.model.item.Item
 import org.alter.game.model.timer.TimerKey
 import org.alter.plugins.content.bots.knights.CampClearance
-import org.alter.plugins.content.combat.PvpZones
 import org.alter.plugins.content.economy.pk.LootKeys
 import org.alter.plugins.content.quests.QuestJournal
 import org.alter.plugins.content.war.roguehunt.RogueHunt
@@ -94,9 +93,9 @@ class BotCombatPlugin(
     }
 
     /**
-     * The bot's entire kit (worn gear + inventory) goes to the killer: sealed in a loot key for a
-     * real-player kill in the wilderness (same as killing a real player), otherwise as ground loot
-     * on the death tile (killer-owned window for a real player, public for a bot/no killer).
+     * The bot's entire kit (worn gear + inventory) goes to the killer: sealed in a loot key for
+     * ANY real-player kill — wilderness or safe zone alike (same as killing a real player) —
+     * otherwise as ground loot on the death tile (public for a bot/no killer).
      *
      * On top of the kit, a real killer also rolls the bot's **PK-set loot pool** ([PkLootPools]) —
      * the tier's rare gear chase (escalating to claws / AGS / voidwaker-class uniques), or a named
@@ -119,7 +118,7 @@ class BotCombatPlugin(
         }
         val realKiller = killer?.takeIf { it !is PkBot }
         kit += PkLootPools.bonusDrops(world, bot, realKiller)
-        val overflow = if (realKiller != null && PvpZones.isWilderness(tile)) {
+        val overflow = if (realKiller != null) {
             LootKeys.tryAward(realKiller, bot.username, kit) // null = no key → everything drops
         } else {
             null

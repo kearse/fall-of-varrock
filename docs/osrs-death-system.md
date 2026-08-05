@@ -18,9 +18,12 @@
 - Out of scope, unchanged: ironman rules, gravestone object/UI (option b), Death's Office (option c).
 
 **Added 2026-07-04 — wilderness LOOT KEYS** (`content/economy/pk/LootKeyPlugin.kt`):
-- A real player who kills a player OR a PKer bot in the wilderness gets the victim's lost items
-  sealed into an OSRS **loot key** (cache items 26651-26655, untradeable) instead of ground drops.
-  Up to 5 keys; at the cap or with a full inventory → normal killer-owned ground drops.
+- A real player who kills a player OR a PKer bot gets the victim's lost items sealed into an
+  OSRS **loot key** (cache items 26651-26655, untradeable) instead of ground drops. Up to 5
+  keys; at the cap or with a full inventory → normal killer-owned ground drops.
+  *(2026-08-05: minting was wilderness-only at first; now EVERY player kill mints a key — safe
+  zones included — and the overhead icon is repainted keys-only, no skull: see the headIcons
+  cache tool, `org.alter.tools.headicons`.)*
 - **Claiming = the REAL OSRS Loot Chest popup** (stock cache interface **742** "Wilderness Loot
   Key", driven by `LootChestInterface.kt`): a Loot Chest object (`object.loot_chest` 43468, native
   "Loot" action) sits at the Lumbridge market's economy corner (3224,3219, south of the Bond
@@ -35,7 +38,8 @@
 - **Dying loses unclaimed keys** (OSRS): on any non-safe death the handles are destroyed
   (inventory AND bank) and the sealed contents join the lost loot — wilderness killer gets them in
   THEIR key; safe-zone deaths put them on the victim's reclaim pile. No keep slot, no Protect Item.
-- Bots killed OUTSIDE the wilderness (road highwaymen) still drop their full kit on the ground.
+- Bots killed OUTSIDE the wilderness (road highwaymen) also mint keys since 2026-08-05 (no key
+  possible → kit drops on the ground as before).
 - New audit tool: `gradlew :game-server:objCheck -PobjArgs="<ids>"` prints loc name/size/actions.
 **Origin:** Spun off from the road-ambusher ("highwayman") work. That change added roaming PKer
 bots that hunt players on the overworld roads and hit **anyone** (rank no longer protects — see

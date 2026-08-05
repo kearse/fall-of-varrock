@@ -21,8 +21,8 @@ Untradeables are always kept and don't use up a slot. Check exactly what you'd k
 
 ## Where your items go
 
-- **Killed by a player in the wilderness** - your loot seals into a [loot key](/wiki/wilderness-loot-keys) owned by your killer.
-- **Died anywhere else** (monsters, roads, bot ambushes outside the wild) - your items drop into a **reclaim pile on your death tile that only you can see for ~15 minutes**. Get back there and pick your things up. After that grace period the pile turns public for a few minutes, then despawns.
+- **Killed by a player** (anywhere - wilderness or not) - your loot seals into a [loot key](/wiki/wilderness-loot-keys) owned by your killer.
+- **Died to anything else** (monsters, bot ambushes, hazards) - your items drop into a **reclaim pile on your death tile that only you can see for ~15 minutes**. Get back there and pick your things up. After that grace period the pile turns public for a few minutes, then despawns.
 
 ## Safe deaths
 
