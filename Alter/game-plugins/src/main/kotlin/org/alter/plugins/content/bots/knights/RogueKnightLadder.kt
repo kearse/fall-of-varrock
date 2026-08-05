@@ -101,7 +101,7 @@ object RogueKnightLadder {
 
     /** One-line progress report (::knights header + the Sergeant's chatter). */
     fun statusLine(p: Player): String {
-        if (!unlocked(p)) return "The Rogue Knights: the Recruiting Sergeant will open the hunt when you're ready (finish The Rogue Problem's street work)."
+        if (!unlocked(p)) return "The Rogue Knights: the Recruiting Sergeant will open the hunt when you're ready (finish Rogue Hunting I's street work)."
         val active = activeDef(p)
         return when {
             active == null -> "The Rogue Knights: <col=4f9b4f>ladder cleared</col> — ${RogueKnights.LADDER.size}/${RogueKnights.LADDER.size} beaten. Set a farm target with ::knights."

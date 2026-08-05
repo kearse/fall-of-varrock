@@ -34,10 +34,16 @@ findings that shape everything below:
   |---|---|---|---|---|---|
   | Recruit Trials | Cook's Assistant | 17 | 1 | **29** | 2 |
   | War-Prep I — Magic | Doric's Quest | 30 | 11 | **31** | 100 |
-  | The Rogue Problem | The Restless Ghost | 120 | 3 | 107 | 5 |
+  | Rogue Hunting I (the 30-rogue hunt) | The Restless Ghost | 120 | 3 | 107 | 5 |
+  | Rogue Hunting II (the Rogue Knight ladder) | The Knight's Sword | 83 | 14 | 122 | 7 |
   | War-Prep II — Ranged | Imp Catcher | 76 | 9 | 160 | 2 |
   | War-Prep III — Survival | Sheep Shearer | 131 | 5 | 179 | 21 |
   | King of Lumbridge | Witch's Potion | 161 | 13 | 67 | 3 |
+
+  Rogue Hunting I & II are TWO rows off ONE server chain (`RogueProblem.Step`, varp 4617):
+  `QuestJournal.syncNativeTab` completes row I the moment the hunt clears (KNIGHT step) and holds
+  row II at not-started until then, completing it at DONE (the whole ladder broken). After changing
+  `PLAN`, re-run `relabel` then `hide` (the workflow) so the tab picks up the new/renamed rows.
 
 > **Note (2026-07):** The Rogue Problem took The Restless Ghost (varp 107) — the slot originally
 > penciled in for War-Prep II — Ranged — so Ranged was re-mapped to a fresh spare quest, **Imp

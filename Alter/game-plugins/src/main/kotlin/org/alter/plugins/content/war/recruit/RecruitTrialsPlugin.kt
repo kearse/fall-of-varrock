@@ -213,7 +213,7 @@ class RecruitTrialsPlugin(
                     RogueProblem.Step.REPORT -> {
                         chatNpc(p, "A named knight of the rogues' ladder, dead by your hand. THAT is the work of a Knight of Lumbridge in the making, ${p.address}.", npc = s, title = "Recruiting Sergeant")
                         chatPlayer(p, "What now, sergeant?")
-                        chatNpc(p, "Now you climb. The Rogue Problem ends when EVERY camp on the ladder is broken — the Commander last. The ladder pays as you go: knight kills, their kits, camp spoils, my bounties. When your purse reaches ${"%,d".format(org.alter.plugins.content.war.Title.KNIGHT.cost)} coins, Duke Horacio will sell you the Knighthood you're already earning — rune, a companion, the wilderness.", npc = s, title = "Recruiting Sergeant")
+                        chatNpc(p, "Now you climb — <col=801700>Rogue Hunting II</col>: it ends when EVERY camp on the ladder is broken, the Commander last. The ladder pays as you go: knight kills, their kits, camp spoils, my bounties. When your purse reaches ${"%,d".format(org.alter.plugins.content.war.Title.KNIGHT.cost)} coins, Duke Horacio will sell you the Knighthood you're already earning — rune, a companion, the wilderness.", npc = s, title = "Recruiting Sergeant")
                         RogueProblem.onReportedToSergeant(p)
                         return
                     }

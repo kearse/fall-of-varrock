@@ -70,45 +70,58 @@ enum LofQuest
 			"Access to the war's raids"
 		)),
 
-	THE_ROGUE_PROBLEM(
-		"The Rogue Problem",
+	ROGUE_HUNTING_I(
+		"Rogue Hunting I",
 		"Lumbridge holds, but when the demons took Varrock its rogues, muggers and highwaymen — led "
 			+ "by deserters who style themselves Rogue Knights — fled west and overran Fallen "
-			+ "Falador. The Recruiting Sergeant sets the new Squire on their rank and file — the "
-			+ "safe road camps west of Lumbridge, or Falador's lawless streets for the bold — then "
-			+ "opens the Rogue Knight ladder. The hunt pays a soldier's purse; the ladder's "
-			+ "spoils earn your Knighthood along the way — but the quest ends only when every "
-			+ "camp is broken and the Rogue Commander falls. This is how you learn to PK.",
-		6, // DONE ordinal (RogueProblem.Step)
-		// World anchors are best-effort tiles — TUNE against the live map.
+			+ "Falador. The Recruiting Sergeant sets the new Squire on their rank and file: thin "
+			+ "the cutthroats on the safe road camps west of Lumbridge, or in Falador's lawless "
+			+ "streets for the bold. Clearing the hunt pays a soldier's purse — and opens the "
+			+ "Rogue Knight ladder.",
+		3, // complete once the hunt clears (RogueProblem.Step.KNIGHT ordinal)
 		Arrays.asList(
 			new LofQuestStep(1, "Speak to the Recruiting Sergeant", "He has harder work now you're a Squire — by the Lumbridge gate.", new WorldPoint(3217, 3220, 0)),
 			// No fixed anchor: the server's hint arrow leads this step — to the nearest safe road
 			// camp from afar, locking onto live rogues once they're in reach (like the knight hunt).
-			new LofQuestStep(2, "Thin out the rogue rank and file", "Cut down 30 of the rogue family — kills count anywhere; the arrow leads to the nearest safe road camp and locks onto rogues in reach. Fallen Falador is denser but a raid city — only its banks are safe.", null),
+			new LofQuestStep(2, "Thin out the rogue rank and file", "Cut down 30 of the rogue family — kills count anywhere; the arrow leads to the nearest safe road camp and locks onto rogues in reach. Fallen Falador is denser but a raid city — only its banks are safe.", null)
+		),
+		Arrays.asList(
+			"A soldier's purse (150,000) — buys the Soldier rank at Duke Horacio",
+			"The Rogue Knight ladder — Rogue Hunting II begins",
+			"The Sergeant's rogue bounties (::rogues)"
+		)),
+
+	ROGUE_HUNTING_II(
+		"Rogue Hunting II",
+		"The rank and file are thinned — now for the deserters who lead them. The Sergeant assigns "
+			+ "the Rogue Knights in order, weakest to strongest, camp by camp from the Lumbridge "
+			+ "road to the deepest wilderness. Each knight guards the coin and gear that beat the "
+			+ "next; their spoils earn your Knighthood along the way. The quest ends only when "
+			+ "every camp is broken and the Rogue Commander falls. This is how you learn to PK.",
+		6, // DONE ordinal (RogueProblem.Step)
+		Arrays.asList(
 			new LofQuestStep(3, "Kill your first assigned Rogue Knight", "Buy Soldier with your hunt purse first. The Sergeant's marker leads to the camp; ::knights tracks the ladder.", null),
 			new LofQuestStep(4, "Return to the Recruiting Sergeant", "Report the knight's fall.", new WorldPoint(3217, 3220, 0)),
 			// No fixed anchor: the ladder's own marker leads the climb, camp to camp.
 			new LofQuestStep(5, "Break every camp on the ladder", "All 14 knights, weakest to strongest — the Commander last. Buy Soldier and Knight from Duke Horacio as the spoils come in; ::knights tracks the climb.", null)
 		),
 		Arrays.asList(
-			"Knighthood — rune armour",
+			"Knighthood — earned from the ladder's spoils: rune armour",
 			"Your first companion (General Zo musters them)",
 			"The wilderness / PK loop (start at the PK Training Arena)",
-			"The Rogue Knight ladder — every knight beaten stays farmable for its gear (::knights)",
-			"A soldier's purse after the hunt — the ladder earns your Knighthood",
-			"The realm's PK schooling: switches, baits, spec combos — learned camp by camp"
+			"Every beaten knight stays farmable for its signature gear (::knights)",
+			"The realm's PK schooling: switches, baits, spec combos — learned camp by camp",
+			"War-Prep II — Ranged"
 		)),
 
 	WARPREP_RANGED(
 		"War-Prep II — Ranged",
-		"The next drill in the War-Prep chain: the front's skirmish lines are won with the bow. Vannaka "
-			+ "drills your Ranged, arms you with a marksman's kit, and sends you to prove you can hold a "
-			+ "line at distance — then pays a purse that raises you to Lord.",
+		"The front's skirmish lines are won with the bow. The rogues' ladder made a fighter of you — "
+			+ "now Vannaka arms you with a marksman's kit and sends you to prove you can hold a "
+			+ "line at distance, then pays a purse that raises you to Lord.",
 		6, // DONE ordinal (WarPrepRanged.Step)
 		// World anchors are best-effort — TUNE against the live map.
 		Arrays.asList(
-			new LofQuestStep(1, "Train Ranged to 40", "Loose arrows on the front's foes — the goblin woods or Fallen Varrock.", new WorldPoint(3193, 3221, 0)),
 			new LofQuestStep(2, "Return to Vannaka for the marksman's kit", new WorldPoint(3222, 3212, 0)),
 			new LofQuestStep(3, "Fell 20 enemies with a ranged weapon", "Bow, crossbow or thrown — Fallen Varrock's rogues will do.", new WorldPoint(3212, 3428, 0)),
 			new LofQuestStep(4, "Report back to Vannaka", new WorldPoint(3222, 3212, 0)),
@@ -204,7 +217,9 @@ enum LofQuest
 				return LofQuestVarps.recruitStep(client);
 			case WARPREP_MAGIC:
 				return LofQuestVarps.warprepStep(client);
-			case THE_ROGUE_PROBLEM:
+			case ROGUE_HUNTING_I:
+			case ROGUE_HUNTING_II:
+				// Both rogue quests window the same server chain (RogueProblem.Step).
 				return LofQuestVarps.rogueProblemStep(client);
 			case WARPREP_RANGED:
 				return LofQuestVarps.warprepRangedStep(client);
@@ -234,18 +249,27 @@ enum LofQuest
 				// The chain auto-begins when the Recruit Trials finish; ordinal 0 = still locked.
 				return ord >= doneOrdinal ? LofQuestState.FINISHED
 					: ord == 0 ? LofQuestState.LOCKED : LofQuestState.IN_PROGRESS;
-			case THE_ROGUE_PROBLEM:
-				// Act II — locked until War-Prep I (Magic) finishes (its DONE ordinal is 6); after
-				// that the chain auto-begins at step 1, so ordinal 0 still reads as locked.
+			case ROGUE_HUNTING_I:
+				// Act II opener — locked until War-Prep I (Magic) finishes (its DONE ordinal is 6);
+				// after that the chain auto-begins at step 1, so ordinal 0 still reads as locked.
+				// Complete the moment the hunt clears (the chain reaches its KNIGHT beat, ordinal 3).
 				if (LofQuestVarps.warprepStep(client) < 6)
 				{
 					return LofQuestState.LOCKED;
 				}
 				return ord >= doneOrdinal ? LofQuestState.FINISHED
 					: ord == 0 ? LofQuestState.LOCKED : LofQuestState.IN_PROGRESS;
+			case ROGUE_HUNTING_II:
+				// The ladder — locked until Rogue Hunting I clears (the shared chain reaches
+				// ordinal 3); complete when every camp is broken (DONE, ordinal 6).
+				if (ord < 3)
+				{
+					return LofQuestState.LOCKED;
+				}
+				return ord >= doneOrdinal ? LofQuestState.FINISHED : LofQuestState.IN_PROGRESS;
 			case WARPREP_RANGED:
-				// Locked until The Rogue Problem finishes (its DONE ordinal is 6); then auto-begins at
-				// the Knight rank-up, so ordinal 0 still reads as locked.
+				// Locked until Rogue Hunting II finishes (the rogue chain's DONE ordinal is 6);
+				// then auto-begins, so ordinal 0 still reads as locked.
 				if (LofQuestVarps.rogueProblemStep(client) < 6)
 				{
 					return LofQuestState.LOCKED;
@@ -277,13 +301,17 @@ enum LofQuest
 		{
 			return "Complete the Recruit Trials first.";
 		}
-		if (this == THE_ROGUE_PROBLEM && state(client) == LofQuestState.LOCKED)
+		if (this == ROGUE_HUNTING_I && state(client) == LofQuestState.LOCKED)
 		{
 			return "Finish War-Prep I — Magic first.";
 		}
+		if (this == ROGUE_HUNTING_II && state(client) == LofQuestState.LOCKED)
+		{
+			return "Finish Rogue Hunting I first.";
+		}
 		if (this == WARPREP_RANGED && state(client) == LofQuestState.LOCKED)
 		{
-			return "Finish The Rogue Problem first.";
+			return "Finish Rogue Hunting II first.";
 		}
 		if (this == WARPREP_SURVIVAL && state(client) == LofQuestState.LOCKED)
 		{
@@ -383,13 +411,13 @@ enum LofQuest
 		{
 			return " (" + client.getRealSkillLevel(Skill.PRAYER) + "/37)";
 		}
-		if (this == THE_ROGUE_PROBLEM && step.getOrdinal() == 2 && stepOrdinal(client) == 2)
+		if (this == ROGUE_HUNTING_I && step.getOrdinal() == 2 && stepOrdinal(client) == 2)
 		{
 			return " (" + LofQuestVarps.rogueProblemKills(client) + "/30)";
 		}
-		if (this == WARPREP_RANGED && step.getOrdinal() == 1 && stepOrdinal(client) == 1)
+		if (this == ROGUE_HUNTING_II && step.getOrdinal() == 5 && stepOrdinal(client) == 5)
 		{
-			return " (" + client.getRealSkillLevel(Skill.RANGED) + "/40)";
+			return " (" + LofQuestVarps.knightsBeaten(client) + "/14)";
 		}
 		if (this == WARPREP_RANGED && step.getOrdinal() == 3 && stepOrdinal(client) == 3)
 		{

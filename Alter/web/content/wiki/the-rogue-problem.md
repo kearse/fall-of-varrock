@@ -7,7 +7,7 @@ updated: 2026-08-05
 infobox: Type = Quest (auto-starts); Start = Automatic once War-Prep I is done; Giver = Recruiting Sergeant (Lumbridge gate); Steps = Hunt, Knight, Report, Ladder; Guidance = Quest Journal (::rogueproblem); Reward = A soldier's purse - the ladder earns your Knighthood; Completes = When every camp on the ladder is broken; Leads to = Companions, the wilderness + War-Prep II
 ---
 
-**The Rogue Problem** is the quest that answers "what now?" the moment you clear the [Wizard Tower](/wiki/wizard-tower) and claim your Squire rank. Where the roadmap used to drop you into an open-ended grind toward Knight, this quest hands you a guided path there - and the [Quest Journal](/wiki/gameplay-roadmap) points the way at every step.
+**The Rogue Problem** is the story arc that answers "what now?" the moment you clear the [Wizard Tower](/wiki/wizard-tower) and claim your Squire rank. In the quest tab it's **two quests**: **Rogue Hunting I** (the 30-rogue hunt) and **Rogue Hunting II** (the Rogue Knight ladder). Where the roadmap used to drop you into an open-ended grind toward Knight, these hand you a guided path - and the [Quest Journal](/wiki/gameplay-roadmap) points the way at every step.
 
 It's the first chapter of **Act II - The Soldier**: the Sergeant sets you on the rogue rank and file - hunted along the **safe road camps** west of Lumbridge or, when you're ready for it, in **Fallen Falador**, the city the rogues seized when the demons took Varrock.
 

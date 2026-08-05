@@ -70,7 +70,7 @@ object RogueProblem {
         KNIGHT("Buy Soldier with your hunt purse, then thin your assigned Rogue Knight's camp and cut the knight down — ::knights tracks both and the marker leads the way."),
         REPORT("Return to the Recruiting Sergeant with word of the knight's fall."),
         LADDER("Break every knight on the ladder, camp by camp — ::knights tracks the climb, the marker leads. Buy your ranks from Duke Horacio as the spoils come in; the ladder pays for them."),
-        DONE("The Rogue Problem — the ladder is broken: every rogue camp cleared, the Commander dead. Farm any knight for its gear (::knights); the wilderness is yours."),
+        DONE("Rogue Hunting II — the ladder is broken: every rogue camp cleared, the Commander dead. Farm any knight for its gear (::knights); the wilderness is yours."),
     }
 
     /** The player's current step (NONE until the chain begins). */
@@ -119,7 +119,7 @@ object RogueProblem {
         if (kills >= HUNT_GOAL) {
             advanceTo(p, Step.KNIGHT)
         } else if (kills == HUNT_GOAL / 2) {
-            p.message("<col=801700>The Rogue Problem:</col> $kills/$HUNT_GOAL cutthroats down — keep at it.")
+            p.message("<col=801700>Rogue Hunting I:</col> $kills/$HUNT_GOAL cutthroats down — keep at it.")
         }
     }
 
@@ -157,17 +157,22 @@ object RogueProblem {
 
     // --- transitions --------------------------------------------------------------------
 
+    /** The quest-tab name for the phase [s] belongs to — Act II is TWO listed quests off this one
+     *  chain: Rogue Hunting I (the hunt) and Rogue Hunting II (the ladder). */
+    fun questName(s: Step): String =
+        if (s.ordinal >= Step.KNIGHT.ordinal) "Rogue Hunting II" else "Rogue Hunting I"
+
     /** Advance to [next], run its side effects and announce the objective. */
     fun advanceTo(p: Player, next: Step) {
         p.attr[ROGUE_PROBLEM_STEP_ATTR] = next.ordinal
         when (next) {
-            Step.KNIGHT -> grantHuntPurse(p) // the hunt bounty — a soldier's purse, nothing more
+            Step.KNIGHT -> grantHuntPurse(p) // Rogue Hunting I complete — the hunt bounty pays out
             Step.DONE -> grantCompletion(p)
             else -> {}
         }
         if (isTracked(next)) p.timers[TIMER] = POLL_TICKS
         if (next != Step.NONE && next != Step.DONE) {
-            p.message("<col=801700>The Rogue Problem — next objective:</col> ${next.objective}")
+            p.message("<col=801700>${questName(next)} — next objective:</col> ${next.objective}")
         }
     }
 
@@ -175,11 +180,11 @@ object RogueProblem {
      *  Covers exactly [Title.SOLDIER]; Knighthood is earned on the ladder. */
     private fun grantHuntPurse(p: Player) {
         giveItem(p, COINS, HUNT_PURSE)
-        p.message("<col=801700>The Sergeant pays your hunt bounty: ${"%,d".format(HUNT_PURSE)} coins</col> — a soldier's purse. Buy <col=ffae00>Soldier</col> from Duke Horacio, then take to the ladder: its knights guard the coin and kit that will earn your Knighthood.")
+        p.message("<col=4f9b4f>Rogue Hunting I complete!</col> <col=801700>The Sergeant pays your hunt bounty: ${"%,d".format(HUNT_PURSE)} coins</col> — a soldier's purse. Buy <col=ffae00>Soldier</col> from Duke Horacio, then take to the ladder: <col=801700>Rogue Hunting II</col> begins.")
     }
 
     private fun grantCompletion(p: Player) {
-        p.message("<col=801700>The Rogue Problem complete!</col> Every rogue camp is broken and the Commander is dead — you learned to fight players the hard way, and won.")
+        p.message("<col=801700>Rogue Hunting II complete!</col> Every rogue camp is broken and the Commander is dead — you learned to fight players the hard way, and won.")
         p.message("<col=801700>The ladder stays yours to farm:</col> every beaten knight can be hunted again for its gear (<col=ffae00>::knights</col>) — and the open wilderness pays Blood Money for real hunts.")
         if (p.title.ordinal < Title.KNIGHT.ordinal) {
             p.message("<col=ffae00>Your spoils are long past a Knighthood</col> — buy your ranks from Duke Horacio: rune armour and a companion of your own (General Zo musters them) await.")
@@ -190,12 +195,12 @@ object RogueProblem {
     }
 
     /** One-line progress report (`::rogueproblem` and the Sergeant's chatter). */
-    fun statusLine(p: Player): String = when (step(p)) {
-        Step.NONE -> "The Rogue Problem: finish the War-Prep chain first."
-        Step.HUNT -> "The Rogue Problem: <col=801700>${huntKills(p)}/$HUNT_GOAL</col> of the rogue family felled."
-        Step.LADDER -> "The Rogue Problem: <col=801700>${RogueKnightLadder.rank(p)}/${RogueKnights.LADDER.size}</col> knights of the ladder broken — ::knights leads the hunt."
-        Step.DONE -> "The Rogue Problem: <col=4f9b4f>complete</col> — every camp broken; the streets fear you."
-        else -> "The Rogue Problem — current objective: ${step(p).objective}"
+    fun statusLine(p: Player): String = when (val s = step(p)) {
+        Step.NONE -> "Rogue Hunting I: finish the War-Prep chain first."
+        Step.HUNT -> "Rogue Hunting I: <col=801700>${huntKills(p)}/$HUNT_GOAL</col> of the rogue family felled."
+        Step.LADDER -> "Rogue Hunting II: <col=801700>${RogueKnightLadder.rank(p)}/${RogueKnights.LADDER.size}</col> knights of the ladder broken — ::knights leads the hunt."
+        Step.DONE -> "Rogue Hunting II: <col=4f9b4f>complete</col> — every camp broken; the streets fear you."
+        else -> "${questName(s)} — current objective: ${s.objective}"
     }
 
     /** Add [amount] of [key] to the bag; whatever doesn't fit overflows to the bank. Defensive on keys. */

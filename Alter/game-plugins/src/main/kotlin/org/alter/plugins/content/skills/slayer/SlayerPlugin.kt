@@ -242,8 +242,9 @@ class SlayerPlugin(
         if (WarPrepChain.step(p) == WarPrepChain.Step.PRAYER) warPrepPrayerNudge(p)
         if (WarPrepChain.step(p) == WarPrepChain.Step.TOWER) warPrepTowerNudge(p)
         // War-Prep II (Ranged): Vannaka MUST act on GEAR (arm the marksman kit) and REPORT (the debrief
-        // that closes the quest); DRILL/FIELD just get a one-line nudge before the contract menu opens.
-        if (WarPrepRanged.step(p) == WarPrepRanged.Step.GEAR) {
+        // that closes the quest); FIELD just gets a one-line nudge before the contract menu opens.
+        // (DRILL is a legacy no-op — the poll migrates it to GEAR, so it's treated as GEAR here too.)
+        if (WarPrepRanged.step(p) == WarPrepRanged.Step.GEAR || WarPrepRanged.step(p) == WarPrepRanged.Step.DRILL) {
             warPrepRangedArm(p)
             return
         }
@@ -251,7 +252,6 @@ class SlayerPlugin(
             warPrepRangedDebrief(p)
             return
         }
-        if (WarPrepRanged.step(p) == WarPrepRanged.Step.DRILL) warPrepRangedDrillNudge(p)
         if (WarPrepRanged.step(p) == WarPrepRanged.Step.FIELD) warPrepRangedFieldNudge(p)
         // Outside the quest beats, the contract board is the client-drawn War Contracts window
         // (lofcontracts): active contracts, streak and points at a glance — no options() menu.
@@ -352,25 +352,10 @@ class SlayerPlugin(
         say(p, "Take it to <col=801700>Duke Horacio</col> and have him raise you — a higher rank means <col=801700>heavier armour</col> on your back. Follow the marker; you've earned this one.")
     }
 
-    /** War-Prep II (Ranged) DRILL nudge: keep them training the bow; top up arrows if they ran dry
-     *  (bounded — see [WarPrepRanged.topUpAmmo]), and past the cap drill the remaining Ranged xp in. */
-    private suspend fun QueueTask.warPrepRangedDrillNudge(p: Player) {
-        when (WarPrepRanged.topUpAmmo(p)) {
-            WarPrepRanged.TopUp.AMMO ->
-                say(p, "Out of arrows? Here's more — and mind them. Keep loosing until your <col=801700>Ranged</col> reaches <col=801700>${WarPrepRanged.RANGED_TARGET}</col>.")
-            WarPrepRanged.TopUp.DRILLED -> {
-                say(p, "Fumbling your quiver AGAIN? Enough. On the line, soldier — we'll drill it into you.")
-                say(p, "Vannaka runs you ragged on the range until your <col=801700>Ranged</col> reaches <col=801700>${WarPrepRanged.RANGED_TARGET}</col>.")
-            }
-            WarPrepRanged.TopUp.NOT_NEEDED ->
-                say(p, "A raider holds the line at distance too. Train your <col=801700>Ranged to ${WarPrepRanged.RANGED_TARGET}</col> — loose those arrows — then come back and I'll kit you for the skirmish.")
-        }
-    }
-
-    /** War-Prep II (Ranged) GEAR step: Ranged is trained — arm the marksman kit and send them to the
-     *  skirmish (fell enemies with a ranged weapon). */
+    /** War-Prep II (Ranged) GEAR step: arm the marksman kit and send them to the skirmish (fell
+     *  enemies with a ranged weapon). The rogue ladder already trained their combat — no drill. */
     private suspend fun QueueTask.warPrepRangedArm(p: Player) {
-        say(p, "Ranged trained — good eye. Now you'll need a proper marksman's kit, not that training bow.")
+        say(p, "The rogues' ladder made a fighter of you — now let's make a marksman. A raider holds the line at distance too.")
         // Advance immediately with the handout — a say between them let an early chat-close strand
         // the step on GEAR and re-claim the kit (same dupe as the tower kit above).
         WarPrepRanged.armForSkirmish(p) // bow + d'hide + arrows

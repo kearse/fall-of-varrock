@@ -27,7 +27,7 @@ custom client reads (same transport as the war HUD — no custom packets):
 | **4610** | Recruit Trials, packed: bits 0-5 step ordinal, bits 6-9 goblin kills, bit 10 contract taken |
 | **4611** | War-Prep chain step ordinal |
 | **4612** | 1 while quest guidance is muted (free play), else 0 |
-| **4617** | The Rogue Problem, packed: bits 0-5 step ordinal, bits 6-11 rogues felled on HUNT |
+| **4617** | Rogue Hunting I + II (one shared chain), packed: bits 0-5 step ordinal, bits 6-11 rogues felled on HUNT |
 | **4624** | War-Prep II — Ranged, packed: bits 0-5 step ordinal, bits 6-11 enemies felled with a ranged weapon on FIELD |
 | **4643** | War-Prep III — Survival step ordinal, bits 0-5 |
 | **4633** | King of Lumbridge (endgame conquest) step ordinal, bits 0-5 |
@@ -51,8 +51,9 @@ A first-party sidebar plugin (book icon) modelled on the RuneLite **Quest Helper
 (BSD-2, ported arrow rendering credits in `LofArrow.java`):
 
 - **Quest list** coloured like the OSRS quest tab (red / yellow / green, grey for locked), with
-  per-quest progress (`6/11`). All six chain quests (Recruit Trials, War-Prep I — Magic, The Rogue
-  Problem, War-Prep II — Ranged, War-Prep III — Survival, King of Lumbridge) are fully wired; the
+  per-quest progress (`6/11`). All seven chain quests (Recruit Trials, War-Prep I — Magic, Rogue
+  Hunting I, Rogue Hunting II, War-Prep II — Ranged, War-Prep III — Survival, King of Lumbridge)
+  are fully wired — the two Rogue Hunting quests window one server chain (varp 4617); the
   FUTURE-teaser render path (dimmed "coming soon" rows) stays available for the next unbuilt quest.
 - **Per-quest card**: the "why" blurb, the step checklist (✓ done / ➤ current+detail / ○ ahead,
   live counters like goblin kills and Prayer level), and **what it unlocks**.
