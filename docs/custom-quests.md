@@ -36,8 +36,9 @@ A 3-tick world poll re-derives these from the persistent attributes (which stay 
 truth) and only writes on change. **Custom-varp registry so far:** 4600 siege alert · 4601 war
 progress · 4602-4605 PK stats · 4606 wilderness level · 4607 teleport menu · 4608 LMS HUD ·
 **4610-4612 quests** · 4617 quests (rogue) · 4620-4623 CW timer · **4624 quests (War-Prep II)** ·
-**4633 quests (King of Lumbridge)** · **4643 quests (War-Prep III)**. Claim the next one here when
-you add a system.
+**4633 quests (King of Lumbridge)** · **4643 quests (War-Prep III)** · **4644 quests (Rogue Knight
+ladder)** · **4645 Quest Journal window open-pulse** (`QuestBook.OPEN_VARP`). Claim the next one
+here when you add a system.
 
 ### 2b. Free-play toggle (`::questguide`)
 
@@ -86,9 +87,12 @@ the quest's progress varp/varbit.
    the OSRS rows, add one row per custom quest pointing each at one of our varps (4610/4611…).
 2. Repack + re-CRC the cache; the client picks it up via js5.
 3. Server: replace the hardcoded quest-count varbits in `CharacterSummaryPlugin.kt:28-31`
-   (marked `@TODO`) with real counts, and handle row clicks — `setInterfaceEvents(399,
-   component 7)` is already armed; an `onButton(399, 7)` handler can open a journal or focus the
-   sidebar Journal.
+   (marked `@TODO`) with real counts. Row clicks are now handled: `QuestBookPlugin`'s
+   `onButton(399, 7)` maps the clicked row to a quest and pulses `QuestBook.OPEN_VARP` (4645),
+   which the `lofquests` client opens as the custom **Quest Journal window**
+   (`LofQuestBookOverlay`, styled after the Feudal Ranks screen). The same window is opened by
+   `::quests`, the per-quest status commands (`::rogueproblem` / `::warpranged` / `::warpsurvival`),
+   and a sidebar toolbar button.
 4. The stock quest-list *filter* varbits (13774/13776/13777/13889) can hide categories today as
    a stopgap, but can't rename or add entries — the DBTable edit is the real fix.
 

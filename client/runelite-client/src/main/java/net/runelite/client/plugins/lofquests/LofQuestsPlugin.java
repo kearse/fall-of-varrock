@@ -32,8 +32,11 @@ import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.game.npcoverlay.HighlightedNpc;
 import net.runelite.client.game.npcoverlay.NpcOverlayService;
+import net.runelite.client.input.MouseManager;
+import net.runelite.client.input.MouseWheelListener;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
+import net.runelite.client.plugins.loftheme.LofWindows;
 import net.runelite.client.ui.ClientToolbar;
 import net.runelite.client.ui.NavigationButton;
 import net.runelite.client.ui.overlay.OverlayManager;
@@ -71,8 +74,17 @@ public class LofQuestsPlugin extends Plugin
 	@Inject
 	private NpcOverlayService npcOverlayService;
 
+	@Inject
+	private LofQuestBookOverlay questBook;
+
+	@Inject
+	private MouseManager mouseManager;
+
 	private LofQuestsPanel panel;
 	private NavigationButton navButton;
+	private NavigationButton bookButton;
+	private LofQuestBookMouseListener questBookMouse;
+	private MouseWheelListener questBookWheel;
 
 	/** Highlighter registered with the shared NPC-overlay service; kept so we can unregister it. */
 	private final Function<NPC, HighlightedNpc> objectiveHighlighter = this::highlightObjectiveNpc;
@@ -106,6 +118,29 @@ public class LofQuestsPlugin extends Plugin
 			.build();
 		clientToolbar.addNavigation(navButton);
 
+		// The floating Quest Journal window (Feudal-Ranks-style): a client-drawn overlay opened by
+		// the server's QUEST_BOOK_OPEN varp, a toolbar button, or the ::quests command.
+		overlayManager.add(questBook);
+		LofWindows.register(questBook);
+		questBookMouse = new LofQuestBookMouseListener(this, questBook);
+		mouseManager.registerMouseListener(questBookMouse);
+		questBookWheel = event ->
+		{
+			if (questBook.handleScroll(event.getPoint(), event.getWheelRotation()))
+			{
+				event.consume();
+			}
+			return event;
+		};
+		mouseManager.registerMouseWheelListener(questBookWheel);
+		bookButton = NavigationButton.builder()
+			.tooltip("Quest Journal (window)")
+			.icon(icon)
+			.priority(7)
+			.onClick(() -> clientThread.invokeLater(() -> openQuestBook(activeChainQuest())))
+			.build();
+		clientToolbar.addNavigation(bookButton);
+
 		npcOverlayService.registerHighlighter(objectiveHighlighter);
 
 		refresh();
@@ -116,8 +151,22 @@ public class LofQuestsPlugin extends Plugin
 	{
 		overlayManager.remove(worldOverlay);
 		overlayManager.remove(minimapOverlay);
+		overlayManager.remove(questBook);
+		LofWindows.unregister(questBook);
+		if (questBookMouse != null)
+		{
+			mouseManager.unregisterMouseListener(questBookMouse);
+			questBookMouse = null;
+		}
+		if (questBookWheel != null)
+		{
+			mouseManager.unregisterMouseWheelListener(questBookWheel);
+			questBookWheel = null;
+		}
+		questBook.setVisible(false);
 		npcOverlayService.unregisterHighlighter(objectiveHighlighter);
 		clientToolbar.removeNavigation(navButton);
+		clientToolbar.removeNavigation(bookButton);
 		trackedQuest = null;
 	}
 
@@ -125,12 +174,86 @@ public class LofQuestsPlugin extends Plugin
 	public void onVarbitChanged(VarbitChanged event)
 	{
 		int varp = event.getVarpId();
+
+		// Server signal to open the floating Quest Journal window, focused on a quest (value = its
+		// chain index + 1). The pulse's falling edge (0) never closes the window.
+		if (varp == LofQuestVarps.QUEST_BOOK_OPEN)
+		{
+			final int value = client.getVarpValue(LofQuestVarps.QUEST_BOOK_OPEN);
+			if (value != 0)
+			{
+				openQuestBook(LofQuest.byChainIndex(value - 1));
+			}
+			return;
+		}
+
 		if (varp == LofQuestVarps.RECRUIT || varp == LofQuestVarps.WARPREP || varp == LofQuestVarps.GUIDE_MUTED
 			|| varp == LofQuestVarps.ROGUE_PROBLEM || varp == LofQuestVarps.KNIGHTS || varp == LofQuestVarps.RANGED
 			|| varp == LofQuestVarps.SURVIVAL || varp == LofQuestVarps.CONQUEST)
 		{
 			refresh();
 		}
+	}
+
+	// --- floating Quest Journal window control ---
+
+	/** The quest the window defaults to: the first in-progress chain quest, else the first
+	 *  unfinished one, else the last (a fully-completed chain focuses King). */
+	private LofQuest activeChainQuest()
+	{
+		LofQuest firstUnfinished = null;
+		for (LofQuest q : LofQuest.CHAIN)
+		{
+			final LofQuestState st = q.state(client);
+			if (st == LofQuestState.IN_PROGRESS)
+			{
+				return q;
+			}
+			if (firstUnfinished == null && st != LofQuestState.FINISHED)
+			{
+				firstUnfinished = q;
+			}
+		}
+		return firstUnfinished != null ? firstUnfinished : LofQuest.CHAIN.get(LofQuest.CHAIN.size() - 1);
+	}
+
+	/** Open the window focused on [q] (null falls back to the active quest). No-op when the player
+	 *  has switched the window off in config — the server's chat status line is the fallback. */
+	void openQuestBook(LofQuest q)
+	{
+		if (!config.questWindow())
+		{
+			return;
+		}
+		final LofQuest focus = q != null ? q : activeChainQuest();
+		questBook.setFocus(focus);
+		questBook.setTrackedOn(trackedQuest == focus);
+		LofWindows.openExclusive(questBook);
+		questBook.setVisible(true);
+	}
+
+	/** Track node clicked — switch the focused quest. */
+	void focusQuestBook(int chainIndex)
+	{
+		final LofQuest q = LofQuest.byChainIndex(chainIndex);
+		if (q == null)
+		{
+			return;
+		}
+		questBook.setFocus(q);
+		questBook.setTrackedOn(trackedQuest == q);
+	}
+
+	/** Track button clicked — toggle the guidance arrow for the focused quest. */
+	void toggleQuestBookTrack()
+	{
+		final LofQuest q = questBook.getFocus();
+		if (q == null || !questBook.isTrackable())
+		{
+			return;
+		}
+		setTrackedQuest(trackedQuest == q ? null : q);
+		questBook.setTrackedOn(trackedQuest == q);
 	}
 
 	@Subscribe

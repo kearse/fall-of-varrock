@@ -26,6 +26,10 @@ final class LofQuestVarps
 	/** Packed Rogue Knight ladder state: bits 0-7 knights beaten, bits 8-15 active hunt index + 1. */
 	static final int KNIGHTS = 4644;
 
+	/** "Open the Quest Journal window" pulse: value = focused quest's chain index + 1 (0 = no signal).
+	 *  Must match server QuestBook.OPEN_VARP. */
+	static final int QUEST_BOOK_OPEN = 4645;
+
 	/** Packed "War-Prep II — Ranged" state: bits 0-5 step ordinal, bits 6-11 enemies felled with a ranged weapon on FIELD. */
 	static final int RANGED = 4624;
 
@@ -88,6 +92,11 @@ final class LofQuestVarps
 	static int knightsBeaten(Client client)
 	{
 		return client.getVarpValue(KNIGHTS) & 0xFF;
+	}
+
+	static int questBookOpen(Client client)
+	{
+		return client.getVarpValue(QUEST_BOOK_OPEN);
 	}
 
 	static boolean guideMuted(Client client)

@@ -106,7 +106,13 @@ format (§2); it backs the master index up and verifies by re-decode. Rollback i
 **Still open (polish, not blockers):**
 - The summary-tab counts in `CharacterSummaryPlugin.kt` (`@TODO` ~line 28-31) still show placeholder
   totals — set them to our quest count for a tidy "quests completed" line.
-- An `onButton(399, 7)` handler could open the sidebar Journal when a quest row is clicked.
+
+**Done:** the `onButton(399, 7)` row-click handler now ships (`QuestBookPlugin`). It maps the
+clicked row to a quest and pulses `QuestBook.OPEN_VARP` (4645), which opens the client-drawn
+**Quest Journal window** (`lofquests` / `LofQuestBookOverlay`) focused on that quest. NOTE: the
+slot→quest mapping assumes the click delivers the row's list position (0–6, in `PLAN`/`hide`
+order = chain order); a temporary `logger.info` echoes the raw slot so this can be confirmed
+in-game (with a col0-id fallback) — remove the log once verified.
 - To add more quests to the tab later: add rows to `PLAN` in `QuestTablePatch.kt` (each reusing an
   OSRS quest's varp — the §0 table has three more mapped), mirror their varps in `QuestJournal`, then
   re-run `relabel` + `hide`.

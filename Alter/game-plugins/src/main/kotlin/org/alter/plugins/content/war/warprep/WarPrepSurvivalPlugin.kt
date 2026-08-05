@@ -6,6 +6,7 @@ import org.alter.game.Server
 import org.alter.game.model.World
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
+import org.alter.plugins.content.quests.QuestBook
 
 /**
  * Wiring for [WarPrepSurvival] (the "War-Prep III — Survival" quest). Resumes/begins the per-player
@@ -31,8 +32,9 @@ class WarPrepSurvivalPlugin(
 
         onTimer(WarPrepSurvival.TIMER) { WarPrepSurvival.pollTick(player) }
 
-        onCommand("warpsurvival", description = "Show your War-Prep III (Survival) quest objective") {
+        onCommand("warpsurvival", description = "Open War-Prep III (Survival) in the Quest Journal") {
             player.message(WarPrepSurvival.statusLine(player))
+            QuestBook.open(player, QuestBook.WARPREP_SURVIVAL)
         }
     }
 }

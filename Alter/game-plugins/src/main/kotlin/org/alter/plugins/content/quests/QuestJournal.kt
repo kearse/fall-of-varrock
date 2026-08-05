@@ -38,7 +38,8 @@ import org.alter.plugins.content.war.warprep.WarPrepSurvival
  *  - [GUIDE_MUTED_VARP] = 1 while guidance is muted, else 0 (so the client toggle reflects state).
  *
  * Varps 4600-4608, 4613-4616, 4618-4623, 4625-4626 and 4633-4637 are taken by the other client HUDs;
- * quests own 4610-4612, 4617, 4624, 4633, 4643 and 4644.
+ * quests own 4610-4612, 4617, 4624, 4633, 4643, 4644 and 4645 ([QuestBook.OPEN_VARP] — the
+ * "open the Quest Journal window, focused on quest N" pulse; not published here, pulsed on demand).
  * Non-zero varps persist ([VarpSerialisation]), but the attributes stay the source of truth —
  * everything here is re-derived and re-published on login and on the world poll.
  *
