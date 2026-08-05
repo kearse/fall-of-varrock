@@ -211,15 +211,25 @@ class RecruitTrialsPlugin(
                         return
                     }
                     RogueProblem.Step.REPORT -> {
-                        chatNpc(p, "A named knight of the rogues' ladder, dead by your hand. THAT is the work of a Knight of Lumbridge, ${p.address}. The realm pays its debt.", npc = s, title = "Recruiting Sergeant")
+                        chatNpc(p, "A named knight of the rogues' ladder, dead by your hand. THAT is the work of a Knight of Lumbridge in the making, ${p.address}.", npc = s, title = "Recruiting Sergeant")
                         chatPlayer(p, "What now, sergeant?")
-                        chatNpc(p, "Keep climbing. The ladder pays — knight kills, their kits, camp spoils, my bounties. When your purse reaches ${"%,d".format(org.alter.plugins.content.war.Title.KNIGHT.cost)} coins, Duke Horacio will make it official: Knighthood earns you rune, a companion of your own, and the right to hunt the wilderness.", npc = s, title = "Recruiting Sergeant")
+                        chatNpc(p, "Now you climb. The Rogue Problem ends when EVERY camp on the ladder is broken — the Commander last. The ladder pays as you go: knight kills, their kits, camp spoils, my bounties. When your purse reaches ${"%,d".format(org.alter.plugins.content.war.Title.KNIGHT.cost)} coins, Duke Horacio will sell you the Knighthood you're already earning — rune, a companion, the wilderness.", npc = s, title = "Recruiting Sergeant")
                         RogueProblem.onReportedToSergeant(p)
                         return
                     }
-                    RogueProblem.Step.RANK -> {
-                        RogueHunt.payout(p) // the bounties are part of the Knighthood purse now
-                        chatNpc(p, "Climb to Knight at Duke Horacio when your purse allows, ${p.address} — the ladder pays for it: knight kills, their kits, my bounties. A companion and the wilderness are waiting on it.", npc = s, title = "Recruiting Sergeant")
+                    RogueProblem.Step.LADDER -> {
+                        RogueHunt.payout(p) // the bounties are part of the climb's purse
+                        val ladder = org.alter.plugins.content.bots.knights.RogueKnights.LADDER
+                        chatNpc(p, "The climb's the quest now, ${p.address}: ${RogueKnightLadder.rank(p)} of ${ladder.size} knights down. Break every camp on the ladder — the Commander last — and the realm will call the Rogue Problem solved.", npc = s, title = "Recruiting Sergeant")
+                        val target = RogueKnightLadder.assignedDef(p)
+                        if (target != null) {
+                            chatNpc(p, "Your mark: ${target.briefLine}", npc = s, title = "Recruiting Sergeant")
+                            chatNpc(p, "Find them at <col=801700>${target.camp.display}</col> — ${target.camp.directions} The marker leads; <col=ffae00>::knights</col> tracks the climb.", npc = s, title = "Recruiting Sergeant")
+                            if (!CampClearance.cleared(p, target.camp)) {
+                                chatNpc(p, "The camp guards its own: ${CampClearance.statusLine(p, target.camp)}", npc = s, title = "Recruiting Sergeant")
+                            }
+                        }
+                        chatNpc(p, "And keep buying your ranks off Duke Horacio as the spoils come in — a Knighthood pays for itself on this road, and its rune and companion will carry you up the harder rungs.", npc = s, title = "Recruiting Sergeant")
                         return
                     }
                     else -> {} // NONE (War-Prep unfinished) or DONE — fall through to the ladder/milestone chatter

@@ -19,7 +19,8 @@ import org.alter.rscm.RSCM.getRSCM
  *  - **farm target** = an already-beaten knight the player has asked to hunt again (for its
  *    signature drops); cleared automatically whenever the rank advances.
  *  - The ladder unlocks at The Rogue Problem's KNIGHT step (the Sergeant's first assignment is
- *    the quest beat itself) and keeps going long after the quest closes.
+ *    the quest beat itself); breaking the WHOLE ladder is the quest's finish line
+ *    ([RogueProblem.onLadderCleared]), and every beaten knight stays farmable after.
  */
 object RogueKnightLadder {
 
@@ -90,6 +91,7 @@ object RogueKnightLadder {
         } else {
             p.message("<col=801700>${def.name} has fallen — the ladder is CLEARED.</col> Every knight remains yours to farm (::knights).")
             Announce.broadcast(p.world, "<col=ffcc00>${p.username} has beaten the entire Rogue Knight ladder — ${RogueKnights.LADDER.size} knights, ending with ${def.name}!</col>")
+            RogueProblem.onLadderCleared(p) // the quest's finish line: every camp broken
         }
         if (def.rank >= FANFARE_RANK && next != null) {
             Announce.broadcast(p.world, "<col=4f9b4f>${p.username} has struck down ${def.name} of ${def.camp.display}!</col>")

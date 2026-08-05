@@ -1,10 +1,10 @@
 ---
 title: The Rogue Problem
 category: Getting Started
-summary: The Act II quest that picks up after the Wizard Tower and guides a fresh Squire all the way to Knight - your first companion, your first steps into the wilderness, and the opening of the Rogue Knight ladder.
+summary: The Act II quest that picks up after the Wizard Tower and runs a fresh Squire through the whole Rogue Knight ladder - the realm's PK schooling. It ends when every camp is broken, not when a rank is bought.
 order: 4
 updated: 2026-08-05
-infobox: Type = Quest (auto-starts); Start = Automatic once War-Prep I is done; Giver = Recruiting Sergeant (Lumbridge gate); Steps = Hunt, Knight, Report, Rank; Guidance = Quest Journal (::rogueproblem); Reward = A soldier's purse - the ladder earns your Knighthood; Leads to = Companions, the wilderness + the Rogue Knight ladder
+infobox: Type = Quest (auto-starts); Start = Automatic once War-Prep I is done; Giver = Recruiting Sergeant (Lumbridge gate); Steps = Hunt, Knight, Report, Ladder; Guidance = Quest Journal (::rogueproblem); Reward = A soldier's purse - the ladder earns your Knighthood; Completes = When every camp on the ladder is broken; Leads to = Companions, the wilderness + War-Prep II
 ---
 
 **The Rogue Problem** is the quest that answers "what now?" the moment you clear the [Wizard Tower](/wiki/wizard-tower) and claim your Squire rank. Where the roadmap used to drop you into an open-ended grind toward Knight, this quest hands you a guided path there - and the [Quest Journal](/wiki/gameplay-roadmap) points the way at every step.
@@ -24,11 +24,11 @@ It's the first chapter of **Act II - The Soldier**: the Sergeant sets you on the
 | **Hunt** | Cut down **30 of the rogue family** (rogues, muggers, highwaymen, thugs, bandits, outlaws - and bot "Rogue Knights" - all count). Kills count **anywhere**: the safe road camps at the **jail west of Lumbridge**, **Draynor's outskirts** and **south of Port Sarim** are the intended first hunting grounds; **Fallen Falador** is denser hunting but lawless raid ground. |
 | **Knight** | Clearing the hunt pays a **soldier's purse** (150,000 - buy **Soldier** at Duke Horacio, no rung skipped). Then kill your **first assigned [Rogue Knight](/wiki/rogue-knights)** - the Sergeant names the mark, the marker arrow leads you to the camp, and `::knights` tracks the hunt. |
 | **Report** | Return to the Recruiting Sergeant with word of the knight's fall. |
-| **Rank** | **Earn your Knighthood on the ladder** - knight kills, their worn-kit drops, camp spoils and the Sergeant's bounties pay the 500,000 - then buy **Knight** at Duke Horacio. |
+| **Ladder** | **Break every camp on the [Rogue Knight ladder](/wiki/rogue-knights)** - all fourteen knights, weakest to strongest, the Commander last. The spoils (knight kills, worn-kit drops, camp loot, bounties) pay your **Knighthood** along the way - buy it at Duke Horacio whenever your purse allows; buying it never ends the quest. |
 
 The **road camps are all safe, reclaimable ground** - die there and your gear waits in a pile. Fallen Falador is not: it's **lawless PvP ground**, a raid city where only the banks are safe, and the road there crosses open wilderness. Cut your teeth on the roads first, and take nothing into Falador you can't afford to lose; the rogue tally, at least, is yours forever and death never resets it. See [Death & item protection](/wiki/death-and-item-protection). Your first assigned Rogue Knight also waits on safe ground, at the **Bandit Hideout west of Lumbridge**: if he beats you (he might!), you walk straight back for the rematch.
 
-This step opens the **[Rogue Knight ladder](/wiki/rogue-knights)** - fourteen named boss PKers, weakest to strongest, each guarding the gear that beats the next. The quest only asks for the first; the ladder runs long after, all the way to the Rogue Commander's AGS-class loot.
+The quest and the **[Rogue Knight ladder](/wiki/rogue-knights)** are one journey: fourteen named boss PKers, weakest to strongest, each guarding the gear that beats the next. **The Rogue Problem completes only when the whole ladder is broken** - that climb is where you actually learn to PK: switches at the low camps, prayer baits and freezers in the middle, held spec combos and momentum play at the top. Every beaten knight stays farmable after.
 
 ## Rewards
 
@@ -38,6 +38,6 @@ This step opens the **[Rogue Knight ladder](/wiki/rogue-knights)** - fourteen na
 
 ## What comes after
 
-Knight is the mid-game power spike. With a companion at your side, learn to fight players at the **[PK Training Arena](/wiki/gameplay-roadmap)** (free loaner kits, sparring bots that teach real mechanics), then hunt for real - player kills pay **Blood Money**. Entry bosses, the Fight Cave, and the war's Marches all open up too.
+Knight is the mid-game power spike, and you'll hit it mid-quest. With a companion at your side, sharpen up at the **[PK Training Arena](/wiki/gameplay-roadmap)** (free loaner kits, sparring bots that teach real mechanics) between rungs, and hunt for real - player kills pay **Blood Money**. Entry bosses, the Fight Cave, and the war's Marches open up along the way too.
 
-And the **[Rogue Knight ladder](/wiki/rogue-knights)** keeps going: the Sergeant has thirteen more knights for you, each harder than the last, each guarding better PK gear - the guided track that keeps you climbing from your first bronze duel to end-game loot. See the [Gameplay roadmap](/wiki/gameplay-roadmap) for the full journey.
+Breaking the final camp completes the quest - and opens **War-Prep II** (the Ranged drills, the road to Lord). Every beaten knight stays farmable for its signature gear (`::knights`). See the [Gameplay roadmap](/wiki/gameplay-roadmap) for the full journey.

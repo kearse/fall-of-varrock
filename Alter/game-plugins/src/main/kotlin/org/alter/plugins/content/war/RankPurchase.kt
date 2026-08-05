@@ -50,8 +50,8 @@ object RankPurchase {
         RecruitTrials.onBuyRank(player) // advances the intro quest's RANK step, if active
         WarPrepChain.onRankBought(player) // closes the War-Prep chain's RANK step, if active
         RogueProblem.begin(player)        // War-Prep's Squire rank-up opens Act II — start "The Rogue Problem"
-        RogueProblem.onRankBought(player) // closes "The Rogue Problem" RANK step once Knight is reached
-        WarPrepRanged.begin(player)       // the Knight rank-up opens War-Prep II (gated on RogueProblem.complete)
+        // (Rank purchases never close The Rogue Problem — its finish line is the full ladder.)
+        WarPrepRanged.begin(player)       // opens War-Prep II once the ladder is cleared (RogueProblem.complete)
         WarPrepRanged.onRankBought(player)   // closes War-Prep II once Lord is reached
         WarPrepSurvival.begin(player)     // the Lord rank-up opens War-Prep III (gated on WarPrepRanged.complete)
         WarPrepSurvival.onRankBought(player) // closes War-Prep III once Minister is reached
