@@ -52,6 +52,29 @@ object NpcAnims {
         425 to Set(attack = 164, block = 165, death = 167),     // hobgoblin
     )
 
+    /** [NpcCombatDef.DEFAULT]'s unarmed human fallbacks — the anims [ARMED] replaces. */
+    private const val HUMAN_PUNCH = 422
+    private const val HUMAN_UNARMED_BLOCK = 424
+
+    /**
+     * Armed humanoids stuck with the DEFAULT unarmed 422/424, keyed by npc id. A black knight
+     * model swings a black sword and carries a kiteshield, but its defs inherit the human PUNCH
+     * and bare-arms block — and because both are playable on the human skeleton, the [playable]
+     * check can never flag them. The replacements are the sword slash (390) and shield block
+     * (1156) the player combat tables already use on the same skeleton. Only the two unarmed
+     * defaults are ever replaced — a def that configures its own animation is honoured. Add
+     * armed humanoids here as they're reported. (death stays -1: the human death 836 is right.)
+     */
+    private val ARMED = mapOf(
+        // The black knight family (sword + kiteshield): ambient/warden/port-raider 516-517,
+        // the Falador frontier line 4959-4960, and the captain 4777.
+        516 to Set(attack = 390, block = 1156, death = -1),
+        517 to Set(attack = 390, block = 1156, death = -1),
+        4777 to Set(attack = 390, block = 1156, death = -1),
+        4959 to Set(attack = 390, block = 1156, death = -1),
+        4960 to Set(attack = 390, block = 1156, death = -1),
+    )
+
     /** npcId -> its resolved set. */
     private val byNpc = HashMap<Int, Set>()
 
@@ -108,9 +131,17 @@ object NpcAnims {
         return if (replacement != -1) replacement else configured
     }
 
-    fun coerceAttack(npcId: Int, configured: Int): Int = coerce(npcId, configured) { it.attack }
+    fun coerceAttack(npcId: Int, configured: Int): Int {
+        // Armed-humanoid fix ([ARMED]): swap the unarmed default for the weapon swing. Guarded by
+        // playable() like everything else so a bad table entry can never deform the model.
+        ARMED[npcId]?.let { if (configured == HUMAN_PUNCH && playable(npcId, it.attack)) return it.attack }
+        return coerce(npcId, configured) { it.attack }
+    }
 
-    fun coerceBlock(npcId: Int, configured: Int): Int = coerce(npcId, configured) { it.block }
+    fun coerceBlock(npcId: Int, configured: Int): Int {
+        ARMED[npcId]?.let { if (configured == HUMAN_UNARMED_BLOCK && playable(npcId, it.block)) return it.block }
+        return coerce(npcId, configured) { it.block }
+    }
 
     fun coerceDeath(npcId: Int, configured: Int): Int = coerce(npcId, configured) { it.death }
 
