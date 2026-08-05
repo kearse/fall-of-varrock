@@ -46,6 +46,7 @@ object RankPurchase {
         player.inventory.remove(coins, next.cost)
         player.attr[PLAYER_TITLE_ATTR] = next.ordinal
         player.refreshTitledName() // stamp the new (colored, for nobles) name onto the appearance
+        RankCapes.grant(player, next) // the rank's cape — the wearable mark of the new station
 
         RecruitTrials.onBuyRank(player) // advances the intro quest's RANK step, if active
         WarPrepChain.onRankBought(player) // closes the War-Prep chain's RANK step, if active
