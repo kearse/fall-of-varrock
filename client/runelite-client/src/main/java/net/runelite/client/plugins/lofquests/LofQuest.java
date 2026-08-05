@@ -77,8 +77,8 @@ enum LofQuest
 			+ "Falador. The Recruiting Sergeant sets the new Squire on their rank and file — the "
 			+ "safe road camps west of Lumbridge, or Falador's lawless streets for the bold — then "
 			+ "opens the Rogue Knight ladder with your first named "
-			+ "assignment. Break them and the purse earns your Knighthood — your first companion, "
-			+ "and the right to hunt the wilderness.",
+			+ "assignment. The hunt pays a soldier's purse; the ladder's spoils earn your "
+			+ "Knighthood — your first companion, and the right to hunt the wilderness.",
 		6, // DONE ordinal (RogueProblem.Step)
 		// World anchors are best-effort tiles — TUNE against the live map.
 		Arrays.asList(
@@ -86,16 +86,16 @@ enum LofQuest
 			// No fixed anchor: the server's hint arrow leads this step — to the nearest safe road
 			// camp from afar, locking onto live rogues once they're in reach (like the knight hunt).
 			new LofQuestStep(2, "Thin out the rogue rank and file", "Cut down 30 of the rogue family — kills count anywhere; the arrow leads to the nearest safe road camp and locks onto rogues in reach. Fallen Falador is denser but a raid city — only its banks are safe.", null),
-			new LofQuestStep(3, "Kill your first assigned Rogue Knight", "The Sergeant's marker leads to the camp; ::knights tracks the ladder.", null),
-			new LofQuestStep(4, "Return to the Recruiting Sergeant", "Report the knight's fall and claim your purse.", new WorldPoint(3217, 3220, 0)),
-			new LofQuestStep(5, "Rise to Knight at Duke Horacio", "The Sergeant's purse covers the climb — Soldier, then Knight.", new WorldPoint(3220, 3211, 0))
+			new LofQuestStep(3, "Kill your first assigned Rogue Knight", "Buy Soldier with your hunt purse first. The Sergeant's marker leads to the camp; ::knights tracks the ladder.", null),
+			new LofQuestStep(4, "Return to the Recruiting Sergeant", "Report the knight's fall.", new WorldPoint(3217, 3220, 0)),
+			new LofQuestStep(5, "Rise to Knight at Duke Horacio", "The ladder's spoils pay the climb — knight kills, their kits, camp loot and bounties.", new WorldPoint(3220, 3211, 0))
 		),
 		Arrays.asList(
 			"Knighthood — rune armour",
 			"Your first companion (General Zo musters them)",
 			"The wilderness / PK loop (start at the PK Training Arena)",
 			"The Rogue Knight ladder — ever-harder named knights guarding PK gear (::knights)",
-			"A purse that covers the climb to Knight"
+			"A soldier's purse after the hunt — the ladder earns the rest"
 		)),
 
 	WARPREP_RANGED(

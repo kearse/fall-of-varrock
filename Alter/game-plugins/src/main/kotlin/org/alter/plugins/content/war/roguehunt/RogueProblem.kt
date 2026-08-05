@@ -20,8 +20,9 @@ import org.alter.rscm.RSCM.getRSCM
  * when demons took Varrock — see `WorldSpawnsPlugin.applyFallenFalador`; the city is a raid-city
  * PvP ground, which was farming fresh Squires when the quest steered them there first) —
  * then opens the **Rogue Knight ladder** (`bots/knights/`) with the player's
- * first assigned named knight — kill it, and he pays a purse that covers the last rungs to
- * **Knight**, which unlocks the player's first **companion** and the real wilderness / PK loop.
+ * first assigned named knight. Clearing the hunt pays a **soldier's purse** ([HUNT_PURSE] — no
+ * rung skipped); **Knighthood is earned on the ladder** (knight coin + kit drops + bounties),
+ * and reaching it unlocks the player's first **companion** and the real wilderness / PK loop.
  * The ladder itself keeps assigning harder and harder knights long after this quest closes. This
  * is the pure state machine; [RogueProblemPlugin] owns the wiring (login resume, poll timer, kill
  * hooks), the Recruiting Sergeant speaks the beats, and Duke Horacio reports the rank-up.
@@ -44,16 +45,13 @@ object RogueProblem {
     private const val COINS = "item.coins_995"
 
     /**
-     * The quest's culminating purse — sized straight off the ladder so it always covers the rungs
-     * from the player's post-War-Prep rank ([Title.SQUIRE]) up to [Title.KNIGHT]: Soldier + Knight.
-     * This is the "…and that gives you enough for Knight" payout the design calls for; combined with
-     * the first knight's spoils and rogue drops earned on the way, the player clears the climb.
-     *
-     * ECONOMY NOTE (TUNE): the roadmap frames Squire→Knight as a longer grind. This purse
-     * deliberately short-cuts it into a single guided quest — dial it down (and lean on the earned
-     * hunt/captain/milestone coin) if you want the climb to stay a multi-session haul.
+     * The HUNT bounty — paid the moment the 30-kill hunt clears, sized to exactly cover the
+     * [Title.SOLDIER] rank so the ladder is walked as a Soldier, no rung skipped. Knighthood is
+     * EARNED, never gifted: the ladder pays it — first-kill coin, the knights' worn-kit drops,
+     * camp rogues' kits, and the Sergeant's milestone bounties — the multi-session climb the
+     * roadmap calls for. (The old single 650k Soldier+Knight purse skipped Soldier entirely.)
      */
-    val COMPLETION_COINS = Title.SOLDIER.cost + Title.KNIGHT.cost
+    val HUNT_PURSE = Title.SOLDIER.cost
 
     /** The rank the quest carries the player to — closes the RANK step (and the quest) when reached. */
     val TARGET_TITLE = Title.KNIGHT
@@ -66,9 +64,9 @@ object RogueProblem {
         NONE("(not started)"),
         BRIEF("Speak to the Recruiting Sergeant about the rogues overrunning Fallen Falador."),
         HUNT("Cut down $HUNT_GOAL of the rogue family — kills count anywhere. Hunt the safe road camps first (the jail west of Lumbridge, Draynor, south of Port Sarim); Fallen Falador is richer hunting but lawless raid ground. ::rogueproblem tracks it."),
-        KNIGHT("Thin your assigned Rogue Knight's camp, then cut the knight down — ::knights tracks both and the marker leads the way."),
+        KNIGHT("Buy Soldier with your hunt purse, then thin your assigned Rogue Knight's camp and cut the knight down — ::knights tracks both and the marker leads the way."),
         REPORT("Return to the Recruiting Sergeant with word of the knight's fall."),
-        RANK("Take your purse to Duke Horacio and climb to Knight — a companion and the wilderness await."),
+        RANK("Climb to Knight at Duke Horacio — the ladder's spoils pay the way: knight kills, their kits, camp loot and the Sergeant's bounties. A companion and the wilderness await."),
         DONE("The Rogue Problem — Knighthood earned. Muster a companion from General Zo, then keep climbing the Rogue Knight ladder (::knights)."),
     }
 
@@ -159,7 +157,7 @@ object RogueProblem {
     fun advanceTo(p: Player, next: Step) {
         p.attr[ROGUE_PROBLEM_STEP_ATTR] = next.ordinal
         when (next) {
-            Step.RANK -> grantPurse(p) // the quest's payout — enough to reach Knight
+            Step.KNIGHT -> grantHuntPurse(p) // the hunt bounty — a soldier's purse, nothing more
             Step.DONE -> grantCompletion(p)
             else -> {}
         }
@@ -169,10 +167,11 @@ object RogueProblem {
         }
     }
 
-    /** RANK entry: the Sergeant's payout for breaking the first Rogue Knight — a purse sized to reach Knight. */
-    private fun grantPurse(p: Player) {
-        giveItem(p, COINS, COMPLETION_COINS)
-        p.message("<col=801700>The Sergeant pays you ${"%,d".format(COMPLETION_COINS)} coins</col> — enough to climb to ${TARGET_TITLE.display} at Duke Horacio.")
+    /** KNIGHT entry: the hunt bounty — a soldier's purse the moment the rank and file are thinned.
+     *  Covers exactly [Title.SOLDIER]; Knighthood is earned on the ladder. */
+    private fun grantHuntPurse(p: Player) {
+        giveItem(p, COINS, HUNT_PURSE)
+        p.message("<col=801700>The Sergeant pays your hunt bounty: ${"%,d".format(HUNT_PURSE)} coins</col> — a soldier's purse. Buy <col=ffae00>Soldier</col> from Duke Horacio, then take to the ladder: its knights guard the coin and kit that will earn your Knighthood.")
     }
 
     private fun grantCompletion(p: Player) {

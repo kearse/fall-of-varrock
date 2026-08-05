@@ -3,8 +3,8 @@ title: The Rogue Problem
 category: Getting Started
 summary: The Act II quest that picks up after the Wizard Tower and guides a fresh Squire all the way to Knight - your first companion, your first steps into the wilderness, and the opening of the Rogue Knight ladder.
 order: 4
-updated: 2026-08-04
-infobox: Type = Quest (auto-starts); Start = Automatic once War-Prep I is done; Giver = Recruiting Sergeant (Lumbridge gate); Steps = Hunt, Knight, Report, Rank; Guidance = Quest Journal (::rogueproblem); Reward = A purse that buys your Knighthood; Leads to = Companions, the wilderness + the Rogue Knight ladder
+updated: 2026-08-05
+infobox: Type = Quest (auto-starts); Start = Automatic once War-Prep I is done; Giver = Recruiting Sergeant (Lumbridge gate); Steps = Hunt, Knight, Report, Rank; Guidance = Quest Journal (::rogueproblem); Reward = A soldier's purse - the ladder earns your Knighthood; Leads to = Companions, the wilderness + the Rogue Knight ladder
 ---
 
 **The Rogue Problem** is the quest that answers "what now?" the moment you clear the [Wizard Tower](/wiki/wizard-tower) and claim your Squire rank. Where the roadmap used to drop you into an open-ended grind toward Knight, this quest hands you a guided path there - and the [Quest Journal](/wiki/gameplay-roadmap) points the way at every step.
@@ -22,9 +22,9 @@ It's the first chapter of **Act II - The Soldier**: the Sergeant sets you on the
 | Step | What to do |
 | --- | --- |
 | **Hunt** | Cut down **30 of the rogue family** (rogues, muggers, highwaymen, thugs, bandits, outlaws - and bot "Rogue Knights" - all count). Kills count **anywhere**: the safe road camps at the **jail west of Lumbridge**, **Draynor's outskirts** and **south of Port Sarim** are the intended first hunting grounds; **Fallen Falador** is denser hunting but lawless raid ground. |
-| **Knight** | Kill your **first assigned [Rogue Knight](/wiki/rogue-knights)** - the Sergeant names the mark, the marker arrow leads you to the camp, and `::knights` tracks the hunt. |
-| **Report** | Return to the Recruiting Sergeant for your purse. |
-| **Rank** | Take the purse to **Duke Horacio** and climb to **Knight**. |
+| **Knight** | Clearing the hunt pays a **soldier's purse** (150,000 - buy **Soldier** at Duke Horacio, no rung skipped). Then kill your **first assigned [Rogue Knight](/wiki/rogue-knights)** - the Sergeant names the mark, the marker arrow leads you to the camp, and `::knights` tracks the hunt. |
+| **Report** | Return to the Recruiting Sergeant with word of the knight's fall. |
+| **Rank** | **Earn your Knighthood on the ladder** - knight kills, their worn-kit drops, camp spoils and the Sergeant's bounties pay the 500,000 - then buy **Knight** at Duke Horacio. |
 
 The **road camps are all safe, reclaimable ground** - die there and your gear waits in a pile. Fallen Falador is not: it's **lawless PvP ground**, a raid city where only the banks are safe, and the road there crosses open wilderness. Cut your teeth on the roads first, and take nothing into Falador you can't afford to lose; the rogue tally, at least, is yours forever and death never resets it. See [Death & item protection](/wiki/death-and-item-protection). Your first assigned Rogue Knight also waits on safe ground, at the **Bandit Hideout west of Lumbridge**: if he beats you (he might!), you walk straight back for the rematch.
 
@@ -32,7 +32,8 @@ This step opens the **[Rogue Knight ladder](/wiki/rogue-knights)** - fourteen na
 
 ## Rewards
 
-- A **purse that covers your climb to Knight** - buy Soldier, then Knight, from Duke Horacio. Combined with your first knight's spoils and everything you loot on the way, you'll have enough.
+- A **soldier's purse** (150,000) the moment the hunt clears - exactly enough to buy **Soldier** from Duke Horacio, so no rung is skipped.
+- **Knighthood is earned, not gifted**: the ladder pays it - every knight drops coin and its full worn kit, the camp rogues drop theirs, and the Sergeant's rogue-hunting bounties keep coming. Climb until your purse covers the 500,000.
 - **Knighthood** unlocks **rune armour**, your **first [companion](/wiki/companions)** (a levelable bot ally - muster one from General Zo in the castle courtyard), and the real **wilderness / PK loop**.
 
 ## What comes after
