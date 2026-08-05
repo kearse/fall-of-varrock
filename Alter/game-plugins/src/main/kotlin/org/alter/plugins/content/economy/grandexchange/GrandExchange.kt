@@ -4,6 +4,7 @@ import dev.openrune.cache.CacheManager.getItem
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.alter.api.ext.message
 import org.alter.game.model.entity.Player
+import org.alter.plugins.content.mechanics.shops.ItemCurrency
 import org.alter.rscm.RSCM.getRSCM
 import org.bson.Document
 import org.bson.json.JsonWriterSettings
@@ -311,9 +312,10 @@ object GrandExchange {
     private fun commodityCeiling(itemId: Int): Int? =
         if (isBackstopped(itemId)) economyValue(itemId) else null
 
-    /** Floor = 85% of value (matches the Trading Post buy rate / gp sink). */
+    /** Floor = [ItemCurrency.BUY_RATE] (70%) of value — the same rate every NPC buyer pays (coin
+     *  shops, Trading Post), so a sell offer can never do worse here than vendoring. */
     private fun commodityFloor(itemId: Int): Int? =
-        commodityCeiling(itemId)?.let { (it * 0.85).toInt().coerceAtLeast(1) }
+        commodityCeiling(itemId)?.let { (it * ItemCurrency.BUY_RATE).toInt().coerceAtLeast(1) }
 
     /** The `(min, max)` prices the book will accept for [itemId], or null when it has no value to band
      *  against (see [economyValue]). The offer-setup window shows this so a price is refused *before*

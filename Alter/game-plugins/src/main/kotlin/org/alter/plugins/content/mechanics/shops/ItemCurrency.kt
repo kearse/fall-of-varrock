@@ -251,9 +251,10 @@ open class ItemCurrency(
 
     companion object {
         /**
-         * Fraction of an item's cache value a shop pays when buying FROM a player.
-         * Kept above high alch (60%) so vendoring loot at a shop is always the better
-         * of the two sinks, but below the Trading Post's 85% backstop.
+         * Fraction of an item's cache value an NPC pays when buying FROM a player — shared by
+         * every coin shop, the Trading Post, and the GE's commodity floor. Kept above high alch
+         * (60%) so vendoring always beats alching; better prices only come from other players
+         * on the Grand Exchange (up to 100% of value).
          */
         const val BUY_RATE = 0.7
     }

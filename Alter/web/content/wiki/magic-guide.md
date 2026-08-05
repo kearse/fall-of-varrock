@@ -34,7 +34,7 @@ City teleports work on **all four books** - Modern plus 8 Ancient, 7 Lunar and 9
 Basic elemental and mind runes are shop-bought in the Lumbridge market. **High-tier runes are deliberately not sold** - chaos, nature, law, death, blood, soul and wrath come from:
 
 - **[Wizard Tower](/wiki/wizard-tower)** runs - the main rune faucet
-- The **Trading Post** (`::market`) seed stock - nature, law, death, blood, cosmic, astral at cache value
+- The **Grand Exchange** - buy off other players; everyday runes (nature, law, blood, soul, cosmic, astral) are store-backstopped, so a buy offer at full value always fills
 - Monster drops (every NPC uses its real OSRS table)
 
 ## Elemental staves
