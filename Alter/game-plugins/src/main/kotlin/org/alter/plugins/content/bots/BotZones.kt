@@ -248,10 +248,10 @@ object BotZones {
                 allowSafe = true,
             ),
         )
-        // THE SAFE ROAD WEST — stepping-stone hunting camps between the hideout and Port Sarim
-        // (RogueKnights.DRAYNOR / SARIM_ROAD; no ladder knight is stationed at either). The Act II
-        // hunt counts rogue-family kills anywhere, so a fresh Squire can fill the whole tally on
-        // reclaim-death ground along this road instead of marching straight into raid-city Falador.
+        // THE SAFE ROAD WEST — ladder camps between the hideout and Port Sarim (RogueKnights.DRAYNOR
+        // hosts Sir Oswin, SARIM_ROAD hosts Sir Malrik), so the Sergeant's assignments march the
+        // whole road. The Act II hunt counts rogue-family kills anywhere, so a fresh Squire can also
+        // fill the tally on reclaim-death ground here instead of marching into raid-city Falador.
         add(
             BotZoneConfig(
                 key = "draynor",

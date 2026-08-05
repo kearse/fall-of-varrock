@@ -74,8 +74,8 @@ object CampClearance {
         val goal = goal(camp)
         if (count >= goal) {
             val boss = RogueKnightLadder.activeDef(p)?.takeIf { it.camp == camp }
-            // Knightless road camps (Draynor, the Sarim road) have no boss to promise — the
-            // stand-down is the whole prize there.
+            // A camp with no stationed knight has no boss to promise — the stand-down is the
+            // whole prize there.
             val face = when {
                 boss != null -> ", and <col=ffae00>${boss.name}</col> will face you now"
                 RogueKnights.LADDER.any { it.camp == camp } -> ", and its knights will face you now"
