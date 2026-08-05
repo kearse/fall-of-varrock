@@ -21,8 +21,11 @@ import org.alter.plugins.content.bots.BotItem
  * Port Sarim (the rogues raid Lumbridge's lifeline port — `areas/portsarim/PortSiegePlugin` runs
  * the battle scene; lose the port and the realm is cut off) → shallow-wild Fallen Varrock → the
  * deep-wild camps where dying costs you everything you carry. Top knights are TUNED TO BE
- * GENUINELY HARD (hp overrides + near-perfect prayer reactions + fast specs) — several attempts is
- * the intended experience.
+ * GENUINELY HARD (hp overrides + tight prayer reactions + fast specs) — several attempts is the
+ * intended experience. But hard means SMALL windows, never NO window: the ladder exists to teach
+ * fighting good players (switch timing, prayer tricking, punishing the flick lag), so every
+ * knight's reaction range must leave at least an occasional 2-tick gap — a pinned 1..1 makes
+ * switching pointless and teaches nothing. See [RogueKnightDef.reactionTicks].
  *
  * **Scaling:** adding knight #15+ is ONE list entry (keep ranks contiguous). Everything else —
  * spawning, tracking arrows, dialogue, drops — is data-driven off this list.
@@ -58,7 +61,11 @@ data class RogueKnightDef(
     /** Boss max-HP override (null = the loadout's normal pool). Applied via PkBot.maxHpOverride +
      *  setCurrentLevel — NEVER setBaseLevel above 99 (crashes the XP table). */
     val maxHp: Int? = null,
-    /** Prayer-reaction override (ticks); 1..1 = near frame-perfect. Null = human default. */
+    /** Prayer-reaction override (ticks) — the delay before the knight's overhead answers a style
+     *  switch, i.e. THE PLAYER'S DAMAGE WINDOW (see BotBrain.updatePrayers). Null = human default
+     *  (mostly sharp 1-2, sometimes a slow 3-6). Pin a range to make a boss consistent; NEVER pin
+     *  1..1 — a frame-perfect flick leaves no window, and the ladder teaches switching, it doesn't
+     *  invalidate it. The top of the ladder bottoms out at 1..2: sharp, but beatable on timing. */
     val reactionTicks: IntRange? = null,
     /** Spec-regen override (ticks per +10%); lower = more specs. Null = default. */
     val specRegen: Int? = null,
@@ -246,7 +253,7 @@ object RogueKnights {
         ),
         RogueKnightDef(
             rank = 10, key = "halric", name = "Sir Halric Iron-Hand",
-            camp = WILD_BANDIT_CAMP, loadoutKey = "statius_bruiser", maxHp = 130, reactionTicks = 1..2,
+            camp = WILD_BANDIT_CAMP, loadoutKey = "statius_bruiser", maxHp = 130, reactionTicks = 2..3,
             firstKillRewards = listOf("item.barrows_gloves" to 1, "item.amulet_of_fury" to 1),
             rareTable = DropTable(rare = listOf(
                 DropEntry("item.statiuss_warhammer", oneInN = 15, announce = true),
@@ -259,7 +266,7 @@ object RogueKnights {
         ),
         RogueKnightDef(
             rank = 11, key = "nyx", name = "Dame Nyx the Huntress",
-            camp = WILD_BANDIT_CAMP, loadoutKey = "morrigan_skirmisher", maxHp = 130, reactionTicks = 1..2,
+            camp = WILD_BANDIT_CAMP, loadoutKey = "morrigan_skirmisher", maxHp = 130, reactionTicks = 2..3,
             firstKillRewards = listOf("item.heavy_ballista" to 1, "item.dragon_javelin" to 50),
             rareTable = DropTable(rare = listOf(
                 DropEntry("item.morrigans_coif", oneInN = 15, announce = true),
@@ -271,7 +278,7 @@ object RogueKnights {
         ),
         RogueKnightDef(
             rank = 12, key = "dathen", name = "Sir Dathen the Claw",
-            camp = ROGUE_REDOUBT, loadoutKey = "vesta_duelist", maxHp = 140, reactionTicks = 1..2, specRegen = 4,
+            camp = ROGUE_REDOUBT, loadoutKey = "vesta_duelist", maxHp = 140, reactionTicks = 1..3, specRegen = 4,
             extraInventory = listOf(BotItem("item.saradomin_brew4", 2)),
             firstKillRewards = listOf("item.dragon_defender" to 1, "item.berserker_ring_i" to 1),
             rareTable = DropTable(rare = listOf(
@@ -284,7 +291,7 @@ object RogueKnights {
         ),
         RogueKnightDef(
             rank = 13, key = "vexmar", name = "Lord Vexmar, Rogue Commander",
-            camp = ROGUE_REDOUBT, loadoutKey = "elite_nh", maxHp = 160, reactionTicks = 1..1, specRegen = 3,
+            camp = ROGUE_REDOUBT, loadoutKey = "elite_nh", maxHp = 160, reactionTicks = 1..2, specRegen = 3,
             extraInventory = listOf(BotItem("item.saradomin_brew4", 4), BotItem("item.super_restore4", 2)),
             firstKillRewards = listOf("item.coins_995" to 250_000, "item.bandos_tassets" to 1),
             rareTable = DropTable(rare = listOf(
@@ -296,7 +303,7 @@ object RogueKnights {
                 DropEntry("item.ancestral_hat", oneInN = 40, announce = true, log = true),
                 DropEntry("item.elder_maul", oneInN = 40, announce = true),
             )),
-            briefLine = "Lord Vexmar — the Rogue Commander himself. The full NH kit, frame-perfect prayers, and no mercy. Beating him makes you one of the deadliest blades in the realm.",
+            briefLine = "Lord Vexmar — the Rogue Commander himself. The full NH kit, razor prayers, and no mercy. Beating him makes you one of the deadliest blades in the realm.",
         ),
     )
 

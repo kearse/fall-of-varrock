@@ -9,7 +9,7 @@ infobox: Type = Boss ladder (repeatable); Start = The Rogue Problem quest (auto)
 
 The deserters who lead Varrock's rogues style themselves **Rogue Knights** - a ladder of **fourteen named boss PKers**, weakest to strongest, camped from the Lumbridge road to the deepest wilderness. The **Recruiting Sergeant** assigns them **in order**: kill your mark, rank up, and he names the next. Every knight you beat hands you a **first-kill gear unlock** - deliberately the core of the kit that beats the *next* one - so the ladder is both your PK training and your gear progression in one track.
 
-**Expect to die.** The knights fight like real players - they eat, pot, pray-switch and spec - and the top of the ladder flicks prayers nearly frame-perfectly. Dying to a knight is the loop, not a failure: your rank never resets, the first four camps (the whole safe road west) sit on **reclaim-safe ground** (walk back for your gear), and the tracking arrow leads you straight back for the rematch. *Dying is training. Going back is winning.*
+**Expect to die.** The knights fight like real players - they eat, pot, pray-switch and spec - and the top of the ladder answers your switches within a tick or two. The window is small, but it is **always there**: every knight has flick lag you can punish, bait with a fake switch, or line a spec up inside - that's the skill the ladder teaches. Dying to a knight is the loop, not a failure: your rank never resets, the first four camps (the whole safe road west) sit on **reclaim-safe ground** (walk back for your gear), and the tracking arrow leads you straight back for the rematch. *Dying is training. Going back is winning.*
 
 ## Finding your knight
 

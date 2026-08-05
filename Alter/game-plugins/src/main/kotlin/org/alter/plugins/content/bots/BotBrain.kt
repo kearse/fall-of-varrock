@@ -273,8 +273,9 @@ object BotBrain {
         if (cls != bot.prayedAgainst) {
             if (bot.pendingPray != cls) { // opponent just switched to a new style — start reacting
                 bot.pendingPray = cls
-                // Boss knights may pin the reaction window ([PkBot.reactionTicksRange], e.g. 1..1 for
-                // a near frame-perfect flicker) — the top of the ladder is MEANT to take several tries.
+                // Boss knights may pin the reaction window ([PkBot.reactionTicksRange]) for a
+                // consistent, learnable flick. This delay IS the player's damage window, so never
+                // pin 1..1 (frame-perfect = unbeatable switches); the ladder's sharpest is 1..2.
                 bot.timers[PRAYER_REACT] = bot.reactionTicksRange?.random() ?: prayerReactionTicks()
             }
             if (!bot.timers.has(PRAYER_REACT)) { // reaction time elapsed — commit the overhead switch
