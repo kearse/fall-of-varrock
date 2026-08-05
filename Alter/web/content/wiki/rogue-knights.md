@@ -11,6 +11,8 @@ The deserters who lead Varrock's rogues style themselves **Rogue Knights** - a l
 
 **Expect to die.** The knights fight like real players - they eat, pot, pray-switch and spec - and the top of the ladder answers your switches within a tick or two. The window is small, but it is **always there**: every knight has flick lag you can punish, bait with a fake switch, or line a spec up inside - that's the skill the ladder teaches. Dying to a knight is the loop, not a failure: your rank never resets, the first four camps (the whole safe road west) sit on **reclaim-safe ground** (walk back for your gear), and the tracking arrow leads you straight back for the rematch. *Dying is training. Going back is winning.*
 
+They fight like humans in one more way: **fight momentum (PID)**. Just like the real game, the fight's tick priority reshuffles at random every minute or so - sometimes your switches bite a tick sooner, sometimes their combos stack a tick tighter, and the smartest knights hold their KO spec for the moment momentum flips their way. You never see it; you learn to feel it - and to respect the swap exactly as you would against a real NHer. The knights also throw real **prayer baits** (a gear-flash between swings to pull your overhead) and real **spec combos** (the AGS or dagger into an instant granite maul). Every trick they use is a trick humans use, and every counter that works on them works on people.
+
 ## Finding your knight
 
 - A **marker arrow** tracks your hunt the whole way: it points to the camp from anywhere on the map, then locks onto the knight itself once you're close. (Toggle with the quest-guidance mute.)

@@ -2,6 +2,7 @@ package org.alter.plugins.content.bots
 
 import org.alter.api.EquipmentType
 import org.alter.api.PrayerIcon
+import org.alter.api.ext.getVarp
 import org.alter.api.ext.setVarp
 import org.alter.game.model.Tile
 import org.alter.game.model.attr.KNIGHT_KEY_ATTR
@@ -55,9 +56,16 @@ object BotBrain {
     // Special attack: spec when energy is at/above this and the bot is on a spec-capable style.
     private const val SPEC_THRESHOLD = 50
 
-    // Melee finisher: only swap to AGS/maul specs once the target's HP is at/below this.
-    private const val FINISH_HP = 55
     private const val SPEC_REGEN_PERIOD = 5 // ticks between +10% energy regen (no client to do it)
+
+    // --- fight-style constants (docs/pk-bot-fight-styles.md) ---
+    /** OSRS reshuffles PIDs at random ~1-minute intervals; the fight coin follows suit. */
+    private val PID_SHUFFLE_TICKS = 100..150
+    /** A specOnPidSwap boss holds its KO burst for the swap at most this long, then goes anyway. */
+    private const val KO_WAIT_MAX_TICKS = 15
+    /** Spec weapons with no swing timer of their own — a follow-up with one fires instantly
+     *  (the real granite-maul behaviour that makes ags+maul a stack, not two swings). */
+    private val INSTANT_SPEC_WEAPONS = setOf("item.granite_maul")
 
     private const val EAT_ANIM = 829
 
@@ -138,13 +146,18 @@ object BotBrain {
             return
         }
 
+        updatePid(world, bot, target)
         updatePrayers(bot, target)
 
         // Only re-evaluate offence/spec when the bot is ready to swing — avoids gear-swap thrashing.
+        // Between swings: finish an in-flight spec combo, else maybe throw a bait gear-flash.
         if (!bot.timers.has(ATTACK_DELAY)) {
+            restoreBait(bot)
             val desired = chooseOffence(bot, target)
             if (desired != bot.currentStyle) applyStyle(bot, desired)
             maybeSpec(bot, target)
+        } else if (!comboFollowup(bot)) {
+            maybeBait(bot)
         }
 
         if (bot.getCombatTarget() != target) bot.attack(target)
@@ -158,6 +171,33 @@ object BotBrain {
             bot.resetFacePawn()
         }
         bot.provokedBy = null // the fight is over — a passive/stood-down bot goes back to ignoring
+        // Fight-scoped style state dies with the fight.
+        bot.pidOpponent = null
+        bot.koWaitSince = null
+        bot.comboFollowup = null
+        restoreBait(bot)
+    }
+
+    // --- the PID coin (docs/pk-bot-fight-styles.md) ---
+
+    /**
+     * The fight's PID coin. OSRS processes players in PID order and reshuffles PIDs at random
+     * ~1-minute intervals; whoever holds the lower PID wins same-tick races. We model exactly that
+     * much — a per-fight coin reshuffled every [PID_SHUFFLE_TICKS]:
+     *  - PLAYER holds it: the bot's minimum reaction rolls lose the race tick (+1 — see
+     *    [updatePrayers]). Your sharpest switch beats its sharpest flick.
+     *  - BOT holds it: its instant combo follow-ups stack with no gap, and a specOnPidSwap
+     *    archetype launches its held KO burst (the real "spec on the swap").
+     * PID never makes a bot react FASTER than its tuned range — it settles ties, like the real
+     * thing, so the windows the ladder teaches stay honest. Invisible by design, also like the
+     * real thing: you feel the momentum shift, you never see it.
+     */
+    private fun updatePid(world: World, bot: PkBot, target: Player) {
+        if (bot.pidOpponent != target.uid || world.currentCycle >= bot.pidShuffleAt) {
+            bot.pidOpponent = target.uid
+            bot.hasPid = (0 until 2).random() == 0
+            bot.pidShuffleAt = world.currentCycle + PID_SHUFFLE_TICKS.random()
+        }
     }
 
     /** Idle wander: occasionally walk to a nearby walkable tile within [PkBot.roamRadius] of home. */
@@ -276,7 +316,12 @@ object BotBrain {
                 // Boss knights may pin the reaction window ([PkBot.reactionTicksRange]) for a
                 // consistent, learnable flick. This delay IS the player's damage window, so never
                 // pin 1..1 (frame-perfect = unbeatable switches); the ladder's sharpest is 1..2.
-                bot.timers[PRAYER_REACT] = bot.reactionTicksRange?.random() ?: prayerReactionTicks()
+                var react = bot.reactionTicksRange?.random() ?: prayerReactionTicks()
+                // PID tiebreak (see updatePid): when the PLAYER holds the fight's PID, their switch
+                // wins the race tick — the bot's SHARPEST roll arrives one tick later. Never the
+                // other way round: PID cannot make the bot faster than its tuned range.
+                if (!bot.hasPid && react == (bot.reactionTicksRange?.first ?: 1)) react++
+                bot.timers[PRAYER_REACT] = react
             }
             if (!bot.timers.has(PRAYER_REACT)) { // reaction time elapsed — commit the overhead switch
                 bot.prayedAgainst = cls
@@ -325,6 +370,34 @@ object BotBrain {
     private fun mageOffence(prayer: Int): Prayer = when {
         prayer >= 77 -> Prayer.AUGURY
         else -> Prayer.MYSTIC_MIGHT
+    }
+
+    // --- the bait gear-flash (the prayer trick real NHers throw) ---
+
+    /**
+     * Between swings, a baiting archetype ([FightProfile.baitOneIn]) briefly dresses another
+     * style — the gear-flash real NHers use to pull your overhead — then re-dresses its true
+     * style before it swings ([restoreBait] runs on every ready tick). Pure theatre: it never
+     * attacks in the bait kit, so the human counter (read the weapon at SWING time, not
+     * mid-cycle) is exactly the counter that works on people.
+     */
+    private fun maybeBait(bot: PkBot) {
+        val oneIn = bot.loadout.profile.baitOneIn ?: return
+        if (bot.baitedFrom != null || bot.loadout.gear.size < 2) return
+        if (bot.getVarp(AttackTab.SPECIAL_ATTACK_VARP) == 1) return // queued spec must keep its weapon
+        if (bot.timers[ATTACK_DELAY] < 2) return // no time to re-dress before the swing
+        if ((0 until oneIn).random() != 0) return
+        val flash = bot.loadout.gear.keys.filter { it != bot.currentStyle }.randomOrNull() ?: return
+        bot.baitedFrom = bot.currentStyle
+        BotManager.equipStyle(bot, flash)
+    }
+
+    /** Undo a bait flash: re-dress the true style (swing decisions always run after this). */
+    private fun restoreBait(bot: PkBot) {
+        val real = bot.baitedFrom ?: return
+        bot.baitedFrom = null
+        BotManager.equipStyle(bot, real)
+        configureStyle(bot)
     }
 
     // --- offence style (attack off the opponent's overhead prayer) ---
@@ -385,23 +458,68 @@ object BotBrain {
     }
 
     /**
-     * Whip is the sustained melee main; the AGS -> granite-maul rotation are spec FINISHERS, swapped
-     * in only once the target is low enough to burst down. Restores the whip (+ shield) otherwise.
+     * Whip is the sustained melee main; the spec rotation are KO FINISHERS, swapped in only once
+     * the target is at/below the profile's [FightProfile.koAtHp]. Restores the whip (+ shield)
+     * otherwise. A [FightProfile.specOnPidSwap] archetype holds the burst until the fight's PID
+     * flips its way (the classic "spec on the swap"), capped at [KO_WAIT_MAX_TICKS] so a held
+     * spec always goes eventually. Firing a step whose NEXT rotation entry is an instant weapon
+     * (granite maul) arms [comboFollowup] — the real ags+maul stack, not two slow swings.
      */
     private fun meleeSpecOrRestore(bot: PkBot, target: Player) {
+        val profile = bot.loadout.profile
         val rotation = bot.loadout.meleeSpecRotation
-        val finishing = target.getCurrentHp() <= FINISH_HP
+        val finishing = target.getCurrentHp() <= profile.koAtHp
         if (rotation.isNotEmpty() && finishing && AttackTab.getEnergy(bot) >= SPEC_THRESHOLD) {
+            if (profile.specOnPidSwap && !bot.hasPid) {
+                // KO is loaded but momentum isn't — keep main-weapon pressure until the swap.
+                val since = bot.koWaitSince ?: bot.world.currentCycle.also { bot.koWaitSince = it }
+                if (bot.world.currentCycle - since < KO_WAIT_MAX_TICKS) {
+                    restoreMeleeMain(bot)
+                    return
+                }
+            }
+            bot.koWaitSince = null
             val name = rotation[bot.nextMeleeSpec % rotation.size]
             bot.equipment[EquipmentType.WEAPON.id] = Item(getRSCM(name))
             bot.equipment[EquipmentType.SHIELD.id] = null // AGS / maul are two-handed
             bot.calculateBonuses()
             bot.setVarp(AttackTab.SPECIAL_ATTACK_VARP, 1) // combat loop runs the weapon's special
             bot.nextMeleeSpec++
+            // If the next rotation step is an instant spec weapon, arm the stack: it fires the
+            // moment this spec has swung, without waiting out the swing timer.
+            val follow = if (rotation.size > 1) rotation[bot.nextMeleeSpec % rotation.size] else null
+            if (follow != null && follow != name && follow in INSTANT_SPEC_WEAPONS) {
+                bot.comboFollowup = follow
+            }
         } else {
             restoreMeleeMain(bot)
-            if (!finishing) bot.nextMeleeSpec = 0 // reset the combo once the target is healthy again
+            if (!finishing) {
+                bot.nextMeleeSpec = 0 // reset the combo once the target is healthy again
+                bot.koWaitSince = null
+            }
         }
+    }
+
+    /**
+     * Fire an armed instant follow-up ([PkBot.comboFollowup]) as soon as the leading spec has
+     * swung: equip the instant weapon (granite maul — no swing timer on spec, exactly like the
+     * real item), queue its special, and cut the remaining attack delay. PID sets the stack gap:
+     * holding it, the maul lands with no daylight (the true ags+maul tick-stack); without it,
+     * one tick — the window a player with PID gets to eat or pray. Returns true while a combo
+     * is in flight (suppresses bait flashes).
+     */
+    private fun comboFollowup(bot: PkBot): Boolean {
+        val next = bot.comboFollowup ?: return false
+        if (bot.getVarp(AttackTab.SPECIAL_ATTACK_VARP) == 1) return true // leading spec not out yet
+        bot.comboFollowup = null
+        if (AttackTab.getEnergy(bot) < SPEC_THRESHOLD) return false // tank's dry — no stack
+        bot.equipment[EquipmentType.WEAPON.id] = Item(getRSCM(next))
+        bot.equipment[EquipmentType.SHIELD.id] = null
+        bot.calculateBonuses()
+        bot.setVarp(AttackTab.SPECIAL_ATTACK_VARP, 1)
+        if (bot.hasPid) bot.timers.remove(ATTACK_DELAY) else bot.timers[ATTACK_DELAY] = 1
+        bot.nextMeleeSpec++
+        return true
     }
 
     /** Put the whip (+ shield) back if the bot is currently holding a spec weapon. */
