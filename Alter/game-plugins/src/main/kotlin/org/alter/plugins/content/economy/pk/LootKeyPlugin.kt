@@ -24,30 +24,29 @@ import org.bson.Document
 private val logger = KotlinLogging.logger {}
 
 /**
- * **Wilderness loot keys** (OSRS-style). When a real player kills another player (or a PKer bot)
- * in the wilderness, the victim's lost items are sealed into a **loot key** placed in the killer's
- * inventory instead of scattering on the ground.
+ * **Loot keys** (OSRS-style). When a real player kills another player (or a PKer bot) —
+ * ANYWHERE, wilderness and safe zones alike — the victim's lost items are sealed into a
+ * **loot key** placed in the killer's inventory instead of scattering on the ground.
  *
  *  - **Claiming works like rev-228 OSRS:** the **Loot Chest** at the Lumbridge market opens the
  *    stock Wilderness Loot Key popup showing ONE key at a time (oldest first — see
  *    [LootChestInterface] for why there are no per-key tabs at this revision). Items can be
  *    withdrawn/banked singly from the grid or all at once with the chest buttons; emptying a key
  *    advances to the next. The key's inventory "Check" option lists contents in chat.
- *  - Up to [MAX_KEYS] keys at once (the 5 distinct OSRS key items, one per bundle); at the cap, or
- *    with a full inventory, the kill falls back to normal ground drops.
+ *  - Carry as many keys as your inventory holds — the 5 OSRS key items are just handles, reused
+ *    round-robin across bundles. With a full inventory the kill falls back to normal ground
+ *    drops. The overhead icon caps at five keys ([MAX_OVERHEAD_KEYS]).
  *  - Key contents persist on [LOOT_KEYS_ATTR] as a JSON blob (companion-roster pattern: bson
  *    [Document], decode never throws). The key ITEM is just a handle — `::lootkeys` re-issues a
  *    lost handle as long as the bundle exists.
  *  - **Dying loses your unclaimed keys** (OSRS): on any non-safe death the handles are destroyed
- *    and the sealed contents join the rest of your lost loot — in the wilderness your killer gets
- *    them (sealed into THEIR key), elsewhere they land on your reclaim pile
+ *    and the sealed contents join the rest of your lost loot — a player killer gets them (sealed
+ *    into THEIR key), otherwise they land on your reclaim pile
  *    ([org.alter.plugins.content.combat.PvpDeathDropPlugin.dropOnDeath] calls [LootKeys.confiscate]).
- *
- * Only wilderness kills mint keys — safe-zone bot kills (road highwaymen) still drop their full
- * kit on the ground as before.
  */
 object LootKeys {
-    const val MAX_KEYS = 5
+    /** The overhead icon caps at five keys (icons 8..12) — carrying is bounded only by inventory space. */
+    const val MAX_OVERHEAD_KEYS = 5
 
     /** Skull icons 8..12 = the PK skull carrying 1..5 loot keys (RuneLite `SkullIcon.LOOT_KEYS_*`). */
     private const val KEYED_SKULL_BASE = 8
@@ -76,18 +75,15 @@ object LootKeys {
     /**
      * Seal [items] into a new loot key in [killer]'s inventory. A key holds up to [MAX_STACKS]
      * item stacks (OSRS): the most valuable are sealed and the rest is RETURNED as overflow for
-     * the caller to ground-drop. Returns null (caller drops EVERYTHING) when there are no items,
-     * no free key slot/id, or no inventory space.
+     * the caller to ground-drop. There's no key-count cap — the 5 key item ids are reused
+     * round-robin (least-carried first), so inventory space is the only limit. Returns null
+     * (caller drops EVERYTHING) when there are no items, no key ids, or no inventory space.
      */
     fun tryAward(killer: Player, victimName: String, items: List<Item>): List<Item>? {
         if (items.isEmpty() || keyIds.isEmpty()) return null
         val bundles = load(killer)
-        if (bundles.size >= MAX_KEYS) {
-            killer.message("You already carry $MAX_KEYS loot keys — this one's loot falls to the ground.")
-            return null
-        }
-        val used = bundles.map { it.keyId }
-        val keyId = keyIds.firstOrNull { it !in used } ?: return null
+        val counts = bundles.groupingBy { it.keyId }.eachCount()
+        val keyId = keyIds.minByOrNull { counts[it] ?: 0 } ?: return null
         if (killer.inventory.add(item = keyId, amount = 1).completed == 0) {
             killer.message("Your inventory is too full for a loot key — the loot falls to the ground.")
             return null
@@ -96,11 +92,13 @@ object LootKeys {
         val sealed = sorted.take(MAX_STACKS)
         bundles += Bundle(keyId, victimName, sealed.map { Item(it.id, it.amount) }.toMutableList())
         save(killer, bundles)
-        killer.message("<col=801700>You received a loot key from $victimName!</col> (${bundles.size}/$MAX_KEYS — open it at the Loot Chest in Lumbridge)")
+        killer.message("<col=801700>You received a loot key from $victimName!</col> (${bundles.size} carried — open it at the Loot Chest in Lumbridge)")
         return sorted.drop(MAX_STACKS)
     }
 
-    /** "Check" a key: list what's sealed inside (claiming happens at the Loot Chest). */
+    /** "Check" a key: list what's sealed inside (claiming happens at the Loot Chest). With ids
+     *  shared round-robin, checking shows the OLDEST bundle on that id — the one the chest
+     *  would open first. */
     fun checkKey(p: Player, keyId: Int) {
         val bundle = load(p).firstOrNull { it.keyId == keyId }
         if (bundle == null) {
@@ -239,12 +237,13 @@ object LootKeys {
 
     /**
      * Keys-above-head (OSRS): while carrying loot keys the skull becomes the keyed variant
-     * (icons 8..12 for 1..5 keys). With none left, fall back to the plain white skull while the
-     * PK skull timer still runs, else clear the icon. Called on every key mutation and at login.
+     * (icons 8..12 — the display caps at five keys however many are carried). With none left,
+     * fall back to the plain white skull while the PK skull timer still runs, else clear the
+     * icon. Called on every key mutation and at login.
      */
     fun syncOverhead(p: Player, count: Int = load(p).size) {
         val icon = when {
-            count > 0 -> KEYED_SKULL_BASE + (count.coerceAtMost(MAX_KEYS) - 1)
+            count > 0 -> KEYED_SKULL_BASE + (count.coerceAtMost(MAX_OVERHEAD_KEYS) - 1)
             p.timers.has(SKULL_ICON_DURATION_TIMER) -> 0
             else -> -1
         }
@@ -323,15 +322,20 @@ class LootKeyPlugin(
         onCommand("lootkeys", description = "List your loot keys / recover a lost key handle") {
             val bundles = LootKeys.load(player)
             if (bundles.isEmpty()) {
-                player.message("You have no loot keys. Kill someone in the wilderness to earn one.")
+                player.message("You have no loot keys. Kill another player to earn one.")
                 return@onCommand
             }
             bundles.forEachIndexed { i, b ->
-                player.message("Key ${i + 1}/${LootKeys.MAX_KEYS} — from <col=801700>${b.victim}</col>: ${b.items.size} item(s) sealed.")
-                // Re-issue the handle if it went missing (not in inventory or bank).
-                val held = player.inventory.getItemCount(b.keyId) + player.bank.getItemCount(b.keyId)
-                if (held == 0 && player.inventory.add(item = b.keyId, amount = 1).completed > 0) {
-                    player.message("...its key was missing, so a replacement has been issued.")
+                player.message("Key ${i + 1}/${bundles.size} — from <col=801700>${b.victim}</col>: ${b.items.size} item(s) sealed.")
+            }
+            // Re-issue missing handles: ids are shared round-robin across bundles, so compare
+            // how many of each id are held (inventory + bank) against how many bundles use it.
+            bundles.groupingBy { it.keyId }.eachCount().forEach { (keyId, needed) ->
+                val held = player.inventory.getItemCount(keyId) + player.bank.getItemCount(keyId)
+                repeat(needed - held) {
+                    if (player.inventory.add(item = keyId, amount = 1).completed > 0) {
+                        player.message("...a missing key handle has been re-issued.")
+                    }
                 }
             }
             player.message("Open your keys at the <col=801700>Loot Chest</col> at the Lumbridge market.")
@@ -344,7 +348,7 @@ class LootKeyPlugin(
         onCommand("testkey", Privilege.DEV_POWER, description = "Mint a test loot key (dummy loot)") {
             val loot = listOf(Item(995, 250_000), Item(1333, 1), Item(1127, 1), Item(379, 5), Item(563, 100))
             if (LootKeys.tryAward(player, "Test Victim", loot) == null) {
-                player.message("Couldn't mint a test key (at the cap or full inventory).")
+                player.message("Couldn't mint a test key (full inventory).")
             }
         }
     }

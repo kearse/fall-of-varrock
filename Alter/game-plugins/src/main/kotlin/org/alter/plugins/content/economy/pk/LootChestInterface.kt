@@ -131,7 +131,7 @@ object LootChestInterface {
             p.setComponentText(IFACE, COMP_KEY_LABEL, "")
             p.setComponentText(IFACE, COMP_COUNT_USED, "0")
         } else {
-            p.setComponentText(IFACE, COMP_KEY_LABEL, "${bundle.victim} (${bundles.size}/$KEY_SLOTS)")
+            p.setComponentText(IFACE, COMP_KEY_LABEL, "${bundle.victim} (${bundles.size} held)")
             p.setComponentText(IFACE, COMP_COUNT_USED, "${bundle.items.size}")
         }
         p.setComponentText(IFACE, COMP_COUNT_CAP, "${LootKeys.MAX_STACKS}")

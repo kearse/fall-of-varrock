@@ -28,9 +28,12 @@ import org.alter.plugins.service.marketvalue.ItemMarketValueService
  *  - skulled:   keep 0 (1 with Protect Item)
  * Untradeables are always kept and don't use up a keep slot (OSRS keeps them on top of the 3).
  *
- * Where the lost items go depends on where you died:
- *  - **Wilderness:** PvP loot — a real-player killer owns the private window; bot/no killer →
- *    public immediately. (Unchanged behavior.)
+ * Where the lost items go depends on who killed you and where:
+ *  - **A real-player killer (anywhere):** the loot is sealed into a loot key for the killer
+ *    ([LootKeys.tryAward]) — wilderness or not. Overflow/no-key remainders follow the zone
+ *    rules below.
+ *  - **Wilderness:** ground loot — a real-player killer owns the private window; bot/no
+ *    killer → public immediately.
  *  - **Anywhere else (PvE, roads, towns):** a reclaim pile owned by the VICTIM on the death
  *    tile, private for [RECLAIM_PRIVATE_CYCLES] (~15 min) so they can walk back from respawn,
  *    then public briefly before despawning.
@@ -101,17 +104,18 @@ class PvpDeathDropPlugin(
         val loot = lostLoot + keyLoot
 
         val tile = victim.tile
+        // ANY real-player kill seals the loot into a key for the killer — wilderness or not.
+        // What's left (the key's 28-stack overflow, or everything when no key could be minted:
+        // at the cap, full inventory, bot/no killer) follows the zone's normal drop rules.
+        val killer = victim.attr[KILLER_ATTR]?.get() as? Player
+        val owner = killer?.takeIf { it !is PkBot }
+        val overflow = if (owner != null) LootKeys.tryAward(owner, victim.username, loot) else null
+        val remainder = overflow ?: loot
         if (PvpZones.isWilderness(tile)) {
-            // PvP loot: a real-player killer gets it sealed in a loot key — anything past the
-            // key's 28-stack cap (the overflow) still hits the ground. Null = no key (cap/full
-            // inventory/bot killer) → everything ground-drops (public when the killer is a bot).
-            val killer = victim.attr[KILLER_ATTR]?.get() as? Player
-            val owner = killer?.takeIf { it !is PkBot }
-            val overflow = if (owner != null) LootKeys.tryAward(owner, victim.username, loot) else null
-            (overflow ?: loot).forEach { world.spawn(GroundItem(it.id, it.amount, tile, owner)) }
-        } else {
+            remainder.forEach { world.spawn(GroundItem(it.id, it.amount, tile, owner)) }
+        } else if (remainder.isNotEmpty()) {
             // Safe-zone death: victim-owned reclaim pile with a long private window.
-            loot.forEach { item ->
+            remainder.forEach { item ->
                 val drop = GroundItem(item.id, item.amount, tile, victim)
                 drop.publicDelayOverride = RECLAIM_PRIVATE_CYCLES
                 drop.despawnDelayOverride = RECLAIM_PRIVATE_CYCLES + RECLAIM_PUBLIC_CYCLES
