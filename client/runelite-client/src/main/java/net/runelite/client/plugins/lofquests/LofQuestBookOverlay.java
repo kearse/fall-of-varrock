@@ -61,6 +61,11 @@ class LofQuestBookOverlay extends Overlay implements LofWindows.Window
 	private static final int FOOT_BTN_Y = 284;
 	private static final int FOOT_BTN_H = 28;
 
+	// Rogue quests get a left-side progress dial; the story/steps/rewards shift right past it.
+	private static final int DIAL_W = 130;
+	private static final int HUNT_GOAL = 30;   // Rogue Hunting I — mirrors RogueProblem.HUNT_GOAL
+	private static final int LADDER_SIZE = 14; // Rogue Knight ladder length (RogueKnights.LADDER)
+
 	private final Client client;
 	private final LofQuestsConfig config;
 
@@ -241,11 +246,22 @@ class LofQuestBookOverlay extends Overlay implements LofWindows.Window
 		final LofQuestState state = focus.state(client);
 		trackable = state != LofQuestState.LOCKED && !focus.isFuture();
 
+		final boolean rogue = focus == LofQuest.ROGUE_HUNTING_I || focus == LofQuest.ROGUE_HUNTING_II;
+		final int leftX = rogue ? ox + PAD + DIAL_W : ox + PAD;
+		final int viewW = rogue ? WIN_W - 2 * PAD - DIAL_W : WIN_W - 2 * PAD;
+
 		LofTheme.panel(g, ox, oy, WIN_W, WIN_H, WIN_ARC);
 		drawHeader(g, ox, oy, mouse);
 		drawHero(g, ox, oy, state);
-		drawBar(g, ox, oy, state);
-		drawScrollContent(g, ox, oy, state);
+		if (rogue)
+		{
+			drawDial(g, ox, oy); // the left-side rogue gauge takes the progress bar's role
+		}
+		else
+		{
+			drawBar(g, ox, oy, state);
+		}
+		drawScrollContent(g, ox, oy, state, leftX, viewW);
 		drawTrack(g, ox, oy, mouse);
 		drawFooter(g, ox, oy, mouse);
 
@@ -350,6 +366,73 @@ class LofQuestBookOverlay extends Overlay implements LofWindows.Window
 		}
 	}
 
+	/**
+	 * The rogue quests' left-side dial: a radial gauge of hunt kills (Rogue Hunting I) or camps
+	 * cleared (Rogue Hunting II, with a knights-beaten sub-readout). Data from the varps the client
+	 * already reads (ROGUE_PROBLEM kills, KNIGHTS camps/knights) — no server round-trip per frame.
+	 */
+	private void drawDial(Graphics2D g, int ox, int oy)
+	{
+		final int cx = ox + PAD + DIAL_W / 2;
+		final int cy = oy + SCROLL_TOP + 42;
+		final int r = 34;
+
+		final int value, max;
+		final String label;
+		final String sub;
+		if (focus == LofQuest.ROGUE_HUNTING_I)
+		{
+			value = Math.min(LofQuestVarps.rogueProblemKills(client), HUNT_GOAL);
+			max = HUNT_GOAL;
+			label = "CUTTHROATS";
+			sub = null;
+		}
+		else
+		{
+			int total = LofQuestVarps.knightCampsTotal(client);
+			if (total <= 0)
+			{
+				total = 5; // varp not populated yet — the ladder has 5 knight-hosting camps
+			}
+			value = Math.min(LofQuestVarps.knightCampsCleared(client), total);
+			max = total;
+			label = "CAMPS CLEARED";
+			sub = "Knights " + Math.min(LofQuestVarps.knightsBeaten(client), LADDER_SIZE) + " / " + LADDER_SIZE;
+		}
+		final double frac = max <= 0 ? 0.0 : Math.min(1.0, (double) value / max);
+
+		// background ring + progress arc (from the top, clockwise)
+		final Stroke old = g.getStroke();
+		g.setStroke(new BasicStroke(7f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+		g.setColor(new Color(255, 255, 255, 24));
+		g.drawArc(cx - r, cy - r, 2 * r, 2 * r, 0, 360);
+		if (frac > 0)
+		{
+			g.setColor(frac >= 1.0 ? LofTheme.GOLD : LofTheme.EMBER);
+			g.drawArc(cx - r, cy - r, 2 * r, 2 * r, 90, -(int) Math.round(360 * frac));
+		}
+		g.setStroke(old);
+
+		// centre value
+		g.setFont(nameFont);
+		final String big = value + "/" + max;
+		final FontMetrics bfm = g.getFontMetrics();
+		LofTheme.shadowText(g, big, cx - bfm.stringWidth(big) / 2, cy + 6, frac >= 1.0 ? LofTheme.GOLD : LofTheme.TEXT);
+
+		// label + optional sub-readout under the dial
+		g.setFont(FontManager.getRunescapeSmallFont());
+		final FontMetrics sfm = g.getFontMetrics();
+		LofTheme.shadowText(g, label, cx - sfm.stringWidth(label) / 2, cy + r + 14, LofTheme.GOLD_DIM);
+		if (sub != null)
+		{
+			LofTheme.shadowText(g, sub, cx - sfm.stringWidth(sub) / 2, cy + r + 27, LofTheme.TEXT_DIM);
+		}
+
+		// thin divider between the dial column and the content
+		g.setColor(new Color(255, 255, 255, 14));
+		g.fillRect(ox + PAD + DIAL_W - 7, oy + SCROLL_TOP, 1, SCROLL_BOT - SCROLL_TOP);
+	}
+
 	private double progressFraction(LofQuestState state)
 	{
 		if (state == LofQuestState.FINISHED)
@@ -364,16 +447,16 @@ class LofQuestBookOverlay extends Overlay implements LofWindows.Window
 		return total == 0 ? 0.0 : Math.min(1.0, (double) focus.completedSteps(client) / total);
 	}
 
-	// --- the scrolling story / steps / rewards region ---
-	private void drawScrollContent(Graphics2D g, int ox, int oy, LofQuestState state)
+	// --- the scrolling story / steps / rewards region (leftX/viewW let a rogue dial claim the left) ---
+	private void drawScrollContent(Graphics2D g, int ox, int oy, LofQuestState state, int leftX, int viewW)
 	{
-		final int x = ox + PAD;
-		final int w = WIN_W - 2 * PAD - 6; // leave room for the scrollbar
+		final int x = leftX;
+		final int w = viewW - 6; // leave room for the scrollbar
 		final int viewTop = oy + SCROLL_TOP;
 		final int viewH = SCROLL_BOT - SCROLL_TOP;
 
 		final Shape oldClip = g.getClip();
-		g.setClip(x, viewTop, WIN_W - 2 * PAD, viewH);
+		g.setClip(x, viewTop, viewW, viewH);
 		int y = viewTop - scroll; // content origin, scrolled
 
 		final FontMetrics small = smallMetrics(g);
@@ -443,10 +526,10 @@ class LofQuestBookOverlay extends Overlay implements LofWindows.Window
 		contentH = (y + scroll) - viewTop + 6; // total content height for maxScroll()
 		g.setClip(oldClip);
 
-		// scrollbar
-		LofModal.scrollbar(g, x + WIN_W - 2 * PAD - 4, viewTop, viewH, contentH, scroll);
+		// scrollbar at the right edge of the content column
+		LofModal.scrollbar(g, x + viewW - 4, viewTop, viewH, contentH, scroll);
 
-		// bottom divider under the scroll region
+		// bottom divider under the scroll region (full width)
 		g.setColor(new Color(255, 255, 255, 16));
 		g.fillRect(ox + PAD, oy + SCROLL_BOT + 5, WIN_W - 2 * PAD, 1);
 	}

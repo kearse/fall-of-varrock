@@ -9,6 +9,7 @@ import org.alter.game.model.attr.RECRUIT_GOBLIN_KILLS_ATTR
 import org.alter.game.model.attr.SLAYER_TASK_NPC_ATTR
 import org.alter.game.model.entity.Player
 import org.alter.plugins.content.bots.knights.RogueKnightLadder
+import org.alter.plugins.content.bots.knights.RogueKnights
 import org.alter.plugins.content.war.Conquest
 import org.alter.plugins.content.war.recruit.RecruitTrials
 import org.alter.plugins.content.war.roguehunt.RogueProblem
@@ -33,8 +34,9 @@ import org.alter.plugins.content.war.warprep.WarPrepSurvival
  *  - [WARPREP_SURVIVAL_VARP] bits 0-5 = [WarPrepSurvival.Step] ordinal.
  *  - [CONQUEST_VARP] bits 0-5 = [Conquest.Step] ordinal (the endgame "King of Lumbridge" quest).
  *  - [KNIGHTS_VARP] packed: bits 0-7 = Rogue Knight ladder rank (knights beaten, 0-255 clamp),
- *    bits 8-15 = the active hunt's ladder index + 1 (0 = no active hunt) — published for a future
- *    client ladder panel; the live tracking arrow is server-driven (`RogueKnightCampPlugin`).
+ *    bits 8-15 = the active hunt's ladder index + 1 (0 = no active hunt), bits 16-19 = rogue camps
+ *    cleared (0-15), bits 20-23 = total knight-hosting camps (0-15) — the last two feed the rogue
+ *    quest window's left-side dial; the live tracking arrow is server-driven (`RogueKnightCampPlugin`).
  *  - [GUIDE_MUTED_VARP] = 1 while guidance is muted, else 0 (so the client toggle reflects state).
  *
  * Varps 4600-4608, 4613-4616, 4618-4623, 4625-4626 and 4633-4637 are taken by the other client HUDs;
@@ -132,10 +134,18 @@ object QuestJournal {
         val conquest = Conquest.step(p).ordinal and 0x3F
         if (p.getVarp(CONQUEST_VARP) != conquest) p.setVarp(CONQUEST_VARP, conquest)
 
-        // Rogue Knight ladder: rank + the active hunt (index+1; 0 = none) for a future client panel.
+        // Rogue Knight ladder: rank + the active hunt (index+1; 0 = none), plus the rogue quest
+        // window's left-side dial data — camps cleared / total. A knight-hosting camp is "cleared"
+        // once every knight it stations is beaten (max rank < knights beaten). Packed here so the
+        // client dial never has to mirror the ladder's camp layout.
         val knightRank = RogueKnightLadder.rank(p).coerceIn(0, 255)
         val knightHunt = ((RogueKnightLadder.targetIdx(p) ?: -1) + 1).coerceIn(0, 255)
-        val knightsPacked = knightRank or (knightHunt shl 8)
+        val knightCamps = RogueKnights.LADDER.map { it.camp }.distinct()
+        val campsCleared = knightCamps.count { camp ->
+            RogueKnights.LADDER.filter { it.camp == camp }.all { it.rank < knightRank }
+        }.coerceIn(0, 15)
+        val campsTotal = knightCamps.size.coerceIn(0, 15)
+        val knightsPacked = knightRank or (knightHunt shl 8) or (campsCleared shl 16) or (campsTotal shl 20)
         if (p.getVarp(KNIGHTS_VARP) != knightsPacked) p.setVarp(KNIGHTS_VARP, knightsPacked)
 
         val mutedFlag = if (muted(p)) 1 else 0

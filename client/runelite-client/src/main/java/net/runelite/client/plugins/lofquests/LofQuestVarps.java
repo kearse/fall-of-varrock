@@ -23,7 +23,9 @@ final class LofQuestVarps
 	 *  ordinal, bits 6-11 rogues felled on the HUNT step. */
 	static final int ROGUE_PROBLEM = 4617;
 
-	/** Packed Rogue Knight ladder state: bits 0-7 knights beaten, bits 8-15 active hunt index + 1. */
+	/** Packed Rogue Knight ladder state: bits 0-7 knights beaten, bits 8-15 active hunt index + 1,
+	 *  bits 16-19 rogue camps cleared, bits 20-23 total knight-hosting camps (the last two feed the
+	 *  rogue quest window's left-side dial). */
 	static final int KNIGHTS = 4644;
 
 	/** "Open the Quest Journal window" pulse: value = focused quest's chain index + 1 (0 = no signal).
@@ -92,6 +94,16 @@ final class LofQuestVarps
 	static int knightsBeaten(Client client)
 	{
 		return client.getVarpValue(KNIGHTS) & 0xFF;
+	}
+
+	static int knightCampsCleared(Client client)
+	{
+		return (client.getVarpValue(KNIGHTS) >> 16) & 0xF;
+	}
+
+	static int knightCampsTotal(Client client)
+	{
+		return (client.getVarpValue(KNIGHTS) >> 20) & 0xF;
 	}
 
 	static int questBookOpen(Client client)
