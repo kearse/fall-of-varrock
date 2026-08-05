@@ -19,8 +19,12 @@ final class LofQuestVarps
 	/** 1 while the player has muted the server's guidance arrows (free play), else 0. */
 	static final int GUIDE_MUTED = 4612;
 
-	/** Packed "The Rogue Problem" state: bits 0-5 step ordinal, bits 6-11 rogues felled on the HUNT step. */
+	/** Packed rogue-quests state (Rogue Hunting I + II share one server chain): bits 0-5 step
+	 *  ordinal, bits 6-11 rogues felled on the HUNT step. */
 	static final int ROGUE_PROBLEM = 4617;
+
+	/** Packed Rogue Knight ladder state: bits 0-7 knights beaten, bits 8-15 active hunt index + 1. */
+	static final int KNIGHTS = 4644;
 
 	/** Packed "War-Prep II — Ranged" state: bits 0-5 step ordinal, bits 6-11 enemies felled with a ranged weapon on FIELD. */
 	static final int RANGED = 4624;
@@ -79,6 +83,11 @@ final class LofQuestVarps
 	static int rogueProblemKills(Client client)
 	{
 		return (client.getVarpValue(ROGUE_PROBLEM) >> 6) & 0x3F;
+	}
+
+	static int knightsBeaten(Client client)
+	{
+		return client.getVarpValue(KNIGHTS) & 0xFF;
 	}
 
 	static boolean guideMuted(Client client)

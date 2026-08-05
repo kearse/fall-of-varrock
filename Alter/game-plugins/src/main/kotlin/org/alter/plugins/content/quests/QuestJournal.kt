@@ -70,10 +70,13 @@ object QuestJournal {
     /** Doric's Quest varp — now the "War-Prep I — Magic" row. Completes at 100. */
     const val WARPREP_QUEST_VARP = 31
     private const val WARPREP_QUEST_COMPLETE = 100
-    /** The Restless Ghost varp — now the "The Rogue Problem" row (reused War-Prep II — Ranged slot).
-     *  Completes at 5. */
+    /** The Restless Ghost varp — now the "Rogue Hunting I" row (the 30-rogue hunt). Completes at 5. */
     const val ROGUE_QUEST_VARP = 107
     private const val ROGUE_QUEST_COMPLETE = 5
+    /** The Knight's Sword varp — now the "Rogue Hunting II" row (the Rogue Knight ladder).
+     *  Completes at 7. */
+    const val ROGUE_LADDER_QUEST_VARP = 122
+    private const val ROGUE_LADDER_QUEST_COMPLETE = 7
     /** Imp Catcher varp — now the "War-Prep II — Ranged" row. Completes at 2. */
     const val WARPREP_RANGED_QUEST_VARP = 160
     private const val WARPREP_RANGED_QUEST_COMPLETE = 2
@@ -164,15 +167,24 @@ object QuestJournal {
         }
         setVarpSafely(p, WARPREP_QUEST_VARP, warprepVal)
 
-        // The Rogue Problem (Act II): NONE (locked until War-Prep I finishes / not begun) is not
-        // started; DONE is complete; any hunting/reporting/rank step in between is in progress.
+        // The Act II rogue chain drives TWO native rows, windowed off one Step machine:
+        //  - Rogue Hunting I (the 30-rogue hunt): complete the moment the hunt clears (KNIGHT
+        //    step onward); BRIEF/HUNT in progress; NONE not begun / locked.
+        //  - Rogue Hunting II (the Rogue Knight ladder): locked until the hunt clears; complete
+        //    when every camp is broken (DONE); the knight/report/ladder stretch is in progress.
         val rogue = RogueProblem.step(p)
-        val rogueVal = when {
-            rogue == RogueProblem.Step.DONE -> ROGUE_QUEST_COMPLETE
+        val huntVal = when {
+            rogue.ordinal >= RogueProblem.Step.KNIGHT.ordinal -> ROGUE_QUEST_COMPLETE
             rogue == RogueProblem.Step.NONE -> 0 // not begun / locked
             else -> 1                            // in progress
         }
-        setVarpSafely(p, ROGUE_QUEST_VARP, rogueVal)
+        setVarpSafely(p, ROGUE_QUEST_VARP, huntVal)
+        val ladderVal = when {
+            rogue == RogueProblem.Step.DONE -> ROGUE_LADDER_QUEST_COMPLETE
+            rogue.ordinal >= RogueProblem.Step.KNIGHT.ordinal -> 1 // climbing
+            else -> 0 // locked until Rogue Hunting I clears
+        }
+        setVarpSafely(p, ROGUE_LADDER_QUEST_VARP, ladderVal)
 
         // War-Prep II — Ranged: NONE (locked until The Rogue Problem finishes / not begun) is not
         // started; DONE is complete; any drill/skirmish/rank step in between is in progress.

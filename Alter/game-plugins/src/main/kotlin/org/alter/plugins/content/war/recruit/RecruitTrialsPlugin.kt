@@ -187,7 +187,7 @@ class RecruitTrialsPlugin(
                         chatNpc(p, "Worse: the deserters who lead them style themselves <col=801700>Rogue Knights</col>. A whole ladder of them, weakest to strongest, camped from the Lumbridge road to the deepest wilderness.", npc = s, title = "Recruiting Sergeant")
                         chatNpc(p, "First, thin the rank and file — ${RogueProblem.HUNT_GOAL} of the cutthroats. Any of the family counts, wherever you fell them: the jail camp west of Lumbridge, Draynor's outskirts and the road south of Port Sarim all crawl with them, and every one is safe ground — die there and your gear waits in a pile.", npc = s, title = "Recruiting Sergeant")
                         chatNpc(p, "Falador itself is thicker with them, but fair warning: its streets are a lawless raid ground — only its banks are safe. Cut your teeth on the road camps first, and take nothing into Falador you can't afford to lose. Follow the marker.", npc = s, title = "Recruiting Sergeant")
-                        chatNpc(p, "Prove that, and I'll set you on the first knight of the ladder. Do THAT and there's a purse fit to buy your Knighthood.", npc = s, title = "Recruiting Sergeant")
+                        chatNpc(p, "Prove that and I'll pay you a soldier's purse, then set you on the first knight of the ladder. Your Knighthood you'll EARN, rung by rung — every knight on that ladder guards coin and gear.", npc = s, title = "Recruiting Sergeant")
                         chatPlayer(p, "Consider it done, sergeant.")
                         RogueProblem.onSergeantBriefed(p)
                         return
@@ -201,7 +201,7 @@ class RecruitTrialsPlugin(
                         RogueHunt.payout(p)
                         val target = RogueKnightLadder.activeDef(p)
                         if (target != null) {
-                            chatNpc(p, "The rank and file are thinned. Now for the ladder, ${p.address}: ${target.briefLine}", npc = s, title = "Recruiting Sergeant")
+                            chatNpc(p, "The rank and file are thinned and your soldier's purse is paid — buy <col=ffae00>Soldier</col> from Duke Horacio if you haven't. Now for the ladder, ${p.address}: ${target.briefLine}", npc = s, title = "Recruiting Sergeant")
                             chatNpc(p, "You'll find the cur at <col=801700>${target.camp.display}</col> — ${target.camp.directions} The marker will lead you; <col=ffae00>::knights</col> tracks the hunt.", npc = s, title = "Recruiting Sergeant")
                             chatNpc(p, "Mind: the camp guards its own. Cut down <col=ffae00>${CampClearance.goal(target.camp)}</col> of its rogues first — only then will the knight take the field against you.", npc = s, title = "Recruiting Sergeant")
                             chatNpc(p, "Expect to lose a fight or two before you take them — every knight on this ladder guards the gear that beats the next one. Dying is training. Going back is winning.", npc = s, title = "Recruiting Sergeant")
@@ -211,14 +211,25 @@ class RecruitTrialsPlugin(
                         return
                     }
                     RogueProblem.Step.REPORT -> {
-                        chatNpc(p, "A named knight of the rogues' ladder, dead by your hand. THAT is the work of a Knight of Lumbridge, ${p.address}. The realm pays its debt.", npc = s, title = "Recruiting Sergeant")
+                        chatNpc(p, "A named knight of the rogues' ladder, dead by your hand. THAT is the work of a Knight of Lumbridge in the making, ${p.address}.", npc = s, title = "Recruiting Sergeant")
                         chatPlayer(p, "What now, sergeant?")
-                        chatNpc(p, "Take this purse to Duke Horacio and claim your Knighthood — it earns you rune, a companion of your own, and the right to hunt the wilderness. And the ladder doesn't end there: harder knights, better gear, all the way to the Rogue Commander himself.", npc = s, title = "Recruiting Sergeant")
+                        chatNpc(p, "Now you climb — <col=801700>Rogue Hunting II</col>: it ends when EVERY camp on the ladder is broken, the Commander last. The ladder pays as you go: knight kills, their kits, camp spoils, my bounties. When your purse reaches ${"%,d".format(org.alter.plugins.content.war.Title.KNIGHT.cost)} coins, Duke Horacio will sell you the Knighthood you're already earning — rune, a companion, the wilderness.", npc = s, title = "Recruiting Sergeant")
                         RogueProblem.onReportedToSergeant(p)
                         return
                     }
-                    RogueProblem.Step.RANK -> {
-                        chatNpc(p, "Off to Duke Horacio in the market, ${p.address} — climb to Knight. A companion and the wilderness are waiting on it.", npc = s, title = "Recruiting Sergeant")
+                    RogueProblem.Step.LADDER -> {
+                        RogueHunt.payout(p) // the bounties are part of the climb's purse
+                        val ladder = org.alter.plugins.content.bots.knights.RogueKnights.LADDER
+                        chatNpc(p, "The climb's the quest now, ${p.address}: ${RogueKnightLadder.rank(p)} of ${ladder.size} knights down. Break every camp on the ladder — the Commander last — and the realm will call the Rogue Problem solved.", npc = s, title = "Recruiting Sergeant")
+                        val target = RogueKnightLadder.assignedDef(p)
+                        if (target != null) {
+                            chatNpc(p, "Your mark: ${target.briefLine}", npc = s, title = "Recruiting Sergeant")
+                            chatNpc(p, "Find them at <col=801700>${target.camp.display}</col> — ${target.camp.directions} The marker leads; <col=ffae00>::knights</col> tracks the climb.", npc = s, title = "Recruiting Sergeant")
+                            if (!CampClearance.cleared(p, target.camp)) {
+                                chatNpc(p, "The camp guards its own: ${CampClearance.statusLine(p, target.camp)}", npc = s, title = "Recruiting Sergeant")
+                            }
+                        }
+                        chatNpc(p, "And keep buying your ranks off Duke Horacio as the spoils come in — a Knighthood pays for itself on this road, and its rune and companion will carry you up the harder rungs.", npc = s, title = "Recruiting Sergeant")
                         return
                     }
                     else -> {} // NONE (War-Prep unfinished) or DONE — fall through to the ladder/milestone chatter

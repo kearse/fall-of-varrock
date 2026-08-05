@@ -68,16 +68,23 @@ class DukeHoracioPlugin(
             return
         }
 
-        // "The Rogue Problem" finale (Act II): the Sergeant's purse covers the rungs up to Knight, so
-        // flow straight into claiming them — one per talk (Soldier, then Knight) until the quest closes.
-        if (RogueProblem.step(player) == RogueProblem.Step.RANK && next != null) {
-            val toKnight = if (next == RogueProblem.TARGET_TITLE) "the ${next.display}'s rune" else "${next.display} — and ${RogueProblem.TARGET_TITLE.display} beyond it"
-            chatNpc(player, "The Sergeant sends word — a captain of Fallen Varrock dead by your hand, and his purse to see you to Knighthood. Shall I raise you to ${next.display}? It costs ${fmt(next.cost)} coins, and earns you $toKnight.")
+        // "The Rogue Problem" (Act II): the hunt bounty covers Soldier and the ladder's spoils earn
+        // Knight, so while the ladder is live and the player is still below Knight, flow straight
+        // into claiming the next rung. Ranks never close the quest — only the broken ladder does.
+        val rogueLadderLive = RogueProblem.step(player).ordinal >= RogueProblem.Step.KNIGHT.ordinal &&
+            !RogueProblem.complete(player)
+        if (rogueLadderLive && next != null && next.ordinal <= Title.KNIGHT.ordinal) {
+            val pitch = if (next == Title.KNIGHT) {
+                "the Knight's rune, a companion of your own, and the wilderness"
+            } else {
+                "${next.display}'s ${next.maxTier.display} armour — and Knight beyond it"
+            }
+            chatNpc(player, "The Sergeant sends word of your work on the rogues' ladder — and every coin of your purse your own earning. Shall I raise you to ${next.display}? It costs ${fmt(next.cost)} coins, and earns you $pitch.")
             when (options(player, "Yes — make me a ${next.display}.", "Not just yet.")) {
                 1 -> {
                     buy(player, next)
-                    if (player.title == RogueProblem.TARGET_TITLE) {
-                        chatNpc(player, "Arise, ${RogueProblem.TARGET_TITLE.display}. You've earned a companion of your own — General Zo in the courtyard will muster them — and the wilderness is yours to hunt. Wear your rune with pride.")
+                    if (player.title == Title.KNIGHT) {
+                        chatNpc(player, "Arise, Knight. You've earned a companion of your own — General Zo in the courtyard will muster them — and the wilderness is yours to hunt. Now finish what you started: the rogues' ladder still stands.")
                     }
                 }
                 2 -> chatPlayer(player, "Not just yet.")

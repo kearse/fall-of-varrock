@@ -83,6 +83,6 @@ The four **Ancient Warrior knights** (Halric, Nyx, Dathen, and Vexmar's Zuriel k
 
 ## Related
 
-- [The Rogue Problem](/wiki/the-rogue-problem) - the quest that opens the ladder (and pays your Knighthood)
+- [The Rogue Problem](/wiki/the-rogue-problem) - the quest whose finish line is this ladder: a soldier's purse up front, Knighthood earned on the climb, complete when every camp is broken
 - [PK bots of the wilderness](/wiki/pk-bots-and-highwaymen) - the ambient PKer population and its loot pools
 - [Wilderness loot keys](/wiki/wilderness-loot-keys) · [Death & item protection](/wiki/death-and-item-protection)

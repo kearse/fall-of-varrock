@@ -1,8 +1,6 @@
 package org.alter.plugins.content.war.warprep
 
-import org.alter.api.Skills
 import org.alter.game.model.attr.AttributeKey
-import org.alter.game.model.attr.WARPREP_RANGED_AMMO_TOPUPS_ATTR
 import org.alter.game.model.attr.WARPREP_RANGED_KILLS_ATTR
 import org.alter.game.model.attr.WARPREP_RANGED_STEP_ATTR
 import org.alter.api.ext.message
@@ -20,10 +18,13 @@ import org.alter.rscm.RSCM.getRSCM
  * Quest 1 (Magic) closes at the Squire rung, The Rogue Problem carries Squire→Knight, and this quest
  * picks up there and carries **Knight→Lord** — filling the otherwise-unguided mid-game climb.
  *
- * Shape mirrors War-Prep I (skill drill → gear-up → field test → report → rank-up): Vannaka drills
- * the recruit's **Ranged to [RANGED_TARGET]** (handing a training bow + arrows), arms them with a
- * **marksman's kit**, sends them to fell [FIELD_GOAL] enemies with a ranged weapon, then debriefs and
- * pays a purse sized to the **Lord** rung — the final step walks them to Duke Horacio to buy it.
+ * Shape: gear-up → field test → report → rank-up. Vannaka arms the Knight with a **marksman's
+ * kit**, sends them to fell [FIELD_GOAL] enemies with a ranged weapon, then debriefs and pays a
+ * **skirmish bounty** ([SKIRMISH_BOUNTY] — pay for the task, never the rank). The Lordship itself
+ * is EARNED from the mid-game loops the Knight rank opened — knight farming, city raids, loot
+ * keys — and the RANK step tracks until it's bought. (The old "train Ranged to 40" DRILL step was
+ * cut — the Rogue Hunting ladder trains combat for real; its ordinal survives as a legacy no-op
+ * that migrates straight to GEAR.)
  *
  * All state is a single persistent step ordinal ([WARPREP_RANGED_STEP_ATTR]) plus a quest-scoped
  * FIELD kill counter ([WARPREP_RANGED_KILLS_ATTR]); the chain survives relogs and never re-fires once
@@ -40,17 +41,10 @@ object WarPrepRanged {
     private const val NUDGE_TICKS = 500 // ~5 minutes
     private val NUDGE_COUNTDOWN = AttributeKey<Int>()
 
-    /** The Ranged level the DRILL step trains to. TUNABLE. */
-    const val RANGED_TARGET = 40
-
     /** Enemies to fell with a ranged weapon on the FIELD step (quest-scoped). TUNABLE. */
     const val FIELD_GOAL = 20
 
-    // Training bow + a generous stock of arrows so a fresh recruit can train Ranged to the target;
-    // the bounded ammo top-up below covers anyone who runs dry (arrows are tradeable). TUNABLE.
-    private const val TRAINING_BOW = "item.magic_shortbow"
     private const val ARROWS = "item.rune_arrow"
-    private const val TRAINING_ARROWS = 1000
 
     // Marksman's kit for the skirmish: a crossbow, coloured d'hide and a stack of ammo. All TUNABLE /
     // defensive on missing keys.
@@ -59,10 +53,11 @@ object WarPrepRanged {
     private const val MARKSMAN_ARROWS = 2000
 
     /**
-     * Vannaka's payout for the skirmish test: a purse that covers the recruit's next rank ([Title.LORD]) —
-     * read off the ladder so it never drifts out of sync with the price.
+     * Vannaka's payout for the skirmish test — a bounty sized to the TASK, never the rank (the old
+     * full-Lord purse gifted the 2m climb away). Lord's [Title.LORD.cost] is earned from the loops
+     * the Knight rank opened: knight farming, city raids, loot keys, bounties. TUNE.
      */
-    val RANK_REWARD_COINS = Title.LORD.cost
+    const val SKIRMISH_BOUNTY = 250_000
     private const val COINS = "item.coins_995"
 
     /** The rank the quest carries the player to — closes the RANK step (and the quest) when reached. */
@@ -72,11 +67,13 @@ object WarPrepRanged {
     // Quest Journal varp the client reads).
     enum class Step(val objective: String) {
         NONE("(not started)"),
-        DRILL("Train Ranged to $RANGED_TARGET — loose arrows on the front's targets."),
+        /** LEGACY (never entered): the old "train Ranged to 40" drill — the Rogue Hunting ladder
+         *  trains combat for real now. Ordinal kept for saves; the poll migrates it to GEAR. */
+        DRILL("Return to Vannaka for the marksman's kit."),
         GEAR("Return to Vannaka for the marksman's kit."),
         FIELD("Skirmish test: fell $FIELD_GOAL enemies with a ranged weapon; ::warpranged tracks it."),
         REPORT("Return to Vannaka with word of the skirmish."),
-        RANK("Take your purse to Duke Horacio and rise to Lord — heavier armour and command await."),
+        RANK("Earn your Lordship and buy it at Duke Horacio — farm the Rogue Knights for their kits and rares, raid the fallen cities' loot spots, hunt the wild for loot keys. Heavier armour and command await."),
         DONE("War-Prep — Ranged mastered: you can hold a skirmish line."),
     }
 
@@ -96,7 +93,7 @@ object WarPrepRanged {
     fun begin(p: Player) {
         if (step(p) != Step.NONE) return
         if (!RogueProblem.complete(p)) return
-        advanceTo(p, Step.DRILL)
+        advanceTo(p, Step.GEAR) // straight to the kit — the ladder already trained their combat
     }
 
     /** On login, re-arm the poll timer if on a tracked step, and remind the player of the objective. */
@@ -113,7 +110,6 @@ object WarPrepRanged {
 
     /** The current objective, with live progress where the step has a measurable target. */
     fun objectiveLine(p: Player): String = when (step(p)) {
-        Step.DRILL -> "${Step.DRILL.objective} (Ranged ${p.getSkills().getBaseLevel(Skills.RANGED)}/$RANGED_TARGET)"
         Step.FIELD -> "${Step.FIELD.objective} (${fieldKills(p)}/$FIELD_GOAL)"
         else -> step(p).objective
     }
@@ -127,9 +123,10 @@ object WarPrepRanged {
 
     // --- pillar hooks -------------------------------------------------------------------
 
-    /** GEAR: `SlayerPlugin` (Vannaka) calls this once he's armed the recruit with the marksman kit. */
+    /** GEAR: `SlayerPlugin` (Vannaka) calls this once he's armed the recruit with the marksman kit.
+     *  Accepts legacy DRILL saves too (the cut drill step) so nobody strands between the poll ticks. */
     fun onArmedForSkirmish(p: Player) {
-        if (step(p) != Step.GEAR) return
+        if (step(p) != Step.GEAR && step(p) != Step.DRILL) return
         advanceTo(p, Step.FIELD)
     }
 
@@ -146,8 +143,8 @@ object WarPrepRanged {
         }
     }
 
-    /** REPORT → RANK: `SlayerPlugin` (Vannaka) calls this on the post-skirmish debrief — pays the rank
-     *  purse ([RANK_REWARD_COINS]) and sends the recruit to Duke Horacio for the rank-up. */
+    /** REPORT → RANK: `SlayerPlugin` (Vannaka) calls this on the post-skirmish debrief — pays the
+     *  skirmish bounty ([SKIRMISH_BOUNTY]); the Lordship itself is earned and bought when it is. */
     fun onReportedToVannaka(p: Player) {
         if (step(p) != Step.REPORT) return
         advanceTo(p, Step.RANK)
@@ -166,7 +163,7 @@ object WarPrepRanged {
      */
     fun pollTick(p: Player) {
         when (step(p)) {
-            Step.DRILL -> if (p.getSkills().getBaseLevel(Skills.RANGED) >= RANGED_TARGET) { advanceTo(p, Step.GEAR); return }
+            Step.DRILL -> { advanceTo(p, Step.GEAR); return } // legacy saves: the drill is cut
             Step.RANK -> if (p.title.ordinal >= TARGET_TITLE.ordinal) { advanceTo(p, Step.DONE); return }
             else -> {}
         }
@@ -183,7 +180,6 @@ object WarPrepRanged {
     fun advanceTo(p: Player, next: Step) {
         p.attr[WARPREP_RANGED_STEP_ATTR] = next.ordinal
         when (next) {
-            Step.DRILL -> { giveItem(p, TRAINING_BOW, 1); giveItem(p, ARROWS, TRAINING_ARROWS) } // bow + arrows to train
             Step.RANK -> grantRankPurse(p)
             Step.DONE -> grantCompletion(p)
             else -> {}
@@ -202,38 +198,10 @@ object WarPrepRanged {
         giveItem(p, ARROWS, MARKSMAN_ARROWS)
     }
 
-    /** Outcome of a DRILL-step top-up request — drives Vannaka's line. */
-    enum class TopUp { NOT_NEEDED, AMMO, DRILLED }
-
-    private const val MAX_TOPUPS = 2
-    private const val TOPUP_ARROWS = 500
-
-    /**
-     * Anti-soft-lock for a recruit who ran their arrows dry before Ranged [RANGED_TARGET] — bounded so
-     * it can't be farmed: the first [MAX_TOPUPS] dry visits hand out [TOPUP_ARROWS] arrows; after that
-     * Vannaka drills the recruit — granting the REMAINING Ranged xp directly (unfarmable, no soft-lock).
-     */
-    fun topUpAmmo(p: Player): TopUp {
-        if (step(p) != Step.DRILL) return TopUp.NOT_NEEDED
-        if (p.getSkills().getBaseLevel(Skills.RANGED) >= RANGED_TARGET) return TopUp.NOT_NEEDED
-        val id = runCatching { getRSCM(ARROWS) }.getOrNull() ?: return TopUp.NOT_NEEDED
-        if (p.inventory.getItemCount(id) > 0 || p.bank.getItemCount(id) > 0) return TopUp.NOT_NEEDED
-        val used = p.attr[WARPREP_RANGED_AMMO_TOPUPS_ATTR] ?: 0
-        if (used < MAX_TOPUPS) {
-            p.attr[WARPREP_RANGED_AMMO_TOPUPS_ATTR] = used + 1
-            giveItem(p, ARROWS, TOPUP_ARROWS)
-            return TopUp.AMMO
-        }
-        val need = org.alter.game.model.skill.SkillSet.getXpForLevel(RANGED_TARGET) -
-            p.getSkills().getCurrentXp(Skills.RANGED)
-        if (need > 0) p.addXp(Skills.RANGED, need)
-        return TopUp.DRILLED
-    }
-
-    /** RANK entry: Vannaka's payout for the skirmish — a purse sized to the next rank on the ladder. */
+    /** RANK entry: Vannaka's skirmish bounty — pay for the task; the Lordship is earned. */
     private fun grantRankPurse(p: Player) {
-        giveItem(p, COINS, RANK_REWARD_COINS)
-        p.message("<col=801700>Vannaka pays you ${"%,d".format(RANK_REWARD_COINS)} coins</col> — enough to rise to ${TARGET_TITLE.display} at Duke Horacio.")
+        giveItem(p, COINS, SKIRMISH_BOUNTY)
+        p.message("<col=801700>Vannaka pays your skirmish bounty: ${"%,d".format(SKIRMISH_BOUNTY)} coins.</col> The ${TARGET_TITLE.display}ship's ${"%,d".format(TARGET_TITLE.cost)} you'll earn — knight farming, city raids, loot keys — then buy it at Duke Horacio.")
     }
 
     private fun grantCompletion(p: Player) {
@@ -242,8 +210,7 @@ object WarPrepRanged {
 
     /** One-line progress report (`::warpranged` and Vannaka's chatter). */
     fun statusLine(p: Player): String = when (step(p)) {
-        Step.NONE -> "War-Prep II — Ranged: finish The Rogue Problem first."
-        Step.DRILL -> "War-Prep II — Ranged: train Ranged to <col=801700>$RANGED_TARGET</col> (currently ${p.getSkills().getBaseLevel(Skills.RANGED)})."
+        Step.NONE -> "War-Prep II — Ranged: finish Rogue Hunting II first."
         Step.FIELD -> "War-Prep II — Ranged: <col=801700>${fieldKills(p)}/$FIELD_GOAL</col> felled with a ranged weapon."
         Step.DONE -> "War-Prep II — Ranged: <col=4f9b4f>complete</col>."
         else -> "War-Prep II — Ranged — current objective: ${step(p).objective}"
