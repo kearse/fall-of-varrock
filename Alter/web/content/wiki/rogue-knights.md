@@ -1,15 +1,17 @@
 ---
 title: The Rogue Knights - the PK ladder
 category: PvP & Wilderness
-summary: Fourteen named boss PKers across five organized camps. The Sergeant assigns them weakest to strongest - each one you beat unlocks the gear for the next, all the way to AGS-class loot.
+summary: Fourteen named boss PKers across seven organized camps. The Sergeant assigns them weakest to strongest - each one you beat unlocks the gear for the next, all the way to AGS-class loot.
 order: 6
-updated: 2026-08-04
-infobox: Type = Boss ladder (repeatable); Start = The Rogue Problem quest (auto); Giver = Recruiting Sergeant (Lumbridge gate); Length = 14 knights, 5 camps; Tracking = Hint arrow + ::knights; Reward = PK gear per knight, up to AGS / dragon claws / Ancient Warrior sets
+updated: 2026-08-05
+infobox: Type = Boss ladder (repeatable); Start = The Rogue Problem quest (auto); Giver = Recruiting Sergeant (Lumbridge gate); Length = 14 knights, 7 camps; Tracking = Hint arrow + ::knights; Reward = PK gear per knight, up to AGS / dragon claws / Ancient Warrior sets
 ---
 
 The deserters who lead Varrock's rogues style themselves **Rogue Knights** - a ladder of **fourteen named boss PKers**, weakest to strongest, camped from the Lumbridge road to the deepest wilderness. The **Recruiting Sergeant** assigns them **in order**: kill your mark, rank up, and he names the next. Every knight you beat hands you a **first-kill gear unlock** - deliberately the core of the kit that beats the *next* one - so the ladder is both your PK training and your gear progression in one track.
 
-**Expect to die.** The knights fight like real players - they eat, pot, pray-switch and spec - and the top of the ladder flicks prayers nearly frame-perfectly. Dying to a knight is the loop, not a failure: your rank never resets, the first two camps sit on **reclaim-safe ground** (walk back for your gear), and the tracking arrow leads you straight back for the rematch. *Dying is training. Going back is winning.*
+**Expect to die.** The knights fight like real players - they eat, pot, pray-switch and spec - and the top of the ladder answers your switches within a tick or two. The window is small, but it is **always there**: every knight has flick lag you can punish, bait with a fake switch, or line a spec up inside - that's the skill the ladder teaches. Dying to a knight is the loop, not a failure: your rank never resets, the first four camps (the whole safe road west) sit on **reclaim-safe ground** (walk back for your gear), and the tracking arrow leads you straight back for the rematch. *Dying is training. Going back is winning.*
+
+They fight like humans in one more way: **fight momentum (PID)**. Just like the real game, the fight's tick priority reshuffles at random every minute or so - sometimes your switches bite a tick sooner, sometimes their combos stack a tick tighter, and the smartest knights hold their KO spec for the moment momentum flips their way. You never see it; you learn to feel it - and to respect the swap exactly as you would against a real NHer. The knights also throw real **prayer baits** (a gear-flash between swings to pull your overhead) and real **spec combos** (the AGS or dagger into an instant granite maul). Every trick they use is a trick humans use, and every counter that works on them works on people.
 
 ## Finding your knight
 
@@ -22,15 +24,15 @@ The deserters who lead Varrock's rogues style themselves **Rogue Knights** - a l
 
 | Camp | Where | Ground | Who holds it |
 | --- | --- | --- | --- |
-| **Bandit Hideout** | west of Lumbridge, on the Draynor road | **Safe** - death leaves a reclaim pile | Bronze, iron and steel knights - the learning camp |
-| **Siege of Port Sarim** | the docks south-west of Lumbridge | **Safe** - death leaves a reclaim pile | The raid leaders - Black Knights and low-level NHers: pures, zerkers, an obsidian mauler - assaulting the dock garrison in waves |
+| **Bandit Hideout** | west of Lumbridge, by the jail on the Draynor road | **Safe** - death leaves a reclaim pile | Sir Brack and his bronze-and-iron rabble - the learning camp |
+| **Draynor outskirts** | the coast road on Draynor's southern edge | **Safe** - death leaves a reclaim pile | Sir Oswin the Steel and the village-road rabble (iron to black) |
+| **Sarim road** | south of Port Sarim, past the jail | **Safe** - death leaves a reclaim pile | Sir Malrik the Black and his road-toll gang (black to adamant) |
+| **Siege of Port Sarim** | the docks south-west of Lumbridge | **Safe** - death leaves a reclaim pile | The raid leaders - low-level NHers: pures, zerkers, an obsidian mauler - assaulting the dock garrison in waves |
 | **Fallen Varrock** | the old capital's streets | **Wilderness** (single combat) | Rune mains, hybrids, a Void ranger |
 | **Wild Bandit Camp** | deep wilderness, far north-west | **Wilderness** (multi) | Maxers and Ancient Warrior builds - Dharok's, Statius, Morrigan |
 | **Rogue Commander's Redoubt** | the deepest wild, near the old mage arena | **Wilderness** (multi) | The elite guard - Vesta, Zuriel, and the Commander himself |
 
-Most camps also have an **ambient warband** of regular Rogue Knights in that band's gear prowling it - fodder, loot and practice around the named fights. The two low camps sit on reclaim-safe ground (die, walk back, try again); from Fallen Varrock onward you're on PvP ground, so carry a cheap kit until a fight is learned.
-
-Two more warbands hold the **safe road west** without a named knight: **Draynor's southern outskirts** and the **road south of Port Sarim** (past the jail). They're hunting grounds, not ladder stops - every kill there feeds the rogue tally and [The Rogue Problem](/wiki/the-rogue-problem)'s hunt on reclaim-safe ground, and once you thin a warband it stops attacking you on sight for good.
+Every camp has an **ambient warband** of regular Rogue Knights in that band's gear prowling it - fodder, loot and practice around the named fights, and the source of your first PK gear (they drop their worn kit). **Thin the warband before the boss will fight you**: 10 kills at each of the four safe road camps (reps are free there - reclaim-safe deaths, and your quest hunt kills count toward the gates), 5 at the wilderness camps where every attempt risks your kit. Once thinned, a camp's rogues stop attacking you on sight for good - though they'll still answer a fight you start, so keep farming them for gear. Every kill also feeds the rogue tally and [The Rogue Problem](/wiki/the-rogue-problem)'s hunt.
 
 ## Holding the port
 
@@ -49,8 +51,8 @@ Raiders never attack travellers unprovoked - the port stays a safe hub - and dyi
 | # | Knight | Camp | Their kit | Signature drops (every kill) |
 | --- | --- | --- | --- | --- |
 | 1 | **Sir Brack the Bronze** | Bandit Hideout | iron | - |
-| 2 | **Sir Oswin the Steel** | Bandit Hideout | steel | - |
-| 3 | **Sir Malrik the Black** | Port Sarim | black | rune scimitar |
+| 2 | **Sir Oswin the Steel** | Draynor outskirts | steel | - |
+| 3 | **Sir Malrik the Black** | Sarim road | black | rune scimitar |
 | 4 | **Dame Vora the Swift** | Port Sarim | 1-def pure (prays!) | black d'hide |
 | 5 | **Grom the Mauler** | Port Sarim | obsidian maul | berserker necklace, obby maul |
 | 6 | **Sir Edran Ironclad** | Port Sarim | 45-def zerker | fighter torso, warrior ring |

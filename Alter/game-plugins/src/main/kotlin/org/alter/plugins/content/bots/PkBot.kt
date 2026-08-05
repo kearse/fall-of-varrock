@@ -109,4 +109,25 @@ open class PkBot(world: World, val loadout: BotLoadout) : Player(world) {
     /** The opponent style the bot is mid-reaction to (waiting out its reaction timer before switching
      *  its overhead to it). Null = no pending switch. */
     var pendingPray: CombatClass? = null
+
+    // --- fight-style state (docs/pk-bot-fight-styles.md — PID model, baits, combos) ---
+
+    /** The opponent the fight's PID coin is currently flipped against (fight-scoped). */
+    var pidOpponent: PlayerUID? = null
+
+    /** True while the bot holds PID advantage this phase (see [BotBrain.updatePid]). */
+    var hasPid: Boolean = false
+
+    /** World cycle at which the fight's PID reshuffles (every 100-150 ticks, like OSRS). */
+    var pidShuffleAt: Int = 0
+
+    /** World cycle the bot entered KO range holding its burst for the PID swap (fallback timer). */
+    var koWaitSince: Int? = null
+
+    /** The true style hidden behind a bait gear-flash (restored before the next swing). */
+    var baitedFrom: BotStyle? = null
+
+    /** Armed instant spec follow-up (e.g. the granite maul after AGS) — RSCM name, fired by
+     *  [BotBrain] as soon as the leading spec has swung. */
+    var comboFollowup: String? = null
 }

@@ -16,12 +16,16 @@ import org.alter.plugins.content.bots.BotItem
  *   - and every kill (first or farmed) rolls the knight's **signature rare table** on top of its
  *     full worn-kit drop.
  *
- * Camps escalate: the SAFE Bandit Hideout (reclaimable deaths — learn cheaply) → the SAFE Siege of
+ * Camps escalate along the safe road first — the Bandit Hideout → Draynor → the Sarim road
+ * (reclaimable deaths — learn cheaply) → the SAFE Siege of
  * Port Sarim (the rogues raid Lumbridge's lifeline port — `areas/portsarim/PortSiegePlugin` runs
  * the battle scene; lose the port and the realm is cut off) → shallow-wild Fallen Varrock → the
  * deep-wild camps where dying costs you everything you carry. Top knights are TUNED TO BE
- * GENUINELY HARD (hp overrides + near-perfect prayer reactions + fast specs) — several attempts is
- * the intended experience.
+ * GENUINELY HARD (hp overrides + tight prayer reactions + fast specs) — several attempts is the
+ * intended experience. But hard means SMALL windows, never NO window: the ladder exists to teach
+ * fighting good players (switch timing, prayer tricking, punishing the flick lag), so every
+ * knight's reaction range must leave at least an occasional 2-tick gap — a pinned 1..1 makes
+ * switching pointless and teaches nothing. See [RogueKnightDef.reactionTicks].
  *
  * **Scaling:** adding knight #15+ is ONE list entry (keep ranks contiguous). Everything else —
  * spawning, tracking arrows, dialogue, drops — is data-driven off this list.
@@ -57,7 +61,11 @@ data class RogueKnightDef(
     /** Boss max-HP override (null = the loadout's normal pool). Applied via PkBot.maxHpOverride +
      *  setCurrentLevel — NEVER setBaseLevel above 99 (crashes the XP table). */
     val maxHp: Int? = null,
-    /** Prayer-reaction override (ticks); 1..1 = near frame-perfect. Null = human default. */
+    /** Prayer-reaction override (ticks) — the delay before the knight's overhead answers a style
+     *  switch, i.e. THE PLAYER'S DAMAGE WINDOW (see BotBrain.updatePrayers). Null = human default
+     *  (mostly sharp 1-2, sometimes a slow 3-6). Pin a range to make a boss consistent; NEVER pin
+     *  1..1 — a frame-perfect flick leaves no window, and the ladder teaches switching, it doesn't
+     *  invalidate it. The top of the ladder bottoms out at 1..2: sharp, but beatable on timing. */
     val reactionTicks: IntRange? = null,
     /** Spec-regen override (ticks per +10%); lower = more specs. Null = default. */
     val specRegen: Int? = null,
@@ -76,24 +84,30 @@ object RogueKnights {
 
     // ---- the camps (tiles TUNE — centers must be open ground; verify with ::zone) ----
 
+    // Clearance-gate tune ([KnightCamp.clearGoal]): the four SAFE road camps ask 10 tier kills —
+    // reps are free on reclaim ground, the tier rogues' worn-kit drops ARE the gear-up, and hunt-
+    // step kills pre-credit the gates — while the wilderness camps keep the default 5, since every
+    // attempt there risks the hunter's kit.
     val BANDIT_HIDEOUT = KnightCamp(
         key = "bandit_hideout",
         display = "the Bandit Hideout",
         center = Tile(3110, 3230),
         safe = true,
         directions = "west out of Lumbridge, past the mill — the hideout squats by the jail on the road to Draynor.",
+        clearGoal = 10,
     )
-    // The two SAFE ROAD camps between the hideout and Port Sarim. No ladder knight is stationed at
-    // either — they exist so the Act II hunt (RogueProblem.HUNT counts rogue-family kills anywhere)
-    // has a stepping-stone route of reclaim-death ground the whole way west, instead of marching a
-    // fresh Squire straight into raid-city Falador. Being CAMPS entries gives their colonies the
-    // full safe-camp behaviour (1v1 attacker cap, aggro-until-cleared, then stand-down).
+    // The SAFE ROAD camps between the hideout and Port Sarim — full ladder stops (Sir Oswin holds
+    // Draynor, Sir Malrik the Sarim road), so the Sergeant's assignments march the whole road west:
+    // hideout → Draynor → Sarim road → docks. They double as the Act II hunt's stepping-stone
+    // grounds (RogueProblem.HUNT counts rogue-family kills anywhere) — reclaim-death ground the
+    // whole way, instead of marching a fresh Squire straight into raid-city Falador.
     val DRAYNOR = KnightCamp(
         key = "draynor",
         display = "the Draynor outskirts",
         center = Tile(3081, 3225),
         safe = true,
         directions = "the coast road on Draynor's southern edge — the rabble prowl between the village and Port Sarim.",
+        clearGoal = 10,
     )
     val SARIM_ROAD = KnightCamp(
         key = "sarim_road",
@@ -101,6 +115,7 @@ object RogueKnights {
         center = Tile(3015, 3165),
         safe = true,
         directions = "south out of Port Sarim, past the jail — they work the road toward Mudskipper Point.",
+        clearGoal = 10,
     )
     val PORT_SARIM = KnightCamp(
         key = "port_sarim",
@@ -108,6 +123,7 @@ object RogueKnights {
         center = Tile(3041, 3202), // the docks — matches PortSiegePlugin.PORT_CENTRE (TUNE together)
         safe = true, // outside the red: reclaim deaths — the ladder's second learning ground
         directions = "the docks south-west of Lumbridge — our only port. The rogues raid it in waves to cut the realm off; help the dock knights hold it while you hunt.",
+        clearGoal = 10,
     )
     val FALLEN_VARROCK = KnightCamp(
         key = "fallen_varrock",
@@ -144,16 +160,16 @@ object RogueKnights {
         ),
         RogueKnightDef(
             rank = 1, key = "oswin", name = "Sir Oswin the Steel",
-            camp = BANDIT_HIDEOUT, loadoutKey = "steel_pker", maxHp = 40,
+            camp = DRAYNOR, loadoutKey = "steel_pker", maxHp = 40,
             firstKillRewards = listOf("item.black_scimitar" to 1, "item.amulet_of_strength" to 1),
-            briefLine = "Sir Oswin the Steel runs the hideout now. Tougher than Brack — watch his dagger.",
+            briefLine = "Sir Oswin the Steel fell back to Draynor when Brack died — he runs the rabble on the village outskirts now. Tougher than Brack — watch his dagger.",
         ),
         RogueKnightDef(
             rank = 2, key = "malrik", name = "Sir Malrik the Black",
-            camp = PORT_SARIM, loadoutKey = "black_pker", maxHp = 60,
+            camp = SARIM_ROAD, loadoutKey = "black_pker", maxHp = 60,
             firstKillRewards = listOf("item.mithril_scimitar" to 1, "item.climbing_boots" to 1, "item.coins_995" to 20_000),
             rareTable = DropTable(rare = listOf(DropEntry("item.rune_scimitar", oneInN = 8))),
-            briefLine = "Sir Malrik the Black leads the raids on Port Sarim's docks. Lose that port and Lumbridge is cut off from the world — cut HIM down instead. Help the dock knights hold the line while you're there.",
+            briefLine = "Sir Malrik the Black chokes the supply road south of Port Sarim — every wagon past the jail pays him or bleeds. Cut HIM down and the road breathes again.",
         ),
         RogueKnightDef(
             rank = 3, key = "vora", name = "Dame Vora the Swift",
@@ -237,7 +253,7 @@ object RogueKnights {
         ),
         RogueKnightDef(
             rank = 10, key = "halric", name = "Sir Halric Iron-Hand",
-            camp = WILD_BANDIT_CAMP, loadoutKey = "statius_bruiser", maxHp = 130, reactionTicks = 1..2,
+            camp = WILD_BANDIT_CAMP, loadoutKey = "statius_bruiser", maxHp = 130, reactionTicks = 2..3,
             firstKillRewards = listOf("item.barrows_gloves" to 1, "item.amulet_of_fury" to 1),
             rareTable = DropTable(rare = listOf(
                 DropEntry("item.statiuss_warhammer", oneInN = 15, announce = true),
@@ -250,7 +266,7 @@ object RogueKnights {
         ),
         RogueKnightDef(
             rank = 11, key = "nyx", name = "Dame Nyx the Huntress",
-            camp = WILD_BANDIT_CAMP, loadoutKey = "morrigan_skirmisher", maxHp = 130, reactionTicks = 1..2,
+            camp = WILD_BANDIT_CAMP, loadoutKey = "morrigan_skirmisher", maxHp = 130, reactionTicks = 2..3,
             firstKillRewards = listOf("item.heavy_ballista" to 1, "item.dragon_javelin" to 50),
             rareTable = DropTable(rare = listOf(
                 DropEntry("item.morrigans_coif", oneInN = 15, announce = true),
@@ -262,7 +278,7 @@ object RogueKnights {
         ),
         RogueKnightDef(
             rank = 12, key = "dathen", name = "Sir Dathen the Claw",
-            camp = ROGUE_REDOUBT, loadoutKey = "vesta_duelist", maxHp = 140, reactionTicks = 1..2, specRegen = 4,
+            camp = ROGUE_REDOUBT, loadoutKey = "vesta_duelist", maxHp = 140, reactionTicks = 1..3, specRegen = 4,
             extraInventory = listOf(BotItem("item.saradomin_brew4", 2)),
             firstKillRewards = listOf("item.dragon_defender" to 1, "item.berserker_ring_i" to 1),
             rareTable = DropTable(rare = listOf(
@@ -275,7 +291,7 @@ object RogueKnights {
         ),
         RogueKnightDef(
             rank = 13, key = "vexmar", name = "Lord Vexmar, Rogue Commander",
-            camp = ROGUE_REDOUBT, loadoutKey = "elite_nh", maxHp = 160, reactionTicks = 1..1, specRegen = 3,
+            camp = ROGUE_REDOUBT, loadoutKey = "elite_nh", maxHp = 160, reactionTicks = 1..2, specRegen = 3,
             extraInventory = listOf(BotItem("item.saradomin_brew4", 4), BotItem("item.super_restore4", 2)),
             firstKillRewards = listOf("item.coins_995" to 250_000, "item.bandos_tassets" to 1),
             rareTable = DropTable(rare = listOf(
@@ -287,7 +303,7 @@ object RogueKnights {
                 DropEntry("item.ancestral_hat", oneInN = 40, announce = true, log = true),
                 DropEntry("item.elder_maul", oneInN = 40, announce = true),
             )),
-            briefLine = "Lord Vexmar — the Rogue Commander himself. The full NH kit, frame-perfect prayers, and no mercy. Beating him makes you one of the deadliest blades in the realm.",
+            briefLine = "Lord Vexmar — the Rogue Commander himself. The full NH kit, razor prayers, and no mercy. Beating him makes you one of the deadliest blades in the realm.",
         ),
     )
 

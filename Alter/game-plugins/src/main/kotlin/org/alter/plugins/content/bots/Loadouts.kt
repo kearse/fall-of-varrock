@@ -35,6 +35,23 @@ typealias GearBlock = Map<EquipmentType, String>
 /** One consumable/spec-weapon line the bot carries in its inventory. */
 data class BotItem(val name: String, val amount: Int = 1)
 
+/**
+ * Per-loadout FIGHT STYLE — how this archetype fights beyond its gear (docs/pk-bot-fight-styles.md).
+ * Every field mirrors a behaviour real OSRS PKers actually show, and its counter is the human
+ * counter — the ladder must teach transferable habits, never bot-only quirks.
+ */
+data class FightProfile(
+    /** Target-HP threshold at/below which the KO attempt starts (spec weapons come out). */
+    val koAtHp: Int = 55,
+    /** 1-in-N chance per idle tick BETWEEN swings to flash another style's gear — the prayer bait
+     *  real NHers throw to pull your overhead. The bot re-dresses its true style before it swings,
+     *  so the human counter (read the weapon at swing time, not mid-cycle) works. Null = never. */
+    val baitOneIn: Int? = null,
+    /** Hold the KO burst until the fight's PID flips to the bot — the classic "spec on the swap".
+     *  Falls back to bursting anyway after [org.alter.plugins.content.bots.BotBrain]'s KO-wait cap. */
+    val specOnPidSwap: Boolean = false,
+)
+
 data class BotLoadout(
     /** Stable key used by commands/spawners (e.g. "elite_nh"). */
     val key: String,
@@ -67,6 +84,8 @@ data class BotLoadout(
      * this LOW (e.g. 0.18) so they stay in the high-damage missing-HP band and only emergency-eat.
      */
     val eatAt: Double? = null,
+    /** How this archetype fights beyond its gear — baits, KO timing, PID habits. */
+    val profile: FightProfile = FightProfile(),
 )
 
 private fun gb(vararg pairs: Pair<EquipmentType, String>): GearBlock = mapOf(*pairs)
@@ -127,6 +146,7 @@ object BotLoadouts {
         ),
         spell = mapOf(BotStyle.MAGIC to "ice_barrage"),
         meleeSpecRotation = listOf("item.armadyl_godsword", "item.granite_maul"),
+        profile = FightProfile(koAtHp = 60, baitOneIn = 6, specOnPidSwap = true),
         inventory = listOf(
             BotItem("item.armadyl_godsword"), // spec finisher + drops on death
             BotItem("item.granite_maul"),     // combo finisher + drops on death
@@ -189,6 +209,7 @@ object BotLoadouts {
         ),
         spell = mapOf(BotStyle.MAGIC to "ice_blitz"),
         meleeSpecRotation = listOf("item.dragon_dagger", "item.granite_maul"),
+        profile = FightProfile(koAtHp = 50, baitOneIn = 10),
         inventory = listOf(
             BotItem("item.dragon_dagger"),
             BotItem("item.granite_maul"),
@@ -239,6 +260,7 @@ object BotLoadouts {
         ),
         spell = mapOf(BotStyle.MAGIC to "ice_barrage"),
         meleeSpecRotation = listOf("item.dragon_dagger"),
+        profile = FightProfile(koAtHp = 45, baitOneIn = 8),
         inventory = listOf(
             BotItem("item.dragon_dagger"),
             BotItem("item.saradomin_brew4", 8),
@@ -285,6 +307,7 @@ object BotLoadouts {
         ),
         spell = mapOf(BotStyle.MAGIC to "ice_blitz"),
         meleeSpecRotation = listOf("item.dragon_dagger"),
+        profile = FightProfile(koAtHp = 45),
         inventory = listOf(
             BotItem("item.dragon_dagger"),
             BotItem("item.saradomin_brew4", 6),
@@ -333,6 +356,7 @@ object BotLoadouts {
             ),
         ),
         meleeSpecRotation = listOf("item.armadyl_godsword"),
+        profile = FightProfile(koAtHp = 60, baitOneIn = 8),
         inventory = listOf(
             BotItem("item.armadyl_godsword"), // finisher + drops on death
             BotItem("item.saradomin_brew4", 8),
@@ -493,6 +517,7 @@ object BotLoadouts {
         ),
         spell = mapOf(BotStyle.MAGIC to "blood_barrage"),
         meleeSpecRotation = listOf("item.dragon_dagger"),
+        profile = FightProfile(koAtHp = 45, baitOneIn = 8),
         inventory = listOf(
             BotItem("item.dragon_dagger"),
             BotItem("item.saradomin_brew4", 6),
@@ -541,6 +566,7 @@ object BotLoadouts {
         ),
         spell = mapOf(BotStyle.MAGIC to "ice_blitz"),
         meleeSpecRotation = listOf("item.dragon_claws"),
+        profile = FightProfile(koAtHp = 60, baitOneIn = 6, specOnPidSwap = true),
         inventory = listOf(
             BotItem("item.dragon_claws"),
             BotItem("item.saradomin_brew4", 8),
@@ -650,6 +676,7 @@ object BotLoadouts {
             ),
         ),
         meleeSpecRotation = listOf("item.dragon_dagger"),
+        profile = FightProfile(koAtHp = 45, baitOneIn = 12),
         inventory = listOf(
             BotItem("item.dragon_dagger"),
             BotItem("item.shark", 4),
@@ -693,6 +720,7 @@ object BotLoadouts {
             ),
         ),
         meleeSpecRotation = listOf("item.dragon_dagger", "item.granite_maul"),
+        profile = FightProfile(koAtHp = 50, baitOneIn = 12),
         inventory = listOf(
             BotItem("item.dragon_dagger"),
             BotItem("item.granite_maul"),
@@ -736,6 +764,7 @@ object BotLoadouts {
             ),
         ),
         meleeSpecRotation = listOf("item.dragon_dagger", "item.granite_maul"),
+        profile = FightProfile(koAtHp = 50),
         inventory = listOf(
             BotItem("item.dragon_dagger"),
             BotItem("item.granite_maul"),
@@ -782,6 +811,7 @@ object BotLoadouts {
             ),
         ),
         meleeSpecRotation = listOf("item.armadyl_godsword", "item.granite_maul"),
+        profile = FightProfile(koAtHp = 60, baitOneIn = 8, specOnPidSwap = true),
         inventory = listOf(
             BotItem("item.armadyl_godsword"),
             BotItem("item.granite_maul"),
@@ -826,6 +856,7 @@ object BotLoadouts {
             ),
         ),
         meleeSpecRotation = listOf("item.dragon_claws"),
+        profile = FightProfile(koAtHp = 60, baitOneIn = 8, specOnPidSwap = true),
         inventory = listOf(
             BotItem("item.dragon_claws"),
             BotItem("item.saradomin_brew4", 6),
@@ -902,6 +933,7 @@ object BotLoadouts {
             ),
         ),
         meleeSpecRotation = listOf("item.dragon_dagger"),
+        profile = FightProfile(koAtHp = 50),
         inventory = listOf(
             BotItem("item.dragon_dagger"),
             BotItem("item.shark", 6),
@@ -975,6 +1007,7 @@ object BotLoadouts {
             ),
         ),
         meleeSpecRotation = listOf("item.statiuss_warhammer"),
+        profile = FightProfile(koAtHp = 60),
         inventory = listOf(
             BotItem("item.saradomin_brew4", 5),
             BotItem("item.super_restore4", 3),
@@ -1018,6 +1051,7 @@ object BotLoadouts {
             ),
         ),
         meleeSpecRotation = listOf("item.dragon_dagger"),
+        profile = FightProfile(koAtHp = 50),
         inventory = listOf(
             BotItem("item.dragon_dagger"),
             BotItem("item.saradomin_brew4", 5),
@@ -1061,6 +1095,7 @@ object BotLoadouts {
             ),
         ),
         meleeSpecRotation = listOf("item.dragon_dagger"),
+        profile = FightProfile(koAtHp = 50),
         inventory = listOf(
             BotItem("item.dragon_dagger"),
             BotItem("item.saradomin_brew4", 5),
@@ -1105,6 +1140,7 @@ object BotLoadouts {
             ),
         ),
         meleeSpecRotation = listOf("item.vestas_longsword", "item.granite_maul"),
+        profile = FightProfile(koAtHp = 60, baitOneIn = 7, specOnPidSwap = true),
         inventory = listOf(
             BotItem("item.granite_maul"),
             BotItem("item.saradomin_brew4", 6),
@@ -1149,6 +1185,7 @@ object BotLoadouts {
         ),
         spell = mapOf(BotStyle.MAGIC to "ice_barrage"),
         meleeSpecRotation = listOf("item.dragon_dagger"),
+        profile = FightProfile(koAtHp = 45, baitOneIn = 7),
         inventory = listOf(
             BotItem("item.dragon_dagger"),
             BotItem("item.saradomin_brew4", 6),
