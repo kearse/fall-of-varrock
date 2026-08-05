@@ -118,34 +118,36 @@ enum LofQuest
 		"War-Prep II — Ranged",
 		"The front's skirmish lines are won with the bow. The rogues' ladder made a fighter of you — "
 			+ "now Vannaka arms you with a marksman's kit and sends you to prove you can hold a "
-			+ "line at distance, then pays a purse that raises you to Lord.",
+			+ "line at distance. He pays a skirmish bounty; the Lordship itself you earn — knight "
+			+ "farming, city raids, loot keys — and buy when your purse allows.",
 		6, // DONE ordinal (WarPrepRanged.Step)
 		// World anchors are best-effort — TUNE against the live map.
 		Arrays.asList(
 			new LofQuestStep(2, "Return to Vannaka for the marksman's kit", new WorldPoint(3222, 3212, 0)),
 			new LofQuestStep(3, "Fell 20 enemies with a ranged weapon", "Bow, crossbow or thrown — Fallen Varrock's rogues will do.", new WorldPoint(3212, 3428, 0)),
 			new LofQuestStep(4, "Report back to Vannaka", new WorldPoint(3222, 3212, 0)),
-			new LofQuestStep(5, "Rise to Lord at Duke Horacio", "Vannaka's purse covers the climb — heavier armour and command await.", new WorldPoint(3220, 3211, 0))
+			new LofQuestStep(5, "Earn your Lordship at Duke Horacio", "The realm's loops pay the 2,000,000 — farm the Rogue Knights for kits and rares, raid the fallen cities' loot spots, hunt the wild for loot keys.", new WorldPoint(3220, 3211, 0))
 		),
 		Arrays.asList(
 			"The rank of Lord — dragon armour",
 			"Command of the knights (General Zo)",
 			"War-Prep III — Survival (General Zo's next lesson)",
-			"A purse that covers your rank to Lord"
+			"A 250,000 skirmish bounty — the Lordship is earned"
 		)),
 
 	WARPREP_SURVIVAL(
 		"War-Prep III — Survival",
 		"Field survival training — staying alive when the front collapses around you. General Zo toughens "
-			+ "you up, kits you out, and sends you into the Fight Cave to prove you can endure — then pays "
-			+ "a purse that raises you to Minister.",
+			+ "you up, kits you out, and sends you into the Fight Cave to prove you can endure. He pays "
+			+ "a survival bounty; the Ministry itself you earn in command — marches, raids, the "
+			+ "ladder's elite rares.",
 		6, // DONE ordinal (WarPrepSurvival.Step)
 		Arrays.asList(
 			new LofQuestStep(1, "Raise your Hitpoints to 60", "Hitpoints climbs as you fight — toughen up.", new WorldPoint(3220, 3210, 0)),
 			new LofQuestStep(2, "Return to General Zo for a survival kit", new WorldPoint(3220, 3210, 0)),
 			new LofQuestStep(3, "Endure the Fight Cave to wave 6", "Enter with ::arena — manage your health and outlast it.", null),
 			new LofQuestStep(4, "Report back to General Zo", new WorldPoint(3220, 3210, 0)),
-			new LofQuestStep(5, "Rise to Minister at Duke Horacio", "General Zo's purse covers the climb.", new WorldPoint(3220, 3211, 0))
+			new LofQuestStep(5, "Earn your Ministry at Duke Horacio", "Command pays the 10,000,000 — lead marches and raids, farm the ladder's elite for their rares, hunt the deep wild.", new WorldPoint(3220, 3211, 0))
 		),
 		Arrays.asList(
 			"The rank of Minister — within reach of the crown",

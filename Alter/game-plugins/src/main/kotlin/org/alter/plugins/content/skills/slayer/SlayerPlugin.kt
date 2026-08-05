@@ -369,13 +369,13 @@ class SlayerPlugin(
         say(p, "The skirmish isn't won yet, ${p.address}. <col=801700>${WarPrepRanged.fieldKills(p)}/${WarPrepRanged.FIELD_GOAL}</col> felled with a ranged weapon — keep at it, then report back.")
     }
 
-    /** War-Prep II (Ranged) REPORT step: back from the skirmish — Vannaka's debrief pays the rank purse
-     *  and sends the soldier to Duke Horacio to rise to Lord. */
+    /** War-Prep II (Ranged) REPORT step: back from the skirmish — Vannaka's debrief pays the skirmish
+     *  BOUNTY; the Lordship itself is earned from the mid-game loops and bought when it is. */
     private suspend fun QueueTask.warPrepRangedDebrief(p: Player) {
         say(p, "A clean skirmish — I watched the reports come in. You can hold a line at range now, ${p.address}.")
-        say(p, "The realm pays for a soldier who can. Here — <col=801700>${"%,d".format(WarPrepRanged.RANK_REWARD_COINS)} coins</col>, a purse fit to raise you to <col=801700>Lord</col>.")
-        WarPrepRanged.onReportedToVannaka(p) // REPORT → RANK: pays the purse
-        say(p, "Take it to <col=801700>Duke Horacio</col>. A Lord commands knights — and General Zo will have words for you once you wear the title. Follow the marker.")
+        say(p, "The realm pays for the task: <col=801700>${"%,d".format(WarPrepRanged.SKIRMISH_BOUNTY)} coins</col>, a skirmish bounty. The <col=801700>Lordship</col> you'll EARN — farm the rogues' ladder for their kits and rares, raid the fallen cities' loot spots, hunt the wild for loot keys.")
+        WarPrepRanged.onReportedToVannaka(p) // REPORT → RANK: pays the bounty
+        say(p, "When your purse reaches <col=801700>${"%,d".format(org.alter.plugins.content.war.Title.LORD.cost)} coins</col>, Duke Horacio will raise you. A Lord commands knights — and General Zo will have words for you once you wear the title.")
     }
 
     /** Intro-quest: the recruit reports back to Vannaka after the rats — Vannaka rewards the combat

@@ -139,12 +139,12 @@ class GeneralZoPlugin(
         }
     }
 
-    /** REPORT step: debrief — pay the rank purse and send the soldier to Duke Horacio to rise to Minister. */
+    /** REPORT step: debrief — pay the survival BOUNTY; the Ministry itself is earned in command. */
     private suspend fun QueueTask.survivalDebrief(player: Player) {
         chatNpc(player, "You held out when lesser men would have broken. That's<br>the making of a commander, ${player.address}.", title = ZO)
-        chatNpc(player, "The realm rewards it. Here — ${"%,d".format(WarPrepSurvival.RANK_REWARD_COINS)} coins, enough<br>to rise to <col=801700>Minister</col> at Duke Horacio.", title = ZO)
-        WarPrepSurvival.onReportedToZo(player) // REPORT → RANK: pays the purse
-        chatNpc(player, "Take it to the Duke. A Minister stands within reach of the<br>crown itself — and the King's endgame. Follow the marker.", title = ZO)
+        chatNpc(player, "The realm pays for the trial: <col=801700>${"%,d".format(WarPrepSurvival.SURVIVAL_BOUNTY)} coins</col>, a survival<br>bounty. The <col=801700>Ministry</col> you'll EARN in command — lead marches<br>and raids, farm the ladder's elite for their rares.", title = ZO)
+        WarPrepSurvival.onReportedToZo(player) // REPORT → RANK: pays the bounty
+        chatNpc(player, "When your purse reaches ${"%,d".format(org.alter.plugins.content.war.Title.MINISTER.cost)}, the Duke will raise you.<br>A Minister stands within reach of the crown itself —<br>and the King's endgame.", title = ZO)
     }
 
     private companion object {

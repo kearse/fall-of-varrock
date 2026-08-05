@@ -20,9 +20,11 @@ import org.alter.rscm.RSCM.getRSCM
  *
  * Shape: gear-up → field test → report → rank-up. Vannaka arms the Knight with a **marksman's
  * kit**, sends them to fell [FIELD_GOAL] enemies with a ranged weapon, then debriefs and pays a
- * purse sized to the **Lord** rung — the final step walks them to Duke Horacio to buy it. (The
- * old "train Ranged to 40" DRILL step was cut — the Rogue Hunting ladder trains combat for real;
- * its ordinal survives as a legacy no-op that migrates straight to GEAR.)
+ * **skirmish bounty** ([SKIRMISH_BOUNTY] — pay for the task, never the rank). The Lordship itself
+ * is EARNED from the mid-game loops the Knight rank opened — knight farming, city raids, loot
+ * keys — and the RANK step tracks until it's bought. (The old "train Ranged to 40" DRILL step was
+ * cut — the Rogue Hunting ladder trains combat for real; its ordinal survives as a legacy no-op
+ * that migrates straight to GEAR.)
  *
  * All state is a single persistent step ordinal ([WARPREP_RANGED_STEP_ATTR]) plus a quest-scoped
  * FIELD kill counter ([WARPREP_RANGED_KILLS_ATTR]); the chain survives relogs and never re-fires once
@@ -51,10 +53,11 @@ object WarPrepRanged {
     private const val MARKSMAN_ARROWS = 2000
 
     /**
-     * Vannaka's payout for the skirmish test: a purse that covers the recruit's next rank ([Title.LORD]) —
-     * read off the ladder so it never drifts out of sync with the price.
+     * Vannaka's payout for the skirmish test — a bounty sized to the TASK, never the rank (the old
+     * full-Lord purse gifted the 2m climb away). Lord's [Title.LORD.cost] is earned from the loops
+     * the Knight rank opened: knight farming, city raids, loot keys, bounties. TUNE.
      */
-    val RANK_REWARD_COINS = Title.LORD.cost
+    const val SKIRMISH_BOUNTY = 250_000
     private const val COINS = "item.coins_995"
 
     /** The rank the quest carries the player to — closes the RANK step (and the quest) when reached. */
@@ -70,7 +73,7 @@ object WarPrepRanged {
         GEAR("Return to Vannaka for the marksman's kit."),
         FIELD("Skirmish test: fell $FIELD_GOAL enemies with a ranged weapon; ::warpranged tracks it."),
         REPORT("Return to Vannaka with word of the skirmish."),
-        RANK("Take your purse to Duke Horacio and rise to Lord — heavier armour and command await."),
+        RANK("Earn your Lordship and buy it at Duke Horacio — farm the Rogue Knights for their kits and rares, raid the fallen cities' loot spots, hunt the wild for loot keys. Heavier armour and command await."),
         DONE("War-Prep — Ranged mastered: you can hold a skirmish line."),
     }
 
@@ -140,8 +143,8 @@ object WarPrepRanged {
         }
     }
 
-    /** REPORT → RANK: `SlayerPlugin` (Vannaka) calls this on the post-skirmish debrief — pays the rank
-     *  purse ([RANK_REWARD_COINS]) and sends the recruit to Duke Horacio for the rank-up. */
+    /** REPORT → RANK: `SlayerPlugin` (Vannaka) calls this on the post-skirmish debrief — pays the
+     *  skirmish bounty ([SKIRMISH_BOUNTY]); the Lordship itself is earned and bought when it is. */
     fun onReportedToVannaka(p: Player) {
         if (step(p) != Step.REPORT) return
         advanceTo(p, Step.RANK)
@@ -195,10 +198,10 @@ object WarPrepRanged {
         giveItem(p, ARROWS, MARKSMAN_ARROWS)
     }
 
-    /** RANK entry: Vannaka's payout for the skirmish — a purse sized to the next rank on the ladder. */
+    /** RANK entry: Vannaka's skirmish bounty — pay for the task; the Lordship is earned. */
     private fun grantRankPurse(p: Player) {
-        giveItem(p, COINS, RANK_REWARD_COINS)
-        p.message("<col=801700>Vannaka pays you ${"%,d".format(RANK_REWARD_COINS)} coins</col> — enough to rise to ${TARGET_TITLE.display} at Duke Horacio.")
+        giveItem(p, COINS, SKIRMISH_BOUNTY)
+        p.message("<col=801700>Vannaka pays your skirmish bounty: ${"%,d".format(SKIRMISH_BOUNTY)} coins.</col> The ${TARGET_TITLE.display}ship's ${"%,d".format(TARGET_TITLE.cost)} you'll earn — knight farming, city raids, loot keys — then buy it at Duke Horacio.")
     }
 
     private fun grantCompletion(p: Player) {

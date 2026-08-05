@@ -20,8 +20,9 @@ import org.alter.rscm.RSCM.getRSCM
  * Shape mirrors the earlier prep quests (skill drill → gear-up → field test → report → rank-up):
  * **General Zo** — the commander of the Lumbridge defense — drills the soldier's **Hitpoints to
  * [HP_TARGET]**, hands a **survival kit** (food, brews, restores, armour), and sends them into the
- * **Fight Cave** to prove they can endure — survive to wave [FIELD_WAVE]. He then debriefs and pays a
- * purse sized to the **Minister** rung; the final step walks the player to Duke Horacio to buy it.
+ * **Fight Cave** to prove they can endure — survive to wave [FIELD_WAVE]. He then debriefs and pays
+ * a **survival bounty** ([SURVIVAL_BOUNTY] — pay for the trial, never the rank); the Ministry's 10m
+ * is EARNED in command (marches, raids, the ladder's elite) and the RANK step tracks until bought.
  *
  * The FIELD test reuses the existing Fight Cave hiscore ([ARENA_BEST_WAVE_ATTR]) — the poll simply
  * watches it, so no coupling into the cave plugin is needed. All state is a single persistent step
@@ -55,8 +56,13 @@ object WarPrepSurvival {
         "item.shark" to 20, "item.saradomin_brew4" to 6, "item.super_restore4" to 4, "item.antipoison4" to 2,
     )
 
-    /** General Zo's payout for the trial: a purse sized to the next rank ([Title.MINISTER]). */
-    val RANK_REWARD_COINS = Title.MINISTER.cost
+    /**
+     * General Zo's payout for the Fight Cave trial — a bounty sized to the TASK, never the rank
+     * (the old full-Minister purse gifted the 10m climb away). Minister's [Title.MINISTER.cost] is
+     * earned from the loops a Lord commands: marches and raids, the ladder's elite rares, the deep
+     * wild. TUNE.
+     */
+    const val SURVIVAL_BOUNTY = 1_000_000
     private const val COINS = "item.coins_995"
 
     /** The rank the quest carries the player to — closes the RANK step (and the quest) when reached. */
@@ -69,7 +75,7 @@ object WarPrepSurvival {
         GEAR("Return to General Zo for a survival kit."),
         FIELD("Endure the Fight Cave — survive to wave $FIELD_WAVE; ::warpsurvival tracks it."),
         REPORT("Return to General Zo with word of the trial."),
-        RANK("Take your purse to Duke Horacio and rise to Minister."),
+        RANK("Earn your Ministry and buy it at Duke Horacio — command pays: lead marches and raids, farm the ladder's elite for their rares, hunt the deep wild."),
         DONE("War-Prep — Survival mastered: you can outlast a collapsing front."),
     }
 
@@ -126,7 +132,7 @@ object WarPrepSurvival {
         advanceTo(p, Step.FIELD)
     }
 
-    /** REPORT → RANK: `GeneralZoPlugin` calls this on the post-trial debrief — pays the rank purse and
+    /** REPORT → RANK: `GeneralZoPlugin` calls this on the post-trial debrief — pays the survival bounty and
      *  sends the player to Duke Horacio for the rank-up. */
     fun onReportedToZo(p: Player) {
         if (step(p) != Step.REPORT) return
@@ -217,10 +223,10 @@ object WarPrepSurvival {
         return TopUp.DRILLED
     }
 
-    /** RANK entry: General Zo's payout — a purse sized to the next rank on the ladder. */
+    /** RANK entry: General Zo's survival bounty — pay for the trial; the Ministry is earned. */
     private fun grantRankPurse(p: Player) {
-        giveItem(p, COINS, RANK_REWARD_COINS)
-        p.message("<col=801700>General Zo pays you ${"%,d".format(RANK_REWARD_COINS)} coins</col> — enough to rise to ${TARGET_TITLE.display} at Duke Horacio.")
+        giveItem(p, COINS, SURVIVAL_BOUNTY)
+        p.message("<col=801700>General Zo pays your survival bounty: ${"%,d".format(SURVIVAL_BOUNTY)} coins.</col> The ${TARGET_TITLE.display}'s ${"%,d".format(TARGET_TITLE.cost)} you'll earn in command — marches, raids, the ladder's elite — then buy it at Duke Horacio.")
     }
 
     private fun grantCompletion(p: Player) {

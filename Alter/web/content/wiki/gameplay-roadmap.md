@@ -35,7 +35,7 @@ This is also when the War first pays you: scheduled **[Marches](/wiki/marches-an
 
 ## Stage 3 - Early game: build your bankroll
 
-Straight out of the Wizard Tower, the **[The Rogue Problem](/wiki/the-rogue-problem)** quest picks you up: the Recruiting Sergeant sends the new Squire into Fallen Varrock to thin its cutthroats and cut down a district captain, then pays a purse that carries you all the way to **Knight**. It's the guided bridge across this stage - follow the Quest Journal and you're never left wondering what's next.
+Straight out of the Wizard Tower, **[Rogue Hunting I & II](/wiki/the-rogue-problem)** pick you up: the Recruiting Sergeant sets the new Squire on the rogues' rank and file (a soldier's purse when the hunt clears), then opens the **[Rogue Knight ladder](/wiki/rogue-knights)** - the camp-by-camp PK schooling whose spoils earn your **Knighthood**, complete when every camp is broken. It's the guided bridge across this stage - follow the Quest Journal and you're never left wondering what's next.
 
 Beyond (and after) the quest, ranks are bought with coins, so the early game is about finding the money-making loop you enjoy. All of these work from day one:
 
