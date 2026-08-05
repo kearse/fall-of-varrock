@@ -9,7 +9,7 @@ import org.alter.rscm.RSCM.getRSCM
 /**
  * Lumbridge General Store currency — coins, plus an anti-faucet BUY-BACK DENY-LIST (store-audit F-5).
  *
- * A `BUY_TRADEABLES` shop buys ANY tradeable at 60% cache cost, so an NPC-dropped item whose cache
+ * A `BUY_TRADEABLES` shop buys ANY tradeable at 70% cache cost, so an NPC-dropped item whose cache
  * `cost` far exceeds its true drop value would be a runaway gp faucet (kill mob -> vendor the drop ->
  * gp). Refuse buy-back on anything whose cache cost exceeds [MAX_BUYBACK_COST]; those route to the
  * value-derived Trading Post (::market) instead. Selling FROM the shop TO the player is unchanged, and

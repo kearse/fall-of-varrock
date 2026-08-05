@@ -345,24 +345,28 @@ class LumbridgeShopHubPlugin(
     // Declared last so every stock list above is initialised before this init runs.
     init {
         // ---- shop registration ----
+        // Every coin shop is BUY_STOCK: with no player market at low population, the themed
+        // stores are the buyers of last resort — each buys back what it stocks at the shared
+        // ItemCurrency.BUY_RATE (70% of value). One-way stays reserved for the ticket/reward
+        // shops below.
         coinShop(MELEE_WEAPONS, PurchasePolicy.BUY_STOCK, meleeWeaponStock)
         coinShop(RANGED_GEAR, PurchasePolicy.BUY_STOCK, rangedStock)
-        coinShop(MAGIC_STORE, PurchasePolicy.BUY_NONE, magicStock)
+        coinShop(MAGIC_STORE, PurchasePolicy.BUY_STOCK, magicStock)
         coinShop(FISHING_SUPPLIES, PurchasePolicy.BUY_STOCK, fishingSuppliesStock)
-        coinShop(FISH, PurchasePolicy.BUY_NONE, fishStock)
-        coinShop(ALLOTMENT_SEEDS, PurchasePolicy.BUY_NONE, allotmentSeedStock)
-        coinShop(HERB_SEEDS, PurchasePolicy.BUY_NONE, herbSeedStock)
-        coinShop(TREE_SEEDS, PurchasePolicy.BUY_NONE, treeSeedStock)
-        coinShop(SPECIAL_SEEDS, PurchasePolicy.BUY_NONE, specialSeedStock)
-        coinShop(HERBS, PurchasePolicy.BUY_NONE, herbStock)
-        coinShop(SECONDARIES, PurchasePolicy.BUY_NONE, secondaryStock)
-        coinShop(UNFINISHED_POTIONS, PurchasePolicy.BUY_NONE, unfinishedStock)
+        coinShop(FISH, PurchasePolicy.BUY_STOCK, fishStock)
+        coinShop(ALLOTMENT_SEEDS, PurchasePolicy.BUY_STOCK, allotmentSeedStock)
+        coinShop(HERB_SEEDS, PurchasePolicy.BUY_STOCK, herbSeedStock)
+        coinShop(TREE_SEEDS, PurchasePolicy.BUY_STOCK, treeSeedStock)
+        coinShop(SPECIAL_SEEDS, PurchasePolicy.BUY_STOCK, specialSeedStock)
+        coinShop(HERBS, PurchasePolicy.BUY_STOCK, herbStock)
+        coinShop(SECONDARIES, PurchasePolicy.BUY_STOCK, secondaryStock)
+        coinShop(UNFINISHED_POTIONS, PurchasePolicy.BUY_STOCK, unfinishedStock)
         coinShop(FARM_TOOLS, PurchasePolicy.BUY_STOCK, farmToolStock)
         coinShop(SKILL_TOOLS, PurchasePolicy.BUY_STOCK, skillToolStock)
-        coinShop(SKILL_MATERIALS, PurchasePolicy.BUY_NONE, skillMaterialStock)
-        coinShop(BONES, PurchasePolicy.BUY_NONE, bonesStock)
-        coinShop(CRAFTING, PurchasePolicy.BUY_NONE, craftingStock)
-        coinShop(CONSTRUCTION, PurchasePolicy.BUY_NONE, constructionStock)
+        coinShop(SKILL_MATERIALS, PurchasePolicy.BUY_STOCK, skillMaterialStock)
+        coinShop(BONES, PurchasePolicy.BUY_STOCK, bonesStock)
+        coinShop(CRAFTING, PurchasePolicy.BUY_STOCK, craftingStock)
+        coinShop(CONSTRUCTION, PurchasePolicy.BUY_STOCK, constructionStock)
         ticketShop(BOSS_REWARDS, "item.boss_ticket", "Boss Ticket", "Boss Tickets", bossRewardStock)
         ticketShop(VOTE_REWARDS, "item.vote_ticket", "Vote Ticket", "Vote Tickets", voteRewardStock)
         // Buy Vote Tickets for coins — sets the coin ceiling on the vote-reward gear.

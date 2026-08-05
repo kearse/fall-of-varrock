@@ -42,8 +42,8 @@
 | Duke Horacio ranks | gp (rank purchases) | live (`DukeHoracioPlugin`) |
 | Forge / Upgrade gear | gp + rune gear + runite bars | **live** (`economy/forge/ForgePlugin`) — the marquee sink; KBD runite bars feed it |
 | High/Low Alchemy | item destroyed (gp partial faucet) | **live** (`magic/alchemy/AlchemyPlugin`) — item sink |
-| Trading Post trade margin | gp | **live** (`economy/tradingpost`) — 15% buy/sell spread, value-derived; the NPC-backstop marketplace sink |
-| Grand Exchange commodity margin | gp | **live (engine)** — 15% band (floor 85% / ceiling 100% of value) on the commodity allowlist (`grandexchange/GrandExchangeCommodities`); same sink as the Trading Post, now inside the GE offer book |
+| Trading Post trade margin | gp | **live** (`economy/tradingpost`) — 30% buy/sell spread (the shared `ItemCurrency.BUY_RATE` 70%), value-derived; no house stock — the shelf lists only player-sold items |
+| Grand Exchange commodity margin | gp | **live (engine)** — 30% band (floor 70% / ceiling 100% of value) on the commodity allowlist (`grandexchange/GrandExchangeCommodities`); same sink as the Trading Post, now inside the GE offer book |
 | Buy-currency-for-coins tabs | gp | **live** (`grandexchange/CurrencyExchange`) — Boss Tickets 1,000 / Blood Money 800 / Vote Tickets 2,000 gp each; **one-way** (no NPC buyback) so it's a pure coin sink, and it sets the coin ceiling on special-currency gear |
 | PK Rewards shop (emblem trader) | Blood Money | **live** (`economy/pk`) — PK supplies (food/potions), no tradeable gear |
 | Gambling rake | gp | **live** (`economy/gambling`) — 5% house edge on dice |
@@ -60,7 +60,7 @@ consolidates trade and lets stores set the price floors.
   between an offer's escrow and its collectable proceeds — a player↔player match never mints or destroys
   coins/items. The NPC commodity backstop is the *only* faucet/sink and is gated to the allowlist.
 - **Store minimums (backstop):** commodity-allowlist items (runes, bars, ores, logs, food, herbs, mats)
-  get an NPC floor (85% of value) and ceiling (value). Gear, megarares and the currency items have **no**
+  get an NPC floor (70% of value — the shared NPC buy rate) and ceiling (value). Gear, megarares and the currency items have **no**
   backstop — they float on the pure player market. The allowlist excludes the deliberately premium-priced
   items (death rune, adamant arrow, cooked swordfish) and load-bearing sinks (runite bar, dragon bones).
 - **Price band (all items):** every offer's price must sit within **a tenth to ten times** the item's

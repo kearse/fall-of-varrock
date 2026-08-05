@@ -123,7 +123,7 @@ open class ItemCurrency(
     override fun getBuyPrice(
         world: World,
         item: Int,
-    ): Int = (getItem(item).cost * 0.6).toInt()
+    ): Int = (getItem(item).cost * BUY_RATE).toInt().coerceAtLeast(1)
 
     override fun sellToPlayer(
         p: Player,
@@ -247,5 +247,15 @@ open class ItemCurrency(
             p.inventory.add(item.id, amount = remove.completed, beginSlot = slot)
             p.message("You don't have enough inventory space.")
         }
+    }
+
+    companion object {
+        /**
+         * Fraction of an item's cache value an NPC pays when buying FROM a player — shared by
+         * every coin shop, the Trading Post, and the GE's commodity floor. Kept above high alch
+         * (60%) so vendoring always beats alching; better prices only come from other players
+         * on the Grand Exchange (up to 100% of value).
+         */
+        const val BUY_RATE = 0.7
     }
 }

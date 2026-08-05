@@ -9,6 +9,8 @@ infobox: Type = Shop reference; Location = Lumbridge courtyard market; Getting t
 
 Every vendor in the realm, in one place. For how the market *works* - instant-open shops, tab strips, the Trading Post - see [Trading Post & the market](/wiki/trading-post-and-shops). This page is the reference: **who sells what, where, and for how much**.
 
+Every coin shop also **buys back what it stocks at 70% of value** (right-click an inventory item while the shop is open). The [Trading Post](/wiki/trading-post-and-shops) takes anything at the same 70%; for a better price, sell to other players on the Grand Exchange. Only the ticket/reward vendors never buy back.
+
 ## Getting there
 
 The market is the **Lumbridge courtyard**, just east of the castle's east wall - two facing shop rows with a walkable aisle between them. The fastest route is the **teleport portal → Basics → "Market / Shops"**, which lands you in the middle of the aisle. Home teleport puts you a few steps away.
@@ -87,7 +89,7 @@ Two reward tabs, two ticket currencies - both tickets are **tradeable items**, s
 
 ## The general store
 
-The classic **general store by the bridge** (shop keeper and assistant behind the counter) sells pots, jugs, buckets, tinderboxes, shears, knives, chisels, hammers and spades - and it **buys almost any tradeable** at 60% of value, the market's junk-disposal counter.
+The classic **general store by the bridge** (shop keeper and assistant behind the counter) sells pots, jugs, buckets, tinderboxes, shears, knives, chisels, hammers and spades - and it **buys almost any tradeable** at 70% of value, the market's junk-disposal counter.
 
 ## Rank armour - the Apprentice's Armoury
 
@@ -204,7 +206,7 @@ The PvP gear chase, paid in **Blood Money** - earned only from killing **real pl
 ## Beyond the market
 
 - **Lisa's LMS shop** - at the [Last Man Standing](/wiki/last-man-standing) lobby, **LMS points**: cooked karambwan 1, saradomin brew(4) and super restore(4) 2, super combat(4) 4, and the Saradomin/Zamorak/Guthix halos at 500 each. The island's chest gear exists only inside a match - you keep nothing and lose nothing.
-- **The Trading Post** (`::market`) - the player marketplace with an always-stocked backstop; see [Trading Post & the market](/wiki/trading-post-and-shops).
+- **The Trading Post** (`::market`) - the sell-anything counter; its shelf lists only what players have sold. See [Trading Post & the market](/wiki/trading-post-and-shops).
 - **Donor Store** (`::donorstore`) - cosmetic rares for **Donor Points**: partyhats 900 (white 1,350), santa hat 1,350, h'ween masks 700. Tradeable, stat-less. See [Bonds & membership](/wiki/bonds-and-membership).
 - **Commander's Regalia** (`::prestigeshop`) - the **sanguine Torva** cosmetic set for **Prestige** points: full helm 75, platebody and platelegs 100 each. Commanders only earn Prestige.
 - **Aggie's dyes** (`::dyes`) - red, blue and green dye at 1,000,000 gp, purple at 2,500,000. Used on a Champion's Cape to recolour it (the dye and the old cape are both consumed).

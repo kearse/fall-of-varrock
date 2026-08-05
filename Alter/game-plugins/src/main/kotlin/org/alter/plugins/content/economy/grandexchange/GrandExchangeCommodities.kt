@@ -5,7 +5,7 @@ import org.alter.rscm.RSCM.getRSCM
 /**
  * The **commodity allowlist** for the GE's NPC backstop — the items whose price the *stores* pin
  * ("minimums set by our stores"). Only these get an NPC floor/ceiling ([GrandExchange] uses cache
- * value as the ceiling and 85% as the floor, matching the Trading Post); everything else — gear,
+ * value as the ceiling and the shared 70% NPC buy rate as the floor); everything else — gear,
  * megarares, the currency items — floats on the pure player market.
  *
  * This is the generalisation of `TradingPostPlugin.seedKeys`: the everyday coin-store mats,

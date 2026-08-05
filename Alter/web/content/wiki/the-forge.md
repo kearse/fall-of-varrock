@@ -30,4 +30,4 @@ Forging dragon armour doesn't mean you can wear it - dragon requires the **Lord*
 
 ## Where the bars come from
 
-Runite ore is in the castle cellar mine and Mire collection grounds (Mining 85); each runite bar needs 8 coal (Smithing 85, or Superheat Item). The Trading Post also stocks adamantite bars and coal if you'd rather buy your way in - see [Trading Post & the market](/wiki/trading-post-and-shops).
+Runite ore is in the castle cellar mine and Mire collection grounds (Mining 85); each runite bar needs 8 coal (Smithing 85, or Superheat Item). Adamantite bars and coal can also be bought on the **Grand Exchange** if you'd rather buy your way in (both are store-backstopped commodities, so a buy offer at full value always fills) - see [Trading Post & the market](/wiki/trading-post-and-shops).

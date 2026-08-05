@@ -1,8 +1,6 @@
 package org.alter.plugins.content.economy.tradingpost
 
-import dev.openrune.cache.CacheManager.getItem
 import org.alter.api.ext.message
-import org.alter.game.model.World
 import org.alter.game.model.entity.Player
 import org.alter.game.model.shop.Shop
 import org.alter.plugins.content.mechanics.shops.ItemCurrency
@@ -13,31 +11,19 @@ import org.alter.rscm.RSCM.getRSCM
  *
  * Prices are derived from each item's cache value ([getItem].cost — the same basis the
  * alch faucet uses), so the post is a real value-tracking market rather than a hand-priced
- * shop. The gap between what it sells for and what it pays is the **trade margin**, and that
- * margin is the gp **sink**: an item that flows player → post → player destroys
- * `(1 - BUY_RATE)` of its value in gp.
+ * shop. It sells at full value and pays the shared [ItemCurrency.BUY_RATE] (70%) like every
+ * other coin shop — the 30% spread is the gp **sink**. Deliberately NOT better than the
+ * shops: the post is the accepts-anything fallback, and the place to beat the margin is the
+ * Grand Exchange, where players sell to each other inside the 70%–100% band.
  *
- * The margin is tighter than the junk general store (which pays 60%), so the Trading Post is
- * the better place to move valuables — but still wide enough that, at low population, dumping
- * loot for gp isn't a runaway faucet. When a player-to-player offer book is added later it
- * simply matches *inside* this spread first, with the post as the fallback fill.
- *
- * Pays in gp (extends [ItemCurrency] over `item.coins_995`, like `CoinCurrency`, but with the
- * value-tracking price overrides).
+ * Pays in gp (extends [ItemCurrency] over `item.coins_995`, like `CoinCurrency`; the base
+ * class already prices from cache value).
  */
 class TradingPostCurrency : ItemCurrency(getRSCM("item.coins_995"), singularCurrency = "coin", pluralCurrency = "coins") {
 
-    /** Price to BUY one from the post (what the player pays): full market value. */
-    override fun getSellPrice(world: World, item: Int): Int =
-        maxOf(1, getItem(item).cost)
-
-    /** Price the post PAYS the player when selling to it: market value minus the trade margin. */
-    override fun getBuyPrice(world: World, item: Int): Int =
-        (getItem(item).cost * BUY_RATE).toInt().coerceAtLeast(1)
-
     /**
      * Bonds must NEVER be NPC-sold for gold (bond spec §2.3): the tradeable bond's cache cost is
-     * 2m (not overridable), so the post's 85% buy would mint 1.7m gp per $4.99 bond. Denied —
+     * 2m (not overridable), so the post's 70% buy would mint 1.4m gp per $4.99 bond. Denied —
      * bonds change hands player-to-player only.
      */
     override fun buyFromPlayer(p: Player, shop: Shop, slot: Int, amt: Int) {
@@ -52,9 +38,4 @@ class TradingPostCurrency : ItemCurrency(getRSCM("item.coins_995"), singularCurr
     private val neverBuy: Set<Int> = listOf("item.bond", "item.bond_untradeable")
         .mapNotNull { key -> runCatching { getRSCM(key) }.getOrNull() }
         .toSet()
-
-    private companion object {
-        /** Post pays this fraction of value; the remaining 15% is the gp sink. */
-        const val BUY_RATE = 0.85
-    }
 }
