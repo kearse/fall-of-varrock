@@ -20,6 +20,10 @@ Clicking **Trade** (or Talk-to on a pure shopkeeper) opens the store **directly*
 
 The odd vendor with something to *say* still talks on **Talk-to** (Zaff can still lift you to the rune altar; the Quartermaster still takes war-supply hand-ins) - but **Trade always goes straight to the wares**.
 
+## Selling to shops
+
+Every **coin shop buys back what it stocks at 70% of value** - with the shop window open, right-click an item in your inventory and pick **Sell 1/5/10** (or Sell X). Runes go back to Zaff, fish to Gerrant, herbs and seeds to Jatix, armour to the Apprentice, and so on. The **general store** by the bridge buys **almost any tradeable** (up to 5,000 gp value) at the same 70%, and the **Trading Post** (`::market`) pays the best rate - **85%** - on anything, including valuables the general store refuses. Reward and ticket shops (Quartermaster, Emblem Trader, Valaine, the currency desks) never buy back.
+
 ## The Trading Post
 
 `::market` opens the **Trading Post** - a player marketplace with an NPC backstop so trading works even at low population:

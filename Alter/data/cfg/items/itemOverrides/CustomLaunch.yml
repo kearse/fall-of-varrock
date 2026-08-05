@@ -67,7 +67,7 @@ buy_limit: null
 # Reuses the REAL OSRS bond defs (13190 tradeable w/ native "Redeem" option; 13192 untradeable
 # w/ "Redeem"/"Convert"). CACHE COST IS 2,000,000 on 13190 and CANNOT be overridden (schema
 # ignores cost) — every NPC gp-conversion path must deny bonds: alch (AlchemyPlugin guard),
-# Trading Post 85% buy (TradingPostCurrency deny), general store 60% buy (GeneralStoreCurrency
+# Trading Post 85% buy (TradingPostCurrency deny), general store 70% buy (GeneralStoreCurrency
 # cost>5k deny). The 2m cost is otherwise GOOD: trade-window/value sorts treat it as valuable.
 id: 13190
 name: "Bond"

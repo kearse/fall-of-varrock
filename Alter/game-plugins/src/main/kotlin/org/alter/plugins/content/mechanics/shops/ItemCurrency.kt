@@ -123,7 +123,7 @@ open class ItemCurrency(
     override fun getBuyPrice(
         world: World,
         item: Int,
-    ): Int = (getItem(item).cost * 0.6).toInt()
+    ): Int = (getItem(item).cost * BUY_RATE).toInt().coerceAtLeast(1)
 
     override fun sellToPlayer(
         p: Player,
@@ -247,5 +247,14 @@ open class ItemCurrency(
             p.inventory.add(item.id, amount = remove.completed, beginSlot = slot)
             p.message("You don't have enough inventory space.")
         }
+    }
+
+    companion object {
+        /**
+         * Fraction of an item's cache value a shop pays when buying FROM a player.
+         * Kept above high alch (60%) so vendoring loot at a shop is always the better
+         * of the two sinks, but below the Trading Post's 85% backstop.
+         */
+        const val BUY_RATE = 0.7
     }
 }

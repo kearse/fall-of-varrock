@@ -17,7 +17,7 @@ import org.alter.rscm.RSCM.getRSCM
  * margin is the gp **sink**: an item that flows player → post → player destroys
  * `(1 - BUY_RATE)` of its value in gp.
  *
- * The margin is tighter than the junk general store (which pays 60%), so the Trading Post is
+ * The margin is tighter than the junk general store (which pays 70%), so the Trading Post is
  * the better place to move valuables — but still wide enough that, at low population, dumping
  * loot for gp isn't a runaway faucet. When a player-to-player offer book is added later it
  * simply matches *inside* this spread first, with the post as the fallback fill.

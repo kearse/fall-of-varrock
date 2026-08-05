@@ -41,7 +41,7 @@ class SmithingApprenticePlugin(
     init {
         ApprenticeArmoury.TIER_SHOPS.forEach { (cap, shopName) ->
             val stock = buildStock(cap)
-            createShop(shopName, CoinCurrency(), purchasePolicy = PurchasePolicy.BUY_NONE, stockSize = maxOf(stock.size, 1)) {
+            createShop(shopName, CoinCurrency(), purchasePolicy = PurchasePolicy.BUY_STOCK, stockSize = maxOf(stock.size, 1)) {
                 stock.forEachIndexed { i, id -> items[i] = ShopItem(item = id, amount = SHOP_AMOUNT) }
             }
         }

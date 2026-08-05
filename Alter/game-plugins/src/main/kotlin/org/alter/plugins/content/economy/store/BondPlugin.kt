@@ -52,7 +52,7 @@ object BondMenu {
  * Economic invariants (spec §2.3 — a bond must NEVER mint gold):
  *  - Bonds are never NPC-sold for gold and never redeemed for gold. Cache cost on 13190 is 2m and
  *    can't be overridden, so every NPC gp-conversion path denies bonds: alch (AlchemyPlugin),
- *    Trading Post 85% buy (TradingPostCurrency), general store 60% buy (GeneralStoreCurrency's
+ *    Trading Post 85% buy (TradingPostCurrency), general store 70% buy (GeneralStoreCurrency's
  *    cost>5k deny). Gold only ever moves player -> player when a bond trades hands.
  *  - Claiming is one-way: there is no untradeable -> tradeable code path (anti wash-trading).
  *  - Redemption is remove-first / refund-on-grant-fail (mirrors ItemCurrency ordering), and every

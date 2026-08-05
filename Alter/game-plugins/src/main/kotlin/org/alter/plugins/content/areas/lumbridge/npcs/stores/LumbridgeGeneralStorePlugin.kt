@@ -20,7 +20,7 @@ import org.alter.rscm.RSCM.getRSCM
 /**
  * Classic Lumbridge **general store** — Shop keeper + Shop assistant behind the counter in the
  * store building by the bridge (where the general-store minimap icon sits). Sells the basic
- * starter supplies and buys players' junk at 60% ([PurchasePolicy.BUY_TRADEABLES]) — the low-end
+ * starter supplies and buys players' junk at 70% ([PurchasePolicy.BUY_TRADEABLES]) — the low-end
  * junk sink the courtyard specialist shops in [LumbridgeShopHubPlugin] deliberately don't cover.
  */
 class LumbridgeGeneralStorePlugin(

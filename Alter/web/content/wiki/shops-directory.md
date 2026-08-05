@@ -9,6 +9,8 @@ infobox: Type = Shop reference; Location = Lumbridge courtyard market; Getting t
 
 Every vendor in the realm, in one place. For how the market *works* - instant-open shops, tab strips, the Trading Post - see [Trading Post & the market](/wiki/trading-post-and-shops). This page is the reference: **who sells what, where, and for how much**.
 
+Every coin shop also **buys back what it stocks at 70% of value** (right-click an inventory item while the shop is open). The [Trading Post](/wiki/trading-post-and-shops) pays 85% on anything; only the ticket/reward vendors never buy back.
+
 ## Getting there
 
 The market is the **Lumbridge courtyard**, just east of the castle's east wall - two facing shop rows with a walkable aisle between them. The fastest route is the **teleport portal → Basics → "Market / Shops"**, which lands you in the middle of the aisle. Home teleport puts you a few steps away.
@@ -87,7 +89,7 @@ Two reward tabs, two ticket currencies - both tickets are **tradeable items**, s
 
 ## The general store
 
-The classic **general store by the bridge** (shop keeper and assistant behind the counter) sells pots, jugs, buckets, tinderboxes, shears, knives, chisels, hammers and spades - and it **buys almost any tradeable** at 60% of value, the market's junk-disposal counter.
+The classic **general store by the bridge** (shop keeper and assistant behind the counter) sells pots, jugs, buckets, tinderboxes, shears, knives, chisels, hammers and spades - and it **buys almost any tradeable** at 70% of value, the market's junk-disposal counter.
 
 ## Rank armour - the Apprentice's Armoury
 
