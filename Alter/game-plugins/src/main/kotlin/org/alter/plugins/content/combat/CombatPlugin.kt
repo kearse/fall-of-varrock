@@ -108,15 +108,23 @@ class CombatPlugin(
         if (!reached) {
             when (routeLogic) {
                 1 -> {
+                    // Chasing a MOVING target must path ONTO the tile they occupy (locShape -1),
+                    // not stop at its border (-2): a bordering route to a target 2 tiles away is a
+                    // single step, and running only gains ground when two steps are queued in the
+                    // same tick (MovementQueue polls the second step only if one exists). With the
+                    // one-step route, a running chaser and a walking target stayed exactly one
+                    // tile apart forever. The target is vacating their tile this tick, so pathing
+                    // onto it is safe — and if they stop, the next cycle re-routes with -2.
+                    val fleeing = target.hasMoveDestination()
                     val route = world.smartRouteFinder.findRoute(
                         level = pawn.tile.height,
                         srcX = pawn.tile.x,
                         srcZ = pawn.tile.z,
                         destX = target.tile.x,
                         destZ = target.tile.z,
-                        locShape = -2,
-                        destWidth = target.getSize(),
-                        destLength = target.getSize()
+                        locShape = if (fleeing) -1 else -2,
+                        destWidth = if (fleeing) 1 else target.getSize(),
+                        destLength = if (fleeing) 1 else target.getSize()
                     )
                     pawn.walkRoute(route, StepType.NORMAL)
                 }
@@ -195,6 +203,12 @@ class CombatPlugin(
                 reached = true
                 pawn.stopMovement()
             }
+        }
+        if (reached && pawn.hasMoveDestination()) {
+            // In range now: drop any leftover chase steps (queued last tick, aimed at where the
+            // target used to be) so the guard below doesn't defer the swing — and so we don't
+            // walk past a target we could already hit.
+            pawn.stopMovement()
         }
         if (pawn.hasMoveDestination() || !reached) {
             // Still chasing: let the OUTER combat loop wait a tick and call cycle() again.
