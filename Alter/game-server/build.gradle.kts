@@ -158,14 +158,6 @@ tasks.register<JavaExec>("minimapIcons") {
     mainClass.set("org.alter.tools.minimap.MinimapIconsToolKt")
     args = ((project.findProperty("minimapArgs") as String?) ?: "scan").split(" ")
 }
-tasks.register<JavaExec>("headIcons") {
-    description = "Head-icon cache tool: repaint the loot-key overhead icons to keys-only (erase the skull)"
-    group = "application"
-    workingDir = rootProject.projectDir
-    classpath = sourceSets["main"].runtimeClasspath
-    mainClass.set("org.alter.tools.headicons.HeadIconsToolKt")
-    args = ((project.findProperty("headArgs") as String?) ?: "inspect").split(" ")
-}
 tasks.register<JavaExec>("mapDump") {
     description = "Dump terrain collision + objects per region (ASCII grids, PNGs, stitched overview) for offline map understanding"
     group = "application"

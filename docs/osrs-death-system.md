@@ -19,11 +19,11 @@
 
 **Added 2026-07-04 — wilderness LOOT KEYS** (`content/economy/pk/LootKeyPlugin.kt`):
 - A real player who kills a player OR a PKer bot gets the victim's lost items sealed into an
-  OSRS **loot key** (cache items 26651-26655, untradeable) instead of ground drops. Up to 5
-  keys; at the cap or with a full inventory → normal killer-owned ground drops.
+  OSRS **loot key** (cache items 26651-26655, untradeable) instead of ground drops. With a
+  full inventory → normal killer-owned ground drops.
   *(2026-08-05: minting was wilderness-only at first; now EVERY player kill mints a key — safe
-  zones included — and the overhead icon is repainted keys-only, no skull: see the headIcons
-  cache tool, `org.alter.tools.headicons`.)*
+  zones included. The 5-key cap is gone too: the 5 key item ids are reused round-robin as
+  handles, so inventory space is the only limit; the overhead icon still caps at five keys.)*
 - **Claiming = the REAL OSRS Loot Chest popup** (stock cache interface **742** "Wilderness Loot
   Key", driven by `LootChestInterface.kt`): a Loot Chest object (`object.loot_chest` 43468, native
   "Loot" action) sits at the Lumbridge market's economy corner (3224,3219, south of the Bond

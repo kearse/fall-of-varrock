@@ -4,7 +4,7 @@ category: PvP & Wilderness
 summary: Every player kill mints a loot key - claim it at the Lumbridge Loot Chest before someone takes it off your corpse.
 order: 1
 updated: 2026-08-05
-infobox: Type = PvP reward; Minted by = Killing any player, anywhere; Held = Up to 5 keys at once; Cash in = the Loot Chest, east of the Lumbridge market; Command = `::lootkeys`; Risk = Keys always lost on death
+infobox: Type = PvP reward; Minted by = Killing any player, anywhere; Held = As many as your inventory holds; Cash in = the Loot Chest, east of the Lumbridge market; Command = `::lootkeys`; Risk = Keys always lost on death
 ---
 
 Kill a player - anywhere - and their lost items don't hit the ground: they're sealed into a **loot key** placed in your inventory. Bring it home to cash in.
@@ -12,8 +12,8 @@ Kill a player - anywhere - and their lost items don't hit the ground: they're se
 ## How keys work
 
 - Each key is a single inventory item labelled with the victim's name. Check a key to see its sealed contents in chat.
-- You can hold **up to 5 keys** at once. At the cap (or with a full inventory), further kills drop loot on the ground the normal way.
-- **Everyone can see your keys.** While you carry keys, one to five keys hang above your head (just the keys - no skull). The more keys, the bigger the target on your back.
+- **No key cap** - carry as many keys as your inventory has room for. With a full inventory, further kills drop loot on the ground the normal way.
+- **Everyone can see your keys.** While you carry keys, your skull shows them - keys hanging under it above your head (the display caps at five, however many you carry). The more keys, the bigger the target on your back.
 - Losing the key *item* doesn't lose the loot - `::lootkeys` lists your keys and re-issues any missing handles.
 
 ## Claiming - the Loot Chest
@@ -36,4 +36,4 @@ That's the whole tension of the system: every key you carry deep in the wild is 
 ## What counts
 
 - **Every player kill mints a key** - real players and killable PK bots alike, in the wilderness or in safe zones. Kill the goblin-camp bandit on the road and its kit seals into a key for you, same as a deep-wild PK.
-- If no key can be minted (you're at the 5-key cap, or your inventory is full), the loot drops on the ground the normal way instead.
+- If no key can be minted (your inventory is full), the loot drops on the ground the normal way instead.
