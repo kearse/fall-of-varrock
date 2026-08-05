@@ -31,7 +31,7 @@ enum class ArmourTier(val display: String) {
  *
  *  - Peasant (free): bronze & iron armour
  *  - Commoner (10k): steel armour
- *  - Squire (50k): black armour + coloured name (Squire and up)
+ *  - Squire (50k): black armour + coloured name (Squire and up) + rank cape ([RankCapes], Squire and up)
  *  - Soldier (150k): mithril & adamant armour
  *  - Knight (500k): rune armour + 1 companion soldier ([companions])
  *  - Lord (2M): ALL armour + field troops & summon bosses ([CommandTier.RAID]) + 2 companions

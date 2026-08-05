@@ -1,0 +1,147 @@
+---
+# Rank capes — the feudal ladder's uniform (see Title.kt / RankCapes.kt and
+# docs/war-system-design.md). One cape per noble rank (Squire and up), granted by
+# RankPurchase when the rank is bought and rank-gated on equip by RankCapesPlugin,
+# so a cape on someone's back is proof of standing — same promise as the armour gate.
+#
+# Each cape is an otherwise-unobtainable cache item (no shop, drop or minigame here
+# hands them out — checked 2026-08-05) renamed into the rank uniform, going plain →
+# elaborate up the ladder, and its colour echoes the rank's over-head name colour:
+#   Squire   yellow-green — Fremennik green cloak   (plain wool)
+#   Soldier  blue         — Fremennik blue cloak    (plain wool; NOT the Castle Wars
+#                           hooded cloak 4514/4516 — those read as CW team cloaks)
+#   Knight   silver       — white heraldic cloak     (star emblem)
+#   Lord     purple       — black cape, purple wreath emblem
+#   Minister crimson      — deep crimson soul cape
+#   King     gold         — gold-embroidered ceremonial cape
+#
+# Stats climb with the rank (hybrid — all three styles — because ranks aren't
+# style-bound). Ceiling is deliberate: the King's cape sits just UNDER the fire cape
+# for defence/strength so the earned combat capes (fire/infernal) stay the trophies.
+# Untradeable (rank must be bought, never traded); cost stays 0 like every override.
+# NOTE: keep the very first line of this file as `---` (a leading comment block before
+# the first `---` is parsed as an empty document and throws MismatchedInputException).
+id: 3765
+name: "Squire's cape"
+examine: "A plain green wool cape - the first mark of a noble of the realm."
+tradeable: false
+equipment:
+  attackStab: 0
+  attackSlash: 0
+  attackCrush: 0
+  attackMagic: 0
+  attackRanged: 0
+  defenceStab: 1
+  defenceSlash: 1
+  defenceCrush: 1
+  defenceMagic: 1
+  defenceRanged: 1
+  meleeStrength: 0
+  rangedStrength: 0
+  magicDamage: 0
+  prayer: 1
+
+---
+id: 3763
+name: "Soldier's cape"
+examine: "A blue wool field cape - standard issue for a Soldier of the realm."
+tradeable: false
+equipment:
+  attackStab: 1
+  attackSlash: 1
+  attackCrush: 1
+  attackMagic: 1
+  attackRanged: 1
+  defenceStab: 2
+  defenceSlash: 2
+  defenceCrush: 2
+  defenceMagic: 2
+  defenceRanged: 2
+  meleeStrength: 0
+  rangedStrength: 0
+  magicDamage: 0
+  prayer: 1
+
+---
+id: 10446
+name: "Knight's cape"
+examine: "A white cloak bearing the star of knighthood. Only a Knight of the realm may wear it."
+tradeable: false
+equipment:
+  attackStab: 2
+  attackSlash: 2
+  attackCrush: 2
+  attackMagic: 2
+  attackRanged: 2
+  defenceStab: 4
+  defenceSlash: 4
+  defenceCrush: 4
+  defenceMagic: 4
+  defenceRanged: 4
+  meleeStrength: 1
+  rangedStrength: 0
+  magicDamage: 0
+  prayer: 2
+
+---
+id: 24520
+name: "Lord's cape"
+examine: "A black cape bearing the purple wreath of lordship - the mark of a commander of the realm."
+tradeable: false
+equipment:
+  attackStab: 3
+  attackSlash: 3
+  attackCrush: 3
+  attackMagic: 3
+  attackRanged: 3
+  defenceStab: 6
+  defenceSlash: 6
+  defenceCrush: 6
+  defenceMagic: 6
+  defenceRanged: 6
+  meleeStrength: 2
+  rangedStrength: 0
+  magicDamage: 0
+  prayer: 3
+
+---
+id: 25344
+name: "Minister's cape"
+examine: "A deep crimson cape of state. Few in the realm outrank its wearer."
+tradeable: false
+equipment:
+  attackStab: 4
+  attackSlash: 4
+  attackCrush: 4
+  attackMagic: 4
+  attackRanged: 4
+  defenceStab: 8
+  defenceSlash: 8
+  defenceCrush: 8
+  defenceMagic: 8
+  defenceRanged: 8
+  meleeStrength: 3
+  rangedStrength: 0
+  magicDamage: 0
+  prayer: 4
+
+---
+id: 25334
+name: "King's cape"
+examine: "A gold-embroidered ceremonial cape. There is no higher station in the land."
+tradeable: false
+equipment:
+  attackStab: 5
+  attackSlash: 5
+  attackCrush: 5
+  attackMagic: 5
+  attackRanged: 5
+  defenceStab: 10
+  defenceSlash: 10
+  defenceCrush: 10
+  defenceMagic: 10
+  defenceRanged: 10
+  meleeStrength: 4
+  rangedStrength: 0
+  magicDamage: 0
+  prayer: 6

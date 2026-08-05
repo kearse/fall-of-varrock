@@ -25,6 +25,23 @@ Check your current rank, armour tier and next rank price with `::title`. Check y
 
 From Squire up, your title displays in colour over your head - rank here is earned status, not a cosmetic you buy in a store.
 
+## Rank capes
+
+Every noble rank (Squire and up) comes with a **rank cape**, handed to you the moment you buy the rank. The capes go from plain to elaborate up the ladder, and each one's colour echoes the rank's name colour - so you can read someone's standing off their back at a glance:
+
+| Rank | Cape | Cape bonuses (attack / defence / strength / prayer) |
+| --- | --- | --- |
+| Squire | Squire's cape - plain green wool | 0 / +1 / 0 / +1 |
+| Soldier | Soldier's cape - plain blue wool | +1 / +2 / 0 / +1 |
+| Knight | Knight's cape - white with the star of knighthood | +2 / +4 / +1 / +2 |
+| Lord | Lord's cape - black with the purple wreath of lordship | +3 / +6 / +2 / +3 |
+| Minister | Minister's cape - deep crimson cape of state | +4 / +8 / +3 / +4 |
+| King | King's cape - gold-embroidered ceremonial cape | +5 / +10 / +4 / +6 |
+
+Attack and defence bonuses apply to **all combat styles** - ranks aren't style-bound. Wearing a rank cape needs at least that rank (a Knight's cape on someone's back proves they're a Knight at minimum), so like the armour gate, the cape is proof of standing, not a costume. The capes are untradeable, and the King's cape deliberately stays a shade under the [fire cape](/wiki/fight-cave) - the earned combat capes remain the trophies.
+
+Lost yours? `::cape` reclaims your current rank's cape for free.
+
 All three combat styles climb the same ladder: each ranged/magic family is pegged to the metal rung of similar strength (studded ≈ steel, green d'hide ≈ adamant, mystic ≈ rune, black d'hide ≈ dragon). Untiered utility gear - monk robes, vestments, graceful, basic wizard robes - is free for everyone.
 
 ## Why gate armour?
