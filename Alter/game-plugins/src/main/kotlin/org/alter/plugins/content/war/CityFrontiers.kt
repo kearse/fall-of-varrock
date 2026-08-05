@@ -277,7 +277,10 @@ object CityFrontiers {
 
     // The old Varrock occupiers — marauders, Black Knights and rogue captains — fled the demons and now
     // garrison overrun Falador ([FALADOR] below). Their combat defs are kept and reused there. Human
-    // models, so the generic melee anims (422/424/836) look right.
+    // models, so the generic melee anims (422/424/836) look right for the bare-handed rabble — but NOT
+    // for the Black Knights, who visibly wield a black sword + kiteshield and were punching with it.
+    // They get the human sword slash (390) and shield block (1156) instead (see NpcAnims.ARMED, which
+    // also covers every other black-knight spawn path).
 
     /** Marauders — the street rabble holding the Falador approach + streets. */
     private val V_MARAUDER_DEF = NpcCombatDef.DEFAULT.copy(
@@ -286,10 +289,11 @@ object CityFrontiers {
         aggressiveRadius = 6, aggroTargetDelay = 4, aggressiveTimer = 400,
     )
 
-    /** Black Knights — the heavy infantry of the Falador occupation. */
+    /** Black Knights — the heavy infantry of the Falador occupation. Sword slash + shield block,
+     *  not the unarmed 422/424 (they carry a black sword — punching with it read as a bug). */
     private val V_BLACK_KNIGHT_DEF = NpcCombatDef.DEFAULT.copy(
         attack = 70, strength = 65, defence = 70, hitpoints = 90,
-        attackSpeed = 5, attackAnimation = 422, blockAnimation = 424, deathAnimation = listOf(836),
+        attackSpeed = 5, attackAnimation = 390, blockAnimation = 1156, deathAnimation = listOf(836),
         aggressiveRadius = 6, aggroTargetDelay = 4, aggressiveTimer = 400,
     )
 
