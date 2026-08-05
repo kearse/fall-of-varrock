@@ -210,6 +210,34 @@ enum LofQuest
 		return doneOrdinal < 0;
 	}
 
+	/** The main quest chain in order — the real, built quests (FUTURE teasers excluded). The index
+	 *  into this list is the "chain index" the server's QuestBook varp and the node track speak. */
+	static final List<LofQuest> CHAIN;
+	static
+	{
+		final java.util.List<LofQuest> c = new java.util.ArrayList<>();
+		for (LofQuest q : values())
+		{
+			if (!q.isFuture())
+			{
+				c.add(q);
+			}
+		}
+		CHAIN = Collections.unmodifiableList(c);
+	}
+
+	/** This quest's 0-based position in {@link #CHAIN}, or -1 if it's a FUTURE teaser. */
+	int chainIndex()
+	{
+		return CHAIN.indexOf(this);
+	}
+
+	/** The chain quest at [i], or null if out of range. */
+	static LofQuest byChainIndex(int i)
+	{
+		return i >= 0 && i < CHAIN.size() ? CHAIN.get(i) : null;
+	}
+
 	/** The server chain's current step ordinal for this quest (0 for FUTURE entries). */
 	int stepOrdinal(Client client)
 	{

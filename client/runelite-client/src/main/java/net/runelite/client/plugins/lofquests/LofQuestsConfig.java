@@ -13,6 +13,17 @@ import net.runelite.client.config.ConfigItem;
 public interface LofQuestsConfig extends Config
 {
 	@ConfigItem(
+		keyName = "questWindow",
+		name = "Quest Journal window",
+		description = "Open the in-game Quest Journal window when you click a quest in the quest tab or use ::quests",
+		position = 0
+	)
+	default boolean questWindow()
+	{
+		return true;
+	}
+
+	@ConfigItem(
 		keyName = "showWorldArrow",
 		name = "World arrow",
 		description = "Draw an arrow over the tracked quest's objective in the game scene",

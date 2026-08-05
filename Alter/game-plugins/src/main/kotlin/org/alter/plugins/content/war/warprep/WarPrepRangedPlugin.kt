@@ -11,6 +11,7 @@ import org.alter.game.model.attr.KILLER_ATTR
 import org.alter.game.model.entity.Player
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
+import org.alter.plugins.content.quests.QuestBook
 
 /**
  * Wiring for [WarPrepRanged] (the "War-Prep II — Ranged" quest). Resumes/begins the per-player state
@@ -45,8 +46,9 @@ class WarPrepRangedPlugin(
             }
         }
 
-        onCommand("warpranged", description = "Show your War-Prep II (Ranged) quest objective") {
+        onCommand("warpranged", description = "Open War-Prep II (Ranged) in the Quest Journal") {
             player.message(WarPrepRanged.statusLine(player))
+            QuestBook.open(player, QuestBook.WARPREP_RANGED)
         }
     }
 

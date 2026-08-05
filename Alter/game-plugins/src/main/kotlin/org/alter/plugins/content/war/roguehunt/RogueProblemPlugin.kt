@@ -15,6 +15,7 @@ import org.alter.plugins.content.bots.BotManager
 import org.alter.plugins.content.bots.PkBot
 import org.alter.plugins.content.bots.knights.RogueKnights
 import org.alter.plugins.content.hunt.TargetMarker
+import org.alter.plugins.content.quests.QuestBook
 
 /**
  * Wiring for [RogueProblem] (the Act II "Rogue Problem" quest). Resumes the per-player state on
@@ -55,8 +56,11 @@ class RogueProblemPlugin(
             }
         }
 
-        onCommand("rogueproblem", description = "Show your Rogue Problem quest objective") {
+        onCommand("rogueproblem", description = "Open your Rogue Hunting quest in the Quest Journal") {
             player.message(RogueProblem.statusLine(player))
+            val idx = if (RogueProblem.step(player).ordinal >= RogueProblem.Step.KNIGHT.ordinal)
+                QuestBook.ROGUE_HUNTING_II else QuestBook.ROGUE_HUNTING_I
+            QuestBook.open(player, idx)
         }
     }
 
