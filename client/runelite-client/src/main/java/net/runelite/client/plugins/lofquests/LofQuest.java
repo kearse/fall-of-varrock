@@ -83,7 +83,9 @@ enum LofQuest
 		// World anchors are best-effort tiles — TUNE against the live map.
 		Arrays.asList(
 			new LofQuestStep(1, "Speak to the Recruiting Sergeant", "He has harder work now you're a Squire — by the Lumbridge gate.", new WorldPoint(3217, 3220, 0)),
-			new LofQuestStep(2, "Thin out the rogue rank and file", "Cut down 30 of the rogue family — kills count anywhere. Safest: the road camps at the jail west of Lumbridge, Draynor and south of Port Sarim. Fallen Falador is denser but a raid city — only its banks are safe.", new WorldPoint(3110, 3230, 0)),
+			// No fixed anchor: the server's hint arrow leads this step — to the nearest safe road
+			// camp from afar, locking onto live rogues once they're in reach (like the knight hunt).
+			new LofQuestStep(2, "Thin out the rogue rank and file", "Cut down 30 of the rogue family — kills count anywhere; the arrow leads to the nearest safe road camp and locks onto rogues in reach. Fallen Falador is denser but a raid city — only its banks are safe.", null),
 			new LofQuestStep(3, "Kill your first assigned Rogue Knight", "The Sergeant's marker leads to the camp; ::knights tracks the ladder.", null),
 			new LofQuestStep(4, "Return to the Recruiting Sergeant", "Report the knight's fall and claim your purse.", new WorldPoint(3217, 3220, 0)),
 			new LofQuestStep(5, "Rise to Knight at Duke Horacio", "The Sergeant's purse covers the climb — Soldier, then Knight.", new WorldPoint(3220, 3211, 0))
