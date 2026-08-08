@@ -438,6 +438,12 @@ object CompanionRegistry {
     fun dismiss(player: Player, slot: Int): Boolean {
         val live = byOwner[keyOf(player)] ?: return false
         val comp = live.getOrNull(slot) ?: return false
+        // Not mid-SPARRING-bout: its containers hold a loaner kit, and vanishing your opponent is
+        // just quitting — end the bout (which restores everything) before standing down.
+        if (org.alter.plugins.content.minigames.pktraining.CompanionSparring.isSparring(comp)) {
+            player.message("<col=801700>Sir ${comp.username} is mid-bout — end the spar first.</col>")
+            return false
+        }
         // Not while another PLAYER is hitting him — vanishing a companion mid-PvP is the same trick as
         // logging out to escape, so it gets the same 10-second rule the logout gate uses. NPC damage
         // (training, bossing) doesn't count: waiting out a goblin to bench a knight would just be tedious.
@@ -737,14 +743,21 @@ object CompanionRegistry {
         data.inventory.forEach { (slot, it) -> if (slot < comp.inventory.capacity) comp.inventory[slot] = Item(it.id, it.amount) }
     }
 
-    /** Capture a live companion's current state for persistence. */
+    /** Capture a live companion's current state for persistence. Mid-SPARRING-bout the live
+     *  containers hold a loaner training kit — persist the session's stash of the REAL gear
+     *  instead, so no save path (periodic, logout, crash) can ever write borrowed items into the
+     *  roster blob. XP stays live: the companion keeps what it earns mid-bout. Pure read-through —
+     *  this is the persistence hot path. */
     private fun snapshot(comp: Companion): CompanionData {
         val xp = HashMap<Int, Double>()
         for (s in 0..6) xp[s] = comp.getSkills().getCurrentXp(s)
-        val equip = HashMap<Int, CompItem>()
-        for (i in 0 until comp.equipment.capacity) comp.equipment[i]?.let { equip[i] = CompItem(it.id, it.amount) }
-        val inv = HashMap<Int, CompItem>()
-        for (i in 0 until comp.inventory.capacity) comp.inventory[i]?.let { inv[i] = CompItem(it.id, it.amount) }
+        val stash = org.alter.plugins.content.minigames.pktraining.CompanionSparring.stashedContainersOf(comp)
+        val equip = stash?.first?.let { HashMap(it) } ?: HashMap<Int, CompItem>().also { m ->
+            for (i in 0 until comp.equipment.capacity) comp.equipment[i]?.let { m[i] = CompItem(it.id, it.amount) }
+        }
+        val inv = stash?.second?.let { HashMap(it) } ?: HashMap<Int, CompItem>().also { m ->
+            for (i in 0 until comp.inventory.capacity) comp.inventory[i]?.let { m[i] = CompItem(it.id, it.amount) }
+        }
         return CompanionData(
             comp.archetype, comp.username, xp, equip, inv, comp.dead, comp.autoLoot,
             attackStyle = comp.getVarp(AttackTab.ATTACK_STYLE_VARP),

@@ -100,6 +100,7 @@ object CompanionGear {
             owner.message("You can't hand borrowed gear to your companion.")
             return
         }
+        if (sparringSealed(owner, comp)) return
         var moved = 0
         var blocked = 0
         for (slot in 0 until comp.equipment.capacity) {
@@ -125,6 +126,7 @@ object CompanionGear {
 
     /** Return the companion's whole worn kit to the owner's inventory. */
     fun dismiss(owner: Player, comp: Companion) {
+        if (sparringSealed(owner, comp)) return
         var moved = 0
         var kept = 0
         for (slot in 0 until comp.equipment.capacity) {
@@ -163,6 +165,7 @@ object CompanionGear {
      * Honours the item's skill requirements against the COMPANION's levels.
      */
     fun equipFromBank(owner: Player, comp: Companion, itemId: Int) {
+        if (sparringSealed(owner, comp)) return
         val def = getItem(itemId)
         val slot = def.equipSlot
         if (slot < 0 || !isWearable(itemId)) { owner.message("That item can't be equipped."); return }
@@ -233,6 +236,7 @@ object CompanionGear {
 
     /** Return the item in equipment [equipSlot] of [comp] to the **owner's bank** (panel "remove"). */
     fun unequipToBank(owner: Player, comp: Companion, equipSlot: Int) {
+        if (sparringSealed(owner, comp)) return
         if (equipSlot < 0 || equipSlot >= comp.equipment.capacity) return
         val item = comp.equipment[equipSlot] ?: return
         // Transactional: a full bank returns completed < amount, and nulling the slot anyway
@@ -246,6 +250,14 @@ object CompanionGear {
         comp.equipment[equipSlot] = null
         refreshGear(comp)
         owner.message("<col=4f9b4f>Returned ${itemName(item.id)} to your bank.</col>")
+    }
+
+    /** Loaner-kit seal, sparring side: mid-bout the COMPANION's containers hold borrowed training
+     *  gear — every gear-transfer path must refuse, or the loaner kit leaks through the bank. */
+    private fun sparringSealed(owner: Player, comp: Companion): Boolean {
+        if (!org.alter.plugins.content.minigames.pktraining.CompanionSparring.isSparring(comp)) return false
+        owner.message("<col=801700>Sir ${comp.username} is mid-bout — gear can't be changed until the spar ends.</col>")
+        return true
     }
 
     /**

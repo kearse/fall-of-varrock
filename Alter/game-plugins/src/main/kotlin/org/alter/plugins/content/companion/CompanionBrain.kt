@@ -57,6 +57,11 @@ object CompanionBrain {
 
     fun tick(world: World, comp: Companion) {
         if (comp.index < 0 || comp.isDead()) return
+        // Mid-SPAR the companion IS the opponent — the NH BotBrain owns it entirely (driven by
+        // CompanionSparringPlugin's 1-tick timer). This MUST come before every stand-down gate
+        // below: the owner is `TrainingArena.inBout` during the bout, and that gate would strip
+        // the sparring companion's combat target every registry tick, leaving it passive.
+        if (org.alter.plugins.content.minigames.pktraining.CompanionSparring.isSparring(comp)) return
         // Owner competing in Last Man Standing → companions HOLD where they are. Every order's
         // catch-up snap (moveTo on height/distance mismatch) would otherwise teleport them onto the
         // island as free bodyguards — a battle royale with three guards isn't one. They stand down
