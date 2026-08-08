@@ -199,6 +199,10 @@ class PotionsPlugin(
             player.message("You can't drink potions in this duel.")
             return
         }
+        if (org.alter.plugins.content.minigames.pktraining.CompanionSparring.rulesOf(player)?.noDrinks == true) {
+            player.message("You can't drink potions in this sparring bout.")
+            return
+        }
         if (player.timers.has(POTION_DELAY)) return
         val slot = player.getInteractingSlot()
         if (player.inventory.remove(item = getRSCM(key), beginSlot = slot).hasSucceeded()) {

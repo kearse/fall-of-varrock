@@ -14,6 +14,7 @@ import org.alter.game.model.item.Item
 import org.alter.game.model.move.moveTo
 import org.alter.game.model.priv.Privilege
 import org.alter.game.model.queue.QueueTask
+import org.alter.game.model.timer.FROZEN_TIMER
 import org.alter.game.model.timer.TimerKey
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
@@ -82,8 +83,12 @@ class CompanionSparringPlugin(
         onTimer(brainTimer) {
             CompanionSparring.all().forEach { s ->
                 if (s.fighting && s.comp.index >= 0) {
-                    runCatching { BotBrain.tick(world, s.comp) }
-                        .onFailure { logger.error(it) { "spar: brain tick failed for ${s.comp.username}" } }
+                    runCatching {
+                        BotBrain.tick(world, s.comp)
+                        // No-specials binds the companion too: the brain's ranged path arms the
+                        // spec varp unconditionally, so clear it right back every tick.
+                        if (s.settings.rules.noSpec) s.comp.setVarp(AttackTab.SPECIAL_ATTACK_VARP, 0)
+                    }.onFailure { logger.error(it) { "spar: brain tick failed for ${s.comp.username}" } }
                 }
             }
             world.timers[brainTimer] = 1
@@ -373,6 +378,11 @@ class CompanionSparringPlugin(
             return
         }
         if (comp.getCombatTarget() == null) comp.attack(owner) // re-aggro if it lost its target
+        if (s.settings.rules.noMovement) {
+            // "No movement" — keep both rooted by refreshing the freeze timer (the duel pattern).
+            owner.timers[FROZEN_TIMER] = 4
+            comp.timers[FROZEN_TIMER] = 4
+        }
     }
 
     /**

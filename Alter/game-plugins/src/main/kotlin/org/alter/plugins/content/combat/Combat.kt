@@ -75,6 +75,17 @@ object Combat {
                 pawn.message("That combat style isn't allowed in this duel.")
                 return false
             }
+            // Companion-sparring style bans, same shape (binds the owner AND the sparring companion —
+            // the companion's kit already excludes banned styles, this is the belt to that braces).
+            val spar = org.alter.plugins.content.minigames.pktraining.CompanionSparring.rulesOf(pawn)
+            if (spar != null &&
+                ((combatClass == CombatClass.MELEE && spar.noMelee) ||
+                    (combatClass == CombatClass.RANGED && spar.noRanged) ||
+                    (combatClass == CombatClass.MAGIC && spar.noMagic))
+            ) {
+                pawn.message("That combat style isn't allowed in this sparring bout.")
+                return false
+            }
         }
         return canEngage(pawn, target) && getStrategy(combatClass).canAttack(pawn, target)
     }
