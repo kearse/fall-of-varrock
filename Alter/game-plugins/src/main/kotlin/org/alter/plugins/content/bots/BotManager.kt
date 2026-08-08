@@ -139,7 +139,7 @@ object BotManager {
 
     /** Replace the bot's worn equipment with a different style's full set and re-render it. */
     fun equipStyle(bot: PkBot, style: BotStyle) {
-        val gear = bot.loadout.gear[style] ?: return
+        val gear = bot.fightLoadout.gear[style] ?: return
         applyGear(bot, gear)
         bot.currentStyle = style
     }

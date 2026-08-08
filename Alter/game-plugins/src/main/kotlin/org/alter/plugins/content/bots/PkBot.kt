@@ -21,6 +21,18 @@ import org.alter.game.model.entity.Player
  */
 open class PkBot(world: World, val loadout: BotLoadout) : Player(world) {
 
+    /**
+     * Temporary loadout the FIGHT layer ([BotBrain], [BotManager.equipStyle]) uses instead of
+     * [loadout] while set. Lets a long-lived bot (a companion in a sparring bout) fight with a
+     * per-bout kit without touching its spawn loadout. Spawn/loot concerns (PkLootPools, ::bots)
+     * deliberately stay on [loadout]. NOTE: [loadout] itself must stay a non-open val — the
+     * initializer below reads it (`currentStyle`), so a virtual override would NPE.
+     */
+    var loadoutOverride: BotLoadout? = null
+
+    /** The loadout the bot is currently FIGHTING with — [loadoutOverride] if set, else [loadout]. */
+    val fightLoadout: BotLoadout get() = loadoutOverride ?: loadout
+
     /** Where the bot was spawned; its anchor for roaming and idle return. */
     var homeTile: Tile = Tile(0, 0)
 

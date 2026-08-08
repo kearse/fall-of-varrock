@@ -303,7 +303,7 @@ object BotBrain {
     // --- prayer (defence + offence) ---
 
     private fun updatePrayers(bot: PkBot, target: Player) {
-        if (!bot.loadout.usesPrayer) return // a few loadouts opt out of prayer entirely
+        if (!bot.fightLoadout.usesPrayer) return // a few loadouts opt out of prayer entirely
 
         // HUMAN prayer reaction: don't flick the overhead the instant the opponent changes style. When
         // their combat class changes, wait a randomized few ticks (usually a sharp 1-2, sometimes a slow
@@ -338,7 +338,7 @@ object BotBrain {
         }
         // Offence prayer scales with the bot's prayer level, so a low-bracket PKer uses Ultimate
         // Strength / Eagle Eye rather than Piety / Rigour — authentic for the kit, not a maxed main.
-        val pray = bot.loadout.stats.prayer
+        val pray = bot.fightLoadout.stats.prayer
         val offence = when (bot.currentStyle) {
             BotStyle.MELEE -> meleeOffence(pray)
             BotStyle.RANGED -> rangeOffence(pray)
@@ -382,12 +382,12 @@ object BotBrain {
      * mid-cycle) is exactly the counter that works on people.
      */
     private fun maybeBait(bot: PkBot) {
-        val oneIn = bot.loadout.profile.baitOneIn ?: return
-        if (bot.baitedFrom != null || bot.loadout.gear.size < 2) return
+        val oneIn = bot.fightLoadout.profile.baitOneIn ?: return
+        if (bot.baitedFrom != null || bot.fightLoadout.gear.size < 2) return
         if (bot.getVarp(AttackTab.SPECIAL_ATTACK_VARP) == 1) return // queued spec must keep its weapon
         if (bot.timers[ATTACK_DELAY] < 2) return // no time to re-dress before the swing
         if ((0 until oneIn).random() != 0) return
-        val flash = bot.loadout.gear.keys.filter { it != bot.currentStyle }.randomOrNull() ?: return
+        val flash = bot.fightLoadout.gear.keys.filter { it != bot.currentStyle }.randomOrNull() ?: return
         bot.baitedFrom = bot.currentStyle
         BotManager.equipStyle(bot, flash)
     }
@@ -412,7 +412,7 @@ object BotBrain {
         // If they're not protecting our current style, keep hammering it.
         if (bot.currentStyle != blocked) return bot.currentStyle
         // They just prayed our style — switch to one they're not blocking (prefer mage > range > melee).
-        return PREFERRED_OFFENCE.firstOrNull { it != blocked && bot.loadout.gear.containsKey(it) }
+        return PREFERRED_OFFENCE.firstOrNull { it != blocked && bot.fightLoadout.gear.containsKey(it) }
             ?: bot.currentStyle
     }
 
@@ -429,7 +429,7 @@ object BotBrain {
      */
     fun configureStyle(bot: PkBot) {
         if (bot.currentStyle == BotStyle.MAGIC) {
-            bot.attr[Combat.CASTING_SPELL] = resolveSpell(bot.loadout.spell[BotStyle.MAGIC])
+            bot.attr[Combat.CASTING_SPELL] = resolveSpell(bot.fightLoadout.spell[BotStyle.MAGIC])
             bot.setVarp(AttackTab.ATTACK_STYLE_VARP, 0)
         } else {
             bot.attr.remove(Combat.CASTING_SPELL)
@@ -466,8 +466,8 @@ object BotBrain {
      * (granite maul) arms [comboFollowup] — the real ags+maul stack, not two slow swings.
      */
     private fun meleeSpecOrRestore(bot: PkBot, target: Player) {
-        val profile = bot.loadout.profile
-        val rotation = bot.loadout.meleeSpecRotation
+        val profile = bot.fightLoadout.profile
+        val rotation = bot.fightLoadout.meleeSpecRotation
         val finishing = target.getCurrentHp() <= profile.koAtHp
         if (rotation.isNotEmpty() && finishing && AttackTab.getEnergy(bot) >= SPEC_THRESHOLD) {
             if (profile.specOnPidSwap && !bot.hasPid) {
@@ -524,7 +524,7 @@ object BotBrain {
 
     /** Put the whip (+ shield) back if the bot is currently holding a spec weapon. */
     private fun restoreMeleeMain(bot: PkBot) {
-        val main = bot.loadout.gear[BotStyle.MELEE] ?: return
+        val main = bot.fightLoadout.gear[BotStyle.MELEE] ?: return
         val mainWeaponId = main[EquipmentType.WEAPON]?.let { getRSCM(it) } ?: return
         if (bot.equipment[EquipmentType.WEAPON.id]?.id == mainWeaponId) return // already on the main
         bot.equipment[EquipmentType.WEAPON.id] = Item(mainWeaponId)
@@ -543,7 +543,7 @@ object BotBrain {
 
         // DHers override eatAt LOW so they sit in the high-damage band; everyone else uses EAT_AT.
         // A named-knight INSTANCE may override its loadout's threshold ([PkBot.eatAtOverride]).
-        val eatAt = bot.eatAtOverride ?: bot.loadout.eatAt ?: EAT_AT
+        val eatAt = bot.eatAtOverride ?: bot.fightLoadout.eatAt ?: EAT_AT
         // Combo-eat no higher than the eat threshold, so a low-eatAt DHer doesn't karambwan itself
         // back out of its damage band.
         val comboAt = minOf(COMBO_AT, eatAt)
