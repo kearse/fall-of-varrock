@@ -1,24 +1,25 @@
 /*
  * Fall of Varrock — Task Helper.
  *
- * A Quest-Helper-style guide for Vannaka's combat contracts (the Slayer tasks): guidance arrows in
- * the scene and on the minimap point the way to the active contract's hunting ground, and the
- * assigned monsters' tiles are highlighted (scene + minimap dot) once you're among them — the same
+ * A Quest-Helper-style guide for Vannaka's contracts: guidance arrows in the scene and on the
+ * minimap point the way to the active combat contract's hunting ground, and the assigned
+ * monsters' tiles are highlighted (scene + minimap dot) once you're among them — the same
  * hand-off the Quest Journal does for the castle rats. The arrows use their own colour (cyan by
  * default) so they can't be mistaken for the gold Quest Journal arrows, and the whole thing is an
  * ordinary plugin — toggle it off in the plugin list to hunt unaided.
  *
- * The sidebar tab (LofTaskHelperPanel, styled like the Quest Journal) lists Vannaka's whole
- * contract roster (LofTask): what each task is, where its monsters hunt, and its terms. Pick one
- * to track and the same arrows and highlights guide you there — useful for scouting a hunting
- * ground before taking the contract, or hunting off-contract. A tracked pick wins over the active
- * contract's arrow (it's the player's explicit choice), and the moment Vannaka signs a NEW
- * contract the pick clears so the helper snaps to the real assignment.
+ * The sidebar tab (LofTaskHelperPanel, styled like the Quest Journal) shows ONLY the tasks the
+ * player is signed to — Vannaka signs at most one combat and one resource contract at a time. The
+ * combat card names the target, where it hunts and what a kill pays (LofTask), with a tracking
+ * toggle for the arrows and highlights; the resource card shows what's left to gather. Tracking
+ * follows the contract varps, so completing a task turns the tracker off by itself, and a fresh
+ * contract re-arms it.
  *
  * Progress itself is already tracked by the Slayer dial in the war-dial row (`lofdials`, varp
  * 4616); this plugin reads the same varp to know a contract is active and to caption the arrow
  * with the kill count. The target tile arrives in varp 4638 and the target's canonical npc id in
- * varp 4639, both published by the server's SlayerHudPlugin (see Alter) — no custom packets.
+ * varp 4639, both published by the server's SlayerHudPlugin (see Alter); the resource contract
+ * rides the same hidden ~LOFCON~ chat line the War Contracts window reads — no custom packets.
  * Targets are matched by cache NAME, not id, mirroring the server's kill credit: cows alone spawn
  * under four npc ids, and every variant that counts is also the one marked.
  */
@@ -36,6 +37,7 @@ import net.runelite.api.NPC;
 import net.runelite.api.NPCComposition;
 import net.runelite.api.Player;
 import net.runelite.api.coords.WorldPoint;
+import net.runelite.api.events.ChatMessage;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.VarbitChanged;
 import net.runelite.client.config.ConfigManager;
@@ -52,7 +54,7 @@ import net.runelite.client.util.Text;
 
 @PluginDescriptor(
 	name = "Lof Task Helper",
-	description = "A sidebar tab of Vannaka's contract roster — pick a task to be guided to it; arrows point at your active war-contract's hunting ground and the assigned monsters' tiles are highlighted.",
+	description = "A sidebar tab of your signed contracts — arrows point at your combat contract's hunting ground, the assigned monsters' tiles are highlighted, and your resource contract's count stays in view.",
 	tags = {"lof", "slayer", "task", "contract", "assignment", "helper", "guide", "arrow", "highlight", "panel"},
 	enabledByDefault = true
 )
@@ -69,6 +71,10 @@ public class LofTaskHelperPlugin extends Plugin
 	 *  highlight matches every npc sharing this id's cache name — the server credits kills the
 	 *  same way. */
 	static final int VARP_TARGET_NPC = 4639;
+
+	/** The contract board's hidden state line (server ContractMenu; hidden from chat by
+	 *  lofcontracts): streak|warEffort|combatName|left|total|resourceName|resLeft|resSkill. */
+	private static final String LOFCON_PREFIX = "~LOFCON~";
 
 	/** Tiles from the player within which a highlighted target counts as "in sight" (≈ the
 	 *  viewport), at which point the arrow hands off to the on-creature highlight (mirrors the
@@ -102,18 +108,31 @@ public class LofTaskHelperPlugin extends Plugin
 	/** Highlighter registered with the shared NPC-overlay service; kept so we can unregister it. */
 	private final Function<NPC, HighlightedNpc> targetHighlighter = this::highlightTargetNpc;
 
-	/** The roster task the player picked in the sidebar tab (null = follow the active contract). */
+	/** True while the player has switched this contract's guidance off from the tab. Reset when a
+	 *  fresh contract is signed, so every new task tracks by default; completion needs no reset —
+	 *  the arrows and highlights are gated on the contract varps and stop with them. */
 	@Getter
-	private LofTask selectedTask;
+	private boolean trackingMuted;
 
-	/** Last seen VARP_TARGET_NPC, so a NEW contract (value change to non-zero) can clear the
-	 *  player's roster pick and snap the helper to the real assignment. */
+	/** Last seen VARP_TARGET_NPC, so a NEW contract (value change to non-zero) can be told apart
+	 *  from a re-push of the current one. */
 	private int lastContractNpc;
 
-	/** The active contract target's cache name as displayed (e.g. "Goblin"); resolved on the
-	 *  client thread whenever the contract varps move, read by the Swing panel. Null = none. */
+	/** The active combat contract target's cache name as displayed (e.g. "Goblin"); resolved on
+	 *  the client thread whenever the contract varps move, read by the Swing panel. Null = none. */
 	@Getter
 	private String contractDisplayName;
+
+	/** The active resource contract from the ~LOFCON~ line: what's being gathered (e.g. "willow
+	 *  logs"), how many remain, and the skill. Null name = no resource contract. */
+	@Getter
+	private String resourceName;
+
+	@Getter
+	private int resourceLeft;
+
+	@Getter
+	private String resourceSkill;
 
 	@Provides
 	LofTaskHelperConfig provideConfig(ConfigManager configManager)
@@ -148,8 +167,11 @@ public class LofTaskHelperPlugin extends Plugin
 		overlayManager.remove(minimapOverlay);
 		npcOverlayService.unregisterHighlighter(targetHighlighter);
 		clientToolbar.removeNavigation(navButton);
-		selectedTask = null;
+		trackingMuted = false;
 		contractDisplayName = null;
+		resourceName = null;
+		resourceLeft = 0;
+		resourceSkill = null;
 	}
 
 	@Subscribe
@@ -163,20 +185,44 @@ public class LofTaskHelperPlugin extends Plugin
 		if (varp == VARP_TARGET_NPC)
 		{
 			int npcId = client.getVarpValue(VARP_TARGET_NPC);
-			// A NEW contract (not a clear, not a re-push of the same one) overrides any roster
-			// pick — Vannaka's assignment is what actually progresses, so guide there.
+			// A fresh contract (not a clear, not a re-push of the same one) re-arms tracking —
+			// every new task starts guided; the player mutes per-contract from the tab.
 			if (npcId != 0 && npcId != lastContractNpc)
 			{
-				selectedTask = null;
+				trackingMuted = false;
 			}
 			lastContractNpc = npcId;
 			contractDisplayName = resolveContractName(npcId);
 		}
-		// The highlighter's membership depends on the live contract/pick, so re-evaluate the
-		// scene's npcs whenever it changes (npcs spawned after this are captured by the spawn hook).
+		// The highlighter's membership depends on the live contract, so re-evaluate the scene's
+		// npcs whenever it changes (npcs spawned after this are captured by the spawn hook).
 		if (varp == VARP_SLAYER || varp == VARP_TARGET_NPC)
 		{
 			npcOverlayService.rebuild();
+		}
+		refreshPanel();
+	}
+
+	@Subscribe
+	public void onChatMessage(ChatMessage event)
+	{
+		final String msg = event.getMessage();
+		if (msg == null || !msg.startsWith(LOFCON_PREFIX))
+		{
+			return;
+		}
+		try
+		{
+			// Fields 0-4 (streak, War Effort, combat contract) belong to the contract board; the
+			// combat card here runs off the live varps instead. Only the resource tail is ours.
+			final String[] p = msg.substring(LOFCON_PREFIX.length()).split("\\|", -1);
+			resourceName = "-".equals(p[5]) ? null : p[5];
+			resourceLeft = Integer.parseInt(p[6]);
+			resourceSkill = "-".equals(p[7]) ? null : p[7];
+		}
+		catch (Exception e)
+		{
+			return; // malformed line — keep the last good state
 		}
 		refreshPanel();
 	}
@@ -186,16 +232,23 @@ public class LofTaskHelperPlugin extends Plugin
 	{
 		if (event.getGameState() == GameState.LOGGED_IN)
 		{
+			// Blank the resource card until this account's login push arrives (the server sends
+			// the ~LOFCON~ state on login), so a hop or account switch never shows stale work.
+			resourceName = null;
+			resourceLeft = 0;
+			resourceSkill = null;
 			lastContractNpc = client.getVarpValue(VARP_TARGET_NPC);
 			contractDisplayName = resolveContractName(lastContractNpc);
 			refreshPanel();
 		}
 	}
 
-	/** Panel: the player picked a roster task to guide toward (null = stop tracking). */
-	void setSelectedTask(LofTask task)
+	/** Panel: switch this contract's guidance arrows + highlights off/on. */
+	void setTrackingMuted(boolean muted)
 	{
-		selectedTask = task;
+		trackingMuted = muted;
+		// Membership isn't gated on the mute (only rendering is), but a rebuild keeps the shared
+		// service's view of the scene fresh either way.
 		npcOverlayService.rebuild();
 		refreshPanel();
 	}
@@ -224,9 +277,13 @@ public class LofTaskHelperPlugin extends Plugin
 	/** The hunting-ground tile the overlays should point at right now (null = nothing to draw). */
 	WorldPoint activeTarget()
 	{
-		if (client.getGameState() != GameState.LOGGED_IN)
+		if (client.getGameState() != GameState.LOGGED_IN || trackingMuted)
 		{
 			return null;
+		}
+		if (client.getVarpValue(VARP_SLAYER) == 0)
+		{
+			return null; // no active contract
 		}
 		// Once a highlighted target creature is in sight the tile marker is guidance enough, so the
 		// arrow gets out of the way — mirroring the Quest Journal's rat hand-off. Only applies
@@ -234,16 +291,6 @@ public class LofTaskHelperPlugin extends Plugin
 		if (config.highlightTargets() && targetNpcInSight())
 		{
 			return null;
-		}
-		// A roster pick from the sidebar tab wins over the contract arrow (the player's explicit
-		// choice); a new contract clears the pick (see onVarbitChanged) so this can't shadow it.
-		if (selectedTask != null)
-		{
-			return selectedTask.getHuntingGround();
-		}
-		if (client.getVarpValue(VARP_SLAYER) == 0)
-		{
-			return null; // no active contract
 		}
 		int packed = client.getVarpValue(VARP_TARGET);
 		if (packed == 0)
@@ -256,16 +303,10 @@ public class LofTaskHelperPlugin extends Plugin
 		return new WorldPoint(packed & 0x3FFF, (packed >> 14) & 0x3FFF, (packed >> 28) & 0x3);
 	}
 
-	/** The arrow's caption: the task's name, plus the kill count when it's the live contract —
-	 *  e.g. "Goblins · 12/30" on contract, "Cows" on a roster pick (null = nothing to caption). */
+	/** The arrow's caption: the contract's name plus the kill count, e.g. "Goblins · 12/30"
+	 *  (null = nothing to caption). */
 	String progressText()
 	{
-		if (selectedTask != null)
-		{
-			// A picked task that happens to BE the contract target still shows the count.
-			String count = selectedTaskIsContract() ? contractCount() : null;
-			return count != null ? selectedTask.getDisplayName() + " · " + count : selectedTask.getDisplayName();
-		}
 		String count = contractCount();
 		if (count == null)
 		{
@@ -276,8 +317,21 @@ public class LofTaskHelperPlugin extends Plugin
 		return name != null ? name + " · " + count : count;
 	}
 
+	/** The active combat contract's kill count, e.g. "12/30" (null = no active contract). */
+	String contractCount()
+	{
+		int packed = client.getVarpValue(VARP_SLAYER);
+		if (packed == 0)
+		{
+			return null;
+		}
+		int killed = packed & 0xFFF;
+		int total = (packed >> 12) & 0xFFF;
+		return killed + "/" + total;
+	}
+
 	/** The roster entry matching the active contract's target (null = no contract, or a target
-	 *  the client-side roster doesn't know — the arrow still works, only the tab tag is lost). */
+	 *  the client-side lore doesn't know — the arrow still works, only the card's blurb is lost). */
 	LofTask contractRosterTask()
 	{
 		if (contractDisplayName == null)
@@ -295,33 +349,14 @@ public class LofTaskHelperPlugin extends Plugin
 		return null;
 	}
 
-	/** The active contract's kill count, e.g. "12/30" (null = no active contract). */
-	String contractCount()
-	{
-		int packed = client.getVarpValue(VARP_SLAYER);
-		if (packed == 0)
-		{
-			return null;
-		}
-		int killed = packed & 0xFFF;
-		int total = (packed >> 12) & 0xFFF;
-		return killed + "/" + total;
-	}
-
-	/** True when the sidebar pick and the live contract hunt the same monster. */
-	boolean selectedTaskIsContract()
-	{
-		return selectedTask != null && selectedTask == contractRosterTask();
-	}
-
 	/**
 	 * Highlighter for the shared NPC-overlay service: tile highlight + minimap dot for every npc
-	 * whose cache name matches the active contract's target (or the sidebar pick). Membership is
-	 * dynamic (the contract changes), so {@link #onVarbitChanged} and
-	 * {@link #setSelectedTask} rebuild the service on every change; the render predicate re-checks
-	 * live so a completed task blanks immediately. Note the service gives each npc at most ONE
-	 * highlight (first registered highlighter wins) — so the tutorial rats, which the Quest
-	 * Journal also highlights, are never double-drawn.
+	 * whose cache name matches the active contract's target. Membership is dynamic (the contract
+	 * changes), so {@link #onVarbitChanged} rebuilds the service on every contract change; the
+	 * render predicate re-checks live so a completed task or a mute from the tab blanks
+	 * immediately. Note the service gives each npc at most ONE highlight (first registered
+	 * highlighter wins) — so the tutorial rats, which the Quest Journal also highlights, are never
+	 * double-drawn.
 	 */
 	private HighlightedNpc highlightTargetNpc(NPC npc)
 	{
@@ -333,11 +368,11 @@ public class LofTaskHelperPlugin extends Plugin
 			.npc(npc)
 			.highlightColor(config.arrowColor())
 			.tile(true)
-			.render(n -> config.highlightTargets() && isTargetNpc(n))
+			.render(n -> config.highlightTargets() && !trackingMuted && isTargetNpc(n))
 			.build();
 	}
 
-	/** True when [npc]'s cache name matches the guided target's name. */
+	/** True when [npc]'s cache name matches the active contract's target name. */
 	private boolean isTargetNpc(NPC npc)
 	{
 		String target = targetName();
@@ -349,19 +384,11 @@ public class LofTaskHelperPlugin extends Plugin
 		return name != null && target.equals(Text.standardize(name));
 	}
 
-	/** The guided target's standardized cache name — the sidebar pick when there is one, else the
-	 *  active contract's target (null = neither / unresolvable). */
+	/** The active contract target's standardized cache name (null = no contract / unresolvable). */
 	private String targetName()
 	{
-		if (client.getGameState() != GameState.LOGGED_IN)
-		{
-			return null;
-		}
-		if (selectedTask != null)
-		{
-			return Text.standardize(selectedTask.getNpcName());
-		}
-		if (client.getVarpValue(VARP_SLAYER) == 0)
+		if (client.getGameState() != GameState.LOGGED_IN
+			|| client.getVarpValue(VARP_SLAYER) == 0)
 		{
 			return null;
 		}
