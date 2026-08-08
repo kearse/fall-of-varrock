@@ -64,10 +64,39 @@ object KitStorage {
         return out
     }
 
-    fun save(p: Player, slot: Int, kit: KitSetup) {
+    /** Per-slot kit NAMES (the dropdown labels). Legacy blobs without names read "Kit N". */
+    fun names(p: Player): Array<String> {
+        val out = Array(SLOT_COUNT) { "Kit ${it + 1}" }
+        val blob = p.attr[KIT_LOADOUTS_ATTR] ?: return out
+        runCatching {
+            val root = Document.parse(blob)
+            for (i in 0 until SLOT_COUNT) {
+                root.get(i.toString(), Document::class.java)?.getString("name")
+                    ?.takeIf { it.isNotBlank() }?.let { out[i] = it }
+            }
+        }
+        return out
+    }
+
+    /** Rename saved slot [slot] in place (a no-op for an empty slot). */
+    fun rename(p: Player, slot: Int, name: String) {
+        if (slot !in 0 until SLOT_COUNT) return
+        val kits = load(p)
+        if (kits[slot] == null) return
+        val allNames = names(p).also { it[slot] = name }
+        write(p, kits, allNames)
+    }
+
+    fun save(p: Player, slot: Int, kit: KitSetup, name: String? = null) {
         if (slot !in 0 until SLOT_COUNT) return
         val kits = load(p)
         kits[slot] = kit.copy()
+        val allNames = names(p)
+        if (name != null && name.isNotBlank()) allNames[slot] = name
+        write(p, kits, allNames)
+    }
+
+    private fun write(p: Player, kits: Array<KitSetup?>, names: Array<String>) {
         val root = Document()
         kits.forEachIndexed { i, k ->
             if (k != null) {
@@ -76,7 +105,8 @@ object KitStorage {
                     Document()
                         .append("gear", itemsDoc(k.gear))
                         .append("inv", itemsDoc(k.inv))
-                        .append("book", k.book),
+                        .append("book", k.book)
+                        .append("name", names[i]),
                 )
             }
         }

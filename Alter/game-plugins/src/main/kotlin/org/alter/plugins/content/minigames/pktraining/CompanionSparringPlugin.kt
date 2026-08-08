@@ -73,7 +73,12 @@ class CompanionSparringPlugin(
     private val upkeepTimer = TimerKey()
 
     init {
-        CompanionSparring.setupOpener = { owner, comp -> owner.queue { setupDialog(owner, comp) } }
+        // Themed client overlay (default) with the chatbox dialogue as the everyone-else fallback —
+        // the duel rules screen's split, one flag.
+        CompanionSparring.setupOpener = { owner, comp ->
+            if (SparringClientMenu.enabled) openOverlay(owner, comp)
+            else owner.queue { setupDialog(owner, comp) }
+        }
 
         onWorldInit {
             world.timers[brainTimer] = 1
@@ -103,7 +108,12 @@ class CompanionSparringPlugin(
 
         // Clean logout ends the bout; ordering vs CompanionPlugin's storeAndDespawn is free —
         // the snapshot-stash hook makes both orders write real gear.
-        onLogout { CompanionSparring.sessionOf(player)?.let { teardown(it, ownerWon = null) } }
+        onLogout {
+            SparringClientMenu.close(player)
+            CompanionSparring.sessionOf(player)?.let { teardown(it, ownerWon = null) }
+        }
+
+        onLogin { SparringClientMenu.clearVarps(player) } // transient UI state never survives a login
 
         // Crash recovery: a Max Stats boost taken in OWN gear left its level snapshot on disk.
         // (Loaner-kit fighters recover through PkTrainingArenaPlugin's PK_ARENA_STASH restore.)
@@ -148,6 +158,28 @@ class CompanionSparringPlugin(
             }
             startSpar(player, comp, settings)
         }
+    }
+
+    // ───────────────────────────── setup via the themed overlay ─────────────────────────────
+
+    private fun openOverlay(owner: Player, comp: CompanionPawn, carried: SparSettings? = null) {
+        if (!validateChallenge(owner, comp)) return
+        val settings = carried ?: CompanionSparring.lastSettingsOf(owner) ?: SparSettings()
+        SparringClientMenu.open(
+            owner, comp, settings,
+            onStart = { startSpar(owner, comp, it) },
+            onEditKit = { st ->
+                // Hand off to the kit locker; its finish re-opens this screen with the kit applied.
+                if (!KitEditor.isOpen(owner)) {
+                    KitEditor.open(owner, KitEditor.Mode.TRAINING, onStart = { kit, _ ->
+                        st.companionKit = kit
+                        st.companionKitMode = CompanionKitMode.CUSTOM
+                        owner.message("<col=4f9b4f>Sir ${comp.username} will fight in that kit.</col>")
+                        openOverlay(owner, comp, st)
+                    })
+                }
+            },
+        )
     }
 
     // ───────────────────────────── setup dialogue (chatbox fallback) ─────────────────────────────

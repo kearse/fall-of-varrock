@@ -11,10 +11,14 @@ package net.runelite.client.plugins.lofkit;
 
 import com.google.inject.Provides;
 import javax.inject.Inject;
+import net.runelite.api.ChatLineBuffer;
 import net.runelite.api.Client;
+import net.runelite.api.MessageNode;
 import net.runelite.api.ScriptID;
+import net.runelite.api.events.ChatMessage;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
+import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.input.MouseManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
@@ -75,5 +79,38 @@ public class LofKitPlugin extends Plugin
 	{
 		final String msg = "::lofkit " + action;
 		clientThread.invokeLater(() -> client.runScript(ScriptID.CHAT_SEND, msg, 0, 0, 0, -1));
+	}
+
+	/** Tag for the server's kit-name channel (must match KitEditor.NAMES_PREFIX). */
+	private static final String NAMES_PREFIX = "~LOFKITN~";
+
+	/**
+	 * The kit-NAME feed: varps can't carry text, so the dropdown's labels arrive as a hidden chat
+	 * line `~LOFKITN~<current>|<slot0>|<slot1>|<slot2>` (empty = that save slot is empty). Parsed
+	 * here, handed to the overlay, and deleted from the chatbox (the companions-panel pattern —
+	 * matched by CONTENT, not chat type, which transport quirks can rewrite).
+	 */
+	@Subscribe
+	public void onChatMessage(ChatMessage event)
+	{
+		final String msg = event.getMessage();
+		if (msg == null || !msg.startsWith(NAMES_PREFIX))
+		{
+			return;
+		}
+		final String[] parts = msg.substring(NAMES_PREFIX.length()).split("\\|", -1);
+		final String[] saved = new String[3];
+		for (int i = 0; i < 3; i++)
+		{
+			saved[i] = parts.length > i + 1 ? parts[i + 1] : "";
+		}
+		overlay.setKitNames(parts.length > 0 ? parts[0] : "", saved);
+		// Delete the line from the chatbox so it stays invisible.
+		final MessageNode node = event.getMessageNode();
+		final ChatLineBuffer buffer = client.getChatLineMap().get(event.getType().getType());
+		if (buffer != null && node != null)
+		{
+			buffer.removeMessageNode(node);
+		}
 	}
 }

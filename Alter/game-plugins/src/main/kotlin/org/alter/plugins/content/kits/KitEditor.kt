@@ -3,6 +3,7 @@ package org.alter.plugins.content.kits
 import org.alter.api.EquipmentType
 import org.alter.api.Spellbook
 import org.alter.api.ext.getSpellbook
+import org.alter.api.ext.inputString
 import org.alter.api.ext.message
 import org.alter.api.ext.setVarp
 import org.alter.game.model.entity.Player
@@ -37,6 +38,17 @@ object KitEditor {
     const val SLOT_VARP_BASE = 4641 // 11 equipment varps, then 28 inventory varps (39 total)
     const val EQUIP_SLOTS = 11
 
+    /** Built-in preset names, in `loadPreset` index order — shown in the kit-name dropdown. */
+    val PRESET_NAMES = listOf("Dharok's", "NH Tribrid")
+
+    /**
+     * Kit-NAME channel to the client overlay: varps can't carry text, so the dropdown's labels ride
+     * a tagged chat message the client parses + suppresses (the companion-panel pattern).
+     * Wire: `~LOFKITN~<currentName>|<slot0Name>|<slot1Name>|<slot2Name>` — an empty slot name means
+     * that save slot is empty (the occupied bits in [CONTROL_VARP] are authoritative regardless).
+     */
+    const val NAMES_PREFIX = "~LOFKITN~"
+
     /** Paper-doll order (doll index → EquipmentType id) — MUST match the client overlay. */
     val SLOT_IDS = intArrayOf(
         EquipmentType.HEAD.id, EquipmentType.CAPE.id, EquipmentType.AMULET.id, EquipmentType.WEAPON.id,
@@ -57,6 +69,12 @@ object KitEditor {
         val kit = KitSetup()
         var diff = 1 // 0 easy, 1 medium, 2 hard (training mode only)
         var savedKits: Array<KitSetup?> = arrayOfNulls(KitStorage.SLOT_COUNT)
+        /** Per-slot names for the dropdown ("Kit N" for legacy saves). */
+        var savedNames: Array<String> = Array(KitStorage.SLOT_COUNT) { "Kit ${it + 1}" }
+        /** The name of the kit being edited (a preset's name, a saved kit's name, or user-entered). */
+        var kitName: String = ""
+        /** Which saved slot the current kit came from; -1 = a preset or a fresh build. */
+        var loadedSlot: Int = -1
     }
 
     private val sessions = HashMap<Int, Session>()
@@ -78,10 +96,18 @@ object KitEditor {
             return
         }
         s.savedKits = KitStorage.load(p)
+        s.savedNames = KitStorage.names(p)
         // Open on the last-used saved kit if there is one, else the Dharok preset — never a blank
         // screen: there is always something concrete on the doll to react to.
-        val initial = s.savedKits.firstOrNull { it != null && !it.isEmpty() } ?: KitArmoury.DHAROK
-        loadInto(s, initial)
+        val savedIdx = s.savedKits.indexOfFirst { it != null && !it.isEmpty() }
+        if (savedIdx >= 0) {
+            loadInto(s, s.savedKits[savedIdx]!!)
+            s.kitName = s.savedNames[savedIdx]
+            s.loadedSlot = savedIdx
+        } else {
+            loadInto(s, KitArmoury.DHAROK)
+            s.kitName = PRESET_NAMES[0]
+        }
         sessions[p.index] = s
         publish(s)
     }
@@ -178,6 +204,8 @@ object KitEditor {
         val s = sessions[p.index] ?: return
         if (s.mode == Mode.LMS) return
         loadInto(s, if (index == 0) KitArmoury.DHAROK else KitArmoury.NH)
+        s.kitName = PRESET_NAMES.getOrElse(index.coerceIn(0, 1)) { PRESET_NAMES[0] }
+        s.loadedSlot = -1
         publish(s)
     }
 
@@ -186,6 +214,8 @@ object KitEditor {
         if (s.mode == Mode.LMS) return
         val kit = s.savedKits.getOrNull(slot) ?: run { p.message("That kit slot is empty — press Save to fill it."); return }
         loadInto(s, kit)
+        s.kitName = s.savedNames.getOrElse(slot) { "Kit ${slot + 1}" }
+        s.loadedSlot = slot
         publish(s)
     }
 
@@ -194,11 +224,92 @@ object KitEditor {
         if (s.mode == Mode.LMS) return
         if (slot !in 0 until KitStorage.SLOT_COUNT) return
         if (s.kit.isEmpty()) { p.message("There's nothing to save yet."); return }
-        KitStorage.save(p, slot, s.kit)
+        KitStorage.save(p, slot, s.kit, s.kitName.ifBlank { null })
         s.savedKits[slot] = s.kit.copy()
+        if (s.kitName.isNotBlank()) s.savedNames[slot] = s.kitName
+        s.loadedSlot = slot
         p.message("<col=007f00>Saved to kit slot ${slot + 1}.</col>")
         publish(s)
     }
+
+    // ── the named-kit dropdown (one kit name; pick / new / save / rename) ──
+
+    /** Start a fresh, EMPTY kit — and ask for its name up front (a new kit needs one to save). */
+    fun newKit(p: Player) {
+        val s = sessions[p.index] ?: return
+        if (s.mode == Mode.LMS) return
+        s.kit.gear.clear()
+        s.kit.inv.clear()
+        s.kit.book = KitSetup.BOOK_STANDARD
+        s.kitName = ""
+        s.loadedSlot = -1
+        publish(s)
+        p.queue {
+            val name = cleanName(inputString(p, "Name your new kit:"))
+            val live = sessionOf(p) ?: return@queue
+            live.kitName = name.ifBlank { "" }
+            if (name.isBlank()) p.message("Unnamed — you'll be asked for a name when you save.")
+            publish(live)
+        }
+    }
+
+    /** Save the current build under its name: back into the slot it came from, else the first
+     *  free slot. A nameless kit (fresh build) prompts for its name first. */
+    fun saveCurrent(p: Player) {
+        val s = sessions[p.index] ?: return
+        if (s.mode == Mode.LMS) return
+        if (s.kit.isEmpty()) { p.message("There's nothing to save yet."); return }
+        val slot = if (s.loadedSlot >= 0) s.loadedSlot
+            else s.savedKits.indexOfFirst { it == null || it.isEmpty() }
+        if (slot < 0) {
+            p.message("<col=801700>All ${KitStorage.SLOT_COUNT} kit slots are full — load a saved kit and Save to overwrite it.</col>")
+            return
+        }
+        if (s.kitName.isBlank()) {
+            p.queue {
+                val name = cleanName(inputString(p, "Name your kit:"))
+                if (name.isBlank()) { p.message("A kit needs a name to save."); return@queue }
+                val live = sessionOf(p) ?: return@queue
+                live.kitName = name
+                completeSave(p, live, slot)
+            }
+        } else {
+            completeSave(p, s, slot)
+        }
+    }
+
+    /** Rename the kit being edited (double-click its title in the overlay). Renames the saved
+     *  slot in place when the kit came from one. */
+    fun renameKit(p: Player) {
+        val s = sessions[p.index] ?: return
+        if (s.mode == Mode.LMS) return
+        p.queue {
+            val name = cleanName(inputString(p, "Rename kit:"))
+            if (name.isBlank()) { p.message("That name isn't allowed."); return@queue }
+            val live = sessionOf(p) ?: return@queue
+            live.kitName = name
+            if (live.loadedSlot >= 0) {
+                KitStorage.rename(p, live.loadedSlot, name)
+                live.savedNames[live.loadedSlot] = name
+            }
+            p.message("<col=007f00>Kit renamed to \"$name\".</col>")
+            publish(live)
+        }
+    }
+
+    private fun completeSave(p: Player, s: Session, slot: Int) {
+        KitStorage.save(p, slot, s.kit, s.kitName)
+        s.savedKits[slot] = s.kit.copy()
+        s.savedNames[slot] = s.kitName
+        s.loadedSlot = slot
+        p.message("<col=007f00>Saved \"${s.kitName}\".</col>")
+        publish(s)
+    }
+
+    /** Kit names are chat-channel data (`~LOFKIT~`-framed, `|`-delimited): keep them short and
+     *  strip the delimiter characters. */
+    private fun cleanName(raw: String): String =
+        raw.trim().filter { it.isLetterOrDigit() || it == ' ' || it == '-' || it == '\'' }.take(16)
 
     fun setBook(p: Player, book: Int) {
         val s = sessions[p.index] ?: return
@@ -284,6 +395,13 @@ object KitEditor {
         }
         for (i in 0 until KitSetup.INV_SIZE) {
             p.setVarp(SLOT_VARP_BASE + EQUIP_SLOTS + i, packItem(kit.inv[i]))
+        }
+        // Kit names for the dropdown (text can't ride varps). Not meaningful in LMS mode.
+        if (s.mode != Mode.LMS) {
+            val names = (0 until KitStorage.SLOT_COUNT).joinToString("|") { i ->
+                if (s.savedKits[i] != null && !s.savedKits[i]!!.isEmpty()) s.savedNames[i] else ""
+            }
+            p.message("$NAMES_PREFIX${s.kitName}|$names", org.alter.api.ChatMessageType.CONSOLE)
         }
     }
 

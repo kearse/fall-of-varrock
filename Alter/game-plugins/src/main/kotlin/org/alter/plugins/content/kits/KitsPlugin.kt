@@ -67,6 +67,11 @@ class KitsPlugin(
                 "k" -> args.getOrNull(1)?.toIntOrNull()?.let { KitEditor.loadSaved(player, it) }
                 "s" -> args.getOrNull(1)?.toIntOrNull()?.let { KitEditor.saveKit(player, it) }
                 "cur" -> KitEditor.loadCurrent(player)
+                // The named-kit dropdown: fresh kit (asks its name), save under the current name,
+                // rename (double-clicked title).
+                "new" -> KitEditor.newKit(player)
+                "save" -> KitEditor.saveCurrent(player)
+                "rename" -> KitEditor.renameKit(player)
                 "b" -> args.getOrNull(1)?.toIntOrNull()?.let { KitEditor.setBook(player, it) }
                 "d" -> args.getOrNull(1)?.toIntOrNull()?.let { KitEditor.setDiff(player, it) }
                 "start" -> KitEditor.start(player)

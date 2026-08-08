@@ -101,6 +101,11 @@ class MessagePublicHandler : MessageHandler<MessagePublic> {
                     client.world.plugins.executeCommand(client, "kitclick", parts.drop(1).toTypedArray())
                     return
                 }
+                // Companion sparring settings overlay (lofspar): "::lofspar <action>" → sparclick.
+                "lofspar" -> {
+                    client.world.plugins.executeCommand(client, "sparclick", parts.drop(1).toTypedArray())
+                    return
+                }
                 "lofspoils" -> {
                     client.world.plugins.executeCommand(client, "spoilsclick", parts.drop(1).toTypedArray())
                     return
@@ -229,6 +234,11 @@ class MessagePublicHandler : MessageHandler<MessagePublic> {
                 // Kit editor overlay (lofkit): "::kit <action> [arg]" → kit interaction, suppress chat.
                 "kit" -> {
                     client.world.plugins.executeCommand(client, "kitclick", parts.drop(1).toTypedArray())
+                    return
+                }
+                // Companion sparring overlay short alias (manual testing on the custom client).
+                "spar" -> {
+                    client.world.plugins.executeCommand(client, "sparclick", parts.drop(1).toTypedArray())
                     return
                 }
                 // Typed "::kits" (open the kit editor at a bank) arrives down this channel too —
