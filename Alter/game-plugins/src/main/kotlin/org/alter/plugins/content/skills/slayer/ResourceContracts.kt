@@ -143,6 +143,7 @@ object ResourceContracts {
         val remaining = left - 1
         if (remaining > 0) {
             p.attr[RESOURCE_CONTRACT_LEFT_ATTR] = remaining
+            ContractMenu.push(p) // keep the client's board/Task Helper count live as it drops
             return
         }
         // Complete: clear the contract and pay out coin + War Effort (launch-generosity scaled).
@@ -157,6 +158,7 @@ object ResourceContracts {
             p.addPoints(PointKind.WAR_EFFORT, we)
             p.message("<col=801700>Resource contract complete!</col> +${"%,d".format(coins)} coins and +$we War Effort. See Vannaka for another.")
         }
+        ContractMenu.push(p) // the client drops its resource-task card the moment the work is done
     }
 
     /** Pay coins into the bag, overflowing to the bank (gathering tends to fill the inventory). */

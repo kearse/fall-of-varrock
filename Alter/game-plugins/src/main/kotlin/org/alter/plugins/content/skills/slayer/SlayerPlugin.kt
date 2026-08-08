@@ -190,6 +190,11 @@ class SlayerPlugin(
                 "rewards" -> player.openShop(rewardShop)
             }
         }
+
+        // Seed the client's contract state (lofcontracts window + the Task Helper's signed-task
+        // cards) on login — without this a relogging player's resource contract is invisible
+        // client-side until the board is next opened or a contract assigned.
+        onLogin { ContractMenu.push(player) }
     }
 
     private fun bindTalk() {
