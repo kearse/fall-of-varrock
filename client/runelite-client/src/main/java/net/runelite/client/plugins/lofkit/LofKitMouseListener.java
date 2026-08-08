@@ -82,6 +82,10 @@ class LofKitMouseListener extends MouseAdapter
 		{
 			plugin.sendAction("save");
 		}
+		else if (hit == LofKitOverlay.SEARCH_BTN)
+		{
+			plugin.sendAction("search"); // server opens the native chatbox item finder
+		}
 		else if (hit == LofKitOverlay.ACTION)
 		{
 			plugin.sendAction(overlay.isTraining() ? "start" : overlay.isLms() ? "done" : "load");

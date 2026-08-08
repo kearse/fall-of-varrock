@@ -137,29 +137,45 @@ object KitStorage {
  */
 object KitArmoury {
 
-    /** name → (defaultQty, forced equip slot or null to let the item def decide). */
+    /** name → defaultQty, in POPULARITY order — the client's search-box armoury shows this list
+     *  front-to-back (most-wanted spec weapons and the Dharok set first), so keep the order
+     *  deliberate and keep it MATCHING the client's ARMOURY_POPULAR list (lofkit overlay). */
     private val POOL_DEFS: List<Pair<String, Int>> = listOf(
-        // Melee
-        "item.abyssal_whip" to 1, "item.dragon_dagger" to 1, "item.dragon_claws" to 1,
-        "item.dharoks_greataxe" to 1, "item.dragon_defender" to 1,
-        // Ranged
-        "item.magic_shortbow" to 1, "item.rune_arrow" to 500,
-        "item.black_dhide_body" to 1, "item.black_dhide_chaps" to 1,
-        // Magic
-        "item.ancient_staff" to 1, "item.mystic_hat" to 1, "item.mystic_robe_top" to 1,
-        "item.mystic_robe_bottom" to 1, "item.occult_necklace" to 1,
-        // Armour
+        // The chase spec weapons + classic sets everyone searches for first
+        "item.armadyl_godsword" to 1, "item.granite_maul" to 1, "item.dragon_claws" to 1,
+        "item.dragon_dagger" to 1, "item.abyssal_whip" to 1, "item.dharoks_greataxe" to 1,
         "item.dharoks_helm" to 1, "item.dharoks_platebody" to 1, "item.dharoks_platelegs" to 1,
-        "item.helm_of_neitiznot" to 1, "item.fighter_torso" to 1, "item.fire_cape" to 1,
-        "item.amulet_of_torture" to 1, "item.barrows_gloves" to 1, "item.dragon_boots" to 1,
-        "item.berserker_ring" to 1, "item.berserker_ring_i" to 1,
+        "item.magic_shortbow" to 1, "item.ancient_staff" to 1,
         // Supplies
-        "item.super_combat_potion4" to 1, "item.saradomin_brew4" to 1, "item.super_restore4" to 1,
-        "item.shark" to 1, "item.cooked_karambwan" to 1,
+        "item.saradomin_brew4" to 1, "item.super_restore4" to 1, "item.cooked_karambwan" to 1,
+        "item.shark" to 1, "item.anglerfish" to 1, "item.super_combat_potion4" to 1,
+        "item.ranging_potion4" to 1,
+        // Melee armour + trinkets
+        "item.helm_of_neitiznot" to 1, "item.neitiznot_faceguard" to 1, "item.fighter_torso" to 1,
+        "item.bandos_chestplate" to 1, "item.bandos_tassets" to 1, "item.fire_cape" to 1,
+        "item.infernal_cape" to 1, "item.amulet_of_torture" to 1, "item.amulet_of_fury" to 1,
+        "item.dragon_defender" to 1, "item.avernic_defender" to 1, "item.rune_defender" to 1,
+        "item.berserker_helm" to 1, "item.barrows_gloves" to 1, "item.ferocious_gloves" to 1,
+        "item.dragon_boots" to 1, "item.primordial_boots" to 1,
+        "item.berserker_ring" to 1, "item.berserker_ring_i" to 1,
+        // Ranged
+        "item.magic_shortbow_i" to 1, "item.rune_arrow" to 500, "item.dragon_arrow" to 500,
+        "item.karils_coif" to 1, "item.black_dhide_body" to 1, "item.black_dhide_chaps" to 1,
+        "item.black_dhide_vambraces" to 1, "item.necklace_of_anguish" to 1, "item.archers_ring" to 1,
+        // Magic
+        "item.kodai_wand" to 1, "item.ancestral_hat" to 1, "item.ancestral_robe_top" to 1,
+        "item.ancestral_robe_bottom" to 1, "item.mystic_hat" to 1, "item.mystic_robe_top" to 1,
+        "item.mystic_robe_bottom" to 1, "item.occult_necklace" to 1, "item.tormented_bracelet" to 1,
+        "item.eternal_boots" to 1, "item.seers_ring" to 1,
         // Runes
         "item.astral_rune" to 5000, "item.death_rune" to 5000, "item.earth_rune" to 5000,
         "item.water_rune" to 5000, "item.blood_rune" to 5000,
     )
+
+    /** The pool's resolved ids in POPULARITY order (drives the search-box armoury's default view). */
+    val popular: List<Int> by lazy {
+        POOL_DEFS.mapNotNull { (name, _) -> runCatching { getRSCM(name) }.getOrNull() }
+    }
 
     /** Resolved id → default quantity. Lazy so a cache miss degrades to a smaller pool. */
     val pool: Map<Int, Int> by lazy {

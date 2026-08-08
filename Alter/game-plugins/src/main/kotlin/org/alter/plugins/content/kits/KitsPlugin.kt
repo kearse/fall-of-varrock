@@ -67,6 +67,17 @@ class KitsPlugin(
                 "k" -> args.getOrNull(1)?.toIntOrNull()?.let { KitEditor.loadSaved(player, it) }
                 "s" -> args.getOrNull(1)?.toIntOrNull()?.let { KitEditor.saveKit(player, it) }
                 "cur" -> KitEditor.loadCurrent(player)
+                // Armoury search bar: opens the native chatbox item finder; the pick is added to
+                // the kit through the same validated path as a palette click (training mode still
+                // refuses anything outside the armoury pool).
+                "search" -> {
+                    if (KitEditor.isOpen(player)) {
+                        player.queue {
+                            val id = searchItemInputT(player, "Search the armoury:")
+                            if (id > 0) KitEditor.addItem(player, id)
+                        }
+                    }
+                }
                 // The named-kit dropdown: fresh kit (asks its name), save under the current name,
                 // rename (double-clicked title).
                 "new" -> KitEditor.newKit(player)
