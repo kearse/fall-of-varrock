@@ -27,13 +27,11 @@ class EatingPlugin(
     init {
         Food.values.forEach { food ->
             onItemOption(item = food.item, option = "eat") {
-                if (org.alter.plugins.content.minigames.duel.DuelArena.rulesOf(player)?.noFood == true) {
-                    player.message("You can't eat in this duel.")
-                    return@onItemOption
-                }
-                if (org.alter.plugins.content.minigames.pktraining.CompanionSparring.rulesOf(player)?.noFood == true) {
-                    player.message("You can't eat in this sparring bout.")
-                    return@onItemOption
+                org.alter.plugins.content.combat.CombatRestrictions.of(player)?.let { r ->
+                    if (r.noFood) {
+                        player.message("You can't eat in this ${r.context}.")
+                        return@onItemOption
+                    }
                 }
                 if (!Foods.canEat(player, food)) {
                     return@onItemOption

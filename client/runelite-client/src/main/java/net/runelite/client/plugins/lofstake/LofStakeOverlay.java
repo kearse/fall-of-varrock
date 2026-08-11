@@ -97,10 +97,28 @@ class LofStakeOverlay extends Overlay
 	// Scaled placement published by render() on the client thread; the mouse thread hit-tests via this cache only.
 	private volatile LofModal.Placement placement;
 
+	// 2015-Rework anti-scam UX, derived by DIFFING both offers frame-to-frame: any change flashes
+	// the changed slots and turns Accept into "Wait…" for ~3 s (the server's TradeSession enforces
+	// the same lockout — this is the visible half).
+	private static final long CHANGE_LOCK_MS = 3000;
+	private boolean wasShowing;
+	private int[] lastYours;
+	private int[] lastTheirs;
+	private boolean[] flashYours = new boolean[COLS * ROWS];
+	private boolean[] flashTheirs = new boolean[COLS * ROWS];
+	private long flashUntilMs;
+	private volatile boolean waitCached;
+
 	/** Cached — safe to call from the mouse thread (see the field note). */
 	boolean isShowing()
 	{
 		return showingCached;
+	}
+
+	/** Cached — true while Accept shows "Wait…" after a stake change (clicks are swallowed). */
+	boolean isAcceptWaiting()
+	{
+		return waitCached;
 	}
 
 	/** The live client-thread check (widget access) — only call from render(). */
@@ -151,7 +169,15 @@ class LofStakeOverlay extends Overlay
 		// Publish the gate for the mouse thread in the same pass that draws the window.
 		final boolean showing = computeShowing();
 		showingCached = showing;
-		if (!showing) return null;
+		if (!showing)
+		{
+			// Window closed: forget the diff baseline so the next open doesn't flash everything.
+			wasShowing = false;
+			lastYours = null;
+			lastTheirs = null;
+			waitCached = false;
+			return null;
+		}
 
 		final Object oldAA = g.getRenderingHint(RenderingHints.KEY_ANTIALIASING);
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -193,9 +219,41 @@ class LofStakeOverlay extends Overlay
 			LofTheme.shadowText(g, tag, ox + WIN_W - PAD - g.getFontMetrics().stringWidth(tag), oy + TITLE_H + 22, GREEN);
 		}
 
+		// change detection: any slot whose item/quantity differs from the last frame starts the
+		// flash + "Wait…" window (only while the window was already open — opening never flashes).
+		final Widget yourOffer = client.getWidget(TRADE_GROUP, YOUR_OFFER_CHILD);
+		final Widget theirOffer = client.getWidget(TRADE_GROUP, THEIR_OFFER_CHILD);
+		final long now = System.currentTimeMillis();
+		final int[] yoursNow = snapshot(yourOffer);
+		final int[] theirsNow = snapshot(theirOffer);
+		if (now >= flashUntilMs)
+		{
+			// Previous flash window over — drop its marks so they don't ride along with the next.
+			java.util.Arrays.fill(flashYours, false);
+			java.util.Arrays.fill(flashTheirs, false);
+		}
+		if (wasShowing && (diffInto(lastYours, yoursNow, flashYours) | diffInto(lastTheirs, theirsNow, flashTheirs)))
+		{
+			flashUntilMs = now + CHANGE_LOCK_MS;
+		}
+		lastYours = yoursNow;
+		lastTheirs = theirsNow;
+		wasShowing = true;
+		final boolean waiting = now < flashUntilMs;
+		waitCached = waiting;
+		final boolean flashOn = waiting && (now / 150) % 2 == 0;
+
 		// grids
-		drawGrid(g, ox, oy, YOUR_X, client.getWidget(TRADE_GROUP, YOUR_OFFER_CHILD), mouse, true);
-		drawGrid(g, ox, oy, THEIR_X, client.getWidget(TRADE_GROUP, THEIR_OFFER_CHILD), mouse, false);
+		drawGrid(g, ox, oy, YOUR_X, yourOffer, mouse, true);
+		drawGrid(g, ox, oy, THEIR_X, theirOffer, mouse, false);
+		if (flashOn)
+		{
+			for (int i = 0; i < COLS * ROWS; i++)
+			{
+				if (flashYours[i]) flashOutline(g, slotRect(ox, oy, YOUR_X, i));
+				if (flashTheirs[i]) flashOutline(g, slotRect(ox, oy, THEIR_X, i));
+			}
+		}
 
 		// centre divider
 		g.setColor(LofTheme.alpha(LofTheme.EMBER_DARK, 150));
@@ -209,10 +267,18 @@ class LofStakeOverlay extends Overlay
 			LofTheme.shadowText(g, yourVal, ox + PAD, valY, GREEN);
 		}
 
-		// buttons
+		// the classic change warning while the lockout runs
+		if (waiting)
+		{
+			g.setFont(FontManager.getRunescapeSmallFont());
+			LofTheme.shadowText(g, "An option or stake has changed - check before accepting!",
+				ox + PAD, oy + WIN_H - PAD - BTN_H - 8, LofTheme.EMBER);
+		}
+
+		// buttons ("Wait…" during the post-change lockout, exactly like the 2015 Rework)
 		g.setFont(FontManager.getRunescapeBoldFont());
 		final Rectangle acc = acceptRect(ox, oy), dec = declineRect(ox, oy);
-		button(g, acc, "Accept", LofTheme.GOLD, acc.contains(mouse));
+		button(g, acc, waiting ? "Wait..." : "Accept", waiting ? LofTheme.GOLD_DIM : LofTheme.GOLD, acc.contains(mouse) && !waiting);
 		button(g, dec, "Decline", LofTheme.EMBER, dec.contains(mouse));
 
 		LofModal.endWindow(g, place);
@@ -247,6 +313,46 @@ class LofStakeOverlay extends Overlay
 				}
 			}
 		}
+	}
+
+	/** Slot fingerprint per grid cell (item id + quantity), for the frame-to-frame change diff. */
+	private static int[] snapshot(Widget offer)
+	{
+		final int[] out = new int[COLS * ROWS];
+		final Widget[] items = offer == null ? null : offer.getDynamicChildren();
+		for (int i = 0; i < out.length; i++)
+		{
+			if (items != null && i < items.length && items[i] != null)
+			{
+				out[i] = items[i].getItemId() * 31 + items[i].getItemQuantity();
+			}
+		}
+		return out;
+	}
+
+	/** Mark differing slots in [flash]; true when anything differed. A null baseline marks nothing. */
+	private static boolean diffInto(int[] last, int[] now, boolean[] flash)
+	{
+		boolean any = false;
+		for (int i = 0; i < flash.length; i++)
+		{
+			if (last != null && last[i] != now[i])
+			{
+				flash[i] = true;
+				any = true;
+			}
+		}
+		return any;
+	}
+
+	/** The change-flash pulse: an ember outline over a slot that just changed. */
+	private static void flashOutline(Graphics2D g, Rectangle rc)
+	{
+		final Stroke old = g.getStroke();
+		g.setColor(LofTheme.EMBER);
+		g.setStroke(new BasicStroke(1.6f));
+		g.drawRoundRect(rc.x, rc.y, rc.width - 1, rc.height - 1, 4, 4);
+		g.setStroke(old);
 	}
 
 	private static void button(Graphics2D g, Rectangle rc, String label, Color accent, boolean hov)

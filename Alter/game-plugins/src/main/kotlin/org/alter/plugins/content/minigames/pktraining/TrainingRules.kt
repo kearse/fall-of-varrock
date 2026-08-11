@@ -6,9 +6,15 @@ package org.alter.plugins.content.minigames.pktraining
  * PARALLEL of [org.alter.plugins.content.minigames.duel.DuelRules]: deliberately its own type, so
  * the sparring bout never has to masquerade as an active duel (stakes, escrow, 2-player state).
  *
- * Enforcement mirrors the duel sites one-for-one — each place that consults `DuelArena.rulesOf(p)`
- * also consults [CompanionSparring.rulesOf] (eating, potions, prayers, style bans, movement,
- * teleports, specials). XP is NEVER suppressed: earning combat XP is the point of the arena.
+ * Enforcement mirrors the duel sites one-for-one via the merged
+ * [org.alter.plugins.content.combat.CombatRestrictions] view (eating, potions, prayers, style
+ * bans, specials) plus the movement/teleport seals. XP is NEVER suppressed: earning combat XP is
+ * the point of the arena.
+ *
+ * Mirror-or-diverge (duel rules deliberately NOT mirrored here): `noForfeit` (nothing staked,
+ * `::sparend` always exits), `noWeaponSwitch` / `funWeapons` / gear-slot disables (sparring
+ * loadouts are kit-defined — mid-bout gear games aren't a thing), and companions (the bout IS
+ * the companion).
  */
 data class TrainingRules(
     var noMelee: Boolean = false,

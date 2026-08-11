@@ -162,8 +162,23 @@ export interface OnlineDoc extends Document {
   since: number;
 }
 
+// ---- duels: the Duel Arena scoreboard, written by the game's DuelLog on every
+// resolved STAKED duel (exhibition/tournament matches are never recorded). For
+// draws, winner/loser hold the two fighters with no meaning to the order. ----
+export interface DuelDoc extends Document {
+  winner: string; // display name
+  winnerLogin: string;
+  loser: string;
+  loserLogin: string;
+  end: "death" | "forfeit" | "logout" | "draw-timeout" | "draw-double-ko";
+  rules: string; // human-readable rule summary
+  potValue: number; // market value of both stakes combined
+  at: number;
+}
+
 export const Collections = {
   accounts: () => col<AccountDoc>("accounts"),
+  duels: () => col<DuelDoc>("duels"),
   details: () => col<DetailsDoc>("details"),
   entitlements: () => col<EntitlementDoc>("entitlements"),
   votes: () => col<VoteDoc>("votes"),

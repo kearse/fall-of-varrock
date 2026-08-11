@@ -40,15 +40,27 @@ class LofDuelOverlay extends Overlay
 	static final int INSIDE = 0;
 	static final int DECLINE = 1;
 	static final int ACCEPT = 2;
-	static final int LOAD = 3;
-	static final int RULE_BASE = 100; // + rule index (0..11)
+	static final int LOAD = 3;      // "Last" — the last-agreed rules
+	static final int SAVE = 4;      // save personal preset
+	static final int LOAD_SAVED = 5; // load personal preset
+	static final int WHIP = 6;      // official Whip preset
+	static final int BOXING = 7;    // official Boxing preset
+	static final int RULE_BASE = 100; // + rule index (0..13)
 	static final int SLOT_BASE = 200; // + doll slot index (0..10)
 
 	/** MUST match DuelRulesClientMenu.RULES. */
 	private static final String[] RULES = {
 		"No Melee", "No Ranged", "No Magic", "No Prayer", "No Food", "No Drinks",
 		"No Movement", "No Forfeit", "Whip only", "DDS only", "Fun weapons", "Allow companions",
+		"No Weapon Switch", "No Special Attacks", "Show Inventories", "Obstacles",
 	};
+
+	// Packed-varp bit layout — MUST match DuelRulesClientMenu: bit 0 open, rules at bit 1 with
+	// 16 bits reserved, then the two accept bits, then the 11 doll-slot bits.
+	private static final int RULE_BITS = 16;
+	private static final int ACCEPT_MINE_BIT = RULE_BITS + 1;
+	private static final int ACCEPT_THEIRS_BIT = RULE_BITS + 2;
+	private static final int SLOT_BIT_BASE = RULE_BITS + 3;
 
 	/** Paper-doll slot labels, in DuelRulesClientMenu.SLOT_IDS order. */
 	private static final String[] SLOTS = { "Head", "Cape", "Neck", "Weap", "Body", "Shld", "Legs", "Hand", "Foot", "Ring", "Ammo" };
@@ -63,16 +75,22 @@ class LofDuelOverlay extends Overlay
 	private static final int WIN_ARC = 14;
 	private static final int TITLE_H = 38;
 	private static final int PAD = 12;
-	// Rules column + paper-doll are tightened to fit the short standard window (both must show in full —
-	// rules can't be hidden and the doll isn't a list, so this window crams rather than scrolls).
-	private static final int RULE_TOP = TITLE_H + 26;
-	private static final int RULE_H = 16;
+	// Rules column + paper-doll + preset column are tightened to fit the short standard window
+	// (everything must show in full — rules can't be hidden and the doll isn't a list, so this
+	// window crams rather than scrolls).
+	private static final int RULE_TOP = TITLE_H + 24;
+	private static final int RULE_H = 12;
 	private static final int RULE_W = 226;
 	private static final int DOLL_X = 288;
-	private static final int DOLL_TOP = TITLE_H + 34;
-	private static final int SLOT_SZ = 32;
-	private static final int SLOT_GAP = 6;
+	private static final int DOLL_TOP = TITLE_H + 30;
+	private static final int SLOT_SZ = 30;
+	private static final int SLOT_GAP = 4;
 	private static final int BTN_H = 32;
+	// Preset button column, right of the paper-doll.
+	private static final int PRESET_X = 394;
+	private static final int PRESET_W = 74;
+	private static final int PRESET_H = 22;
+	private static final int PRESET_GAP = 5;
 
 	private static final Color GREEN = new Color(110, 205, 110);
 
@@ -97,10 +115,26 @@ class LofDuelOverlay extends Overlay
 	// Scaled placement published by render() on the client thread; the mouse thread hit-tests via this cache only.
 	private volatile LofModal.Placement placement;
 
+	// 2015-Rework anti-scam UX, derived by DIFFING the state varp frame-to-frame: any rule/slot
+	// bit change flashes the changed rows and turns Accept into "Wait…" for the lockout window
+	// (the server enforces the same lockout on its side — this is the visible half).
+	private static final int CHANGE_MASK = 0x1FFFE | 0x3FF80000; // rule bits 1-16 + slot bits 19-29
+	private static final long CHANGE_LOCK_MS = 3000;
+	private int lastState;
+	private int changedMask;
+	private long flashUntilMs;
+	private volatile boolean waitCached;
+
 	/** Cached — safe to call from the mouse thread (see the field note). */
 	boolean isShowing()
 	{
 		return showingCached;
+	}
+
+	/** Cached — true while Accept shows "Wait…" after a change (clicks are swallowed). */
+	boolean isAcceptWaiting()
+	{
+		return waitCached;
 	}
 
 	/** The live client-thread check — only call from render(). */
@@ -124,9 +158,16 @@ class LofDuelOverlay extends Overlay
 		final int y = oy + DOLL_TOP + DOLL_ROW[i] * (SLOT_SZ + SLOT_GAP);
 		return new Rectangle(x, y, SLOT_SZ, SLOT_SZ);
 	}
-	private Rectangle loadRect(int ox, int oy) { return new Rectangle(ox + PAD, oy + WIN_H - PAD - BTN_H, 96, BTN_H); }
+	/** Preset column rows, top to bottom: Whip, Boxing, Save, Load, Last. */
+	private Rectangle presetRect(int ox, int oy, int row)
+	{
+		return new Rectangle(ox + PRESET_X, oy + DOLL_TOP + row * (PRESET_H + PRESET_GAP), PRESET_W, PRESET_H);
+	}
 	private Rectangle acceptRect(int ox, int oy) { return new Rectangle(ox + WIN_W - PAD - 210, oy + WIN_H - PAD - BTN_H, 100, BTN_H); }
 	private Rectangle declineRect(int ox, int oy) { return new Rectangle(ox + WIN_W - PAD - 100, oy + WIN_H - PAD - BTN_H, 100, BTN_H); }
+
+	/** Hit codes of the preset rows, in {@link #presetRect} row order. */
+	private static final int[] PRESET_HITS = { WHIP, BOXING, SAVE, LOAD_SAVED, LOAD };
 
 	int hitTest(Point canvas)
 	{
@@ -136,7 +177,7 @@ class LofDuelOverlay extends Overlay
 		final Point p = place.toLocal(canvas);
 		final int ox = place.ox, oy = place.oy;
 		if (!new Rectangle(ox, oy, WIN_W, WIN_H).contains(p)) return OUTSIDE;
-		if (loadRect(ox, oy).contains(p)) return LOAD;
+		for (int i = 0; i < PRESET_HITS.length; i++) if (presetRect(ox, oy, i).contains(p)) return PRESET_HITS[i];
 		if (acceptRect(ox, oy).contains(p)) return ACCEPT;
 		if (declineRect(ox, oy).contains(p)) return DECLINE;
 		for (int i = 0; i < RULES.length; i++) if (ruleRect(ox, oy, i).contains(p)) return RULE_BASE + i;
@@ -150,7 +191,14 @@ class LofDuelOverlay extends Overlay
 		// Publish the gate for the mouse thread in the same pass that draws the window.
 		final boolean showing = computeShowing();
 		showingCached = showing;
-		if (!showing) return null;
+		if (!showing)
+		{
+			// Window closed: forget the diff baseline so the next open doesn't flash everything.
+			lastState = 0;
+			changedMask = 0;
+			waitCached = false;
+			return null;
+		}
 
 		final Object oldAA = g.getRenderingHint(RenderingHints.KEY_ANTIALIASING);
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -164,10 +212,28 @@ class LofDuelOverlay extends Overlay
 		placement = place;
 
 		final int state = client.getVarpValue(STATE_VARP);
-		final boolean myAccept = (state & (1 << 13)) != 0;
-		final boolean theirAccept = (state & (1 << 14)) != 0;
+		final boolean myAccept = (state & (1 << ACCEPT_MINE_BIT)) != 0;
+		final boolean theirAccept = (state & (1 << ACCEPT_THEIRS_BIT)) != 0;
 		final int ox = place.ox, oy = place.oy;
 		final Point mouse = place.toLocal(mousePoint());
+
+		// Change detection: any rule/slot bit that differs from the last frame starts the flash +
+		// "Wait…" window. Only diffed while the window was ALREADY open (bit 0 set last frame),
+		// so opening it never flashes.
+		final long now = System.currentTimeMillis();
+		if (now >= flashUntilMs)
+		{
+			changedMask = 0; // previous flash window over
+		}
+		if ((lastState & 1) != 0 && (state & CHANGE_MASK) != (lastState & CHANGE_MASK))
+		{
+			changedMask |= (state ^ lastState) & CHANGE_MASK;
+			flashUntilMs = now + CHANGE_LOCK_MS;
+		}
+		lastState = state;
+		final boolean waiting = now < flashUntilMs;
+		waitCached = waiting;
+		final boolean flashOn = waiting && (now / 150) % 2 == 0;
 
 		LofTheme.panel(g, ox, oy, WIN_W, WIN_H, WIN_ARC);
 
@@ -186,35 +252,56 @@ class LofDuelOverlay extends Overlay
 
 		// section labels
 		g.setFont(FontManager.getRunescapeSmallFont());
-		LofTheme.shadowText(g, "COMBAT RULES", ox + PAD + 2, oy + TITLE_H + 22, LofTheme.GOLD_DIM);
-		LofTheme.shadowText(g, "FORBIDDEN GEAR", ox + DOLL_X, oy + TITLE_H + 22, LofTheme.GOLD_DIM);
+		LofTheme.shadowText(g, "COMBAT RULES", ox + PAD + 2, oy + TITLE_H + 20, LofTheme.GOLD_DIM);
+		LofTheme.shadowText(g, "FORBIDDEN GEAR", ox + DOLL_X, oy + TITLE_H + 20, LofTheme.GOLD_DIM);
+		LofTheme.shadowText(g, "PRESETS", ox + PRESET_X, oy + TITLE_H + 20, LofTheme.GOLD_DIM);
 
-		// rule checkboxes
+		// rule checkboxes (a just-changed row pulses ember for the lockout window)
 		g.setFont(FontManager.getRunescapeFont());
 		for (int i = 0; i < RULES.length; i++)
 		{
 			final boolean on = (state & (1 << (i + 1))) != 0;
-			checkbox(g, ruleRect(ox, oy, i), RULES[i], on, ruleRect(ox, oy, i).contains(mouse));
+			final Rectangle rc = ruleRect(ox, oy, i);
+			checkbox(g, rc, RULES[i], on, rc.contains(mouse));
+			if (flashOn && (changedMask & (1 << (i + 1))) != 0)
+			{
+				flashOutline(g, rc);
+			}
 		}
 
-		// equipment paper-doll
+		// equipment paper-doll (changed slots pulse the same way)
 		for (int i = 0; i < SLOTS.length; i++)
 		{
-			final boolean forbidden = (state & (1 << (i + 15))) != 0;
-			dollSlot(g, slotRect(ox, oy, i), SLOTS[i], forbidden, slotRect(ox, oy, i).contains(mouse));
+			final boolean forbidden = (state & (1 << (i + SLOT_BIT_BASE))) != 0;
+			final Rectangle rc = slotRect(ox, oy, i);
+			dollSlot(g, rc, SLOTS[i], forbidden, rc.contains(mouse));
+			if (flashOn && (changedMask & (1 << (i + SLOT_BIT_BASE))) != 0)
+			{
+				flashOutline(g, rc);
+			}
 		}
 
-		// status
-		final String status = myAccept && !theirAccept ? "Waiting for the other player…"
+		// preset column: the two official rule sets, then the personal save/load pair, then last-duel
+		g.setFont(FontManager.getRunescapeSmallFont());
+		final String[] presetLabels = { "Whip", "Boxing", "Save", "Load", "Last" };
+		for (int i = 0; i < presetLabels.length; i++)
+		{
+			button(g, presetRect(ox, oy, i), presetLabels[i], LofTheme.GOLD_DIM, false, presetRect(ox, oy, i).contains(mouse));
+		}
+
+		// status (a change overrides it with the classic warning for the lockout window)
+		final String status = waiting ? "An option or stake has changed - check before accepting!"
+			: myAccept && !theirAccept ? "Waiting for the other player…"
 			: !myAccept && theirAccept ? "Opponent has accepted — waiting on you."
 			: "Either player can change the rules; both must accept.";
 		g.setFont(FontManager.getRunescapeSmallFont());
-		LofTheme.shadowText(g, status, ox + PAD + 2, oy + WIN_H - PAD - BTN_H - 8, (myAccept ^ theirAccept) ? GREEN : LofTheme.TEXT_DIM);
+		LofTheme.shadowText(g, status, ox + PAD + 2, oy + WIN_H - PAD - BTN_H - 8,
+			waiting ? LofTheme.EMBER : (myAccept ^ theirAccept) ? GREEN : LofTheme.TEXT_DIM);
 
-		// buttons
+		// buttons ("Wait…" during the post-change lockout, exactly like the 2015 Rework)
 		g.setFont(FontManager.getRunescapeBoldFont());
-		button(g, loadRect(ox, oy), "Load Last", LofTheme.GOLD_DIM, false, loadRect(ox, oy).contains(mouse));
-		button(g, acceptRect(ox, oy), myAccept ? "Accepted" : "Accept", LofTheme.GOLD, myAccept, acceptRect(ox, oy).contains(mouse));
+		button(g, acceptRect(ox, oy), waiting ? "Wait..." : myAccept ? "Accepted" : "Accept",
+			waiting ? LofTheme.GOLD_DIM : LofTheme.GOLD, myAccept, acceptRect(ox, oy).contains(mouse) && !waiting);
 		button(g, declineRect(ox, oy), "Decline", LofTheme.EMBER, false, declineRect(ox, oy).contains(mouse));
 
 		LofModal.endWindow(g, place);
@@ -222,23 +309,34 @@ class LofDuelOverlay extends Overlay
 		return new Dimension(WIN_W, WIN_H);
 	}
 
+	/** The change-flash pulse: an ember outline over a row/slot that just changed. */
+	private static void flashOutline(Graphics2D g, Rectangle rc)
+	{
+		final Stroke old = g.getStroke();
+		g.setColor(LofTheme.EMBER);
+		g.setStroke(new BasicStroke(1.6f));
+		g.drawRoundRect(rc.x, rc.y, rc.width - 1, rc.height - 1, 6, 6);
+		g.setStroke(old);
+	}
+
 	private static void checkbox(Graphics2D g, Rectangle rc, String label, boolean on, boolean hov)
 	{
 		g.setColor(on ? LofTheme.alpha(GREEN, 30) : (hov ? LofTheme.ROW_HOVER : LofTheme.ROW));
 		g.fillRoundRect(rc.x, rc.y, rc.width, rc.height, 6, 6);
-		final int bx = rc.x + 6, by = rc.y + (rc.height - 13) / 2;
+		// 10px box so the tightened 16-rule rows still enclose it.
+		final int bx = rc.x + 6, by = rc.y + (rc.height - 10) / 2;
 		g.setColor(on ? GREEN : new Color(0, 0, 0, 120));
-		g.fillRoundRect(bx, by, 13, 13, 3, 3);
+		g.fillRoundRect(bx, by, 10, 10, 3, 3);
 		if (on)
 		{
 			final Stroke old = g.getStroke();
 			g.setColor(new Color(20, 20, 20));
 			g.setStroke(new BasicStroke(2f));
-			g.drawLine(bx + 3, by + 7, bx + 5, by + 9);
-			g.drawLine(bx + 5, by + 9, bx + 10, by + 3);
+			g.drawLine(bx + 2, by + 5, bx + 4, by + 7);
+			g.drawLine(bx + 4, by + 7, bx + 7, by + 3);
 			g.setStroke(old);
 		}
-		LofTheme.shadowText(g, label, bx + 19, rc.y + rc.height / 2 + 5, on ? LofTheme.TEXT : LofTheme.TEXT_DIM);
+		LofTheme.shadowText(g, label, bx + 16, rc.y + rc.height / 2 + 5, on ? LofTheme.TEXT : LofTheme.TEXT_DIM);
 	}
 
 	/** A paper-doll equipment slot — red when the slot is forbidden. */
