@@ -35,12 +35,56 @@ class LofKitMouseListener extends MouseAdapter
 		final int hit = overlay.hitTest(event.getPoint());
 		if (hit == LofKitOverlay.OUTSIDE)
 		{
+			overlay.setDropdownOpen(false); // clicking away closes the kit list
 			return event; // let clicks outside the window reach the game
+		}
+
+		// Any click that isn't the dropdown itself closes its open list.
+		if (hit != LofKitOverlay.DD_HEAD && (hit < LofKitOverlay.DD_ITEM_BASE || hit > LofKitOverlay.DD_ITEM_NEW))
+		{
+			overlay.setDropdownOpen(false);
 		}
 
 		if (hit == LofKitOverlay.CLOSE)
 		{
 			plugin.sendAction("x");
+		}
+		else if (hit == LofKitOverlay.DD_HEAD)
+		{
+			// Double-click the title = rename; single click = open/close the kit list.
+			if (event.getClickCount() >= 2)
+			{
+				overlay.setDropdownOpen(false);
+				plugin.sendAction("rename");
+			}
+			else
+			{
+				overlay.setDropdownOpen(!overlay.isDropdownOpen());
+			}
+		}
+		else if (hit >= LofKitOverlay.DD_ITEM_BASE && hit <= LofKitOverlay.DD_ITEM_NEW)
+		{
+			final int i = hit - LofKitOverlay.DD_ITEM_BASE;
+			if (i < 2)
+			{
+				plugin.sendAction("p " + i); // preset
+			}
+			else if (i < 5)
+			{
+				plugin.sendAction("k " + (i - 2)); // saved kit
+			}
+			else
+			{
+				plugin.sendAction("new"); // fresh kit — the server asks for its name
+			}
+		}
+		else if (hit == LofKitOverlay.SAVE_BTN)
+		{
+			plugin.sendAction("save");
+		}
+		else if (hit == LofKitOverlay.SEARCH_BTN)
+		{
+			plugin.sendAction("search"); // server opens the native chatbox item finder
 		}
 		else if (hit == LofKitOverlay.ACTION)
 		{
@@ -77,18 +121,6 @@ class LofKitMouseListener extends MouseAdapter
 		else if (hit >= LofKitOverlay.BOOK_BASE)
 		{
 			plugin.sendAction("b " + (hit - LofKitOverlay.BOOK_BASE));
-		}
-		else if (hit >= LofKitOverlay.KITSAVE_BASE)
-		{
-			plugin.sendAction("s " + (hit - LofKitOverlay.KITSAVE_BASE));
-		}
-		else if (hit >= LofKitOverlay.KITLOAD_BASE)
-		{
-			plugin.sendAction("k " + (hit - LofKitOverlay.KITLOAD_BASE));
-		}
-		else if (hit >= LofKitOverlay.PRESET_BASE)
-		{
-			plugin.sendAction("p " + (hit - LofKitOverlay.PRESET_BASE));
 		}
 		else if (hit >= LofKitOverlay.INV_BASE)
 		{

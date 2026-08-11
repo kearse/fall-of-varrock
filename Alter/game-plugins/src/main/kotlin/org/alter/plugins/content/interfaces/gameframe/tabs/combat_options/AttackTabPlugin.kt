@@ -114,13 +114,17 @@ class AttackTabPlugin(
          * minimap spec orb silently did nothing while the combat-tab bar worked.
          */
         val onSpecialToggle: org.alter.game.plugin.Plugin.() -> Unit = {
-            val weaponId = player.equipment[EquipmentType.WEAPON.id]?.id ?: -1
-            if (SpecialAttacks.executeOnEnable(weaponId)) {
-                if (!SpecialAttacks.execute(player, null, world)) {
-                    player.message("You don't have enough power left.")
-                }
+            if (org.alter.plugins.content.minigames.pktraining.CompanionSparring.rulesOf(player)?.noSpec == true) {
+                player.message("Special attacks are disabled in this sparring bout.")
             } else {
-                player.toggleVarp(SPECIAL_ATTACK_VARP)
+                val weaponId = player.equipment[EquipmentType.WEAPON.id]?.id ?: -1
+                if (SpecialAttacks.executeOnEnable(weaponId)) {
+                    if (!SpecialAttacks.execute(player, null, world)) {
+                        player.message("You don't have enough power left.")
+                    }
+                } else {
+                    player.toggleVarp(SPECIAL_ATTACK_VARP)
+                }
             }
         }
         onButton(interfaceId = 593, component = 38, logic = onSpecialToggle)

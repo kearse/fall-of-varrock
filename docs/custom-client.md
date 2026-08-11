@@ -459,7 +459,9 @@ assume the common one (`::bank`); other scam-bait words would also open the bank
   **4624 supply · 4625 make · 4626 contracts · 4627 forge · 4628 dice · 4629 bonds** ·
   4630 duel rules · **4633 quests (King of Lumbridge / conquest)** ·
   **4635-4637 companion world-indices** (moved off 4610-4612 to stop the
-  guidance arrow pointing at the Duke after buying companions).
+  guidance arrow pointing at the Duke after buying companions) ·
+  **4640-4679 kit editor** (control + per-slot) ·
+  **4680 companion sparring settings** (`SparringClientMenu` / client `lofspar`).
 
 ## 5h. Build stamp — spotting stale installs at a glance
 

@@ -74,6 +74,10 @@ class PrayersPlugin(
                     player.message("Prayer is disabled in this duel.")
                     return@onButton
                 }
+                if (org.alter.plugins.content.minigames.pktraining.CompanionSparring.rulesOf(player)?.noPrayer == true) {
+                    player.message("Prayer is disabled in this sparring bout.")
+                    return@onButton
+                }
                 player.queue {
                     Prayers.toggle(player, this, prayer)
                 }
@@ -98,6 +102,10 @@ class PrayersPlugin(
         onButton(interfaceId = 160, component = 19) {
             if (org.alter.plugins.content.minigames.duel.DuelArena.rulesOf(player)?.noPrayer == true) {
                 player.message("Prayer is disabled in this duel.")
+                return@onButton
+            }
+            if (org.alter.plugins.content.minigames.pktraining.CompanionSparring.rulesOf(player)?.noPrayer == true) {
+                player.message("Prayer is disabled in this sparring bout.")
                 return@onButton
             }
             val opt = player.getInteractingOption()

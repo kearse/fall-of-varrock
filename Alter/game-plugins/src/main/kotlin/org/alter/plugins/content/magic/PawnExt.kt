@@ -30,6 +30,13 @@ fun Player.canTeleport(type: TeleportType): Boolean {
         return false
     }
 
+    // A companion sparring bout is sealed the same way (loaner gear + a private instance): walk
+    // out or ::sparend to leave — both hand the kits back first.
+    if (org.alter.plugins.content.minigames.pktraining.CompanionSparring.sessionOf(this) != null) {
+        message("You can't teleport out of a sparring bout.")
+        return false
+    }
+
     if (currWildLvl > wildLvlRestriction) {
         message("A mysterious force blocks your teleport spell!")
         message("You can't use this teleport after level $wildLvlRestriction wilderness.")

@@ -31,6 +31,10 @@ class EatingPlugin(
                     player.message("You can't eat in this duel.")
                     return@onItemOption
                 }
+                if (org.alter.plugins.content.minigames.pktraining.CompanionSparring.rulesOf(player)?.noFood == true) {
+                    player.message("You can't eat in this sparring bout.")
+                    return@onItemOption
+                }
                 if (!Foods.canEat(player, food)) {
                     return@onItemOption
                 }

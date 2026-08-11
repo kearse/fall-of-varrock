@@ -168,6 +168,15 @@ class DuelArenaPlugin(
 
     private fun challenge(player: Player, target: Player) {
         if (target === player) return
+        // Challenging YOUR OWN companion isn't a stake — it opens COMPANION SPARRING (the PK
+        // training arena's settings flow: NH style, difficulty, rules, loadouts, then a private
+        // pit). Other people's companions and generic bots keep the rejection below.
+        if (target is CompanionPawn &&
+            org.alter.plugins.content.companion.CompanionRegistry.owns(player, target)
+        ) {
+            org.alter.plugins.content.minigames.pktraining.CompanionSparring.requestSetup(player, target)
+            return
+        }
         if (target is PkBot) { player.message("You can't stake against a training bot."); return }
         // Challenges are a safe-zone thing: in the wilderness you just attack them.
         if (!PvpZones.isSafe(player.tile) || !PvpZones.isSafe(target.tile)) {

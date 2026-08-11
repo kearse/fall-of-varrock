@@ -3,13 +3,9 @@ package org.alter.plugins.content.minigames.pktraining
 import dev.openrune.cache.CacheManager.getNpc
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.alter.api.EquipmentType
-import org.alter.api.Skills
-import org.alter.api.Spellbook
-import org.alter.api.cfg.Varbit
 import org.alter.api.ext.*
 import org.alter.game.Server
 import org.alter.game.info.PlayerInfo
-import org.alter.game.model.Area
 import org.alter.game.model.Direction
 import org.alter.game.model.Tile
 import org.alter.game.model.World
@@ -18,7 +14,6 @@ import org.alter.game.model.attr.RESPAWN_TILE_ATTR
 import org.alter.game.model.attr.SPAR_BOT_ATTR
 import org.alter.game.model.entity.Npc
 import org.alter.game.model.entity.Player
-import org.alter.game.model.item.Item
 import org.alter.game.model.move.moveTo
 import org.alter.game.model.queue.QueueTask
 import org.alter.game.model.timer.TimerKey
@@ -37,7 +32,6 @@ import org.alter.plugins.content.kits.KitSetup
 import org.alter.plugins.content.raids.RaidInstance
 import org.alter.plugins.content.war.WarNpcNames
 import org.alter.rscm.RSCM.getRSCM
-import org.bson.Document
 
 private val logger = KotlinLogging.logger {}
 
@@ -98,7 +92,7 @@ class PkTrainingArenaPlugin(
 
     init {
         // Deaths anywhere in the arena are safe by design (covers trainees AND sparring bots).
-        SafeDeaths.register(ARENA)
+        SafeDeaths.register(TrainingArena.ARENA)
 
         onWorldInit {
             // Force-load the trainer's region so he spawns at boot, before any player visits — and
@@ -115,7 +109,7 @@ class PkTrainingArenaPlugin(
                 WarNpcNames.rename(n, TRAINER_NAME) // client-side display name; base model unchanged
             }.onFailure { logger.warn { "pktrain: trainer '$TRAINER_NPC' not spawned: ${it.message}" } }
 
-            world.timers[arenaTimer] = ARENA_TICK
+            world.timers[arenaTimer] = TrainingArena.ARENA_TICK
         }
 
         // Bind the trainer's Talk-to only if his cache def actually has it (else ::pktrain is the entry).
@@ -134,7 +128,7 @@ class PkTrainingArenaPlugin(
         // ── crash recovery: a stash blob still present at login means we owe a real-gear restore ──
         onLogin {
             if (player.attr[PK_ARENA_STASH_ATTR] != null) {
-                restoreLoaner(player)
+                LoanerKits.restoreLoaner(player)
                 player.moveTo(world.gameContext.home)
                 player.message("<col=801700>Your gear was returned from the training arena.</col>")
             }
@@ -160,7 +154,7 @@ class PkTrainingArenaPlugin(
             sessions.toList().forEach { s ->
                 runCatching { tick(s) }.onFailure { e -> logger.error(e) { "pktrain session tick failed" } }
             }
-            world.timers[arenaTimer] = ARENA_TICK
+            world.timers[arenaTimer] = TrainingArena.ARENA_TICK
         }
     }
 
@@ -176,7 +170,7 @@ class PkTrainingArenaPlugin(
         // grounds are also fine — a death drops them at EXIT_TILE a beat before endRound runs);
         // between rounds they belong on the arena grounds. Anywhere else → kit back, bot gone.
         val inPit = s.instance?.contains(p.tile) == true
-        val whereTheyBelong = ARENA.contains(p.tile) || (s.bot != null && inPit)
+        val whereTheyBelong = TrainingArena.ARENA.contains(p.tile) || (s.bot != null && inPit)
         if (!whereTheyBelong) { endBout(p); return }
         val bot = s.bot ?: return // between rounds — waiting at the trainer
 
@@ -254,7 +248,7 @@ class PkTrainingArenaPlugin(
         KitEditor.open(p, KitEditor.Mode.TRAINING, onStart = { kit, diffIndex ->
             // The editor is an overlay, so the player can wander while it's open — a bout only
             // starts if they're still on the arena grounds (no teleport-from-anywhere entry).
-            if (!ARENA.contains(p.tile)) {
+            if (!TrainingArena.ARENA.contains(p.tile)) {
                 p.message("Come back to the arena when you're ready — $TRAINER_NAME keeps your kit warm.")
             } else {
                 val diff = when (diffIndex) { 0 -> Diff.EASY; 2 -> Diff.HARD; else -> Diff.MEDIUM }
@@ -283,9 +277,9 @@ class PkTrainingArenaPlugin(
         if (custom == null) {
             // "Bring your own" fights in real gear — if they were previously loaned a kit, give their
             // real gear back first so they aren't sparring in borrowed armour.
-            if (p.attr[PK_ARENA_STASH_ATTR] != null) restoreLoaner(p)
+            if (p.attr[PK_ARENA_STASH_ATTR] != null) LoanerKits.restoreLoaner(p)
         } else {
-            applyLoaner(p, custom)
+            LoanerKits.applyLoaner(p, custom)
         }
         startBout(p, custom, diff)
         p.message("<col=801700>Train hard.</col> Your kit is loaned — you keep nothing. Leave the arena or ::unkit to hand it back.")
@@ -297,13 +291,13 @@ class PkTrainingArenaPlugin(
         // fights in their own copy, so the whole server can train at once. autoDeallocate is OFF —
         // the sparring bot is a real Player standing inside; endRound/endBout empty the pit and the
         // allocator's idle scan reclaims it. Its exit tile backstops any unhandled path out.
-        val instance = RaidInstance.allocate(world, PIT_SOURCE, exitTile = EXIT_TILE, owner = p.uid, autoDeallocate = false)
+        val instance = RaidInstance.allocate(world, TrainingArena.PIT_SOURCE, exitTile = TrainingArena.EXIT_TILE, owner = p.uid, autoDeallocate = false)
         if (instance == null) {
             p.message("<col=801700>Every training pit is in use — give it a moment and talk to $TRAINER_NAME again.</col>")
             // Hand back the already-applied loaner kit. On a first-ever bout there is no session
             // yet (endBout would no-op), so restore the stash directly.
             if (sessionOf(p) != null) endBout(p)
-            else if (p.attr[PK_ARENA_STASH_ATTR] != null) restoreLoaner(p)
+            else if (p.attr[PK_ARENA_STASH_ATTR] != null) LoanerKits.restoreLoaner(p)
             return
         }
 
@@ -320,15 +314,15 @@ class PkTrainingArenaPlugin(
             s.prevRespawn = p.attr[RESPAWN_TILE_ATTR]
             s.respawnSaved = true
         }
-        p.attr[RESPAWN_TILE_ATTR] = EXIT_TILE.coordinate
+        p.attr[RESPAWN_TILE_ATTR] = TrainingArena.EXIT_TILE.coordinate
 
         // Into the private pit, opponent across the floor — just like a real duel.
-        p.moveTo(instance.translate(BOUT_PLAYER_TILE))
+        p.moveTo(instance.translate(TrainingArena.BOUT_PLAYER_TILE))
         p.setCurrentHp(p.getMaxHp())
         AttackTab.setEnergy(p, 100)
-        s.bot = spawnSparBot(p, s.loadout, instance.translate(BOUT_BOT_TILE))
+        s.bot = spawnSparBot(p, s.loadout, instance.translate(TrainingArena.BOUT_BOT_TILE))
         s.fighting = false
-        s.countdown = COUNTDOWN_STEPS
+        s.countdown = TrainingArena.COUNTDOWN_STEPS
         TrainingArena.setInBout(p, true) // companions stand down while the bout runs
         p.message("<col=801700>Your opponent steps onto the sand...</col>")
     }
@@ -341,7 +335,7 @@ class PkTrainingArenaPlugin(
         bot.attr[SPAR_BOT_ATTR] = true
         bot.ambushEverywhere = false // passive during the countdown; armed at "FIGHT!" (see tick)
         bot.homeTile = tile
-        bot.leashRadius = ARENA_LEASH // don't let it chase a fleeing trainee out of the arena
+        bot.leashRadius = TrainingArena.ARENA_LEASH // don't let it chase a fleeing trainee out of the arena
         bot.roamRadius = 0
         // A bot is a real Player, so its display name is its username (not an NPC name-change).
         bot.username = SPAR_BOT_NAME
@@ -365,8 +359,8 @@ class PkTrainingArenaPlugin(
         val p = s.player
         TrainingArena.setInBout(p, false)
         if (p.index < 0) return
-        p.moveTo(EXIT_TILE)
-        if (p.attr[PK_ARENA_STASH_ATTR] != null) restoreLoaner(p) // the kit goes straight back
+        p.moveTo(TrainingArena.EXIT_TILE)
+        if (p.attr[PK_ARENA_STASH_ATTR] != null) LoanerKits.restoreLoaner(p) // the kit goes straight back
         p.setCurrentHp(p.getMaxHp())
         p.message(
             if (won) "<col=007f00>Your opponent falls — the bout is yours!</col> The kit returns to $TRAINER_NAME; talk to him to go again."
@@ -381,10 +375,10 @@ class PkTrainingArenaPlugin(
         TrainingArena.setInBout(p, false)
         // ::unkit (or any mid-bout end) can fire while the player still stands in the pit
         // instance — walk them out so the pit empties and the allocator reclaims it.
-        if (p.index >= 0 && s.instance?.contains(p.tile) == true) p.moveTo(EXIT_TILE)
+        if (p.index >= 0 && s.instance?.contains(p.tile) == true) p.moveTo(TrainingArena.EXIT_TILE)
         s.instance = null
         if (p.attr[PK_ARENA_STASH_ATTR] != null) {
-            restoreLoaner(p) // restores the real respawn override from the stash too
+            LoanerKits.restoreLoaner(p) // restores the real respawn override from the stash too
         } else {
             restoreSessionRespawn(p, s)
         }
@@ -406,102 +400,9 @@ class PkTrainingArenaPlugin(
         s.instance = null // pit is empty now (bot gone, player vanished) — idle scan reclaims it
     }
 
-    // ───────────────────────────── loaner kit (stash / apply / restore) ─────────────────────────────
-
-    /**
-     * Dress the player in a loaner [kit] (built in the kit editor). Their REAL inventory/equipment/
-     * spellbook/respawn/Magic-level are stashed FIRST (only if not already — so switching kits
-     * mid-session doesn't stash loaner gear), so nothing is lost. The kit's chosen spellbook is set;
-     * Lunar boosts Magic so anyone can practise Vengeance.
-     */
-    private fun applyLoaner(p: Player, kit: KitSetup) {
-        stashIfNeeded(p)
-        wipeContainers(p)
-        kit.gear.forEach { (slotId, item) ->
-            if (slotId < p.equipment.capacity) p.equipment[slotId] = Item(item.id, item.amount)
-        }
-        kit.inv.forEach { (slot, item) ->
-            if (slot < p.inventory.capacity) p.inventory[slot] = Item(item.id, item.amount)
-        }
-        p.calculateBonuses()
-        val weapon = p.equipment[EquipmentType.WEAPON.id]
-        p.setVarbit(Varbit.WEAPON_TYPE_VARBIT, if (weapon != null) weapon.getDef().weaponType else 0)
-        PlayerInfo(p).syncAppearance()
-        val book = when (kit.book) {
-            KitSetup.BOOK_ANCIENTS -> Spellbook.ANCIENTS
-            KitSetup.BOOK_LUNAR -> Spellbook.LUNAR
-            else -> Spellbook.NORMAL
-        }
-        p.setSpellbook(book)
-        if (book == Spellbook.LUNAR && p.getSkills().getCurrentLevel(Skills.MAGIC) < VENG_MAGIC) {
-            p.getSkills().setCurrentLevel(Skills.MAGIC, VENG_MAGIC) // training affordance: veng at any level
-        }
-        // (The EXIT-tile respawn override is set per-bout in startBout; the stash above already
-        // captured the player's real override for restore.)
-        p.setCurrentHp(p.getMaxHp())
-        AttackTab.setEnergy(p, 100)
-    }
-
-    private fun stashIfNeeded(p: Player) {
-        if (p.attr[PK_ARENA_STASH_ATTR] != null) return
-        val doc = Document()
-        doc.append("inv", itemsDoc(p.inventory.rawItemsSnapshot()))
-        doc.append("equip", itemsDoc(p.equipment.rawItemsSnapshot()))
-        doc.append("book", p.getSpellbook().id)
-        doc.append("magic", p.getSkills().getCurrentLevel(Skills.MAGIC))
-        p.attr[RESPAWN_TILE_ATTR]?.let { doc.append("respawn", it) }
-        p.attr[PK_ARENA_STASH_ATTR] = doc.toJson()
-    }
-
-    /** Restore the player's real gear/spellbook/respawn from the stash blob and clear it. No-op if none. */
-    private fun restoreLoaner(p: Player) {
-        val blob = p.attr[PK_ARENA_STASH_ATTR] ?: return
-        wipeContainers(p)
-        runCatching {
-            val doc = Document.parse(blob)
-            itemsFrom(doc, "inv").forEach { (idx, it) -> if (idx < p.inventory.capacity) p.inventory[idx] = it }
-            itemsFrom(doc, "equip").forEach { (idx, it) -> if (idx < p.equipment.capacity) p.equipment[idx] = it }
-            val book = Spellbook.values.firstOrNull { it.id == doc.getInteger("book", 0) } ?: Spellbook.NORMAL
-            p.setSpellbook(book)
-            p.getSkills().setCurrentLevel(Skills.MAGIC, doc.getInteger("magic", p.getSkills().getBaseLevel(Skills.MAGIC)))
-            if (doc.containsKey("respawn")) p.attr[RESPAWN_TILE_ATTR] = doc.getInteger("respawn")
-            else p.attr.remove(RESPAWN_TILE_ATTR)
-        }.onFailure { logger.error(it) { "pktrain: failed to restore stash for ${p.username} — blob kept for retry" }; return }
-        p.calculateBonuses()
-        val weapon = p.equipment[EquipmentType.WEAPON.id]
-        p.setVarbit(Varbit.WEAPON_TYPE_VARBIT, if (weapon != null) weapon.getDef().weaponType else 0)
-        PlayerInfo(p).syncAppearance()
-        p.attr.remove(PK_ARENA_STASH_ATTR)
-    }
-
-    private fun wipeContainers(p: Player) {
-        for (i in 0 until p.inventory.capacity) p.inventory[i] = null
-        for (i in 0 until p.equipment.capacity) p.equipment[i] = null
-    }
-
-    // ─── bson item (de)serialization — mirrors CompanionData so a bad blob never throws on login ───
-
-    private fun itemsDoc(items: Map<Int, Item>): Document = Document().also { d ->
-        items.forEach { (slot, it) -> d.append(slot.toString(), Document("id", it.id).append("amount", it.amount)) }
-    }
-
-    private fun itemsFrom(doc: Document, key: String): Map<Int, Item> {
-        val out = HashMap<Int, Item>()
-        doc.get(key, Document::class.java)?.forEach { (slot, v) ->
-            val d = v as Document
-            out[slot.toInt()] = Item(d.getInteger("id"), d.getInteger("amount", 1))
-        }
-        return out
-    }
-
-    /** Snapshot a container's non-empty slots as slot→Item (an [Item] copy per occupied slot). */
-    private fun org.alter.game.model.container.ItemContainer.rawItemsSnapshot(): Map<Int, Item> {
-        val out = HashMap<Int, Item>()
-        for (i in 0 until capacity) this[i]?.let { out[i] = Item(it.id, it.amount) }
-        return out
-    }
-
     // ───────────────────────────── difficulty → sparring loadout ─────────────────────────────
+    // (The loaner-kit stash/apply/restore machinery lives in [LoanerKits], shared with companion
+    // sparring; the arena geography constants live in [TrainingArena].)
 
     /** Map the trainee's kit + difficulty to a bot loadout (reusing the tuned bot presets). */
     private fun botLoadout(custom: KitSetup?, diff: Diff): BotLoadout {
@@ -537,30 +438,11 @@ class PkTrainingArenaPlugin(
         val TRAINER_TILE = Tile(3367, 3269, 0)
         const val TRAINER_REGION = 13363 // (3367 shr 6 shl 8) or (3269 shr 6)
 
-        // Bouts fight in a PRIVATE INSTANCED COPY of the NORTH-WEST pit (mapdump-verified: region
-        // 13362, pit interior x3334..3351 z3246..3258, row z3251 fully clear of walls/objects) —
-        // one instance per bout, mirroring the staked duels' NE-pit instances. PIT_SOURCE is the
-        // chunk-aligned 4x3-chunk template including the pit's enclosing walls; everything beyond
-        // the copied chunks is collision-blocked inside the instance, so nobody walks out mid-bout.
-        // Whoever dies sends the trainee back to EXIT_TILE beside the trainer (mapdump-verified
-        // walkable, region 13363 lobby) — also each instance's fallback exit tile.
-        val PIT_SOURCE = Area(3328, 3240, 3359, 3263)
-        // Spawn tiles in SOURCE coordinates — translated into the allocated instance per bout.
-        val BOUT_PLAYER_TILE = Tile(3339, 3251, 0)
-        val BOUT_BOT_TILE = Tile(3347, 3251, 0)
-        val EXIT_TILE = Tile(3368, 3269, 0) // beside the trainer — round-end + death respawn
-
-        // The whole Duel-Arena grounds: SafeDeath zone + "you left, hand the kit back" boundary.
-        // x-min 3330 so the NW pit's full interior (x3334+) is inside — a fighter hugging the pit's
-        // west wall must NOT trip the "left the arena" kit-return check mid-bout.
-        val ARENA = Area(3330, 3242, 3396, 3296)
-        const val ARENA_LEASH = 40 // bot won't chase past this from its spawn (keeps it in the arena)
+        // Arena geography + cadence constants (PIT_SOURCE, EXIT_TILE, ARENA, ...) live in
+        // [TrainingArena] — shared with companion sparring. The loaner stash/apply/restore
+        // machinery lives in [LoanerKits] (same sharing).
 
         const val SPAR_BOT_NAME = "Sparring Partner"
-
-        const val ARENA_TICK = 2       // session upkeep cadence (~1.2s)
-        const val COUNTDOWN_STEPS = 4  // arena-ticks to FIGHT! (prints 3... 2... 1... at ~1.2s each)
-        const val VENG_MAGIC = 94      // Vengeance's Magic requirement — boosted to here while kitted
 
         // The loaner presets + curated armoury live in [KitArmoury] (content/kits), shared with the
         // kit editor: the trainer's "kit locker" IS the editor, so what it stocks is defined there.

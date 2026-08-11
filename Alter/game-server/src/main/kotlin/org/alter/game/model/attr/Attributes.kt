@@ -606,6 +606,16 @@ val CLIENT_KEY_COMBINATION = AttributeKey<Int>()
 val PK_ARENA_STASH_ATTR = AttributeKey<String>("pk_arena_stash")
 
 /**
+ * A JSON blob of the player's pre-boost combat CURRENT levels, written when a companion-sparring
+ * bout's **Max Stats** option boosts them to 99 while they fight in their OWN gear (a loaner-kit
+ * fighter's levels ride [PK_ARENA_STASH_ATTR] instead — this key exists precisely for the
+ * no-stash path). Persistent by design: a JVM death mid-bout leaves the snapshot on disk and the
+ * levels are restored on next login. Cleared the moment the bout ends. Boosts are current-level
+ * only — base levels/XP are never touched.
+ */
+val SPAR_BOOST_ATTR = AttributeKey<String>("spar_boost")
+
+/**
  * A JSON blob holding the items a player has escrowed into an **active Duel Arena stake** (their own
  * stake). Written when a duel begins (items already moved out of the inventory into escrow), cleared
  * when the duel resolves. Persistent by design: if the JVM dies mid-duel the stake is on disk and is

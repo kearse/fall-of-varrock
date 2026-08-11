@@ -286,7 +286,9 @@ Reusable pieces — reach for these before inventing a new one. Metrics above.
     every npc sharing its cache name; SlayerHudPlugin) ·
     **4640-4679 kit editor** (control + per-slot — was
     missing from this list; a parallel branch DID double-claim 4631 the same week — keep EVERY
-    varp here).
+    varp here) ·
+    **4680 companion sparring settings** (packed: open | style bits 1-2 | difficulty 3-4 |
+    rules 5-13 | companion-loadout mode 14-15 — `SparringClientMenu`, client `lofspar`).
     (4601/4609/4616 all feed the `lofdials` dial row.)
 
     **Windows are exclusive** (`LofWindows` in loftheme): register the overlay, call

@@ -75,6 +75,17 @@ object Combat {
                 pawn.message("That combat style isn't allowed in this duel.")
                 return false
             }
+            // Companion-sparring style bans, same shape (binds the owner AND the sparring companion —
+            // the companion's kit already excludes banned styles, this is the belt to that braces).
+            val spar = org.alter.plugins.content.minigames.pktraining.CompanionSparring.rulesOf(pawn)
+            if (spar != null &&
+                ((combatClass == CombatClass.MELEE && spar.noMelee) ||
+                    (combatClass == CombatClass.RANGED && spar.noRanged) ||
+                    (combatClass == CombatClass.MAGIC && spar.noMagic))
+            ) {
+                pawn.message("That combat style isn't allowed in this sparring bout.")
+                return false
+            }
         }
         return canEngage(pawn, target) && getStrategy(combatClass).canAttack(pawn, target)
     }
@@ -295,9 +306,11 @@ object Combat {
         // You cannot raise a blade against your own companions. Ownership is matched through the
         // registry's normalized owner key, NOT a raw `uid.value` compare — a display name that comes
         // back in a different case would otherwise read as someone else's companion, and the guard
-        // would let a player attack their own knights.
+        // would let a player attack their own knights. ONE exemption: a live companion-sparring
+        // bout sanctions exactly this pairing (owner vs THEIR sparring companion, post-countdown).
         if (pawn is Player && target is org.alter.plugins.content.companion.Companion &&
-            org.alter.plugins.content.companion.CompanionRegistry.owns(pawn, target)
+            org.alter.plugins.content.companion.CompanionRegistry.owns(pawn, target) &&
+            !org.alter.plugins.content.minigames.pktraining.CompanionSparring.sanctionsEngagement(pawn, target)
         ) {
             pawn.message("That's your own companion.")
             return false
@@ -425,7 +438,13 @@ object Combat {
             val lmsCombat = pawn is Player && target is Player &&
                 org.alter.plugins.content.minigames.lms.LmsGame.sameGame(pawn, target)
 
-            if (pvp && !botCombat && !duelCombat && !lmsCombat) {
+            // A companion-sparring bout sanctions its own pairing (owner ↔ their sparring
+            // companion, both directions) inside the private training pit. Needed on top of
+            // botCombat because a COMPANION target is deliberately excluded from that bypass.
+            val sparCombat = pawn is Player && target is Player &&
+                org.alter.plugins.content.minigames.pktraining.CompanionSparring.sanctionsEngagement(pawn, target)
+
+            if (pvp && !botCombat && !duelCombat && !lmsCombat && !sparCombat) {
                 pawn as Player
 
                 // PvP is only allowed in the wilderness (the red zone); everywhere else is safe.

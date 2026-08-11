@@ -52,23 +52,23 @@ class LofKitOverlay extends Overlay
 	static final int PAGE_PREV = 3;
 	static final int PAGE_NEXT = 4;
 	static final int CURRENT = 5;      // copy worn gear + inventory into the editor (bank mode)
+	static final int DD_HEAD = 6;      // the kit-name dropdown head (click = open/close; dbl-click = rename)
+	static final int SAVE_BTN = 7;     // save the current build under its name
+	static final int SEARCH_BTN = 8;   // the armoury search bar (opens the chatbox item finder)
 	static final int EQUIP_BASE = 100; // + doll index (0..10)
 	static final int INV_BASE = 140;   // + inventory slot (0..27)
-	static final int PRESET_BASE = 300; // + 0 Dharok's, 1 NH
-	static final int KITLOAD_BASE = 310; // + save slot (0..2)
-	static final int KITSAVE_BASE = 320; // + save slot (0..2)
 	static final int BOOK_BASE = 330;  // + 0 std, 1 ancients, 2 lunar
 	static final int DIFF_BASE = 340;  // + 0 easy, 1 medium, 2 hard
 	static final int TAB_BASE = 350;   // + armoury tab (0..5)
 	static final int PAL_BASE = 400;   // + visible palette index
+	// Dropdown list rows (only hit while the list is open): 0-1 presets, 2-4 saved kits, 5 = new kit.
+	static final int DD_ITEM_BASE = 500;
+	static final int DD_ITEM_NEW = DD_ITEM_BASE + 5;
 
 	/** Doll slot labels, in server KitEditor.SLOT_IDS order. */
 	private static final String[] SLOTS = { "Head", "Cape", "Neck", "Weap", "Body", "Shld", "Legs", "Hand", "Foot", "Ring", "Ammo" };
 	private static final int[] DOLL_COL = { 1, 0, 1, 0, 1, 2, 1, 0, 1, 2, 2 };
 	private static final int[] DOLL_ROW = { 0, 1, 1, 2, 2, 2, 3, 4, 4, 4, 1 };
-
-	/** Training armoury — MUST match the server's KitArmoury pool, grouped for the tabs. */
-	private static final String[] TABS = { "Melee", "Range", "Magic", "Armour", "Supply", "Runes" };
 
 	/** LMS mode: tabs are the LmsKits categories; each tile is a choice's representative item —
 	 *  MUST match the server's LmsKits reps (order = choice order, for the selected-index bits). */
@@ -80,15 +80,33 @@ class LofKitOverlay extends Overlay
 		{ ItemID.BLOOD_RUNE, ItemID.ASTRAL_RUNE, ItemID.LAW_RUNE },
 		{ ItemID.SARADOMIN_BREW4, ItemID.SHARK },
 	};
-	private static final int[][] ARMOURY = {
-		{ ItemID.ABYSSAL_WHIP, ItemID.DRAGON_DAGGER, ItemID.DRAGON_CLAWS, ItemID.DHAROKS_GREATAXE, ItemID.DRAGON_DEFENDER },
-		{ ItemID.MAGIC_SHORTBOW, ItemID.RUNE_ARROW, ItemID.BLACK_DHIDE_BODY, ItemID.BLACK_DHIDE_CHAPS },
-		{ ItemID.ANCIENT_STAFF, ItemID.MYSTIC_HAT, ItemID.MYSTIC_ROBE_TOP, ItemID.MYSTIC_ROBE_BOTTOM, ItemID.OCCULT_NECKLACE },
-		{ ItemID.DHAROKS_HELM, ItemID.DHAROKS_PLATEBODY, ItemID.DHAROKS_PLATELEGS, ItemID.HELM_OF_NEITIZNOT,
-			ItemID.FIGHTER_TORSO, ItemID.FIRE_CAPE, ItemID.AMULET_OF_TORTURE, ItemID.BARROWS_GLOVES,
-			ItemID.DRAGON_BOOTS, ItemID.BERSERKER_RING, ItemID.BERSERKER_RING_I },
-		{ ItemID.SUPER_COMBAT_POTION4, ItemID.SARADOMIN_BREW4, ItemID.SUPER_RESTORE4, ItemID.SHARK, ItemID.COOKED_KARAMBWAN },
-		{ ItemID.ASTRAL_RUNE, ItemID.DEATH_RUNE, ItemID.EARTH_RUNE, ItemID.WATER_RUNE, ItemID.BLOOD_RUNE },
+	/** The training armoury in POPULARITY order (the search box's default view) — MUST match the
+	 *  server's KitArmoury POOL_DEFS order. Typing in the search bar opens the native chatbox item
+	 *  finder; this grid is what you browse before searching. */
+	private static final int[] ARMOURY_POPULAR = {
+		ItemID.ARMADYL_GODSWORD, ItemID.GRANITE_MAUL, ItemID.DRAGON_CLAWS,
+		ItemID.DRAGON_DAGGER, ItemID.ABYSSAL_WHIP, ItemID.DHAROKS_GREATAXE,
+		ItemID.DHAROKS_HELM, ItemID.DHAROKS_PLATEBODY, ItemID.DHAROKS_PLATELEGS,
+		ItemID.MAGIC_SHORTBOW, ItemID.ANCIENT_STAFF,
+		ItemID.SARADOMIN_BREW4, ItemID.SUPER_RESTORE4, ItemID.COOKED_KARAMBWAN,
+		ItemID.SHARK, ItemID.ANGLERFISH, ItemID.SUPER_COMBAT_POTION4,
+		ItemID.RANGING_POTION4,
+		ItemID.HELM_OF_NEITIZNOT, ItemID.NEITIZNOT_FACEGUARD, ItemID.FIGHTER_TORSO,
+		ItemID.BANDOS_CHESTPLATE, ItemID.BANDOS_TASSETS, ItemID.FIRE_CAPE,
+		ItemID.INFERNAL_CAPE, ItemID.AMULET_OF_TORTURE, ItemID.AMULET_OF_FURY,
+		ItemID.DRAGON_DEFENDER, ItemID.AVERNIC_DEFENDER, ItemID.RUNE_DEFENDER,
+		ItemID.BERSERKER_HELM, ItemID.BARROWS_GLOVES, ItemID.FEROCIOUS_GLOVES,
+		ItemID.DRAGON_BOOTS, ItemID.PRIMORDIAL_BOOTS,
+		ItemID.BERSERKER_RING, ItemID.BERSERKER_RING_I,
+		ItemID.MAGIC_SHORTBOW_I, ItemID.RUNE_ARROW, ItemID.DRAGON_ARROW,
+		ItemID.KARILS_COIF, ItemID.BLACK_DHIDE_BODY, ItemID.BLACK_DHIDE_CHAPS,
+		ItemID.BLACK_DHIDE_VAMBRACES, ItemID.NECKLACE_OF_ANGUISH, ItemID.ARCHERS_RING,
+		ItemID.KODAI_WAND, ItemID.ANCESTRAL_HAT, ItemID.ANCESTRAL_ROBE_TOP,
+		ItemID.ANCESTRAL_ROBE_BOTTOM, ItemID.MYSTIC_HAT, ItemID.MYSTIC_ROBE_TOP,
+		ItemID.MYSTIC_ROBE_BOTTOM, ItemID.OCCULT_NECKLACE, ItemID.TORMENTED_BRACELET,
+		ItemID.ETERNAL_BOOTS, ItemID.SEERS_RING,
+		ItemID.ASTRAL_RUNE, ItemID.DEATH_RUNE, ItemID.EARTH_RUNE,
+		ItemID.WATER_RUNE, ItemID.BLOOD_RUNE,
 	};
 
 	// Window geometry. Wider than the duel modal (three columns); in fixed mode it overlaps the
@@ -125,11 +143,32 @@ class LofKitOverlay extends Overlay
 	private final LofKitConfig config;
 	private final ItemManager itemManager;
 
-	// Client-side view state (never authoritative): armoury tab + bank palette page.
+	// Client-side view state (never authoritative): armoury tab + bank palette page + dropdown.
 	private int tab;
 	private int bankPage;
 	/** Palette ids as last rendered — read by the mouse listener off the client thread. */
 	private volatile int[] palCache = new int[0];
+	/** Kit-name dropdown open/closed — pure view state, toggled by the mouse listener. */
+	private volatile boolean ddOpen;
+	/** Names from the server's ~LOFKITN~ channel: the kit being edited + the three save slots. */
+	private volatile String kitName = "";
+	private volatile String[] savedNames = { "", "", "" };
+
+	void setKitNames(String current, String[] saved)
+	{
+		kitName = current == null ? "" : current;
+		savedNames = saved;
+	}
+
+	void setDropdownOpen(boolean open)
+	{
+		ddOpen = open;
+	}
+
+	boolean isDropdownOpen()
+	{
+		return ddOpen;
+	}
 
 	@Inject
 	private LofKitOverlay(Client client, LofKitConfig config, ItemManager itemManager)
@@ -197,7 +236,8 @@ class LofKitOverlay extends Overlay
 
 	void setTab(int t)
 	{
-		if (t >= 0 && t < TABS.length) { tab = t; bankPage = 0; }
+		// Tabs only exist in LMS mode now (the training armoury is the search box + popular grid).
+		if (t >= 0 && t < LMS_TABS.length) { tab = t; bankPage = 0; }
 	}
 
 	void pageDelta(int d) { bankPage = Math.max(0, bankPage + d); }
@@ -211,20 +251,16 @@ class LofKitOverlay extends Overlay
 
 	private Rectangle closeRect(int ox, int oy) { return new Rectangle(ox + WIN_W - 30, oy + 8, 22, 22); }
 
-	private Rectangle presetRect(int ox, int oy, int i) // 0..1 presets
+	// The kit row: one NAMED-kit dropdown (replaces the old preset + numbered-save-slot chips),
+	// a Save button, and (bank mode) the "Wearing" chip. Single click opens the list; double-click
+	// the title renames the kit; "+ New kit..." starts an empty build and asks for its name.
+	private Rectangle ddHeadRect(int ox, int oy) { return new Rectangle(ox + PAD + 28, oy + PRESET_Y, 156, PRESET_H); }
+	private Rectangle saveRect(int ox, int oy) { return new Rectangle(ox + PAD + 190, oy + PRESET_Y, 46, PRESET_H); }
+	private static final int DD_ROW_H = 16;
+	private Rectangle ddItemRect(int ox, int oy, int i) // list row i (0..5), below the head
 	{
-		return new Rectangle(ox + PAD + i * 84, oy + PRESET_Y, 80, PRESET_H);
-	}
-
-	private Rectangle kitLoadRect(int ox, int oy, int i) // 0..2 saved kits
-	{
-		return new Rectangle(ox + PAD + 172 + i * 76, oy + PRESET_Y, 50, PRESET_H);
-	}
-
-	private Rectangle kitSaveRect(int ox, int oy, int i)
-	{
-		final Rectangle r = kitLoadRect(ox, oy, i);
-		return new Rectangle(r.x + r.width + 2, r.y, 20, PRESET_H);
+		final Rectangle h = ddHeadRect(ox, oy);
+		return new Rectangle(h.x, h.y + h.height + 1 + i * DD_ROW_H, h.width, DD_ROW_H);
 	}
 
 	private Rectangle currentRect(int ox, int oy) // bank mode: copy the real worn+carried setup
@@ -251,7 +287,11 @@ class LofKitOverlay extends Overlay
 		return new Rectangle(ox + PAL_X + (i % 3) * 60, oy + COLS_TOP + (i / 3) * (TAB_H + 2), 54, TAB_H);
 	}
 
-	private int palTop(int oy) { return oy + COLS_TOP + 2 * (TAB_H + 2) + 6; }
+	/** The armoury/bank SEARCH bar — clicking it opens the native chatbox item finder. */
+	private Rectangle searchRect(int ox, int oy) { return new Rectangle(ox + PAL_X, oy + COLS_TOP, 5 * (PAL_SZ + PAL_GAP) - PAL_GAP, 16); }
+
+	/** Palette origin: below the search bar (training/bank) or below the category tabs (LMS). */
+	private int palTop(int oy) { return isLms() ? oy + COLS_TOP + 2 * (TAB_H + 2) + 6 : oy + COLS_TOP + 22; }
 
 	private Rectangle palRect(int ox, int oy, int i)
 	{
@@ -280,31 +320,32 @@ class LofKitOverlay extends Overlay
 		if (actionRect(ox, oy).contains(p)) return ACTION;
 		if (!lms)
 		{
-			for (int i = 0; i < 2; i++) if (presetRect(ox, oy, i).contains(p)) return PRESET_BASE + i;
-			for (int i = 0; i < 3; i++)
+			if (ddHeadRect(ox, oy).contains(p)) return DD_HEAD;
+			// The open dropdown list draws OVER the doll — its rows must win the hit-test.
+			if (ddOpen)
 			{
-				if (kitLoadRect(ox, oy, i).contains(p)) return KITLOAD_BASE + i;
-				if (kitSaveRect(ox, oy, i).contains(p)) return KITSAVE_BASE + i;
+				for (int i = 0; i < 6; i++) if (ddItemRect(ox, oy, i).contains(p)) return DD_ITEM_BASE + i;
 			}
+			if (saveRect(ox, oy).contains(p)) return SAVE_BTN;
 			if (!training && currentRect(ox, oy).contains(p)) return CURRENT;
 			// In LMS mode the doll + inventory are a read-only preview of the category picks.
 			for (int i = 0; i < EQUIP_SLOTS; i++) if (dollRect(ox, oy, i).contains(p)) return EQUIP_BASE + i;
 			for (int i = 0; i < INV_SIZE; i++) if (invRect(ox, oy, i).contains(p)) return INV_BASE + i;
 			for (int i = 0; i < 3; i++) if (bookRect(ox, oy, i).contains(p)) return BOOK_BASE + i;
 		}
-		if (training || lms)
+		if (lms)
 		{
-			final int tabs = lms ? LMS_TABS.length : TABS.length;
-			for (int i = 0; i < tabs; i++) if (tabRect(ox, oy, i).contains(p)) return TAB_BASE + i;
+			for (int i = 0; i < LMS_TABS.length; i++) if (tabRect(ox, oy, i).contains(p)) return TAB_BASE + i;
+		}
+		else
+		{
+			if (searchRect(ox, oy).contains(p)) return SEARCH_BTN;
+			if (pagePrevRect(ox, oy).contains(p)) return PAGE_PREV;
+			if (pageNextRect(ox, oy).contains(p)) return PAGE_NEXT;
 		}
 		if (training)
 		{
 			for (int i = 0; i < 3; i++) if (diffRect(ox, oy, i).contains(p)) return DIFF_BASE + i;
-		}
-		if (!training && !lms)
-		{
-			if (pagePrevRect(ox, oy).contains(p)) return PAGE_PREV;
-			if (pageNextRect(ox, oy).contains(p)) return PAGE_NEXT;
 		}
 		final int[] pal = palCache;
 		for (int i = 0; i < pal.length; i++) if (palRect(ox, oy, i).contains(p)) return PAL_BASE + i;
@@ -319,7 +360,15 @@ class LofKitOverlay extends Overlay
 	{
 		if (isTraining())
 		{
-			return ARMOURY[Math.min(tab, ARMOURY.length - 1)];
+			// The armoury, popular-first, paged (same paging chips as the bank browser).
+			final int pageSize = PAL_COLS * PAL_ROWS;
+			final int maxPage = Math.max(0, (ARMOURY_POPULAR.length - 1) / pageSize);
+			if (bankPage > maxPage) bankPage = maxPage;
+			final int from = bankPage * pageSize;
+			final int count = Math.max(0, Math.min(pageSize, ARMOURY_POPULAR.length - from));
+			final int[] page = new int[count];
+			System.arraycopy(ARMOURY_POPULAR, from, page, 0, count);
+			return page;
 		}
 		if (isLms())
 		{
@@ -397,25 +446,19 @@ class LofKitOverlay extends Overlay
 		g.drawLine(xr.x + xr.width - 8, xr.y + 7, xr.x + 7, xr.y + xr.height - 8);
 		g.setStroke(oldX);
 
-		// preset + save-slot chips (not in LMS mode — LMS has exactly one kit, the category picks)
+		// the named-kit dropdown + Save (not in LMS mode — LMS has exactly one kit, the category picks)
 		g.setFont(FontManager.getRunescapeFont());
 		if (!lms)
 		{
-			final String[] presets = { "Dharok's", "NH Tribrid" };
-			for (int i = 0; i < 2; i++)
-			{
-				chip(g, presetRect(ox, oy, i), presets[i], false, presetRect(ox, oy, i).contains(mouse));
-			}
-			for (int i = 0; i < 3; i++)
-			{
-				final boolean filled = (control & (1 << (7 + i))) != 0;
-				final Rectangle lr = kitLoadRect(ox, oy, i);
-				chip(g, lr, "Kit " + (i + 1), filled, lr.contains(mouse));
-				final Rectangle sr = kitSaveRect(ox, oy, i);
-				chip(g, sr, "S", false, sr.contains(mouse));
-				if (lr.contains(mouse)) hover = filled ? "Load your saved kit " + (i + 1) : "Empty — press S to save the current setup here";
-				if (sr.contains(mouse)) hover = "Save the current setup to kit slot " + (i + 1);
-			}
+			g.setFont(FontManager.getRunescapeSmallFont());
+			LofTheme.shadowText(g, "KIT", ox + PAD, oy + PRESET_Y + 14, LofTheme.GOLD_DIM);
+			g.setFont(FontManager.getRunescapeFont());
+			final Rectangle hd = ddHeadRect(ox, oy);
+			ddChip(g, hd, kitName.isEmpty() ? "Unnamed kit" : kitName, hd.contains(mouse));
+			if (hd.contains(mouse)) hover = "Pick a kit - double-click to rename";
+			final Rectangle sv = saveRect(ox, oy);
+			chip(g, sv, "Save", false, sv.contains(mouse));
+			if (sv.contains(mouse)) hover = "Save this build under its name";
 			if (!training)
 			{
 				final Rectangle cr = currentRect(ox, oy);
@@ -436,7 +479,7 @@ class LofKitOverlay extends Overlay
 		LofTheme.shadowText(g, lms ? "YOU'LL WEAR" : "WORN GEAR", ox + DOLL_X + 2, oy + LABEL_Y, LofTheme.GOLD_DIM);
 		LofTheme.shadowText(g, lms ? "YOU'LL CARRY" : "INVENTORY", ox + INV_X + 2, oy + LABEL_Y, LofTheme.GOLD_DIM);
 		LofTheme.shadowText(g,
-			training ? "ARMOURY — CLICK TO ADD" : lms ? "KIT OPTIONS — ONE PER TAB" : "YOUR BANK — CLICK TO ADD",
+			training ? "ARMOURY" : lms ? "KIT OPTIONS — ONE PER TAB" : "YOUR BANK",
 			ox + PAL_X + 2, oy + LABEL_Y, LofTheme.GOLD_DIM);
 
 		// worn gear paper-doll (varps 4641..4651)
@@ -459,18 +502,38 @@ class LofKitOverlay extends Overlay
 			if (hov && !lms && (packed & 0xFFFF) != 0) hover = "Remove " + itemName(packed & 0xFFFF);
 		}
 
-		// palette: armoury tabs (training), category tabs (LMS), or the bank with paging (bank mode)
+		// palette: search bar + popular-first armoury (training) / searched bank (bank mode) /
+		// category tabs (LMS)
 		final int[] pal = buildPalette();
 		palCache = pal;
-		if (training || lms)
+		if (lms)
 		{
-			final String[] tabs = lms ? LMS_TABS : TABS;
 			g.setFont(FontManager.getRunescapeSmallFont());
-			for (int i = 0; i < tabs.length; i++)
+			for (int i = 0; i < LMS_TABS.length; i++)
 			{
 				final Rectangle rc = tabRect(ox, oy, i);
-				chip(g, rc, tabs[i], i == tab, rc.contains(mouse));
+				chip(g, rc, LMS_TABS[i], i == tab, rc.contains(mouse));
 			}
+		}
+		else
+		{
+			// The search bar: click → the native chatbox item finder; the pick is added to the kit.
+			final Rectangle sr = searchRect(ox, oy);
+			g.setColor(sr.contains(mouse) ? LofTheme.ROW_HOVER : new Color(0, 0, 0, 90));
+			g.fillRoundRect(sr.x, sr.y, sr.width, sr.height, 6, 6);
+			g.setColor(LofTheme.alpha(LofTheme.GOLD, sr.contains(mouse) ? 200 : 110));
+			final Stroke oldS = g.getStroke();
+			g.setStroke(new BasicStroke(1f));
+			g.drawRoundRect(sr.x, sr.y, sr.width - 1, sr.height - 1, 6, 6);
+			g.setStroke(oldS);
+			// magnifier glass drawn as strokes (the RuneScape font has no such glyph)
+			g.setColor(LofTheme.GOLD_DIM);
+			g.drawOval(sr.x + 5, sr.y + 4, 6, 6);
+			g.drawLine(sr.x + 10, sr.y + 10, sr.x + 13, sr.y + 13);
+			g.setFont(FontManager.getRunescapeSmallFont());
+			LofTheme.shadowText(g, training ? "Search the armoury..." : "Search your bank...",
+				sr.x + 18, sr.y + 12, LofTheme.TEXT_DIM);
+			if (sr.contains(mouse)) hover = "Search for an item to add to the kit";
 		}
 		final int lmsSelected = lms ? (control >> (10 + 2 * Math.min(tab, LMS_CHOICES.length - 1))) & 0x3 : -1;
 		for (int i = 0; i < pal.length; i++)
@@ -485,10 +548,10 @@ class LofKitOverlay extends Overlay
 			}
 			if (hov) hover = (lms ? "Pick " : "Add ") + itemName(pal[i]);
 		}
-		if (!training && !lms)
+		if (!lms)
 		{
 			g.setFont(FontManager.getRunescapeSmallFont());
-			if (pal.length == 0)
+			if (!training && pal.length == 0)
 			{
 				LofTheme.shadowText(g, "Visit a bank once to browse it here.", ox + PAL_X, palTop(oy) + 14, LofTheme.TEXT_DIM);
 			}
@@ -530,6 +593,51 @@ class LofKitOverlay extends Overlay
 		g.setFont(FontManager.getRunescapeBoldFont());
 		button(g, actionRect(ox, oy), training ? "Start bout" : lms ? "Done" : "Load kit",
 			LofTheme.GOLD, false, actionRect(ox, oy).contains(mouse));
+
+		// the OPEN kit dropdown draws LAST so its list sits over the doll column
+		if (!lms && ddOpen)
+		{
+			final String[] names = savedNames;
+			final Rectangle first = ddItemRect(ox, oy, 0);
+			final Rectangle last = ddItemRect(ox, oy, 5);
+			g.setColor(new Color(28, 23, 21));
+			g.fillRoundRect(first.x, first.y, first.width, last.y + last.height - first.y, 6, 6);
+			g.setColor(LofTheme.alpha(LofTheme.GOLD_DIM, 160));
+			g.drawRoundRect(first.x, first.y, first.width - 1, last.y + last.height - first.y - 1, 6, 6);
+			g.setFont(FontManager.getRunescapeFont());
+			final String[] presetNames = { "Dharok's", "NH Tribrid" };
+			for (int i = 0; i < 6; i++)
+			{
+				final Rectangle rc = ddItemRect(ox, oy, i);
+				final boolean hov = rc.contains(mouse);
+				String label;
+				Color col;
+				if (i < 2)
+				{
+					label = presetNames[i];
+					col = hov ? LofTheme.TEXT : LofTheme.TEXT_DIM;
+				}
+				else if (i < 5)
+				{
+					final int slot = i - 2;
+					final boolean filled = (control & (1 << (7 + slot))) != 0;
+					final String nm = (names != null && slot < names.length) ? names[slot] : "";
+					label = filled ? (nm.isEmpty() ? "Kit " + (slot + 1) : nm) : "(empty slot)";
+					col = filled ? (hov ? LofTheme.TEXT : LofTheme.TEXT_DIM) : LofTheme.alpha(LofTheme.TEXT_DIM, 110);
+				}
+				else
+				{
+					label = "+ New kit...";
+					col = hov ? GREEN_ON : LofTheme.alpha(GREEN_ON, 190);
+				}
+				if (hov)
+				{
+					g.setColor(LofTheme.ROW_HOVER);
+					g.fillRoundRect(rc.x + 2, rc.y, rc.width - 4, rc.height - 1, 4, 4);
+				}
+				LofTheme.shadowText(g, label, rc.x + 8, rc.y + rc.height / 2 + 5, col);
+			}
+		}
 
 		// hover hint in the title bar (OSRS-style)
 		if (hover != null)
@@ -580,6 +688,24 @@ class LofKitOverlay extends Overlay
 		{
 			return "item " + id;
 		}
+	}
+
+	private static final Color GREEN_ON = new Color(110, 205, 110);
+
+	/** The dropdown head: the current kit's name + a drawn caret (the font has no arrow glyphs). */
+	private void ddChip(Graphics2D g, Rectangle rc, String label, boolean hov)
+	{
+		g.setColor(hov ? LofTheme.ROW_HOVER : LofTheme.ROW);
+		g.fillRoundRect(rc.x, rc.y, rc.width, rc.height, 6, 6);
+		g.setColor(LofTheme.alpha(LofTheme.GOLD, hov ? 200 : 120));
+		g.drawRoundRect(rc.x, rc.y, rc.width - 1, rc.height - 1, 6, 6);
+		LofTheme.shadowText(g, label, rc.x + 7, rc.y + rc.height / 2 + 5, LofTheme.GOLD);
+		// caret: a small filled triangle at the right edge
+		final int cx = rc.x + rc.width - 13, cy = rc.y + rc.height / 2 - 2;
+		final int[] xs = { cx, cx + 8, cx + 4 };
+		final int[] ys = { cy, cy, cy + 5 };
+		g.setColor(LofTheme.GOLD_DIM);
+		g.fillPolygon(xs, ys, 3);
 	}
 
 	private void chip(Graphics2D g, Rectangle rc, String label, boolean active, boolean hov)
