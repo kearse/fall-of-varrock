@@ -135,13 +135,17 @@ class CompanionSparringPlugin(
 
         // A death ends the round, either direction. The engine has already handled the death
         // itself (companions are death-protected and respawn; the trainee's death is safe).
+        // Runs in ANY phase — a countdown death (lingering poison etc.) must not leave the
+        // session hanging with the fighters respawned (the duel plugin's rule, same reason).
         onPlayerDeath {
             val comp = player as? CompanionPawn
             if (comp != null) {
                 CompanionSparring.sessionOfComp(comp)?.let { teardown(it, ownerWon = true) }
                 return@onPlayerDeath
             }
-            CompanionSparring.sessionOf(player)?.let { s -> if (s.fighting) teardown(s, ownerWon = false) }
+            CompanionSparring.sessionOf(player)?.let { s ->
+                teardown(s, ownerWon = if (s.fighting) false else null)
+            }
         }
 
         // Escape hatch + quick test entry.
@@ -461,10 +465,16 @@ class CompanionSparringPlugin(
     private fun tick(s: CompanionSparring.SparSession) {
         val owner = s.owner
         if (owner.index < 0) { teardown(s, ownerWon = null); return } // vanished without a clean logout
+        val comp = s.comp
+        if (comp.index < 0) { teardown(s, ownerWon = true); return } // vanished mid-bout
+        // A 0-HP fighter has a STRONG death task IN FLIGHT (PlayerDeathAction queues it with
+        // multi-tick waits) — driving combat now would KILL it: Pawn.attack() interrupts queues,
+        // which cancels the pending death and strands the companion locked at 0 HP forever (and
+        // the session with it — this exact bug shipped). Stand down completely and let the death
+        // complete; executePlayerDeath then ends the bout through the onPlayerDeath handler.
+        if (comp.isDead() || owner.isDead()) return
         val inPit = s.instance.contains(owner.tile)
         if (!inPit && !TrainingArena.ARENA.contains(owner.tile)) { teardown(s, ownerWon = null); return }
-        val comp = s.comp
-        if (comp.index < 0 || comp.dead) { teardown(s, ownerWon = true); return } // vanished mid-bout
 
         if (!s.fighting) {
             s.countdown--
@@ -507,6 +517,10 @@ class CompanionSparringPlugin(
 
         // ── companion restore ──
         if (comp.index >= 0) {
+            // Recovery hatch: a companion whose death task was cancelled mid-flight is left in the
+            // death plugin's FULL lock (its unlock lives in the respawn step that never ran).
+            // Idempotent after a completed death, so always safe.
+            runCatching { comp.unlock() }
             Combat.reset(comp)
             comp.resetFacePawn()
             runCatching { Prayers.deactivateAll(comp) }
