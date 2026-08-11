@@ -142,6 +142,36 @@ strings in research §2.1–2.2.
 
 ---
 
+## Companion sparring — parity & reuse (reviewed pre-build)
+
+Sparring (`pktraining/CompanionSparring*`) is the duel challenge's no-risk sibling: a
+deliberate **parallel** (`TrainingRules` ≠ `DuelRules`, no stakes/escrow/handshake) sharing
+the same machinery (instanced pit, countdown, FROZEN_TIMER rooting, overlay-varp transport,
+kit-editor handoffs) and mirrored one-for-one at every enforcement site (eat / potion /
+prayer / spec / style bans / teleport seal). Findings that bind this plan:
+
+- **Steal from sparring:** its two-phase overlay (SETTINGS → kit step → read-only CONFIRM
+  with Accept/Back via a phase bit) is the proven pattern for Phase 3's confirmation
+  screen; its overhead `forceChat` countdown ("3…2…1…FIGHT!") is Phase 4's countdown
+  polish; its remembered-settings rematch is the model for richer duel presets.
+- **Phase 1 applies to every rules entry path:** `DuelRulesClientMenu.accept()` already
+  validates all-styles-banned and No Forfeit + No Melee, but not No Forfeit + No Movement,
+  and nothing blocks No Movement + melee-restricted — with the 8-tile spawns that's the
+  stalemate duel. The `DuelRules.validate()` helper must be the single gate the overlay,
+  grid, and chatbox menus all call. (Sparring itself is immune: nothing staked, `::sparend`
+  always exits.)
+- **Phase 2 rule additions must be a mirror-or-diverge decision per rule** for
+  `TrainingRules` (sparring already has `noSpec`; duels don't yet). To stop the per-site
+  duplication doubling, add one shared helper — a merged `combatRestrictionsOf(player)`
+  view over duel + spar rules — so each enforcement site checks once. Keeps the
+  parallel-types design, kills the copy-paste.
+- **Known quirk (cosmetic):** `SparringClientMenu.loadLast` aliases the remembered
+  `SparSettings` by reference — live edits mutate the "last used" copy. Fine today; snapshot
+  it if that ever matters.
+- **Future option:** sparring's `maxStats` (all-99s, LMS-style, with crash-safe
+  boost/restore blobs) would make a good house duel rule for mismatched accounts — the
+  machinery already exists.
+
 ## Test checklist (the failure-mode suite, from research §3)
 
 - Stake mutation after opponent accepts → both accepts reset + lockout (rules AND stake).
