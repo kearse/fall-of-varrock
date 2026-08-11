@@ -96,12 +96,8 @@ object DuelRulesClientMenu {
 
     fun accept(p: Player) {
         val s = sessions[p.index] ?: return
-        if (s.rules[0] && s.rules[1] && s.rules[2]) {
-            p.message("You must leave at least one combat style available."); return
-        }
-        if (s.rules[7] && s.rules[0]) {
-            p.message("No Forfeit can't be set with No Melee — a fighter could run out of ammo/runes."); return
-        }
+        // The single winnability gate (DuelRules.validate) — same matrix as the grid and menus.
+        buildRules(s.rules, s.slots).validate()?.let { err -> p.message(err); return }
         if (p === s.a) s.acceptedA = true else s.acceptedB = true
         if (s.acceptedA && s.acceptedB) {
             s.done = true

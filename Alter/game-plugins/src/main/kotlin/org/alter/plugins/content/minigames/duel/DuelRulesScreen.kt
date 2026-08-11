@@ -98,9 +98,9 @@ object DuelRulesScreen {
 
     fun accept(p: Player) {
         val s = sessions[p.index] ?: return
-        // A duel with every style blocked can never end — refuse the accept (classic behaviour).
-        if (s.toggles[0] && s.toggles[1] && s.toggles[2]) {
-            p.message("You must leave at least one combat style available.")
+        // The single winnability gate (DuelRules.validate) — same matrix as the overlay and menus.
+        buildRules(s.toggles).validate()?.let { err ->
+            p.message(err)
             return
         }
         if (p === s.a) s.acceptedA = true else s.acceptedB = true

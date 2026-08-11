@@ -11,6 +11,7 @@ import org.alter.game.model.Tile
 import org.alter.game.model.World
 import org.alter.game.model.attr.AttributeKey
 import org.alter.game.model.attr.DUEL_ESCROW_ATTR
+import org.alter.game.model.attr.POISON_TICKS_LEFT_ATTR
 import org.alter.game.model.entity.Player
 import org.alter.game.model.item.Item
 import org.alter.game.model.move.moveTo
@@ -22,6 +23,11 @@ import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
 import org.alter.plugins.content.bots.PkBot
 import org.alter.plugins.content.combat.PvpZones
+import org.alter.plugins.content.combat.Vengeance
+import org.alter.plugins.content.interfaces.attack.AttackTab
+import org.alter.plugins.content.items.consumables.potions.PotionsPlugin
+import org.alter.plugins.content.mechanics.poison.Poison
+import org.alter.plugins.content.mechanics.prayer.Prayers
 // Aliased: this class has its own `companion object`, which would shadow a bare Companion import
 // (the always-false `is Companion` bug from BotCombatPlugin). The alias is unambiguous.
 import org.alter.plugins.content.companion.Companion as CompanionPawn
@@ -39,6 +45,13 @@ private val logger = KotlinLogging.logger {}
 
 /** Pending duel challenges sent TO this player (by identity), mirroring the trade-request pattern. */
 val DUEL_REQUESTS_ATTR = AttributeKey<MutableSet<Player>>()
+
+/**
+ * Return tile owed to a fighter whose duel resolved while their own death sequence was still in
+ * flight (the double-KO second faller): their respawn lands them on the instance's fallback exit
+ * AFTER our resolve teleport, so resolve parks the tile here and the post-death hook applies it.
+ */
+val DUEL_RETURN_ATTR = AttributeKey<Tile>()
 
 /**
  * **Duelling — classic staking, challenge anywhere.** The old-school "risk it all" duel: right-click
@@ -115,6 +128,17 @@ class DuelArenaPlugin(
             world.timers[duelTimer] = 1
         }
 
+        // Double-KO detection. The pre-death hook fires at the START of the death sequence, while
+        // both fallers are still at 0 HP — the only window where "we died together" is observable
+        // order-independently. The post-death hook (below) fires AFTER the death animation and
+        // respawn, by which point the other faller may already be respawned and healed.
+        onPlayerPreDeath {
+            if (player is CompanionPawn) return@onPlayerPreDeath
+            DuelArena.duelOf(player)?.let { d ->
+                if (!d.exhibition && d.opponentOf(player).isDead()) d.drawPending = true
+            }
+        }
+
         // Dying in a fight = you lose; opponent takes the escrow. (Personal items are safe here.)
         // A COMPANION KO'd during a companions-allowed duel is benched for the rest of it — the
         // companion system auto-respawns it at home, and benching stops it snapping back into the
@@ -124,10 +148,21 @@ class DuelArenaPlugin(
                 CompanionRegistry.ownerOf(world, comp)?.let { owner ->
                     DuelArena.duelOf(owner)?.let { d -> if (d.fighting) d.benched += comp }
                 }
+                return@onPlayerDeath
+            }
+            // A duel that resolved while this death was mid-animation parked our return tile —
+            // apply it now that the respawn (which lands on the instance fallback exit) is done.
+            player.attr[DUEL_RETURN_ATTR]?.let { tile ->
+                player.attr.remove(DUEL_RETURN_ATTR)
+                player.moveTo(tile)
             }
             // A principal's death resolves the duel in ANY phase — a countdown death (lingering
-            // poison etc.) must not leave the duel hanging with one fighter gone.
-            DuelArena.duelOf(player)?.let { d -> resolve(d, loser = player) }
+            // poison etc.) must not leave the duel hanging with one fighter gone. A double KO
+            // (both principals' deaths overlapped) is a draw, not a processing-order coin flip.
+            DuelArena.duelOf(player)?.let { d ->
+                if (d.drawPending) resolveDraw(d, "Both fighters fell")
+                else resolve(d, loser = player)
+            }
         }
 
         // Logging out mid-duel forfeits the stake to the opponent (a pre-fight stake screen is
@@ -135,7 +170,21 @@ class DuelArenaPlugin(
         onLogout {
             if (DuelRulesScreen.isOpen(player)) DuelRulesScreen.cancel(player)
             if (DuelRulesClientMenu.isOpen(player)) DuelRulesClientMenu.cancel(player)
-            DuelArena.duelOf(player)?.let { d -> resolve(d, loser = player) }
+            DuelArena.duelOf(player)?.let { d -> resolve(d, loser = player, end = DuelEnd.LOGOUT) }
+        }
+
+        // The classic forfeit (the arena trapdoors, as a command until the duel overlay grows a
+        // button): concede the fight and hand the whole stake to your opponent. Denied by the
+        // No Forfeit rule and during the countdown, exactly like the original.
+        onCommand("forfeit", description = "Forfeit your duel — your opponent takes the stake") {
+            val d = DuelArena.duelOf(player)
+            when {
+                d == null -> player.message("You're not in a duel.")
+                d.exhibition -> player.message("You can't forfeit a tournament match.")
+                !d.fighting -> player.message("The duel hasn't started yet.")
+                d.rules.noForfeit -> player.message("The No Forfeit rule is set — this duel is to the death.")
+                else -> resolve(d, loser = player, end = DuelEnd.FORFEIT)
+            }
         }
 
         // ── rules-grid interface routing (cache group DuelRulesScreen.IFACE) ──
@@ -276,6 +325,9 @@ class DuelArenaPlugin(
             allowCompanions = allowCompanions,
             disabledSlots = disabledSlots, allowedWeapons = allowedWeapons, gearLabel = gearLabel,
         )
+        // The menus only offer coherent packages, but the single winnability gate runs anyway —
+        // every rules entry path goes through DuelRules.validate() (see docs plan, Phase 1).
+        rules.validate()?.let { err -> player.message(err); return }
         if (busy(target)) { player.message("${target.username} is busy at the moment."); return }
         target.message("<col=801700>${player.username} set the duel rules: ${rules.summary()}.</col>")
         openStake(player, target, rules)
@@ -315,6 +367,15 @@ class DuelArenaPlugin(
 
     /** Both stakes are locked in (escrow) — allocate a private arena copy and start the duel. */
     private fun begin(a: Player, stakeA: List<Item>, b: Player, stakeB: List<Item>, rules: DuelRules) {
+        // The validation belt: every rules entry path calls validate() at accept time, but the
+        // stakes lock in HERE — an unfightable combo slipping through would trap two stakes in a
+        // stalemate, so refuse and refund rather than trust the screens.
+        rules.validate()?.let { err ->
+            award(a, stakeA)
+            award(b, stakeB)
+            listOf(a, b).forEach { it.message("<col=801700>The duel can't start: $err Your stake has been returned.</col>") }
+            return
+        }
         // One instanced pit PER DUEL (the Wizard-Tower pattern) — the whole server can duel at
         // once without ever sharing an arena. autoDeallocate is OFF because the "owner" is just
         // one of the fighters: their death/logout must not evict the opponent mid-payout. resolve()
@@ -336,40 +397,97 @@ class DuelArenaPlugin(
         a.attr[DUEL_ESCROW_ATTR] = escrowBlob(stakeA)
         b.attr[DUEL_ESCROW_ATTR] = escrowBlob(stakeB)
 
-        a.moveTo(instance.translate(RED_SPAWN))
-        b.moveTo(instance.translate(BLUE_SPAWN))
+        // Classic spawn shape: No-Movement duels start on ADJACENT tiles (so melee always
+        // connects — the original's fix for the rooted-stalemate scam); everything else starts
+        // the fighters apart.
+        val (spawnA, spawnB) = if (rules.noMovement) NM_RED_SPAWN to NM_BLUE_SPAWN else RED_SPAWN to BLUE_SPAWN
+        a.moveTo(instance.translate(spawnA))
+        b.moveTo(instance.translate(spawnB))
+        a.facePawn(b)
+        b.facePawn(a)
         // Enforce gear rules up front — force off anything the rules disallow before the fight.
         stripDisallowed(a, rules)
         stripDisallowed(b, rules)
-        a.setCurrentHp(a.getMaxHp())
-        b.setCurrentHp(b.getMaxHp())
+        // The classic level playing field: both fighters enter fully normalized — no pre-potted
+        // boosts, pre-charged specs, loaded Vengeance, ticking poison or divine re-boost timers.
+        normalizeCombatState(a)
+        normalizeCombatState(b)
+        val forfeitLine = if (rules.noForfeit) "No forfeit — this one's to the death!"
+        else "Type ::forfeit to concede (your opponent takes the stake)."
         listOf(a, b).forEach {
-            it.message("<col=801700>The stakes are set. Rules: ${rules.summary()}. Winner takes all — no forfeit.</col>")
+            it.message("<col=801700>The stakes are set. Rules: ${rules.summary()}. Winner takes all. $forfeitLine</col>")
         }
+    }
+
+    /**
+     * The classic duel-start/duel-end reset — both fighters on equal footing, nothing carried in
+     * or out: boosted AND drained stats to base (includes full HP), prayers stopped, special
+     * attack to 100%, run energy full, poison/venom cured, a loaded Vengeance cleared, a queued
+     * spec un-armed, and a divine potion's recurring re-boost cancelled (a plain stat reset would
+     * silently re-boost 15s later). Also the "hospital treatment" at duel end.
+     */
+    private fun normalizeCombatState(p: Player) {
+        p.getSkills().restoreAll()
+        Prayers.deactivateAll(p)
+        AttackTab.setEnergy(p, 100)
+        p.setVarp(AttackTab.SPECIAL_ATTACK_VARP, 0)
+        PotionsPlugin.cancelDivineReboost(p)
+        p.runEnergy = MAX_RUN_ENERGY
+        p.sendRunEnergy(p.runEnergy.toInt())
+        if ((p.attr[POISON_TICKS_LEFT_ATTR] ?: 0) > 0) {
+            p.attr[POISON_TICKS_LEFT_ATTR] = 0
+            Poison.setHpOrb(p, Poison.OrbState.NONE)
+        }
+        p.attr.remove(Vengeance.ACTIVE)
     }
 
     private fun tick(d: Duel) {
         if (d.a.index < 0 || d.b.index < 0) return // logout handled by onLogout
-        if (!d.fighting) {
-            d.countdown--
-            when (d.countdown) {
-                2, 1 -> broadcast(d, "<col=ff0000>${d.countdown}...</col>")
-                0 -> {
-                    d.fighting = true
-                    broadcast(d, "<col=ff0000>FIGHT!</col>")
-                    d.a.attack(d.b)
-                    d.b.attack(d.a)
-                }
-            }
-        } else if (d.rules.noMovement) {
-            // "No movement" — keep both rooted by refreshing the freeze timer every tick (it wears off).
+        if (d.rules.noMovement) {
+            // "No movement" — rooted from the moment they land on the adjacent spawns, countdown
+            // included (a step apart during the count would re-create the melee stalemate), by
+            // refreshing the freeze timer every tick (it wears off).
             d.a.timers[FROZEN_TIMER] = 4
             d.b.timers[FROZEN_TIMER] = 4
         }
+        if (!d.fighting) {
+            d.countdown--
+            when (d.countdown) {
+                3, 2, 1 -> {
+                    // Classic presentation: the count is called overhead by both fighters.
+                    overhead(d, "${d.countdown}")
+                    broadcast(d, "<col=ff0000>${d.countdown}...</col>")
+                }
+                0 -> {
+                    d.fighting = true
+                    overhead(d, "FIGHT!")
+                    broadcast(d, "<col=ff0000>FIGHT!</col>")
+                    // Fair opener: who swings first is a coin flip, not challenger-always-first.
+                    // (Within the fight, the engine's OSRS-style PID shuffle owns tick order.)
+                    val (first, second) = if (world.random(1) == 0) d.a to d.b else d.b to d.a
+                    first.attack(d.opponentOf(first))
+                    second.attack(d.opponentOf(second))
+                }
+            }
+            return
+        }
+        // Classic 15-minute limit: a staked duel nobody can finish is called a draw, both stakes
+        // refunded — the escape valve for turtled fights. Exhibition (tournament) matches keep
+        // their own lifecycle.
+        if (!d.exhibition) {
+            d.fightTicks++
+            if (d.fightTicks == DRAW_WARN_TICK) {
+                broadcast(d, "<col=ff0000>One minute remains — if nobody falls, the duel is a draw.</col>")
+            }
+            if (d.fightTicks >= DRAW_TICK) {
+                resolveDraw(d, "Time is up")
+                return
+            }
+        }
     }
 
-    /** [loser] died / forfeited — [winner] takes both stakes; tidy up and void the escrow refund. */
-    private fun resolve(d: Duel, loser: Player) {
+    /** [loser] died / forfeited / fled — [winner] takes both stakes; tidy up and void the escrow refund. */
+    private fun resolve(d: Duel, loser: Player, end: DuelEnd = DuelEnd.DEATH) {
         if (!DuelArena.active.remove(d)) return // already resolved (guard double-fire)
         val winner = d.opponentOf(loser)
 
@@ -378,20 +496,68 @@ class DuelArenaPlugin(
         d.b.attr.remove(DUEL_ESCROW_ATTR)
 
         if (!d.exhibition) award(winner, d.stakes)
-        winner.setCurrentHp(winner.getMaxHp())
-        // Both fighters go back to the tiles they were standing on when the stake locked in.
-        // The loser's death already dropped them at the instance's fallback exit (or the logout
-        // path moved them there) — this override lands them home; emptying the pit also lets the
-        // allocator's idle scan reclaim the instance.
-        if (winner.index >= 0) winner.moveTo(d.returnTileOf(winner))
-        if (loser.index >= 0) loser.moveTo(d.returnTileOf(loser))
+        // Send home FIRST, restore second: sendHome() keys off isDead() to spot a death sequence
+        // still in flight, and the restore below heals — reversing the order would erase that
+        // signal and strand the second faller of a double-KO on the fallback exit.
+        // Both fighters go back to the tiles they were standing on when the stake locked in;
+        // emptying the pit also lets the allocator's idle scan reclaim the instance.
+        sendHome(winner, d)
+        sendHome(loser, d)
+        // The hospital treatment: both fighters leave fully restored (stats, prayer, spec, run
+        // energy, poison) — classic duel-end behaviour, and it doubles as buff cleanup.
+        listOf(winner, loser).forEach { p -> if (p.index >= 0) { normalizeCombatState(p); p.resetFacePawn() } }
         if (!d.exhibition) {
-            winner.message("<col=007f00>You won the duel and claimed the stake!</col>")
-            if (loser.index >= 0) loser.message("<col=ff0000>You lost the duel — your stake is gone.</col>")
+            when (end) {
+                DuelEnd.DEATH -> {
+                    winner.message("<col=007f00>You won the duel and claimed the stake!</col>")
+                    if (loser.index >= 0) loser.message("<col=ff0000>You lost the duel — your stake is gone.</col>")
+                }
+                DuelEnd.FORFEIT -> {
+                    winner.message("<col=007f00>${loser.username} forfeits — you claim the stake!</col>")
+                    if (loser.index >= 0) loser.message("<col=ff0000>You forfeit the duel — the stake goes to ${winner.username}.</col>")
+                }
+                DuelEnd.LOGOUT ->
+                    winner.message("<col=007f00>${loser.username} fled the duel — you claim the stake!</col>")
+            }
         }
-        logger.info { "DUEL winner=${winner.username} loser=${loser.username} exhibition=${d.exhibition} pot=${d.stakes.sumOf { it.amount.toLong() }} items" }
+        logger.info { "DUEL winner=${winner.username} loser=${loser.username} end=$end exhibition=${d.exhibition} pot=${d.stakes.sumOf { it.amount.toLong() }} items" }
         d.onResolved?.invoke(winner, loser)
         d.onResolved = null
+    }
+
+    /**
+     * The duel produced no winner — a double KO (both principals' deaths overlapped) or the
+     * 15-minute limit. Each side gets their OWN stake back; nothing changes hands. A side that
+     * is offline keeps their [DUEL_ESCROW_ATTR] so the login crash-refund path pays them instead.
+     * Never called for exhibition duels ([Duel.drawPending] and the timer both guard on it).
+     */
+    private fun resolveDraw(d: Duel, why: String) {
+        if (!DuelArena.active.remove(d)) return // already resolved (guard double-fire)
+        listOf(d.a to d.stakeA, d.b to d.stakeB).forEach { (p, ownStake) ->
+            if (p.index >= 0) {
+                p.attr.remove(DUEL_ESCROW_ATTR)
+                award(p, ownStake)
+                sendHome(p, d) // BEFORE the restore — it keys off isDead() (see resolve())
+                normalizeCombatState(p)
+                p.resetFacePawn()
+                p.message("<col=801700>$why — the duel is a draw. Your stake has been returned.</col>")
+            }
+            // Offline side: escrow attr stays put → their stake refunds on next login.
+        }
+        logger.info { "DUEL DRAW a=${d.a.username} b=${d.b.username} why=\"$why\" pot=${d.stakes.sumOf { it.amount.toLong() }} items" }
+        d.onResolved = null
+    }
+
+    /**
+     * Return [p] to their pre-duel tile. A fighter whose death sequence is still in flight can't
+     * be moved now — their respawn (which runs after us) would override the teleport with the
+     * instance's fallback exit — so the tile is parked on [DUEL_RETURN_ATTR] and the post-death
+     * hook applies it once the respawn is done.
+     */
+    private fun sendHome(p: Player, d: Duel) {
+        if (p.index < 0) return
+        if (p.isDead()) p.attr[DUEL_RETURN_ATTR] = d.returnTileOf(p)
+        else p.moveTo(d.returnTileOf(p))
     }
 
     // ───────────────────────────── helpers ─────────────────────────────
@@ -407,6 +573,12 @@ class DuelArenaPlugin(
     private fun broadcast(d: Duel, msg: String) {
         if (d.a.index >= 0) d.a.message(msg)
         if (d.b.index >= 0) d.b.message(msg)
+    }
+
+    /** Both fighters call [text] overhead (the classic countdown presentation). */
+    private fun overhead(d: Duel, text: String) {
+        if (d.a.index >= 0) d.a.forceChat(text)
+        if (d.b.index >= 0) d.b.forceChat(text)
     }
 
     private fun escrowBlob(items: List<Item>): String {
@@ -426,7 +598,14 @@ class DuelArenaPlugin(
         /** Player right-click slot for "Challenge" (2..5 = Attack/Follow/Trade/Report; 6 is free). */
         const val CHALLENGE_OPTION_SLOT = 6
 
-        const val COUNTDOWN_TICKS = 3
+        /** 4 ticks → the full classic "3", "2", "1", "FIGHT!" call (one step per tick). */
+        const val COUNTDOWN_TICKS = 4
+
+        private const val MAX_RUN_ENERGY = 10000.0
+
+        // Classic 15-minute draw limit on staked duels (1,500 ticks), with a one-minute warning.
+        const val DRAW_TICK = 1500
+        const val DRAW_WARN_TICK = DRAW_TICK - 100
 
         // Source of each duel's private arena copy: the NORTH-EAST Duel-Arena pit (mapdump-verified:
         // region 13362, pit interior x3370..3389 z3246..3258, row z3251 fully clear). Chunk-aligned
@@ -436,6 +615,10 @@ class DuelArenaPlugin(
         // Spawn tiles in SOURCE coordinates — translated into the allocated instance per duel.
         val RED_SPAWN = Tile(3374, 3251, 0)
         val BLUE_SPAWN = Tile(3382, 3251, 0)
+        // No-Movement duels start ADJACENT (centre of the same clear row) so melee always
+        // connects — spread spawns + rooted fighters would be an unwinnable stalemate.
+        val NM_RED_SPAWN = Tile(3377, 3251, 0)
+        val NM_BLUE_SPAWN = Tile(3378, 3251, 0)
         // The instance's exit tile: the old arena lobby, near the trainer (mapdump-verified
         // walkable). Only a fallback — resolve() sends both fighters back to their return tiles;
         // this catches the odd path (death/logout placement, allocator teardown sweep).

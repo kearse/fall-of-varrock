@@ -1,5 +1,6 @@
 package org.alter.plugins.content.minigames.duel
 
+import org.alter.api.EquipmentType
 import org.alter.game.model.Tile
 import org.alter.game.model.World
 import org.alter.game.model.entity.Player
@@ -120,7 +121,34 @@ class DuelRules(
         }
         return if (parts.isEmpty()) "No rules" else parts.joinToString(", ")
     }
+
+    /**
+     * The single winnability/escapability gate every rules entry path (overlay, cache grid,
+     * chatbox menus) and [begin] itself must pass — the classic dependency matrix. Each banned
+     * pair below exists because the original game shipped without it and someone weaponised the
+     * gap (see docs/duel-arena-research.md §2.3). Returns the refusal message, or null when the
+     * rule set is fightable.
+     */
+    fun validate(): String? {
+        val meleeOnlyWeapons = allowedWeapons != null || EquipmentType.WEAPON.id in disabledSlots
+        return when {
+            noMelee && noRanged && noMagic ->
+                "You must leave at least one combat style available."
+            noForfeit && noMovement ->
+                "No Forfeit can't be set with No Movement — a stalled duel could never end."
+            noForfeit && noMelee ->
+                "No Forfeit can't be set with No Melee — a fighter could run out of ammo or runes."
+            // Every weapon whitelist we offer (whip / DDS / fun weapons) and bare-fist boxing are
+            // melee — pairing them with No Melee leaves no sanctioned way to swing.
+            noMelee && meleeOnlyWeapons ->
+                "That weapon restriction is a melee restriction — it can't be set with No Melee."
+            else -> null
+        }
+    }
 }
+
+/** How a duel ended — picks the resolution messaging. */
+enum class DuelEnd { DEATH, FORFEIT, LOGOUT }
 
 /** One live duel: the two combatants, their escrowed stakes, their private arena, and the fight phase. */
 class Duel(
@@ -154,6 +182,17 @@ class Duel(
 
     /** Countdown ticks remaining before the fight starts. */
     var countdown = 0
+
+    /** Ticks fought since "FIGHT!" — staked duels are called a draw at the classic 15 minutes. */
+    var fightTicks = 0
+
+    /**
+     * Set (via the pre-death hook) when BOTH principals' death sequences overlap — a double KO.
+     * The first post-death hook to fire then resolves the duel as a draw instead of letting
+     * processing order pick the winner. Never set for exhibition duels (the tournament needs a
+     * winner, and keeps the first-death-loses behaviour).
+     */
+    var drawPending = false
 
     /**
      * Companions knocked out during a companions-allowed duel. A dead companion auto-respawns at

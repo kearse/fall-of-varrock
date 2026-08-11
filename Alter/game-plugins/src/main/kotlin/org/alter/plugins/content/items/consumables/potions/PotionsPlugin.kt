@@ -280,19 +280,30 @@ class PotionsPlugin(
 
     private fun resolves(key: String): Boolean = try { getRSCM(key); true } catch (e: Exception) { false }
 
-    private companion object {
-        const val DRINK_ANIM = 829
-        const val POTION_DELAY_TICKS = 3
-        const val MAX_RUN_ENERGY = 10000.0
+    companion object {
+        private const val DRINK_ANIM = 829
+        private const val POTION_DELAY_TICKS = 3
+        private const val MAX_RUN_ENERGY = 10000.0
 
         // Divine potions: 10 HP per sip; the boost re-applies every 25 ticks (15s) for
         // 5 minutes (20 fires) — OSRS Wiki, Divine super combat potion.
-        const val DIVINE_SIP_COST = 10
-        const val DIVINE_REBOOST_INTERVAL = 25
-        const val DIVINE_REBOOST_FIRES = 20
-        val DIVINE_REBOOST_TIMER = org.alter.game.model.timer.TimerKey()
-        val DIVINE_EFFECT_ATTR = org.alter.game.model.attr.AttributeKey<String>()
-        val DIVINE_FIRES_LEFT_ATTR = org.alter.game.model.attr.AttributeKey<Int>()
+        private const val DIVINE_SIP_COST = 10
+        private const val DIVINE_REBOOST_INTERVAL = 25
+        private const val DIVINE_REBOOST_FIRES = 20
+        private val DIVINE_REBOOST_TIMER = org.alter.game.model.timer.TimerKey()
+        private val DIVINE_EFFECT_ATTR = org.alter.game.model.attr.AttributeKey<String>()
+        private val DIVINE_FIRES_LEFT_ATTR = org.alter.game.model.attr.AttributeKey<Int>()
+
+        /**
+         * Cancel a running divine re-boost outright (timer + tracking state). The duel arena's
+         * combat-state normalization needs this: a plain stat reset would silently re-boost within
+         * 15 seconds when the recurring timer next fires.
+         */
+        fun cancelDivineReboost(p: Player) {
+            p.timers.remove(DIVINE_REBOOST_TIMER)
+            p.attr.remove(DIVINE_EFFECT_ATTR)
+            p.attr.remove(DIVINE_FIRES_LEFT_ATTR)
+        }
 
         // Poison-cure immunity in POISON_TIMER fires (each = 30 ticks = 18s).
         const val IMMUNITY_ANTIPOISON = 5   // 90s

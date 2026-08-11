@@ -65,10 +65,11 @@ These are live bugs or unfairness in what's built (research §4 gaps 1–3, 7).
    (trapdoor objects if the instanced pit's map has them, otherwise an option on the duel
    status overlay/`::forfeit`). Forfeiter loses the whole stake (existing `resolve()` path,
    distinct message). When `noForfeit` on, hide/deny it. Update wiki article wording.
-6. **PID fairness audit** — determine Alter's player processing order. If deterministic,
-   alternate which duelist is processed first per tick (or randomize per duel) so close
-   whip/boxing duels aren't decided by list position. The same-tick-death = draw rule (fix
-   3) removes the worst case regardless.
+6. **PID fairness audit** — **RESOLVED: already faithful.** Alter's `PlayerCycleTask` cycles
+   players by a `processingPriority` that `World.shufflePidsIfDue()` re-deals randomly every
+   100–150 ticks — the OSRS PID shuffle, exactly. Phase 1 adds two things on top: the
+   FIGHT! opening swing order is a per-duel coin flip (not challenger-first), and the
+   double-KO draw rule (fix 3) removes the one place PID could still pick a stake winner.
 
 ## Phase 2 — complete the classic rule set
 
