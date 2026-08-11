@@ -114,7 +114,7 @@ class RogueKnightCampPlugin(
                 }
                 player.message("  ${def.rank + 1}. ${def.name} — ${def.camp.display}: $state")
             }
-            player.message("The marker leads to your hunt. Camps: safe ground until the deep wild — past Varrock, you risk what you carry.")
+            player.message("The marker leads to your hunt (::huntarrow turns the arrow off/on). Camps: safe ground until the deep wild — past Varrock, you risk what you carry.")
         }
 
         onCommand("huntknight", description = "Farm a beaten Rogue Knight: ::huntknight <number>") {

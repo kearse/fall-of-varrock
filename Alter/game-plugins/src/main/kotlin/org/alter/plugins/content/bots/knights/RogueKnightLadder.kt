@@ -5,6 +5,7 @@ import org.alter.game.model.attr.ROGUE_KNIGHT_RANK_ATTR
 import org.alter.game.model.attr.ROGUE_KNIGHT_TARGET_ATTR
 import org.alter.game.model.entity.Player
 import org.alter.plugins.content.announce.Announce
+import org.alter.plugins.content.hunt.TargetMarker
 import org.alter.plugins.content.quests.QuestJournal
 import org.alter.plugins.content.war.roguehunt.RogueProblem
 import org.alter.rscm.RSCM.getRSCM
@@ -62,6 +63,9 @@ object RogueKnightLadder {
         if (idx >= rank(p)) return false
         p.attr[ROGUE_KNIGHT_TARGET_ATTR] = idx
         p.message("<col=801700>Hunting ${def.name}</col> at ${def.camp.display} — the marker will lead you. (::knights to switch back.)")
+        if (TargetMarker.muted(p)) {
+            p.message("Your tracking arrow is switched off — type <col=801700>::huntarrow</col> to see the marker.")
+        }
         return true
     }
 

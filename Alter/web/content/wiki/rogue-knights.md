@@ -4,7 +4,7 @@ category: PvP & Wilderness
 summary: Fourteen named boss PKers across seven organized camps. The Sergeant assigns them weakest to strongest - each one you beat unlocks the gear for the next, all the way to AGS-class loot.
 order: 6
 updated: 2026-08-05
-infobox: Type = Boss ladder (repeatable); Start = The Rogue Problem quest (auto); Giver = Recruiting Sergeant (Lumbridge gate); Length = 14 knights, 7 camps; Tracking = Hint arrow + ::knights; Reward = PK gear per knight, up to AGS / dragon claws / Ancient Warrior sets
+infobox: Type = Boss ladder (repeatable); Start = The Rogue Problem quest (auto); Giver = Recruiting Sergeant (Lumbridge gate); Length = 14 knights, 7 camps; Tracking = Hint arrow (toggle with ::huntarrow) + ::knights; Reward = PK gear per knight, up to AGS / dragon claws / Ancient Warrior sets
 ---
 
 The deserters who lead Varrock's rogues style themselves **Rogue Knights** - a ladder of **fourteen named boss PKers**, weakest to strongest, camped from the Lumbridge road to the deepest wilderness. The **Recruiting Sergeant** assigns them **in order**: kill your mark, rank up, and he names the next. Every knight you beat hands you a **first-kill gear unlock** - deliberately the core of the kit that beats the *next* one - so the ladder is both your PK training and your gear progression in one track.
@@ -15,7 +15,7 @@ They fight like humans in one more way: **fight momentum (PID)**. Just like the 
 
 ## Finding your knight
 
-- A **marker arrow** tracks your hunt the whole way: it points to the camp from anywhere on the map, then locks onto the knight itself once you're close. (Toggle with the quest-guidance mute.)
+- A **marker arrow** tracks your hunt the whole way: it points to the camp from anywhere on the map, then locks onto the knight itself once you're close. Type `::huntarrow` to switch the arrow off or on whenever you like - your hunt stays assigned either way. (The quest-guidance mute, `::questguide`, also hides it along with all other guidance.)
 - `::knights` shows the whole ladder - beaten, assigned, locked - with camp directions.
 - When you reach the camp, **your knight walks out to meet you** - every hunter gets their own copy of the knight, bound to them alone. Nobody can steal your kill or your fight, no matter how many players share your assignment.
 - Killed your mark? It respawns for you about 45 seconds later if you want to farm it - or move up the ladder.
