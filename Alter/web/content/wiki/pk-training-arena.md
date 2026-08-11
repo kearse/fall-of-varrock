@@ -85,7 +85,7 @@ the kit editor appears in bank mode: pick a saved kit, build one from your bank'
 into the editor. Tweak it however you like, then press **Save** to keep it in one of your three
 kit slots (double-click the kit's name to rename it).
 
-Building feels like using your bank. The browser shows your bank (as of your last visit) with
+Building feels like using your bank. The browser shows your bank with
 real stack counts - **type in the search bar to filter it live**, and use the **All / Gear /
 Food / Pot / Misc** tabs to browse by type. **Click** a bank item to withdraw it into the kit's
 pack, or **right-click** for options: Equip puts gear straight onto the doll (ammo equips its

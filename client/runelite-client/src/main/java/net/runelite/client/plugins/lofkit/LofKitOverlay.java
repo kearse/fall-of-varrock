@@ -165,8 +165,9 @@ class LofKitOverlay extends Overlay
 	private volatile String searchQuery = "";
 	private volatile boolean searchFocused;
 	// The filtered bank (ids + stack sizes), rebuilt on the client thread only when its inputs
-	// change. NOTE the bank container is the client's cache from the last bank visit — counts can
-	// drift after a remote kit load until the next visit; the server clamps every real withdraw.
+	// change. The bank container is the client-side cache: the server pushes it when the editor
+	// opens (the cache is wiped on login/hop) and again whenever the bank changes, so it stays
+	// current; the server additionally clamps every real withdraw to actual stock.
 	private int[] filteredIds = new int[0];
 	private int[] filteredQtys = new int[0];
 	private long paletteFingerprint = Long.MIN_VALUE;
@@ -785,11 +786,22 @@ class LofKitOverlay extends Overlay
 			g.setFont(FontManager.getRunescapeSmallFont());
 			if (pal.length == 0)
 			{
-				LofTheme.shadowText(g,
-					filteredIds.length == 0 && searchQuery.isEmpty() && bankCat == LofKitItems.CAT_ALL
-						? "Visit a bank once to browse it here."
-						: "Nothing matches.",
-					ox + PAL_X, palTop(oy) + 14, LofTheme.TEXT_DIM);
+				// The server pushes the bank container when the editor opens, so a null container
+				// only lasts until the next game tick delivers it.
+				final String empty;
+				if (client.getItemContainer(InventoryID.BANK) == null)
+				{
+					empty = "Fetching your bank...";
+				}
+				else if (searchQuery.isEmpty() && bankCat == LofKitItems.CAT_ALL)
+				{
+					empty = "Your bank is empty.";
+				}
+				else
+				{
+					empty = "Nothing matches.";
+				}
+				LofTheme.shadowText(g, empty, ox + PAL_X, palTop(oy) + 14, LofTheme.TEXT_DIM);
 			}
 			// Scrollbar along the grid's right edge (wheel scrolls; thumb is display-only).
 			final int viewH = PAL_ROWS_BANK * (PAL_SZ + PAL_GAP) - PAL_GAP;

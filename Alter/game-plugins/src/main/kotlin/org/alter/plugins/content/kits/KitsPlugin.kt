@@ -147,6 +147,10 @@ class KitsPlugin(
     private fun openEditor(p: Player) {
         if (KitEditor.isOpen(p)) return
         if (TrainingArena.kitted(p)) { p.message("Hand the training kit back first (::unkit)."); return }
+        // Push the bank container to the client: its palette is the client-side bank cache, which
+        // is wiped on every login/world-hop while the server only resends on CHANGE (bank.dirty) —
+        // without this, opening the editor before visiting a bank showed an empty browser.
+        p.bank.dirty = true
         KitEditor.open(p, KitEditor.Mode.BANK, onLoad = { kit -> loadFromBank(p, kit) })
     }
 
