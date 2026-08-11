@@ -165,24 +165,68 @@ class CompanionSparringPlugin(
 
     // ───────────────────────────── setup via the themed overlay ─────────────────────────────
 
-    private fun openOverlay(owner: Player, comp: CompanionPawn, carried: SparSettings? = null) {
+    private fun openOverlay(
+        owner: Player,
+        comp: CompanionPawn,
+        carried: SparSettings? = null,
+        phase: SparringClientMenu.Phase = SparringClientMenu.Phase.SETTINGS,
+    ) {
         if (!validateChallenge(owner, comp)) return
         val settings = carried ?: CompanionSparring.lastSettingsOf(owner) ?: SparSettings()
         SparringClientMenu.open(
             owner, comp, settings,
             onStart = { startSpar(owner, comp, it) },
             onEditKit = { st ->
-                // Hand off to the kit locker; its finish re-opens this screen with the kit applied.
+                // Hand off to the kit locker for the COMPANION's custom kit; finishing (or closing)
+                // re-opens the settings screen.
                 if (!KitEditor.isOpen(owner)) {
-                    KitEditor.open(owner, KitEditor.Mode.TRAINING, onStart = { kit, _ ->
-                        st.companionKit = kit
-                        st.companionKitMode = CompanionKitMode.CUSTOM
-                        owner.message("<col=4f9b4f>Sir ${comp.username} will fight in that kit.</col>")
-                        openOverlay(owner, comp, st)
-                    })
+                    KitEditor.open(
+                        owner, KitEditor.Mode.TRAINING,
+                        seed = st.companionKit, seedName = "Sir ${comp.username}'s kit",
+                        onStart = { kit, _ ->
+                            st.companionKit = kit
+                            st.companionKitMode = CompanionKitMode.CUSTOM
+                            owner.message("<col=4f9b4f>Sir ${comp.username} will fight in that kit.</col>")
+                            resume(owner) { openOverlay(owner, comp, st) }
+                        },
+                        onClosed = { resume(owner) { openOverlay(owner, comp, st) } },
+                    )
                 }
             },
+            onKitStep = { st -> openKitStep(owner, comp, st) },
+            phase = phase,
         )
+    }
+
+    /**
+     * The duel-arena kit step between settings and confirm: the kit locker opens on the OWNER's
+     * bout loadout. "Start bout" locks the built kit in as their loaner; closing with X keeps
+     * their own gear. Either way the flow lands on the CONFIRM overview.
+     */
+    private fun openKitStep(owner: Player, comp: CompanionPawn, settings: SparSettings) {
+        if (KitEditor.isOpen(owner)) return
+        owner.message("Confirm your loadout — or close the locker to fight in your own gear.")
+        KitEditor.open(
+            owner, KitEditor.Mode.TRAINING,
+            seed = settings.playerKit, seedName = "Spar loadout",
+            onStart = { kit, _ ->
+                settings.playerKit = kit
+                owner.message("<col=4f9b4f>You'll be loaned that kit for the bout.</col>")
+                resume(owner) { openOverlay(owner, comp, settings, phase = SparringClientMenu.Phase.CONFIRM) }
+            },
+            onClosed = {
+                settings.playerKit = null // X = fight in my own gear (Back on the overview re-enters)
+                resume(owner) { openOverlay(owner, comp, settings, phase = SparringClientMenu.Phase.CONFIRM) }
+            },
+        )
+    }
+
+    /** Run [action] next tick via the player's queue — a queue never fires for a player who logged
+     *  out in between, which is exactly the guard these resume hops need (KitEditor.close also
+     *  runs on logout, and its onClosed must not re-open a screen for a leaving player). */
+    private fun resume(owner: Player, action: () -> Unit) {
+        if (owner.index < 0) return
+        owner.queue { action() }
     }
 
     // ───────────────────────────── setup dialogue (chatbox fallback) ─────────────────────────────
@@ -201,7 +245,19 @@ class CompanionSparringPlugin(
                 "Never mind.",
                 title = "Spar against Sir ${comp.username}?",
             )) {
-                1 -> { startSpar(owner, comp, settings); return }
+                1 -> {
+                    // The duel-arena final confirm: one read-back of the whole arrangement.
+                    when (options(
+                        owner,
+                        "Fight!",
+                        "Them: ${settings.fightStyle.label} · ${settings.difficulty.label} · ${settings.companionKitMode.label}; me: $myKit.",
+                        "Back.",
+                        title = "Confirm — rules: ${settings.rules.summary()}",
+                    )) {
+                        1 -> { startSpar(owner, comp, settings); return }
+                        else -> {} // back to the main menu loop
+                    }
+                }
                 2 -> partnerMenu(owner, settings)
                 3 -> if (!loadoutMenu(owner, comp, settings)) return // handed off to the kit editor
                 4 -> rulesMenu(owner, settings)
@@ -389,6 +445,9 @@ class CompanionSparringPlugin(
         comp.facePawn(owner)
 
         TrainingArena.setInBout(owner, true) // the owner's OTHER companions stand down
+        // Tell the client which companion is the live opponent, so its menu tidy-up (which hides
+        // "Attack" on your own companions) leaves this one attackable for the bout.
+        SparringClientMenu.setOpponent(owner, comp.index)
         s.fighting = false
         s.countdown = TrainingArena.COUNTDOWN_STEPS
 
@@ -410,9 +469,16 @@ class CompanionSparringPlugin(
         if (!s.fighting) {
             s.countdown--
             when {
-                s.countdown > 0 -> owner.message("<col=ff0000>${s.countdown}...</col>")
+                s.countdown > 0 -> {
+                    // Duel-arena style: both fighters call the count overhead, plus the chat line.
+                    owner.forceChat("${s.countdown}")
+                    comp.forceChat("${s.countdown}")
+                    owner.message("<col=ff0000>${s.countdown}...</col>")
+                }
                 s.countdown == 0 -> {
                     s.fighting = true
+                    owner.forceChat("FIGHT!")
+                    comp.forceChat("FIGHT!")
                     owner.message("<col=ff0000>FIGHT!</col>")
                     comp.ambushEverywhere = true // arm the brain (the pit isn't wilderness)
                     comp.attack(owner)
@@ -480,6 +546,7 @@ class CompanionSparringPlugin(
 
         // ── owner restore ──
         TrainingArena.setInBout(owner, false)
+        if (owner.index >= 0) SparringClientMenu.setOpponent(owner, null) // "Attack" hides again
         if (owner.index >= 0) {
             if (s.instance.contains(owner.tile)) owner.moveTo(TrainingArena.EXIT_TILE)
             if (owner.attr[PK_ARENA_STASH_ATTR] != null) {

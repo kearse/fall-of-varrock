@@ -20,8 +20,10 @@ import org.alter.game.model.entity.Player
  */
 object QuestBook {
 
-    /** Overlay-open varp (docs/overlay-design-system.md §8). Value = focused chain index + 1; 0 = closed. */
-    const val OPEN_VARP = 4645
+    /** Overlay-open varp (docs/overlay-design-system.md §8). Value = focused chain index + 1; 0 = closed.
+     *  Was 4645 — that id sits inside the kit editor's 4640-4679 slot block, so publishing a kit
+     *  whose chest slot was filled pulsed this open (::kits popped the quest journal). */
+    const val OPEN_VARP = 4683
 
     // Chain indices — must match client LofQuest.CHAIN order.
     const val RECRUIT_TRIALS = 0

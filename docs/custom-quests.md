@@ -29,16 +29,18 @@ custom client reads (same transport as the war HUD — no custom packets):
 | **4612** | 1 while quest guidance is muted (free play), else 0 |
 | **4617** | Rogue Hunting I + II (one shared chain), packed: bits 0-5 step ordinal, bits 6-11 rogues felled on HUNT |
 | **4624** | War-Prep II — Ranged, packed: bits 0-5 step ordinal, bits 6-11 enemies felled with a ranged weapon on FIELD |
-| **4643** | War-Prep III — Survival step ordinal, bits 0-5 |
+| **4681** | War-Prep III — Survival step ordinal, bits 0-5 (was 4643 — collided with the kit editor's 4640-4679 block) |
 | **4633** | King of Lumbridge (endgame conquest) step ordinal, bits 0-5 |
 
 A 3-tick world poll re-derives these from the persistent attributes (which stay the source of
 truth) and only writes on change. **Custom-varp registry so far:** 4600 siege alert · 4601 war
 progress · 4602-4605 PK stats · 4606 wilderness level · 4607 teleport menu · 4608 LMS HUD ·
 **4610-4612 quests** · 4617 quests (rogue) · 4620-4623 CW timer · **4624 quests (War-Prep II)** ·
-**4633 quests (King of Lumbridge)** · **4643 quests (War-Prep III)** · **4644 quests (Rogue Knight
-ladder)** · **4645 Quest Journal window open-pulse** (`QuestBook.OPEN_VARP`). Claim the next one
-here when you add a system.
+**4633 quests (King of Lumbridge)** · 4640-4679 kit editor · 4680 companion sparring ·
+**4681 quests (War-Prep III)** · **4682 quests (Rogue Knight ladder)** · **4683 Quest Journal
+window open-pulse** (`QuestBook.OPEN_VARP`) — the quest trio moved off 4643-4645, which sat inside
+the kit editor's block and made `::kits` pop the quest journal. Claim the next one here when you
+add a system, and cross-check the master map in docs/overlay-design-system.md §8 FIRST.
 
 ### 2b. Free-play toggle (`::questguide`)
 
@@ -88,7 +90,7 @@ the quest's progress varp/varbit.
 2. Repack + re-CRC the cache; the client picks it up via js5.
 3. Server: replace the hardcoded quest-count varbits in `CharacterSummaryPlugin.kt:28-31`
    (marked `@TODO`) with real counts. Row clicks are now handled: `QuestBookPlugin`'s
-   `onButton(399, 7)` maps the clicked row to a quest and pulses `QuestBook.OPEN_VARP` (4645),
+   `onButton(399, 7)` maps the clicked row to a quest and pulses `QuestBook.OPEN_VARP` (4683),
    which the `lofquests` client opens as the custom **Quest Journal window**
    (`LofQuestBookOverlay`, styled after the Feudal Ranks screen). The same window is opened by
    `::quests`, the per-quest status commands (`::rogueproblem` / `::warpranged` / `::warpsurvival`),

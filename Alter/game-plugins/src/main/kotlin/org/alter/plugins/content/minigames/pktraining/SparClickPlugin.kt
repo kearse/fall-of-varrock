@@ -17,7 +17,10 @@ import org.alter.game.plugin.PluginRepository
  *   - `t<i>`  → toggle rule i (0..8)
  *   - `m<i>`  → companion loadout mode i ([CompanionKitMode]; 2 = Custom opens the kit locker)
  *   - `load`  → load the last-used setup
- *   - `start` → begin the bout
+ *   - `next`  → settings screen "Continue" (on to the kit-locker step)
+ *   - `accept`→ confirm screen "Accept" (begin the bout)
+ *   - `back`  → confirm screen "Back" (return to settings)
+ *   - `start` → legacy stale-client begin — phase-aware, advances the flow
  *   - `x`     → decline / close
  *
  * Also testable directly by typing `::sparclick t3` etc. in chat.
@@ -38,6 +41,9 @@ class SparClickPlugin(
         if (action == null || !SparringClientMenu.isOpen(p)) return
         when {
             action == "start" -> SparringClientMenu.start(p)
+            action == "next" -> SparringClientMenu.next(p)
+            action == "accept" -> SparringClientMenu.accept(p)
+            action == "back" -> SparringClientMenu.back(p)
             action == "x" -> SparringClientMenu.cancel(p)
             action == "load" -> SparringClientMenu.loadLast(p)
             action.startsWith("f") -> action.drop(1).toIntOrNull()?.let { SparringClientMenu.setStyle(p, it) }

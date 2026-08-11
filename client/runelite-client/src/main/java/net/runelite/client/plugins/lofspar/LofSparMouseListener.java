@@ -40,7 +40,15 @@ class LofSparMouseListener extends MouseAdapter
 
 		if (hit == LofSparOverlay.START)
 		{
-			plugin.sendAction("start");
+			plugin.sendAction("next"); // settings "Continue" → the kit-locker step
+		}
+		else if (hit == LofSparOverlay.ACCEPT)
+		{
+			plugin.sendAction("accept"); // confirm overview → begin the bout
+		}
+		else if (hit == LofSparOverlay.BACK)
+		{
+			plugin.sendAction("back"); // confirm overview → back to settings
 		}
 		else if (hit == LofSparOverlay.DECLINE)
 		{

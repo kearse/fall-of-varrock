@@ -436,18 +436,29 @@ public class CompanionsPlugin extends Plugin
 		}
 	}
 
-	/** Hide the "Attack" option on your own companions (matched by rendered world-index). */
+	/** Server SparringClientMenu.OPPONENT_VARP: live sparring opponent's world-index + 1 (0 = none).
+	 *  While a bout runs, that one companion must KEEP its "Attack" entry — it's the whole point. */
+	private static final int SPAR_OPPONENT_VARP = 4684;
+
+	/** Hide the "Attack" option on your own companions (matched by rendered world-index) —
+	 *  except the live sparring opponent, which stays attackable for the bout. */
 	@Subscribe
 	public void onMenuEntryAdded(MenuEntryAdded event)
 	{
-		if (!"Attack".equals(event.getOption()) || !isCompanion(event.getIdentifier()))
+		if (!"Attack".equals(event.getOption()) || !shouldHideAttack(event.getIdentifier()))
 		{
 			return;
 		}
 		final MenuEntry[] entries = client.getMenuEntries();
 		client.setMenuEntries(Arrays.stream(entries)
-			.filter(e -> !("Attack".equals(e.getOption()) && isCompanion(e.getIdentifier())))
+			.filter(e -> !("Attack".equals(e.getOption()) && shouldHideAttack(e.getIdentifier())))
 			.toArray(MenuEntry[]::new));
+	}
+
+	private boolean shouldHideAttack(int worldIndex)
+	{
+		return isCompanion(worldIndex)
+			&& worldIndex != client.getVarpValue(SPAR_OPPONENT_VARP) - 1;
 	}
 
 	private boolean isCompanion(int worldIndex)

@@ -39,8 +39,10 @@ class LofSparOverlay extends Overlay
 	static final int OUTSIDE = -1;
 	static final int INSIDE = 0;
 	static final int DECLINE = 1;
-	static final int START = 2;
+	static final int START = 2;   // settings phase: "Continue" (on to the kit step)
 	static final int LOAD = 3;
+	static final int ACCEPT = 4;  // confirm phase: begin the bout
+	static final int BACK = 5;    // confirm phase: return to settings
 	static final int RULE_BASE = 200;  // + rule index (0..8)
 	static final int STYLE_BASE = 100; // + fight-style index (0..3)
 	static final int DIFF_BASE = 110;  // + difficulty index (0..2)
@@ -93,6 +95,7 @@ class LofSparOverlay extends Overlay
 	// Computed on the CLIENT thread during render() and read by the mouse thread — the click path
 	// must read ONLY these cached values (see LofDuelOverlay's field note; same fix, same reason).
 	private volatile boolean showingCached;
+	private volatile boolean confirmCached; // varp bit 16: the read-only CONFIRM overview phase
 	private volatile LofModal.Placement placement;
 
 	/** Cached — safe to call from the mouse thread. */
@@ -125,6 +128,14 @@ class LofSparOverlay extends Overlay
 		final Point p = place.toLocal(canvas);
 		final int ox = place.ox, oy = place.oy;
 		if (!new Rectangle(ox, oy, WIN_W, WIN_H).contains(p)) return OUTSIDE;
+		if (confirmCached)
+		{
+			// The overview is read-only: just Back / Accept / Decline.
+			if (loadRect(ox, oy).contains(p)) return BACK;
+			if (startRect(ox, oy).contains(p)) return ACCEPT;
+			if (declineRect(ox, oy).contains(p)) return DECLINE;
+			return INSIDE;
+		}
 		if (loadRect(ox, oy).contains(p)) return LOAD;
 		if (startRect(ox, oy).contains(p)) return START;
 		if (declineRect(ox, oy).contains(p)) return DECLINE;
@@ -157,6 +168,9 @@ class LofSparOverlay extends Overlay
 		final int diff = (state >> 3) & 0x3;
 		final int rules = (state >> 5) & 0x1FF;
 		final int kitMode = (state >> 14) & 0x3;
+		final boolean confirm = (state & (1 << 16)) != 0;
+		final boolean loanerKit = (state & (1 << 17)) != 0;
+		confirmCached = confirm;
 		final int ox = place.ox, oy = place.oy;
 		final Point mouse = place.toLocal(mousePoint());
 
@@ -173,35 +187,63 @@ class LofSparOverlay extends Overlay
 		int titleX = ox + 14;
 		if (logo != null) { g.drawImage(logo, ox + 12, oy + 5, 28, 28, null); titleX = ox + 46; }
 		g.setFont(FontManager.getRunescapeBoldFont());
-		LofTheme.shadowText(g, "Companion Sparring", titleX, oy + 25, LofTheme.GOLD);
+		LofTheme.shadowText(g, confirm ? "Companion Sparring - Confirm" : "Companion Sparring", titleX, oy + 25, LofTheme.GOLD);
 
 		// section labels
 		g.setFont(FontManager.getRunescapeSmallFont());
 		LofTheme.shadowText(g, "COMBAT RULES", ox + PAD + 2, oy + TITLE_H + 22, LofTheme.GOLD_DIM);
-		LofTheme.shadowText(g, "SPARRING PARTNER", ox + RIGHT_X, oy + TITLE_H + 22, LofTheme.GOLD_DIM);
-		LofTheme.shadowText(g, "DIFFICULTY", ox + RIGHT_X, oy + DIFF_LABEL_Y, LofTheme.GOLD_DIM);
-		LofTheme.shadowText(g, "THEIR LOADOUT", ox + RIGHT_X, oy + KIT_LABEL_Y, LofTheme.GOLD_DIM);
+		if (confirm)
+		{
+			LofTheme.shadowText(g, "THE ARRANGEMENT", ox + RIGHT_X, oy + TITLE_H + 22, LofTheme.GOLD_DIM);
+		}
+		else
+		{
+			LofTheme.shadowText(g, "SPARRING PARTNER", ox + RIGHT_X, oy + TITLE_H + 22, LofTheme.GOLD_DIM);
+			LofTheme.shadowText(g, "DIFFICULTY", ox + RIGHT_X, oy + DIFF_LABEL_Y, LofTheme.GOLD_DIM);
+			LofTheme.shadowText(g, "THEIR LOADOUT", ox + RIGHT_X, oy + KIT_LABEL_Y, LofTheme.GOLD_DIM);
+		}
 
-		// rule checkboxes (green = a rule the bout enforces)
+		// rule checkboxes (green = a rule the bout enforces); read-only on the confirm overview
 		g.setFont(FontManager.getRunescapeFont());
 		for (int i = 0; i < RULES.length; i++)
 		{
 			final boolean on = (rules & (1 << i)) != 0;
-			row(g, ruleRect(ox, oy, i), RULES[i], on, GREEN, ruleRect(ox, oy, i).contains(mouse));
+			row(g, ruleRect(ox, oy, i), RULES[i], on, GREEN, !confirm && ruleRect(ox, oy, i).contains(mouse));
 		}
 
-		// partner radios (gold = the selected choice)
-		for (int i = 0; i < STYLES.length; i++)
+		if (confirm)
 		{
-			row(g, styleRect(ox, oy, i), STYLES[i], i == style, LofTheme.GOLD, styleRect(ox, oy, i).contains(mouse));
+			// The classic duel-arena second screen: a read-back of everything agreed, then Accept.
+			final String[] summary = {
+				"Fight style:  " + STYLES[style],
+				"Difficulty:  " + DIFFS[diff],
+				"Their loadout:  " + KITS[kitMode],
+				"Your loadout:  " + (loanerKit ? "Loaner kit (from the locker)" : "Your own gear"),
+			};
+			int sy = oy + STYLE_TOP + 8;
+			for (final String line : summary)
+			{
+				LofTheme.shadowText(g, line, ox + RIGHT_X, sy, LofTheme.TEXT);
+				sy += ROW_H + 8;
+			}
+			g.setFont(FontManager.getRunescapeSmallFont());
+			LofTheme.shadowText(g, "Check the terms - Accept starts the countdown.", ox + RIGHT_X, sy + 6, LofTheme.TEXT_DIM);
 		}
-		for (int i = 0; i < DIFFS.length; i++)
+		else
 		{
-			row(g, diffRect(ox, oy, i), DIFFS[i], i == diff, LofTheme.GOLD, diffRect(ox, oy, i).contains(mouse));
-		}
-		for (int i = 0; i < KITS.length; i++)
-		{
-			row(g, kitRect(ox, oy, i), KITS[i], i == kitMode, LofTheme.GOLD, kitRect(ox, oy, i).contains(mouse));
+			// partner radios (gold = the selected choice)
+			for (int i = 0; i < STYLES.length; i++)
+			{
+				row(g, styleRect(ox, oy, i), STYLES[i], i == style, LofTheme.GOLD, styleRect(ox, oy, i).contains(mouse));
+			}
+			for (int i = 0; i < DIFFS.length; i++)
+			{
+				row(g, diffRect(ox, oy, i), DIFFS[i], i == diff, LofTheme.GOLD, diffRect(ox, oy, i).contains(mouse));
+			}
+			for (int i = 0; i < KITS.length; i++)
+			{
+				row(g, kitRect(ox, oy, i), KITS[i], i == kitMode, LofTheme.GOLD, kitRect(ox, oy, i).contains(mouse));
+			}
 		}
 
 		// status
@@ -212,10 +254,18 @@ class LofSparOverlay extends Overlay
 		g.setFont(FontManager.getRunescapeSmallFont());
 		LofTheme.shadowText(g, status, ox + PAD + 2, oy + WIN_H - PAD - BTN_H - 8, maxStats ? GREEN : LofTheme.TEXT_DIM);
 
-		// buttons
+		// buttons — settings: Load Last / Continue / Decline; confirm: Back / Accept / Decline
 		g.setFont(FontManager.getRunescapeBoldFont());
-		button(g, loadRect(ox, oy), "Load Last", LofTheme.GOLD_DIM, loadRect(ox, oy).contains(mouse));
-		button(g, startRect(ox, oy), "Start Bout", LofTheme.GOLD, startRect(ox, oy).contains(mouse));
+		if (confirm)
+		{
+			button(g, loadRect(ox, oy), "Back", LofTheme.GOLD_DIM, loadRect(ox, oy).contains(mouse));
+			button(g, startRect(ox, oy), "Accept", LofTheme.GOLD, startRect(ox, oy).contains(mouse));
+		}
+		else
+		{
+			button(g, loadRect(ox, oy), "Load Last", LofTheme.GOLD_DIM, loadRect(ox, oy).contains(mouse));
+			button(g, startRect(ox, oy), "Continue", LofTheme.GOLD, startRect(ox, oy).contains(mouse));
+		}
 		button(g, declineRect(ox, oy), "Decline", LofTheme.EMBER, declineRect(ox, oy).contains(mouse));
 
 		LofModal.endWindow(g, place);

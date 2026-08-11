@@ -108,7 +108,7 @@ format (§2); it backs the master index up and verifies by re-decode. Rollback i
   totals — set them to our quest count for a tidy "quests completed" line.
 
 **Done:** the `onButton(399, 7)` row-click handler now ships (`QuestBookPlugin`). It maps the
-clicked row to a quest and pulses `QuestBook.OPEN_VARP` (4645), which opens the client-drawn
+clicked row to a quest and pulses `QuestBook.OPEN_VARP` (4683; was 4645), which opens the client-drawn
 **Quest Journal window** (`lofquests` / `LofQuestBookOverlay`) focused on that quest. NOTE: the
 slot→quest mapping assumes the click delivers the row's list position (0–6, in `PLAN`/`hide`
 order = chain order); a temporary `logger.info` echoes the raw slot so this can be confirmed
