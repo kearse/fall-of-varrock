@@ -60,6 +60,7 @@ class LofKitOverlay extends Overlay
 	static final int BOOK_BASE = 330;  // + 0 std, 1 ancients, 2 lunar
 	static final int DIFF_BASE = 340;  // + 0 easy, 1 medium, 2 hard
 	static final int TAB_BASE = 350;   // + armoury tab (0..5)
+	static final int CAT_BASE = 360;   // + bank-browser category tab (0..4, client-side only)
 	static final int PAL_BASE = 400;   // + visible palette index
 	// Dropdown list rows (only hit while the list is open): 0-1 presets, 2-4 saved kits, 5 = new kit.
 	static final int DD_ITEM_BASE = 500;
@@ -134,8 +135,10 @@ class LofKitOverlay extends Overlay
 	private static final int PAL_SZ = 30;
 	private static final int PAL_GAP = 2;
 	private static final int PAL_COLS = 5;
-	private static final int PAL_ROWS = 4;
+	private static final int PAL_ROWS = 4;      // training/LMS grid (pager below)
+	private static final int PAL_ROWS_BANK = 5; // bank browser grid (scrolls, no pager)
 	private static final int TAB_H = 15;
+	private static final int CAT_H = 15;        // bank-browser category chip height
 	private static final int FOOT_H = 30;
 	private static final int CHIP_H = 20;
 
@@ -148,6 +151,28 @@ class LofKitOverlay extends Overlay
 	private int bankPage;
 	/** Palette ids as last rendered — read by the mouse listener off the client thread. */
 	private volatile int[] palCache = new int[0];
+	/** True bank stack size per visible palette tile (all 1s outside bank mode). */
+	private volatile int[] palQtyCache = new int[0];
+	/** Per kit-inventory slot: is the item there wearable gear? Drives the smart left-click. */
+	private volatile boolean[] invEquipCache = new boolean[INV_SIZE];
+
+	// Bank-browser view state (bank mode only, all client-side).
+	/** Category tab (LofKitItems.CAT_*) — written by the mouse thread, read in render(). */
+	private volatile int bankCat;
+	/** Scroll offset in grid ROWS — written by the wheel listener, clamped in render(). */
+	private volatile int bankScrollRows;
+	/** Live search query — written by the key listener (single writer), read in render(). */
+	private volatile String searchQuery = "";
+	private volatile boolean searchFocused;
+	// The filtered bank (ids + stack sizes), rebuilt on the client thread only when its inputs
+	// change. The bank container is the client-side cache: the server pushes it when the editor
+	// opens (the cache is wiped on login/hop) and again whenever the bank changes, so it stays
+	// current; the server additionally clamps every real withdraw to actual stock.
+	private int[] filteredIds = new int[0];
+	private int[] filteredQtys = new int[0];
+	private long paletteFingerprint = Long.MIN_VALUE;
+	private String builtQuery = "";
+	private int builtCat = -1;
 	/** Kit-name dropdown open/closed — pure view state, toggled by the mouse listener. */
 	private volatile boolean ddOpen;
 	/** Names from the server's ~LOFKITN~ channel: the kit being edited + the three save slots. */
@@ -188,6 +213,10 @@ class LofKitOverlay extends Overlay
 	private volatile boolean showingCached;
 	private volatile boolean trainingCached;
 	private volatile boolean lmsCached;
+	private volatile boolean bankCached;
+	/** Native right-click menu open? While it is, the mouse listener must pass every click
+	 *  through untouched or the menu row the player selects never fires. */
+	private volatile boolean menuOpenCached;
 
 	// Scaled placement published by render() on the client thread; the mouse thread hit-tests via this cache only.
 	private volatile LofModal.Placement placement;
@@ -210,6 +239,18 @@ class LofKitOverlay extends Overlay
 		return lmsCached;
 	}
 
+	/** Cached — safe to call from the mouse thread (see the field note). */
+	boolean isBank()
+	{
+		return bankCached;
+	}
+
+	/** Cached — safe to call from the mouse thread (see the field note). */
+	boolean isMenuOpen()
+	{
+		return menuOpenCached;
+	}
+
 	/** The live client-thread reads — only call from render(). */
 	private boolean computeShowing()
 	{
@@ -228,10 +269,29 @@ class LofKitOverlay extends Overlay
 		return ((client.getVarpValue(CONTROL_VARP) >> 1) & 0x3) == 3;
 	}
 
+	private boolean computeBank()
+	{
+		return ((client.getVarpValue(CONTROL_VARP) >> 1) & 0x3) == 2;
+	}
+
 	int palItemIdAt(int visibleIndex)
 	{
 		final int[] pal = palCache;
 		return visibleIndex >= 0 && visibleIndex < pal.length ? pal[visibleIndex] : -1;
+	}
+
+	/** The bank stack size behind a visible palette tile (1 outside bank mode). */
+	int palQtyAt(int visibleIndex)
+	{
+		final int[] qty = palQtyCache;
+		return visibleIndex >= 0 && visibleIndex < qty.length ? qty[visibleIndex] : 1;
+	}
+
+	/** Is the item in kit-inventory slot i wearable gear? (cached — mouse-thread safe). */
+	boolean invEquipableAt(int slot)
+	{
+		final boolean[] eq = invEquipCache;
+		return slot >= 0 && slot < eq.length && eq[slot];
 	}
 
 	void setTab(int t)
@@ -241,6 +301,45 @@ class LofKitOverlay extends Overlay
 	}
 
 	void pageDelta(int d) { bankPage = Math.max(0, bankPage + d); }
+
+	void setBankCategory(int c)
+	{
+		if (c >= 0 && c <= LofKitItems.CAT_OTHER) { bankCat = c; bankScrollRows = 0; }
+	}
+
+	boolean isSearchFocused() { return searchFocused; }
+
+	void setSearchFocused(boolean focused) { searchFocused = focused; }
+
+	void searchAppend(char c)
+	{
+		final String q = searchQuery;
+		if (q.length() < 24) { searchQuery = q + c; bankScrollRows = 0; }
+	}
+
+	void searchBackspace()
+	{
+		final String q = searchQuery;
+		if (!q.isEmpty()) { searchQuery = q.substring(0, q.length() - 1); bankScrollRows = 0; }
+	}
+
+	/** Wheel over the bank grid scrolls it; returns true when consumed (pattern: LofTeleports). */
+	boolean handleScroll(Point canvas, int rotation)
+	{
+		if (!isShowing() || !isBank() || isMenuOpen()) return false;
+		final LofModal.Placement place = placement;
+		if (place == null) return false;
+		final Point p = place.toLocal(canvas);
+		final int ox = place.ox, oy = place.oy;
+		final int top = palTop(oy);
+		if (!new Rectangle(ox + PAL_X, top, PAL_COLS * (PAL_SZ + PAL_GAP), PAL_ROWS_BANK * (PAL_SZ + PAL_GAP)).contains(p))
+		{
+			return false;
+		}
+		// Clamped properly against the filtered row count in render(); loosely bounded here.
+		bankScrollRows = Math.max(0, bankScrollRows + rotation);
+		return true;
+	}
 
 	// Placement single-sourced in LofModal (§6A). The editor is wider than the fixed-mode viewport,
 	// so LofModal centres it on the whole canvas (its width can't clear the inventory column anyway).
@@ -287,11 +386,25 @@ class LofKitOverlay extends Overlay
 		return new Rectangle(ox + PAL_X + (i % 3) * 60, oy + COLS_TOP + (i / 3) * (TAB_H + 2), 54, TAB_H);
 	}
 
-	/** The armoury/bank SEARCH bar — clicking it opens the native chatbox item finder. */
+	/** The SEARCH bar: a live filter field in bank mode, the chatbox item finder in training. */
 	private Rectangle searchRect(int ox, int oy) { return new Rectangle(ox + PAL_X, oy + COLS_TOP, 5 * (PAL_SZ + PAL_GAP) - PAL_GAP, 16); }
 
-	/** Palette origin: below the search bar (training/bank) or below the category tabs (LMS). */
-	private int palTop(int oy) { return isLms() ? oy + COLS_TOP + 2 * (TAB_H + 2) + 6 : oy + COLS_TOP + 22; }
+	/** Bank-browser category chip i (All/Gear/Food/Pot/Misc), on a rail under the search bar. */
+	private Rectangle catRect(int ox, int oy, int i)
+	{
+		return new Rectangle(ox + PAL_X + i * (PAL_SZ + PAL_GAP), oy + COLS_TOP + 19, PAL_SZ, CAT_H);
+	}
+
+	/** Palette origin: below the category rail (bank), the search bar (training) or the tabs (LMS). */
+	private int palTop(int oy)
+	{
+		if (isLms()) return oy + COLS_TOP + 2 * (TAB_H + 2) + 6;
+		if (isBank()) return oy + COLS_TOP + 19 + CAT_H + 4;
+		return oy + COLS_TOP + 22;
+	}
+
+	/** Visible palette grid rows for the current mode. */
+	private int palRows() { return isBank() ? PAL_ROWS_BANK : PAL_ROWS; }
 
 	private Rectangle palRect(int ox, int oy, int i)
 	{
@@ -337,11 +450,17 @@ class LofKitOverlay extends Overlay
 		{
 			for (int i = 0; i < LMS_TABS.length; i++) if (tabRect(ox, oy, i).contains(p)) return TAB_BASE + i;
 		}
-		else
+		else if (training)
 		{
 			if (searchRect(ox, oy).contains(p)) return SEARCH_BTN;
 			if (pagePrevRect(ox, oy).contains(p)) return PAGE_PREV;
 			if (pageNextRect(ox, oy).contains(p)) return PAGE_NEXT;
+		}
+		else
+		{
+			// Bank browser: live search field + category rail; the grid scrolls (no pager).
+			if (searchRect(ox, oy).contains(p)) return SEARCH_BTN;
+			for (int i = 0; i <= LofKitItems.CAT_OTHER; i++) if (catRect(ox, oy, i).contains(p)) return CAT_BASE + i;
 		}
 		if (training)
 		{
@@ -355,12 +474,12 @@ class LofKitOverlay extends Overlay
 	// ── palette contents ──
 
 	/** The palette page on screen: the tab's armoury (training), the tab's LMS category choices
-	 *  (LMS mode), or a bank page (bank mode). */
+	 *  (LMS mode), or the filtered + scrolled bank window (bank mode; also fills [palQtyCache]). */
 	private int[] buildPalette()
 	{
 		if (isTraining())
 		{
-			// The armoury, popular-first, paged (same paging chips as the bank browser).
+			// The armoury, popular-first, paged (same paging chips as before).
 			final int pageSize = PAL_COLS * PAL_ROWS;
 			final int maxPage = Math.max(0, (ARMOURY_POPULAR.length - 1) / pageSize);
 			if (bankPage > maxPage) bankPage = maxPage;
@@ -368,29 +487,71 @@ class LofKitOverlay extends Overlay
 			final int count = Math.max(0, Math.min(pageSize, ARMOURY_POPULAR.length - from));
 			final int[] page = new int[count];
 			System.arraycopy(ARMOURY_POPULAR, from, page, 0, count);
+			palQtyCache = new int[0];
 			return page;
 		}
 		if (isLms())
 		{
+			palQtyCache = new int[0];
 			return LMS_CHOICES[Math.min(tab, LMS_CHOICES.length - 1)];
 		}
+		// Bank browser: category tab + live search over the client's cached bank container,
+		// then the scroll window over the filtered list.
+		rebuildBankFilter();
+		final int visible = PAL_COLS * PAL_ROWS_BANK;
+		final int totalRows = (filteredIds.length + PAL_COLS - 1) / PAL_COLS;
+		final int maxScroll = Math.max(0, totalRows - PAL_ROWS_BANK);
+		int scroll = bankScrollRows;
+		if (scroll > maxScroll) { scroll = maxScroll; bankScrollRows = maxScroll; }
+		final int from = scroll * PAL_COLS;
+		final int count = Math.max(0, Math.min(visible, filteredIds.length - from));
+		final int[] page = new int[count];
+		final int[] qtys = new int[count];
+		System.arraycopy(filteredIds, from, page, 0, count);
+		System.arraycopy(filteredQtys, from, qtys, 0, count);
+		palQtyCache = qtys;
+		return page;
+	}
+
+	/** Re-filter the cached bank into [filteredIds]/[filteredQtys] when its inputs changed.
+	 *  Client thread only (composition lookups). */
+	private void rebuildBankFilter()
+	{
 		final ItemContainer bank = client.getItemContainer(InventoryID.BANK);
-		if (bank == null) return new int[0];
-		final net.runelite.api.Item[] items = bank.getItems();
-		final int pageSize = PAL_COLS * PAL_ROWS;
-		final int[] all = new int[items.length];
+		final net.runelite.api.Item[] items = bank == null ? new net.runelite.api.Item[0] : bank.getItems();
+		long fp = items.length;
+		for (net.runelite.api.Item it : items)
+		{
+			if (it != null) fp = fp * 31 + it.getId() * 31L + it.getQuantity();
+		}
+		final String q = searchQuery.toLowerCase();
+		final int cat = bankCat;
+		if (fp == paletteFingerprint && q.equals(builtQuery) && cat == builtCat) return;
+		paletteFingerprint = fp;
+		builtQuery = q;
+		builtCat = cat;
+		final int[] ids = new int[items.length];
+		final int[] qtys = new int[items.length];
 		int n = 0;
 		for (net.runelite.api.Item it : items)
 		{
-			if (it != null && it.getId() > 0 && it.getQuantity() > 0) all[n++] = it.getId();
+			if (it == null || it.getId() <= 0 || it.getQuantity() <= 0) continue; // qty<=0 = placeholder
+			try
+			{
+				final net.runelite.api.ItemComposition c = itemManager.getItemComposition(it.getId());
+				if (cat != LofKitItems.CAT_ALL && LofKitItems.category(c) != cat) continue;
+				if (!q.isEmpty() && !c.getName().toLowerCase().contains(q)) continue;
+			}
+			catch (Exception e)
+			{
+				if (cat != LofKitItems.CAT_ALL || !q.isEmpty()) continue;
+			}
+			ids[n] = it.getId();
+			qtys[n] = it.getQuantity();
+			n++;
 		}
-		final int maxPage = Math.max(0, (n - 1) / pageSize);
-		if (bankPage > maxPage) bankPage = maxPage;
-		final int from = bankPage * pageSize;
-		final int count = Math.max(0, Math.min(pageSize, n - from));
-		final int[] page = new int[count];
-		System.arraycopy(all, from, page, 0, count);
-		return page;
+		filteredIds = java.util.Arrays.copyOf(ids, n);
+		filteredQtys = java.util.Arrays.copyOf(qtys, n);
 	}
 
 	// ── rendering ──
@@ -403,6 +564,8 @@ class LofKitOverlay extends Overlay
 		showingCached = showing;
 		trainingCached = computeTraining();
 		lmsCached = computeLms();
+		bankCached = computeBank();
+		menuOpenCached = client.isMenuOpen();
 		if (!showing) return null;
 
 		final Object oldAA = g.getRenderingHint(RenderingHints.KEY_ANTIALIASING);
@@ -482,6 +645,8 @@ class LofKitOverlay extends Overlay
 			training ? "ARMOURY" : lms ? "KIT OPTIONS — ONE PER TAB" : "YOUR BANK",
 			ox + PAL_X + 2, oy + LABEL_Y, LofTheme.GOLD_DIM);
 
+		final boolean bank = !training && !lms;
+
 		// worn gear paper-doll (varps 4641..4651)
 		for (int i = 0; i < EQUIP_SLOTS; i++)
 		{
@@ -492,15 +657,34 @@ class LofKitOverlay extends Overlay
 			if (hov && !lms && (packed & 0xFFFF) != 0) hover = "Remove " + itemName(packed & 0xFFFF);
 		}
 
-		// inventory grid (varps 4652..4679)
+		// inventory grid (varps 4652..4679) — in bank mode the smart left-click needs to know
+		// which slots hold wearable gear (equip) vs consumables/supplies (deposit).
+		final boolean[] invEquip = new boolean[INV_SIZE];
 		for (int i = 0; i < INV_SIZE; i++)
 		{
 			final int packed = client.getVarpValue(SLOT_VARP_BASE + EQUIP_SLOTS + i);
+			final int id = packed & 0xFFFF;
+			if (bank && id > 0)
+			{
+				try
+				{
+					invEquip[i] = LofKitItems.equipable(itemManager.getItemComposition(id));
+				}
+				catch (Exception ignored)
+				{
+				}
+			}
 			final Rectangle rc = invRect(ox, oy, i);
 			final boolean hov = rc.contains(mouse);
 			itemSlot(g, rc, packed, null, hov && !lms);
-			if (hov && !lms && (packed & 0xFFFF) != 0) hover = "Remove " + itemName(packed & 0xFFFF);
+			if (hov && !lms && id != 0)
+			{
+				hover = bank
+					? (invEquip[i] ? "Equip " : "Deposit ") + itemName(id)
+					: "Remove " + itemName(id);
+			}
 		}
+		invEquipCache = invEquip;
 
 		// palette: search bar + popular-first armoury (training) / searched bank (bank mode) /
 		// category tabs (LMS)
@@ -517,11 +701,14 @@ class LofKitOverlay extends Overlay
 		}
 		else
 		{
-			// The search bar: click → the native chatbox item finder; the pick is added to the kit.
+			// The search bar: a LIVE filter field in bank mode (type to narrow your bank), or a
+			// click-to-open chatbox item finder in training mode.
 			final Rectangle sr = searchRect(ox, oy);
-			g.setColor(sr.contains(mouse) ? LofTheme.ROW_HOVER : new Color(0, 0, 0, 90));
+			final boolean focused = bank && searchFocused;
+			final String query = bank ? searchQuery : "";
+			g.setColor(sr.contains(mouse) || focused ? LofTheme.ROW_HOVER : new Color(0, 0, 0, 90));
 			g.fillRoundRect(sr.x, sr.y, sr.width, sr.height, 6, 6);
-			g.setColor(LofTheme.alpha(LofTheme.GOLD, sr.contains(mouse) ? 200 : 110));
+			g.setColor(LofTheme.alpha(LofTheme.GOLD, focused ? 230 : sr.contains(mouse) ? 200 : 110));
 			final Stroke oldS = g.getStroke();
 			g.setStroke(new BasicStroke(1f));
 			g.drawRoundRect(sr.x, sr.y, sr.width - 1, sr.height - 1, 6, 6);
@@ -531,33 +718,97 @@ class LofKitOverlay extends Overlay
 			g.drawOval(sr.x + 5, sr.y + 4, 6, 6);
 			g.drawLine(sr.x + 10, sr.y + 10, sr.x + 13, sr.y + 13);
 			g.setFont(FontManager.getRunescapeSmallFont());
-			LofTheme.shadowText(g, training ? "Search the armoury..." : "Search your bank...",
-				sr.x + 18, sr.y + 12, LofTheme.TEXT_DIM);
-			if (sr.contains(mouse)) hover = "Search for an item to add to the kit";
+			if (query.isEmpty() && !focused)
+			{
+				LofTheme.shadowText(g, training ? "Search the armoury..." : "Search your bank...",
+					sr.x + 18, sr.y + 12, LofTheme.TEXT_DIM);
+			}
+			else
+			{
+				// Query text + a caret while typing (blink driven by the client's game cycle).
+				LofTheme.shadowText(g, query, sr.x + 18, sr.y + 12, LofTheme.TEXT);
+				if (focused && (client.getGameCycle() % 40) < 20)
+				{
+					final int cx = sr.x + 19 + g.getFontMetrics().stringWidth(query);
+					g.setColor(LofTheme.GOLD);
+					g.drawLine(cx, sr.y + 3, cx, sr.y + sr.height - 4);
+				}
+			}
+			if (sr.contains(mouse))
+			{
+				hover = bank ? "Type to filter your bank" : "Search for an item to add to the kit";
+			}
+
+			// Bank browser: the category rail under the search field.
+			if (bank)
+			{
+				final String[] cats = { "All", "Gear", "Food", "Pot", "Misc" };
+				final String[] catHints = { "Everything", "Weapons & armour", "Food", "Potions", "Everything else" };
+				for (int i = 0; i < cats.length; i++)
+				{
+					final Rectangle rc = catRect(ox, oy, i);
+					final boolean hov = rc.contains(mouse);
+					g.setFont(FontManager.getRunescapeSmallFont());
+					chip(g, rc, cats[i], bankCat == i, hov);
+					if (hov) hover = catHints[i];
+				}
+			}
 		}
 		final int lmsSelected = lms ? (control >> (10 + 2 * Math.min(tab, LMS_CHOICES.length - 1))) & 0x3 : -1;
+		final int[] palQty = palQtyCache;
 		for (int i = 0; i < pal.length; i++)
 		{
 			final Rectangle rc = palRect(ox, oy, i);
 			final boolean hov = rc.contains(mouse);
-			itemSlot(g, rc, pal[i] | (1 << 16), null, hov);
+			// Bank tiles show the TRUE stack size (a kit slot still caps at 65535 on the wire).
+			final int qty = bank && i < palQty.length ? palQty[i] : 1;
+			itemSlot(g, rc, pal[i], qty, null, hov);
 			if (lms && i == lmsSelected)
 			{
 				g.setColor(LofTheme.GOLD);
 				g.drawRoundRect(rc.x, rc.y, rc.width - 1, rc.height - 1, 6, 6);
 			}
-			if (hov) hover = (lms ? "Pick " : "Add ") + itemName(pal[i]);
+			if (hov)
+			{
+				hover = (lms ? "Pick " : bank ? "Withdraw " : "Add ") + itemName(pal[i])
+					+ (bank ? " - right-click for options" : "");
+			}
 		}
-		if (!lms)
+		if (training)
 		{
 			g.setFont(FontManager.getRunescapeSmallFont());
-			if (!training && pal.length == 0)
-			{
-				LofTheme.shadowText(g, "Visit a bank once to browse it here.", ox + PAL_X, palTop(oy) + 14, LofTheme.TEXT_DIM);
-			}
 			chip(g, pagePrevRect(ox, oy), "<", false, pagePrevRect(ox, oy).contains(mouse));
 			chip(g, pageNextRect(ox, oy), ">", false, pageNextRect(ox, oy).contains(mouse));
 			LofTheme.shadowText(g, "Page " + (bankPage + 1), ox + PAL_X + 78, pagePrevRect(ox, oy).y + 13, LofTheme.TEXT_DIM);
+		}
+		else if (bank)
+		{
+			g.setFont(FontManager.getRunescapeSmallFont());
+			if (pal.length == 0)
+			{
+				// The server pushes the bank container when the editor opens, so a null container
+				// only lasts until the next game tick delivers it.
+				final String empty;
+				if (client.getItemContainer(InventoryID.BANK) == null)
+				{
+					empty = "Fetching your bank...";
+				}
+				else if (searchQuery.isEmpty() && bankCat == LofKitItems.CAT_ALL)
+				{
+					empty = "Your bank is empty.";
+				}
+				else
+				{
+					empty = "Nothing matches.";
+				}
+				LofTheme.shadowText(g, empty, ox + PAL_X, palTop(oy) + 14, LofTheme.TEXT_DIM);
+			}
+			// Scrollbar along the grid's right edge (wheel scrolls; thumb is display-only).
+			final int viewH = PAL_ROWS_BANK * (PAL_SZ + PAL_GAP) - PAL_GAP;
+			final int totalRows = (filteredIds.length + PAL_COLS - 1) / PAL_COLS;
+			final int contentH = Math.max(viewH, totalRows * (PAL_SZ + PAL_GAP) - PAL_GAP);
+			LofModal.scrollbar(g, ox + PAL_X + PAL_COLS * (PAL_SZ + PAL_GAP) + 2, palTop(oy),
+				viewH, contentH, bankScrollRows * (PAL_SZ + PAL_GAP));
 		}
 
 		// footer: spellbook (not LMS — the magic pack owns it), difficulty (training), action button
@@ -654,8 +905,13 @@ class LofKitOverlay extends Overlay
 	/** One kit slot: the REAL item sprite (with its stack count) or the slot's ghost label. */
 	private void itemSlot(Graphics2D g, Rectangle rc, int packed, String emptyLabel, boolean hov)
 	{
-		final int id = packed & 0xFFFF;
-		final int qty = (packed >> 16) & 0xFFFF;
+		itemSlot(g, rc, packed & 0xFFFF, (packed >> 16) & 0xFFFF, emptyLabel, hov);
+	}
+
+	/** Same, with the quantity unpacked — bank tiles pass TRUE stack sizes (beyond the varp's
+	 *  16-bit cap) so a large stack renders its real count with the native k/M formatting. */
+	private void itemSlot(Graphics2D g, Rectangle rc, int id, int qty, String emptyLabel, boolean hov)
+	{
 		g.setColor(hov ? LofTheme.ROW_HOVER : LofTheme.ROW);
 		g.fillRoundRect(rc.x, rc.y, rc.width, rc.height, 6, 6);
 		g.setColor(LofTheme.alpha(LofTheme.EMBER, hov ? 130 : 40));

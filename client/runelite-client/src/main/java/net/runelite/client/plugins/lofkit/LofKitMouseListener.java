@@ -1,9 +1,12 @@
 /*
  * Fall of Varrock — Kit editor overlay (mouse input).
  *
- * Hit-tests left-clicks against the open kit editor window: palette items add, filled slots
- * remove, chips switch presets/kits/book/difficulty, tabs and bank pages stay client-side.
- * Every click on the window is consumed so it doesn't fall through to the game world.
+ * Hit-tests left-clicks against the open kit editor window. Bank mode has smart defaults:
+ * bank tiles withdraw into the kit inventory, inventory gear equips, supplies deposit —
+ * everything else is on the native right-click menu (LofKitPlugin.onMenuOpened). Chips switch
+ * presets/kits/book/difficulty; tabs, categories and scrolling stay client-side. Every
+ * left-click on the window is consumed so it doesn't fall through to the game world; while
+ * the native menu is open, ALL clicks pass through untouched (they belong to the menu).
  */
 package net.runelite.client.plugins.lofkit;
 
@@ -27,6 +30,12 @@ class LofKitMouseListener extends MouseAdapter
 	@Override
 	public MouseEvent mousePressed(MouseEvent event)
 	{
+		// While the native right-click menu is open, EVERY click belongs to it — swallowing the
+		// click that selects a menu row would make the injected options unclickable.
+		if (overlay.isMenuOpen())
+		{
+			return event;
+		}
 		if (!overlay.isShowing() || !SwingUtilities.isLeftMouseButton(event))
 		{
 			return event;
@@ -36,7 +45,14 @@ class LofKitMouseListener extends MouseAdapter
 		if (hit == LofKitOverlay.OUTSIDE)
 		{
 			overlay.setDropdownOpen(false); // clicking away closes the kit list
+			overlay.setSearchFocused(false);
 			return event; // let clicks outside the window reach the game
+		}
+
+		// Any click that isn't the search field itself takes the typing focus away from it.
+		if (hit != LofKitOverlay.SEARCH_BTN)
+		{
+			overlay.setSearchFocused(false);
 		}
 
 		// Any click that isn't the dropdown itself closes its open list.
@@ -84,7 +100,14 @@ class LofKitMouseListener extends MouseAdapter
 		}
 		else if (hit == LofKitOverlay.SEARCH_BTN)
 		{
-			plugin.sendAction("search"); // server opens the native chatbox item finder
+			if (overlay.isBank())
+			{
+				overlay.setSearchFocused(true); // bank mode: the live filter field takes typing focus
+			}
+			else
+			{
+				plugin.sendAction("search"); // training: server opens the native chatbox item finder
+			}
 		}
 		else if (hit == LofKitOverlay.ACTION)
 		{
@@ -107,8 +130,14 @@ class LofKitMouseListener extends MouseAdapter
 			final int id = overlay.palItemIdAt(hit - LofKitOverlay.PAL_BASE);
 			if (id > 0)
 			{
-				plugin.sendAction("a " + id);
+				// Bank mode: a click WITHDRAWS into the kit inventory (equip is on the right-click
+				// menu). Training/LMS keep the classic add (armoury-validated / category pick).
+				plugin.sendAction(overlay.isBank() ? "ai " + id + " 1" : "a " + id);
 			}
+		}
+		else if (hit >= LofKitOverlay.CAT_BASE)
+		{
+			overlay.setBankCategory(hit - LofKitOverlay.CAT_BASE);
 		}
 		else if (hit >= LofKitOverlay.TAB_BASE)
 		{
@@ -124,7 +153,9 @@ class LofKitMouseListener extends MouseAdapter
 		}
 		else if (hit >= LofKitOverlay.INV_BASE)
 		{
-			plugin.sendAction("ri " + (hit - LofKitOverlay.INV_BASE));
+			final int slot = hit - LofKitOverlay.INV_BASE;
+			// Bank mode smart click: gear jumps onto the doll, supplies deposit (clear the slot).
+			plugin.sendAction(overlay.isBank() && overlay.invEquipableAt(slot) ? "eq " + slot : "ri " + slot);
 		}
 		else if (hit >= LofKitOverlay.EQUIP_BASE)
 		{
@@ -149,6 +180,12 @@ class LofKitMouseListener extends MouseAdapter
 
 	private MouseEvent swallowIfOnWindow(MouseEvent event)
 	{
+		// Right-button events feed the native menu machinery, and while the menu is open every
+		// click is the menu's — both must pass through untouched (see mousePressed).
+		if (overlay.isMenuOpen() || SwingUtilities.isRightMouseButton(event))
+		{
+			return event;
+		}
 		if (overlay.isShowing() && overlay.hitTest(event.getPoint()) != LofKitOverlay.OUTSIDE)
 		{
 			event.consume();
