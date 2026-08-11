@@ -1,7 +1,6 @@
 package org.alter.plugins.content.kits
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import org.alter.api.InterfaceDestination
 import org.alter.api.ext.*
 import org.alter.game.Server
 import org.alter.game.action.EquipAction
@@ -10,7 +9,11 @@ import org.alter.game.model.entity.Player
 import org.alter.game.model.item.Item
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
+import org.alter.plugins.content.combat.PvpZones
 import org.alter.plugins.content.interfaces.bank.Bank
+import org.alter.plugins.content.minigames.castlewars.CastleWars
+import org.alter.plugins.content.minigames.duel.DuelArena
+import org.alter.plugins.content.minigames.lms.LmsGame
 import org.alter.plugins.content.minigames.pktraining.TrainingArena
 
 private val logger = KotlinLogging.logger {}
@@ -21,20 +24,22 @@ private val logger = KotlinLogging.logger {}
  * Two ways in:
  *  - The **PK trainer** opens the editor in TRAINING mode (loaner gear — see PkTrainingArenaPlugin).
  *  - `::kit` (or `::kits`) opens it in BANK mode **anywhere**: browse, build (the palette is the
- *    client's cached view of your bank), copy your current setup ("Wearing"), and save kits from
- *    any location. Only **Load kit** — which deposits everything you're carrying and re-arms you
- *    from your own bank in one click — still requires the bank to be open; anything else would be
- *    a portable bank. Only items actually in your bank are withdrawn — anything missing is skipped
- *    and reported. Nothing is ever created; requirements still apply (an item you can't wear stays
- *    in your inventory).
+ *    client's cached view of your bank), copy your current setup ("Wearing"), save kits — and
+ *    **Load kit**, which deposits everything you're carrying and re-arms you from your own bank
+ *    in one click. Loading works anywhere EXCEPT dangerous places (wilderness, duels, minigames,
+ *    instanced arenas — see [loadBlockedReason]). Only items actually in your bank are withdrawn —
+ *    anything missing is skipped and reported. Nothing is ever created; requirements still apply
+ *    (an item you can't wear stays in your inventory).
  *
  * Input routing: the client overlay sends `::kit <action>` (public chat, suppressed and routed to
  * the `kitclick` command by MessagePublicHandler — the lofduel/lofstake pattern).
  *
- * Actions: `a <id>` add item · `re <i>` / `ri <i>` clear worn/inventory slot · `p <0|1>` preset ·
- * `k <0-2>` load saved · `s <0-2>` save · `cur` copy current worn+carried setup · `b <0-2>`
- * spellbook · `d <0-2>` difficulty · `start` begin training bout · `load` bank-load · `x` close ·
- * a bare number = `::kit <n>` quick-load (typed commands can arrive down this channel too).
+ * Actions: `a <id>` add item (training/LMS palette) · `ai <id> [qty]` add into the kit inventory ·
+ * `aix <id>` add-X (native amount prompt) · `ae <id> [qty]` add + equip · `eq <i>` equip inventory
+ * slot · `re <i>` / `ri <i>` clear worn/inventory slot · `p <0|1>` preset · `k <0-2>` load saved ·
+ * `s <0-2>` save · `cur` copy current worn+carried setup · `b <0-2>` spellbook · `d <0-2>`
+ * difficulty · `start` begin training bout · `load` bank-load · `x` close · a bare number =
+ * `::kit <n>` quick-load (typed commands can arrive down this channel too).
  */
 class KitsPlugin(
     r: PluginRepository,
@@ -47,13 +52,13 @@ class KitsPlugin(
 
         onLogout { KitEditor.close(player) }
 
-        onCommand("kits", description = "Open the kit loadout editor (loading needs a bank)") {
+        onCommand("kits", description = "Open the kit loadout editor") {
             openEditor(player)
         }
 
         // Bare ::kit opens the editor anywhere (browse/build/save kits);
         // ::kit <1-3> re-arms straight from a saved slot with no editor round-trip.
-        onCommand("kit", description = "Open the kit editor; ::kit <1-3> quick-loads a saved kit at a bank") {
+        onCommand("kit", description = "Open the kit editor; ::kit <1-3> quick-loads a saved kit") {
             kitCommand(player, player.getCommandArgs().getOrNull(0))
         }
 
@@ -61,17 +66,34 @@ class KitsPlugin(
             val args = player.getCommandArgs()
             when (args.getOrNull(0)) {
                 "a" -> args.getOrNull(1)?.toIntOrNull()?.let { KitEditor.addItem(player, it) }
+                "ai" -> args.getOrNull(1)?.toIntOrNull()?.let {
+                    KitEditor.addToInv(player, it, args.getOrNull(2)?.toIntOrNull() ?: 1)
+                }
+                // Withdraw-X: the native chatbox amount prompt, then the same add-to-inventory path.
+                "aix" -> args.getOrNull(1)?.toIntOrNull()?.let { id ->
+                    if (KitEditor.sessionOf(player)?.mode == KitEditor.Mode.BANK) {
+                        player.queue {
+                            val amt = inputInt(player, "Enter amount:")
+                            if (amt > 0) KitEditor.addToInv(player, id, amt)
+                        }
+                    }
+                }
+                "ae" -> args.getOrNull(1)?.toIntOrNull()?.let {
+                    KitEditor.addAndEquip(player, it, args.getOrNull(2)?.toIntOrNull() ?: 1)
+                }
+                "eq" -> args.getOrNull(1)?.toIntOrNull()?.let { KitEditor.equipInvSlot(player, it) }
                 "re" -> args.getOrNull(1)?.toIntOrNull()?.let { KitEditor.clearEquip(player, it) }
                 "ri" -> args.getOrNull(1)?.toIntOrNull()?.let { KitEditor.clearInv(player, it) }
                 "p" -> args.getOrNull(1)?.toIntOrNull()?.let { KitEditor.loadPreset(player, it) }
                 "k" -> args.getOrNull(1)?.toIntOrNull()?.let { KitEditor.loadSaved(player, it) }
                 "s" -> args.getOrNull(1)?.toIntOrNull()?.let { KitEditor.saveKit(player, it) }
                 "cur" -> KitEditor.loadCurrent(player)
-                // Armoury search bar: opens the native chatbox item finder; the pick is added to
-                // the kit through the same validated path as a palette click (training mode still
-                // refuses anything outside the armoury pool).
+                // Armoury search bar (TRAINING only): opens the native chatbox item finder; the
+                // pick is added through the same validated path as a palette click. Bank mode
+                // filters the palette client-side instead — the whole-cache finder must stay
+                // unreachable there (it would "find" items the player doesn't own).
                 "search" -> {
-                    if (KitEditor.isOpen(player)) {
+                    if (KitEditor.sessionOf(player)?.mode == KitEditor.Mode.TRAINING) {
                         player.queue {
                             val id = searchItemInputT(player, "Search the armoury:")
                             if (id > 0) KitEditor.addItem(player, id)
@@ -117,20 +139,28 @@ class KitsPlugin(
             p.message("Kit $slot is empty — build and save it with ::kits first.")
             return
         }
-        loadFromBank(p, kit)
-        p.setSpellbook(spellbookOf(kit.book))
+        if (loadFromBank(p, kit)) p.setSpellbook(spellbookOf(kit.book))
     }
 
     /** Open the editor in bank mode. Works anywhere — browsing, building, copying your current
-     *  setup and saving are location-free; only Load kit (the bank withdrawal) checks the bank. */
+     *  setup, saving AND loading; only dangerous places refuse the load itself. */
     private fun openEditor(p: Player) {
         if (KitEditor.isOpen(p)) return
         if (TrainingArena.kitted(p)) { p.message("Hand the training kit back first (::unkit)."); return }
         KitEditor.open(p, KitEditor.Mode.BANK, onLoad = { kit -> loadFromBank(p, kit) })
     }
 
-    private fun bankOpen(p: Player): Boolean =
-        p.getInterfaceAt(InterfaceDestination.MAIN_SCREEN) == Bank.BANK_INTERFACE_ID
+    /** Why a kit can't be loaded right here, or null when it can. Loading is a full re-arm from
+     *  the bank, so anywhere you shouldn't be able to re-gear mid-fight is off the table. */
+    private fun loadBlockedReason(p: Player): String? = when {
+        PvpZones.isWilderness(p.tile) -> "You can't load a kit in the wilderness."
+        world.instanceAllocator.getMap(p.tile) != null -> "You can't load a kit in here."
+        DuelArena.duelOf(p) != null -> "You can't load a kit during a duel."
+        LmsGame.inGame(p) -> "You can't load a kit during Last Man Standing."
+        CastleWars.inGame(p) -> "You can't load a kit during Castle Wars."
+        TrainingArena.kitted(p) -> "Hand the training kit back first (::unkit)."
+        else -> null
+    }
 
     private fun spellbookOf(book: Int): org.alter.api.Spellbook =
         when (book) {
@@ -143,12 +173,14 @@ class KitsPlugin(
 
     /**
      * One-click re-arm from the player's own bank: deposit everything carried, then withdraw and
-     * equip the kit. Bank-only (checked again here — the editor can outlive walking away), and
+     * equip the kit. Works anywhere outside danger zones ([loadBlockedReason] — the deposit and
+     * withdrawal act on the server-side containers directly, no bank interface needed), and
      * strictly conservative: any step that can't complete skips and reports, never duplicates.
+     * Returns false when nothing happened (blocked/locked/bank full) so the editor can stay open.
      */
-    private fun loadFromBank(p: Player, kit: KitSetup) {
-        if (!bankOpen(p)) { p.message("You need your bank open to load a kit."); return }
-        if (p.isLocked()) return
+    private fun loadFromBank(p: Player, kit: KitSetup): Boolean {
+        loadBlockedReason(p)?.let { p.message(it); return false }
+        if (p.isLocked()) return false
 
         // 1) Everything carried goes into the bank first (LMS-style clean slate).
         depositInventory(p)
@@ -156,7 +188,7 @@ class KitsPlugin(
         if (!p.inventory.isEmpty || p.equipment.occupiedSlotCount != 0) {
             // Bank couldn't take it all (full) — abort before withdrawing anything.
             p.message("<col=801700>Your bank is too full to stash what you're carrying — kit not loaded.</col>")
-            return
+            return false
         }
 
         val missing = ArrayList<String>()
@@ -186,6 +218,7 @@ class KitsPlugin(
             p.message("<col=801700>Couldn't be worn (kept in your pack):</col> ${unworn.joinToString(", ")}.")
         }
         logger.info { "KIT bank-load by ${p.username}: ${kit.gear.size} gear, ${kit.inv.size} inv, missing=${missing.size}" }
+        return true
     }
 
     private fun depositInventory(p: Player) {

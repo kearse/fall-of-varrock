@@ -80,15 +80,23 @@ arena - the gear stays with Ardan, and whatever you learned comes with you.
 ## Building, saving and loading kits (::kit)
 
 The same saved kits do double duty outside the arena. Type `::kit` (or `::kits`) **anywhere** and
-the kit editor appears in bank mode: pick a saved kit, build one from your bank's items (the
-palette shows your bank as of your last visit), or press **Wearing** to copy your current worn
-gear and inventory - the full setup, spellbook included - into the editor. Tweak it however you
-like, then press **S** to save it to one of your three kit slots.
+the kit editor appears in bank mode: pick a saved kit, build one from your bank's items, or press
+**Wearing** to copy your current worn gear and inventory - the full setup, spellbook included -
+into the editor. Tweak it however you like, then press **Save** to keep it in one of your three
+kit slots (double-click the kit's name to rename it).
 
-**Load kit** is the one thing that still needs your bank open: everything you're carrying is
-deposited, then the kit is withdrawn and equipped **from your own bank in one click**, exact slot
-layout and all. In a hurry? `::kit <1-3>` skips the editor and loads that saved slot directly.
+Building feels like using your bank. The browser shows your bank (as of your last visit) with
+real stack counts - **type in the search bar to filter it live**, and use the **All / Gear /
+Food / Pot / Misc** tabs to browse by type. **Click** a bank item to withdraw it into the kit's
+pack, or **right-click** for options: Equip puts gear straight onto the doll (ammo equips its
+whole stack), and food, potions and other stackables get Withdraw-5/10/X/All. In the kit's pack,
+**clicking gear equips it** (two-handers and shields swap correctly, displaced pieces drop back
+into the pack) and clicking supplies deposits them - right-click for the full Equip/Deposit menu.
+
+**Load kit** re-arms you **from your own bank in one click**: everything you're carrying is
+deposited, then the kit is withdrawn and equipped, exact slot layout and all - and it works
+**anywhere outside dangerous places** (no wilderness, duels, or minigames; you don't need a bank
+open). In a hurry? `::kit <1-3>` skips the editor and loads that saved slot directly.
 
 Bank mode never creates items: anything the kit lists that **isn't in your bank is skipped** and
 reported, and gear you don't meet the requirements for stays in your pack instead of being worn.
-Loading only works at a bank - the kit screen is a loadout tool, not a portable bank.

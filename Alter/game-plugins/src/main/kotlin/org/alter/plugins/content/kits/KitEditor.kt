@@ -66,8 +66,9 @@ object KitEditor {
         val mode: Mode,
         /** Training mode: fires with the finished kit + difficulty (0/1/2) on "Start bout". */
         val onStart: ((KitSetup, Int) -> Unit)?,
-        /** Bank mode: fires with the kit to withdraw on "Load kit". */
-        val onLoad: ((KitSetup) -> Unit)?,
+        /** Bank mode: fires with the kit to withdraw on "Load kit". Returns whether the load
+         *  went through — a refusal (danger zone, full bank) keeps the editor open. */
+        val onLoad: ((KitSetup) -> Boolean)?,
         /** Fires when the editor closes WITHOUT completing (X / logout) — never after
          *  onStart/onLoad/done. Lets a parent flow (companion sparring's kit step) resume. */
         val onClosed: (() -> Unit)? = null,
@@ -94,7 +95,7 @@ object KitEditor {
         p: Player,
         mode: Mode,
         onStart: ((KitSetup, Int) -> Unit)? = null,
-        onLoad: ((KitSetup) -> Unit)? = null,
+        onLoad: ((KitSetup) -> Boolean)? = null,
         /** Open pre-loaded with this kit (a parent flow's working loadout) instead of the default. */
         seed: KitSetup? = null,
         seedName: String = "",
@@ -188,6 +189,90 @@ object KitEditor {
             s.kit.inv[free] = Item(itemId, qty.coerceAtMost(KitSetup.MAX_QTY))
         }
         publish(s)
+    }
+
+    /** Add [qty] x [itemId] into the kit's INVENTORY — the bank palette's "withdraw", which never
+     *  auto-equips. Stackables merge into their stack; non-stackables take one slot per unit. */
+    fun addToInv(p: Player, itemId: Int, qty: Int) {
+        val s = sessions[p.index] ?: return
+        if (s.mode != Mode.BANK) return
+        if (itemId <= 0) return
+        val def = runCatching { Item(itemId).getDef() }.getOrNull() ?: return
+        val want = qty.coerceIn(1, KitSetup.MAX_QTY)
+        if (def.stackable) {
+            val existing = s.kit.inv.entries.firstOrNull { it.value.id == itemId }
+            if (existing != null) {
+                s.kit.inv[existing.key] = Item(itemId, (existing.value.amount + want).coerceAtMost(KitSetup.MAX_QTY))
+            } else {
+                val free = (0 until KitSetup.INV_SIZE).firstOrNull { it !in s.kit.inv }
+                    ?: run { p.message("The kit's inventory is full."); return }
+                s.kit.inv[free] = Item(itemId, want)
+            }
+        } else {
+            var added = 0
+            while (added < want) {
+                val free = (0 until KitSetup.INV_SIZE).firstOrNull { it !in s.kit.inv } ?: break
+                s.kit.inv[free] = Item(itemId, 1)
+                added++
+            }
+            if (added == 0) { p.message("The kit's inventory is full."); return }
+            if (added < want) p.message("The kit's inventory is full.")
+        }
+        publish(s)
+    }
+
+    /** Bank palette "Equip": put [itemId] straight onto the doll (2h/shield rules apply). */
+    fun addAndEquip(p: Player, itemId: Int, qty: Int) {
+        val s = sessions[p.index] ?: return
+        if (s.mode != Mode.BANK) return
+        if (itemId <= 0) return
+        if (virtualEquip(s, Item(itemId, qty.coerceIn(1, KitSetup.MAX_QTY)))) publish(s)
+    }
+
+    /** Equip kit-inventory slot [slot] into its doll slot. On failure the item stays put. */
+    fun equipInvSlot(p: Player, slot: Int) {
+        val s = sessions[p.index] ?: return
+        if (s.mode == Mode.LMS) return
+        val item = s.kit.inv.remove(slot) ?: return // popped first: its slot can host displaced gear
+        if (!virtualEquip(s, item)) { s.kit.inv[slot] = item; return }
+        publish(s)
+    }
+
+    /**
+     * Equip [item] onto the kit's doll, mirroring [org.alter.game.action.EquipAction]'s slot rules:
+     * the piece displaces whatever sits in its own slot, its secondary slot (a 2h sword's
+     * equipType is the shield slot), and any worn piece whose secondary is this piece's slot
+     * (a shield displaces a worn 2h). Displaced pieces move into free inventory slots — nothing
+     * vanishes. Returns false (kit untouched) when they wouldn't fit or [item] isn't equipable.
+     */
+    private fun virtualEquip(s: Session, item: Item): Boolean {
+        val def = runCatching { item.getDef() }.getOrNull() ?: return false
+        if (def.equipSlot < 0) return false
+        val equipSlot = def.equipSlot
+        val equipType = def.equipType
+
+        val worn = s.kit.gear[equipSlot]
+        if (def.stackable && worn?.id == item.id) {
+            s.kit.gear[equipSlot] = Item(item.id, (worn.amount + item.amount).coerceAtMost(KitSetup.MAX_QTY))
+            return true
+        }
+
+        val displaced = LinkedHashSet<Int>()
+        if (equipSlot in s.kit.gear) displaced += equipSlot
+        if (equipType != -1 && equipType != equipSlot && equipType in s.kit.gear) displaced += equipType
+        for ((slotId, piece) in s.kit.gear) {
+            val otherDef = runCatching { piece.getDef() }.getOrNull() ?: continue
+            if (otherDef.equipType == equipSlot && otherDef.equipType != 0) displaced += slotId
+        }
+
+        val freeSlots = (0 until KitSetup.INV_SIZE).filter { it !in s.kit.inv }
+        if (freeSlots.size < displaced.size) {
+            s.player.message("No room in the kit's pack for what this replaces.")
+            return false
+        }
+        displaced.forEachIndexed { i, slotId -> s.kit.inv[freeSlots[i]] = s.kit.gear.remove(slotId)!! }
+        s.kit.gear[equipSlot] = Item(item.id, if (def.stackable) item.amount.coerceIn(1, KitSetup.MAX_QTY) else 1)
+        return true
     }
 
     /** Clear worn-slot [dollIndex] (index into [SLOT_IDS]). */
@@ -381,15 +466,15 @@ object KitEditor {
         p.message("<col=007f00>Kit saved.</col> You'll spawn with it in your next Last Man Standing game.")
     }
 
-    /** Bank mode "Load kit" — hand the kit to the bank loader and close. */
+    /** Bank mode "Load kit" — hand the kit to the bank loader, and only close once it goes
+     *  through. A refusal (danger zone, bank too full) leaves the editor open and untouched. */
     fun load(p: Player) {
         val s = sessions[p.index] ?: return
         val onLoad = s.onLoad ?: return
         if (s.kit.isEmpty()) { p.message("Put a kit together first."); return }
-        val kit = s.kit.copy()
+        if (!onLoad(s.kit.copy())) return
         s.completing = true
         close(p)
-        onLoad(kit)
     }
 
     // ── state sync ──

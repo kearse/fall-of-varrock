@@ -286,7 +286,9 @@ Reusable pieces — reach for these before inventing a new one. Metrics above.
     every npc sharing its cache name; SlayerHudPlugin) ·
     **4640-4679 kit editor** (control + per-slot — was
     missing from this list; a parallel branch DID double-claim 4631 the same week — keep EVERY
-    varp here) ·
+    varp here. The bank-mode browser's live search / category tabs / scrolling / stack counts are
+    all CLIENT-side over the cached bank container — no extra varps; new `::lofkit` verbs
+    `ai`/`aix`/`ae`/`eq` ride the existing command channel) ·
     **4680 companion sparring settings** (packed: open | style bits 1-2 | difficulty 3-4 |
     rules 5-13 | companion-loadout mode 14-15 | bit 16 CONFIRM phase | bit 17 owner-fights-in-
     loaner-kit — `SparringClientMenu`, client `lofspar`) ·
@@ -356,6 +358,16 @@ Reusable pieces — reach for these before inventing a new one. Metrics above.
 - **Mouse:** a `MouseAdapter` hit-tests `mousePressed` against the window; consume any click on the
   window (incl. `mouseClicked`/`mouseReleased`) so it never falls through to the world; return
   `OUTSIDE` for clicks off the window so the game still gets them.
+- **Native right-click menus over a modal** (the kit editor's bank mode is the reference):
+  `onMenuOpened` runs on the client thread, so it may hit-test `getMouseCanvasPosition()` against
+  the overlay's cached placement, read varps/item defs live, `client.setMenuEntries(...)` down to
+  the base Cancel entry, and inject `MenuAction.RUNELITE` entries with `onClick` → the window's
+  `::lof…` token (LofShopTabs clears the same way; Companions injects the same way). TWO traps:
+  **(1) a click-swallowing modal makes the menu unclickable** — the click that selects a menu row
+  lands on the overlay's MouseAdapter first, so every mouse handler must first check a
+  render()-published `volatile isMenuOpen` (`client.isMenuOpen()`) and pass the event through
+  untouched while the menu is up; **(2) right-button press/release must also pass through** or the
+  menu never opens consistently. Entries render bottom-up — create them in reverse display order.
 - **Hover:** read `client.getMouseCanvasPosition()` each frame; apply `ROW_HOVER` / brightened accents.
 
 ---
