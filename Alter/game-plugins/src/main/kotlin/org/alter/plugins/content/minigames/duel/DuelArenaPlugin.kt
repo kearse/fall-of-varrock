@@ -49,6 +49,14 @@ private val logger = KotlinLogging.logger {}
 /** Pending duel challenges sent TO this player (by identity), mirroring the trade-request pattern. */
 val DUEL_REQUESTS_ATTR = AttributeKey<MutableSet<Player>>()
 
+// Per-player duel record (persisted → surfaces on the website profile beside the PK stats,
+// which read the same details-blob attribute path). Staked duels only — exhibition/tournament
+// matches never touch these.
+val DUEL_WINS_ATTR = AttributeKey<Int>(persistenceKey = "duel_wins")
+val DUEL_LOSSES_ATTR = AttributeKey<Int>(persistenceKey = "duel_losses")
+val DUEL_DRAWS_ATTR = AttributeKey<Int>(persistenceKey = "duel_draws")
+val DUEL_BIGGEST_POT_ATTR = AttributeKey<Long>(persistenceKey = "duel_biggest_pot")
+
 /**
  * Return tile owed to a fighter whose duel resolved while their own death sequence was still in
  * flight (the double-KO second faller): their respawn lands them on the instance's fallback exit
@@ -178,7 +186,7 @@ class DuelArenaPlugin(
             // poison etc.) must not leave the duel hanging with one fighter gone. A double KO
             // (both principals' deaths overlapped) is a draw, not a processing-order coin flip.
             DuelArena.duelOf(player)?.let { d ->
-                if (d.drawPending) resolveDraw(d, "Both fighters fell")
+                if (d.drawPending) resolveDraw(d, "Both fighters fell", DuelLog.DRAW_DOUBLE_KO)
                 else resolve(d, loser = player)
             }
         }
@@ -189,6 +197,33 @@ class DuelArenaPlugin(
             if (DuelRulesScreen.isOpen(player)) DuelRulesScreen.cancel(player)
             if (DuelRulesClientMenu.isOpen(player)) DuelRulesClientMenu.cancel(player)
             DuelArena.duelOf(player)?.let { d -> resolve(d, loser = player, end = DuelEnd.LOGOUT) }
+        }
+
+        // The scoreboard, read from anywhere: recent staked results + your own record — the
+        // classic arena wall boards, virtualized (DuelLog; the site's /duels page is the
+        // durable version).
+        onCommand("duels", description = "Recent duel results and your record") {
+            player.message("<col=801700>-- Duel Arena scoreboard --</col>")
+            val rows = DuelLog.recent(SCOREBOARD_ROWS)
+            if (rows.isEmpty()) {
+                player.message("No staked duels since the last restart. See the website for the full history.")
+            }
+            rows.forEach { e ->
+                val line = when (e.end) {
+                    DuelLog.DRAW_TIMEOUT, DuelLog.DRAW_DOUBLE_KO -> "${e.winner} drew with ${e.loser}"
+                    DuelLog.END_FORFEIT -> "${e.winner} beat ${e.loser} (forfeit)"
+                    DuelLog.END_LOGOUT -> "${e.winner} beat ${e.loser} (fled)"
+                    else -> "${e.winner} beat ${e.loser}"
+                }
+                val pot = if (e.potValue > 0) " — ${"%,d".format(e.potValue)} coins" else ""
+                player.message("$line$pot <col=7f7f7f>(${ago(e.at)})</col>")
+            }
+            val w = player.attr[DUEL_WINS_ATTR] ?: 0
+            val l = player.attr[DUEL_LOSSES_ATTR] ?: 0
+            val dr = player.attr[DUEL_DRAWS_ATTR] ?: 0
+            val big = player.attr[DUEL_BIGGEST_POT_ATTR] ?: 0L
+            val bigText = if (big > 0) " Biggest pot won: ${"%,d".format(big)} coins." else ""
+            player.message("<col=801700>Your record:</col> $w-$l-$dr (W-L-D).$bigText")
         }
 
         // The classic forfeit (the arena trapdoors, as a command until the duel overlay grows a
@@ -561,22 +596,11 @@ class DuelArenaPlugin(
      * or out: boosted AND drained stats to base (includes full HP), prayers stopped, special
      * attack to 100%, run energy full, poison/venom cured, a loaded Vengeance cleared, a queued
      * spec un-armed, and a divine potion's recurring re-boost cancelled (a plain stat reset would
-     * silently re-boost 15s later). Also the "hospital treatment" at duel end.
+     * silently re-boost 15s later). Also the "hospital treatment" at duel end. In the companion
+     * so the tournament's exhibition matches apply the same reset at match start (it previously
+     * reset only HP + spec energy — lobby prayers/poison/Vengeance could ride into round one).
      */
-    private fun normalizeCombatState(p: Player) {
-        p.getSkills().restoreAll()
-        Prayers.deactivateAll(p)
-        AttackTab.setEnergy(p, 100)
-        p.setVarp(AttackTab.SPECIAL_ATTACK_VARP, 0)
-        PotionsPlugin.cancelDivineReboost(p)
-        p.runEnergy = MAX_RUN_ENERGY
-        p.sendRunEnergy(p.runEnergy.toInt())
-        if ((p.attr[POISON_TICKS_LEFT_ATTR] ?: 0) > 0) {
-            p.attr[POISON_TICKS_LEFT_ATTR] = 0
-            Poison.setHpOrb(p, Poison.OrbState.NONE)
-        }
-        p.attr.remove(Vengeance.ACTIVE)
-    }
+    private fun normalizeCombatState(p: Player) = Companion.normalizeCombatState(p)
 
     private fun tick(d: Duel) {
         if (d.a.index < 0 || d.b.index < 0) return // logout handled by onLogout
@@ -629,7 +653,7 @@ class DuelArenaPlugin(
                 broadcast(d, "<col=ff0000>One minute remains — if nobody falls, the duel is a draw.</col>")
             }
             if (d.fightTicks >= DRAW_TICK) {
-                resolveDraw(d, "Time is up")
+                resolveDraw(d, "Time is up", DuelLog.DRAW_TIMEOUT)
                 return
             }
         }
@@ -675,7 +699,22 @@ class DuelArenaPlugin(
                 DuelEnd.LOGOUT ->
                     winner.message("<col=007f00>${loser.username} fled the duel — you claim the stake!</col>")
             }
-            sendSpoils(winner, loser, d.stakes)
+            val pot = potValue(d.stakes)
+            sendSpoils(winner, loser, d.stakes, pot)
+            // Scoreboard + per-player record. The loser's attrs still persist on a LOGOUT end —
+            // logout handlers (which is where that resolve comes from) run before the save.
+            DuelLog.record(
+                winner, loser,
+                when (end) {
+                    DuelEnd.DEATH -> DuelLog.END_DEATH
+                    DuelEnd.FORFEIT -> DuelLog.END_FORFEIT
+                    DuelEnd.LOGOUT -> DuelLog.END_LOGOUT
+                },
+                d.rules, pot,
+            )
+            winner.attr[DUEL_WINS_ATTR] = (winner.attr[DUEL_WINS_ATTR] ?: 0) + 1
+            if (pot > (winner.attr[DUEL_BIGGEST_POT_ATTR] ?: 0L)) winner.attr[DUEL_BIGGEST_POT_ATTR] = pot
+            loser.attr[DUEL_LOSSES_ATTR] = (loser.attr[DUEL_LOSSES_ATTR] ?: 0) + 1
         }
         logger.info { "DUEL winner=${winner.username} loser=${loser.username} end=$end exhibition=${d.exhibition} pot=${d.stakes.sumOf { it.amount.toLong() }} items" }
         d.onResolved?.invoke(winner, loser)
@@ -688,7 +727,7 @@ class DuelArenaPlugin(
      * is offline keeps their [DUEL_ESCROW_ATTR] so the login crash-refund path pays them instead.
      * Never called for exhibition duels ([Duel.drawPending] and the timer both guard on it).
      */
-    private fun resolveDraw(d: Duel, why: String) {
+    private fun resolveDraw(d: Duel, why: String, endKind: String) {
         if (!DuelArena.active.remove(d)) return // already resolved (guard double-fire)
         listOf(d.a to d.stakeA, d.b to d.stakeB).forEach { (p, ownStake) ->
             if (p.index >= 0) {
@@ -699,9 +738,11 @@ class DuelArenaPlugin(
                 p.resetFacePawn()
                 p.clearHintArrow()
                 p.message("<col=801700>$why — the duel is a draw. Your stake has been returned.</col>")
+                p.attr[DUEL_DRAWS_ATTR] = (p.attr[DUEL_DRAWS_ATTR] ?: 0) + 1
             }
             // Offline side: escrow attr stays put → their stake refunds on next login.
         }
+        DuelLog.recordDraw(d.a, d.b, endKind, d.rules, potValue(d.stakes))
         logger.info { "DUEL DRAW a=${d.a.username} b=${d.b.username} why=\"$why\" pot=${d.stakes.sumOf { it.amount.toLong() }} items" }
         d.onResolved = null
     }
@@ -720,19 +761,23 @@ class DuelArenaPlugin(
 
     // ───────────────────────────── helpers ─────────────────────────────
 
+    /** Market value of a stake pot (falls back to cache cost when no price service is up). */
+    private fun potValue(spoils: List<Item>): Long {
+        val prices = world.getService(ItemMarketValueService::class.java)
+        return spoils.sumOf { ((prices?.get(it.id) ?: it.getDef().cost ?: 0).toLong()) * it.amount }
+    }
+
     /**
      * The classic winnings presentation (interface 372's spoils list, as a chat block until an
      * overlay panel exists): who fell, what was won, and what it's worth. Long stakes list the
      * first few items and summarize the rest — the full pot is already in the winner's backpack.
      */
-    private fun sendSpoils(winner: Player, loser: Player, spoils: List<Item>) {
+    private fun sendSpoils(winner: Player, loser: Player, spoils: List<Item>, total: Long) {
         if (winner.index < 0) return
         if (spoils.isEmpty()) {
             winner.message("Nothing was staked — honour only.")
             return
         }
-        val prices = world.getService(ItemMarketValueService::class.java)
-        val total = spoils.sumOf { ((prices?.get(it.id) ?: it.getDef().cost ?: 0).toLong()) * it.amount }
         val named = spoils.take(SPOILS_LISTED).joinToString(", ") { item ->
             if (item.amount == 1) item.getName() else "${item.getName()} x${"%,d".format(item.amount)}"
         }
@@ -791,6 +836,36 @@ class DuelArenaPlugin(
 
         /** Items named individually in the winnings chat block before "+n more". */
         const val SPOILS_LISTED = 5
+
+        /** Rows the ::duels chat scoreboard shows. */
+        const val SCOREBOARD_ROWS = 8
+
+        /** See the instance-side doc — shared with the tournament's match starter. */
+        fun normalizeCombatState(p: Player) {
+            p.getSkills().restoreAll()
+            Prayers.deactivateAll(p)
+            AttackTab.setEnergy(p, 100)
+            p.setVarp(AttackTab.SPECIAL_ATTACK_VARP, 0)
+            PotionsPlugin.cancelDivineReboost(p)
+            p.runEnergy = MAX_RUN_ENERGY
+            p.sendRunEnergy(p.runEnergy.toInt())
+            if ((p.attr[POISON_TICKS_LEFT_ATTR] ?: 0) > 0) {
+                p.attr[POISON_TICKS_LEFT_ATTR] = 0
+                Poison.setHpOrb(p, Poison.OrbState.NONE)
+            }
+            p.attr.remove(Vengeance.ACTIVE)
+        }
+
+        /** Rough "how long ago" for scoreboard rows. */
+        private fun ago(at: Long): String {
+            val mins = (System.currentTimeMillis() - at) / 60_000
+            return when {
+                mins < 1 -> "just now"
+                mins < 60 -> "${mins}m ago"
+                mins < 60 * 24 -> "${mins / 60}h ago"
+                else -> "${mins / (60 * 24)}d ago"
+            }
+        }
 
         // Source of each duel's private arena copy: the NORTH-EAST Duel-Arena pit (mapdump-verified:
         // region 13362, pit interior x3370..3389 z3246..3258, row z3251 fully clear). Chunk-aligned

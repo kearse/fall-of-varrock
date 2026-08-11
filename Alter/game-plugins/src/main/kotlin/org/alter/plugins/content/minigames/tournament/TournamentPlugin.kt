@@ -244,8 +244,9 @@ class TournamentPlugin(
         a.moveTo(instance.translate(DuelArenaPlugin.RED_SPAWN))
         b.moveTo(instance.translate(DuelArenaPlugin.BLUE_SPAWN))
         listOf(a, b).forEach {
-            it.setCurrentHp(it.getMaxHp())
-            AttackTab.setEnergy(it, 100)
+            // The full duel-start reset (stats/prayers/spec/poison/Vengeance), shared with staked
+            // duels — previously only HP + spec energy, which let lobby prayers ride into round 1.
+            DuelArenaPlugin.normalizeCombatState(it)
             it.message("<col=801700>Round $round:</col> ${a.username} vs ${b.username}. Winner advances!")
         }
     }

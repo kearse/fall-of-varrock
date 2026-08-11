@@ -113,7 +113,18 @@ Always in effect:
 - **You can't stake a training bot** - bots are for practice, players are for stakes.
 - You can only challenge someone **in a safe zone** - in the wilderness, you just attack them.
 
+## The scoreboard
+
+Every staked duel goes on the record - the classic arena wall boards, without the walk:
+
+- **`::duels`** in-game shows the most recent results and **your own record** (wins-losses-draws
+  and your biggest pot won).
+- The **[website scoreboard](/duels)** lists the last 50 staked duels - winner, how it ended
+  (forfeits and flights are marked), the pot, and the rules it was fought under.
+- Your duel record also appears on your **player profile** on the site.
+
+Tournament matches are exhibition bouts - they never touch the scoreboard or your record.
+
 ## Coming soon
 
-The **obstacle pit opens** once its inspection wraps up, and **duel scoreboards** (recent
-results, per-player win/loss records) are on the way.
+The **obstacle pit opens** once its inspection wraps up.

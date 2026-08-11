@@ -168,17 +168,32 @@ strings in research §2.1–2.2.
   combat level, up to five named items (+n more), and the pot's market value. The overlay
   panel remains a later nicety; the chat block is the classic interface-372 content.
 
-## Phase 5 — social & meta layer
+## Phase 5 — social & meta layer — ✅ SHIPPED
 
-- **Scoreboard, virtualized**: log every resolved duel (winner, loser, rule summary, pot
-  value, timestamp — forfeits marked, draws logged) to Mongo; surface as `::duels` recent
-  results in-game and a page/section on the community site. Classic scoreboard feel without
-  a physical hub.
-- **Per-player duel stats**: wins/losses/draws, biggest pot won — website profile fodder.
-- **RMT-pattern logging we keep anyway**: the duel log already records pairs and pots;
-  cheap insurance even though RMT isn't a concern.
-- Tournament (`exhibition` duels) picks up all new rules automatically — verify presets and
-  normalization behave under `onResolved`.
+- ✅ **Scoreboard, virtualized** (`DuelLog`): every resolved STAKED duel is recorded —
+  winner, loser (login + display), end kind (death / forfeit / logout / the two draw
+  kinds), rule summary, pot market value, timestamp — into an in-memory last-50 ring
+  (`::duels`, instant, wiped on restart like a real board) AND the `duels` Mongo collection
+  (best-effort write, never on the duel's critical path). The site's **`/duels` page**
+  renders the collection (winner/result/loser/pot/rules/when, linked to player profiles).
+  Departure from the classic boards, deliberate: forfeits ARE listed (marked) — with no
+  physical crowd, a hidden loss category would just invite "safe" ragequits. Exhibition
+  (tournament) matches are never recorded: nothing staked, no RMT signal, and the
+  tournament owns its own presentation.
+- ✅ **Per-player duel stats**: `duel_wins` / `duel_losses` / `duel_draws` /
+  `duel_biggest_pot` persisted attrs (staked only) — summarized by `::duels` and rendered
+  as a "Duel record" section on the website player profile (same details-blob path the PK
+  stats ride; hidden until the player has duelled).
+- ✅ **RMT-pattern logging**: the `duels` collection IS the ledger (pairs, pots,
+  frequency, login-keyed) — queryable insurance, no extra pipeline.
+- ✅ **Tournament verification** (exhibition duels under the Phase 1–4 machinery):
+  `onResolved` still fires LAST in `resolve()` — after the hospital restore — so the
+  bracket always sees clean fighters; exhibition matches take the hint arrows and coin-flip
+  opener, skip stakes/spoils/scoreboard/stats by the existing `exhibition` guards, and can
+  never draw (both draw paths are `!exhibition`-guarded). One real gap found and fixed:
+  match START only reset HP + spec energy, so lobby prayers/poison/Vengeance could ride
+  into round one — `startMatch` now applies the full shared `normalizeCombatState` (moved
+  to the plugin companion for exactly this reuse).
 
 ---
 
