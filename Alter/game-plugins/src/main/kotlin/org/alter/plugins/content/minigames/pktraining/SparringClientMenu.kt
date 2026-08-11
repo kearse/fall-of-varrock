@@ -32,6 +32,14 @@ object SparringClientMenu {
     /** Overlay on custom clients; the chatbox dialogue remains the fallback for everyone else. */
     var enabled = true
 
+    /**
+     * Whether [STATE_VARP] can actually be written for [p] — the varp table is sized from the
+     * cache's varp count plus the server's custom ceiling, and `VarpSet.setState` THROWS on an
+     * out-of-range id (the failure mode that silently killed the Challenge flow). When this is
+     * false the caller must use the chatbox dialogue instead.
+     */
+    fun available(p: Player): Boolean = STATE_VARP < p.varps.maxVarps
+
     private class Session(
         val owner: Player,
         val comp: CompanionPawn,
@@ -62,7 +70,9 @@ object SparringClientMenu {
     }
 
     /** Wipe the overlay varp (login hygiene — transient UI state must never persist). */
-    fun clearVarps(p: Player) = p.setVarp(STATE_VARP, 0)
+    fun clearVarps(p: Player) {
+        if (available(p)) p.setVarp(STATE_VARP, 0)
+    }
 
     // ── actions (routed from ::lofspar via SparClickPlugin) ──
 
@@ -143,7 +153,7 @@ object SparringClientMenu {
 
     private fun publish(s: Session) {
         val p = s.owner
-        if (p.index < 0) return
+        if (p.index < 0 || !available(p)) return
         var v = 1
         v = v or ((s.settings.fightStyle.ordinal and 0x3) shl 1)
         v = v or ((s.settings.difficulty.ordinal and 0x3) shl 3)
