@@ -58,6 +58,16 @@ object CombatConfigs {
             "item.beach_boxing_gloves_11706",
         )
 
+    private val DHAROKS_GREATAXES =
+        arrayOf(
+            "item.dharoks_greataxe",
+            "item.dharoks_greataxe_100",
+            "item.dharoks_greataxe_75",
+            "item.dharoks_greataxe_50",
+            "item.dharoks_greataxe_25",
+            "item.dharoks_greataxe_25516",
+        )
+
     private val GODSWORDS =
         arrayOf(
             "item.armadyl_godsword",
@@ -164,6 +174,8 @@ object CombatConfigs {
             return when {
                 pawn.hasEquipped(EquipmentType.WEAPON, *GODSWORDS) -> 7045
                 pawn.hasEquipped(EquipmentType.WEAPON, "item.granite_maul") -> 1665
+                // Dharok's greataxe: smash (crush) undercuts, chop/hack/block swing overhead.
+                pawn.hasEquipped(EquipmentType.WEAPON, *DHAROKS_GREATAXES) -> if (style == 2) 2066 else 2067
                 pawn.hasWeaponType(WeaponType.AXE) -> if (style == 1) 401 else 395
                 pawn.hasWeaponType(WeaponType.HAMMER) -> 401
                 pawn.hasWeaponType(WeaponType.BULWARK) -> 7511
