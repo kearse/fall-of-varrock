@@ -26,17 +26,18 @@ final class LofQuestVarps
 	/** Packed Rogue Knight ladder state: bits 0-7 knights beaten, bits 8-15 active hunt index + 1,
 	 *  bits 16-19 rogue camps cleared, bits 20-23 total knight-hosting camps (the last two feed the
 	 *  rogue quest window's left-side dial). */
-	static final int KNIGHTS = 4644;
+	static final int KNIGHTS = 4682;
 
 	/** "Open the Quest Journal window" pulse: value = focused quest's chain index + 1 (0 = no signal).
-	 *  Must match server QuestBook.OPEN_VARP. */
-	static final int QUEST_BOOK_OPEN = 4645;
+	 *  Must match server QuestBook.OPEN_VARP. Was 4645 — inside the kit editor's 4640-4679 slot
+	 *  block, so publishing a kit with a filled chest slot popped the quest journal. */
+	static final int QUEST_BOOK_OPEN = 4683;
 
 	/** Packed "War-Prep II — Ranged" state: bits 0-5 step ordinal, bits 6-11 enemies felled with a ranged weapon on FIELD. */
 	static final int RANGED = 4624;
 
-	/** "War-Prep III — Survival" step ordinal, bits 0-5. */
-	static final int SURVIVAL = 4643;
+	/** "War-Prep III — Survival" step ordinal, bits 0-5. (Was 4643 — kit editor's block.) */
+	static final int SURVIVAL = 4681;
 
 	/** "King of Lumbridge" (endgame conquest) step ordinal, bits 0-5 (0 = not started / not yet King). */
 	static final int CONQUEST = 4633;

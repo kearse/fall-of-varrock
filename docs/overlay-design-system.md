@@ -288,7 +288,13 @@ Reusable pieces — reach for these before inventing a new one. Metrics above.
     missing from this list; a parallel branch DID double-claim 4631 the same week — keep EVERY
     varp here) ·
     **4680 companion sparring settings** (packed: open | style bits 1-2 | difficulty 3-4 |
-    rules 5-13 | companion-loadout mode 14-15 — `SparringClientMenu`, client `lofspar`).
+    rules 5-13 | companion-loadout mode 14-15 — `SparringClientMenu`, client `lofspar`) ·
+    **4681 quests: War-Prep III step** · **4682 quests: Rogue Knight ladder (packed)** ·
+    **4683 Quest Journal open-pulse** (`QuestBook.OPEN_VARP`; value = chain index + 1) — the
+    quest trio previously squatted 4643-4645 INSIDE the kit editor's block unrecorded here,
+    which is exactly the double-claim this list exists to prevent: once the varp-table ceiling
+    fix let kit publishes complete, every `::kits` open pulsed "quest book open" via the chest
+    slot varp. If a varp isn't in this list, it isn't yours.
     (4601/4609/4616 all feed the `lofdials` dial row.)
     Every id in this map is guaranteed writable server-side: the varp table is sized
     `maxOf(cache varp count, Player.CUSTOM_VARP_CEILING = 6000)` — the cache count alone sat BELOW

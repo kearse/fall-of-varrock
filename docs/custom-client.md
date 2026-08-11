@@ -465,7 +465,10 @@ assume the common one (`::bank`); other scam-bait words would also open the bank
   **4635-4637 companion world-indices** (moved off 4610-4612 to stop the
   guidance arrow pointing at the Duke after buying companions) ·
   **4640-4679 kit editor** (control + per-slot) ·
-  **4680 companion sparring settings** (`SparringClientMenu` / client `lofspar`).
+  **4680 companion sparring settings** (`SparringClientMenu` / client `lofspar`) ·
+  **4681 quests (War-Prep III step)** · **4682 quests (Rogue Knight ladder)** ·
+  **4683 Quest Journal open-pulse** (`QuestBook.OPEN_VARP`) — the quest trio moved off
+  4643-4645, which silently collided with the kit editor's block (`::kits` popped the journal).
   All ids here are guaranteed writable: the server sizes the varp table to at least
   `Player.CUSTOM_VARP_CEILING` (6000) regardless of the cache's varp count (`::varpmax` to verify).
 

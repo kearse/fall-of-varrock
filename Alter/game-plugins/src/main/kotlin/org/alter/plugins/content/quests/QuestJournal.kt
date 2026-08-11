@@ -39,9 +39,12 @@ import org.alter.plugins.content.war.warprep.WarPrepSurvival
  *    quest window's left-side dial; the live tracking arrow is server-driven (`RogueKnightCampPlugin`).
  *  - [GUIDE_MUTED_VARP] = 1 while guidance is muted, else 0 (so the client toggle reflects state).
  *
- * Varps 4600-4608, 4613-4616, 4618-4623, 4625-4626 and 4633-4637 are taken by the other client HUDs;
- * quests own 4610-4612, 4617, 4624, 4633, 4643, 4644 and 4645 ([QuestBook.OPEN_VARP] — the
- * "open the Quest Journal window, focused on quest N" pulse; not published here, pulsed on demand).
+ * Varps 4600-4608, 4613-4616, 4618-4623, 4625-4626 and 4633-4637 are taken by the other client HUDs,
+ * and 4640-4679 is the kit editor's block (control + one varp per kit slot — 4643/4644/4645 briefly
+ * squatted inside it, which made ::kits pop the quest journal once the varp-table ceiling fix let
+ * kit publishes complete; renumbered out). Quests own 4610-4612, 4617, 4624, 4633, and 4681-4683
+ * ([WARPREP_SURVIVAL_VARP], [KNIGHTS_VARP], and [QuestBook.OPEN_VARP] — the "open the Quest Journal
+ * window, focused on quest N" pulse; not published here, pulsed on demand).
  * Non-zero varps persist ([VarpSerialisation]), but the attributes stay the source of truth —
  * everything here is re-derived and re-published on login and on the world poll.
  *
@@ -60,9 +63,9 @@ object QuestJournal {
     const val GUIDE_MUTED_VARP = 4612
     const val ROGUE_PROBLEM_VARP = 4617 // 4613-4616 belong to the companion + slayer HUDs
     const val WARPREP_RANGED_VARP = 4624   // War-Prep II — Ranged (4618-4623, 4625-4626 belong to other HUDs)
-    const val WARPREP_SURVIVAL_VARP = 4643 // War-Prep III — Survival
+    const val WARPREP_SURVIVAL_VARP = 4681 // War-Prep III — Survival (was 4643: kit editor's block)
     const val CONQUEST_VARP = 4633      // King of Lumbridge (endgame); 4635-4637 are companion indices
-    const val KNIGHTS_VARP = 4644       // Rogue Knight ladder (rank + active hunt index)
+    const val KNIGHTS_VARP = 4682       // Rogue Knight ladder (rank + active hunt index; was 4644)
 
     // Reused OSRS quest progress varps that colour the relabelled native quest-tab rows. A value of
     // 0 reads as "not started" (red), the complete value as "finished" (green), anything between as

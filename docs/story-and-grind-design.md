@@ -171,7 +171,7 @@ the chase doubles as PK training + gear progression.
   knights take several genuine attempts (Vexmar: 160hp, frame-perfect prayers, 3-tick spec regen).
 - **Tracking** (the quest-helper ask): a native **hint arrow** follows the hunt — tile arrow toward
   the camp from anywhere, flipping to a player arrow locked on the live knight in scene; respects
-  the guidance mute; varp **4644** publishes rank+target for a future client panel.
+  the guidance mute; varp **4682** (was 4644) publishes rank+target for a future client panel.
 - **PK-set loot pools** (`PkLootPools`): every bot death still drops its full worn kit, PLUS a
   rare-tier roll from its band's pool — pools are built around real PK builds so grinding a camp
   assembles a recognisable set: starter metal → **pure/zerker kits** → **hybrid kit** (whip,
