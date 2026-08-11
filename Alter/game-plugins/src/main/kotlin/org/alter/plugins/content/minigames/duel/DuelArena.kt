@@ -111,6 +111,9 @@ class DuelRules(
     /** Classic bit 12: attacks only land with a whitelisted joke weapon ([FUN_WEAPONS]) — bare
      *  fists are NOT allowed (the whitelist is also enforced at the equip point). */
     val funWeapons: Boolean = false,
+    /** Classic bit 3 (informational, no enforcement): each player can see the OTHER's backpack
+     *  and worn gear on the stake/confirm screens — item identities, stack quantities hidden. */
+    val showInventories: Boolean = false,
     /** Companions may fight alongside their owners (both sides) — up to a 4v4. Default OFF. */
     val allowCompanions: Boolean = false,
     /** Equipment slot ids that can't be worn (e.g. Boxing disables every slot). */
@@ -127,6 +130,7 @@ class DuelRules(
             if (noPrayer) add("No Prayer"); if (noFood) add("No Food"); if (noDrinks) add("No Drinks")
             if (noMovement) add("No Movement"); if (noForfeit) add("No Forfeit")
             if (noWeaponSwitch) add("No Weapon Switch"); if (noSpec) add("No Special Attacks")
+            if (showInventories) add("Show Inventories")
             if (allowCompanions) add("Companions allowed")
             gearLabel?.let { add(it) }
         }

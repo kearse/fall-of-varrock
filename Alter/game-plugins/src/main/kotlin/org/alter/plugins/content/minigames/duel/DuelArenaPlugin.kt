@@ -13,6 +13,8 @@ import org.alter.game.model.World
 import org.alter.game.model.attr.AttributeKey
 import org.alter.game.model.attr.DUEL_ESCROW_ATTR
 import org.alter.game.model.attr.POISON_TICKS_LEFT_ATTR
+import org.alter.game.model.container.ContainerStackType
+import org.alter.game.model.container.ItemContainer
 import org.alter.game.model.entity.Player
 import org.alter.game.model.item.Item
 import org.alter.game.model.move.moveTo
@@ -90,8 +92,10 @@ class DuelArenaPlugin(
         onLogin {
             player.attr[DUEL_REQUESTS_ATTR] = HashSet()
             player.sendOption("Challenge", CHALLENGE_OPTION_SLOT)
-            // Clear any stale rules-overlay state (transient signal must never persist across login).
+            // Clear any stale rules/confirm-overlay state (transient signals must never persist
+            // across login).
             player.setVarp(DuelRulesClientMenu.STATE_VARP, 0)
+            player.setVarp(DuelConfirmScreen.STATE_VARP, 0)
             // Crash recovery: a leftover escrow blob means a duel never resolved — refund the stake.
             player.attr[DUEL_ESCROW_ATTR]?.let { blob ->
                 val refunded = itemsFromBlob(blob)
@@ -136,6 +140,8 @@ class DuelArenaPlugin(
             DuelArena.active.toList().forEach { d ->
                 runCatching { tick(d) }.onFailure { e -> logger.error(e) { "duel tick failed" } }
             }
+            // Confirmation-screen "Wait…" bits expire here (the same every-tick heartbeat).
+            runCatching { DuelConfirmScreen.tick(world) }.onFailure { e -> logger.error(e) { "duel confirm tick failed" } }
             world.timers[duelTimer] = 1
         }
 
@@ -419,12 +425,52 @@ class DuelArenaPlugin(
                     "but you only have $freeSlots free backpack space${if (freeSlots == 1) "" else "s"} — make room first."
             } else null
         }
-        val sa = TradeSession(a, b, hook, vet)
-        val sb = TradeSession(b, a, hook, vet)
+        // Confirm-screen edges: raise/lower the themed confirmation overlay (varp + opponent
+        // stats), refreshing the Show-Inventories gear snapshot on the way up.
+        val confirm: (Player, Boolean) -> Unit = { p, openNow ->
+            val opponent = if (p === a) b else a
+            if (openNow) {
+                DuelConfirmScreen.open(p, opponent, rules)
+                if (rules.showInventories) pushOpponentGear(p, opponent)
+            } else {
+                DuelConfirmScreen.close(p)
+                clearOpponentGear(p)
+            }
+        }
+        val sa = TradeSession(a, b, hook, vet, confirm)
+        val sb = TradeSession(b, a, hook, vet, confirm)
         a.attr[TRADE_SESSION_ATTR] = sa
         b.attr[TRADE_SESSION_ATTR] = sb
         sa.open()
         sb.open()
+        // Show Inventories: each side sees the other's backpack + worn gear from the FIRST stake
+        // screen on (identities, not quantities — the masked containers).
+        if (rules.showInventories) {
+            pushOpponentGear(a, b)
+            pushOpponentGear(b, a)
+        }
+    }
+
+    /** Send [opponent]'s backpack + worn gear to [viewer] under the Show-Inventories container
+     *  keys, stack quantities masked to 1 (the classic "items visible, amounts hidden"). */
+    private fun pushOpponentGear(viewer: Player, opponent: Player) {
+        viewer.sendItemContainer(DuelConfirmScreen.OPP_BACKPACK_KEY, masked(opponent.inventory))
+        viewer.sendItemContainer(DuelConfirmScreen.OPP_WORN_KEY, masked(opponent.equipment))
+    }
+
+    /** Blank both Show-Inventories containers for [viewer] (the client hides its panel on empty). */
+    private fun clearOpponentGear(viewer: Player) {
+        if (viewer.index < 0) return
+        viewer.sendItemContainer(DuelConfirmScreen.OPP_BACKPACK_KEY, ItemContainer(viewer.inventory.capacity, ContainerStackType.NORMAL))
+        viewer.sendItemContainer(DuelConfirmScreen.OPP_WORN_KEY, ItemContainer(viewer.equipment.capacity, ContainerStackType.NORMAL))
+    }
+
+    private fun masked(source: ItemContainer): ItemContainer {
+        val copy = ItemContainer(source.capacity, ContainerStackType.NORMAL)
+        for (i in 0 until source.capacity) {
+            source[i]?.let { copy[i] = Item(it.id, 1) }
+        }
+        return copy
     }
 
     // ───────────────────────────── duel lifecycle ─────────────────────────────

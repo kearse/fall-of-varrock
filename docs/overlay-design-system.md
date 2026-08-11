@@ -294,6 +294,12 @@ Reusable pieces — reach for these before inventing a new one. Metrics above.
     **4684 sparring opponent** (live bout only: the sparring companion's world-index + 1, 0 = no
     bout — the client companions plugin suspends its own-companion "Attack" menu-hide for exactly
     this index; `SparringClientMenu.OPPONENT_VARP`) ·
+    **4685 duel confirmation screen** (packed: bit 0 open | the duel-rules toggle+slot bit
+    layout of varp 4630 | bit 30 Accept-lockout "Wait…" — `DuelConfirmScreen`, client
+    `lofduel.LofDuelConfirmOverlay`; opponent stats arrive separately as a `~LOFDUEL~` CONSOLE
+    line, and the Show-Inventories rule streams the opponent's backpack/worn gear as ITEM
+    CONTAINERS under keys **4700/4701**, quantities masked to 1 — container keys claimed here
+    beside the varp so nothing else squats them) ·
     **4683 Quest Journal open-pulse** (`QuestBook.OPEN_VARP`; value = chain index + 1) — the
     quest trio previously squatted 4643-4645 INSIDE the kit editor's block unrecorded here,
     which is exactly the double-claim this list exists to prevent: once the varp-table ceiling

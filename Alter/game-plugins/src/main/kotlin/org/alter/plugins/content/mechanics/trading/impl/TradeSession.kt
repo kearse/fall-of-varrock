@@ -37,6 +37,13 @@ class TradeSession(
      * accept" rule — gear the duel's rules will strip at start has to fit in the backpack.
      */
     private val stakeVet: ((Player, Int) -> String?)? = null,
+    /**
+     * Stake-mode stage signal: fired with `open = true` when this session's player lands on the
+     * confirm (second) screen, and `open = false` when the session ends for them (completed or
+     * declined). The duel plugin drives the themed confirmation overlay (varp + opponent stats)
+     * from exactly these two edges.
+     */
+    private val stakeConfirm: ((Player, Boolean) -> Unit)? = null,
 ) {
     /** True for a Duel-Arena stake session (vs a plain trade). Read by the themed stake overlay driver. */
     val isStake = stake != null
@@ -60,6 +67,33 @@ class TradeSession(
      * The current 'stage' of the trade session
      */
     private var stage: TradeStage = TradeStage.TRADE_SCREEN
+
+    /**
+     * Stake-mode anti-scam lockout (the 2015 Duel Arena Rework behaviour): the world tick until
+     * which Accept is refused — armed for ~3 s by every stake change AND on entering the confirm
+     * screen, on BOTH sides. The themed overlays show "Wait…" by watching the containers; this
+     * field is what a spoofed `::lofstake a` runs into.
+     */
+    private var acceptLockedUntil = 0
+
+    /** Ticks Accept stays locked after a stake change / on the confirm screen opening (~3 s). */
+    private val changeLockTicks = 5
+
+    /** Arm the accept lockout on THIS session (see [acceptLockedUntil]). */
+    fun lockAccept() {
+        acceptLockedUntil = player.world.currentCycle + changeLockTicks
+    }
+
+    /** A stake changed: revoke-notice to both sides (if an accept stood) + lockout on both. */
+    private fun onStakeMutated(hadAccept: Boolean) {
+        if (stake == null) return
+        lockAccept()
+        partner.getTradeSession()?.lockAccept()
+        if (hadAccept) {
+            player.message("An option or stake has changed - check before accepting!")
+            partner.message("An option or stake has changed - check before accepting!")
+        }
+    }
 
     /**
      * An extension function for retrieving the value of each item in an [ItemContainer]]
@@ -181,6 +215,11 @@ class TradeSession(
      */
     fun decline(forced: Boolean = false) {
         if (partner.getTradeSession() != null) {
+            // Lower the duel confirmation overlay for both sides (no-op when it never rose).
+            if (stake != null) {
+                stakeConfirm?.invoke(player, false)
+                stakeConfirm?.invoke(partner, false)
+            }
             // Remove the trade sessions from both players
             player.removeTradeSession()
             partner.removeTradeSession()
@@ -212,9 +251,11 @@ class TradeSession(
         val item = inventory[slot] ?: return
         val count = Math.min(amount, inventory.getItemCount(item.id))
 
+        val hadAccept = player.hasAcceptedTrade() || partner.hasAcceptedTrade()
         val transaction = inventory.remove(item.id, count, assureFullRemoval = true, beginSlot = slot)
         if (transaction.hasSucceeded()) {
             container.add(item.id, count)
+            onStakeMutated(hadAccept)
         }
 
         refresh()
@@ -236,10 +277,12 @@ class TradeSession(
         val item = container[slot] ?: return
         val count = Math.min(amount, container.getItemCount(item.id))
 
+        val hadAccept = player.hasAcceptedTrade() || partner.hasAcceptedTrade()
         val transaction = container.remove(item.id, count, assureFullRemoval = true)
         if (transaction.hasSucceeded()) {
             inventory.add(item.id, count)
             container.shift()
+            onStakeMutated(hadAccept)
 
             player.setVarbit(PLAYER_TRADE_MODIFIED_VARBIT, 1)
             partner.setVarbit(PARTNER_TRADE_MODIFIED_VARBIT, 1)
@@ -262,6 +305,12 @@ class TradeSession(
      * @param accepted  If the player accepted this trade session
      */
     fun progress(accepted: Boolean = true) {
+        // Stake-mode accept lockout: within ~3 s of any change (or of the confirm screen opening)
+        // an Accept is refused outright — the change must be seen before it can be agreed to.
+        if (accepted && stake != null && player.world.currentCycle < acceptLockedUntil) {
+            player.message("An option or stake has changed - check before accepting!")
+            return
+        }
         player.attr[TRADE_ACCEPTED_ATTR] = accepted
 
         // If the current trade session is on the trade screen
@@ -335,6 +384,13 @@ class TradeSession(
 
         // Set the trade stage
         stage = TradeStage.ACCEPT_SCREEN
+
+        // Landing on the confirm screen re-arms the lockout (fresh screen, fresh look before an
+        // accept can land) and signals the duel side to raise the themed confirmation overlay.
+        if (stake != null) {
+            lockAccept()
+            stakeConfirm?.invoke(player, true)
+        }
 
         // Send the default component text values
         player.setComponentText(ACCEPT_INTERFACE, 4, if (isStake) "Are you sure you want to stake these items?" else "Are you sure you want to make this trade?")
@@ -430,6 +486,7 @@ class TradeSession(
      * work too, but this keeps the stake path explicit and its message duel-appropriate.)
      */
     private fun finaliseStake(target: Player) {
+        stakeConfirm?.invoke(target, false)
         target.getTradeSession()?.let { s ->
             s.container.removeAll()
             s.inventory.removeAll()

@@ -113,25 +113,36 @@ Extend `DuelRules` + enforcement (research §2.2 is the source of truth for sema
   `noWeaponSwitch`/`funWeapons`/gear slots deliberately duel-only — sparring loadouts are
   kit-defined, so mid-bout gear games aren't a thing there.
 
-## Phase 3 — interface fidelity (the three-screen agreement)
+## Phase 3 — interface fidelity (the three-screen agreement) — ✅ SHIPPED
 
 Ship on the client overlay (`DuelRulesClientMenu`, default-on) first; the cache grid
 (`docs/duel-rules-grid.md`) follows the same contract once live-verified. Cache-exact
 strings in research §2.1–2.2.
 
-1. **Rules screen**: 13 rule rows + 11 equipment slots + preset buttons; toggles sync live
-   to both players (already the overlay's model).
-2. **Anti-scam UX everywhere an agreement can change** (rules screen AND stake screen):
+1. ✅ **Rules screen**: 15 rule rows (incl. **Show Inventories**, informational — added to
+   the Whip/Boxing presets per the decoded masks) + 11 equipment slots + preset buttons;
+   toggles sync live to both players.
+2. ✅ **Anti-scam UX everywhere an agreement can change** (rules screen AND stake screen):
    any mutation resets BOTH accepts, locks Accept for ~3 s ("Wait..."), flashes a marker on
    the changed row/slot, and shows "An option or stake has changed - check before
-   accepting!". **Audit `TradeSession`** to confirm stake edits reset both accepts today;
-   add the lockout timer to it.
-3. **Confirmation screen** (the third screen) before escrow locks: opponent name, combat
-   level, **individual combat stats**; "Before the duel starts:" consequence lines (worn
-   items taken off / boosted stats restored / prayers stopped); "During the duel:" one line
-   per rule; both stake lists with values and `K/M (exact)` expansions; Accept/Decline with
-   the same change-lockout. This is where the 2016 lesson lands: longer, explicit flow =
-   fewer regrets.
+   accepting!". **`TradeSession` audit result**: stake edits DID already reset both accepts
+   (`progress(false)`); what was missing — and is now added — is the ~3 s lockout (armed by
+   every stake change AND on entering the confirm screen, enforced server-side in
+   `progress(true)` so a spoofed `::lofstake a` can't skip it) and the change notice. The
+   client half derives the "Wait…"/flash purely by frame-diffing the state varp (rules
+   screen) / the offer widgets (stake screen) — no extra protocol bits.
+3. ✅ **Confirmation screen** (the third screen) before escrow locks: themed overlay
+   (`LofDuelConfirmOverlay`) over the vanilla confirm interface — opponent name, combat
+   level, **individual combat stats** (one `~LOFDUEL~` CONSOLE machine line, §8 transport
+   rules); "Before the duel starts:" consequence lines; "During the duel:" one cache-exact
+   line per rule derived from the agreed bits (varp 4685 republishes the rules in the varp-
+   4630 layout); both stake grids (confirm containers 90/+32768) with values + short `K/M`
+   expansions; opponent's **worn gear** under Show Inventories (containers 4700/4701,
+   quantities masked); Accept with the same entry lockout ("Wait…", bit 30, server-cleared).
+   *Scoped down:* the opponent-**backpack** panel and the stake-screen gear tabs wait for a
+   window with more room (the 480×324 modal is full) — the worn panel is the hasta-scam
+   surface and ships now; the backpack containers are already streamed, so the client can
+   grow the panel without protocol changes.
 
 ## Phase 4 — arena content & atmosphere
 

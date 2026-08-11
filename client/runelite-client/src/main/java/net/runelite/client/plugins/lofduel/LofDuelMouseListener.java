@@ -1,9 +1,11 @@
 /*
- * Fall of Varrock — Duel Arena rules overlay (mouse input).
+ * Fall of Varrock — Duel Arena rules + confirmation overlays (mouse input).
  *
- * Hit-tests left-clicks against the open rules window: a chip toggles a rule, Accept/Decline send
- * the matching action, and any click on the window is consumed so it doesn't fall through to the
- * game world. All actions go back to the server as "::duel <action>".
+ * Hit-tests left-clicks against whichever duel window is open: on the RULES screen a chip toggles
+ * a rule and preset/Accept/Decline send the matching action; on the CONFIRMATION screen Accept
+ * (refused while the change lockout shows "Wait…") and Decline route through the SECURE
+ * TradeSession as stake actions. Any click on an open window is consumed so it doesn't fall
+ * through to the game world.
  */
 package net.runelite.client.plugins.lofduel;
 
@@ -16,18 +18,45 @@ class LofDuelMouseListener extends MouseAdapter
 {
 	private final LofDuelPlugin plugin;
 	private final LofDuelOverlay overlay;
+	private final LofDuelConfirmOverlay confirmOverlay;
 
 	@Inject
-	LofDuelMouseListener(LofDuelPlugin plugin, LofDuelOverlay overlay)
+	LofDuelMouseListener(LofDuelPlugin plugin, LofDuelOverlay overlay, LofDuelConfirmOverlay confirmOverlay)
 	{
 		this.plugin = plugin;
 		this.overlay = overlay;
+		this.confirmOverlay = confirmOverlay;
 	}
 
 	@Override
 	public MouseEvent mousePressed(MouseEvent event)
 	{
-		if (!overlay.isShowing() || !SwingUtilities.isLeftMouseButton(event))
+		if (!SwingUtilities.isLeftMouseButton(event))
+		{
+			return event;
+		}
+
+		// Confirmation screen (varp-gated; never open at the same time as the rules screen).
+		if (confirmOverlay.isShowing())
+		{
+			final int hit = confirmOverlay.hitTest(event.getPoint());
+			if (hit == LofDuelConfirmOverlay.OUTSIDE)
+			{
+				return event;
+			}
+			if (hit == LofDuelConfirmOverlay.ACCEPT && !confirmOverlay.isAcceptLocked())
+			{
+				plugin.sendStakeAction("a");
+			}
+			else if (hit == LofDuelConfirmOverlay.DECLINE)
+			{
+				plugin.sendStakeAction("d");
+			}
+			event.consume();
+			return event;
+		}
+
+		if (!overlay.isShowing())
 		{
 			return event;
 		}
@@ -40,7 +69,11 @@ class LofDuelMouseListener extends MouseAdapter
 
 		if (hit == LofDuelOverlay.ACCEPT)
 		{
-			plugin.sendAction("a");
+			// Swallowed during the post-change "Wait…" window (server enforces the same lockout).
+			if (!overlay.isAcceptWaiting())
+			{
+				plugin.sendAction("a");
+			}
 		}
 		else if (hit == LofDuelOverlay.DECLINE)
 		{
@@ -94,6 +127,10 @@ class LofDuelMouseListener extends MouseAdapter
 	private MouseEvent swallowIfOnWindow(MouseEvent event)
 	{
 		if (overlay.isShowing() && overlay.hitTest(event.getPoint()) != LofDuelOverlay.OUTSIDE)
+		{
+			event.consume();
+		}
+		else if (confirmOverlay.isShowing() && confirmOverlay.hitTest(event.getPoint()) != LofDuelConfirmOverlay.OUTSIDE)
 		{
 			event.consume();
 		}

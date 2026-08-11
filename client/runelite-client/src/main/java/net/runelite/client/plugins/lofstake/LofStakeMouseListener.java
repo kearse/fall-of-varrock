@@ -41,7 +41,11 @@ class LofStakeMouseListener extends MouseAdapter
 
 		if (hit == LofStakeOverlay.ACCEPT)
 		{
-			plugin.sendAction("a");
+			// Swallowed during the post-change "Wait…" window (server enforces the same lockout).
+			if (!overlay.isAcceptWaiting())
+			{
+				plugin.sendAction("a");
+			}
 		}
 		else if (hit == LofStakeOverlay.DECLINE)
 		{

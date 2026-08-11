@@ -25,7 +25,9 @@ up first? The [PK Training Arena](/wiki/pk-training-arena) is still the place to
 2. **Set the rules** - choose how the fight is fought (see below).
 3. **Put up your stake** - add items and coins exactly like a trade. Both sides see each other's
    stake and its total value.
-4. **Confirm** - a second screen shows both locked stakes. Accept it and the fight is on.
+4. **Confirm** - the third screen is the full classic confirmation: your opponent's **combat
+   stats**, every agreed rule spelled out, what happens when the duel starts, and both locked
+   stakes with their values. Accept it and the fight is on.
 5. **Fight to the death** - you're both teleported into your own private arena, a short countdown,
    then it's live. First to fall loses.
 6. **Payout** - the winner receives **both stakes** (banked if their inventory is full), and both
@@ -38,6 +40,9 @@ Duel Arena staking in RSPS history is a notorious scam pit. This one is built so
 - **The stakes go into escrow the moment you both confirm** - not into your opponent's hands. The
   classic "remove your item at the last second" trick is impossible; the confirm screen shows both
   locked stakes and their value.
+- **Nothing changes behind your back** - any change to the rules or either stake instantly
+  resets BOTH accepts, flashes the changed row, and locks the Accept button for a few seconds
+  ("Wait...") with a warning. You physically cannot agree to something you haven't seen.
 - **Your worn gear and the rest of your bank are never at risk** - only what you explicitly staked.
   Dying in the arena drops **nothing** of your own.
 - **Crash-safe** - if the server ever goes down mid-duel, the duel is voided and **every stake is
@@ -63,6 +68,8 @@ past you at the last second. Both accept → the stake screen opens.
 - **Whip only / DDS only** - house weapon whitelists.
 - **Fun weapons** - you can only attack with a whitelisted joke weapon (rubber chicken and
   friends). **Bare fists don't count** - no weapon, no attack.
+- **Show Inventories** - each of you can see the other's worn gear and backpack (what they
+  have, not how many) - no hidden hasta up the sleeve.
 
 **Forbidden gear** (the paper-doll): click any equipment slot to forbid it for the duel. Forbidden
 worn gear is taken off automatically when the fight starts - so you need **enough free backpack
@@ -72,7 +79,7 @@ bans every two-handed weapon (a 2H fills both).
 **Presets** - one click sets a whole rule sheet:
 
 - **Whip** - the classic whip-stake format: no ranged/magic/prayer/food/drinks/movement/forfeit/specials,
-  every gear slot forbidden except the weapon. Any one-handed weapon is legal.
+  inventories shown, every gear slot forbidden except the weapon. Any one-handed weapon is legal.
 - **Boxing** - the same, plus the weapon slot - bare fists.
 - **Save / Load** - keep your own favourite rule sheet on your account.
 - **Last** - reload whatever the two of you agreed last time.
@@ -104,5 +111,5 @@ Always in effect:
 
 ## Coming soon
 
-**Show Inventories** (see your opponent's backpack on the confirm screen) and **obstacle pits**
-are on the way, along with the full three-screen classic agreement flow.
+**Obstacle pits** and the arena atmosphere polish (winnings interface, scoreboards) are on the
+way.

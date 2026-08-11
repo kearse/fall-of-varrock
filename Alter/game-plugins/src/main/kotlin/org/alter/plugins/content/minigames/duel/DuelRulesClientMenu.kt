@@ -42,9 +42,12 @@ object DuelRulesClientMenu {
     val RULES = listOf(
         "No Melee", "No Ranged", "No Magic", "No Prayer", "No Food", "No Drinks",
         "No Movement", "No Forfeit", "Whip only", "DDS only", "Fun weapons", "Allow companions",
-        "No Weapon Switch", "No Special Attacks",
+        "No Weapon Switch", "No Special Attacks", "Show Inventories",
     )
     val RULE_COUNT = RULES.size
+
+    /** Ticks an Accept stays locked after any rules mutation (~3 s) — the 2015 anti-scam lockout. */
+    const val CHANGE_LOCK_TICKS = 5
 
     /** Paper-doll slots (doll index → EquipmentType id) — MUST match the client overlay's SLOT order. */
     val SLOT_IDS = intArrayOf(
@@ -53,7 +56,7 @@ object DuelRulesClientMenu {
         EquipmentType.BOOTS.id, EquipmentType.RING.id, EquipmentType.AMMO.id,
     )
 
-    // Rule indices used by the official presets.
+    // Rule indices used by the official presets and the rules→bits packer.
     private const val R_NO_RANGED = 1
     private const val R_NO_MAGIC = 2
     private const val R_NO_PRAYER = 3
@@ -62,17 +65,18 @@ object DuelRulesClientMenu {
     private const val R_NO_MOVEMENT = 6
     private const val R_NO_FORFEIT = 7
     private const val R_NO_SPEC = 13
+    private const val R_SHOW_INV = 14
     private const val WEAPON_DOLL_SLOT = 3
 
     /**
-     * The official **Whip** preset (per the decoded cache bitmask, minus Show Inventories which is
-     * a Phase-3 interface feature): No Ranged/Magic/Prayer/Food/Drinks/Movement/Forfeit/Special
-     * Attacks + every equipment slot forbidden EXCEPT the weapon. Any one-handed weapon is legal —
-     * the forbidden shield slot is what bans 2H weapons (see [DuelRules.barsWorn]).
+     * The official **Whip** preset (per the decoded cache bitmask): Show Inventories + No
+     * Ranged/Magic/Prayer/Food/Drinks/Movement/Forfeit/Special Attacks + every equipment slot
+     * forbidden EXCEPT the weapon. Any one-handed weapon is legal — the forbidden shield slot is
+     * what bans 2H weapons (see [DuelRules.barsWorn]).
      */
     val WHIP_PRESET: Int = run {
         var v = 0
-        intArrayOf(R_NO_RANGED, R_NO_MAGIC, R_NO_PRAYER, R_NO_FOOD, R_NO_DRINKS, R_NO_MOVEMENT, R_NO_FORFEIT, R_NO_SPEC)
+        intArrayOf(R_NO_RANGED, R_NO_MAGIC, R_NO_PRAYER, R_NO_FOOD, R_NO_DRINKS, R_NO_MOVEMENT, R_NO_FORFEIT, R_NO_SPEC, R_SHOW_INV)
             .forEach { v = v or (1 shl (it + 1)) }
         for (i in 0 until SLOT_COUNT) if (i != WEAPON_DOLL_SLOT) v = v or (1 shl (i + SLOT_BIT_BASE))
         v
@@ -87,6 +91,9 @@ object DuelRulesClientMenu {
         var acceptedA = false
         var acceptedB = false
         var done = false
+
+        /** World tick until which Accept is locked (the ~3 s post-change lockout). */
+        var lockUntil = 0
     }
 
     private val sessions = HashMap<Int, Session>()
@@ -141,14 +148,25 @@ object DuelRulesClientMenu {
     }
 
     private fun resetAccepts(s: Session) {
-        // Like OSRS: ANY change revokes both accepts.
+        // Like OSRS since the 2015 Rework: ANY change revokes both accepts AND locks Accept for
+        // ~3 s (the client overlay shows "Wait…" by diffing the state varp — the enforcement
+        // below in [accept] is what a spoofed ::lofduel click runs into).
+        val hadAccept = s.acceptedA || s.acceptedB
         s.acceptedA = false
         s.acceptedB = false
+        s.lockUntil = s.a.world.currentCycle + CHANGE_LOCK_TICKS
+        if (hadAccept) {
+            forEachSide(s) { side -> side.message("An option or stake has changed - check before accepting!") }
+        }
         publish(s)
     }
 
     fun accept(p: Player) {
         val s = sessions[p.index] ?: return
+        if (p.world.currentCycle < s.lockUntil) {
+            p.message("The rules just changed - check them before accepting.")
+            return
+        }
         // The single winnability gate (DuelRules.validate) — same matrix as the grid and menus.
         buildRules(s.rules, s.slots).validate()?.let { err -> p.message(err); return }
         if (p === s.a) s.acceptedA = true else s.acceptedB = true
@@ -233,11 +251,32 @@ object DuelRulesClientMenu {
         return DuelRules(
             noMelee = t[0], noRanged = t[1], noMagic = t[2],
             noPrayer = t[3], noFood = t[4], noDrinks = t[5], noMovement = t[6], noForfeit = t[7],
-            noWeaponSwitch = t[12], noSpec = t[13], funWeapons = t[10],
+            noWeaponSwitch = t[12], noSpec = t[13], funWeapons = t[10], showInventories = t[14],
             allowCompanions = t[11],
             disabledSlots = disabled,
             allowedWeapons = weapons.takeIf { it.isNotEmpty() },
             gearLabel = gearLabel,
         )
+    }
+
+    /**
+     * Pack an agreed [DuelRules] back into the [STATE_VARP] toggle+slot bit layout — the
+     * confirmation screen republishes the rules this way (varp 4685, [DuelConfirmScreen]) so the
+     * client renders its "During the duel:" lines from the exact agreed bits. Weapon whitelists
+     * that came from the chatbox menus (no toggle set) surface through the closest toggle.
+     */
+    fun packRules(r: DuelRules): Int {
+        var v = 0
+        fun rule(i: Int, on: Boolean) { if (on) v = v or (1 shl (i + 1)) }
+        rule(0, r.noMelee); rule(R_NO_RANGED, r.noRanged); rule(R_NO_MAGIC, r.noMagic)
+        rule(R_NO_PRAYER, r.noPrayer); rule(R_NO_FOOD, r.noFood); rule(R_NO_DRINKS, r.noDrinks)
+        rule(R_NO_MOVEMENT, r.noMovement); rule(R_NO_FORFEIT, r.noForfeit)
+        rule(8, r.allowedWeapons?.any { it in DuelRules.WHIP_WEAPONS } == true)
+        rule(9, r.allowedWeapons?.any { it in DuelRules.DDS_WEAPONS } == true)
+        rule(10, r.funWeapons)
+        rule(11, r.allowCompanions)
+        rule(12, r.noWeaponSwitch); rule(R_NO_SPEC, r.noSpec); rule(R_SHOW_INV, r.showInventories)
+        SLOT_IDS.forEachIndexed { i, slotId -> if (slotId in r.disabledSlots) v = v or (1 shl (i + SLOT_BIT_BASE)) }
+        return v
     }
 }
