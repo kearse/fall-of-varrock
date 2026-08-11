@@ -468,7 +468,9 @@ assume the common one (`::bank`); other scam-bait words would also open the bank
   **4680 companion sparring settings** (`SparringClientMenu` / client `lofspar`) ·
   **4681 quests (War-Prep III step)** · **4682 quests (Rogue Knight ladder)** ·
   **4683 Quest Journal open-pulse** (`QuestBook.OPEN_VARP`) — the quest trio moved off
-  4643-4645, which silently collided with the kit editor's block (`::kits` popped the journal).
+  4643-4645, which silently collided with the kit editor's block (`::kits` popped the journal) ·
+  **4684 sparring opponent world-index + 1** (live bout only — un-hides "Attack" on that one
+  companion clientside; `SparringClientMenu.OPPONENT_VARP`).
   All ids here are guaranteed writable: the server sizes the varp table to at least
   `Player.CUSTOM_VARP_CEILING` (6000) regardless of the cache's varp count (`::varpmax` to verify).
 

@@ -21,6 +21,8 @@ import org.alter.plugins.content.companion.Companion as CompanionPawn
  *   bits 3-4     difficulty ([SparDifficulty] ordinal)
  *   bits 5-13    the 9 rule toggles ([TrainingRules] — order in [packRules])
  *   bits 14-15   companion loadout mode ([CompanionKitMode] ordinal)
+ *   bit 16       CONFIRM phase (the read-only overview screen; 0 = the settings screen)
+ *   bit 17       the owner fights in a loaner kit (0 = own gear) — confirm-screen "Me:" line
  */
 object SparringClientMenu {
     /** Must match the client overlay (LofSparOverlay). 4680 is free: 4600-4639 are allocated to
@@ -28,6 +30,14 @@ object SparringClientMenu {
      *  docs/overlay-design-system.md §8 (updated together with this claim). */
     const val STATE_VARP = 4680
     const val RULE_COUNT = 9
+
+    /**
+     * Live-bout signal: the sparring OPPONENT's world-index + 1 (0 = no bout). The client's
+     * companions plugin hides the right-click "Attack" entry on your own companions; this varp
+     * tells it which one is currently your sparring partner so that hide is suspended for it
+     * (master varp map: docs/overlay-design-system.md §8).
+     */
+    const val OPPONENT_VARP = 4684
 
     /** Overlay on custom clients; the chatbox dialogue remains the fallback for everyone else. */
     var enabled = true
@@ -40,12 +50,18 @@ object SparringClientMenu {
      */
     fun available(p: Player): Boolean = STATE_VARP < p.varps.maxVarps
 
+    /** The duel-arena two-screen flow: SETTINGS (rules/style/loadout radios) → the kit-locker
+     *  step (handled by the plugin between phases) → CONFIRM (read-only overview, Accept/Back). */
+    enum class Phase { SETTINGS, CONFIRM }
+
     private class Session(
         val owner: Player,
         val comp: CompanionPawn,
         var settings: SparSettings,
+        var phase: Phase,
         val onStart: (SparSettings) -> Unit,
         val onEditKit: (SparSettings) -> Unit,
+        val onKitStep: (SparSettings) -> Unit,
     )
 
     private val sessions = HashMap<Int, Session>()
@@ -58,8 +74,10 @@ object SparringClientMenu {
         settings: SparSettings,
         onStart: (SparSettings) -> Unit,
         onEditKit: (SparSettings) -> Unit,
+        onKitStep: (SparSettings) -> Unit,
+        phase: Phase = Phase.SETTINGS,
     ) {
-        val s = Session(owner, comp, settings, onStart, onEditKit)
+        val s = Session(owner, comp, settings, phase, onStart, onEditKit, onKitStep)
         sessions[owner.index] = s
         publish(s)
     }
@@ -69,9 +87,16 @@ object SparringClientMenu {
         if (p.index >= 0) clearVarps(p)
     }
 
-    /** Wipe the overlay varp (login hygiene — transient UI state must never persist). */
+    /** Wipe the overlay varps (login hygiene — transient UI state must never persist). */
     fun clearVarps(p: Player) {
-        if (available(p)) p.setVarp(STATE_VARP, 0)
+        if (!available(p)) return
+        p.setVarp(STATE_VARP, 0)
+        p.setVarp(OPPONENT_VARP, 0)
+    }
+
+    /** Publish/clear the live-bout opponent signal (world-index + 1; 0 = bout over). */
+    fun setOpponent(p: Player, worldIndex: Int?) {
+        if (OPPONENT_VARP < p.varps.maxVarps) p.setVarp(OPPONENT_VARP, worldIndex?.plus(1) ?: 0)
     }
 
     // ── actions (routed from ::lofspar via SparClickPlugin) ──
@@ -132,15 +157,49 @@ object SparringClientMenu {
         publish(s)
     }
 
-    fun start(p: Player) {
+    /** SETTINGS "Continue" — leave the settings screen for the kit-locker step. */
+    fun next(p: Player) {
         val s = sessions[p.index] ?: return
-        if (s.settings.rules.noMelee && s.settings.rules.noRanged && s.settings.rules.noMagic) {
-            p.message("You must leave at least one combat style available.")
-            return
-        }
+        if (s.phase != Phase.SETTINGS) return
+        if (!stylesValid(p, s)) return
+        val settings = s.settings
+        close(p)
+        s.onKitStep(settings)
+    }
+
+    /** CONFIRM "Accept" — the final go: hand the settings to the bout starter. */
+    fun accept(p: Player) {
+        val s = sessions[p.index] ?: return
+        if (s.phase != Phase.CONFIRM) return
+        if (!stylesValid(p, s)) return
         val settings = s.settings
         close(p)
         s.onStart(settings)
+    }
+
+    /** CONFIRM "Back" — return to the settings screen (same session, phase flip). */
+    fun back(p: Player) {
+        val s = sessions[p.index] ?: return
+        if (s.phase != Phase.CONFIRM) return
+        s.phase = Phase.SETTINGS
+        publish(s)
+    }
+
+    /** Legacy "start" (a stale client's settings screen): phase-aware — advances the flow. */
+    fun start(p: Player) {
+        val s = sessions[p.index] ?: return
+        when (s.phase) {
+            Phase.SETTINGS -> next(p)
+            Phase.CONFIRM -> accept(p)
+        }
+    }
+
+    private fun stylesValid(p: Player, s: Session): Boolean {
+        if (s.settings.rules.noMelee && s.settings.rules.noRanged && s.settings.rules.noMagic) {
+            p.message("You must leave at least one combat style available.")
+            return false
+        }
+        return true
     }
 
     fun cancel(p: Player) {
@@ -159,6 +218,8 @@ object SparringClientMenu {
         v = v or ((s.settings.difficulty.ordinal and 0x3) shl 3)
         v = v or (packRules(s.settings.rules) shl 5)
         v = v or ((s.settings.companionKitMode.ordinal and 0x3) shl 14)
+        if (s.phase == Phase.CONFIRM) v = v or (1 shl 16)
+        if (s.settings.playerKit != null) v = v or (1 shl 17) // "me: loaner kit" (else own gear)
         p.setVarp(STATE_VARP, v)
     }
 

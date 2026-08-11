@@ -68,7 +68,12 @@ object KitEditor {
         val onStart: ((KitSetup, Int) -> Unit)?,
         /** Bank mode: fires with the kit to withdraw on "Load kit". */
         val onLoad: ((KitSetup) -> Unit)?,
+        /** Fires when the editor closes WITHOUT completing (X / logout) — never after
+         *  onStart/onLoad/done. Lets a parent flow (companion sparring's kit step) resume. */
+        val onClosed: (() -> Unit)? = null,
     ) {
+        /** Set just before [close] on the start/load/done paths so [onClosed] stays silent. */
+        var completing = false
         val kit = KitSetup()
         var diff = 1 // 0 easy, 1 medium, 2 hard (training mode only)
         var savedKits: Array<KitSetup?> = arrayOfNulls(KitStorage.SLOT_COUNT)
@@ -90,8 +95,12 @@ object KitEditor {
         mode: Mode,
         onStart: ((KitSetup, Int) -> Unit)? = null,
         onLoad: ((KitSetup) -> Unit)? = null,
+        /** Open pre-loaded with this kit (a parent flow's working loadout) instead of the default. */
+        seed: KitSetup? = null,
+        seedName: String = "",
+        onClosed: (() -> Unit)? = null,
     ) {
-        val s = Session(p, mode, onStart, onLoad)
+        val s = Session(p, mode, onStart, onLoad, onClosed)
         if (mode == Mode.LMS) {
             // LMS state lives in LmsKits (persisted selection) — the session just mirrors it.
             sessions[p.index] = s
@@ -100,24 +109,30 @@ object KitEditor {
         }
         s.savedKits = KitStorage.load(p)
         s.savedNames = KitStorage.names(p)
-        // Open on the last-used saved kit if there is one, else the Dharok preset — never a blank
-        // screen: there is always something concrete on the doll to react to.
-        val savedIdx = s.savedKits.indexOfFirst { it != null && !it.isEmpty() }
-        if (savedIdx >= 0) {
-            loadInto(s, s.savedKits[savedIdx]!!)
-            s.kitName = s.savedNames[savedIdx]
-            s.loadedSlot = savedIdx
+        if (seed != null && !seed.isEmpty()) {
+            loadInto(s, seed)
+            s.kitName = seedName
         } else {
-            loadInto(s, KitArmoury.DHAROK)
-            s.kitName = PRESET_NAMES[0]
+            // Open on the last-used saved kit if there is one, else the Dharok preset — never a
+            // blank screen: there is always something concrete on the doll to react to.
+            val savedIdx = s.savedKits.indexOfFirst { it != null && !it.isEmpty() }
+            if (savedIdx >= 0) {
+                loadInto(s, s.savedKits[savedIdx]!!)
+                s.kitName = s.savedNames[savedIdx]
+                s.loadedSlot = savedIdx
+            } else {
+                loadInto(s, KitArmoury.DHAROK)
+                s.kitName = PRESET_NAMES[0]
+            }
         }
         sessions[p.index] = s
         publish(s)
     }
 
     fun close(p: Player) {
-        sessions.remove(p.index) ?: return
+        val s = sessions.remove(p.index) ?: return
         if (p.index >= 0) clearVarps(p)
+        if (!s.completing) s.onClosed?.invoke()
     }
 
     /** Wipe all editor varps (login hygiene — transient UI state must never persist). */
@@ -352,6 +367,7 @@ object KitEditor {
         if (s.kit.isEmpty()) { p.message("Put a kit together first."); return }
         val kit = s.kit.copy()
         val diff = s.diff
+        s.completing = true
         close(p)
         onStart(kit, diff)
     }
@@ -360,6 +376,7 @@ object KitEditor {
     fun done(p: Player) {
         val s = sessions[p.index] ?: return
         if (s.mode != Mode.LMS) return
+        s.completing = true
         close(p)
         p.message("<col=007f00>Kit saved.</col> You'll spawn with it in your next Last Man Standing game.")
     }
@@ -370,6 +387,7 @@ object KitEditor {
         val onLoad = s.onLoad ?: return
         if (s.kit.isEmpty()) { p.message("Put a kit together first."); return }
         val kit = s.kit.copy()
+        s.completing = true
         close(p)
         onLoad(kit)
     }
