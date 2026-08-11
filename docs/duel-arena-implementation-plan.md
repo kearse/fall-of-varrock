@@ -144,18 +144,29 @@ strings in research §2.1–2.2.
    surface and ships now; the backpack containers are already streamed, so the client can
    grow the panel without protocol changes.
 
-## Phase 4 — arena content & atmosphere
+## Phase 4 — arena content & atmosphere — ✅ SHIPPED (obstacle pit gated on live verify)
 
-- **Obstacle pits**: mapdump-verify an obstacle-arena source area (candidates from the
-  classic map: `(3367,3208)-(3386,3218)`, `(3336,3227)-(3355,3237)`) and a flat one;
-  re-verify the current `ARENA_SOURCE` pit is actually obstacle-free in our rev-228 cache.
-  Obstacles rule → allocate the obstacle source; enforce the No-Movement dependency.
-- **Countdown polish**: overhead text "3", "2", "1", "FIGHT!" above both fighters (classic)
-  instead of chat-only; hint arrow over the opponent.
-- **Messages**: classic strings — "The duel hasn't started yet!", "That is not your
-  opponent.", "Well done! You have defeated <name>!", forfeit/decline lines.
-- **Winnings presentation**: on win, a spoils summary (opponent name, combat level, items
-  won) — chat block first, overlay panel later.
+- ✅ **Obstacle pits**: the Obstacles rule (row 16) is wired end-to-end — `No Movement +
+  Obstacles` rejected (classic matrix), obstacle duels allocate `OBSTACLE_SOURCE` (the
+  classic map's SE obstacle arena, interior `(3367,3208)-(3386,3218)`, chunk-aligned box)
+  with their own spawns. **The area is NOT yet mapdump-verified** — the cache lives only on
+  the live host, so the rule ships CLOSED (`DuelArena.obstaclesOpen`, same ship-dark
+  pattern as the cache grid): while closed the toggle refuses and `validate()` rejects, so
+  an unverified pit can never eat a stake. **Live checklist**: `::duelpittest` (walk a test
+  copy — walls enclose it, both spawn tiles clear, obstacles block pathing/sight; TUNE the
+  spawn constants if needed) → `::duelobstacles` to open. The second candidate area
+  `(3336,3227)-(3355,3237)` is the fallback if this pit disappoints; re-verifying
+  `ARENA_SOURCE` is obstacle-free happens on the same walk.
+- ✅ **Countdown polish**: the overhead "3", "2", "1", "FIGHT!" landed with Phase 1; the
+  hint arrow over the opponent now rises at FIGHT! and clears at resolution (both fighters,
+  draws included).
+- ✅ **Messages**: classic strings shipped — engagement refusals are now per-case ("The
+  duel hasn't started yet!" during the countdown, "That is not your opponent." for friendly
+  fire, interference/companion lines otherwise), "Well done! You have defeated <name>!" on
+  a kill, and the stake screens decline with duel wording instead of trade wording.
+- ✅ **Winnings presentation**: every staked win prints the spoils block — opponent name +
+  combat level, up to five named items (+n more), and the pot's market value. The overlay
+  panel remains a later nicety; the chat block is the classic interface-372 content.
 
 ## Phase 5 — social & meta layer
 

@@ -396,11 +396,13 @@ object Combat {
             // duelists (nor they outsiders), nobody swings during the countdown, and COMPANIONS only
             // join when the duel's rules allow them (KO'd companions stay benched). This must run
             // BEFORE the bot bypass below, or any PkBot (companions included) could pierce the duel.
-            if (pvp && pawn is Player && target is Player &&
-                org.alter.plugins.content.minigames.duel.DuelArena.blocksEngagement(pawn, target)
-            ) {
-                pawn.message("You can't interfere with that fight.")
-                return false
+            // The refusal wording is per-case classic ("The duel hasn't started yet!" during the
+            // countdown, "That is not your opponent." for friendly fire, …).
+            if (pvp && pawn is Player && target is Player) {
+                org.alter.plugins.content.minigames.duel.DuelArena.engagementBlock(pawn, target)?.let { refusal ->
+                    pawn.message(refusal)
+                    return false
+                }
             }
 
             // Rogue Knight camp gate: a named knight refuses any real player who hasn't thinned

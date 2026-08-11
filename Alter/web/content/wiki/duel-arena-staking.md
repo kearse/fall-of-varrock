@@ -30,8 +30,9 @@ up first? The [PK Training Arena](/wiki/pk-training-arena) is still the place to
    stakes with their values. Accept it and the fight is on.
 5. **Fight to the death** - you're both teleported into your own private arena, a short countdown,
    then it's live. First to fall loses.
-6. **Payout** - the winner receives **both stakes** (banked if their inventory is full), and both
-   fighters are teleported back to where they accepted the duel.
+6. **Payout** - "Well done! You have defeated <name>!" - the winner receives **both stakes**
+   (banked if their inventory is full) with a spoils summary of what was won and its value, and
+   both fighters are teleported back to where they accepted the duel.
 
 ## It can't be scammed
 
@@ -70,6 +71,9 @@ past you at the last second. Both accept → the stake screen opens.
   friends). **Bare fists don't count** - no weapon, no attack.
 - **Show Inventories** - each of you can see the other's worn gear and backpack (what they
   have, not how many) - no hidden hasta up the sleeve.
+- **Obstacles** - the fight happens in an obstacle pit: walls and pillars that block movement
+  and line of sight. Can't be combined with No Movement. *(Opening soon - the pit is being
+  inspected.)*
 
 **Forbidden gear** (the paper-doll): click any equipment slot to forbid it for the duel. Forbidden
 worn gear is taken off automatically when the fight starts - so you need **enough free backpack
@@ -111,5 +115,5 @@ Always in effect:
 
 ## Coming soon
 
-**Obstacle pits** and the arena atmosphere polish (winnings interface, scoreboards) are on the
-way.
+The **obstacle pit opens** once its inspection wraps up, and **duel scoreboards** (recent
+results, per-player win/loss records) are on the way.

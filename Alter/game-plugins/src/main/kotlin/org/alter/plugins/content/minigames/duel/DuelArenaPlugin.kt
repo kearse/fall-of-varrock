@@ -37,6 +37,7 @@ import org.alter.plugins.content.companion.Companion as CompanionPawn
 import org.alter.plugins.content.companion.CompanionRegistry
 import org.alter.plugins.content.mechanics.trading.TRADE_SESSION_ATTR
 import org.alter.plugins.content.mechanics.trading.getTradeSession
+import org.alter.plugins.service.marketvalue.ItemMarketValueService
 import org.alter.plugins.content.mechanics.trading.impl.StakeHook
 import org.alter.plugins.content.mechanics.trading.impl.TradeSession
 import org.alter.plugins.content.minigames.castlewars.CastleWars
@@ -227,6 +228,24 @@ class DuelArenaPlugin(
         onCommand("duelgridtest", Privilege.ADMIN_POWER, description = "Open the duel rules grid solo (layout test)") {
             DuelRulesScreen.open(player, player) { }
             player.message("Rules grid opened (solo test) — toggles should tick; Decline to exit.")
+        }
+
+        // Obstacle-pit live verification (the source area can't be mapdump-checked from the build
+        // environment): walk the pit with ::duelpittest — confirm walls enclose it, both spawn
+        // tiles are clear, and obstacles actually block pathing/sight — then open the rule with
+        // ::duelobstacles. See DuelArena.obstaclesOpen.
+        onCommand("duelobstacles", Privilege.ADMIN_POWER, description = "Open/close the Obstacles duel rule (after verifying the pit)") {
+            DuelArena.obstaclesOpen = !DuelArena.obstaclesOpen
+            player.message("Obstacle duels: ${if (DuelArena.obstaclesOpen) "OPEN" else "CLOSED"}.")
+        }
+        onCommand("duelpittest", Privilege.ADMIN_POWER, description = "Teleport into a test copy of the obstacle pit") {
+            val instance = RaidInstance.allocate(world, OBSTACLE_SOURCE, exitTile = FALLBACK_EXIT, owner = player.uid, autoDeallocate = true)
+            if (instance == null) {
+                player.message("No instance space free right now.")
+            } else {
+                player.moveTo(instance.translate(OB_RED_SPAWN))
+                player.message("Obstacle pit test copy. Spawns: ${OB_RED_SPAWN.x},${OB_RED_SPAWN.z} and ${OB_BLUE_SPAWN.x},${OB_BLUE_SPAWN.z} (source coords). ::home to leave.")
+            }
         }
     }
 
@@ -487,10 +506,13 @@ class DuelArenaPlugin(
             return
         }
         // One instanced pit PER DUEL (the Wizard-Tower pattern) — the whole server can duel at
-        // once without ever sharing an arena. autoDeallocate is OFF because the "owner" is just
-        // one of the fighters: their death/logout must not evict the opponent mid-payout. resolve()
-        // empties the pit, and the allocator's idle scan then tears it down.
-        val instance = RaidInstance.allocate(world, ARENA_SOURCE, exitTile = FALLBACK_EXIT, owner = a.uid, autoDeallocate = false)
+        // once without ever sharing an arena. The Obstacles rule swaps in the obstacle pit's
+        // source area (classic: which pit you get is decided solely by that rule). autoDeallocate
+        // is OFF because the "owner" is just one of the fighters: their death/logout must not
+        // evict the opponent mid-payout. resolve() empties the pit, and the allocator's idle scan
+        // then tears it down.
+        val source = if (rules.obstacles) OBSTACLE_SOURCE else ARENA_SOURCE
+        val instance = RaidInstance.allocate(world, source, exitTile = FALLBACK_EXIT, owner = a.uid, autoDeallocate = false)
         if (instance == null) {
             // Instance space exhausted — hand both stakes straight back; nothing was risked.
             award(a, stakeA)
@@ -508,9 +530,14 @@ class DuelArenaPlugin(
         b.attr[DUEL_ESCROW_ATTR] = escrowBlob(stakeB)
 
         // Classic spawn shape: No-Movement duels start on ADJACENT tiles (so melee always
-        // connects — the original's fix for the rooted-stalemate scam); everything else starts
-        // the fighters apart.
-        val (spawnA, spawnB) = if (rules.noMovement) NM_RED_SPAWN to NM_BLUE_SPAWN else RED_SPAWN to BLUE_SPAWN
+        // connects — the original's fix for the rooted-stalemate scam); obstacle duels use the
+        // obstacle pit's own spawns (No Movement + Obstacles can't combine — validate()); and
+        // everything else starts the fighters apart.
+        val (spawnA, spawnB) = when {
+            rules.noMovement -> NM_RED_SPAWN to NM_BLUE_SPAWN
+            rules.obstacles -> OB_RED_SPAWN to OB_BLUE_SPAWN
+            else -> RED_SPAWN to BLUE_SPAWN
+        }
         a.moveTo(instance.translate(spawnA))
         b.moveTo(instance.translate(spawnB))
         a.facePawn(b)
@@ -579,6 +606,9 @@ class DuelArenaPlugin(
                     d.fighting = true
                     // No Weapon Switch: what's in hand at FIGHT! is the weapon for the whole duel.
                     if (d.rules.noWeaponSwitch) d.lockWeapons(EquipmentType.WEAPON.id)
+                    // Classic presentation: a hint arrow over your opponent for the whole fight.
+                    if (d.a.index >= 0) d.a.setPlayerHintArrow(d.b.index)
+                    if (d.b.index >= 0) d.b.setPlayerHintArrow(d.a.index)
                     overhead(d, "FIGHT!")
                     broadcast(d, "<col=ff0000>FIGHT!</col>")
                     // Fair opener: who swings first is a coin flip, not challenger-always-first.
@@ -624,11 +654,18 @@ class DuelArenaPlugin(
         sendHome(loser, d)
         // The hospital treatment: both fighters leave fully restored (stats, prayer, spec, run
         // energy, poison) — classic duel-end behaviour, and it doubles as buff cleanup.
-        listOf(winner, loser).forEach { p -> if (p.index >= 0) { normalizeCombatState(p); p.resetFacePawn() } }
+        listOf(winner, loser).forEach { p ->
+            if (p.index >= 0) {
+                normalizeCombatState(p)
+                p.resetFacePawn()
+                p.clearHintArrow()
+            }
+        }
         if (!d.exhibition) {
             when (end) {
                 DuelEnd.DEATH -> {
-                    winner.message("<col=007f00>You won the duel and claimed the stake!</col>")
+                    // The classic victory line, then the spoils summary below.
+                    winner.message("<col=007f00>Well done! You have defeated ${loser.username}!</col>")
                     if (loser.index >= 0) loser.message("<col=ff0000>You lost the duel — your stake is gone.</col>")
                 }
                 DuelEnd.FORFEIT -> {
@@ -638,6 +675,7 @@ class DuelArenaPlugin(
                 DuelEnd.LOGOUT ->
                     winner.message("<col=007f00>${loser.username} fled the duel — you claim the stake!</col>")
             }
+            sendSpoils(winner, loser, d.stakes)
         }
         logger.info { "DUEL winner=${winner.username} loser=${loser.username} end=$end exhibition=${d.exhibition} pot=${d.stakes.sumOf { it.amount.toLong() }} items" }
         d.onResolved?.invoke(winner, loser)
@@ -659,6 +697,7 @@ class DuelArenaPlugin(
                 sendHome(p, d) // BEFORE the restore — it keys off isDead() (see resolve())
                 normalizeCombatState(p)
                 p.resetFacePawn()
+                p.clearHintArrow()
                 p.message("<col=801700>$why — the duel is a draw. Your stake has been returned.</col>")
             }
             // Offline side: escrow attr stays put → their stake refunds on next login.
@@ -680,6 +719,30 @@ class DuelArenaPlugin(
     }
 
     // ───────────────────────────── helpers ─────────────────────────────
+
+    /**
+     * The classic winnings presentation (interface 372's spoils list, as a chat block until an
+     * overlay panel exists): who fell, what was won, and what it's worth. Long stakes list the
+     * first few items and summarize the rest — the full pot is already in the winner's backpack.
+     */
+    private fun sendSpoils(winner: Player, loser: Player, spoils: List<Item>) {
+        if (winner.index < 0) return
+        if (spoils.isEmpty()) {
+            winner.message("Nothing was staked — honour only.")
+            return
+        }
+        val prices = world.getService(ItemMarketValueService::class.java)
+        val total = spoils.sumOf { ((prices?.get(it.id) ?: it.getDef().cost ?: 0).toLong()) * it.amount }
+        val named = spoils.take(SPOILS_LISTED).joinToString(", ") { item ->
+            if (item.amount == 1) item.getName() else "${item.getName()} x${"%,d".format(item.amount)}"
+        }
+        val more = spoils.size - SPOILS_LISTED
+        val suffix = if (more > 0) " +$more more" else ""
+        winner.message(
+            "<col=007f00>Winnings from ${loser.username} (level ${loser.combatLevel}): " +
+                "$named$suffix — value ${"%,d".format(total)} coins.</col>",
+        )
+    }
 
     /** Give [items] to [p], overflowing to the bank when the inventory is full. */
     private fun award(p: Player, items: List<Item>) {
@@ -726,6 +789,9 @@ class DuelArenaPlugin(
         const val DRAW_TICK = 1500
         const val DRAW_WARN_TICK = DRAW_TICK - 100
 
+        /** Items named individually in the winnings chat block before "+n more". */
+        const val SPOILS_LISTED = 5
+
         // Source of each duel's private arena copy: the NORTH-EAST Duel-Arena pit (mapdump-verified:
         // region 13362, pit interior x3370..3389 z3246..3258, row z3251 fully clear). Chunk-aligned
         // 3x3-chunk box so the pit's enclosing walls are copied with it — inside the instance the
@@ -742,5 +808,15 @@ class DuelArenaPlugin(
         // walkable). Only a fallback — resolve() sends both fighters back to their return tiles;
         // this catches the odd path (death/logout placement, allocator teardown sweep).
         val FALLBACK_EXIT = Tile(3367, 3274, 0)
+
+        // Source of the OBSTACLE pit (the Obstacles rule): the classic map's south-east obstacle
+        // arena, interior (3367,3208)-(3386,3218), boxed chunk-aligned so the enclosing walls copy
+        // with it. NOT YET MAPDUMP-VERIFIED — the cache lives only on the live host, so this is
+        // the classic-map candidate from the research doc: the Obstacles rule ships CLOSED
+        // (DuelArena.obstaclesOpen) until an admin walks the pit with ::duelpittest and opens it
+        // with ::duelobstacles. Spawn tiles are candidates too — TUNE during that walk.
+        val OBSTACLE_SOURCE = Area(3360, 3200, 3391, 3223)
+        val OB_RED_SPAWN = Tile(3372, 3213, 0)
+        val OB_BLUE_SPAWN = Tile(3381, 3213, 0)
     }
 }

@@ -52,7 +52,7 @@ class LofDuelOverlay extends Overlay
 	private static final String[] RULES = {
 		"No Melee", "No Ranged", "No Magic", "No Prayer", "No Food", "No Drinks",
 		"No Movement", "No Forfeit", "Whip only", "DDS only", "Fun weapons", "Allow companions",
-		"No Weapon Switch", "No Special Attacks", "Show Inventories",
+		"No Weapon Switch", "No Special Attacks", "Show Inventories", "Obstacles",
 	};
 
 	// Packed-varp bit layout — MUST match DuelRulesClientMenu: bit 0 open, rules at bit 1 with
@@ -79,7 +79,7 @@ class LofDuelOverlay extends Overlay
 	// (everything must show in full — rules can't be hidden and the doll isn't a list, so this
 	// window crams rather than scrolls).
 	private static final int RULE_TOP = TITLE_H + 24;
-	private static final int RULE_H = 13;
+	private static final int RULE_H = 12;
 	private static final int RULE_W = 226;
 	private static final int DOLL_X = 288;
 	private static final int DOLL_TOP = TITLE_H + 30;
@@ -323,20 +323,20 @@ class LofDuelOverlay extends Overlay
 	{
 		g.setColor(on ? LofTheme.alpha(GREEN, 30) : (hov ? LofTheme.ROW_HOVER : LofTheme.ROW));
 		g.fillRoundRect(rc.x, rc.y, rc.width, rc.height, 6, 6);
-		// 11px box so the tightened 14-rule rows still enclose it.
-		final int bx = rc.x + 6, by = rc.y + (rc.height - 11) / 2;
+		// 10px box so the tightened 16-rule rows still enclose it.
+		final int bx = rc.x + 6, by = rc.y + (rc.height - 10) / 2;
 		g.setColor(on ? GREEN : new Color(0, 0, 0, 120));
-		g.fillRoundRect(bx, by, 11, 11, 3, 3);
+		g.fillRoundRect(bx, by, 10, 10, 3, 3);
 		if (on)
 		{
 			final Stroke old = g.getStroke();
 			g.setColor(new Color(20, 20, 20));
 			g.setStroke(new BasicStroke(2f));
-			g.drawLine(bx + 3, by + 6, bx + 4, by + 8);
-			g.drawLine(bx + 4, by + 8, bx + 8, by + 3);
+			g.drawLine(bx + 2, by + 5, bx + 4, by + 7);
+			g.drawLine(bx + 4, by + 7, bx + 7, by + 3);
 			g.setStroke(old);
 		}
-		LofTheme.shadowText(g, label, bx + 17, rc.y + rc.height / 2 + 5, on ? LofTheme.TEXT : LofTheme.TEXT_DIM);
+		LofTheme.shadowText(g, label, bx + 16, rc.y + rc.height / 2 + 5, on ? LofTheme.TEXT : LofTheme.TEXT_DIM);
 	}
 
 	/** A paper-doll equipment slot — red when the slot is forbidden. */

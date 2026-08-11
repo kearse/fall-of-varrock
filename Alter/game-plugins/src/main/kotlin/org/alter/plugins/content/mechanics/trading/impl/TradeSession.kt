@@ -224,13 +224,14 @@ class TradeSession(
             player.removeTradeSession()
             partner.removeTradeSession()
 
-            // Inform the player that they've declined the trade, and close the trade window
-            if (!forced) player.message("You declined the trade")
+            // Inform the player that they've declined, and close the trade window (duel-worded
+            // for a stake session — the classic decline lines).
+            if (!forced) player.message(if (isStake) "You decline the duel." else "You declined the trade")
             player.closeInterface(InterfaceDestination.MAIN_SCREEN)
             player.closeInterface(OVERLAY_INTERFACE)
 
-            // Inform the partner that the player has declined the trade, and close their window
-            if (!forced) partner.message(TRADE_DECLINED_MESSAGE)
+            // Inform the partner that the player has declined, and close their window
+            if (!forced) partner.message(if (isStake) "Other player declined the duel." else TRADE_DECLINED_MESSAGE)
             partner.closeInterface(InterfaceDestination.MAIN_SCREEN)
             partner.closeInterface(OVERLAY_INTERFACE)
         }

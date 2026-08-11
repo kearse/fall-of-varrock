@@ -42,9 +42,12 @@ object DuelRulesClientMenu {
     val RULES = listOf(
         "No Melee", "No Ranged", "No Magic", "No Prayer", "No Food", "No Drinks",
         "No Movement", "No Forfeit", "Whip only", "DDS only", "Fun weapons", "Allow companions",
-        "No Weapon Switch", "No Special Attacks", "Show Inventories",
+        "No Weapon Switch", "No Special Attacks", "Show Inventories", "Obstacles",
     )
     val RULE_COUNT = RULES.size
+
+    /** Index of the Obstacles toggle — refused while [DuelArena.obstaclesOpen] is false. */
+    private const val R_OBSTACLES = 15
 
     /** Ticks an Accept stays locked after any rules mutation (~3 s) — the 2015 anti-scam lockout. */
     const val CHANGE_LOCK_TICKS = 5
@@ -110,6 +113,10 @@ object DuelRulesClientMenu {
     fun toggle(p: Player, index: Int) {
         val s = sessions[p.index] ?: return
         if (index < 0 || index >= RULE_COUNT) return
+        if (index == R_OBSTACLES && !s.rules[index] && !DuelArena.obstaclesOpen) {
+            p.message("The obstacle arena hasn't opened yet.")
+            return
+        }
         s.rules[index] = !s.rules[index]
         resetAccepts(s)
     }
@@ -252,6 +259,7 @@ object DuelRulesClientMenu {
             noMelee = t[0], noRanged = t[1], noMagic = t[2],
             noPrayer = t[3], noFood = t[4], noDrinks = t[5], noMovement = t[6], noForfeit = t[7],
             noWeaponSwitch = t[12], noSpec = t[13], funWeapons = t[10], showInventories = t[14],
+            obstacles = t[15],
             allowCompanions = t[11],
             disabledSlots = disabled,
             allowedWeapons = weapons.takeIf { it.isNotEmpty() },
@@ -276,6 +284,7 @@ object DuelRulesClientMenu {
         rule(10, r.funWeapons)
         rule(11, r.allowCompanions)
         rule(12, r.noWeaponSwitch); rule(R_NO_SPEC, r.noSpec); rule(R_SHOW_INV, r.showInventories)
+        rule(R_OBSTACLES, r.obstacles)
         SLOT_IDS.forEachIndexed { i, slotId -> if (slotId in r.disabledSlots) v = v or (1 shl (i + SLOT_BIT_BASE)) }
         return v
     }

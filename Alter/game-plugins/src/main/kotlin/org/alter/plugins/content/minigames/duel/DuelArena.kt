@@ -36,6 +36,16 @@ object DuelArena {
      */
     var useRulesOverlay = true
 
+    /**
+     * Whether the **Obstacles** rule can be agreed — OFF until [DuelArenaPlugin.OBSTACLE_SOURCE]
+     * is live-verified (walk the pit with `::duelpittest`, then flip with `::duelobstacles`).
+     * The source area is a classic-map candidate that CANNOT be mapdump-verified from the build
+     * environment (the cache lives only on the live host), and an unverified pit must never eat
+     * a stake: while closed, the rules-screen toggle refuses and [DuelRules.validate] rejects.
+     * Same ship-dark pattern as [useRulesGrid].
+     */
+    var obstaclesOpen = false
+
     /** Every duel currently in progress (counting down or fighting). */
     val active = mutableListOf<Duel>()
 
@@ -65,29 +75,34 @@ object DuelArena {
 
     /**
      * Duel isolation — consulted by [org.alter.plugins.content.combat.Combat.canEngage] for every
-     * player-vs-player engagement. Blocks any attack that would break a staked duel's bubble:
+     * player-vs-player engagement. Returns the classic refusal message when the attack would
+     * break a staked duel's bubble (null = the duel doesn't object):
      *  - an outsider hitting a duelist (or a duelist hitting a bystander) while the duel runs,
-     *  - anyone swinging during the countdown,
-     *  - friendly fire inside a party,
+     *  - anyone swinging during the countdown ("The duel hasn't started yet!"),
+     *  - friendly fire inside a party ("That is not your opponent."),
      *  - COMPANIONS joining a duel whose rules don't allow them (the default). When the
      *    "Allow companions" rule is on, both parties' companions may fight the other party — the 4v4.
      */
-    fun blocksEngagement(attacker: Player, target: Player): Boolean {
+    fun engagementBlock(attacker: Player, target: Player): String? {
         val world = attacker.world
         val rootA = partyRoot(world, attacker)
         val rootT = partyRoot(world, target)
         val dA = duelOf(rootA)
         val dT = duelOf(rootT)
-        if (dA == null && dT == null) return false // no duel involved — normal combat rules apply
-        if (dA !== dT) return true                 // a duelist and an outsider — sealed both ways
-        val d = dA!!                               // both parties belong to the same duel
-        if (!d.fighting) return true               // countdown — nobody swings early
-        if (rootA === rootT) return true           // same party — no friendly fire
+        if (dA == null && dT == null) return null // no duel involved — normal combat rules apply
+        if (dA !== dT) return "You can't interfere with that fight." // duelist vs outsider — sealed both ways
+        val d = dA!!                                                 // both parties belong to the same duel
+        if (!d.fighting) return "The duel hasn't started yet!"
+        if (rootA === rootT) return "That is not your opponent."     // same party — no friendly fire
         val companionInvolved = attacker !== rootA || target !== rootT
-        if (!companionInvolved) return false       // the two principals — always allowed
-        if (!d.rules.allowCompanions) return true  // companions barred by the rules (the default)
-        return attacker in d.benched || target in d.benched // a KO'd companion is out for the duel
+        if (!companionInvolved) return null                          // the two principals — always allowed
+        if (!d.rules.allowCompanions) return "Companions can't fight in this duel."
+        if (attacker in d.benched || target in d.benched) return "That companion is out of this duel."
+        return null
     }
+
+    /** Boolean view of [engagementBlock] for callers that don't message. */
+    fun blocksEngagement(attacker: Player, target: Player): Boolean = engagementBlock(attacker, target) != null
 }
 
 /**
@@ -114,6 +129,9 @@ class DuelRules(
     /** Classic bit 3 (informational, no enforcement): each player can see the OTHER's backpack
      *  and worn gear on the stake/confirm screens — item identities, stack quantities hidden. */
     val showInventories: Boolean = false,
+    /** Classic bit 10: the fight is assigned to an OBSTACLE pit (walls/pillars blocking movement
+     *  and line of sight) instead of a flat one. Gated by [DuelArena.obstaclesOpen]. */
+    val obstacles: Boolean = false,
     /** Companions may fight alongside their owners (both sides) — up to a 4v4. Default OFF. */
     val allowCompanions: Boolean = false,
     /** Equipment slot ids that can't be worn (e.g. Boxing disables every slot). */
@@ -130,7 +148,7 @@ class DuelRules(
             if (noPrayer) add("No Prayer"); if (noFood) add("No Food"); if (noDrinks) add("No Drinks")
             if (noMovement) add("No Movement"); if (noForfeit) add("No Forfeit")
             if (noWeaponSwitch) add("No Weapon Switch"); if (noSpec) add("No Special Attacks")
-            if (showInventories) add("Show Inventories")
+            if (showInventories) add("Show Inventories"); if (obstacles) add("Obstacles")
             if (allowCompanions) add("Companions allowed")
             gearLabel?.let { add(it) }
         }
@@ -179,6 +197,11 @@ class DuelRules(
             // melee — pairing them with No Melee leaves no sanctioned way to swing.
             noMelee && meleeOnlyWeapons ->
                 "That weapon restriction is a melee restriction — it can't be set with No Melee."
+            // Classic matrix: obstacle pits assume pathing — rooted fighters would wedge on them.
+            obstacles && noMovement ->
+                "Obstacles can't be set with No Movement — the obstacle pit assumes you can walk."
+            obstacles && !DuelArena.obstaclesOpen ->
+                "The obstacle arena hasn't opened yet."
             else -> null
         }
     }

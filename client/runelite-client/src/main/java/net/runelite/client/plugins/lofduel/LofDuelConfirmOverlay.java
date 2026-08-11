@@ -72,23 +72,24 @@ class LofDuelConfirmOverlay extends Overlay
 	// Rule indices (DuelRulesClientMenu.RULES order) → cache-exact confirm lines (research §2.2),
 	// rendered in the classic confirm-screen order: forfeit/movement/switch first, then styles,
 	// then supplies, then the rest.
-	private static final int[] LINE_ORDER = { 7, 6, 12, 14, 1, 0, 2, 5, 4, 3, 10, 13, 8, 9, 11 };
+	private static final int[] LINE_ORDER = { 7, 6, 12, 14, 15, 1, 0, 2, 5, 4, 3, 10, 13, 8, 9, 11 };
 	private static final String[] RULE_LINES = {
-		"You cannot use Melee attacks.",            // 0
-		"You cannot use Ranged attacks.",           // 1
-		"You cannot use Magic attacks.",            // 2
-		"You cannot use Prayer.",                   // 3
-		"You cannot use food.",                     // 4
-		"You cannot use potions or drinks.",        // 5
-		"You cannot move.",                         // 6
-		"You cannot forfeit the duel.",             // 7
-		"Weapons restricted: whip only.",           // 8
-		"Weapons restricted: dragon dagger only.",  // 9
-		"You can only attack with 'fun' weapons.",  // 10
-		"Companions may fight too (up to 4v4).",    // 11
-		"You cannot switch weapons.",               // 12
-		"You cannot use special attacks.",          // 13
-		"You can see your opponent's inventory.",   // 14
+		"You cannot use Melee attacks.",              // 0
+		"You cannot use Ranged attacks.",             // 1
+		"You cannot use Magic attacks.",              // 2
+		"You cannot use Prayer.",                     // 3
+		"You cannot use food.",                       // 4
+		"You cannot use potions or drinks.",          // 5
+		"You cannot move.",                           // 6
+		"You cannot forfeit the duel.",               // 7
+		"Weapons restricted: whip only.",             // 8
+		"Weapons restricted: dragon dagger only.",    // 9
+		"You can only attack with 'fun' weapons.",    // 10
+		"Companions may fight too (up to 4v4).",      // 11
+		"You cannot switch weapons.",                 // 12
+		"You cannot use special attacks.",            // 13
+		"You can see your opponent's inventory.",     // 14
+		"There will be obstacles in the arena.",      // 15
 	};
 	private static final int SHOW_INV_RULE = 14;
 
