@@ -3,8 +3,8 @@ title: Duelling & Staking
 category: Minigames & Bosses
 summary: The classic stake-your-items duel. Challenge a player anywhere in a safe zone, set the rules, both put up items and coins, then get whisked to a private arena and fight to the death - the winner takes the whole pot. Escrowed and crash-safe, so it can't be scammed.
 order: 8
-updated: 2026-07-19
-infobox: Type = Player-vs-player staking; Location = Anywhere in a safe zone (fight happens in a private arena); Start = Right-click a player → Challenge; Rules = No prayer / food / drinks / movement / style limits; Stake = Items + coins (both sides); Payout = Winner takes both stakes; Personal gear = Never at risk; Forfeit/Logout = You lose your stake
+updated: 2026-08-11
+infobox: Type = Player-vs-player staking; Location = Anywhere in a safe zone (fight happens in a private arena); Start = Right-click a player → Challenge; Rules = Full classic rule screen (styles, supplies, movement, weapon switch, specials, gear slots, presets); Stake = Items + coins (both sides); Payout = Winner takes both stakes; Personal gear = Never at risk; Forfeit/Logout = You lose your stake; Draw = Double KO or 15 minutes — both stakes returned
 ---
 
 **Duelling** is where you back yourself with your bank. Challenge another player - at the bank, in
@@ -46,26 +46,36 @@ Duel Arena staking in RSPS history is a notorious scam pit. This one is built so
 
 ## The rules
 
-When you close the challenge, you set the rules over three quick menus (supplies, gear, and companions).
+When both players accept the challenge, the **Duel Arena rules screen** opens for both of you.
+Either player can click the toggles; **any change resets both accepts**, so nothing can be slipped
+past you at the last second. Both accept → the stake screen opens.
 
-**Supplies & movement:**
+**Combat rules** (the checkbox column):
 
-- **Anything goes** - no supply limits.
-- **No prayer** - prayers are disabled for the fight.
-- **No food & drinks** - no eating, no potions. Pure DPS.
-- **No prayer, food & drinks** - the classic supplies-off brawl.
-- **No movement** - both fighters are rooted in place.
+- **No Melee / No Ranged / No Magic** - ban whole combat styles. At least one style must stay legal.
+- **No Prayer** - prayers are disabled (and switched off at the start).
+- **No Food / No Drinks** - no eating, no potions.
+- **No Movement** - both fighters are rooted. You start on **adjacent tiles** so melee still
+  connects - no stalemates.
+- **No Forfeit** - the duel is strictly to the death; the forfeit option is disabled.
+- **No Weapon Switch** - whatever's in your hands at FIGHT! is your weapon for the whole duel.
+- **No Special Attacks** - the spec bar is disabled.
+- **Whip only / DDS only** - house weapon whitelists.
+- **Fun weapons** - you can only attack with a whitelisted joke weapon (rubber chicken and
+  friends). **Bare fists don't count** - no weapon, no attack.
 
-**Combat & gear:**
+**Forbidden gear** (the paper-doll): click any equipment slot to forbid it for the duel. Forbidden
+worn gear is taken off automatically when the fight starts - so you need **enough free backpack
+space for it, checked when you confirm the stake**. Forbidding the weapon **or** shield slot also
+bans every two-handed weapon (a 2H fills both).
 
-- **Any gear** - bring what you like.
-- **Melee only** - no ranged, no magic.
-- **Boxing** - no weapons or armour; bare fists.
-- **Whip only** - the only weapon allowed is the whip.
-- **DDS only** - dragon dagger only.
-- **Fun weapons only** - joke weapons (rubber chicken and friends) only.
+**Presets** - one click sets a whole rule sheet:
 
-Banned gear is stripped off before the fight and can't be re-equipped during it.
+- **Whip** - the classic whip-stake format: no ranged/magic/prayer/food/drinks/movement/forfeit/specials,
+  every gear slot forbidden except the weapon. Any one-handed weapon is legal.
+- **Boxing** - the same, plus the weapon slot - bare fists.
+- **Save / Load** - keep your own favourite rule sheet on your account.
+- **Last** - reload whatever the two of you agreed last time.
 
 **Companions:**
 
@@ -78,7 +88,14 @@ Banned gear is stripped off before the fight and can't be re-equipped during it.
 
 Always in effect:
 
-- **Forfeit or log out during a fight and you lose your stake** to your opponent. Don't run.
+- **A level playing field** - at the start of every duel both fighters are reset: boosted (and
+  drained) stats back to base, special attack to 100%, prayers off, poison cured, Vengeance
+  cleared. No walking in pre-potted with a charged spec. When it's over, both fighters leave
+  **fully restored** - the classic hospital treatment, minus the walk.
+- **Forfeit** (`::forfeit`) concedes the fight - your opponent takes the whole stake. Logging out
+  mid-fight costs you the stake too. Under the **No Forfeit** rule there's no conceding at all.
+- **Draws are real** - if you both fall on the same tick, or the fight hits the classic
+  **15-minute limit**, it's a draw and **both stakes are returned**.
 - **No teleporting out** - the arena is sealed until someone falls.
 - **The duel is sealed** - outsiders (players, bots, anyone) can't touch either fighter; your
   private arena means nobody can even walk in.
@@ -87,5 +104,5 @@ Always in effect:
 
 ## Coming soon
 
-The **faithful clickable rules screen** - with per-slot equipment disables, fun-weapons, obstacles
-and the rest of the classic grid - is on the way, to sit in place of the quick rules menus.
+**Show Inventories** (see your opponent's backpack on the confirm screen) and **obstacle pits**
+are on the way, along with the full three-screen classic agreement flow.

@@ -31,7 +31,7 @@ below point there).
 
 ---
 
-## Phase 1 — correctness & fairness fixes (before any new features)
+## Phase 1 — correctness & fairness fixes (before any new features) — ✅ SHIPPED
 
 These are live bugs or unfairness in what's built (research §4 gaps 1–3, 7).
 
@@ -71,30 +71,47 @@ These are live bugs or unfairness in what's built (research §4 gaps 1–3, 7).
    FIGHT! opening swing order is a per-duel coin flip (not challenger-first), and the
    double-KO draw rule (fix 3) removes the one place PID could still pick a stake winner.
 
-## Phase 2 — complete the classic rule set
+## Phase 2 — complete the classic rule set — ✅ SHIPPED (Show Inv → P3, Obstacles → P4)
 
 Extend `DuelRules` + enforcement (research §2.2 is the source of truth for semantics):
 
-- **No Weapon Switch** (bit 2): lock the weapon (and 2h-implied shield slot) equipped at
-  FIGHT!; block weapon-slot equips during the duel. Enforcement point already exists
-  (`onEquipToSlot`).
-- **No Special Attacks** (bit 13): deny spec activation; pairs with the Phase-1 spec reset.
-- **Fun Weapons** (bit 12) as a proper rule: allowed-weapons whitelist = negative-bonus
-  joke weapons; **bare fists not allowed** (auto-fail attacks without a fun weapon
-  equipped). Replaces the current "fun weapons only" gear-menu variant.
+- ✅ **No Weapon Switch** (bit 2): the weapon worn at FIGHT! is locked. Enforced synchronously
+  in `onEquipToSlot` (weapon AND shield slots — a shield equip silently displaces a locked 2H)
+  so a one-tick DDS-spec switch can't land, plus a duel-tick backstop that re-equips the locked
+  weapon after a plain unequip (re-equipping inside the unequip hook would corrupt
+  `EquipAction`'s swap flow).
+- ✅ **No Special Attacks** (bit 13): arming the spec bar (combat-tab bar + minimap orb, the
+  single gate every spec path goes through) is denied; pairs with the Phase-1 spec reset.
+- ✅ **Fun Weapons** (bit 12) as a proper rule: `funWeapons` flag + whitelist; **bare fists not
+  allowed** — attacks without a whitelisted fun weapon equipped are denied in
+  `Combat.canAttack`. The whitelists (fun/whip/DDS) now live once, in `DuelRules.Companion`.
 - **Obstacles** (bit 10): see Phase 4.
 - **Show Inventories** (bit 3): informational — opponent backpack/worn visible on stake +
   confirm screens, item identities but not stack quantities. Needs interface support;
   schedule with Phase 3.
-- **Equipment-slot restrictions** (bits 14–27): `disabledSlots` already enforced — add the
-  auto-unequip-to-backpack at start **with inventory-space verification at accept** (deny
-  accept if the stripped gear can't fit), and the "no 2H when weapon or shield disabled"
+- ✅ **Equipment-slot restrictions**: `DuelRules.barsWorn()` is the one wearability answer
+  (equip revert, duel-start strip, space check). Auto-unequip at start **with
+  inventory-space verification at accept** (a `TradeSession` stake vet denies the confirm
+  screen when the stripped gear can't fit), a bank-overflow belt if a path skips the vet
+  (a disallowed item must never stay worn), and the "no 2H when weapon or shield disabled"
   implication.
-- **Presets**: Save / Load / Load-last-duel per player (persisted attr), plus the two
-  official ones with faithful semantics — **Whip** = No Forfeit/No Movement/Show Inv/No
+- ✅ **Presets**: Save / Load / Load-last-duel per player (persisted attrs `duel_saved_rules`
+  / `duel_last_rules`), plus the two official ones — **Whip** = No Forfeit/No Movement/No
   Ranged/No Magic/No Drinks/No Food/No Prayer/No Spec + all slots off except weapon (any
-  one-handed weapon, per the real preset); **Boxing** = same + weapon slot off. Our
-  existing stricter "whip-only/DDS-only" item whitelists stay as extra house presets.
+  one-handed weapon — the forbidden shield slot is what bans 2H, exactly like the real
+  preset); **Boxing** = same + weapon slot off. (Show Inv joins both presets in Phase 3.)
+  The stricter "whip-only/DDS-only" item whitelists stay as house rule toggles.
+  **`validate()` change**: the Phase-1 `No Forfeit + No Movement` ban is LIFTED — the decoded
+  official Whip preset sets both bits (research §2.3 correction); melee availability is
+  guaranteed by the `No Forfeit + No Melee` ban and the 15-minute draw timer ends stalls.
+- ✅ **Overlay protocol v2**: `STATE_VARP` repacked with **16 reserved rule bits** (rules
+  1–16, accepts 17/18, slots 19–29) so Phase 3/4 additions won't reshuffle the layout again;
+  preset button column (Whip/Boxing/Save/Load/Last) added to `LofDuelOverlay`.
+- ✅ **Sparring parity** (per the review below): the shared `CombatRestrictions.of(player)`
+  merged view now backs every duel+spar enforcement site (styles, prayer, food, drinks,
+  spec). Mirror-or-diverge decisions: `noSpec` mirrored (spar already had it);
+  `noWeaponSwitch`/`funWeapons`/gear slots deliberately duel-only — sparring loadouts are
+  kit-defined, so mid-bout gear games aren't a thing there.
 
 ## Phase 3 — interface fidelity (the three-screen agreement)
 

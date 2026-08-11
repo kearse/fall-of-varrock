@@ -29,6 +29,14 @@ class TradeSession(
      * "put up items → confirm" stake screen is the trade screen, re-labelled.
      */
     private val stake: StakeHook? = null,
+    /**
+     * Stake-mode veto run when the pair advances to the confirm screen: given this session's
+     * player and the free backpack slots they'll have once the stake is committed, return a
+     * refusal message to bounce the stake (both sides declined, items returned), or null to let
+     * it proceed. The duel plugin uses this for the classic "inventory space must be verified at
+     * accept" rule — gear the duel's rules will strip at start has to fit in the backpack.
+     */
+    private val stakeVet: ((Player, Int) -> String?)? = null,
 ) {
     /** True for a Duel-Arena stake session (vs a plain trade). Read by the themed stake overlay driver. */
     val isStake = stake != null
@@ -312,6 +320,15 @@ class TradeSession(
         if (player.inventory.freeSlotCount < partner.getTradeSession()!!.container.occupiedSlotCount) {
             player.message("You don't have enough inventory space for this trade.")
             partner.message("Other player doesn't have enough inventory space for this trade.")
+            decline(forced = true)
+            return
+        }
+
+        // Stake-mode veto (e.g. the duel's rules-strip space check) — [inventory] is the
+        // player's backpack as it will be once the staked items are committed out of it.
+        stakeVet?.invoke(player, inventory.freeSlotCount)?.let { refusal ->
+            player.message(refusal)
+            partner.message("The duel can't proceed — the other player's gear doesn't fit their backpack.")
             decline(forced = true)
             return
         }

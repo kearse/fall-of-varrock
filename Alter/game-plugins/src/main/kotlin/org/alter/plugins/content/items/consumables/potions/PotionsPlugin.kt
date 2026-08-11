@@ -195,13 +195,11 @@ class PotionsPlugin(
 
     private fun drink(player: Player, key: String) {
         val dose = doseByKey[key] ?: return
-        if (org.alter.plugins.content.minigames.duel.DuelArena.rulesOf(player)?.noDrinks == true) {
-            player.message("You can't drink potions in this duel.")
-            return
-        }
-        if (org.alter.plugins.content.minigames.pktraining.CompanionSparring.rulesOf(player)?.noDrinks == true) {
-            player.message("You can't drink potions in this sparring bout.")
-            return
+        org.alter.plugins.content.combat.CombatRestrictions.of(player)?.let { r ->
+            if (r.noDrinks) {
+                player.message("You can't drink potions in this ${r.context}.")
+                return
+            }
         }
         if (player.timers.has(POTION_DELAY)) return
         val slot = player.getInteractingSlot()

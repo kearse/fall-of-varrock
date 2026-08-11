@@ -1,5 +1,6 @@
 package org.alter.plugins.content.minigames.duel
 
+import dev.openrune.cache.CacheManager.getItem
 import org.alter.api.EquipmentType
 import org.alter.game.model.Tile
 import org.alter.game.model.World
@@ -8,6 +9,7 @@ import org.alter.game.model.item.Item
 import org.alter.plugins.content.companion.Companion as CompanionPawn
 import org.alter.plugins.content.companion.CompanionRegistry
 import org.alter.plugins.content.raids.RaidInstance
+import org.alter.rscm.RSCM.getRSCM
 
 /**
  * Live-duel registry. Kept as a top-level object (not plugin state) so [org.alter.plugins.content.combat.Combat]
@@ -89,8 +91,8 @@ object DuelArena {
 }
 
 /**
- * The agreed rule set for a duel. The clean, cleanly-enforceable classic toggles are here; the
- * equipment-slot disables / fun-weapons / obstacles toggles are a later slice.
+ * The agreed rule set for a duel — the classic 13-rule grid minus the two that need interface/map
+ * work (Show Inventories → Phase 3, Obstacles → Phase 4), plus our companions rule.
  */
 class DuelRules(
     val noMelee: Boolean = false,
@@ -101,6 +103,14 @@ class DuelRules(
     val noDrinks: Boolean = false,
     val noMovement: Boolean = false,
     val noForfeit: Boolean = false,
+    /** Classic bit 2 (2016): the weapon worn at FIGHT! is locked for the whole duel — kills the
+     *  hasta bait-and-switch and the mid-duel DDS-spec finisher. */
+    val noWeaponSwitch: Boolean = false,
+    /** Classic bit 13: special attacks can't be used (arming the spec bar is denied). */
+    val noSpec: Boolean = false,
+    /** Classic bit 12: attacks only land with a whitelisted joke weapon ([FUN_WEAPONS]) — bare
+     *  fists are NOT allowed (the whitelist is also enforced at the equip point). */
+    val funWeapons: Boolean = false,
     /** Companions may fight alongside their owners (both sides) — up to a 4v4. Default OFF. */
     val allowCompanions: Boolean = false,
     /** Equipment slot ids that can't be worn (e.g. Boxing disables every slot). */
@@ -116,10 +126,30 @@ class DuelRules(
             if (noMelee) add("No Melee"); if (noRanged) add("No Ranged"); if (noMagic) add("No Magic")
             if (noPrayer) add("No Prayer"); if (noFood) add("No Food"); if (noDrinks) add("No Drinks")
             if (noMovement) add("No Movement"); if (noForfeit) add("No Forfeit")
+            if (noWeaponSwitch) add("No Weapon Switch"); if (noSpec) add("No Special Attacks")
             if (allowCompanions) add("Companions allowed")
             gearLabel?.let { add(it) }
         }
         return if (parts.isEmpty()) "No rules" else parts.joinToString(", ")
+    }
+
+    /**
+     * True when a duel under these rules bars [itemId] from equipment slot [slotId] — the ONE
+     * wearability answer shared by the equip-revert handler, the duel-start strip, and the
+     * stake-screen space check. Covers: a disabled slot, a non-whitelisted weapon, and the classic
+     * implication that disabling the weapon OR shield slot also bans every 2H weapon (a 2H
+     * occupies both, so either restriction covers it — this is what makes the official Whip
+     * preset "any ONE-HANDED weapon").
+     */
+    fun barsWorn(slotId: Int, itemId: Int): Boolean {
+        if (slotId in disabledSlots) return true
+        if (slotId == EquipmentType.WEAPON.id) {
+            if (allowedWeapons?.let { itemId !in it } == true) return true
+            if (EquipmentType.SHIELD.id in disabledSlots &&
+                getItem(itemId).equipType == EquipmentType.SHIELD.id
+            ) return true // a 2H weapon occupies the (disabled) shield slot
+        }
+        return false
     }
 
     /**
@@ -128,14 +158,17 @@ class DuelRules(
      * pair below exists because the original game shipped without it and someone weaponised the
      * gap (see docs/duel-arena-research.md §2.3). Returns the refusal message, or null when the
      * rule set is fightable.
+     *
+     * No Forfeit + No Movement is deliberately ALLOWED (it was the standard whip-stake format,
+     * and both bits are set in the decoded official Whip preset): with melee guaranteed available
+     * (No Forfeit + No Melee is banned below), adjacent No-Movement spawns mean the fight can
+     * always progress, and the 15-minute draw timer ends any turtled stalemate.
      */
     fun validate(): String? {
-        val meleeOnlyWeapons = allowedWeapons != null || EquipmentType.WEAPON.id in disabledSlots
+        val meleeOnlyWeapons = funWeapons || allowedWeapons != null || EquipmentType.WEAPON.id in disabledSlots
         return when {
             noMelee && noRanged && noMagic ->
                 "You must leave at least one combat style available."
-            noForfeit && noMovement ->
-                "No Forfeit can't be set with No Movement — a stalled duel could never end."
             noForfeit && noMelee ->
                 "No Forfeit can't be set with No Melee — a fighter could run out of ammo or runes."
             // Every weapon whitelist we offer (whip / DDS / fun weapons) and bare-fist boxing are
@@ -143,6 +176,31 @@ class DuelRules(
             noMelee && meleeOnlyWeapons ->
                 "That weapon restriction is a melee restriction — it can't be set with No Melee."
             else -> null
+        }
+    }
+
+    companion object {
+        /** Resolve a set of RSCM item names to ids, skipping any that don't exist in the cache. */
+        fun weaponIds(vararg names: String): Set<Int> =
+            names.mapNotNull { runCatching { getRSCM(it) }.getOrNull() }.toSet()
+
+        /** The negative-bonus joke weapons sanctioned by the Fun Weapons rule. */
+        val FUN_WEAPONS: Set<Int> by lazy {
+            weaponIds(
+                "item.rubber_chicken", "item.stale_baguette", "item.giant_frog_legs",
+                "item.mole_slippers", "item.frozen_whip_mix",
+            )
+        }
+
+        /** The house "Whip only" whitelist (stricter than the official Whip preset). */
+        val WHIP_WEAPONS: Set<Int> by lazy { weaponIds("item.abyssal_whip") }
+
+        /** The house "DDS only" whitelist. */
+        val DDS_WEAPONS: Set<Int> by lazy {
+            weaponIds(
+                "item.dragon_dagger", "item.dragon_dagger_p",
+                "item.dragon_dagger_p+", "item.dragon_dagger_p++",
+            )
         }
     }
 }
@@ -185,6 +243,22 @@ class Duel(
 
     /** Ticks fought since "FIGHT!" — staked duels are called a draw at the classic 15 minutes. */
     var fightTicks = 0
+
+    /**
+     * The weapon each principal wore at FIGHT! (null = bare fists), captured only under the
+     * No Weapon Switch rule — the id the equip handlers and the tick backstop hold the weapon
+     * slot to for the rest of the duel.
+     */
+    var lockedWeaponA: Int? = null
+    var lockedWeaponB: Int? = null
+
+    /** Capture both principals' FIGHT!-moment weapons for the No Weapon Switch rule. */
+    fun lockWeapons(weaponSlot: Int) {
+        lockedWeaponA = a.equipment[weaponSlot]?.id
+        lockedWeaponB = b.equipment[weaponSlot]?.id
+    }
+
+    fun lockedWeaponOf(p: Player): Int? = if (a === p) lockedWeaponA else lockedWeaponB
 
     /**
      * Set (via the pre-death hook) when BOTH principals' death sequences overlap — a double KO.

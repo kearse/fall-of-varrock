@@ -40,15 +40,27 @@ class LofDuelOverlay extends Overlay
 	static final int INSIDE = 0;
 	static final int DECLINE = 1;
 	static final int ACCEPT = 2;
-	static final int LOAD = 3;
-	static final int RULE_BASE = 100; // + rule index (0..11)
+	static final int LOAD = 3;      // "Last" — the last-agreed rules
+	static final int SAVE = 4;      // save personal preset
+	static final int LOAD_SAVED = 5; // load personal preset
+	static final int WHIP = 6;      // official Whip preset
+	static final int BOXING = 7;    // official Boxing preset
+	static final int RULE_BASE = 100; // + rule index (0..13)
 	static final int SLOT_BASE = 200; // + doll slot index (0..10)
 
 	/** MUST match DuelRulesClientMenu.RULES. */
 	private static final String[] RULES = {
 		"No Melee", "No Ranged", "No Magic", "No Prayer", "No Food", "No Drinks",
 		"No Movement", "No Forfeit", "Whip only", "DDS only", "Fun weapons", "Allow companions",
+		"No Weapon Switch", "No Special Attacks",
 	};
+
+	// Packed-varp bit layout — MUST match DuelRulesClientMenu: bit 0 open, rules at bit 1 with
+	// 16 bits reserved, then the two accept bits, then the 11 doll-slot bits.
+	private static final int RULE_BITS = 16;
+	private static final int ACCEPT_MINE_BIT = RULE_BITS + 1;
+	private static final int ACCEPT_THEIRS_BIT = RULE_BITS + 2;
+	private static final int SLOT_BIT_BASE = RULE_BITS + 3;
 
 	/** Paper-doll slot labels, in DuelRulesClientMenu.SLOT_IDS order. */
 	private static final String[] SLOTS = { "Head", "Cape", "Neck", "Weap", "Body", "Shld", "Legs", "Hand", "Foot", "Ring", "Ammo" };
@@ -63,16 +75,22 @@ class LofDuelOverlay extends Overlay
 	private static final int WIN_ARC = 14;
 	private static final int TITLE_H = 38;
 	private static final int PAD = 12;
-	// Rules column + paper-doll are tightened to fit the short standard window (both must show in full —
-	// rules can't be hidden and the doll isn't a list, so this window crams rather than scrolls).
-	private static final int RULE_TOP = TITLE_H + 26;
-	private static final int RULE_H = 16;
+	// Rules column + paper-doll + preset column are tightened to fit the short standard window
+	// (everything must show in full — rules can't be hidden and the doll isn't a list, so this
+	// window crams rather than scrolls).
+	private static final int RULE_TOP = TITLE_H + 24;
+	private static final int RULE_H = 14;
 	private static final int RULE_W = 226;
 	private static final int DOLL_X = 288;
-	private static final int DOLL_TOP = TITLE_H + 34;
-	private static final int SLOT_SZ = 32;
-	private static final int SLOT_GAP = 6;
+	private static final int DOLL_TOP = TITLE_H + 30;
+	private static final int SLOT_SZ = 30;
+	private static final int SLOT_GAP = 4;
 	private static final int BTN_H = 32;
+	// Preset button column, right of the paper-doll.
+	private static final int PRESET_X = 394;
+	private static final int PRESET_W = 74;
+	private static final int PRESET_H = 22;
+	private static final int PRESET_GAP = 5;
 
 	private static final Color GREEN = new Color(110, 205, 110);
 
@@ -124,9 +142,16 @@ class LofDuelOverlay extends Overlay
 		final int y = oy + DOLL_TOP + DOLL_ROW[i] * (SLOT_SZ + SLOT_GAP);
 		return new Rectangle(x, y, SLOT_SZ, SLOT_SZ);
 	}
-	private Rectangle loadRect(int ox, int oy) { return new Rectangle(ox + PAD, oy + WIN_H - PAD - BTN_H, 96, BTN_H); }
+	/** Preset column rows, top to bottom: Whip, Boxing, Save, Load, Last. */
+	private Rectangle presetRect(int ox, int oy, int row)
+	{
+		return new Rectangle(ox + PRESET_X, oy + DOLL_TOP + row * (PRESET_H + PRESET_GAP), PRESET_W, PRESET_H);
+	}
 	private Rectangle acceptRect(int ox, int oy) { return new Rectangle(ox + WIN_W - PAD - 210, oy + WIN_H - PAD - BTN_H, 100, BTN_H); }
 	private Rectangle declineRect(int ox, int oy) { return new Rectangle(ox + WIN_W - PAD - 100, oy + WIN_H - PAD - BTN_H, 100, BTN_H); }
+
+	/** Hit codes of the preset rows, in {@link #presetRect} row order. */
+	private static final int[] PRESET_HITS = { WHIP, BOXING, SAVE, LOAD_SAVED, LOAD };
 
 	int hitTest(Point canvas)
 	{
@@ -136,7 +161,7 @@ class LofDuelOverlay extends Overlay
 		final Point p = place.toLocal(canvas);
 		final int ox = place.ox, oy = place.oy;
 		if (!new Rectangle(ox, oy, WIN_W, WIN_H).contains(p)) return OUTSIDE;
-		if (loadRect(ox, oy).contains(p)) return LOAD;
+		for (int i = 0; i < PRESET_HITS.length; i++) if (presetRect(ox, oy, i).contains(p)) return PRESET_HITS[i];
 		if (acceptRect(ox, oy).contains(p)) return ACCEPT;
 		if (declineRect(ox, oy).contains(p)) return DECLINE;
 		for (int i = 0; i < RULES.length; i++) if (ruleRect(ox, oy, i).contains(p)) return RULE_BASE + i;
@@ -164,8 +189,8 @@ class LofDuelOverlay extends Overlay
 		placement = place;
 
 		final int state = client.getVarpValue(STATE_VARP);
-		final boolean myAccept = (state & (1 << 13)) != 0;
-		final boolean theirAccept = (state & (1 << 14)) != 0;
+		final boolean myAccept = (state & (1 << ACCEPT_MINE_BIT)) != 0;
+		final boolean theirAccept = (state & (1 << ACCEPT_THEIRS_BIT)) != 0;
 		final int ox = place.ox, oy = place.oy;
 		final Point mouse = place.toLocal(mousePoint());
 
@@ -186,8 +211,9 @@ class LofDuelOverlay extends Overlay
 
 		// section labels
 		g.setFont(FontManager.getRunescapeSmallFont());
-		LofTheme.shadowText(g, "COMBAT RULES", ox + PAD + 2, oy + TITLE_H + 22, LofTheme.GOLD_DIM);
-		LofTheme.shadowText(g, "FORBIDDEN GEAR", ox + DOLL_X, oy + TITLE_H + 22, LofTheme.GOLD_DIM);
+		LofTheme.shadowText(g, "COMBAT RULES", ox + PAD + 2, oy + TITLE_H + 20, LofTheme.GOLD_DIM);
+		LofTheme.shadowText(g, "FORBIDDEN GEAR", ox + DOLL_X, oy + TITLE_H + 20, LofTheme.GOLD_DIM);
+		LofTheme.shadowText(g, "PRESETS", ox + PRESET_X, oy + TITLE_H + 20, LofTheme.GOLD_DIM);
 
 		// rule checkboxes
 		g.setFont(FontManager.getRunescapeFont());
@@ -200,8 +226,16 @@ class LofDuelOverlay extends Overlay
 		// equipment paper-doll
 		for (int i = 0; i < SLOTS.length; i++)
 		{
-			final boolean forbidden = (state & (1 << (i + 15))) != 0;
+			final boolean forbidden = (state & (1 << (i + SLOT_BIT_BASE))) != 0;
 			dollSlot(g, slotRect(ox, oy, i), SLOTS[i], forbidden, slotRect(ox, oy, i).contains(mouse));
+		}
+
+		// preset column: the two official rule sets, then the personal save/load pair, then last-duel
+		g.setFont(FontManager.getRunescapeSmallFont());
+		final String[] presetLabels = { "Whip", "Boxing", "Save", "Load", "Last" };
+		for (int i = 0; i < presetLabels.length; i++)
+		{
+			button(g, presetRect(ox, oy, i), presetLabels[i], LofTheme.GOLD_DIM, false, presetRect(ox, oy, i).contains(mouse));
 		}
 
 		// status
@@ -213,7 +247,6 @@ class LofDuelOverlay extends Overlay
 
 		// buttons
 		g.setFont(FontManager.getRunescapeBoldFont());
-		button(g, loadRect(ox, oy), "Load Last", LofTheme.GOLD_DIM, false, loadRect(ox, oy).contains(mouse));
 		button(g, acceptRect(ox, oy), myAccept ? "Accepted" : "Accept", LofTheme.GOLD, myAccept, acceptRect(ox, oy).contains(mouse));
 		button(g, declineRect(ox, oy), "Decline", LofTheme.EMBER, false, declineRect(ox, oy).contains(mouse));
 
@@ -226,19 +259,20 @@ class LofDuelOverlay extends Overlay
 	{
 		g.setColor(on ? LofTheme.alpha(GREEN, 30) : (hov ? LofTheme.ROW_HOVER : LofTheme.ROW));
 		g.fillRoundRect(rc.x, rc.y, rc.width, rc.height, 6, 6);
-		final int bx = rc.x + 6, by = rc.y + (rc.height - 13) / 2;
+		// 11px box so the tightened 14-rule rows still enclose it.
+		final int bx = rc.x + 6, by = rc.y + (rc.height - 11) / 2;
 		g.setColor(on ? GREEN : new Color(0, 0, 0, 120));
-		g.fillRoundRect(bx, by, 13, 13, 3, 3);
+		g.fillRoundRect(bx, by, 11, 11, 3, 3);
 		if (on)
 		{
 			final Stroke old = g.getStroke();
 			g.setColor(new Color(20, 20, 20));
 			g.setStroke(new BasicStroke(2f));
-			g.drawLine(bx + 3, by + 7, bx + 5, by + 9);
-			g.drawLine(bx + 5, by + 9, bx + 10, by + 3);
+			g.drawLine(bx + 3, by + 6, bx + 4, by + 8);
+			g.drawLine(bx + 4, by + 8, bx + 8, by + 3);
 			g.setStroke(old);
 		}
-		LofTheme.shadowText(g, label, bx + 19, rc.y + rc.height / 2 + 5, on ? LofTheme.TEXT : LofTheme.TEXT_DIM);
+		LofTheme.shadowText(g, label, bx + 17, rc.y + rc.height / 2 + 5, on ? LofTheme.TEXT : LofTheme.TEXT_DIM);
 	}
 
 	/** A paper-doll equipment slot — red when the slot is forbidden. */

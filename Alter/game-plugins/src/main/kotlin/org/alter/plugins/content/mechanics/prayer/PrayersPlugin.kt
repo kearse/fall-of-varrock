@@ -70,13 +70,11 @@ class PrayersPlugin(
          */
         Prayer.values.forEach { prayer ->
             onButton(interfaceId = 541, component = prayer.child) {
-                if (org.alter.plugins.content.minigames.duel.DuelArena.rulesOf(player)?.noPrayer == true) {
-                    player.message("Prayer is disabled in this duel.")
-                    return@onButton
-                }
-                if (org.alter.plugins.content.minigames.pktraining.CompanionSparring.rulesOf(player)?.noPrayer == true) {
-                    player.message("Prayer is disabled in this sparring bout.")
-                    return@onButton
+                org.alter.plugins.content.combat.CombatRestrictions.of(player)?.let { r ->
+                    if (r.noPrayer) {
+                        player.message("Prayer is disabled in this ${r.context}.")
+                        return@onButton
+                    }
                 }
                 player.queue {
                     Prayers.toggle(player, this, prayer)
@@ -100,13 +98,11 @@ class PrayersPlugin(
          * Toggle quick-prayers.
          */
         onButton(interfaceId = 160, component = 19) {
-            if (org.alter.plugins.content.minigames.duel.DuelArena.rulesOf(player)?.noPrayer == true) {
-                player.message("Prayer is disabled in this duel.")
-                return@onButton
-            }
-            if (org.alter.plugins.content.minigames.pktraining.CompanionSparring.rulesOf(player)?.noPrayer == true) {
-                player.message("Prayer is disabled in this sparring bout.")
-                return@onButton
+            org.alter.plugins.content.combat.CombatRestrictions.of(player)?.let { r ->
+                if (r.noPrayer) {
+                    player.message("Prayer is disabled in this ${r.context}.")
+                    return@onButton
+                }
             }
             val opt = player.getInteractingOption()
             Prayers.toggleQuickPrayers(player, opt)

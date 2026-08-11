@@ -102,7 +102,11 @@ Enforced **at toggle time**, not at duel start — every one of these exists bec
 weaponised the gap:
 
 - **No Ranged + No Melee + No Magic** — nobody can fight.
-- **No Forfeit + No Movement** — stalemate with no escape hatch.
+- ~~**No Forfeit + No Movement** — stalemate with no escape hatch.~~ **Correction (Phase 2):**
+  the decoded official **Whip preset bitmask (§2.2) sets BOTH bits**, and no-movement/no-forfeit
+  was the standard whip-stake format — the game plainly allowed the pair. Our `validate()`
+  allows it too: melee is guaranteed available (the pair ban below), No-Movement spawns are
+  adjacent, and the 15-minute draw timer ends any turtled stalemate.
 - **No Forfeit + No Melee** — a ranger/mage can run out of ammo/runes and never end the duel.
 - **No Movement + Obstacles** — obstacle pits assume pathing.
 - **Fun Weapons + No Melee** — all fun weapons are melee → zero-damage forever-duel (the

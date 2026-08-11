@@ -6,6 +6,7 @@ import org.alter.api.EquipmentType
 import org.alter.api.ext.*
 import org.alter.game.Server
 import org.alter.game.action.EquipAction
+import org.alter.game.info.PlayerInfo
 import org.alter.game.model.Area
 import org.alter.game.model.Tile
 import org.alter.game.model.World
@@ -38,7 +39,6 @@ import org.alter.plugins.content.mechanics.trading.impl.StakeHook
 import org.alter.plugins.content.mechanics.trading.impl.TradeSession
 import org.alter.plugins.content.minigames.castlewars.CastleWars
 import org.alter.plugins.content.raids.RaidInstance
-import org.alter.rscm.RSCM.getRSCM
 import org.bson.Document
 
 private val logger = KotlinLogging.logger {}
@@ -109,13 +109,24 @@ class DuelArenaPlugin(
         }
 
         // Enforce equipment rules: reverting any equip a duel disallows (disabled slot / non-allowed
-        // weapon). onEquipToSlot is multi-bind, so this stacks cleanly with the other equip handlers.
+        // weapon / 2H under a weapon-or-shield restriction), and holding the weapon slot to its
+        // FIGHT!-moment contents under No Weapon Switch. onEquipToSlot is multi-bind, so this
+        // stacks cleanly with the other equip handlers. The handler runs synchronously inside
+        // EquipAction.equip, so a reverted equip can never land a same-tick hit (the one-tick
+        // DDS-spec switch this rule exists to kill).
         EquipmentType.values.forEach { type ->
             onEquipToSlot(type.id) {
-                val rules = DuelArena.rulesOf(player) ?: return@onEquipToSlot
-                if (slotDisallowed(rules, type.id, player.equipment[type.id]?.id)) {
+                val d = DuelArena.duelOf(player) ?: return@onEquipToSlot
+                val item = player.equipment[type.id]
+                if (item != null && d.rules.barsWorn(type.id, item.id)) {
                     EquipAction.unequip(player, type.id)
                     player.message("You can't wear that in this duel.")
+                    return@onEquipToSlot
+                }
+                // No Weapon Switch: the weapon slot must keep its FIGHT! contents. A shield equip
+                // can break the lock too — it silently unequips a locked 2H.
+                if (type.id == EquipmentType.WEAPON.id || type.id == EquipmentType.SHIELD.id) {
+                    enforceWeaponLock(player, d, revertSlot = type.id)
                 }
             }
         }
@@ -303,17 +314,28 @@ class DuelArenaPlugin(
             "DDS only",
             "Fun weapons only",
         )
-        var noRanged = false; var noMagic = false
+        var noRanged = false; var noMagic = false; var funWeapons = false
         var disabledSlots = emptySet<Int>(); var allowedWeapons: Set<Int>? = null; var gearLabel: String? = null
         when (gear) {
             2 -> { noRanged = true; noMagic = true; gearLabel = "Melee only" }
             3 -> { disabledSlots = EquipmentType.values.map { it.id }.toSet(); gearLabel = "Boxing" }
-            4 -> { allowedWeapons = weaponIds("item.abyssal_whip"); gearLabel = "Whip only" }
-            5 -> { allowedWeapons = weaponIds("item.dragon_dagger", "item.dragon_dagger_p", "item.dragon_dagger_p+", "item.dragon_dagger_p++"); gearLabel = "DDS only" }
-            6 -> { allowedWeapons = weaponIds("item.rubber_chicken", "item.stale_baguette", "item.giant_frog_legs", "item.mole_slippers", "item.frozen_whip_mix"); gearLabel = "Fun weapons only" }
+            4 -> { allowedWeapons = DuelRules.WHIP_WEAPONS; gearLabel = "Whip only" }
+            5 -> { allowedWeapons = DuelRules.DDS_WEAPONS; gearLabel = "DDS only" }
+            6 -> { funWeapons = true; allowedWeapons = DuelRules.FUN_WEAPONS; gearLabel = "Fun weapons" }
         }
+        if (busy(target)) { player.message("${target.username} is busy at the moment."); return }
 
-        // Menu 3 — companions (default: barred; allowed = both parties' companions fight too).
+        // Menu 3 — the 2016-era fairness toggles.
+        val extras = options(player,
+            "No extra restrictions",
+            "No special attacks",
+            "No weapon switching",
+            "No specials & no switching",
+        )
+        val noSpec = extras == 2 || extras == 4
+        val noWeaponSwitch = extras == 3 || extras == 4
+
+        // Menu 4 — companions (default: barred; allowed = both parties' companions fight too).
         val allowCompanions = options(player,
             "No companions — a pure 1v1.",
             "Allow companions — bring the party (up to 4v4).",
@@ -322,6 +344,7 @@ class DuelArenaPlugin(
         val rules = DuelRules(
             noRanged = noRanged, noMagic = noMagic,
             noPrayer = noPrayer, noFood = noConsumables, noDrinks = noConsumables, noMovement = noMovement,
+            noWeaponSwitch = noWeaponSwitch, noSpec = noSpec, funWeapons = funWeapons,
             allowCompanions = allowCompanions,
             disabledSlots = disabledSlots, allowedWeapons = allowedWeapons, gearLabel = gearLabel,
         )
@@ -333,30 +356,71 @@ class DuelArenaPlugin(
         openStake(player, target, rules)
     }
 
-    /** Resolve a set of RSCM item names to ids, skipping any that don't exist in the cache. */
-    private fun weaponIds(vararg names: String): Set<Int> =
-        names.mapNotNull { runCatching { getRSCM(it) }.getOrNull() }.toSet()
+    /** The worn items [rules] would strip from [p] at duel start — the count the stake screen's
+     *  inventory-space check verifies against free backpack slots. */
+    private fun strippedGear(p: Player, rules: DuelRules): List<Int> =
+        EquipmentType.values.mapNotNull { type ->
+            p.equipment[type.id]?.takeIf { rules.barsWorn(type.id, it.id) }?.let { type.id }
+        }
 
-    /** True if [slotId] (holding [itemId]) is barred by [rules]: a disabled slot, or a non-allowed weapon. */
-    private fun slotDisallowed(rules: DuelRules, slotId: Int, itemId: Int?): Boolean {
-        if (slotId in rules.disabledSlots) return true
-        if (slotId == EquipmentType.WEAPON.id && rules.allowedWeapons != null && itemId != null && itemId !in rules.allowedWeapons!!) return true
-        return false
+    /**
+     * Force off every worn item a duel's gear rules disallow, so a fight can never START with it.
+     * The stake screen already verified backpack space at accept; if the player somehow filled up
+     * since (or a path skipped the vet), the item goes to the BANK rather than staying worn —
+     * a disallowed piece remaining equipped would let gear rules be dodged outright.
+     */
+    private fun stripDisallowed(p: Player, rules: DuelRules) {
+        strippedGear(p, rules).forEach { slotId ->
+            if (EquipAction.unequip(p, slotId) != EquipAction.Result.SUCCESS) {
+                p.equipment[slotId]?.let { item ->
+                    p.equipment[slotId] = null
+                    p.calculateBonuses()
+                    PlayerInfo(p).syncAppearance()
+                    EquipAction.onItemUnequip(p, item.id, slotId)
+                    p.bank.add(item.id, item.amount)
+                    p.message("<col=801700>Your ${item.getName()} didn't fit in your backpack — it has been banked.</col>")
+                }
+            }
+        }
     }
 
-    /** Force off any worn item a duel's gear rules disallow (so a fight can't START with it). */
-    private fun stripDisallowed(p: Player, rules: DuelRules) {
-        EquipmentType.values.forEach { type ->
-            val item = p.equipment[type.id] ?: return@forEach
-            if (slotDisallowed(rules, type.id, item.id)) EquipAction.unequip(p, type.id)
+    /**
+     * No Weapon Switch: hold [p]'s weapon slot to the weapon captured at FIGHT!. Runs inside the
+     * equip handlers (synchronously — see the onEquipToSlot binding) with [revertSlot] naming the
+     * slot whose fresh equip broke the lock (the weapon itself, or a shield that displaced a
+     * locked 2H), and from the duel tick as a backstop with no slot to revert (a plain unequip).
+     */
+    private fun enforceWeaponLock(p: Player, d: Duel, revertSlot: Int? = null) {
+        if (!d.fighting || !d.rules.noWeaponSwitch) return
+        val locked = d.lockedWeaponOf(p)
+        val weaponSlot = EquipmentType.WEAPON.id
+        if (p.equipment[weaponSlot]?.id == locked) return
+        revertSlot?.let {
+            EquipAction.unequip(p, it)
+            p.message("You can't switch weapons in this duel.")
+        }
+        // Put the locked weapon back in hand if it's sitting in the backpack (it is, whenever a
+        // swap or unequip displaced it — a thrown weapon running out is the one way it can't be).
+        if (locked != null && p.equipment[weaponSlot]?.id != locked) {
+            val index = p.inventory.getItemIndex(locked, skipAttrItems = false)
+            if (index != -1) p.inventory[index]?.let { EquipAction.equip(p, it, index) }
         }
     }
 
     /** Open the stake screen for both players — a stake-mode [TradeSession] whose completion launches the duel. */
     private fun openStake(a: Player, b: Player, rules: DuelRules) {
         val hook = StakeHook { p, pStake, q, qStake -> begin(p, pStake, q, qStake, rules) }
-        val sa = TradeSession(a, b, hook)
-        val sb = TradeSession(b, a, hook)
+        // The classic accept-time space check: gear these rules strip at duel start must fit the
+        // backpack (as it'll be once the stake is committed), or the stake can't be confirmed.
+        val vet: (Player, Int) -> String? = { p, freeSlots ->
+            val stripped = strippedGear(p, rules).size
+            if (stripped > freeSlots) {
+                "This duel's rules would remove $stripped worn item${if (stripped == 1) "" else "s"} " +
+                    "but you only have $freeSlots free backpack space${if (freeSlots == 1) "" else "s"} — make room first."
+            } else null
+        }
+        val sa = TradeSession(a, b, hook, vet)
+        val sb = TradeSession(b, a, hook, vet)
         a.attr[TRADE_SESSION_ATTR] = sa
         b.attr[TRADE_SESSION_ATTR] = sb
         sa.open()
@@ -450,6 +514,13 @@ class DuelArenaPlugin(
             d.a.timers[FROZEN_TIMER] = 4
             d.b.timers[FROZEN_TIMER] = 4
         }
+        if (d.fighting && d.rules.noWeaponSwitch) {
+            // Weapon-lock backstop for the one path the equip handlers can't revert: a plain
+            // unequip-to-fists (re-equipping mid-unequip would corrupt EquipAction's swap flow,
+            // so the lock is restored here, on the next tick instead).
+            enforceWeaponLock(d.a, d)
+            enforceWeaponLock(d.b, d)
+        }
         if (!d.fighting) {
             d.countdown--
             when (d.countdown) {
@@ -460,6 +531,8 @@ class DuelArenaPlugin(
                 }
                 0 -> {
                     d.fighting = true
+                    // No Weapon Switch: what's in hand at FIGHT! is the weapon for the whole duel.
+                    if (d.rules.noWeaponSwitch) d.lockWeapons(EquipmentType.WEAPON.id)
                     overhead(d, "FIGHT!")
                     broadcast(d, "<col=ff0000>FIGHT!</col>")
                     // Fair opener: who swings first is a coin flip, not challenger-always-first.

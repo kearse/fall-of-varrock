@@ -50,6 +50,22 @@ class LofDuelMouseListener extends MouseAdapter
 		{
 			plugin.sendAction("load");
 		}
+		else if (hit == LofDuelOverlay.SAVE)
+		{
+			plugin.sendAction("save");
+		}
+		else if (hit == LofDuelOverlay.LOAD_SAVED)
+		{
+			plugin.sendAction("loadsaved");
+		}
+		else if (hit == LofDuelOverlay.WHIP)
+		{
+			plugin.sendAction("whip");
+		}
+		else if (hit == LofDuelOverlay.BOXING)
+		{
+			plugin.sendAction("box");
+		}
 		else if (hit >= LofDuelOverlay.SLOT_BASE)
 		{
 			plugin.sendAction("s" + (hit - LofDuelOverlay.SLOT_BASE));

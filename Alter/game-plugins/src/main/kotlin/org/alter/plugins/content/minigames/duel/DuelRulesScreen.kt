@@ -9,7 +9,6 @@ import org.alter.api.ext.setComponentHidden
 import org.alter.api.ext.setComponentText
 import org.alter.api.ext.setInterfaceUnderlay
 import org.alter.game.model.entity.Player
-import org.alter.rscm.RSCM.getRSCM
 
 /**
  * Server driver for the **Duel Arena rules-grid** interface (cache group [IFACE], authored by
@@ -163,9 +162,9 @@ object DuelRulesScreen {
     private fun buildRules(t: BooleanArray): DuelRules {
         val weapons = HashSet<Int>()
         val weaponLabels = ArrayList<String>()
-        if (t[8]) { weapons += ids("item.abyssal_whip"); weaponLabels += "Whip only" }
-        if (t[9]) { weapons += ids("item.dragon_dagger", "item.dragon_dagger_p", "item.dragon_dagger_p+", "item.dragon_dagger_p++"); weaponLabels += "DDS only" }
-        if (t[10]) { weapons += ids("item.rubber_chicken", "item.stale_baguette", "item.giant_frog_legs", "item.mole_slippers", "item.frozen_whip_mix"); weaponLabels += "Fun weapons" }
+        if (t[8]) { weapons += DuelRules.WHIP_WEAPONS; weaponLabels += "Whip only" }
+        if (t[9]) { weapons += DuelRules.DDS_WEAPONS; weaponLabels += "DDS only" }
+        if (t[10]) { weapons += DuelRules.FUN_WEAPONS; weaponLabels += "Fun weapons" }
         val gearLabel = when {
             t[7] -> "Boxing"
             weaponLabels.isNotEmpty() -> weaponLabels.joinToString("/")
@@ -174,13 +173,11 @@ object DuelRulesScreen {
         return DuelRules(
             noMelee = t[0], noRanged = t[1], noMagic = t[2],
             noPrayer = t[3], noFood = t[4], noDrinks = t[5], noMovement = t[6],
+            funWeapons = t[10],
             allowCompanions = t[11],
             disabledSlots = if (t[7]) EquipmentType.values.map { it.id }.toSet() else emptySet(),
             allowedWeapons = weapons.takeIf { it.isNotEmpty() },
             gearLabel = gearLabel,
         )
     }
-
-    private fun ids(vararg names: String): Set<Int> =
-        names.mapNotNull { runCatching { getRSCM(it) }.getOrNull() }.toSet()
 }

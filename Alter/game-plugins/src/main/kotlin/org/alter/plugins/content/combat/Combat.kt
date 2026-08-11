@@ -64,26 +64,28 @@ object Combat {
         target: Pawn,
         combatClass: CombatClass,
     ): Boolean {
-        // Duel style rules: block a combat class this duel disallows (No Melee / No Ranged / No Magic).
+        // Style bans — the merged duel/sparring view (No Melee / No Ranged / No Magic). For
+        // sparring this binds the owner AND the sparring companion — the companion's kit already
+        // excludes banned styles, this is the belt to that braces.
         if (pawn is Player) {
-            val rules = org.alter.plugins.content.minigames.duel.DuelArena.rulesOf(pawn)
-            if (rules != null &&
-                ((combatClass == CombatClass.MELEE && rules.noMelee) ||
-                    (combatClass == CombatClass.RANGED && rules.noRanged) ||
-                    (combatClass == CombatClass.MAGIC && rules.noMagic))
+            val restrictions = CombatRestrictions.of(pawn)
+            if (restrictions != null &&
+                ((combatClass == CombatClass.MELEE && restrictions.noMelee) ||
+                    (combatClass == CombatClass.RANGED && restrictions.noRanged) ||
+                    (combatClass == CombatClass.MAGIC && restrictions.noMagic))
             ) {
-                pawn.message("That combat style isn't allowed in this duel.")
+                pawn.message("That combat style isn't allowed in this ${restrictions.context}.")
                 return false
             }
-            // Companion-sparring style bans, same shape (binds the owner AND the sparring companion —
-            // the companion's kit already excludes banned styles, this is the belt to that braces).
-            val spar = org.alter.plugins.content.minigames.pktraining.CompanionSparring.rulesOf(pawn)
-            if (spar != null &&
-                ((combatClass == CombatClass.MELEE && spar.noMelee) ||
-                    (combatClass == CombatClass.RANGED && spar.noRanged) ||
-                    (combatClass == CombatClass.MAGIC && spar.noMagic))
+            // Fun Weapons (duel-only): every attack must come from a whitelisted joke weapon —
+            // bare fists are NOT allowed (the classic rule). The equip point already reverts
+            // non-fun weapons, so in practice this catches punching.
+            val duelRules = org.alter.plugins.content.minigames.duel.DuelArena.rulesOf(pawn)
+            if (duelRules?.funWeapons == true &&
+                pawn.equipment[EquipmentType.WEAPON.id]?.id !in
+                org.alter.plugins.content.minigames.duel.DuelRules.FUN_WEAPONS
             ) {
-                pawn.message("That combat style isn't allowed in this sparring bout.")
+                pawn.message("You can only attack with fun weapons in this duel.")
                 return false
             }
         }

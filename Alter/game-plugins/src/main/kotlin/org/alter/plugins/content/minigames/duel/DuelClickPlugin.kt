@@ -12,9 +12,11 @@ import org.alter.game.plugin.PluginRepository
  * Handles a duel-rules interaction requested by the client overlay (net.runelite.client.plugins.lofduel).
  * The client sends `::duel <action>` as public chat; `MessagePublicHandler` routes it here as the
  * `duelclick` command:
- *   - `t<i>` → toggle rule i (0..11)
+ *   - `t<i>` → toggle rule i (0..13)
  *   - `s<i>` → toggle forbidden equipment slot i (0..10, the paper-doll)
  *   - `load` → load the "last duel" preset
+ *   - `save` / `loadsaved` → save / load the player's personal preset
+ *   - `whip` / `box` → load the official Whip / Boxing preset
  *   - `a`    → accept
  *   - `d`    → decline / close
  *
@@ -37,7 +39,11 @@ class DuelClickPlugin(
         when {
             action == "a" -> DuelRulesClientMenu.accept(p)
             action == "d" -> DuelRulesClientMenu.cancel(p)
-            action == "load" -> DuelRulesClientMenu.loadPreset(p)
+            action == "load" -> DuelRulesClientMenu.loadLast(p)
+            action == "save" -> DuelRulesClientMenu.savePreset(p)
+            action == "loadsaved" -> DuelRulesClientMenu.loadSaved(p)
+            action == "whip" -> DuelRulesClientMenu.loadOfficial(p, DuelRulesClientMenu.WHIP_PRESET)
+            action == "box" -> DuelRulesClientMenu.loadOfficial(p, DuelRulesClientMenu.BOXING_PRESET)
             action.startsWith("t") -> action.drop(1).toIntOrNull()?.let { DuelRulesClientMenu.toggle(p, it) }
             action.startsWith("s") -> action.drop(1).toIntOrNull()?.let { DuelRulesClientMenu.toggleSlot(p, it) }
         }

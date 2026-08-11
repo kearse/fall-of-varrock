@@ -5,16 +5,20 @@ import org.alter.api.ext.message
 import org.alter.api.ext.setVarp
 import org.alter.game.model.attr.AttributeKey
 import org.alter.game.model.entity.Player
-import org.alter.rscm.RSCM.getRSCM
 
-/** Last agreed rules-grid state (packed toggle+slot bits), for the "Load last duel" preset. */
-val DUEL_PRESET_ATTR = AttributeKey<Int>()
+/** Last AGREED rules-grid state (packed toggle+slot bits) — the "Last" preset. Persists. */
+val DUEL_PRESET_ATTR = AttributeKey<Int>(persistenceKey = "duel_last_rules")
+
+/** The player's explicitly SAVED rules preset (packed toggle+slot bits) — Save/Load. Persists. */
+val DUEL_SAVED_PRESET_ATTR = AttributeKey<Int>(persistenceKey = "duel_saved_rules")
 
 /**
  * Server driver for the **themed client-overlay** duel rules screen — a faithful rebuild of the
  * classic Duel Arena *Options* screen (`net.runelite.client.plugins.lofduel`): the combat-rule
- * checkboxes **and** the equipment paper-doll (click a worn slot to forbid it), plus a
- * "Load last duel" preset. Drawn by a client overlay, so no cache interface → no crash risk.
+ * checkboxes **and** the equipment paper-doll (click a worn slot to forbid it), plus the classic
+ * preset buttons — the official **Whip** and **Boxing** rule sets and per-player **Save / Load /
+ * Load-last-duel** (2015 Rework feature set). Drawn by a client overlay, so no cache interface →
+ * no crash risk.
  *
  * Both players share one session; either side toggles, any change resets both accepts, both Accept →
  * [onAccepted] fires and the stake screen opens. No custom packets: state is one packed varp, and
@@ -22,22 +26,25 @@ val DUEL_PRESET_ATTR = AttributeKey<Int>()
  *
  * Packed [STATE_VARP] (per player — accept bits are that player's perspective):
  *   bit 0        open
- *   bits 1-12    the 12 rule toggles ([RULES])
- *   bit 13       this player accepted
- *   bit 14       opponent accepted
- *   bits 15-25   the 11 forbidden-equipment slots ([SLOT_IDS])
+ *   bits 1-16    rule toggles ([RULES]; [RULE_BITS] bits reserved so Phase 3/4 additions — Show
+ *                Inventories, Obstacles — won't reshuffle the layout again)
+ *   bit 17       this player accepted
+ *   bit 18       opponent accepted
+ *   bits 19-29   the 11 forbidden-equipment slots ([SLOT_IDS])
  */
 object DuelRulesClientMenu {
     /** Must match the client overlay (LofDuelOverlay). */
     const val STATE_VARP = 4630
-    const val RULE_COUNT = 12
+    const val RULE_BITS = 16
     const val SLOT_COUNT = 11
 
-    /** The 12 rule toggles, in order — MUST match the client overlay's RULES order. */
+    /** The rule toggles, in order — MUST match the client overlay's RULES order. */
     val RULES = listOf(
         "No Melee", "No Ranged", "No Magic", "No Prayer", "No Food", "No Drinks",
         "No Movement", "No Forfeit", "Whip only", "DDS only", "Fun weapons", "Allow companions",
+        "No Weapon Switch", "No Special Attacks",
     )
+    val RULE_COUNT = RULES.size
 
     /** Paper-doll slots (doll index → EquipmentType id) — MUST match the client overlay's SLOT order. */
     val SLOT_IDS = intArrayOf(
@@ -45,6 +52,34 @@ object DuelRulesClientMenu {
         EquipmentType.CHEST.id, EquipmentType.SHIELD.id, EquipmentType.LEGS.id, EquipmentType.GLOVES.id,
         EquipmentType.BOOTS.id, EquipmentType.RING.id, EquipmentType.AMMO.id,
     )
+
+    // Rule indices used by the official presets.
+    private const val R_NO_RANGED = 1
+    private const val R_NO_MAGIC = 2
+    private const val R_NO_PRAYER = 3
+    private const val R_NO_FOOD = 4
+    private const val R_NO_DRINKS = 5
+    private const val R_NO_MOVEMENT = 6
+    private const val R_NO_FORFEIT = 7
+    private const val R_NO_SPEC = 13
+    private const val WEAPON_DOLL_SLOT = 3
+
+    /**
+     * The official **Whip** preset (per the decoded cache bitmask, minus Show Inventories which is
+     * a Phase-3 interface feature): No Ranged/Magic/Prayer/Food/Drinks/Movement/Forfeit/Special
+     * Attacks + every equipment slot forbidden EXCEPT the weapon. Any one-handed weapon is legal —
+     * the forbidden shield slot is what bans 2H weapons (see [DuelRules.barsWorn]).
+     */
+    val WHIP_PRESET: Int = run {
+        var v = 0
+        intArrayOf(R_NO_RANGED, R_NO_MAGIC, R_NO_PRAYER, R_NO_FOOD, R_NO_DRINKS, R_NO_MOVEMENT, R_NO_FORFEIT, R_NO_SPEC)
+            .forEach { v = v or (1 shl (it + 1)) }
+        for (i in 0 until SLOT_COUNT) if (i != WEAPON_DOLL_SLOT) v = v or (1 shl (i + SLOT_BIT_BASE))
+        v
+    }
+
+    /** The official **Boxing** preset: Whip plus the weapon slot forbidden → bare fists. */
+    val BOXING_PRESET: Int = WHIP_PRESET or (1 shl (WEAPON_DOLL_SLOT + SLOT_BIT_BASE))
 
     private class Session(val a: Player, val b: Player, val onAccepted: (DuelRules) -> Unit) {
         val rules = BooleanArray(RULE_COUNT)
@@ -79,11 +114,29 @@ object DuelRulesClientMenu {
         resetAccepts(s)
     }
 
-    /** Load the player's last-agreed rules preset into the live session. */
-    fun loadPreset(p: Player) {
+    /** Load the rules both players agreed in [p]'s LAST duel into the live session. */
+    fun loadLast(p: Player) {
+        applyPacked(p, p.attr[DUEL_PRESET_ATTR] ?: run { p.message("You have no previous duel to load."); return })
+    }
+
+    /** Save the session's current rules as [p]'s personal preset. */
+    fun savePreset(p: Player) {
         val s = sessions[p.index] ?: return
-        val preset = p.attr[DUEL_PRESET_ATTR] ?: run { p.message("You have no saved duel rules yet."); return }
-        unpackInto(preset, s.rules, s.slots)
+        p.attr[DUEL_SAVED_PRESET_ATTR] = packState(s.rules, s.slots)
+        p.message("Duel rules saved.")
+    }
+
+    /** Load [p]'s personal saved preset into the live session. */
+    fun loadSaved(p: Player) {
+        applyPacked(p, p.attr[DUEL_SAVED_PRESET_ATTR] ?: run { p.message("You have no saved duel rules yet."); return })
+    }
+
+    /** Load an official preset ([WHIP_PRESET] / [BOXING_PRESET]) into the live session. */
+    fun loadOfficial(p: Player, preset: Int) = applyPacked(p, preset)
+
+    private fun applyPacked(p: Player, packed: Int) {
+        val s = sessions[p.index] ?: return
+        unpackInto(packed, s.rules, s.slots)
         resetAccepts(s)
     }
 
@@ -135,21 +188,27 @@ object DuelRulesClientMenu {
         if (s.b.index >= 0) s.b.setVarp(STATE_VARP, base or 1 or acc(s.acceptedB, s.acceptedA))
     }
 
+    // Bit layout shared with the client overlay AND the persisted preset attrs (a saved preset is
+    // just the packed toggle+slot bits with the transient open/accept bits zero).
+    private const val ACCEPT_MINE_BIT = RULE_BITS + 1 // 17
+    private const val ACCEPT_THEIRS_BIT = RULE_BITS + 2 // 18
+    private const val SLOT_BIT_BASE = RULE_BITS + 3 // 19
+
     /** Toggle+slot bits only (bit 0 open and accept bits added per-player in [publish]). */
     private fun packState(rules: BooleanArray, slots: BooleanArray): Int {
         var v = 0
         for (i in 0 until RULE_COUNT) if (rules[i]) v = v or (1 shl (i + 1))
-        for (i in 0 until SLOT_COUNT) if (slots[i]) v = v or (1 shl (i + 15))
+        for (i in 0 until SLOT_COUNT) if (slots[i]) v = v or (1 shl (i + SLOT_BIT_BASE))
         return v
     }
 
     private fun unpackInto(packed: Int, rules: BooleanArray, slots: BooleanArray) {
         for (i in 0 until RULE_COUNT) rules[i] = (packed and (1 shl (i + 1))) != 0
-        for (i in 0 until SLOT_COUNT) slots[i] = (packed and (1 shl (i + 15))) != 0
+        for (i in 0 until SLOT_COUNT) slots[i] = (packed and (1 shl (i + SLOT_BIT_BASE))) != 0
     }
 
     private fun acc(mine: Boolean, theirs: Boolean): Int =
-        (if (mine) 1 shl 13 else 0) or (if (theirs) 1 shl 14 else 0)
+        (if (mine) 1 shl ACCEPT_MINE_BIT else 0) or (if (theirs) 1 shl ACCEPT_THEIRS_BIT else 0)
 
     private inline fun forEachSide(s: Session, block: (Player) -> Unit) {
         if (s.a.index >= 0) block(s.a)
@@ -159,27 +218,26 @@ object DuelRulesClientMenu {
     private fun buildRules(t: BooleanArray, slots: BooleanArray): DuelRules {
         val weapons = HashSet<Int>()
         val weaponLabels = ArrayList<String>()
-        if (t[8]) { weapons += ids("item.abyssal_whip"); weaponLabels += "Whip only" }
-        if (t[9]) { weapons += ids("item.dragon_dagger", "item.dragon_dagger_p", "item.dragon_dagger_p+", "item.dragon_dagger_p++"); weaponLabels += "DDS only" }
-        if (t[10]) { weapons += ids("item.rubber_chicken", "item.stale_baguette", "item.giant_frog_legs", "item.mole_slippers", "item.frozen_whip_mix"); weaponLabels += "Fun weapons" }
+        if (t[8]) { weapons += DuelRules.WHIP_WEAPONS; weaponLabels += "Whip only" }
+        if (t[9]) { weapons += DuelRules.DDS_WEAPONS; weaponLabels += "DDS only" }
+        if (t[10]) { weapons += DuelRules.FUN_WEAPONS; weaponLabels += "Fun weapons" }
         val disabled = SLOT_IDS.filterIndexed { i, _ -> slots[i] }.toSet()
         val gearLabel = when {
             disabled.size == SLOT_IDS.size -> "Boxing"
             weaponLabels.isNotEmpty() && disabled.isNotEmpty() -> weaponLabels.joinToString("/") + " + restricted gear"
             weaponLabels.isNotEmpty() -> weaponLabels.joinToString("/")
+            disabled.size == SLOT_IDS.size - 1 && EquipmentType.WEAPON.id !in disabled -> "No armour"
             disabled.isNotEmpty() -> "Restricted gear"
             else -> null
         }
         return DuelRules(
             noMelee = t[0], noRanged = t[1], noMagic = t[2],
             noPrayer = t[3], noFood = t[4], noDrinks = t[5], noMovement = t[6], noForfeit = t[7],
+            noWeaponSwitch = t[12], noSpec = t[13], funWeapons = t[10],
             allowCompanions = t[11],
             disabledSlots = disabled,
             allowedWeapons = weapons.takeIf { it.isNotEmpty() },
             gearLabel = gearLabel,
         )
     }
-
-    private fun ids(vararg names: String): Set<Int> =
-        names.mapNotNull { runCatching { getRSCM(it) }.getOrNull() }.toSet()
 }
