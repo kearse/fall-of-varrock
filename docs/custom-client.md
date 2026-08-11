@@ -373,9 +373,13 @@ any server-driven client UI.
 `varp 5000` (the signal). The real War Brain can raise the same varp on raid start.
 
 **Signal pattern (server→client, no custom packets):** server `player.setVarp(N, v)` → client
-plugin reacts to `VarbitChanged` for varp N. **Gotcha:** N must be `< player.varps.maxVarps`
-(= the cache's varp-definition count for the rev, NOT the client's `varp_count=15000`). Used
-`5000`; the command bounds-checks. Varbit alternative needs a cache definition; raw varp doesn't.
+plugin reacts to `VarbitChanged` for varp N. **Gotcha (now fixed at the source):** N must be
+`< player.varps.maxVarps`, and that used to equal the cache's varp-definition count for the rev
+(NOT the client's `varp_count=15000`) — an id past it THROWS in `VarpSet.setState`, which silently
+killed the sparring settings screen (varp 4680) and the kit editor's slot varps. The server now
+sizes the table `maxOf(cache count, Player.CUSTOM_VARP_CEILING = 6000)`, so every id in the master
+varp map below is guaranteed writable; `::varpmax` prints both numbers. Varbit alternative needs a
+cache definition; raw varp doesn't.
 
 ## 5d. Migrated the siege HUD from cache interface → client overlay
 
@@ -462,6 +466,8 @@ assume the common one (`::bank`); other scam-bait words would also open the bank
   guidance arrow pointing at the Duke after buying companions) ·
   **4640-4679 kit editor** (control + per-slot) ·
   **4680 companion sparring settings** (`SparringClientMenu` / client `lofspar`).
+  All ids here are guaranteed writable: the server sizes the varp table to at least
+  `Player.CUSTOM_VARP_CEILING` (6000) regardless of the cache's varp count (`::varpmax` to verify).
 
 ## 5h. Build stamp — spotting stale installs at a glance
 

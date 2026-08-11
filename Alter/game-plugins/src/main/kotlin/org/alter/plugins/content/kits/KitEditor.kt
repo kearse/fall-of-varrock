@@ -6,8 +6,11 @@ import org.alter.api.ext.getSpellbook
 import org.alter.api.ext.inputString
 import org.alter.api.ext.message
 import org.alter.api.ext.setVarp
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.alter.game.model.entity.Player
 import org.alter.game.model.item.Item
+
+private val logger = KotlinLogging.logger {}
 
 /**
  * Server driver for the **kit editor** client overlay (`net.runelite.client.plugins.lofkit`) — the
@@ -119,8 +122,24 @@ object KitEditor {
 
     /** Wipe all editor varps (login hygiene — transient UI state must never persist). */
     fun clearVarps(p: Player) {
+        if (!varpsAvailable(p)) return
         p.setVarp(CONTROL_VARP, 0)
         for (i in 0 until EQUIP_SLOTS + KitSetup.INV_SIZE) p.setVarp(SLOT_VARP_BASE + i, 0)
+    }
+
+    private var warnedVarpRange = false
+
+    /** True when the editor's whole varp range fits the player's varp table (see [publish]). */
+    private fun varpsAvailable(p: Player): Boolean {
+        val fits = SLOT_VARP_BASE + EQUIP_SLOTS + KitSetup.INV_SIZE <= p.varps.maxVarps
+        if (!fits && !warnedVarpRange) {
+            warnedVarpRange = true
+            logger.error {
+                "kit editor varps $CONTROL_VARP-${SLOT_VARP_BASE + EQUIP_SLOTS + KitSetup.INV_SIZE - 1} " +
+                    "exceed the varp table (max ${p.varps.maxVarps}) — overlay disabled; raise Player.CUSTOM_VARP_CEILING"
+            }
+        }
+        return fits
     }
 
     // ── actions (routed from ::kit via KitsPlugin) ──
@@ -389,6 +408,12 @@ object KitEditor {
                 c = c or ((sel and 0x3) shl (10 + 2 * i))
             }
         }
+        // Bounds-guarded: `VarpSet.setState` THROWS on an id >= maxVarps, and an undersized varp
+        // table (cache count below the 4640-4679 claim) used to kill every editor action mid-publish
+        // — the window opened off CONTROL_VARP and then no click ever visibly did anything. The
+        // server now sizes the table past the custom range (Player.CUSTOM_VARP_CEILING); this guard
+        // keeps a future mis-sizing loud-but-harmless instead of silently fatal.
+        if (!varpsAvailable(p)) return
         p.setVarp(CONTROL_VARP, c)
         SLOT_IDS.forEachIndexed { i, slotId ->
             p.setVarp(SLOT_VARP_BASE + i, packItem(kit.gear[slotId]))

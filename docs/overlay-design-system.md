@@ -290,6 +290,10 @@ Reusable pieces — reach for these before inventing a new one. Metrics above.
     **4680 companion sparring settings** (packed: open | style bits 1-2 | difficulty 3-4 |
     rules 5-13 | companion-loadout mode 14-15 — `SparringClientMenu`, client `lofspar`).
     (4601/4609/4616 all feed the `lofdials` dial row.)
+    Every id in this map is guaranteed writable server-side: the varp table is sized
+    `maxOf(cache varp count, Player.CUSTOM_VARP_CEILING = 6000)` — the cache count alone sat BELOW
+    this range and out-of-range `setVarp` throws (that silently broke lofspar + the kit editor
+    slots). Claim new ids under 6000, or raise the ceiling with the claim. `::varpmax` prints both.
 
     **Windows are exclusive** (`LofWindows` in loftheme): register the overlay, call
     `openExclusive()` before showing, and forward VarbitChanged to `onForeignSignal` — a window

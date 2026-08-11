@@ -76,7 +76,10 @@ class CompanionSparringPlugin(
         // Themed client overlay (default) with the chatbox dialogue as the everyone-else fallback —
         // the duel rules screen's split, one flag.
         CompanionSparring.setupOpener = { owner, comp ->
-            if (SparringClientMenu.enabled) openOverlay(owner, comp)
+            // available() guards the overlay's varp being writable at all — an out-of-range varp id
+            // used to throw mid-publish and eat the whole Challenge click silently. The chatbox
+            // dialogue is the universal fallback and never depends on the varp.
+            if (SparringClientMenu.enabled && SparringClientMenu.available(owner)) openOverlay(owner, comp)
             else owner.queue { setupDialog(owner, comp) }
         }
 
@@ -294,7 +297,11 @@ class CompanionSparringPlugin(
     // ───────────────────────────── bout lifecycle ─────────────────────────────
 
     private fun validateChallenge(owner: Player, comp: CompanionPawn): Boolean {
-        if (!CompanionRegistry.owns(owner, comp)) return false
+        // Every rejection MUST speak — a Challenge click that visibly does nothing is
+        // indistinguishable from a broken feature.
+        if (!CompanionRegistry.owns(owner, comp)) {
+            owner.message("You can only challenge your own companions to a sparring bout."); return false
+        }
         if (CompanionSparring.sessionOf(owner) != null || CompanionSparring.isSparring(comp)) {
             owner.message("You're already mid-bout."); return false
         }
@@ -303,8 +310,12 @@ class CompanionSparringPlugin(
         // instances (the bout teleport would rip you out of that content mid-run).
         if (!PvpZones.isSafe(owner.tile)) { owner.message("You can't arrange a spar in the wilderness."); return false }
         if (world.instanceAllocator.getMap(owner.tile) != null) { owner.message("You can't arrange a spar from in here."); return false }
-        if (org.alter.plugins.content.minigames.duel.DuelArena.duelOf(owner) != null) return false
-        if (KitEditor.isOpen(owner)) return false
+        if (org.alter.plugins.content.minigames.duel.DuelArena.duelOf(owner) != null) {
+            owner.message("You can't arrange a spar mid-duel."); return false
+        }
+        if (KitEditor.isOpen(owner)) {
+            owner.message("Close the kit locker first, then challenge Sir ${comp.username}."); return false
+        }
         return true
     }
 

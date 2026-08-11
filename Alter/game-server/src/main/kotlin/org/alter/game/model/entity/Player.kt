@@ -127,7 +127,13 @@ open class Player(world: World) : Pawn(world) {
 
     val interfaces by lazy { InterfaceSet(PlayerInterfaceListener(this, world.plugins)) }
 
-    val varps = VarpSet(maxVarps = varpSize())
+    // Sized past the cache's varp-definition count: the custom overlays claim varps 4600-4680+
+    // (master map: docs/overlay-design-system.md §8), which sit ABOVE the rev-228 cache count, and
+    // VarpSet.setState throws on any id >= maxVarps — that out-of-range throw silently killed the
+    // sparring settings screen (varp 4680) and the kit editor's slot varps mid-publish. The custom
+    // client is patched to varp_count 15000 (docs/custom-client.md), so ids beyond the cache count
+    // are safe to send; the ceiling just has to stay comfortably above the master varp map.
+    val varps = VarpSet(maxVarps = maxOf(varpSize(), CUSTOM_VARP_CEILING))
 
     private val skillSet = SkillSet(maxSkills = world.gameContext.skillCount)
 
@@ -721,6 +727,14 @@ open class Player(world: World) : Pawn(world) {
 
     companion object {
         private val logger = KotlinLogging.logger {}
+
+        /**
+         * Minimum size of the per-player varp table. The rev-228 cache defines fewer varps than
+         * the custom-overlay allocations (4600-4680+, master map: docs/overlay-design-system.md §8),
+         * and [org.alter.game.model.varp.VarpSet.setState] throws on any id >= maxVarps, so the
+         * table must be sized past every claimed id. The custom client accepts varps up to 15000.
+         */
+        const val CUSTOM_VARP_CEILING = 6000
 
         /**
          * How many tiles a player can 'see' at a time, normally.
