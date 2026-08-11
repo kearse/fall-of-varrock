@@ -208,6 +208,14 @@ val WARPREP_BONE_TOPUPS_ATTR = AttributeKey<Int>("warprep_bone_topups")
 val QUEST_GUIDE_MUTED_ATTR = AttributeKey<Boolean>("quest_guide_muted")
 
 /**
+ * Whether the player has switched off the hunt-target tracking arrow (the shared TargetMarker —
+ * the Rogue Knight ladder / rogue-hunt marker). Independent of [QUEST_GUIDE_MUTED_ATTR]: quest
+ * guidance keeps working, only the hunt marker stays hidden. The hunt itself stays assigned —
+ * this hides the arrow, it never clears the target. Toggled by `::huntarrow`. Persistent.
+ */
+val HUNT_ARROW_MUTED_ATTR = AttributeKey<Boolean>("hunt_arrow_muted")
+
+/**
  * One-time "we've met" flags so key NPCs give a full first-meeting introduction (who they are +
  * how their system works) the first time, then fall through to their concise everyday dialogue.
  * Part of the intro-quest polish (master design brief §1). Persistent.

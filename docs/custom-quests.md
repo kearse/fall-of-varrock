@@ -48,6 +48,12 @@ add a system, and cross-check the master map in docs/overlay-design-system.md §
 `WarPrepChain.updateHintArrow` draw nothing, so no server arrow follows the player around;
 progress still advances silently. Toggled by `::questguide` or the Journal's header button.
 
+The **hunt tracking arrow** (the shared `TargetMarker` — the Rogue Knight ladder / rogue-hunt
+native hint arrow) additionally has its own independent toggle: `::huntarrow`
+(`HUNT_ARROW_MUTED_ATTR`, persistent). It hides just the marker while quest guidance keeps
+working; the hunt assignment itself is untouched. The guidance mute above still hides the
+marker too (free play kills ALL guidance).
+
 ### 2c. The client Quest Journal (`lofquests` plugin, custom RuneLite client)
 
 A first-party sidebar plugin (book icon) modelled on the RuneLite **Quest Helper** plugin

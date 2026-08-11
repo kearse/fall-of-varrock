@@ -3,10 +3,12 @@ package org.alter.plugins.content.hunt
 import org.alter.game.model.PlayerUID
 import org.alter.game.model.Tile
 import org.alter.game.model.World
+import org.alter.game.model.attr.HUNT_ARROW_MUTED_ATTR
 import org.alter.game.model.entity.Npc
 import org.alter.game.model.entity.Pawn
 import org.alter.game.model.entity.Player
 import org.alter.api.ext.clearHintArrow
+import org.alter.api.ext.message
 import org.alter.api.ext.setNpcHintArrow
 import org.alter.api.ext.setPlayerHintArrow
 import org.alter.api.ext.setTileHintArrow
@@ -25,7 +27,9 @@ import org.alter.plugins.content.quests.QuestJournal
  *    distance (off-screen the client renders it as the directional edge/minimap arrow).
  *
  * Arrows are deduped per player (packets only go out on change), cleared the sweep a claim ends,
- * and respect the Quest Journal guidance mute ([QuestJournal.muted]).
+ * and respect two mutes: the Quest Journal guidance mute ([QuestJournal.muted], free play — kills
+ * ALL guidance) and the marker's own [muted] toggle (`::huntarrow` — hides just the tracking
+ * arrow while quest guidance keeps working).
  *
  * **Who plugs in:**
  *  - The **Rogue Knight ladder** ([PRIORITY_LADDER]) marks the player's assigned (or farm) knight —
@@ -65,6 +69,25 @@ object TargetMarker {
         providers.sortByDescending { it.first }
     }
 
+    /** True while [p] has the tracking arrow switched off (`::huntarrow`). */
+    fun muted(p: Player): Boolean = p.attr[HUNT_ARROW_MUTED_ATTR] == true
+
+    /**
+     * Flip the tracking-arrow mute and apply it immediately (no waiting for the next sweep).
+     * Only the arrow is affected — the hunt assignment itself is untouched, so toggling back on
+     * picks the marker up exactly where it was.
+     */
+    fun toggleMute(p: Player) {
+        val nowMuted = !muted(p)
+        p.attr[HUNT_ARROW_MUTED_ATTR] = nowMuted
+        if (nowMuted) {
+            p.message("<col=801700>Tracking arrow off.</col> Your hunt stays assigned — type <col=801700>::huntarrow</col> to turn the arrow back on.")
+        } else {
+            p.message("<col=801700>Tracking arrow on.</col> The marker leads to your hunt again.")
+        }
+        update(p)
+    }
+
     /** Last arrow sent per player, so the sweep only writes packets on change. */
     private sealed class Arrow {
         data object None : Arrow()
@@ -100,7 +123,7 @@ object TargetMarker {
 
     /** Highest-priority claim that resolves to a drawable arrow (dead claims fall through). */
     private fun resolve(p: Player): Arrow {
-        if (QuestJournal.muted(p)) return Arrow.None
+        if (QuestJournal.muted(p) || muted(p)) return Arrow.None
         for ((_, provider) in providers) {
             val mark = provider.mark(p) ?: continue
             val arrow = toArrow(p, mark)

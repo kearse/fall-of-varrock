@@ -172,6 +172,11 @@ class MessagePublicHandler : MessageHandler<MessagePublic> {
                     client.world.plugins.executeCommand(client, "questguide", parts.drop(1).toTypedArray())
                     return
                 }
+                // Hunt tracking arrow (TargetMarker): flip just the marker, not all quest guidance.
+                "lofhuntarrow", "huntarrow" -> {
+                    client.world.plugins.executeCommand(client, "huntarrow", parts.drop(1).toTypedArray())
+                    return
+                }
                 "lofcompanion", "companion" -> {
                     client.world.plugins.executeCommand(client, "companion", parts.drop(1).toTypedArray())
                     return
