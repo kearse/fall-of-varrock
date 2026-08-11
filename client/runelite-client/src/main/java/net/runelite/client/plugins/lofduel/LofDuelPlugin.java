@@ -17,8 +17,10 @@ import com.google.inject.Provides;
 import javax.inject.Inject;
 import net.runelite.api.ChatMessageType;
 import net.runelite.api.Client;
+import net.runelite.api.MenuEntry;
 import net.runelite.api.ScriptID;
 import net.runelite.api.events.ChatMessage;
+import net.runelite.api.events.ClientTick;
 import net.runelite.api.events.ScriptCallbackEvent;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
@@ -175,6 +177,33 @@ public class LofDuelPlugin extends Plugin
 		final int[] intStack = client.getIntStack();
 		final int intStackSize = client.getIntStackSize();
 		intStack[intStackSize - 3] = 0; // block from display
+	}
+
+	/**
+	 * Suppress the native HOVER menu while the cursor is over the rules or confirmation window:
+	 * it rebuilds every client tick from what's UNDER the window, so without this the top-left
+	 * hint reads "Walk here" / "Attack ..." for the world behind while hovering a rule or item.
+	 */
+	@Subscribe
+	public void onClientTick(ClientTick event)
+	{
+		if (client.isMenuOpen())
+		{
+			return;
+		}
+		final net.runelite.api.Point m = client.getMouseCanvasPosition();
+		if (m == null)
+		{
+			return;
+		}
+		final java.awt.Point p = new java.awt.Point(m.getX(), m.getY());
+		final boolean over =
+			(overlay.isShowing() && overlay.hitTest(p) != LofDuelOverlay.OUTSIDE)
+			|| (confirmOverlay.isShowing() && confirmOverlay.hitTest(p) != LofDuelConfirmOverlay.OUTSIDE);
+		if (over)
+		{
+			client.setMenuEntries(new MenuEntry[0]);
+		}
 	}
 
 	/** Send a rules interaction to the server as a public-chat token it intercepts + suppresses. */

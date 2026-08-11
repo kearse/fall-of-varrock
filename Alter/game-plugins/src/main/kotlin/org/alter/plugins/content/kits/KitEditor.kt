@@ -224,9 +224,64 @@ object KitEditor {
     /** Bank palette "Equip": put [itemId] straight onto the doll (2h/shield rules apply). */
     fun addAndEquip(p: Player, itemId: Int, qty: Int) {
         val s = sessions[p.index] ?: return
-        if (s.mode != Mode.BANK) return
+        if (s.mode != Mode.BANK && s.mode != Mode.TRAINING) return
         if (itemId <= 0) return
-        if (virtualEquip(s, Item(itemId, qty.coerceIn(1, KitSetup.MAX_QTY)))) publish(s)
+        if (s.mode == Mode.TRAINING && !KitArmoury.contains(itemId)) {
+            p.message("The armoury doesn't stock that."); return
+        }
+        val want = if (s.mode == Mode.TRAINING) KitArmoury.defaultQty(itemId) else qty
+        if (virtualEquip(s, Item(itemId, want.coerceIn(1, KitSetup.MAX_QTY)))) publish(s)
+    }
+
+    /**
+     * Place [itemId] into kit-inventory slot [slot] EXACTLY — the hand-cursor's targeted drop, so
+     * players lay their pack out the way they actually fight (people organise their inventories
+     * deliberately; a first-free dump is not a layout). Same-id stackables merge into the slot; a
+     * different occupant steps aside to the first free slot (refused when there is none).
+     * Training mode stays armoury-gated with armoury quantities.
+     */
+    fun placeInInv(p: Player, itemId: Int, qty: Int, slot: Int) {
+        val s = sessions[p.index] ?: return
+        if (s.mode == Mode.LMS) return
+        if (itemId <= 0 || slot !in 0 until KitSetup.INV_SIZE) return
+        if (s.mode == Mode.TRAINING && !KitArmoury.contains(itemId)) {
+            p.message("The armoury doesn't stock that."); return
+        }
+        val def = runCatching { Item(itemId).getDef() }.getOrNull() ?: return
+        val want = (if (s.mode == Mode.TRAINING) KitArmoury.defaultQty(itemId) else qty).coerceIn(1, KitSetup.MAX_QTY)
+        val amount = if (def.stackable) want else 1
+        val occupant = s.kit.inv[slot]
+        when {
+            occupant == null -> s.kit.inv[slot] = Item(itemId, amount)
+            def.stackable && occupant.id == itemId ->
+                s.kit.inv[slot] = Item(itemId, (occupant.amount + amount).coerceAtMost(KitSetup.MAX_QTY))
+            else -> {
+                val free = (0 until KitSetup.INV_SIZE).firstOrNull { it !in s.kit.inv }
+                    ?: run { p.message("The kit's inventory is full."); return }
+                s.kit.inv[free] = occupant
+                s.kit.inv[slot] = Item(itemId, amount)
+            }
+        }
+        publish(s)
+    }
+
+    /** Move kit-inventory slot [from] onto [to] — the classic drag-rearrange, as pick-up-and-place:
+     *  occupied targets swap (same-id stackables merge), empty targets just take the item. */
+    fun moveInv(p: Player, from: Int, to: Int) {
+        val s = sessions[p.index] ?: return
+        if (s.mode == Mode.LMS) return
+        if (from !in 0 until KitSetup.INV_SIZE || to !in 0 until KitSetup.INV_SIZE || from == to) return
+        val moving = s.kit.inv[from] ?: return
+        val occupant = s.kit.inv[to]
+        val stackable = runCatching { moving.getDef().stackable }.getOrDefault(false)
+        if (occupant != null && occupant.id == moving.id && stackable) {
+            s.kit.inv.remove(from)
+            s.kit.inv[to] = Item(moving.id, (moving.amount + occupant.amount).coerceAtMost(KitSetup.MAX_QTY))
+        } else {
+            if (occupant == null) s.kit.inv.remove(from) else s.kit.inv[from] = occupant
+            s.kit.inv[to] = moving
+        }
+        publish(s)
     }
 
     /** Equip kit-inventory slot [slot] into its doll slot. On failure the item stays put. */

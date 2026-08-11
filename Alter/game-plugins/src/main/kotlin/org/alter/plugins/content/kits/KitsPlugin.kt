@@ -35,11 +35,13 @@ private val logger = KotlinLogging.logger {}
  * the `kitclick` command by MessagePublicHandler — the lofduel/lofstake pattern).
  *
  * Actions: `a <id>` add item (training/LMS palette) · `ai <id> [qty]` add into the kit inventory ·
- * `aix <id>` add-X (native amount prompt) · `ae <id> [qty]` add + equip · `eq <i>` equip inventory
- * slot · `re <i>` / `ri <i>` clear worn/inventory slot · `p <0|1>` preset · `k <0-2>` load saved ·
- * `s <0-2>` save · `cur` copy current worn+carried setup · `b <0-2>` spellbook · `d <0-2>`
- * difficulty · `start` begin training bout · `load` bank-load · `x` close · a bare number =
- * `::kit <n>` quick-load (typed commands can arrive down this channel too).
+ * `aix <id>` add-X (native amount prompt) · `ae <id> [qty]` add + equip · `pi <id> <qty> <slot>`
+ * place into an EXACT inventory slot (the hand cursor's drop) · `mv <from> <to>` move/swap two
+ * inventory slots · `eq <i>` equip inventory slot · `re <i>` / `ri <i>` clear worn/inventory
+ * slot · `p <0|1>` preset · `k <0-2>` load saved · `s <0-2>` save · `cur` copy current
+ * worn+carried setup · `b <0-2>` spellbook · `d <0-2>` difficulty · `start` begin training bout ·
+ * `load` bank-load · `x` close · a bare number = `::kit <n>` quick-load (typed commands can
+ * arrive down this channel too).
  */
 class KitsPlugin(
     r: PluginRepository,
@@ -80,6 +82,15 @@ class KitsPlugin(
                 }
                 "ae" -> args.getOrNull(1)?.toIntOrNull()?.let {
                     KitEditor.addAndEquip(player, it, args.getOrNull(2)?.toIntOrNull() ?: 1)
+                }
+                // The hand cursor's targeted drop: place an item into an EXACT inventory slot.
+                "pi" -> args.getOrNull(1)?.toIntOrNull()?.let { id ->
+                    val slot = args.getOrNull(3)?.toIntOrNull()
+                    if (slot != null) KitEditor.placeInInv(player, id, args.getOrNull(2)?.toIntOrNull() ?: 1, slot)
+                }
+                // Rearrange: move/swap two kit-inventory slots.
+                "mv" -> args.getOrNull(1)?.toIntOrNull()?.let { from ->
+                    args.getOrNull(2)?.toIntOrNull()?.let { to -> KitEditor.moveInv(player, from, to) }
                 }
                 "eq" -> args.getOrNull(1)?.toIntOrNull()?.let { KitEditor.equipInvSlot(player, it) }
                 "re" -> args.getOrNull(1)?.toIntOrNull()?.let { KitEditor.clearEquip(player, it) }
@@ -208,10 +219,21 @@ class KitsPlugin(
             if (result != EquipAction.Result.SUCCESS) unworn += nameOf(want)
         }
 
-        // 3) Inventory: withdraw into the kit's exact slot layout where possible.
-        kit.inv.entries.sortedBy { it.key }.forEach { (_, want) ->
+        // 3) Inventory: withdraw into the kit's EXACT slot layout — people organise their packs
+        //    deliberately (switch positions, brew columns, gap patterns), so the loaded inventory
+        //    must mirror the kit, gaps included. The bank transfer lands each item first-free;
+        //    the swap below walks it to its kit slot. A target blocked by a failed-equip piece
+        //    stays where it landed (best-effort, nothing is lost).
+        kit.inv.entries.sortedBy { it.key }.forEach { (target, want) ->
+            val before = BooleanArray(p.inventory.capacity) { p.inventory[it] != null }
             val got = withdraw(p, want.id, want.amount)
             if (got < want.amount) missing += (if (want.amount > 1) "${want.amount - got} x " else "") + nameOf(want)
+            if (got <= 0 || target !in 0 until p.inventory.capacity) return@forEach
+            val landed = (0 until p.inventory.capacity).firstOrNull { !before[it] && p.inventory[it]?.id == want.id }
+                ?: (0 until p.inventory.capacity).firstOrNull { p.inventory[it]?.id == want.id }
+            if (landed != null && landed != target && p.inventory[target] == null) {
+                p.inventory.swap(landed, target)
+            }
         }
 
         p.message("<col=007f00>Kit loaded from your bank.</col>")
