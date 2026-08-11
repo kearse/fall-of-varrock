@@ -81,6 +81,10 @@ object CompanionSparring {
         var fighting = false // false during the countdown; true once "FIGHT!" is called
         var countdown = 0
 
+        /** Where the owner stood when the bout began — both fighters land back here at bout end
+         *  (the staked duel's return-tile pattern; the arena lobby itself is in the wilderness). */
+        val returnTile: Tile = owner.tile
+
         // Companion's REAL state, captured BEFORE the loaner kit goes on. The container maps are
         // also what CompanionRegistry.snapshot persists mid-bout (see stashedContainersOf).
         var realEquip: Map<Int, CompItem> = emptyMap()

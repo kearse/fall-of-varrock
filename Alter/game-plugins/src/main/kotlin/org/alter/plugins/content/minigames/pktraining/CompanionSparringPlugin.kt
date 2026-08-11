@@ -515,6 +515,13 @@ class CompanionSparringPlugin(
         val owner = s.owner
         val comp = s.comp
 
+        // Bout end sends the owner back to the tile they challenged from (the staked duel's
+        // return-tile pattern) — the arena lobby is wilderness, so nobody may be left standing
+        // there. A death has already respawned them at the instance's exit tile ON the arena
+        // grounds, hence the ARENA check; an owner who left the grounds themselves stays put.
+        val returnOwner = owner.index >= 0 &&
+            (s.instance.contains(owner.tile) || TrainingArena.ARENA.contains(owner.tile))
+
         // ── companion restore ──
         if (comp.index >= 0) {
             // Recovery hatch: a companion whose death task was cancelled mid-flight is left in the
@@ -554,7 +561,8 @@ class CompanionSparringPlugin(
             comp.orders = CompanionOrders.FOLLOW
             comp.huntAnchor = null
             if (owner.index >= 0) {
-                comp.moveTo(Tile(TrainingArena.EXIT_TILE.x + 1, TrainingArena.EXIT_TILE.z, TrainingArena.EXIT_TILE.height))
+                val beside = if (returnOwner) s.returnTile else owner.tile
+                comp.moveTo(Tile(beside.x + 1, beside.z, beside.height))
             }
         }
 
@@ -562,7 +570,7 @@ class CompanionSparringPlugin(
         TrainingArena.setInBout(owner, false)
         if (owner.index >= 0) SparringClientMenu.setOpponent(owner, null) // "Attack" hides again
         if (owner.index >= 0) {
-            if (s.instance.contains(owner.tile)) owner.moveTo(TrainingArena.EXIT_TILE)
+            if (returnOwner) owner.moveTo(s.returnTile)
             if (owner.attr[PK_ARENA_STASH_ATTR] != null) {
                 LoanerKits.restoreLoaner(owner) // gear + levels + respawn from the stash
                 owner.attr.remove(SPAR_BOOST_ATTR) // levels came back with the stash
