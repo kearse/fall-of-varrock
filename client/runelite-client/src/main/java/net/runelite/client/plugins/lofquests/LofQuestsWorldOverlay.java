@@ -2,8 +2,9 @@
  * Fall of Varrock — Quest Journal scene overlay.
  *
  * Draws the tracked quest's objective in the 3D scene: a bouncing arrow above the target tile and
- * an outline on the tile itself. Only renders when the target is on the player's plane and inside
- * the loaded scene — the minimap overlay covers the "it's far away" case.
+ * an outline on the tile itself. The arrow renders whenever the target is inside the loaded scene
+ * (guiding across floors — e.g. from a castle upper floor to a ground-floor objective); the tile
+ * outline is drawn only on the target's own plane. The minimap overlay covers the far-away case.
  */
 package net.runelite.client.plugins.lofquests;
 
@@ -45,7 +46,7 @@ class LofQuestsWorldOverlay extends Overlay
 	public Dimension render(Graphics2D graphics)
 	{
 		WorldPoint target = plugin.activeTarget();
-		if (target == null || target.getPlane() != client.getPlane())
+		if (target == null)
 		{
 			return null;
 		}
@@ -58,7 +59,14 @@ class LofQuestsWorldOverlay extends Overlay
 
 		Color color = config.arrowColor();
 
-		if (config.highlightTargetTile())
+		// The directional arrow guides ACROSS floors: inside Lumbridge castle (plane 1/2) the objective
+		// is a plane-0 tile, so we still draw the arrow toward it rather than bailing on a plane
+		// mismatch (the "no arrow until I'm out of the castle" report). The precise tile OUTLINE is
+		// only drawn on the target's own floor — outlining a tile on another plane sits at the wrong
+		// elevation and reads as a stray marker.
+		boolean samePlane = target.getPlane() == client.getPlane();
+
+		if (samePlane && config.highlightTargetTile())
 		{
 			Polygon poly = Perspective.getCanvasTilePoly(client, lp);
 			if (poly != null)

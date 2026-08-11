@@ -7,6 +7,7 @@ import org.alter.game.model.Tile
 import org.alter.game.model.World
 import org.alter.game.model.attr.KILLER_ATTR
 import org.alter.game.model.attr.RESPAWN_TILE_ATTR
+import org.alter.game.model.entity.Pawn
 import org.alter.game.model.entity.Player
 import org.alter.game.model.instance.InstancedMap
 import org.alter.game.model.move.moveTo
@@ -24,6 +25,17 @@ object PlayerDeathAction {
     private val logger = KotlinLogging.logger {}
 
     private const val DEATH_ANIMATION = 836
+
+    /**
+     * Remaps who gets credit for a player/bot kill before [KILLER_ATTR] is written — the twin of
+     * [NpcDeathAction.killCreditResolver], for the player-death path. Content installs it (the
+     * companion system points a companion's kills at its owner). Without it, when a hunter's
+     * companion deals the most damage to a [PkBot] boss/rogue, KILLER_ATTR is the companion and the
+     * bot-death consumers (Rogue Knight rank, rogue-hunt credit, loot keys) that reject `killer is
+     * PkBot` silently drop the credit. Identity by default; only changes companion-dealt kills, so
+     * real player-vs-player credit is untouched.
+     */
+    var killCreditResolver: (Pawn) -> Pawn = { it }
 
     val deathPlugin: Plugin.() -> Unit = {
         val player = ctx as Player
@@ -57,7 +69,8 @@ object PlayerDeathAction {
          */
         try {
             player.write(MidiJingle(90))
-            player.damageMap.getMostDamage()?.let { killer ->
+            player.damageMap.getMostDamage()?.let { raw ->
+                val killer = killCreditResolver(raw) // remap a companion's damage to its owner
                 if (killer is Player) {
                     world.getService(LoggerService::class.java, searchSubclasses = true)?.logPlayerKill(killer, player)
                 }

@@ -6,6 +6,7 @@ import org.alter.api.ext.player
 import org.alter.game.Server
 import org.alter.game.model.World
 import org.alter.game.action.NpcDeathAction
+import org.alter.game.action.PlayerDeathAction
 import org.alter.game.model.priv.Privilege
 import org.alter.game.model.timer.TimerKey
 import org.alter.game.plugin.KotlinPlugin
@@ -31,6 +32,13 @@ class CompanionPlugin(
         // into transient containers that evaporate on despawn — the "my companion got the bounty
         // reward" report. Installed here, at the engine's single kill-credit choke point.
         NpcDeathAction.killCreditResolver = { pawn ->
+            if (pawn is CompanionPawn) CompanionRegistry.ownerOf(world, pawn) ?: pawn else pawn
+        }
+        // Same remap on the PLAYER-death path — so a companion that lands the killing blow on a
+        // PkBot (a Rogue Knight boss, a tier rogue) credits its OWNER, not the companion. Without
+        // this the bot-death consumers that reject `killer is PkBot` silently drop the kill (the
+        // "killed the bronze boss but it still shows hunting" report).
+        PlayerDeathAction.killCreditResolver = { pawn ->
             if (pawn is CompanionPawn) CompanionRegistry.ownerOf(world, pawn) ?: pawn else pawn
         }
 
