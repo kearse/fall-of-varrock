@@ -35,8 +35,12 @@ import org.alter.rscm.RSCM.getRSCM
  *    Old custom clients browse the website's vote page off the open| line; vanilla clients get
  *    the URL in chat. The toplists confirm each vote via postback (`/api/vote/postback/<site>`),
  *    which queues a `vote_points` entitlement — delivered on next login by [RewardDeliveryPlugin].
+ *    A site whose entitlement is still unapplied streams with cooldownMins = -1, which the
+ *    window renders as a gold **Claim** button.
  *  - `::claimvote` — drains pending vote rewards immediately for online players. On a server
- *    without MongoDB (local dev) it falls back to the old once-a-day streak stub.
+ *    without MongoDB (local dev) it falls back to the old once-a-day streak stub. The vote
+ *    window's Claim button sends `::claimvote panel`: same claim, then the toplist rows are
+ *    re-streamed so the open window swaps its Claim buttons for live cooldowns.
  *  - `::setvotepoints <n>` (admin) — sets points-per-vote in the shared `settings` collection,
  *    which the website's postback route reads when crediting votes (default 1).
  *
@@ -53,7 +57,13 @@ class DailyVotePlugin(
     init {
         onCommand("daily", description = "Claim your daily reward") { claimDaily(player) }
         onCommand("vote", description = "Vote for the server") { openVotePage(player) }
-        onCommand("claimvote", description = "Claim your vote reward") { claimVote(player) }
+        onCommand("claimvote", description = "Claim your vote reward") {
+            // "panel" = sent by the vote window's Claim button — refresh the rows afterwards
+            // so the open window's gold Claim buttons become live cooldowns.
+            val fromPanel = player.getCommandArgs().getOrNull(0) == "panel"
+            claimVote(player)
+            if (fromPanel) streamVoteWindow(player)
+        }
         onCommand("setvotepoints", Privilege.ADMIN_POWER, description = "Set Vote Tickets granted per toplist vote") {
             val points = player.getCommandArgs().getOrNull(0)?.toIntOrNull()
             if (points == null || points < 1) {
@@ -82,16 +92,25 @@ class DailyVotePlugin(
         player.message("<col=801700>Daily reward (day $streak streak):</col> ${"%,d".format(gp)} coins + $votePts Vote Tickets.")
     }
 
+    /** ::vote — open the client's vote window and drop the website fallback line in chat. */
+    private fun openVotePage(player: Player) {
+        streamVoteWindow(player)
+        player.message("Vote for Fall of Varrock at <col=801700>fallofvarrock.com/vote</col> — rewards are delivered automatically (or ::claimvote).")
+    }
+
     /**
-     * ::vote — stream the toplist sites to the client's vote window (lofvote), one row per
-     * site with the player's login already substituted into the vote URL and the minutes
-     * left on that site's cooldown (from the shared `votes` collection the web postbacks
+     * Stream the toplist sites to the client's vote window (lofvote), one row per site with
+     * the player's login already substituted into the vote URL and that site's state in the
+     * cooldownMins field: **-1** = a confirmed vote's reward is waiting (the window shows a
+     * gold Claim button that sends `::claimvote panel`), **0** = ready to vote, **>0** =
+     * minutes left on the cooldown (from the shared `votes` collection the web postbacks
      * write). Old clients act only on the open| line and browse the website's vote page.
      */
-    private fun openVotePage(player: Player) {
+    private fun streamVoteWindow(player: Player) {
         val login = (player as? Client)?.loginUsername ?: player.username
         val encoded = URLEncoder.encode(login, "UTF-8")
         val lastBySite = lastVoteBySite(login)
+        val claimable = claimableSiteIds(login)
         val now = System.currentTimeMillis()
 
         player.message("${VOTE_TRIGGER_PREFIX}open|$VOTE_PAGE_URL?name=$encoded", ChatMessageType.CONSOLE)
@@ -99,10 +118,36 @@ class DailyVotePlugin(
             val url = site.urlTemplate.replace("{username}", encoded)
             val last = lastBySite[site.id] ?: 0L
             val remainingMins = ((last + VOTE_COOLDOWN_MS - now).coerceAtLeast(0L) / 60_000L).toInt()
-            player.message("${VOTE_TRIGGER_PREFIX}row|$i|${site.name}|$url|$remainingMins|${site.logoUrl}", ChatMessageType.CONSOLE)
+            val state = if (site.id in claimable) CLAIMABLE_MINS else remainingMins
+            player.message("${VOTE_TRIGGER_PREFIX}row|$i|${site.name}|$url|$state|${site.logoUrl}", ChatMessageType.CONSOLE)
         }
         player.message("${VOTE_TRIGGER_PREFIX}end", ChatMessageType.CONSOLE)
-        player.message("Vote for Fall of Varrock at <col=801700>fallofvarrock.com/vote</col> — rewards are delivered automatically (or ::claimvote).")
+    }
+
+    /**
+     * Site ids with an unapplied `vote_points` entitlement for [login] — votes a toplist has
+     * confirmed whose tickets haven't been delivered yet. The site rides in the entitlement's
+     * orderId (`vote-<siteId>-<login>-<time>`, written by the web postback's creditVote).
+     * Empty when Mongo isn't configured (local dev) — no Claim buttons, just the streak stub.
+     */
+    private fun claimableSiteIds(login: String): Set<String> = try {
+        DatabaseManager.connect()
+        DatabaseManager.getCollection("entitlements")
+            .find(
+                Filters.and(
+                    Filters.eq("loginUsername", login),
+                    Filters.eq("kind", "vote_points"),
+                    Filters.eq("applied", false),
+                ),
+            )
+            .toList()
+            .mapNotNull { doc ->
+                val orderId = doc.getString("orderId") ?: return@mapNotNull null
+                VOTE_SITES.firstOrNull { orderId.startsWith("vote-${it.id}-") }?.id
+            }
+            .toSet()
+    } catch (e: Exception) {
+        emptySet()
     }
 
     /** Latest confirmed vote per site id for [login], from the web postbacks' `votes`
@@ -195,6 +240,10 @@ class DailyVotePlugin(
 
         /** One credit per site per window — matches the web postback's cooldown guard. */
         const val VOTE_COOLDOWN_MS = 12 * 3_600_000L
+
+        /** cooldownMins sentinel: this site's confirmed vote has an unclaimed reward, so the
+         *  window shows a Claim button instead of Vote/countdown. */
+        const val CLAIMABLE_MINS = -1
 
         /**
          * The toplists streamed to the vote window. KEEP IN SYNC with the website's

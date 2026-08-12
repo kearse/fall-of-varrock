@@ -2,9 +2,10 @@
  * Fall of Varrock — vote window (mouse input).
  *
  * Hit-tests left-clicks against the open window: a row opens that toplist's vote page in
- * the browser (the window stays open so the player can work through every site), the X
- * closes it. Any click on the window is consumed so it doesn't fall through to the game
- * world; a click outside the window closes it.
+ * the browser — or claims the pending reward when its button shows Claim — and the window
+ * stays open so the player can work through every site; the X closes it. Any click on the
+ * window is consumed so it doesn't fall through to the game world; a click outside the
+ * window closes it.
  */
 package net.runelite.client.plugins.lofvote;
 
@@ -47,7 +48,7 @@ class LofVoteMouseListener extends MouseAdapter
 		}
 		else if (hit >= LofVoteOverlay.ROW_BASE)
 		{
-			plugin.openSite(overlay.siteAt(hit - LofVoteOverlay.ROW_BASE));
+			plugin.clickSite(overlay.siteAt(hit - LofVoteOverlay.ROW_BASE));
 		}
 
 		event.consume();

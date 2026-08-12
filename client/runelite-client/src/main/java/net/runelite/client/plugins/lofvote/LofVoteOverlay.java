@@ -5,10 +5,12 @@
  * site's own vote-badge image (streamed logo URL, fetched by LofVoteLogoCache; a
  * lettered tile until it loads or when a site has none), the site name, and a green
  * Vote button. While a site's cooldown runs the card dims and the button becomes a
- * quiet countdown. Styled with the shared LofTheme to match the commands panel and
- * teleport portal. Clicking a card opens that site's vote page in the browser and the
- * window stays open; the X (or a click outside) closes it. Geometry lives here so the
- * mouse listener, wheel handler and renderer all agree.
+ * quiet countdown; once a vote is confirmed (or just cast from this window) the button
+ * turns into a gold Claim that collects the reward with a click. Styled with the shared
+ * LofTheme to match the commands panel and teleport portal. Clicking a card opens that
+ * site's vote page in the browser and the window stays open; the X (or a click outside)
+ * closes it. Geometry lives here so the mouse listener, wheel handler and renderer all
+ * agree.
  *
  * Sized to fit the fixed-mode viewport (~512x334): 492 wide, and the grid viewport
  * scrolls if more sites arrive than two rows can hold.
@@ -67,6 +69,9 @@ class LofVoteOverlay extends Overlay
 	private static final Color CLOSE_HOVER = LofTheme.EMBER;
 	private static final Color GREEN = new Color(74, 164, 88);
 	private static final Color GREEN_HI = new Color(94, 190, 108);
+	private static final Color GOLD_BTN = new Color(186, 140, 44);
+	private static final Color GOLD_BTN_HI = new Color(216, 168, 62);
+	private static final Color GOLD_BTN_LO = new Color(142, 104, 32);
 
 	private final Client client;
 	private final LofVotePlugin plugin;
@@ -309,7 +314,7 @@ class LofVoteOverlay extends Overlay
 
 		// footer hint
 		g.setFont(FontManager.getRunescapeSmallFont());
-		final String hint = "Each vote opens in your browser — rewards are delivered automatically.";
+		final String hint = "Vote in your browser, then press the gold Claim button for your tickets.";
 		final FontMetrics hintFm = g.getFontMetrics();
 		LofTheme.shadowText(g, hint, ox + (WIN_W - hintFm.stringWidth(hint)) / 2, oy + winH - 9, LofTheme.TEXT_DIM);
 
@@ -320,7 +325,8 @@ class LofVoteOverlay extends Overlay
 
 	private void drawCard(Graphics2D g, Site s, Rectangle card, boolean hov)
 	{
-		final boolean onCooldown = s.cooldownMins > 0;
+		final boolean claimable = s.claimable();
+		final boolean onCooldown = !claimable && s.cooldownMins > 0;
 
 		g.setColor(hov ? LofTheme.ROW_HOVER : LofTheme.ROW);
 		g.fillRoundRect(card.x, card.y, card.width, card.height, 10, 10);
@@ -367,9 +373,23 @@ class LofVoteOverlay extends Overlay
 			card.x + (card.width - Math.min(fm.stringWidth(s.name), card.width - 16)) / 2,
 			card.y + 68, onCooldown ? LofTheme.TEXT_DIM : LofTheme.TEXT);
 
-		// button: green "Vote" when ready, quiet countdown while on cooldown
+		// button: gold "Claim" when a confirmed vote's reward waits, green "Vote" when
+		// ready, quiet countdown while on cooldown
 		final Rectangle btn = new Rectangle(card.x + 10, card.y + 76, card.width - 20, 20);
-		if (onCooldown)
+		if (claimable)
+		{
+			final java.awt.Paint oldPaint = g.getPaint();
+			g.setPaint(new GradientPaint(btn.x, btn.y, hov ? GOLD_BTN_HI : GOLD_BTN, btn.x, btn.y + btn.height,
+				hov ? GOLD_BTN : GOLD_BTN_LO));
+			g.fillRoundRect(btn.x, btn.y, btn.width, btn.height, 7, 7);
+			g.setPaint(oldPaint);
+			g.setColor(new Color(255, 255, 255, 60));
+			g.drawLine(btn.x + 4, btn.y + 1, btn.x + btn.width - 5, btn.y + 1);
+			final String label = "Claim";
+			LofTheme.shadowText(g, label, btn.x + (btn.width - fm.stringWidth(label)) / 2, btn.y + 15,
+				Color.WHITE);
+		}
+		else if (onCooldown)
 		{
 			g.setColor(new Color(255, 255, 255, 14));
 			g.fillRoundRect(btn.x, btn.y, btn.width, btn.height, 7, 7);
