@@ -325,6 +325,18 @@ abstract class Pawn(val world: World) : Entity() {
             return false
         }
         /*
+         * FULL_WITH_DAMAGE_IMMUNITY (the mid-teleport lock) must actually grant immunity:
+         * without this check, an attacker's in-flight hit still landed during the teleport
+         * and could kill the pawn — terminating the teleport's queue task before its unlock,
+         * which left the player frozen in a FULL lock (can't move/act/log out; every re-login
+         * rejected as "already logged in"). The hit is REMOVED, not skipped — a skipped hit
+         * would sit in [pendingHits] and land the moment the lock lifts.
+         */
+        if (!lock.canBeAttacked()) {
+            hitIterator.remove()
+            return false
+        }
+        /*
          * A cancelled hit must be REMOVED, not skipped: leaving it in [pendingHits]
          * re-tested it forever (an unbounded leak), and a cancel condition that later
          * flipped back — e.g. an attacker who died and respawned — would land the stale
