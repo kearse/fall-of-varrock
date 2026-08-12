@@ -18,7 +18,7 @@ does four things:
 | **Guides** | `#guides` indexes the website guides (`/guides`) with link buttons. List in `src/seed/guidesIndex.ts`; full guides seeded via web `npm run seed:guides`. |
 | **Live boards** | `#server-status` (world UP/DOWN via TCP probe + online count) and `#hiscores` (top-10), pinned messages refreshed every minute. |
 | **Giveaways** | `/giveaway start\|end\|reroll`; enter via button (must be linked); auto-draw to `#daily-winners`/`#weekly-winners`. |
-| **Engagement** | Self-assign notification roles in `#roles`, auto-welcome new members, 👍/👎 voting in `#suggestions`. |
+| **Engagement** | Self-assign notification roles in `#roles`, auto-welcome new members. |
 
 ## Prerequisites
 
@@ -28,7 +28,7 @@ does four things:
      bot permissions: Manage Roles, Manage Channels, Send Messages, Embed Links,
      Read Message History, Use Application Commands, Create Private Threads,
      Send Messages in Threads, Manage Threads, Manage Messages (to pin the live
-     boards), Add Reactions (for #suggestions voting). Invite with that URL.
+     boards). Invite with that URL.
 2. The shared MongoDB running (same one `web/` and the game server use).
 
 ## Setup
