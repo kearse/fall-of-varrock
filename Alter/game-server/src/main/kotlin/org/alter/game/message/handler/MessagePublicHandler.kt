@@ -3,6 +3,7 @@ package org.alter.game.message.handler
 import net.rsprot.protocol.game.incoming.messaging.MessagePublic
 import org.alter.game.message.MessageHandler
 import org.alter.game.model.entity.Client
+import org.alter.game.model.social.GlobalChatChannel
 import org.alter.game.saving.PlayerModeration
 import org.alter.game.service.log.LoggerService
 
@@ -288,6 +289,14 @@ class MessagePublicHandler : MessageHandler<MessagePublic> {
 
         if (PlayerModeration.isMuted(client.loginUsername)) {
             client.writeMessage("You are muted and cannot talk.")
+            return
+        }
+
+        // "/"-prefixed chat while in the global chat-channel arrives as a friend-channel
+        // message (type 2): relay it to every online member instead of over-head chat.
+        if (message.type == 2) {
+            GlobalChatChannel.sendMessage(client, message.message)
+            client.world.getService(LoggerService::class.java, searchSubclasses = true)?.logPublicChat(client, message.message)
             return
         }
 
