@@ -410,9 +410,11 @@ fun QueueTask.selectAppearance(player: Player) {
  *
  * Unlike [levelUpMessageBox], this does not enter the queue lane or wait for the
  * player to click "continue", so an in-progress action (woodcutting, combat, etc.)
- * keeps running while the box is shown — matching authentic OSRS behaviour. The
- * caller is responsible for dismissing it (e.g. an auto-close timer), since no
- * queued task is listening for the continue button.
+ * keeps running while the box is shown — matching authentic OSRS behaviour.
+ * A "Click here to continue" click with no queued task waiting is handled by
+ * ResumePauseButtonHandler, which dismisses the orphaned chatbox dialog; any
+ * other dismissal (e.g. closing when the player takes their next action) is the
+ * caller's responsibility.
  */
 fun Player.openLevelUpBox(
     skill: Int,
@@ -465,6 +467,7 @@ fun Player.openLevelUpBox(
             text = "Your $skillName level is now ${getSkills().getBaseLevel(skill)}.",
         )
         setComponentText(interfaceId = 233, component = 3, text = "Click here to continue")
+        setInterfaceEvents(interfaceId = 233, component = 3, range = -1..-1, setting = 1)
         openInterface(parent = 162, child = CHATBOX_CHILD, interfaceId = 233)
     } else {
         val levelFormat = if (levelIncrement == 1) "a" else "$levelIncrement"
@@ -472,7 +475,7 @@ fun Player.openLevelUpBox(
         setInterfaceEvents(interfaceId = 132, component = 4, from = -1, to = -1, setting = 0)
         setInterfaceEvents(interfaceId = 132, component = 5, from = -1, to = -1, setting = 0)
 
-        setInterfaceEvents(interfaceId = 193, component = 0, from = -1, to = 1, setting = 0)
+        setInterfaceEvents(interfaceId = 193, component = 0, range = 0..1, setting = 1)
         setComponentItem(interfaceId = 193, component = 1, item = 9951, amountOrZoom = 400)
 
         setComponentText(

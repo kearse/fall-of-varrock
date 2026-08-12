@@ -27,6 +27,12 @@ data class QueueTask(val ctx: Any, val priority: TaskPriority) : Continuation<Un
     var requestReturnValue: Any? = null
 
     /**
+     * True while this task is suspended in [waitReturnValue], i.e. it will
+     * actually consume a value submitted via [QueueTaskSet.submitReturnValue].
+     */
+    var waitingReturnValue = false
+
+    /**
      * Represents an action that should be executed if, and only if, this task
      * was terminated via [terminate].
      */
@@ -62,6 +68,7 @@ data class QueueTask(val ctx: Any, val priority: TaskPriority) : Continuation<Un
         if (next.condition.resume()) {
             next.continuation.resume(Unit)
             requestReturnValue = null
+            waitingReturnValue = false
         }
     }
 
@@ -72,6 +79,7 @@ data class QueueTask(val ctx: Any, val priority: TaskPriority) : Continuation<Un
     fun terminate() {
         nextStep = null
         requestReturnValue = null
+        waitingReturnValue = false
         terminateAction?.invoke(this)
     }
 
@@ -135,6 +143,7 @@ data class QueueTask(val ctx: Any, val priority: TaskPriority) : Continuation<Un
      */
     suspend fun waitReturnValue(): Unit =
         suspendCoroutine {
+            waitingReturnValue = true
             nextStep = SuspendableStep(PredicateCondition { requestReturnValue != null }, it)
         }
 
