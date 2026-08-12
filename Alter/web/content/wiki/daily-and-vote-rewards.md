@@ -20,6 +20,7 @@ At a full streak that's a quarter-million gp a day just for logging in.
 
 - **Vote tickets:** 2 base **+ 1 per consecutive day** of voting.
 - `::vote` explains the vote sites (see also the [Vote page](/vote) on this site).
+- In the `::vote` window, a site's button turns into a gold **Claim** once your vote is confirmed - click it to collect your tickets right there (it does the same thing as typing `::claimvote`).
 
 The two streaks are tracked separately - you can keep a daily streak alive without voting and vice versa.
 

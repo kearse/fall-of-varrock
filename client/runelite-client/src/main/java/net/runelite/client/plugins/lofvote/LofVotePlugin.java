@@ -14,6 +14,12 @@
  *   FOV_VOTE:row|<order>|<name>|<url>|<cooldownMins>|<logoUrl>   (repeated; logoUrl optional)
  *   FOV_VOTE:end
  *
+ * cooldownMins is tri-state: -1 = a confirmed vote's reward is waiting, so the card shows a
+ * gold Claim button (clicking sends "::claimvote panel" — the server claims and re-streams
+ * the batch so the window refreshes); 0 = ready, green Vote button; >0 = quiet countdown.
+ * Clicking Vote also flips that card to Claim locally, so once the toplist confirms the
+ * reward is one click away without reopening the window.
+ *
  * logoUrl points at the toplist's own vote-badge image; LofVoteLogoCache fetches and
  * caches it off-thread and the window draws a lettered tile until it's available.
  *
@@ -39,6 +45,7 @@ import okhttp3.OkHttpClient;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.ChatMessageType;
 import net.runelite.api.Client;
+import net.runelite.api.ScriptID;
 import net.runelite.api.events.ChatMessage;
 import net.runelite.api.events.CommandExecuted;
 import net.runelite.api.events.ScriptCallbackEvent;
@@ -63,6 +70,10 @@ public class LofVotePlugin extends Plugin
 {
 	/** Machine prefix the server drives this plugin with (must match DailyVotePlugin). */
 	static final String PREFIX = "FOV_VOTE:";
+
+	/** The Claim button's command: claim pending vote rewards, then re-stream the batch so
+	 *  the open window refreshes (old servers ignore the arg and just claim). */
+	private static final String CLAIM_COMMAND = "::claimvote panel";
 
 	@Inject
 	private Client client;
@@ -187,7 +198,7 @@ public class LofVotePlugin extends Plugin
 		{
 			handle("open|https://fallofvarrock.com/vote");
 			handle("row|0|RSPS-List|https://fallofvarrock.com/vote|0|https://www.rsps-list.com/images/vote.jpg");
-			handle("row|1|RuLocus|https://fallofvarrock.com/vote|0|");
+			handle("row|1|RuLocus|https://fallofvarrock.com/vote|-1|");
 			handle("row|2|Moparscape|https://fallofvarrock.com/vote|187|");
 			handle("row|3|Top100Arena|https://fallofvarrock.com/vote|0|");
 			handle("row|4|TopG|https://fallofvarrock.com/vote|719|https://topg.org/topg.gif");
@@ -271,16 +282,36 @@ public class LofVotePlugin extends Plugin
 		overlay.setVisible(false);
 	}
 
-	/** Open a site row's vote page in the default browser. The window stays open so the
+	/** A click on a site card. A claimable card collects the pending reward (one
+	 *  {@link #CLAIM_COMMAND} drains every pending vote reward); otherwise the site's vote
+	 *  page opens in the default browser and the card's button flips to Claim, so the reward
+	 *  is one click away once the toplist confirms. The window stays open either way so the
 	 *  player can click through the rest of the toplists. */
-	void openSite(Site site)
+	void clickSite(Site site)
 	{
-		if (site == null || !site.url.startsWith("https://"))
+		if (site == null)
+		{
+			return;
+		}
+		if (site.claimable())
+		{
+			// One claim collects everything pending, so quiet every Claim button now; a new
+			// server then re-streams the batch and redraws the authoritative state.
+			for (Site s : sites)
+			{
+				s.claimPending = false;
+			}
+			log.info("claiming vote rewards from the vote window");
+			clientThread.invokeLater(() -> client.runScript(ScriptID.CHAT_SEND, CLAIM_COMMAND, 0, 0, 0, -1));
+			return;
+		}
+		if (!site.url.startsWith("https://"))
 		{
 			return;
 		}
 		log.info("opening vote page: {}", site.url);
 		LinkBrowser.browse(site.url);
+		site.claimPending = true;
 	}
 
 	List<Site> getSites()
@@ -296,7 +327,8 @@ public class LofVotePlugin extends Plugin
 	}
 
 	/** One toplist row: display name, ready-to-open vote URL, minutes until next vote
-	 *  (0 = ready), and the site's badge-image URL ("" = none, draw the lettered tile). */
+	 *  (0 = ready, -1 = confirmed vote with its reward unclaimed → Claim button), and the
+	 *  site's badge-image URL ("" = none, draw the lettered tile). */
 	static final class Site
 	{
 		final String name;
@@ -304,12 +336,23 @@ public class LofVotePlugin extends Plugin
 		final int cooldownMins;
 		final String logoUrl;
 
+		/** Set when the player opens this site's vote page from the window — an optimistic
+		 *  local flip to the Claim button while the toplist's postback is still in flight.
+		 *  Written on the mouse thread, read on the client thread, hence volatile. */
+		volatile boolean claimPending;
+
 		Site(String name, String url, int cooldownMins, String logoUrl)
 		{
 			this.name = name;
 			this.url = url;
 			this.cooldownMins = cooldownMins;
 			this.logoUrl = logoUrl;
+		}
+
+		/** True when the card should offer Claim instead of Vote/countdown. */
+		boolean claimable()
+		{
+			return cooldownMins < 0 || claimPending;
 		}
 	}
 }
