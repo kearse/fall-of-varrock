@@ -11,6 +11,7 @@ import org.alter.game.model.shop.PurchasePolicy
 import org.alter.game.model.shop.Shop
 import org.alter.game.model.shop.ShopCurrency
 import org.alter.game.model.shop.ShopItem
+import org.alter.plugins.content.war.warprep.WarPrepChain
 
 /**
  * @author Tom <rspsmods@gmail.com>
@@ -203,6 +204,12 @@ open class ItemCurrency(
     ) {
         val item = p.inventory[slot] ?: return
         val unnoted = item.toUnnoted().id
+        // Quest-locked items can't be vendored anywhere the shop engine reaches (general stores,
+        // the Trading Post, coin shops). See [WarPrepChain.bonesLocked].
+        if (WarPrepChain.bonesLocked(p, unnoted)) {
+            WarPrepChain.warnBonesLocked(p)
+            return
+        }
         val acceptance = canAcceptItem(shop, p.world, unnoted)
 
         if (!acceptance.acceptable) {

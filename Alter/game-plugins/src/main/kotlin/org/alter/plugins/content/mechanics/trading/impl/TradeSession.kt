@@ -9,6 +9,7 @@ import org.alter.game.model.container.ItemContainer
 import org.alter.game.model.entity.Player
 import org.alter.game.model.item.Item
 import org.alter.plugins.content.mechanics.trading.*
+import org.alter.plugins.content.war.warprep.WarPrepChain
 import org.alter.plugins.service.marketvalue.ItemMarketValueService
 
 /**
@@ -252,6 +253,11 @@ class TradeSession(
         if (stage != TradeStage.TRADE_SCREEN) return
 
         val item = inventory[slot] ?: return
+        // Quest-locked items can't be offered (trade OR duel stake) — see [WarPrepChain.bonesLocked].
+        if (WarPrepChain.bonesLocked(player, item.id)) {
+            WarPrepChain.warnBonesLocked(player)
+            return
+        }
         val count = Math.min(amount, inventory.getItemCount(item.id))
 
         val hadAccept = player.hasAcceptedTrade() || partner.hasAcceptedTrade()

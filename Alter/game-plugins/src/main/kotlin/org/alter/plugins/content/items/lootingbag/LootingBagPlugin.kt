@@ -21,6 +21,7 @@ import org.alter.game.model.queue.*
 import org.alter.game.model.shop.*
 import org.alter.game.model.timer.*
 import org.alter.game.plugin.*
+import org.alter.plugins.content.war.warprep.WarPrepChain
 import org.alter.plugins.service.marketvalue.ItemMarketValueService
 import org.alter.rscm.RSCM.getRSCM
 
@@ -187,6 +188,13 @@ class LootingBagPlugin(
 
         if (!item.toUnnoted().getDef().isTradeable) {
             p.message("Only tradeable items can be put in the bag.")
+            return
+        }
+
+        // Quest-locked items can't be stashed in the bag either — its contents are invisible to
+        // the quest's "does the player still have them?" checks. See [WarPrepChain.bonesLocked].
+        if (WarPrepChain.bonesLocked(p, item.id)) {
+            WarPrepChain.warnBonesLocked(p)
             return
         }
 
