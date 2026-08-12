@@ -88,6 +88,12 @@ val Player.title: Title get() = Title.byOrdinal(attr[PLAYER_TITLE_ATTR] ?: 0)
  * The name as it should appear over the head / on right-click: a color-coded "<Rank> Name" for the
  * noble ranks (Squire and up — an EARNED mark), or the plain username for Peasant/Commoner. The
  * `<col>` tag rides along the appearance name so the colour carries without protocol work.
+ *
+ * TRADE-OFF: a col-tagged name breaks the client engine's name→player lookups (a chatbox
+ * "Accept trade"/"Accept challenge" click resolves the requester by cleaned name, and a tagged
+ * name cleans to null — "Unable to find <player>"). The shipped client compensates: the
+ * `lofchatrequests` RuneLite plugin rewrites those clicks into index-based player ops. Keep it
+ * in mind before adding other name-lookup-dependent features (see docs/custom-client.md §4).
  */
 fun titledName(p: Player): String {
     val color = p.title.nameColor ?: return p.username
