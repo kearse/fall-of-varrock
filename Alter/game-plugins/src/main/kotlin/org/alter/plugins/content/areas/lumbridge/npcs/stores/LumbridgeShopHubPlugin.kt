@@ -161,17 +161,20 @@ class LumbridgeShopHubPlugin(
         Ware("item.bronze_dart", 1000), Ware("item.iron_dart", 1000), Ware("item.steel_dart", 1000),
     )
 
-    /** Magic — elemental staves, runes up to DEATH (limited stock on the higher ones,
-     *  Runecrafting still cheaper/bulk), basic teleport tabs. */
+    /** Magic — elemental staves, runes up to DEATH (unlimited stock — the coin price is the
+     *  gate; the death-rune premium still keeps Runecrafting cheaper), basic teleport tabs.
+     *  UNLIMITED stock never decrements (see ItemCurrency.sellToPlayer), so runes can't run
+     *  out; the flip side is the shop can't take them back (sell-back reports "out of space"),
+     *  which is fine — runes flow one way, out of the shop. */
     private val magicStock = listOf(
         Ware("item.staff_of_air", 10), Ware("item.staff_of_water", 10),
         Ware("item.staff_of_earth", 10), Ware("item.staff_of_fire", 10),
-        Ware("item.air_rune", 1000), Ware("item.water_rune", 1000), Ware("item.earth_rune", 1000),
-        Ware("item.fire_rune", 1000), Ware("item.mind_rune", 1000), Ware("item.body_rune", 1000),
-        Ware("item.chaos_rune", 500), Ware("item.cosmic_rune", 500), Ware("item.nature_rune", 300),
+        Ware("item.air_rune", UNLIMITED), Ware("item.water_rune", UNLIMITED), Ware("item.earth_rune", UNLIMITED),
+        Ware("item.fire_rune", UNLIMITED), Ware("item.mind_rune", UNLIMITED), Ware("item.body_rune", UNLIMITED),
+        Ware("item.chaos_rune", UNLIMITED), Ware("item.cosmic_rune", UNLIMITED), Ware("item.nature_rune", UNLIMITED),
         // Top-of-category markup (store-audit spot-reprice): the BEST combat rune sold carries an
         // explicit premium (180 -> 270) so Runecrafting undercuts the shop; lower runes stay at cache.
-        Ware("item.law_rune", 300), Ware("item.death_rune", 200, 270),
+        Ware("item.law_rune", UNLIMITED), Ware("item.death_rune", UNLIMITED, 270),
         Ware("item.varrock_teleport", 100), Ware("item.lumbridge_teleport", 100),
         Ware("item.falador_teleport", 100), Ware("item.camelot_teleport", 100),
     )
@@ -429,6 +432,11 @@ class LumbridgeShopHubPlugin(
     }
 
     private companion object {
+        /** Infinite stock: the shop engine never decrements an item whose initial amount is
+         *  Int.MAX_VALUE (see [org.alter.plugins.content.mechanics.shops.ItemCurrency.sellToPlayer]),
+         *  the same convention [currencyBuyShop] uses. */
+        const val UNLIMITED = Int.MAX_VALUE
+
         /** Where Zaff's "rune altar" lift drops the player — one tile east of the fire altar the
          *  Mire yard actually spawns (SwampHubPlugin @3238,3200), so the lift lands you AT the altar
          *  instead of the old placeholder tile up by the castle (which just nudged you a few tiles). */
