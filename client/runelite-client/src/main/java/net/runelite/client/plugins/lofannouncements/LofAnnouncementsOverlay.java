@@ -13,9 +13,9 @@
  * the ticker off-screen.
  *
  * The block is capped at 3/4 of the chat width so it never runs under the war-supply dial /
- * Castle Wars timer on the right; a longer headline wraps onto a line underneath (bullet on the
- * first row only), ellipsised past two rows. Each line keeps the colour the server sent it in,
- * else a warm yellow.
+ * Castle Wars timer on the right; a longer headline wraps onto as many rows underneath as it
+ * needs (bullet on the first row only) — nothing is ever cut off. Each line keeps the colour the
+ * server sent it in, else a warm yellow.
  */
 package net.runelite.client.plugins.lofannouncements;
 
@@ -49,8 +49,6 @@ class LofAnnouncementsOverlay extends Overlay
 	/** Diamond bullet: half-diagonal in px, plus the gap between bullet and text. */
 	private static final int BULLET_R = 3;
 	private static final int BULLET_GAP = 4;
-	/** A headline wraps to at most this many rows; whatever still doesn't fit is ellipsised. */
-	private static final int MAX_WRAP_LINES = 2;
 
 	private final LofAnnouncementsPlugin plugin;
 	private final Client client;
@@ -167,18 +165,18 @@ class LofAnnouncementsOverlay extends Overlay
 	}
 
 	/**
-	 * Word-wrap text to at most {@link #MAX_WRAP_LINES} rows of maxW pixels; the last allowed row
-	 * is ellipsised if text still remains. A single word wider than maxW is hard-broken.
+	 * Word-wrap text into rows of at most maxW pixels — every word is kept, nothing is truncated.
+	 * A single word wider than maxW is hard-broken mid-word.
 	 */
 	private static List<String> wrap(FontMetrics fm, String text, int maxW)
 	{
-		final List<String> rows = new ArrayList<>(MAX_WRAP_LINES);
+		final List<String> rows = new ArrayList<>();
 		String rest = text.trim();
 		while (!rest.isEmpty())
 		{
-			if (rows.size() == MAX_WRAP_LINES - 1 || fm.stringWidth(rest) <= maxW)
+			if (fm.stringWidth(rest) <= maxW)
 			{
-				rows.add(ellipsise(fm, rest, maxW));
+				rows.add(rest);
 				return rows;
 			}
 			// Longest prefix that fits, preferring the last space inside it as the break point.
@@ -196,23 +194,6 @@ class LofAnnouncementsOverlay extends Overlay
 			rest = rest.substring(brk).trim();
 		}
 		return rows;
-	}
-
-	/** Truncate text with a trailing "…" so it fits within maxW pixels. */
-	private static String ellipsise(FontMetrics fm, String text, int maxW)
-	{
-		if (fm.stringWidth(text) <= maxW)
-		{
-			return text;
-		}
-		final String ell = "…";
-		final int ellW = fm.stringWidth(ell);
-		int end = text.length();
-		while (end > 0 && fm.stringWidth(text.substring(0, end)) + ellW > maxW)
-		{
-			end--;
-		}
-		return text.substring(0, end).stripTrailing() + ell;
 	}
 
 	/** First &lt;col=RRGGBB&gt; tag's colour, or the default warm yellow. */
