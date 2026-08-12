@@ -41,10 +41,15 @@ abstract class QueueTaskSet {
      *
      * @param value
      * The return value that the plugin has asked for.
+     *
+     * @return true if the front task was actually suspended waiting for a
+     * return value, false if there was no task or it was busy with something
+     * else (in which case the value goes unused).
      */
-    fun submitReturnValue(value: Any) {
-        val task = queue.peek() ?: return // Shouldn't call this method without a queued task.
+    fun submitReturnValue(value: Any): Boolean {
+        val task = queue.peek() ?: return false
         task.requestReturnValue = value
+        return task.waitingReturnValue
     }
 
     /**

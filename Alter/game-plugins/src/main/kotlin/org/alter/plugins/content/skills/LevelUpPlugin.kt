@@ -4,8 +4,10 @@ import org.alter.api.*
 import org.alter.api.ext.*
 import org.alter.game.Server
 import org.alter.game.discord.DiscordBridge
+import org.alter.game.model.Tile
 import org.alter.game.model.World
 import org.alter.game.model.attr.*
+import org.alter.game.model.entity.Player
 import org.alter.game.model.skill.SkillSet
 import org.alter.game.model.timer.TimerKey
 import org.alter.game.plugin.KotlinPlugin
@@ -23,8 +25,14 @@ import org.alter.game.plugin.PluginRepository
  * queue and suspends until the player clicks "continue" — which would freeze an
  * in-progress action (e.g. woodcutting pauses mid-chop until you dismiss the box).
  * Instead we open the box directly with [openLevelUpBox] (which never touches the
- * queue) and auto-dismiss it with a short timer, so the player keeps chopping /
- * fighting exactly as in real OSRS.
+ * queue), so the player keeps chopping / fighting exactly as in real OSRS.
+ *
+ * The box stays open until the player either clicks "Click here to continue"
+ * (delivered by ResumePauseButtonHandler, which dismisses chatbox dialogs no
+ * queued task is waiting on) or takes their next action. Actions have no single
+ * hook in the engine, so a 1-tick watch timer closes the box as soon as the
+ * player moves tiles or gains any XP after the level-up — walking, the next bar
+ * smelted, a combat hit, etc.
  */
 class LevelUpPlugin(
     r: PluginRepository,
@@ -33,14 +41,20 @@ class LevelUpPlugin(
 ) : KotlinPlugin(r, world, server) {
 
     companion object {
-        /** Ticks the level-up box stays on screen before auto-closing (~5s). */
-        private const val BOX_LIFETIME_TICKS = 8
+        private val LEVEL_UP_BOX_WATCH = TimerKey()
 
-        private val LEVEL_UP_BOX_CLOSE = TimerKey()
+        /** Baselines captured when the box opens; any change means "next action". */
+        private val LEVEL_UP_BOX_TILE = AttributeKey<Tile>()
+        private val LEVEL_UP_BOX_XP = AttributeKey<Double>()
 
         /** Chatbox interface ids used by the level-up box (233 = regular, 193 = hunter). */
         private const val LEVEL_UP_INTERFACE = 233
         private const val LEVEL_UP_HUNTER_INTERFACE = 193
+
+        private fun clearWatch(player: Player) {
+            player.attr.remove(LEVEL_UP_BOX_TILE)
+            player.attr.remove(LEVEL_UP_BOX_XP)
+        }
     }
 
     init {
@@ -58,9 +72,13 @@ class LevelUpPlugin(
             getSkillJingle(skill)?.let { player.playJingle(it.JingleID) }
 
             // Show the "Congratulations" box without interrupting the player's
-            // current action, then schedule it to close itself.
+            // current action, then watch for the action that should dismiss it.
+            // addXp applies the triggering XP before firing this hook, so the
+            // baselines below only change on the player's NEXT move / XP drop.
             player.openLevelUpBox(skill, increment)
-            player.timers[LEVEL_UP_BOX_CLOSE] = BOX_LIFETIME_TICKS
+            player.attr[LEVEL_UP_BOX_TILE] = player.tile
+            player.attr[LEVEL_UP_BOX_XP] = player.getSkills().calculateTotalXp
+            player.timers[LEVEL_UP_BOX_WATCH] = 1
 
             // Announce a freshly-earned 99 to the Discord #achievements feed.
             // getBaseLevel is XP-derived, so it ignores temporary boosts.
@@ -73,9 +91,27 @@ class LevelUpPlugin(
             }
         }
 
-        onTimer(LEVEL_UP_BOX_CLOSE) {
-            player.closeInterface(LEVEL_UP_INTERFACE)
-            player.closeInterface(LEVEL_UP_HUNTER_INTERFACE)
+        onTimer(LEVEL_UP_BOX_WATCH) {
+            val open = player.interfaces.isVisible(LEVEL_UP_INTERFACE) ||
+                player.interfaces.isVisible(LEVEL_UP_HUNTER_INTERFACE)
+            val baseTile = player.attr[LEVEL_UP_BOX_TILE]
+            val baseXp = player.attr[LEVEL_UP_BOX_XP]
+            when {
+                // Already dismissed (continue click or another dialog replaced it).
+                !open -> clearWatch(player)
+                baseTile == null || baseXp == null ||
+                    !player.tile.sameAs(baseTile) ||
+                    player.getSkills().calculateTotalXp != baseXp -> {
+                    if (player.interfaces.isVisible(LEVEL_UP_INTERFACE)) {
+                        player.closeInterface(LEVEL_UP_INTERFACE)
+                    }
+                    if (player.interfaces.isVisible(LEVEL_UP_HUNTER_INTERFACE)) {
+                        player.closeInterface(LEVEL_UP_HUNTER_INTERFACE)
+                    }
+                    clearWatch(player)
+                }
+                else -> player.timers[LEVEL_UP_BOX_WATCH] = 1
+            }
         }
     }
 }
