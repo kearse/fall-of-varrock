@@ -57,6 +57,11 @@ object CastleWars {
     lateinit var world: World
 
     // ───────────────────────────── tunables ─────────────────────────────
+    /** Master switch — while false the war is closed: ::cw and the lobby god portals refuse
+     *  everyone (existing crash-safety hooks still run so nobody gets stranded). Admins can
+     *  flip it live via ::cwtoggle. */
+    var enabled = false
+
     /** Soldiers per side (humans + bot fill). 10 keeps the front line breakable — 25v25 play-tested
      *  as a stalemate wall (and ticked at ~3ms). Tune live via ::cwbots. */
     var teamSize = 10
@@ -274,6 +279,7 @@ object CastleWars {
 
     /** A lobby portal was entered. [pick] null = Guthix (balances you onto the emptier side). */
     fun join(p: Player, pick: Team?) {
+        if (!enabled) { p.message("<col=801700>Castle Wars</col> is closed for now."); return }
         if (inGame(p)) { p.message("You're already fighting in this war!"); return }
         if (queue.any { it.player === p }) { p.message("You're already waiting for the next war."); return }
         val g = game

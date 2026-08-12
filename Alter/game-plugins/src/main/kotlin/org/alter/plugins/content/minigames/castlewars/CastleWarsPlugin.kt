@@ -69,10 +69,22 @@ class CastleWarsPlugin(
         onLogout { CastleWars.onLogout(player) }
 
         onCommand("cw", description = "Teleport to the Castle Wars lobby") {
+            if (!CastleWars.enabled) {
+                player.message("<col=801700>Castle Wars</col> is closed for now.")
+                return@onCommand
+            }
             player.moveTo(CastleWars.LOBBY_TILE)
             player.message("<col=801700>Castle Wars:</col> step through a god portal to join the next war. Guthix balances the sides.")
         }
+        onCommand("cwtoggle", Privilege.ADMIN_POWER, description = "Open/close Castle Wars for everyone") {
+            CastleWars.enabled = !CastleWars.enabled
+            player.message("castlewars: ${if (CastleWars.enabled) "OPEN" else "CLOSED"}.")
+        }
         onCommand("cwstart", Privilege.ADMIN_POWER, description = "Force the queued Castle Wars game to start now") {
+            if (!CastleWars.enabled) {
+                player.message("castlewars: closed — ::cwtoggle to open it first.")
+                return@onCommand
+            }
             CastleWars.join(player, null) // ensure the admin is in, then fire immediately
             CastleWars.forceStart()
             player.message("castlewars: countdown forced.")
