@@ -1,7 +1,6 @@
 package org.alter.plugins.content.interfaces.gameframe.chat
 
 import org.alter.api.*
-import org.alter.api.CommonClientScripts
 import org.alter.api.cfg.*
 import org.alter.api.dsl.*
 import org.alter.api.ext.*
@@ -36,7 +35,6 @@ class ChatBoxFilterPlugin(
         val CHANNEL_BUTTON_COMPONENT = 19
         val CLAN_BUTTON_COMPONENT = 23
         val TRADE_BUTTON_COMPONENT = 27
-        val REPORT_BUG_BUTTON_COMPONENT = 31
 
         onLogin {
             player.setVarbit(Varbit.CHATBOX_UNLOCKED, 1)
@@ -83,18 +81,10 @@ class ChatBoxFilterPlugin(
             }
         }
 
-        onButton(PARENT_CHAT_BOX_INTERFACE, REPORT_BUG_BUTTON_COMPONENT) {
-            player.runClientScript(CommonClientScripts.MAIN_MODAL_OPEN, -1, -1)
-            player.openInterface(553, InterfaceDestination.MAIN_SCREEN)
-            //TODO This script is no longer used
-            //player.runClientScript(1104, 1, 1)
-        }
-        /**
-         * @TODO Needs BUG_REPPORT packet.
-         */
-        onButton(553, 31) {
-            player.message("Unhandled yet, will be fixed later.")
-        }
+        // The Report button (component 31) is handled by
+        // org.alter.plugins.content.mechanics.reports.ReportPlugin — the old
+        // handler here opened interface 553, a stale report-abuse id that
+        // renders the MTA Pizazz panel in our cache.
     }
 
     private suspend fun dialog(player: Player, it: QueueTask) {

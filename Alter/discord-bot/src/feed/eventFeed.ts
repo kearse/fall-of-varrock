@@ -21,6 +21,8 @@ const COLOR: Record<string, number> = {
   update: 0x5865f2,
   boot: 0x2ecc71,
   shutdown: 0x95a5a6,
+  report: 0xe74c3c,
+  reportResolved: 0x2ecc71,
 };
 
 const EMOJI: Record<string, string> = {
@@ -36,6 +38,8 @@ const EMOJI: Record<string, string> = {
   update: "🛠️",
   boot: "🟢",
   shutdown: "🔴",
+  report: "🚨",
+  reportResolved: "✅",
 };
 
 function buildEmbed(ev: DiscordEventDoc): EmbedBuilder {

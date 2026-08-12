@@ -77,6 +77,11 @@ export function channelForEventKind(kind: string): string {
     case "boot":
     case "shutdown":
       return config.channels.status;
+    case "report":
+    case "reportResolved":
+      // Player/bug reports are staff-only — never let these fall through to the
+      // default (public status channel).
+      return config.channels.modlog;
     default:
       return config.channels.status;
   }
