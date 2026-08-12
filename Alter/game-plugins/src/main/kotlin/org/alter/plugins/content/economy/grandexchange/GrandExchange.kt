@@ -5,6 +5,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import org.alter.api.ext.message
 import org.alter.game.model.entity.Player
 import org.alter.plugins.content.mechanics.shops.ItemCurrency
+import org.alter.plugins.content.war.warprep.WarPrepChain
 import org.alter.rscm.RSCM.getRSCM
 import org.bson.Document
 import org.bson.json.JsonWriterSettings
@@ -130,6 +131,12 @@ object GrandExchange {
 
     /** Create a SELL offer, escrowing `qty` of [itemId] from the player's inventory. */
     fun createSell(p: Player, box: Int, itemId: Int, price: Int, qty: Int): Boolean {
+        // Quest-locked items can't be listed — escrow would hide them from the quest's
+        // "does the player still have them?" checks. See [WarPrepChain.bonesLocked].
+        if (WarPrepChain.bonesLocked(p, itemId)) {
+            WarPrepChain.warnBonesLocked(p)
+            return false
+        }
         if (!validNew(p, box, itemId, price, qty)) return false
         val have = p.inventory.getItemCount(itemId)
         if (have < qty) { p.message("You don't have ${qty} of that to sell."); return false }

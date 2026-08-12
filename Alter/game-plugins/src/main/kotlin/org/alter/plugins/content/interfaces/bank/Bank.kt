@@ -12,6 +12,7 @@ import org.alter.plugins.content.interfaces.bank.BankTabs.SELECTED_TAB_VARBIT
 import org.alter.plugins.content.interfaces.bank.BankTabs.getTabsItems
 import org.alter.plugins.content.interfaces.equipstats.EquipmentStats
 import org.alter.plugins.content.interfaces.equipstats.EquipmentStats.bonusTextMap
+import org.alter.plugins.content.war.warprep.WarPrepChain
 
 /**
  * @author Tom <rspsmods@gmail.com>
@@ -87,6 +88,12 @@ object Bank {
         id: Int,
         amt: Int,
     ) {
+        // Quest-locked items refuse the bank (every deposit path — single, X, deposit-inventory —
+        // funnels through here). See [WarPrepChain.bonesLocked] for why the seal exists.
+        if (WarPrepChain.bonesLocked(player, id)) {
+            WarPrepChain.warnBonesLocked(player)
+            return
+        }
         val from = player.inventory
         val to = player.bank
         val amount = from.getItemCount(id).coerceAtMost(amt)

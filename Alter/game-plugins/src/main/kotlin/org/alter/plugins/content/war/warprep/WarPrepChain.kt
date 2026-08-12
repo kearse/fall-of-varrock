@@ -61,6 +61,7 @@ object WarPrepChain {
     // covered by the bounded top-up/drill below, so no soft-lock. TUNABLE.
     const val PRAYER_BONES = 28
     private const val DRAGON_BONES = "item.dragon_bones"
+    private const val DRAGON_BONES_NOTED = "item.dragon_bones_noted"
 
     // Magic-quest gear: an elemental staff (free element rune) + mystic robes + a stack of runes —
     // a few hundred of each BASIC element so a fresh recruit is never dry on casts, plus the
@@ -242,11 +243,44 @@ object WarPrepChain {
         giveItem(p, PRAYER_POTIONS, PRAYER_POTION_COUNT)
     }
 
+    // --- quest-locked bones -------------------------------------------------------------
+    //
+    // Vannaka's dragon bones are a QUEST GIFT, not income: while the recruit is on the PRAYER
+    // step they are locked to the player — no banking, dropping, trading, GE/Trading-Post
+    // listing or shop-vendoring. The only intended exit is the church altar. Without the lock,
+    // every stash the top-up check can't see (a mule trade, a GE escrow, a noted withdrawal)
+    // turns "I'm out of bones" into a dragon-bones faucet. The lock ends with the step, so any
+    // spare bones become ordinary items once Prayer 37 is reached.
+
+    /** One-line refusal shown by every blocked sink (bank/drop/trade/GE/shop). */
+    const val BONES_LOCKED_MESSAGE =
+        "Vannaka's dragon bones are for the church altar — offer them there. He'll want them accounted for."
+
+    // Deposit-inventory tries every backpack slot in one click; without dedup a locked stack of
+    // 28 bones would print 28 refusals. One warning per game cycle. Session-only.
+    private val BONES_WARN_CYCLE = AttributeKey<Int>()
+
+    /** True while [itemId] is the quest gift's dragon bones (noted or not) and [p] is still on
+     *  the PRAYER step — i.e. the item is quest-locked and must be refused by item sinks. */
+    fun bonesLocked(p: Player, itemId: Int): Boolean {
+        if (step(p) != Step.PRAYER) return false
+        return itemId == runCatching { getRSCM(DRAGON_BONES) }.getOrNull() ||
+            itemId == runCatching { getRSCM(DRAGON_BONES_NOTED) }.getOrNull()
+    }
+
+    /** Say [BONES_LOCKED_MESSAGE], at most once per game cycle (multi-slot actions spam otherwise). */
+    fun warnBonesLocked(p: Player) {
+        val cycle = p.world.currentCycle
+        if (p.attr[BONES_WARN_CYCLE] == cycle) return
+        p.attr[BONES_WARN_CYCLE] = cycle
+        p.message(BONES_LOCKED_MESSAGE)
+    }
+
     /** Outcome of a PRAYER-step top-up request — drives Vannaka's line. */
     enum class TopUp { NOT_NEEDED, BONES, DRILLED }
 
-    /** A top-up hands out at most this many extra bone batches; beyond it Vannaka drills XP instead
-     *  (bones are tradeable, so an uncapped top-up is an infinite dragon-bones faucet). */
+    /** A top-up hands out at most this many extra bone batches; beyond it Vannaka drills XP instead.
+     *  Backstop behind the [bonesLocked] seal, for exits the seal can't cover (e.g. death drops). */
     private const val MAX_TOPUPS = 2
     private const val TOPUP_BONES = 30
 
@@ -260,7 +294,12 @@ object WarPrepChain {
         if (step(p) != Step.PRAYER) return TopUp.NOT_NEEDED
         if (p.getSkills().getBaseLevel(Skills.PRAYER) >= PRAYER_TARGET) return TopUp.NOT_NEEDED
         val id = runCatching { getRSCM(DRAGON_BONES) }.getOrNull() ?: return TopUp.NOT_NEEDED
-        if (p.inventory.getItemCount(id) > 0 || p.bank.getItemCount(id) > 0) return TopUp.NOT_NEEDED
+        // "Dry" means dry: bones anywhere the player can still reach — noted or not, bag or bank —
+        // refuse the top-up. (Withdraw-as-note used to hide the stack from this check entirely.)
+        val noted = runCatching { getRSCM(DRAGON_BONES_NOTED) }.getOrNull()
+        val owned = p.inventory.getItemCount(id) + p.bank.getItemCount(id) +
+            (noted?.let { p.inventory.getItemCount(it) + p.bank.getItemCount(it) } ?: 0)
+        if (owned > 0) return TopUp.NOT_NEEDED
         val used = p.attr[org.alter.game.model.attr.WARPREP_BONE_TOPUPS_ATTR] ?: 0
         if (used < MAX_TOPUPS) {
             p.attr[org.alter.game.model.attr.WARPREP_BONE_TOPUPS_ATTR] = used + 1
