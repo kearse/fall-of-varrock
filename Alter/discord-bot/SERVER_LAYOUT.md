@@ -162,7 +162,6 @@ their Manage Threads permission. A **Close ticket** button locks + archives it.
   `/giveaway end` and `/giveaway reroll` also exist.
 - **Self-roles** — a button panel in `#roles` lets members toggle 🔔 Updates,
   🎉 Giveaway Pings, ⚔️ PvP Pings, 🐲 PvM Pings.
-- **Suggestions** — the bot auto-adds 👍/👎 to posts in `#suggestions`.
 - **Welcome** — new members are greeted in `#welcome` with linking pointers.
 
 > Chat channels (`#general`, `#off-topic`, `#memes`, `#media`, `#game-chat`) are

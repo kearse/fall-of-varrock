@@ -5,7 +5,6 @@ import {
   ButtonStyle,
   EmbedBuilder,
   GuildMember,
-  Message,
   TextChannel,
 } from "discord.js";
 import { CH, SELF_ROLES, findRoleByName, findText } from "../guild.js";
@@ -14,7 +13,6 @@ import { CH, SELF_ROLES, findRoleByName, findText } from "../guild.js";
  * Community engagement:
  *  - welcomeMember        — greet new members in #welcome
  *  - postRolesPanelIfMissing / handleSelfRoleButton — self-assign notify roles
- *  - maybeAddSuggestionVotes — auto 👍/👎 on posts in #suggestions
  */
 
 const SELF_ROLE_PREFIX = "selfrole:";
@@ -78,12 +76,4 @@ export async function handleSelfRoleButton(interaction: ButtonInteraction): Prom
     await member.roles.add(role).catch(() => {});
     await interaction.reply({ content: `Added **${def.name}**.`, ephemeral: true });
   }
-}
-
-export async function maybeAddSuggestionVotes(message: Message): Promise<void> {
-  if (message.author.bot) return;
-  const channel = message.channel;
-  if (!("name" in channel) || channel.name?.toLowerCase() !== CH.suggestions) return;
-  await message.react("👍").catch(() => {});
-  await message.react("👎").catch(() => {});
 }

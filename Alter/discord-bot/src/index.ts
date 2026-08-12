@@ -1,4 +1,4 @@
-import { Client, Events, GatewayIntentBits, GuildMember, Message, Partials } from "discord.js";
+import { Client, Events, GatewayIntentBits, GuildMember, Partials } from "discord.js";
 import { config } from "./config.js";
 import { handleCommand } from "./commands.js";
 import { registerCommands } from "./registerCommands.js";
@@ -8,13 +8,12 @@ import { syncAllRoles } from "./roles/sync.js";
 import { handleTicketButton } from "./tickets/tickets.js";
 import { startLiveBoards } from "./live/liveBoards.js";
 import { handleEnterButton, startGiveawayPoller } from "./giveaways/giveaways.js";
-import { handleSelfRoleButton, maybeAddSuggestionVotes, welcomeMember } from "./engagement/engagement.js";
+import { handleSelfRoleButton, welcomeMember } from "./engagement/engagement.js";
 import { closeDb } from "./db.js";
 
 const client = new Client({
   // GuildMembers is privileged — enable it in the Developer Portal → Bot.
-  // GuildMessages lets us auto-react in #suggestions (no MessageContent needed).
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildMessages],
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers],
   partials: [Partials.GuildMember],
 });
 
@@ -69,11 +68,6 @@ client.on(Events.GuildMemberAdd, async (member: GuildMember) => {
     const { syncMemberRoles } = await import("./roles/sync.js");
     await syncMemberRoles(member, link.loginUsername, { grantBaseRoles: true });
   }
-});
-
-// Auto-add 👍/👎 to posts in #suggestions.
-client.on(Events.MessageCreate, async (message: Message) => {
-  await maybeAddSuggestionVotes(message).catch(() => {});
 });
 
 async function shutdown(signal: string) {
