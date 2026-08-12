@@ -97,10 +97,17 @@ class LofShopTabsMouseListener extends MouseAdapter
 		return swallowIfOnWindow(event);
 	}
 
-	/** Swallow any click (either button) that lands on the window or while our menu is open, so the
-	 *  game never processes it behind us (no stray "Choose Option" / "Walk here"). */
+	/** Swallow left/right clicks that land on the window or while our menu is open, so the
+	 *  game never processes them behind us (no stray "Choose Option" / "Walk here"). */
 	private MouseEvent swallowIfOnWindow(MouseEvent event)
 	{
+		// mousePressed() consumes only left- and right-button presses; a middle press reaches the
+		// game, so its release must too — eating it leaves the engine's camera drag stuck rotating
+		// with the mouse until the next click.
+		if (!SwingUtilities.isLeftMouseButton(event) && !SwingUtilities.isRightMouseButton(event))
+		{
+			return event;
+		}
 		if (overlay.isShowing()
 			&& (overlay.isMenuOpen() || overlay.hitTest(event.getPoint()) != LofShopTabsOverlay.OUTSIDE))
 		{

@@ -263,8 +263,10 @@ class LofKitMouseListener extends MouseAdapter
 	private MouseEvent swallowIfOnWindow(MouseEvent event)
 	{
 		// Right-button events feed the native menu machinery, and while the menu is open every
-		// click is the menu's — both must pass through untouched (see mousePressed).
-		if (overlay.isMenuOpen() || SwingUtilities.isRightMouseButton(event))
+		// click is the menu's — both must pass through untouched (see mousePressed). Middle (and
+		// any other non-left) releases must pass through too: their presses reach the game, and
+		// eating the release leaves the engine's camera drag stuck rotating until the next click.
+		if (overlay.isMenuOpen() || !SwingUtilities.isLeftMouseButton(event))
 		{
 			return event;
 		}
