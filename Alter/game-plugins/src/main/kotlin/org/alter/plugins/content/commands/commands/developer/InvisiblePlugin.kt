@@ -27,9 +27,14 @@ class InvisiblePlugin(
     init {
         onCommand("invisible", Privilege.DEV_POWER, description = "Become a ghost?") {
             player.invisible = !player.invisible
-            // The hidden flag only reaches other clients through an appearance
-            // sync — without this, the toggle does nothing until the next
-            // unrelated appearance change (e.g. equipping an item or relogging).
+            // Protocol-level hide: the avatar stops being sent to other clients
+            // entirely. The appearance flag alone isn't enough — RuneLite-based
+            // clients (i.e. our custom client) can still render appearance-hidden
+            // players, and J-Mod ranked observers see them regardless.
+            player.avatar.hidden = player.invisible
+            // The appearance hidden flag only reaches other clients through an
+            // appearance sync — without this, the toggle does nothing until the
+            // next unrelated appearance change (e.g. equipping or relogging).
             PlayerInfo(player).syncAppearance()
             player.message("Invisible: ${if (!player.invisible) "<col=801700>false</col>" else "<col=178000>true</col>"}")
         }
