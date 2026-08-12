@@ -180,15 +180,20 @@ object Combat {
         }
 
         if (target.lock.canAttack()) {
+            // Only auto-acquire the attacker as a target when idle (no living target) —
+            // re-targeting on every incoming hit made multi-combat thrash between attackers,
+            // restarting the combat loop (and its pathing) each time.
+            val current = target.getCombatTarget()
+            val idle = current == null || current.isDead()
             if (target.entityType.isNpc) {
-                if (!target.attr.has(COMBAT_TARGET_FOCUS_ATTR) || target.attr[COMBAT_TARGET_FOCUS_ATTR]!!.get() != pawn) {
+                if (idle) {
                     target.attack(pawn)
                 }
             } else if (target is Player) {
                 // Auto-retaliate: honour the combat-tab toggle (varp 172, 1 = disabled), and don't
                 // require being already in range — attack() spins up the combat loop which paths into
                 // range itself. (Previously this only fired point-blank and the toggle was ignored.)
-                if (target.getVarp(AttackTab.DISABLE_AUTO_RETALIATE_VARP) == 0 && target.getCombatTarget() != pawn) {
+                if (target.getVarp(AttackTab.DISABLE_AUTO_RETALIATE_VARP) == 0 && idle) {
                     target.attack(pawn)
                 }
             }
