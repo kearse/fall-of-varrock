@@ -74,6 +74,13 @@ class LofStakeMouseListener extends MouseAdapter
 
 	private MouseEvent swallowIfOnWindow(MouseEvent event)
 	{
+		// mousePressed() consumes only left-button presses, so only left releases/clicks may be
+		// swallowed here: if the game saw a middle/right press but never its release, the engine's
+		// camera drag stays live and the view keeps rotating with the mouse until the next click.
+		if (!SwingUtilities.isLeftMouseButton(event))
+		{
+			return event;
+		}
 		if (overlay.isShowing() && overlay.hitTest(event.getPoint()) != LofStakeOverlay.OUTSIDE)
 		{
 			event.consume();
