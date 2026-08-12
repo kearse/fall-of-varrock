@@ -34,6 +34,16 @@ object TeleportRegistry {
         danger: DangerTag = SAFE_ZONE, wild: Int? = null,
     ) = TeleportDestination(key, name, cat, PLACEHOLDER, danger, wild, COMING_SOON)
 
+    /**
+     * A built destination temporarily taken offline (greyed out + teleport blocked,
+     * same as COMING_SOON) while it's being fixed. Keeps the real landing tile so
+     * re-enabling is just switching `disabled` back to `built` on that line.
+     */
+    private fun disabled(
+        key: String, name: String, cat: TeleportCategory, tile: Tile,
+        danger: DangerTag, wild: Int? = null,
+    ) = TeleportDestination(key, name, cat, tile, danger, wild, COMING_SOON)
+
     val all: List<TeleportDestination> = listOf(
 
         // ── 🏠 Basics ──────────────────────────────────────────────────────────
@@ -74,50 +84,52 @@ object TeleportRegistry {
         soon("active_campaign", "Active Campaign", WAR, HOSTILE), // dynamic muster — wire to Campaigns later
 
         // ── 💀 Bosses ──────────────────────────────────────────────────────────
-        built("kbd", "King Black Dragon", BOSSES, Tile(2273, 4685, 0), HOSTILE),         // KBD lair
-        built("corporeal_beast", "Corporeal Beast", BOSSES, Tile(2966, 4378, 2), HOSTILE), // always-on cave lair (TUNE plane)
-        built("corp_beast", "Corp Beast (Event)", BOSSES, Tile(3247, 3319, 0), HOSTILE),  // Lumbridge world-boss event arena
+        // ALL boss teleports are temporarily `disabled` while each lair is verified
+        // and fixed one by one — flip a row back to `built` as it's confirmed working.
+        disabled("kbd", "King Black Dragon", BOSSES, Tile(2273, 4685, 0), HOSTILE),         // KBD lair
+        disabled("corporeal_beast", "Corporeal Beast", BOSSES, Tile(2966, 4378, 2), HOSTILE), // always-on cave lair (TUNE plane)
+        disabled("corp_beast", "Corp Beast (Event)", BOSSES, Tile(3247, 3319, 0), HOSTILE),  // Lumbridge world-boss event arena
         soon("world_boss", "World Boss", BOSSES, HOSTILE), // rotating spawn — wire to WorldBoss later
         soon("zulrah", "Zulrah", BOSSES),
-        built("barrows", "Barrows", BOSSES, Tile(3565, 3306, 0), SAFE_ZONE), // Phase B — mounds (dig to enter a crypt)
-        built("kraken", "Kraken", BOSSES, Tile(2279, 10012, 0), HOSTILE),    // Phase D — Kraken Cove (Slayer 87)
+        disabled("barrows", "Barrows", BOSSES, Tile(3565, 3306, 0), SAFE_ZONE), // Phase B — mounds (dig to enter a crypt)
+        disabled("kraken", "Kraken", BOSSES, Tile(2279, 10012, 0), HOSTILE),    // Phase D — Kraken Cove (Slayer 87)
         // Elite / endgame bosses (see EliteBosses).
-        built("nex", "Nex", BOSSES, Tile(2924, 5202, 0), HOSTILE), // Ancient Prison floor is plane 0 (not the plane-2 encampments)
-        built("vorkath", "Vorkath", BOSSES, Tile(2272, 4052, 0), HOSTILE),
-        built("alchemical_hydra", "Alchemical Hydra", BOSSES, Tile(1361, 10231, 0), HOSTILE),
+        disabled("nex", "Nex", BOSSES, Tile(2924, 5202, 0), HOSTILE), // Ancient Prison floor is plane 0 (not the plane-2 encampments)
+        disabled("vorkath", "Vorkath", BOSSES, Tile(2272, 4052, 0), HOSTILE),
+        disabled("alchemical_hydra", "Alchemical Hydra", BOSSES, Tile(1361, 10231, 0), HOSTILE),
         // Land a few tiles south of the lair origin (2117,5645) so the player arrives at the arena
         // edge rather than on top of the large boss; Pawn.teleport snaps this off any wall tile.
-        built("phantom_muspah", "Phantom Muspah", BOSSES, Tile(2117, 5639, 0), HOSTILE),
+        disabled("phantom_muspah", "Phantom Muspah", BOSSES, Tile(2117, 5639, 0), HOSTILE),
         // Real Abyssal Nexus SW chamber; land a few tiles off the spawn (2971,4766) so the player
         // arrives at the chamber edge, not on the boss. Old (2970,4384,0) was the Corp cave's void
         // plane 0 — a black, unwalkable map. Pawn.teleport snaps this off any wall tile.
-        built("abyssal_sire", "Abyssal Sire", BOSSES, Tile(2967, 4762, 0), HOSTILE),
-        built("grotesque_guardians", "Grotesque Guardians", BOSSES, Tile(3413, 3537, 3), HOSTILE), // Slayer Tower roof (plane 3) — lands on Dusk's tile
+        disabled("abyssal_sire", "Abyssal Sire", BOSSES, Tile(2967, 4762, 0), HOSTILE),
+        disabled("grotesque_guardians", "Grotesque Guardians", BOSSES, Tile(3413, 3537, 3), HOSTILE), // Slayer Tower roof (plane 3) — lands on Dusk's tile
         // Phase F — God Wars Dungeon generals (real throne rooms; see GodWarsBosses).
-        built("gwd_graardor", "General Graardor", BOSSES, Tile(2870, 5362, 2), HOSTILE),
-        built("gwd_kril", "K'ril Tsutsaroth", BOSSES, Tile(2926, 5325, 2), HOSTILE),
-        built("gwd_kreearra", "Kree'arra", BOSSES, Tile(2832, 5302, 2), HOSTILE),
-        built("gwd_zilyana", "Commander Zilyana", BOSSES, Tile(2897, 5300, 2), HOSTILE),
+        disabled("gwd_graardor", "General Graardor", BOSSES, Tile(2870, 5362, 2), HOSTILE),
+        disabled("gwd_kril", "K'ril Tsutsaroth", BOSSES, Tile(2926, 5325, 2), HOSTILE),
+        disabled("gwd_kreearra", "Kree'arra", BOSSES, Tile(2832, 5302, 2), HOSTILE),
+        disabled("gwd_zilyana", "Commander Zilyana", BOSSES, Tile(2897, 5300, 2), HOSTILE),
         // Phase C — wilderness single bosses (real OSRS lairs; see WildernessBosses).
-        built("callisto", "Callisto", BOSSES, Tile(3300, 3840, 0), WILD, wild = 40),
-        built("vetion", "Vet'ion", BOSSES, Tile(3239, 3779, 0), WILD, wild = 32),
-        built("venenatis", "Venenatis", BOSSES, Tile(3315, 3743, 0), WILD, wild = 33),
-        built("scorpia", "Scorpia", BOSSES, Tile(3232, 10337, 0), WILD, wild = 54),
-        built("chaos_elemental", "Chaos Elemental", BOSSES, Tile(3279, 3916, 0), WILD, wild = 50),
-        built("chaos_fanatic", "Chaos Fanatic", BOSSES, Tile(2978, 3851, 0), WILD, wild = 42),
-        built("crazy_arch", "Crazy Archaeologist", BOSSES, Tile(2980, 3690, 0), WILD, wild = 24),
+        disabled("callisto", "Callisto", BOSSES, Tile(3300, 3840, 0), WILD, wild = 40),
+        disabled("vetion", "Vet'ion", BOSSES, Tile(3239, 3779, 0), WILD, wild = 32),
+        disabled("venenatis", "Venenatis", BOSSES, Tile(3315, 3743, 0), WILD, wild = 33),
+        disabled("scorpia", "Scorpia", BOSSES, Tile(3232, 10337, 0), WILD, wild = 54),
+        disabled("chaos_elemental", "Chaos Elemental", BOSSES, Tile(3279, 3916, 0), WILD, wild = 50),
+        disabled("chaos_fanatic", "Chaos Fanatic", BOSSES, Tile(2978, 3851, 0), WILD, wild = 42),
+        disabled("crazy_arch", "Crazy Archaeologist", BOSSES, Tile(2980, 3690, 0), WILD, wild = 24),
         // Phase D — Slayer / PvM bosses (real lairs; see PvmBosses).
-        built("demonic_gorillas", "Demonic Gorillas", BOSSES, Tile(2418, 9774, 0), HOSTILE),
-        built("skotizo", "Skotizo", BOSSES, Tile(1721, 10090, 0), HOSTILE),
-        built("cerberus", "Cerberus", BOSSES, Tile(1311, 1250, 0), HOSTILE),
-        built("giant_mole", "Giant Mole", BOSSES, Tile(1760, 5164, 0), HOSTILE),
-        built("kalphite_queen", "Kalphite Queen", BOSSES, Tile(3508, 9494, 2), HOSTILE),
-        built("sarachnis", "Sarachnis", BOSSES, Tile(1923, 9921, 0), HOSTILE),
-        built("smoke_devil", "Thermonuclear Smoke Devil", BOSSES, Tile(2384, 9452, 0), HOSTILE),
-        built("dagannoth_kings", "Dagannoth Kings", BOSSES, Tile(2899, 4449, 0), HOSTILE),
+        disabled("demonic_gorillas", "Demonic Gorillas", BOSSES, Tile(2418, 9774, 0), HOSTILE),
+        disabled("skotizo", "Skotizo", BOSSES, Tile(1721, 10090, 0), HOSTILE),
+        disabled("cerberus", "Cerberus", BOSSES, Tile(1311, 1250, 0), HOSTILE),
+        disabled("giant_mole", "Giant Mole", BOSSES, Tile(1760, 5164, 0), HOSTILE),
+        disabled("kalphite_queen", "Kalphite Queen", BOSSES, Tile(3508, 9494, 2), HOSTILE),
+        disabled("sarachnis", "Sarachnis", BOSSES, Tile(1923, 9921, 0), HOSTILE),
+        disabled("smoke_devil", "Thermonuclear Smoke Devil", BOSSES, Tile(2384, 9452, 0), HOSTILE),
+        disabled("dagannoth_kings", "Dagannoth Kings", BOSSES, Tile(2899, 4449, 0), HOSTILE),
         soon("theatre_of_blood", "Theatre of Blood", BOSSES),
         soon("chambers_of_xeric", "Chambers of Xeric", BOSSES),
-        built("revenant_caves", "Revenant Caves", BOSSES, Tile(3220, 10140, 0), WILD, wild = 17),
+        disabled("revenant_caves", "Revenant Caves", BOSSES, Tile(3220, 10140, 0), WILD, wild = 17),
 
         // ── ⚔️ Wilderness / PvP (the PK-bot corridor, south → north) ───────────
         built("outlaw_camp", "Outlaw Camp", WILDERNESS, Tile(3235, 3345, 0), WILD, wild = 5),

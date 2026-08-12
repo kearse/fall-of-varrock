@@ -96,43 +96,46 @@ final class LofTeleportsData
 			b("Recruit Trials", "Safe Zone", SAFE, 1277),      // bronze sword
 			s("Active Campaign", "Soon", SOON, 1201));         // rune kiteshield
 
-		// Mirrors TeleportRegistry BOSSES row-for-row (34 rows: apex city bosses, the four GWD
+		// Mirrors TeleportRegistry BOSSES row-for-row (35 rows: apex city bosses, the four GWD
 		// generals, the wilderness single bosses, the Slayer/PvM roster, then the raids).
+		// ALL boss rows are temporarily disabled (drawn greyed, unclickable) while each lair
+		// is verified server-side — flip a row back to b(...) as its registry entry is rebuilt.
 		cat("Bosses",
-			b("King Black Dragon", "Hostile", HOSTILE, 1149),  // dragon med helm
-			b("Corporeal Beast", "Hostile", HOSTILE, 13734),   // spirit shield
+			s("King Black Dragon", "Disabled", SOON, 1149),    // dragon med helm
+			s("Corporeal Beast", "Disabled", SOON, 13734),     // spirit shield
+			s("Corp Beast (Event)", "Disabled", SOON, 13734),  // spirit shield
 			s("World Boss", "Soon", SOON, 11864),              // slayer helmet
 			s("Zulrah", "Soon", SOON, 12934),                  // zulrah's scales
-			b("Barrows", "Safe Zone", SAFE, 4716),             // dharok's helm
-			b("Kraken", "Hostile", HOSTILE, 12004),            // kraken tentacle
-			b("Nex", "Hostile", HOSTILE, 11791),               // staff of the dead
-			b("Vorkath", "Hostile", HOSTILE, 21634),           // vorkath's head
-			b("Alchemical Hydra", "Hostile", HOSTILE, 22988),  // hydra leather
-			b("Phantom Muspah", "Hostile", HOSTILE, 28323),    // venator shard
-			b("Abyssal Sire", "Hostile", HOSTILE, 13262),      // abyssal orphan
-			b("Grotesque Guardians", "Hostile", HOSTILE, 21730), // granite gloves
-			b("General Graardor", "Hostile", HOSTILE, 11832),  // bandos chestplate
-			b("K'ril Tsutsaroth", "Hostile", HOSTILE, 11806),  // zamorak godsword
-			b("Kree'arra", "Hostile", HOSTILE, 11826),         // armadyl helmet
-			b("Commander Zilyana", "Hostile", HOSTILE, 11808), // saradomin godsword
-			b("Callisto", "Wild Lvl 40", WILD, 12603),         // tyrannical ring
-			b("Vet'ion", "Wild Lvl 32", WILD, 12601),          // ring of the gods
-			b("Venenatis", "Wild Lvl 33", WILD, 12605),        // treasonous ring
-			b("Scorpia", "Wild Lvl 54", WILD, 12806),          // malediction ward
-			b("Chaos Elemental", "Wild Lvl 50", WILD, 7158),   // dragon 2h
-			b("Chaos Fanatic", "Wild Lvl 42", WILD, 12808),    // odium shard
-			b("Crazy Archaeologist", "Wild Lvl 24", WILD, 11924), // fedora
-			b("Demonic Gorillas", "Hostile", HOSTILE, 19481),  // heavy ballista
-			b("Skotizo", "Hostile", HOSTILE, 19685),           // dark totem
-			b("Cerberus", "Hostile", HOSTILE, 13231),          // primordial boots
-			b("Giant Mole", "Hostile", HOSTILE, 7418),         // mole claw
-			b("Kalphite Queen", "Hostile", HOSTILE, 3140),     // dragon chainbody
-			b("Sarachnis", "Hostile", HOSTILE, 23528),         // sarachnis cudgel
-			b("Thermonuclear Smoke Devil", "Hostile", HOSTILE, 12002), // occult necklace
-			b("Dagannoth Kings", "Hostile", HOSTILE, 6737),    // berserker ring
+			s("Barrows", "Disabled", SOON, 4716),              // dharok's helm
+			s("Kraken", "Disabled", SOON, 12004),              // kraken tentacle
+			s("Nex", "Disabled", SOON, 11791),                 // staff of the dead
+			s("Vorkath", "Disabled", SOON, 21634),             // vorkath's head
+			s("Alchemical Hydra", "Disabled", SOON, 22988),    // hydra leather
+			s("Phantom Muspah", "Disabled", SOON, 28323),      // venator shard
+			s("Abyssal Sire", "Disabled", SOON, 13262),        // abyssal orphan
+			s("Grotesque Guardians", "Disabled", SOON, 21730), // granite gloves
+			s("General Graardor", "Disabled", SOON, 11832),    // bandos chestplate
+			s("K'ril Tsutsaroth", "Disabled", SOON, 11806),    // zamorak godsword
+			s("Kree'arra", "Disabled", SOON, 11826),           // armadyl helmet
+			s("Commander Zilyana", "Disabled", SOON, 11808),   // saradomin godsword
+			s("Callisto", "Disabled", SOON, 12603),            // tyrannical ring
+			s("Vet'ion", "Disabled", SOON, 12601),             // ring of the gods
+			s("Venenatis", "Disabled", SOON, 12605),           // treasonous ring
+			s("Scorpia", "Disabled", SOON, 12806),             // malediction ward
+			s("Chaos Elemental", "Disabled", SOON, 7158),      // dragon 2h
+			s("Chaos Fanatic", "Disabled", SOON, 12808),       // odium shard
+			s("Crazy Archaeologist", "Disabled", SOON, 11924), // fedora
+			s("Demonic Gorillas", "Disabled", SOON, 19481),    // heavy ballista
+			s("Skotizo", "Disabled", SOON, 19685),             // dark totem
+			s("Cerberus", "Disabled", SOON, 13231),            // primordial boots
+			s("Giant Mole", "Disabled", SOON, 7418),           // mole claw
+			s("Kalphite Queen", "Disabled", SOON, 3140),       // dragon chainbody
+			s("Sarachnis", "Disabled", SOON, 23528),           // sarachnis cudgel
+			s("Thermonuclear Smoke Devil", "Disabled", SOON, 12002), // occult necklace
+			s("Dagannoth Kings", "Disabled", SOON, 6737),      // berserker ring
 			s("Theatre of Blood", "Soon", SOON, 22326),        // justiciar faceguard
 			s("Chambers of Xeric", "Soon", SOON, 20997),       // twisted bow
-			b("Revenant Caves", "Wild Lvl 17", WILD, 22557));  // amulet of avarice
+			s("Revenant Caves", "Disabled", SOON, 22557));     // amulet of avarice
 
 		cat("Wilderness",
 			b("Outlaw Camp", "Wild Lvl 5", WILD, 1333),        // rune scimitar
