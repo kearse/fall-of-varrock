@@ -42,6 +42,11 @@ object PlayerDeathAction {
 
         player.interruptQueues()
         player.stopMovement()
+        // Attackers must let go the moment death starts: their combat loops would otherwise pound
+        // the corpse through the animation, and any stale target surviving into the respawn reads
+        // as live hostility to target-scanning systems (companion defense, single-way piling).
+        // Players only — NPC aggro/boss scripts manage their own disengagement.
+        player.clearAttackers(includeNpcs = false)
         player.lock()
 
         player.queue(TaskPriority.STRONG) {

@@ -122,7 +122,9 @@ class TradeSession(
         // Configure the trade text
         player.setComponentText(TRADE_INTERFACE, 31, "${if (isStake) "Staking with" else "Trading with"}: ${partner.username}")
 
-        // Open the inventory overlay
+        // Open the inventory overlay. Dispatch is by op INDEX (TradingPlugin), so only the
+        // player-facing verb changes between a trade and a duel stake.
+        val verb = if (isStake) "Stake" else "Offer"
         player.sendItemContainer(key = PLAYER_INVENTORY_KEY, container = inventory)
         player.runClientScript(
             INTERFACE_INV_INIT_BIG,
@@ -132,11 +134,11 @@ class TradeSession(
             7,
             0,
             -1,
-            "Offer",
-            "Offer-5",
-            "Offer-10",
-            "Offer-All",
-            "Offer-X",
+            verb,
+            "$verb-5",
+            "$verb-10",
+            "$verb-All",
+            "$verb-X",
         )
         player.setInterfaceEvents(interfaceId = OVERLAY_INTERFACE, component = 0, range = 0..container.capacity, setting = 1086)
         player.openInterface(OVERLAY_INTERFACE, InterfaceDestination.TAB_AREA)

@@ -12,6 +12,8 @@ import org.alter.game.model.move.MovementQueue.StepType
 import org.alter.game.model.move.hasMoveDestination
 import org.alter.game.model.move.moveTo
 import org.alter.game.model.move.walkTo
+import org.alter.game.model.timer.ATTACK_DELAY
+import org.alter.plugins.content.combat.Combat
 import org.alter.plugins.content.combat.getCombatTarget
 import org.alter.plugins.content.combat.isAttacking
 import org.alter.plugins.content.combat.removeCombatTarget
@@ -234,7 +236,17 @@ object CompanionBrain {
         if (comp.isAttacking() && cur != null && isAlivePawn(world, cur)) {
             // Keep swinging — unless a player has jumped the owner while we brawl an NPC:
             // defending the owner against a PKer outranks finishing the mob.
-            if (playerThreat == null || cur is Player) return
+            if (cur is Player) {
+                // A held PLAYER target is re-validated every think: the fight it justified can
+                // end without the companion ever seeing a clear (duel resolved, target respawned,
+                // both walked away). Holding it unconditionally is what made companions chase an
+                // ex-duel-opponent and re-kill them on every respawn.
+                if (isLiveThreat(comp, owner, cur)) return
+                comp.removeCombatTarget()
+                comp.resetFacePawn()
+            } else if (playerThreat == null) {
+                return
+            }
         }
         val foe: Pawn? = playerThreat ?: combatFoeNear(world, comp, owner)
         if (foe != null) {
@@ -346,16 +358,31 @@ object CompanionBrain {
         var best: Player? = null
         var bestDist = ENGAGE + 1
         world.players.forEach { p ->
-            if (p === owner || p === comp || p.index < 0 || p.isDead()) return@forEach
-            if (p is Companion && CompanionRegistry.owns(owner, p)) return@forEach
             if (p.tile.height != comp.tile.height) return@forEach
-            val t = p.getCombatTarget()
-            val onParty = t === owner || t === comp || (t is Companion && CompanionRegistry.owns(owner, t))
-            if (!onParty) return@forEach
+            if (!isLiveThreat(comp, owner, p)) return@forEach
             val d = dist(comp.tile, p.tile)
             if (d <= ENGAGE && d < bestDist) { bestDist = d; best = p }
         }
         return best
+    }
+
+    /**
+     * Is [p] a player the companion should be fighting RIGHT NOW? Three tests, all required:
+     * targeting the party, actually fighting (not just carrying a target attribute), and legal
+     * to engage. The middle one is the load-bearing fix: [getCombatTarget] is a persistent
+     * attribute with no recency — after a duel or any broken-off fight it can point at the owner
+     * indefinitely, and treating that alone as hostility made companions execute ex-opponents on
+     * every respawn. A live attacker always holds ATTACK_DELAY (between swings) or the PJ timer
+     * (refreshed on every exchange), or is still pathing in for the first swing.
+     */
+    private fun isLiveThreat(comp: Companion, owner: Player, p: Player): Boolean {
+        if (p === owner || p === comp || p.index < 0 || p.isDead()) return false
+        if (p is Companion && CompanionRegistry.owns(owner, p)) return false
+        val t = p.getCombatTarget()
+        val onParty = t === owner || t === comp || (t is Companion && CompanionRegistry.owns(owner, t))
+        if (!onParty) return false
+        val fresh = p.timers.has(ATTACK_DELAY) || p.timers.has(Combat.PJ_TIMER) || p.hasMoveDestination()
+        return fresh && Combat.canEngage(comp, p)
     }
 
     private fun isAlivePawn(world: World, pawn: Pawn): Boolean = when (pawn) {

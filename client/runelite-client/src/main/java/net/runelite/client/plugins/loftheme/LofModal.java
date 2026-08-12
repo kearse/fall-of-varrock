@@ -23,6 +23,9 @@ import net.runelite.api.Client;
 import net.runelite.api.InventoryID;
 import net.runelite.api.Item;
 import net.runelite.api.ItemContainer;
+import net.runelite.api.Varbits;
+import net.runelite.api.widgets.ComponentID;
+import net.runelite.api.widgets.Widget;
 import net.runelite.client.ui.FontManager;
 
 public final class LofModal
@@ -194,6 +197,12 @@ public final class LofModal
 		final float s = uiScale(client);
 		final int ox = originX(client, Math.round(baseW * s));
 		final int oy = originY(client, Math.round(baseH * s));
+		return begin(g, ox, oy, s);
+	}
+
+	/** Shared tail of the beginWindow variants: pivot-scale about the origin + crisp-text hints. */
+	private static Placement begin(Graphics2D g, int ox, int oy, float s)
+	{
 		final AffineTransform saved = g.getTransform();
 		g.translate(ox, oy);
 		g.scale(s, s);
@@ -207,6 +216,52 @@ public final class LofModal
 		g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_OFF);
 		g.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_OFF);
 		return new Placement(ox, oy, s, saved, savedTextAA, savedFractionalMetrics);
+	}
+
+	/**
+	 * Canvas bounds of the live inventory panel for the current layout (fixed / resizable-classic /
+	 * resizable-bottom-line), or null when it isn't on screen. Reads widgets — call on the client
+	 * thread (i.e. from {@code render()}), never from the mouse thread.
+	 */
+	public static Rectangle inventoryBounds(Client client)
+	{
+		final Widget w;
+		if (client.isResized())
+		{
+			w = client.getVarbitValue(Varbits.SIDE_PANELS) == 1
+				? client.getWidget(ComponentID.RESIZABLE_VIEWPORT_BOTTOM_LINE_INVENTORY_CONTAINER)
+				: client.getWidget(ComponentID.RESIZABLE_VIEWPORT_INVENTORY_CONTAINER);
+		}
+		else
+		{
+			w = client.getWidget(ComponentID.FIXED_VIEWPORT_INVENTORY_CONTAINER);
+		}
+		return w == null || w.isHidden() ? null : w.getBounds();
+	}
+
+	/**
+	 * {@link #beginWindow} for the modals that need the REAL inventory clickable beside them (the
+	 * stake and duel-confirm screens — their items are added by clicking inventory slots). Fixed
+	 * mode already clears the inventory column by construction; in resizable mode, where the plain
+	 * origin centres on the whole canvas, the window is shifted left just far enough to clear the
+	 * inventory panel. On a canvas too narrow for both it pins to the left edge — the overlays'
+	 * hit-tests treat any residual overlap with the inventory as pass-through.
+	 */
+	public static Placement beginWindowBesideInventory(Graphics2D g, Client client, int baseW, int baseH)
+	{
+		final float s = uiScale(client);
+		final int scaledW = Math.round(baseW * s);
+		int ox = originX(client, scaledW);
+		if (client.isResized())
+		{
+			final Rectangle inv = inventoryBounds(client);
+			if (inv != null && ox + scaledW > inv.x - 8)
+			{
+				ox = Math.max(0, inv.x - 8 - scaledW);
+			}
+		}
+		final int oy = originY(client, Math.round(baseH * s));
+		return begin(g, ox, oy, s);
 	}
 
 	/** End a scaled window — restore the transform and text hints captured by {@link #beginWindow}. */

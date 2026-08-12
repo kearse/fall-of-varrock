@@ -2,13 +2,15 @@
  * Fall of Varrock — Duel Arena stake overlay (renderer + hit-testing).
  *
  * The classic Duel Arena *Stakes* screen, themed and drawn client-side over the server's standard
- * trade interface (group 335) during a staked duel. Design-system standard modal (480x400 — see
+ * trade interface (group 335) during a staked duel. Design-system standard modal (480x324 — see
  * docs/overlay-design-system.md), matched to the rules window. It READS the live offers straight
  * from interface 335 — your offer (335.25), the opponent's (335.28), title (335.31), your value
  * (335.24) — so no custom packets are needed. Actions route through the existing SECURE TradeSession:
  *   - click one of YOUR staked items → "::stake rm <slot>" (un-stake)
  *   - Accept / Decline               → "::stake a" / "::stake d"
- * Adding items stays native (the window is viewport-anchored, leaving the inventory column clickable).
+ * Adding items stays native — you click the REAL inventory ("Stake" ops). The window therefore
+ * places itself beside the inventory panel (beginWindowBesideInventory), and hitTest passes any
+ * residual overlap with the inventory through as OUTSIDE so those slots always stay clickable.
  *
  * Every widget read is null-guarded: it renders empty rather than throwing, so it can't crash.
  */
@@ -132,10 +134,9 @@ class LofStakeOverlay extends Overlay
 		return title != null && !title.isHidden() && text(title).startsWith("Staking");
 	}
 
-	// Placement single-sourced in LofModal (§6A): viewport-centred in fixed mode so the inventory
-	// column on the right stays clickable for adding items — same anchor as every other modal.
-	private int originX() { return LofModal.originX(client, WIN_W); }
-	private int originY() { return LofModal.originY(client, WIN_H); }
+	// Inventory panel bounds published by render() (widget reads are client-thread-only); the mouse
+	// thread reads it in hitTest so any residual window/inventory overlap stays click-through.
+	private volatile Rectangle inventoryRect;
 
 	private Rectangle slotRect(int ox, int oy, int gridX, int i)
 	{
@@ -160,6 +161,11 @@ class LofStakeOverlay extends Overlay
 		{
 			if (slotRect(ox, oy, YOUR_X, i).contains(p)) return SLOT_BASE + i;
 		}
+		// Items are STAKED by clicking the real inventory. On a canvas too small for the window to
+		// sit fully beside it, whatever strip of inventory the window covers must stay live — both
+		// the click swallower and the menu suppressor route through this hit-test.
+		final Rectangle inv = inventoryRect;
+		if (inv != null && inv.contains(canvas)) return OUTSIDE;
 		return INSIDE;
 	}
 
@@ -187,8 +193,11 @@ class LofStakeOverlay extends Overlay
 		final java.awt.Rectangle selfBounds = getBounds();
 		g.translate(-selfBounds.x, -selfBounds.y);
 
-		final LofModal.Placement place = LofModal.beginWindow(g, client, WIN_W, WIN_H);
+		// Beside-inventory placement: adding items = clicking the real inventory, so the window must
+		// never sit on top of it (resizable mode centres plain beginWindow over the whole canvas).
+		final LofModal.Placement place = LofModal.beginWindowBesideInventory(g, client, WIN_W, WIN_H);
 		placement = place;
+		inventoryRect = LofModal.inventoryBounds(client);
 
 		final int ox = place.ox, oy = place.oy;
 		final Point mouse = place.toLocal(mousePoint());

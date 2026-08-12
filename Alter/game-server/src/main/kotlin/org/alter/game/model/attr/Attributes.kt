@@ -438,8 +438,10 @@ val CURRENT_SHOP_ATTR = AttributeKey<Shop>()
 /**
  * The [Pawn] which another pawn wants to initiate combat with, whether they meet
  * the criteria to attack or not (including being in attack range).
+ * Reset on death: a respawned player must not carry a stale target — systems that
+ * scan targets (companion defense, single-way piling) would read it as live hostility.
  */
-val COMBAT_TARGET_FOCUS_ATTR = AttributeKey<WeakReference<Pawn>>()
+val COMBAT_TARGET_FOCUS_ATTR = AttributeKey<WeakReference<Pawn>>(resetOnDeath = true)
 
 /**
  * The [Pawn] that killed another pawn.

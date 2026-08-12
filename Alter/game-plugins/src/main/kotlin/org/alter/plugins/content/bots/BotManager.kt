@@ -12,9 +12,6 @@ import org.alter.game.model.Tile
 import org.alter.game.model.World
 import org.alter.game.model.item.Item
 import org.alter.game.model.move.moveTo
-import org.alter.game.model.move.stopMovement
-import org.alter.plugins.content.combat.Combat
-import org.alter.plugins.content.combat.getCombatTarget
 import org.alter.plugins.content.interfaces.attack.AttackTab
 import org.alter.rscm.RSCM.getRSCM
 
@@ -197,19 +194,9 @@ object BotManager {
         // sequence has already restored to full HP and teleported to the home tile (Lumbridge). The
         // combat loop only gives up when the target's HP hits 0, so it keeps pathing toward that ghost:
         // the "run back to spawn after killing the goblin bot" report. Clearing attackers stops it dead.
-        clearAttackersOf(world, bot)
+        bot.clearAttackers()
         if (bot.index >= 0) world.unregister(bot)
         active.remove(bot)
-    }
-
-    /** Drop the combat lock (and any in-flight pursuit route) of every pawn targeting [bot]. */
-    private fun clearAttackersOf(world: World, bot: PkBot) {
-        world.players.forEach { p ->
-            if (p !== bot && p.getCombatTarget() === bot) { Combat.reset(p); p.stopMovement(); p.resetFacePawn() }
-        }
-        world.npcs.forEach { n ->
-            if (n.getCombatTarget() === bot) { Combat.reset(n); n.stopMovement(); n.resetFacePawn() }
-        }
     }
 
     fun despawnAll(world: World) {

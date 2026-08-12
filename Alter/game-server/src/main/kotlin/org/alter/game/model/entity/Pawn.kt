@@ -14,6 +14,7 @@ import org.alter.game.model.bits.InfiniteVarsType
 import org.alter.game.model.collision.rayCast
 import org.alter.game.model.combat.DamageMap
 import org.alter.game.model.move.MovementQueue
+import org.alter.game.model.move.stopMovement
 import org.alter.game.model.queue.QueueTask
 import org.alter.game.model.queue.QueueTaskSet
 import org.alter.game.model.queue.TaskPriority
@@ -545,6 +546,32 @@ abstract class Pawn(val world: World) : Entity() {
         attr.remove(INTERACTING_NPC_ATTR)
         attr.remove(INTERACTING_PLAYER_ATTR)
         resetFacePawn()
+    }
+
+    /**
+     * Drops the combat lock (and any in-flight pursuit route) of every pawn targeting this one —
+     * the reverse of [resetInteractions], which only clears who *this* pawn interacts with. The
+     * combat loop otherwise only gives up when its target's HP hits 0, so anything that removes a
+     * pawn from play mid-fight (death, a duel resolving, a bot despawn) must sweep its attackers
+     * or they keep pathing toward the ghost.
+     */
+    fun clearAttackers(includeNpcs: Boolean = true) {
+        world.players.forEach { p ->
+            if (p !== this && p.attr[COMBAT_TARGET_FOCUS_ATTR]?.get() === this) {
+                p.attr.remove(COMBAT_TARGET_FOCUS_ATTR)
+                p.stopMovement()
+                p.resetFacePawn()
+            }
+        }
+        if (includeNpcs) {
+            world.npcs.forEach { n ->
+                if (n.attr[COMBAT_TARGET_FOCUS_ATTR]?.get() === this) {
+                    n.attr.remove(COMBAT_TARGET_FOCUS_ATTR)
+                    n.stopMovement()
+                    n.resetFacePawn()
+                }
+            }
+        }
     }
 
     fun queue(
