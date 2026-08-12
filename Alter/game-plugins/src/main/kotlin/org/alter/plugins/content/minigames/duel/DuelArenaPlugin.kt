@@ -335,7 +335,10 @@ class DuelArenaPlugin(
         } else {
             (target.attr[DUEL_REQUESTS_ATTR] ?: HashSet<Player>().also { target.attr[DUEL_REQUESTS_ATTR] = it }).add(player)
             player.message("Sending duel challenge...")
-            target.message("${player.username}:duelreq:", ChatMessageType.TRADE_REQ, player.username)
+            // Type 101 (TRADE_REQ) renders the message verbatim, so send readable text — the
+            // shipped client routes "wishes to duel" lines to the Challenge op (lofchatrequests
+            // plugin) instead of the Trade op the engine would otherwise send for this type.
+            target.message("${player.username} wishes to duel with you.", ChatMessageType.TRADE_REQ, player.username)
         }
     }
 
