@@ -20,6 +20,7 @@ import net.runelite.api.MenuEntry;
 import net.runelite.api.MessageNode;
 import net.runelite.api.ScriptID;
 import net.runelite.api.events.ChatMessage;
+import net.runelite.api.events.ClientTick;
 import net.runelite.api.events.MenuOpened;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
@@ -88,13 +89,15 @@ public class LofKitPlugin extends Plugin
 			return event;
 		};
 		mouseManager.registerMouseWheelListener(wheelListener);
-		// The live bank-search field: while it has focus every keystroke edits the query and is
-		// CONSUMED, so typing never leaks into the chatbox or game hotkeys.
+		// The live search field (bank AND training — it filters your bank / the armoury pool):
+		// while it has focus every keystroke edits the query and is CONSUMED, so typing never
+		// leaks into the chatbox or game hotkeys. Esc also drops a held item (the hand cursor)
+		// even when the field isn't focused.
 		searchKeyListener = new KeyListener()
 		{
 			private boolean active()
 			{
-				return overlay.isShowing() && overlay.isBank() && overlay.isSearchFocused();
+				return overlay.isShowing() && !overlay.isLms() && overlay.isSearchFocused();
 			}
 
 			@Override
@@ -119,6 +122,13 @@ public class LofKitPlugin extends Plugin
 			@Override
 			public void keyPressed(KeyEvent e)
 			{
+				// Esc drops the held item regardless of search focus.
+				if (e.getKeyCode() == KeyEvent.VK_ESCAPE && overlay.isShowing() && overlay.hasHand())
+				{
+					overlay.clearHand();
+					e.consume();
+					return;
+				}
 				if (!active())
 				{
 					return;
@@ -168,6 +178,27 @@ public class LofKitPlugin extends Plugin
 	{
 		final String msg = "::lofkit " + action;
 		clientThread.invokeLater(() -> client.runScript(ScriptID.CHAT_SEND, msg, 0, 0, 0, -1));
+	}
+
+	/**
+	 * Suppress the native HOVER menu while the cursor is over the window: it is rebuilt every
+	 * client tick from what's UNDER the window, so without this the top-left hint reads
+	 * "Walk here" / "Attack ..." for the world behind the editor while you hover an item.
+	 * The open right-click menu is left alone (onMenuOpened owns that moment).
+	 */
+	@Subscribe
+	public void onClientTick(ClientTick event)
+	{
+		if (!overlay.isShowing() || client.isMenuOpen())
+		{
+			return;
+		}
+		final net.runelite.api.Point m = client.getMouseCanvasPosition();
+		if (m == null || overlay.hitTest(new java.awt.Point(m.getX(), m.getY())) == LofKitOverlay.OUTSIDE)
+		{
+			return;
+		}
+		client.setMenuEntries(new MenuEntry[0]);
 	}
 
 	/**

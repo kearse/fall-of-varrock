@@ -1,10 +1,13 @@
 /*
  * Fall of Varrock — Kit editor overlay (mouse input).
  *
- * Hit-tests left-clicks against the open kit editor window. Bank mode has smart defaults:
- * bank tiles withdraw into the kit inventory, inventory gear equips, supplies deposit —
- * everything else is on the native right-click menu (LofKitPlugin.onMenuOpened). Chips switch
- * presets/kits/book/difficulty; tabs, categories and scrolling stay client-side. Every
+ * Hit-tests left-clicks against the open kit editor window. Items move by PICK-UP-AND-PLACE:
+ * click a bank/armoury tile or a filled pack slot to lift it onto the cursor, then click the
+ * exact pack slot to place it (occupied slots swap / step aside), or the doll to equip it —
+ * the player decides what equips and where every piece sits. Shift-click on a palette tile is
+ * the quick add (first free slot); quantities and explicit Equip/Deposit stay on the native
+ * right-click menu (LofKitPlugin.onMenuOpened). Esc or right-click drops the held item. Chips
+ * switch presets/kits/book/difficulty; tabs, categories and scrolling stay client-side. Every
  * left-click on the window is consumed so it doesn't fall through to the game world; while
  * the native menu is open, ALL clicks pass through untouched (they belong to the menu).
  */
@@ -36,7 +39,17 @@ class LofKitMouseListener extends MouseAdapter
 		{
 			return event;
 		}
-		if (!overlay.isShowing() || !SwingUtilities.isLeftMouseButton(event))
+		if (!overlay.isShowing())
+		{
+			return event;
+		}
+		// A right-click drops whatever the hand holds (and then behaves natively).
+		if (SwingUtilities.isRightMouseButton(event) && overlay.hasHand())
+		{
+			overlay.clearHand();
+			return event;
+		}
+		if (!SwingUtilities.isLeftMouseButton(event))
 		{
 			return event;
 		}
@@ -46,6 +59,7 @@ class LofKitMouseListener extends MouseAdapter
 		{
 			overlay.setDropdownOpen(false); // clicking away closes the kit list
 			overlay.setSearchFocused(false);
+			overlay.clearHand();
 			return event; // let clicks outside the window reach the game
 		}
 
@@ -100,17 +114,13 @@ class LofKitMouseListener extends MouseAdapter
 		}
 		else if (hit == LofKitOverlay.SEARCH_BTN)
 		{
-			if (overlay.isBank())
-			{
-				overlay.setSearchFocused(true); // bank mode: the live filter field takes typing focus
-			}
-			else
-			{
-				plugin.sendAction("search"); // training: server opens the native chatbox item finder
-			}
+			// The live filter field takes typing focus in BOTH bank and training modes —
+			// it only ever filters what's actually available (your bank / the armoury pool).
+			overlay.setSearchFocused(true);
 		}
 		else if (hit == LofKitOverlay.ACTION)
 		{
+			overlay.clearHand();
 			plugin.sendAction(overlay.isTraining() ? "start" : overlay.isLms() ? "done" : "load");
 		}
 		else if (hit == LofKitOverlay.PAGE_PREV)
@@ -123,16 +133,39 @@ class LofKitMouseListener extends MouseAdapter
 		}
 		else if (hit == LofKitOverlay.CURRENT)
 		{
+			overlay.clearHand();
 			plugin.sendAction("cur");
 		}
 		else if (hit >= LofKitOverlay.PAL_BASE)
 		{
-			final int id = overlay.palItemIdAt(hit - LofKitOverlay.PAL_BASE);
-			if (id > 0)
+			final int idx = hit - LofKitOverlay.PAL_BASE;
+			final int id = overlay.palItemIdAt(idx);
+			if (overlay.isLms())
 			{
-				// Bank mode: a click WITHDRAWS into the kit inventory (equip is on the right-click
-				// menu). Training/LMS keep the classic add (armoury-validated / category pick).
+				// LMS: a tile is a whole category pick — no hand involved.
+				if (id > 0)
+				{
+					plugin.sendAction("a " + id);
+				}
+			}
+			else if (overlay.hasHand() && overlay.handFrom() >= 0)
+			{
+				// Holding a pack item and clicking the bank/armoury area = put it back (deposit).
+				plugin.sendAction("ri " + overlay.handFrom());
+				overlay.clearHand();
+			}
+			else if (id > 0 && event.isShiftDown())
+			{
+				// Shift-click: the one-click quick add (first free slot / auto-equip in training).
+				overlay.clearHand();
 				plugin.sendAction(overlay.isBank() ? "ai " + id + " 1" : "a " + id);
+			}
+			else if (id > 0)
+			{
+				// Pick the item up onto the cursor — the next click decides exactly where it goes.
+				// Stackables carry their whole bank stack; non-stackables place one per click.
+				final int qty = overlay.palStackableAt(idx) ? Math.max(1, overlay.palQtyAt(idx)) : 1;
+				overlay.pickHand(id, qty, -1, overlay.palEquipableAt(idx));
 			}
 		}
 		else if (hit >= LofKitOverlay.CAT_BASE)
@@ -154,12 +187,61 @@ class LofKitMouseListener extends MouseAdapter
 		else if (hit >= LofKitOverlay.INV_BASE)
 		{
 			final int slot = hit - LofKitOverlay.INV_BASE;
-			// Bank mode smart click: gear jumps onto the doll, supplies deposit (clear the slot).
-			plugin.sendAction(overlay.isBank() && overlay.invEquipableAt(slot) ? "eq " + slot : "ri " + slot);
+			if (overlay.hasHand())
+			{
+				if (overlay.handFrom() >= 0)
+				{
+					// Rearrange: move/swap the held pack item into this exact slot.
+					if (overlay.handFrom() != slot)
+					{
+						plugin.sendAction("mv " + overlay.handFrom() + " " + slot);
+					}
+					overlay.clearHand();
+				}
+				else
+				{
+					// Place the held bank/armoury item into this EXACT slot. The hand stays
+					// loaded (sticky) so supplies can be laid out slot by slot.
+					plugin.sendAction("pi " + overlay.handId() + " " + overlay.handQty() + " " + slot);
+				}
+			}
+			else
+			{
+				// Empty hand: pick the slot's item up to move it (right-click keeps Equip/Deposit).
+				final int packed = overlay.invItemAt(slot);
+				final int id = packed & 0xFFFF;
+				if (id > 0)
+				{
+					overlay.pickHand(id, (packed >> 16) & 0xFFFF, slot, overlay.invEquipableAt(slot));
+				}
+			}
 		}
 		else if (hit >= LofKitOverlay.EQUIP_BASE)
 		{
-			plugin.sendAction("re " + (hit - LofKitOverlay.EQUIP_BASE));
+			if (overlay.hasHand())
+			{
+				if (overlay.handFrom() >= 0)
+				{
+					// Equip the held pack item (virtualEquip routes it to its correct slot).
+					plugin.sendAction("eq " + overlay.handFrom());
+					overlay.clearHand();
+				}
+				else if (overlay.handEquipable())
+				{
+					plugin.sendAction("ae " + overlay.handId() + " " + overlay.handQty());
+					overlay.clearHand();
+				}
+				// A non-equipable held item just stays on the cursor (the hover explains why).
+			}
+			else
+			{
+				plugin.sendAction("re " + (hit - LofKitOverlay.EQUIP_BASE));
+			}
+		}
+		else
+		{
+			// Window chrome (close is handled above): a stray click drops the hand.
+			overlay.clearHand();
 		}
 
 		event.consume();

@@ -82,8 +82,8 @@ class LofKitOverlay extends Overlay
 		{ ItemID.SARADOMIN_BREW4, ItemID.SHARK },
 	};
 	/** The training armoury in POPULARITY order (the search box's default view) — MUST match the
-	 *  server's KitArmoury POOL_DEFS order. Typing in the search bar opens the native chatbox item
-	 *  finder; this grid is what you browse before searching. */
+	 *  server's KitArmoury POOL_DEFS order. The search bar live-filters THIS pool (never the whole
+	 *  item cache — the armoury is everything a training kit can hold). */
 	private static final int[] ARMOURY_POPULAR = {
 		ItemID.ARMADYL_GODSWORD, ItemID.GRANITE_MAUL, ItemID.DRAGON_CLAWS,
 		ItemID.DRAGON_DAGGER, ItemID.ABYSSAL_WHIP, ItemID.DHAROKS_GREATAXE,
@@ -153,8 +153,67 @@ class LofKitOverlay extends Overlay
 	private volatile int[] palCache = new int[0];
 	/** True bank stack size per visible palette tile (all 1s outside bank mode). */
 	private volatile int[] palQtyCache = new int[0];
-	/** Per kit-inventory slot: is the item there wearable gear? Drives the smart left-click. */
+	/** Per visible palette tile: stackable? (drives the hand's pick-up quantity). */
+	private volatile boolean[] palStackCache = new boolean[0];
+	/** Per visible palette tile: equipable? (drives the hand's doll-drop affordance). */
+	private volatile boolean[] palEquipCache = new boolean[0];
+	/** Per kit-inventory slot: is the item there wearable gear? (hover text + doll drops). */
 	private volatile boolean[] invEquipCache = new boolean[INV_SIZE];
+	/** Per kit-inventory slot: the packed item varp as last rendered (mouse-thread pick-ups). */
+	private volatile int[] invPackedCache = new int[INV_SIZE];
+
+	// ── the hand cursor ──
+	// Pick-up-and-place: clicking an item lifts it onto the cursor; the next click places it
+	// EXACTLY where the player wants it (a specific inventory slot, or the doll to equip).
+	// People organise their inventories deliberately — first-free dumping is not a layout.
+	// All volatile: written by the mouse thread, read in render() and by the mouse thread.
+	private volatile int handId = -1;
+	private volatile int handQty = 1;
+	/** Where the held item came from: -1 = the palette (bank/armoury), else a kit-inventory slot. */
+	private volatile int handFrom = -1;
+	/** Is the held item equipable (cached at pick-up — no composition reads off-thread). */
+	private volatile boolean handEquipable;
+
+	boolean hasHand()
+	{
+		return handId > 0;
+	}
+
+	int handId()
+	{
+		return handId;
+	}
+
+	int handQty()
+	{
+		return handQty;
+	}
+
+	int handFrom()
+	{
+		return handFrom;
+	}
+
+	boolean handEquipable()
+	{
+		return handEquipable;
+	}
+
+	void pickHand(int id, int qty, int fromInvSlot, boolean equipable)
+	{
+		handId = id;
+		handQty = Math.max(1, qty);
+		handFrom = fromInvSlot;
+		handEquipable = equipable;
+	}
+
+	void clearHand()
+	{
+		handId = -1;
+		handQty = 1;
+		handFrom = -1;
+		handEquipable = false;
+	}
 
 	// Bank-browser view state (bank mode only, all client-side).
 	/** Category tab (LofKitItems.CAT_*) — written by the mouse thread, read in render(). */
@@ -173,6 +232,11 @@ class LofKitOverlay extends Overlay
 	private long paletteFingerprint = Long.MIN_VALUE;
 	private String builtQuery = "";
 	private int builtCat = -1;
+	// The armoury filter (training mode): the same live search field, over the loaner pool —
+	// never the whole item cache (the old chatbox finder "found" every item in the game and
+	// then bounced most picks off the server's armoury gate).
+	private int[] armouryFiltered = ARMOURY_POPULAR;
+	private String builtArmouryQuery = "";
 	/** Kit-name dropdown open/closed — pure view state, toggled by the mouse listener. */
 	private volatile boolean ddOpen;
 	/** Names from the server's ~LOFKITN~ channel: the kit being edited + the three save slots. */
@@ -287,11 +351,32 @@ class LofKitOverlay extends Overlay
 		return visibleIndex >= 0 && visibleIndex < qty.length ? qty[visibleIndex] : 1;
 	}
 
+	/** Is the visible palette tile a stackable? (cached — mouse-thread safe). */
+	boolean palStackableAt(int visibleIndex)
+	{
+		final boolean[] a = palStackCache;
+		return visibleIndex >= 0 && visibleIndex < a.length && a[visibleIndex];
+	}
+
+	/** Is the visible palette tile equipable? (cached — mouse-thread safe). */
+	boolean palEquipableAt(int visibleIndex)
+	{
+		final boolean[] a = palEquipCache;
+		return visibleIndex >= 0 && visibleIndex < a.length && a[visibleIndex];
+	}
+
 	/** Is the item in kit-inventory slot i wearable gear? (cached — mouse-thread safe). */
 	boolean invEquipableAt(int slot)
 	{
 		final boolean[] eq = invEquipCache;
 		return slot >= 0 && slot < eq.length && eq[slot];
+	}
+
+	/** The packed item (id | qty<<16) in kit-inventory slot i (cached — mouse-thread safe). */
+	int invItemAt(int slot)
+	{
+		final int[] packed = invPackedCache;
+		return slot >= 0 && slot < packed.length ? packed[slot] : 0;
 	}
 
 	void setTab(int t)
@@ -314,13 +399,13 @@ class LofKitOverlay extends Overlay
 	void searchAppend(char c)
 	{
 		final String q = searchQuery;
-		if (q.length() < 24) { searchQuery = q + c; bankScrollRows = 0; }
+		if (q.length() < 24) { searchQuery = q + c; bankScrollRows = 0; bankPage = 0; }
 	}
 
 	void searchBackspace()
 	{
 		final String q = searchQuery;
-		if (!q.isEmpty()) { searchQuery = q.substring(0, q.length() - 1); bankScrollRows = 0; }
+		if (!q.isEmpty()) { searchQuery = q.substring(0, q.length() - 1); bankScrollRows = 0; bankPage = 0; }
 	}
 
 	/** Wheel over the bank grid scrolls it; returns true when consumed (pattern: LofTeleports). */
@@ -479,14 +564,16 @@ class LofKitOverlay extends Overlay
 	{
 		if (isTraining())
 		{
-			// The armoury, popular-first, paged (same paging chips as before).
+			// The armoury, popular-first, live-filtered by the search field, paged.
+			rebuildArmouryFilter();
+			final int[] pool = armouryFiltered;
 			final int pageSize = PAL_COLS * PAL_ROWS;
-			final int maxPage = Math.max(0, (ARMOURY_POPULAR.length - 1) / pageSize);
+			final int maxPage = Math.max(0, (Math.max(1, pool.length) - 1) / pageSize);
 			if (bankPage > maxPage) bankPage = maxPage;
 			final int from = bankPage * pageSize;
-			final int count = Math.max(0, Math.min(pageSize, ARMOURY_POPULAR.length - from));
+			final int count = Math.max(0, Math.min(pageSize, pool.length - from));
 			final int[] page = new int[count];
-			System.arraycopy(ARMOURY_POPULAR, from, page, 0, count);
+			System.arraycopy(pool, from, page, 0, count);
 			palQtyCache = new int[0];
 			return page;
 		}
@@ -511,6 +598,38 @@ class LofKitOverlay extends Overlay
 		System.arraycopy(filteredQtys, from, qtys, 0, count);
 		palQtyCache = qtys;
 		return page;
+	}
+
+	/** Re-filter the armoury pool by the live search query. Client thread only. */
+	private void rebuildArmouryFilter()
+	{
+		final String q = searchQuery.toLowerCase();
+		if (q.equals(builtArmouryQuery))
+		{
+			return;
+		}
+		builtArmouryQuery = q;
+		if (q.isEmpty())
+		{
+			armouryFiltered = ARMOURY_POPULAR;
+			return;
+		}
+		final int[] out = new int[ARMOURY_POPULAR.length];
+		int n = 0;
+		for (int id : ARMOURY_POPULAR)
+		{
+			try
+			{
+				if (itemManager.getItemComposition(id).getName().toLowerCase().contains(q))
+				{
+					out[n++] = id;
+				}
+			}
+			catch (Exception ignored)
+			{
+			}
+		}
+		armouryFiltered = java.util.Arrays.copyOf(out, n);
 	}
 
 	/** Re-filter the cached bank into [filteredIds]/[filteredQtys] when its inputs changed.
@@ -566,7 +685,11 @@ class LofKitOverlay extends Overlay
 		lmsCached = computeLms();
 		bankCached = computeBank();
 		menuOpenCached = client.isMenuOpen();
-		if (!showing) return null;
+		if (!showing)
+		{
+			clearHand(); // a held item never survives the window closing
+			return null;
+		}
 
 		final Object oldAA = g.getRenderingHint(RenderingHints.KEY_ANTIALIASING);
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -647,6 +770,8 @@ class LofKitOverlay extends Overlay
 
 		final boolean bank = !training && !lms;
 
+		final boolean handHeld = handId > 0;
+
 		// worn gear paper-doll (varps 4641..4651)
 		for (int i = 0; i < EQUIP_SLOTS; i++)
 		{
@@ -654,17 +779,30 @@ class LofKitOverlay extends Overlay
 			final Rectangle rc = dollRect(ox, oy, i);
 			final boolean hov = rc.contains(mouse);
 			itemSlot(g, rc, packed, SLOTS[i], hov && !lms);
-			if (hov && !lms && (packed & 0xFFFF) != 0) hover = "Remove " + itemName(packed & 0xFFFF);
+			if (handHeld && handEquipable)
+			{
+				// The doll glows faintly while an equipable item rides the cursor.
+				g.setColor(LofTheme.alpha(LofTheme.GOLD, hov ? 200 : 70));
+				g.drawRoundRect(rc.x, rc.y, rc.width - 1, rc.height - 1, 6, 6);
+			}
+			if (hov && !lms)
+			{
+				hover = handHeld
+					? (handEquipable ? "Equip " + itemName(handId) : itemName(handId) + " can't be worn")
+					: (packed & 0xFFFF) != 0 ? "Remove " + itemName(packed & 0xFFFF) : null;
+			}
 		}
 
-		// inventory grid (varps 4652..4679) — in bank mode the smart left-click needs to know
-		// which slots hold wearable gear (equip) vs consumables/supplies (deposit).
+		// inventory grid (varps 4652..4679) — every slot is a pick-up-and-place target, so the
+		// player controls exactly where each piece sits (the pack layout IS the loadout).
 		final boolean[] invEquip = new boolean[INV_SIZE];
+		final int[] invPacked = new int[INV_SIZE];
 		for (int i = 0; i < INV_SIZE; i++)
 		{
 			final int packed = client.getVarpValue(SLOT_VARP_BASE + EQUIP_SLOTS + i);
+			invPacked[i] = packed;
 			final int id = packed & 0xFFFF;
-			if (bank && id > 0)
+			if (!lms && id > 0)
 			{
 				try
 				{
@@ -677,14 +815,22 @@ class LofKitOverlay extends Overlay
 			final Rectangle rc = invRect(ox, oy, i);
 			final boolean hov = rc.contains(mouse);
 			itemSlot(g, rc, packed, null, hov && !lms);
-			if (hov && !lms && id != 0)
+			if (handHeld && handFrom != i)
 			{
-				hover = bank
-					? (invEquip[i] ? "Equip " : "Deposit ") + itemName(id)
-					: "Remove " + itemName(id);
+				g.setColor(LofTheme.alpha(GREEN_ON, hov ? 200 : 45));
+				g.drawRoundRect(rc.x, rc.y, rc.width - 1, rc.height - 1, 6, 6);
+			}
+			if (hov && !lms)
+			{
+				hover = handHeld
+					? (id == 0 ? "Place " + itemName(handId) + " here"
+						: handFrom >= 0 ? "Swap with " + itemName(id)
+						: "Place here (" + itemName(id) + " steps aside)")
+					: id != 0 ? "Pick up " + itemName(id) + " - right-click for options" : null;
 			}
 		}
 		invEquipCache = invEquip;
+		invPackedCache = invPacked;
 
 		// palette: search bar + popular-first armoury (training) / searched bank (bank mode) /
 		// category tabs (LMS)
@@ -701,11 +847,12 @@ class LofKitOverlay extends Overlay
 		}
 		else
 		{
-			// The search bar: a LIVE filter field in bank mode (type to narrow your bank), or a
-			// click-to-open chatbox item finder in training mode.
+			// The search bar: a LIVE filter field — over your bank (bank mode) or the armoury
+			// pool (training). Never the whole item cache: it only ever shows what's actually
+			// available to this kit.
 			final Rectangle sr = searchRect(ox, oy);
-			final boolean focused = bank && searchFocused;
-			final String query = bank ? searchQuery : "";
+			final boolean focused = searchFocused;
+			final String query = searchQuery;
 			g.setColor(sr.contains(mouse) || focused ? LofTheme.ROW_HOVER : new Color(0, 0, 0, 90));
 			g.fillRoundRect(sr.x, sr.y, sr.width, sr.height, 6, 6);
 			g.setColor(LofTheme.alpha(LofTheme.GOLD, focused ? 230 : sr.contains(mouse) ? 200 : 110));
@@ -736,7 +883,7 @@ class LofKitOverlay extends Overlay
 			}
 			if (sr.contains(mouse))
 			{
-				hover = bank ? "Type to filter your bank" : "Search for an item to add to the kit";
+				hover = bank ? "Type to filter your bank" : "Type to filter the armoury";
 			}
 
 			// Bank browser: the category rail under the search field.
@@ -754,6 +901,29 @@ class LofKitOverlay extends Overlay
 				}
 			}
 		}
+		// Per-tile stackable/equipable flags for the hand cursor (client thread — composition
+		// reads are safe here, never on the mouse thread).
+		final boolean[] palStack = new boolean[pal.length];
+		final boolean[] palEquip = new boolean[pal.length];
+		if (!lms)
+		{
+			for (int i = 0; i < pal.length; i++)
+			{
+				try
+				{
+					final net.runelite.api.ItemComposition c = itemManager.getItemComposition(pal[i]);
+					palStack[i] = c.isStackable();
+					palEquip[i] = LofKitItems.equipable(c);
+				}
+				catch (Exception ignored)
+				{
+				}
+			}
+		}
+		palStackCache = palStack;
+		palEquipCache = palEquip;
+
+		final boolean holding = handId > 0;
 		final int lmsSelected = lms ? (control >> (10 + 2 * Math.min(tab, LMS_CHOICES.length - 1))) & 0x3 : -1;
 		final int[] palQty = palQtyCache;
 		for (int i = 0; i < pal.length; i++)
@@ -770,8 +940,9 @@ class LofKitOverlay extends Overlay
 			}
 			if (hov)
 			{
-				hover = (lms ? "Pick " : bank ? "Withdraw " : "Add ") + itemName(pal[i])
-					+ (bank ? " - right-click for options" : "");
+				hover = lms ? "Pick " + itemName(pal[i])
+					: holding ? "Click a pack slot to place - Esc drops"
+					: "Pick up " + itemName(pal[i]) + " - shift-click adds - right-click for amounts";
 			}
 		}
 		if (training)
@@ -895,6 +1066,19 @@ class LofKitOverlay extends Overlay
 		{
 			g.setFont(FontManager.getRunescapeSmallFont());
 			LofTheme.shadowText(g, hover, titleX + 96, oy + 24, LofTheme.GOLD);
+		}
+
+		// the held item rides the cursor, drawn over everything (Esc / right-click drops it)
+		if (handId > 0)
+		{
+			final BufferedImage img = itemManager.getImage(handId, handQty, handQty > 1);
+			if (img != null)
+			{
+				final java.awt.Composite oldC = g.getComposite();
+				g.setComposite(java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 0.85f));
+				g.drawImage(img, mouse.x - 14, mouse.y - 14, 28, 28, null);
+				g.setComposite(oldC);
+			}
 		}
 
 		LofModal.endWindow(g, place);

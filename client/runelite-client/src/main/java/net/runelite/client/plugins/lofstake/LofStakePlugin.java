@@ -11,9 +11,12 @@ package net.runelite.client.plugins.lofstake;
 import com.google.inject.Provides;
 import javax.inject.Inject;
 import net.runelite.api.Client;
+import net.runelite.api.MenuEntry;
 import net.runelite.api.ScriptID;
+import net.runelite.api.events.ClientTick;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
+import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.input.MouseManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
@@ -67,6 +70,26 @@ public class LofStakePlugin extends Plugin
 			mouseManager.unregisterMouseListener(mouseListener);
 			mouseListener = null;
 		}
+	}
+
+	/**
+	 * Suppress the native HOVER menu while the cursor is over the stake window: it rebuilds every
+	 * client tick from what's UNDER the window, so without this the top-left hint reads
+	 * "Walk here" / "Attack ..." for the world behind while hovering a staked item.
+	 */
+	@Subscribe
+	public void onClientTick(ClientTick event)
+	{
+		if (!overlay.isShowing() || client.isMenuOpen())
+		{
+			return;
+		}
+		final net.runelite.api.Point m = client.getMouseCanvasPosition();
+		if (m == null || overlay.hitTest(new java.awt.Point(m.getX(), m.getY())) == LofStakeOverlay.OUTSIDE)
+		{
+			return;
+		}
+		client.setMenuEntries(new MenuEntry[0]);
 	}
 
 	/** Send a stake interaction to the server as a public-chat token it intercepts + suppresses. */

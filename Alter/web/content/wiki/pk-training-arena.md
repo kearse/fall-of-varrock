@@ -85,13 +85,21 @@ the kit editor appears in bank mode: pick a saved kit, build one from your bank'
 into the editor. Tweak it however you like, then press **Save** to keep it in one of your three
 kit slots (double-click the kit's name to rename it).
 
-Building feels like using your bank. The browser shows your bank with
-real stack counts - **type in the search bar to filter it live**, and use the **All / Gear /
-Food / Pot / Misc** tabs to browse by type. **Click** a bank item to withdraw it into the kit's
-pack, or **right-click** for options: Equip puts gear straight onto the doll (ammo equips its
-whole stack), and food, potions and other stackables get Withdraw-5/10/X/All. In the kit's pack,
-**clicking gear equips it** (two-handers and shields swap correctly, displaced pieces drop back
-into the pack) and clicking supplies deposits them - right-click for the full Equip/Deposit menu.
+Building feels like using your bank - and **you place every item exactly where you want it**.
+The browser shows your bank (only your bank - the search never lists items you don't own) with
+real stack counts: **type in the search bar to filter it live**, and use the **All / Gear /
+Food / Pot / Misc** tabs to browse by type.
+
+- **Click** a bank item to pick it up onto your cursor, then **click the exact pack slot** to
+  place it there - it stays on the cursor, so you can lay out a column of brews slot by slot.
+  Click the **paper-doll** instead to wear it (two-handers and shields swap correctly, displaced
+  pieces drop back into the pack).
+- **Click an item already in the pack** to pick it up and **click another slot to move or swap
+  it** - arrange your switches and supplies exactly how you fight.
+- **Esc** or right-click drops whatever you're holding. **Shift-click** a bank item to quick-add
+  it to the first free slot.
+- **Right-click** keeps the full menus: Equip straight onto the doll (ammo equips its whole
+  stack), Withdraw-5/10/X/All for stackables and consumables, Equip/Deposit on pack items.
 
 **Load kit** re-arms you **from your own bank in one click**: everything you're carrying is
 deposited, then the kit is withdrawn and equipped, exact slot layout and all - and it works
