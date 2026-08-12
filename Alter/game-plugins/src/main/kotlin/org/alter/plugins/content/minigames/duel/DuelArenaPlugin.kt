@@ -25,8 +25,12 @@ import org.alter.game.model.timer.TimerKey
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
 import org.alter.plugins.content.bots.PkBot
+import org.alter.game.model.move.stopMovement
+import org.alter.plugins.content.combat.Combat
 import org.alter.plugins.content.combat.PvpZones
 import org.alter.plugins.content.combat.Vengeance
+import org.alter.plugins.content.combat.isAttacking
+import org.alter.plugins.content.combat.removeCombatTarget
 import org.alter.plugins.content.interfaces.attack.AttackTab
 import org.alter.plugins.content.items.consumables.potions.PotionsPlugin
 import org.alter.plugins.content.mechanics.poison.Poison
@@ -679,12 +683,14 @@ class DuelArenaPlugin(
         // The hospital treatment: both fighters leave fully restored (stats, prayer, spec, run
         // energy, poison) — classic duel-end behaviour, and it doubles as buff cleanup.
         listOf(winner, loser).forEach { p ->
+            ceaseFire(p)
             if (p.index >= 0) {
                 normalizeCombatState(p)
                 p.resetFacePawn()
                 p.clearHintArrow()
             }
         }
+        d.benched.clear()
         if (!d.exhibition) {
             when (end) {
                 DuelEnd.DEATH -> {
@@ -730,6 +736,7 @@ class DuelArenaPlugin(
     private fun resolveDraw(d: Duel, why: String, endKind: String) {
         if (!DuelArena.active.remove(d)) return // already resolved (guard double-fire)
         listOf(d.a to d.stakeA, d.b to d.stakeB).forEach { (p, ownStake) ->
+            ceaseFire(p)
             if (p.index >= 0) {
                 p.attr.remove(DUEL_ESCROW_ATTR)
                 award(p, ownStake)
@@ -745,6 +752,28 @@ class DuelArenaPlugin(
         DuelLog.recordDraw(d.a, d.b, endKind, d.rules, potValue(d.stakes))
         logger.info { "DUEL DRAW a=${d.a.username} b=${d.b.username} why=\"$why\" pot=${d.stakes.sumOf { it.amount.toLong() }} items" }
         d.onResolved = null
+    }
+
+    /**
+     * Every combat lock the duel created must die WITH the duel: [p]'s own target, anything still
+     * targeting [p], and both directions for each of [p]'s companions. Without the sweep, a stale
+     * target attribute survives the resolve and [CompanionBrain.playerThreatNear] reads the
+     * ex-opponent as an active attacker — companions then chase them out of the arena and re-kill
+     * them on every respawn. Safe when [p] is offline (attr ops are inert, and a logged-out
+     * owner's companions have already despawned so the registry list is empty).
+     */
+    private fun ceaseFire(p: Player) {
+        Combat.reset(p)
+        p.stopMovement()
+        p.clearAttackers()
+        CompanionRegistry.ofOwner(p).forEach { comp ->
+            if (comp.isAttacking()) {
+                comp.removeCombatTarget()
+                comp.stopMovement()
+                comp.resetFacePawn()
+            }
+            comp.clearAttackers() // 4v4: the other side's companions may be locked onto this one
+        }
     }
 
     /**

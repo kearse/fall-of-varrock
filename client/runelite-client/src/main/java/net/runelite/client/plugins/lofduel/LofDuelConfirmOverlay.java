@@ -143,6 +143,9 @@ class LofDuelConfirmOverlay extends Overlay
 	private volatile boolean showingCached;
 	private volatile boolean lockedCached;
 	private volatile LofModal.Placement placement;
+	// Inventory panel bounds published by render(); hitTest passes clicks there through so the
+	// real inventory stays inspectable/clickable next to the confirm screen (Show Inventories).
+	private volatile Rectangle inventoryRect;
 
 	/** Cached — safe to call from the mouse thread. */
 	boolean isShowing()
@@ -177,6 +180,8 @@ class LofDuelConfirmOverlay extends Overlay
 		if (!new Rectangle(ox, oy, WIN_W, WIN_H).contains(p)) return OUTSIDE;
 		if (acceptRect(ox, oy).contains(p)) return ACCEPT;
 		if (declineRect(ox, oy).contains(p)) return DECLINE;
+		final Rectangle inv = inventoryRect;
+		if (inv != null && inv.contains(canvas)) return OUTSIDE;
 		return INSIDE;
 	}
 
@@ -193,8 +198,11 @@ class LofDuelConfirmOverlay extends Overlay
 		final java.awt.Rectangle selfBounds = getBounds();
 		g.translate(-selfBounds.x, -selfBounds.y);
 
-		final LofModal.Placement place = LofModal.beginWindow(g, client, WIN_W, WIN_H);
+		// Beside-inventory placement: the confirm screen is exactly where a player wants to eyeball
+		// their own (and the opponent's) real inventory before accepting.
+		final LofModal.Placement place = LofModal.beginWindowBesideInventory(g, client, WIN_W, WIN_H);
 		placement = place;
+		inventoryRect = LofModal.inventoryBounds(client);
 
 		final int state = client.getVarpValue(STATE_VARP);
 		final boolean locked = (state & (1 << LOCK_BIT)) != 0;

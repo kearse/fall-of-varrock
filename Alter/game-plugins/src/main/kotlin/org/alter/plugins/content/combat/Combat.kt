@@ -419,14 +419,17 @@ object Combat {
             // PKer bots are attackable anywhere (no wilderness gate, no level range), and they
             // may attack players anywhere. Real player-vs-player keeps the normal rules.
             //
-            // A COMPANION is the exception on the target side: it's a player's property, not a
-            // free-for-all PK bot, so hitting someone else's companion obeys the ordinary PvP rules
-            // (wilderness zone + level range, or a sanctioned duel/LMS/Castle Wars fight). Without
-            // this, anyone could stand in Lumbridge and farm another player's knights — and an
-            // orphaned companion, whose owner-guard matches nobody, was an endless free-XP punchbag
-            // (companions are death-protected, so it just respawned and stood there again).
-            // A companion ATTACKING still takes the bypass, so it can defend its owner anywhere.
-            val botCombat = pawn is org.alter.plugins.content.bots.PkBot ||
+            // A COMPANION is the exception on BOTH sides: it's a player's property, not a
+            // free-for-all PK bot. On the target side, hitting someone else's companion obeys the
+            // ordinary PvP rules (wilderness zone + level range, or a sanctioned duel/LMS fight) —
+            // without this, anyone could stand in Lumbridge and farm another player's knights, and
+            // an orphaned companion was an endless free-XP punchbag. On the attacker side, a
+            // companion swinging at a REAL player is held to the wilderness safe-zone rule below
+            // (companionVsPlayer) — a stale threat reading must never let it beat someone to death
+            // in a safe zone. Companion vs bots/NPCs keeps the full bypass.
+            val companionVsPlayer = pawn is org.alter.plugins.content.companion.Companion &&
+                target !is org.alter.plugins.content.bots.PkBot
+            val botCombat = (pawn is org.alter.plugins.content.bots.PkBot && !companionVsPlayer) ||
                 (target is org.alter.plugins.content.bots.PkBot &&
                     target !is org.alter.plugins.content.companion.Companion)
 
@@ -448,7 +451,7 @@ object Combat {
             val sparCombat = pawn is Player && target is Player &&
                 org.alter.plugins.content.minigames.pktraining.CompanionSparring.sanctionsEngagement(pawn, target)
 
-            if (pvp && !botCombat && !duelCombat && !lmsCombat && !sparCombat) {
+            if (pvp && !botCombat && !companionVsPlayer && !duelCombat && !lmsCombat && !sparCombat) {
                 pawn as Player
 
                 // PvP is only allowed in the wilderness (the red zone); everywhere else is safe.
@@ -480,6 +483,13 @@ object Combat {
                         pawn.message("${target.username} is already in combat.")
                         return false
                     }
+                }
+            } else if (pvp && companionVsPlayer && !duelCombat && !lmsCombat && !sparCombat) {
+                // A companion defending its owner against a real player only fights where PvP is
+                // legal at all. ONLY the safe-zone rule — the level bracket and single-way PJ
+                // checks stay waived, or a companion could never join its owner's wilderness 1v1.
+                if (!PvpZones.isWilderness(pawn.tile) || !PvpZones.isWilderness(target.tile)) {
+                    return false
                 }
             }
         }
