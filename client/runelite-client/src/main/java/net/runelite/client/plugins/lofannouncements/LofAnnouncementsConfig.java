@@ -62,6 +62,6 @@ public interface LofAnnouncementsConfig extends Config
 	)
 	default int fontSize()
 	{
-		return 14;
+		return 16;
 	}
 }
