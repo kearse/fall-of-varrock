@@ -41,6 +41,9 @@ class LofAnnouncementsOverlay extends Overlay
 	private static final Color DEFAULT_COLOR = new Color(255, 238, 130);
 	private static final Pattern COL = Pattern.compile("<col=([0-9a-fA-F]{6})>");
 	private static final int MARGIN = 4;
+	/** Vertical gap between stacked lines — the glyphs plus their 1px outline fill the font's
+	 *  whole metric height, so without explicit leading adjacent headlines touch and merge. */
+	private static final int LINE_GAP = 4;
 	/** Diamond bullet: half-diagonal in px, plus the gap between bullet and text. */
 	private static final int BULLET_R = 3;
 	private static final int BULLET_GAP = 4;
@@ -80,7 +83,7 @@ class LofAnnouncementsOverlay extends Overlay
 
 		graphics.setFont(FontManager.getRunescapeFont().deriveFont((float) plugin.fontSize()));
 		final FontMetrics fm = graphics.getFontMetrics();
-		final int lineH = fm.getHeight();
+		final int lineH = fm.getHeight() + LINE_GAP;
 
 		// Anchor on the chat box. Prefer the real widget bounds; fall back to fixed-mode math if
 		// the widget reports nothing usable (it can be zeroed early in a session).
@@ -100,7 +103,7 @@ class LofAnnouncementsOverlay extends Overlay
 			w = Math.max(w, fm.stringWidth(text));
 		}
 
-		final int totalH = raw.size() * lineH;
+		final int totalH = raw.size() * lineH - LINE_GAP; // no trailing gap under the last line
 		final int baseX = chat.x + MARGIN;
 		final int baseY = chat.y - totalH - MARGIN; // bottom-anchored just above the chat box
 
