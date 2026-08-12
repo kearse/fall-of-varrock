@@ -13,8 +13,9 @@
  * the ticker off-screen.
  *
  * The block is capped at 3/4 of the chat width so it never runs under the war-supply dial /
- * Castle Wars timer on the right; longer lines are ellipsised. Each line keeps the colour the
- * server sent it in, else a warm yellow.
+ * Castle Wars timer on the right; a longer headline wraps onto a line underneath (bullet on the
+ * first row only), ellipsised past two rows. Each line keeps the colour the server sent it in,
+ * else a warm yellow.
  */
 package net.runelite.client.plugins.lofannouncements;
 
@@ -23,6 +24,7 @@ import java.awt.Dimension;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -47,6 +49,8 @@ class LofAnnouncementsOverlay extends Overlay
 	/** Diamond bullet: half-diagonal in px, plus the gap between bullet and text. */
 	private static final int BULLET_R = 3;
 	private static final int BULLET_GAP = 4;
+	/** A headline wraps to at most this many rows; whatever still doesn't fit is ellipsised. */
+	private static final int MAX_WRAP_LINES = 2;
 
 	private final LofAnnouncementsPlugin plugin;
 	private final Client client;
@@ -93,36 +97,43 @@ class LofAnnouncementsOverlay extends Overlay
 		// Cap at 3/4 of the chat width so the right quarter stays clear for the dial / CW timer.
 		final int cap = Math.max(120, chat.width * 3 / 4 - indent);
 
-		// Fit each line to the cap (ellipsised) and measure the widest.
+		// Wrap each headline to the cap — a long one continues on the row underneath, keeping its
+		// colour, with the bullet on the first row only. Measure the widest resulting row.
 		int w = 0;
-		final String[] fitted = new String[raw.size()];
-		for (int i = 0; i < raw.size(); i++)
+		final List<Line> lines = new ArrayList<>();
+		for (String r : raw)
 		{
-			final String text = ellipsise(fm, Text.removeTags(raw.get(i)), cap);
-			fitted[i] = text;
-			w = Math.max(w, fm.stringWidth(text));
+			final Color color = colorOf(r);
+			final List<String> rows = wrap(fm, Text.removeTags(r), cap);
+			for (int j = 0; j < rows.size(); j++)
+			{
+				lines.add(new Line(rows.get(j), color, j == 0));
+				w = Math.max(w, fm.stringWidth(rows.get(j)));
+			}
 		}
 
-		final int totalH = raw.size() * lineH - LINE_GAP; // no trailing gap under the last line
+		final int totalH = lines.size() * lineH - LINE_GAP; // no trailing gap under the last line
 		final int baseX = chat.x + MARGIN;
 		final int baseY = chat.y - totalH - MARGIN; // bottom-anchored just above the chat box
 
 		int y = baseY + fm.getAscent();
-		for (int i = 0; i < raw.size(); i++)
+		for (Line line : lines)
 		{
-			final Color color = colorOf(raw.get(i));
-			final String text = fitted[i];
+			final String text = line.text;
 			final int textX = baseX + indent;
 
-			// Diamond bullet, centred on the text line, outlined for legibility.
-			final int cx = baseX + BULLET_R;
-			final int cy = y - fm.getAscent() / 2 + 1;
-			final int[] dx = {cx, cx + BULLET_R, cx, cx - BULLET_R};
-			final int[] dy = {cy - BULLET_R, cy, cy + BULLET_R, cy};
-			graphics.setColor(Color.BLACK);
-			graphics.drawPolygon(dx, dy, 4);
-			graphics.setColor(color);
-			graphics.fillPolygon(dx, dy, 4);
+			if (line.first)
+			{
+				// Diamond bullet, centred on the text line, outlined for legibility.
+				final int cx = baseX + BULLET_R;
+				final int cy = y - fm.getAscent() / 2 + 1;
+				final int[] dx = {cx, cx + BULLET_R, cx, cx - BULLET_R};
+				final int[] dy = {cy - BULLET_R, cy, cy + BULLET_R, cy};
+				graphics.setColor(Color.BLACK);
+				graphics.drawPolygon(dx, dy, 4);
+				graphics.setColor(line.color);
+				graphics.fillPolygon(dx, dy, 4);
+			}
 
 			// Full 1px outline so warm colours stay legible against the bright game world.
 			graphics.setColor(Color.BLACK);
@@ -130,7 +141,7 @@ class LofAnnouncementsOverlay extends Overlay
 			graphics.drawString(text, textX + 1, y);
 			graphics.drawString(text, textX, y - 1);
 			graphics.drawString(text, textX, y + 1);
-			graphics.setColor(color);
+			graphics.setColor(line.color);
 			graphics.drawString(text, textX, y);
 			y += lineH;
 		}
@@ -153,6 +164,38 @@ class LofAnnouncementsOverlay extends Overlay
 		// Classic fixed-mode fallback: ~519x165 in the bottom-left of the canvas.
 		final int w = Math.min(519, client.getCanvasWidth());
 		return new Rectangle(0, client.getCanvasHeight() - 165, w, 165);
+	}
+
+	/**
+	 * Word-wrap text to at most {@link #MAX_WRAP_LINES} rows of maxW pixels; the last allowed row
+	 * is ellipsised if text still remains. A single word wider than maxW is hard-broken.
+	 */
+	private static List<String> wrap(FontMetrics fm, String text, int maxW)
+	{
+		final List<String> rows = new ArrayList<>(MAX_WRAP_LINES);
+		String rest = text.trim();
+		while (!rest.isEmpty())
+		{
+			if (rows.size() == MAX_WRAP_LINES - 1 || fm.stringWidth(rest) <= maxW)
+			{
+				rows.add(ellipsise(fm, rest, maxW));
+				return rows;
+			}
+			// Longest prefix that fits, preferring the last space inside it as the break point.
+			int end = rest.length();
+			while (end > 0 && fm.stringWidth(rest.substring(0, end)) > maxW)
+			{
+				end--;
+			}
+			int brk = rest.lastIndexOf(' ', end);
+			if (brk <= 0)
+			{
+				brk = Math.max(1, end);
+			}
+			rows.add(rest.substring(0, brk).stripTrailing());
+			rest = rest.substring(brk).trim();
+		}
+		return rows;
 	}
 
 	/** Truncate text with a trailing "…" so it fits within maxW pixels. */
@@ -188,5 +231,20 @@ class LofAnnouncementsOverlay extends Overlay
 			}
 		}
 		return DEFAULT_COLOR;
+	}
+
+	/** One rendered row: a headline's first row (bulleted) or a wrapped continuation under it. */
+	private static final class Line
+	{
+		private final String text;
+		private final Color color;
+		private final boolean first;
+
+		private Line(String text, Color color, boolean first)
+		{
+			this.text = text;
+			this.color = color;
+			this.first = first;
+		}
 	}
 }
