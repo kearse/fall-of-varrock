@@ -3,11 +3,11 @@ title: Corporeal Beast - the city boss
 category: Minigames & Bosses
 summary: Lumbridge's apex world boss - damage-split loot, sigil mega-rares, and Lord-sponsored summons.
 order: 5
-updated: 2026-07-04
+updated: 2026-08-28
 infobox: Type = City world boss; Location = North-east of Lumbridge, by the river; Teleport = `::worldboss`; Summon = `::summonboss corporeal_beast` (Lord+, 3,000,000 gp); Hitpoints = ~1,200; Requirement = Protect from Magic (Prayer 37); Loot = Pooled, split by damage; Notable drops = Sigils, Spirit shield, Draconic visage, pet
 ---
 
-The **Corporeal Beast** is Lumbridge's world boss and the flagship of the War's boss-raid system. Unlike roster bosses, its loot is **pooled and split by damage contribution** among everyone who fought it.
+The **Corporeal Beast** is Lumbridge's world boss, the flagship of the War's boss-raid system - and, while the old boss roster is [retired for its rebuild](/wiki/bosses-overview), the realm's boss fight. Its loot is **pooled and split by damage contribution** among everyone who fought it.
 
 ## When it appears
 
@@ -23,6 +23,7 @@ It's tough - around 1,200 HP with very high offensive stats. **Protect from Magi
 
 Everyone who contributes gets an independent payout scaled by damage dealt:
 
+- **Every kill:** 25 **Boss Tickets** - the [Warlord's Armoury](/wiki/shops-directory)'s currency
 - **Always:** blood runes, death runes, super restores, sharks, 20,000-45,000 coins base
 - **Main roll:** rune gear, dragon gear, resources, magic logs or battlestaves
 - **Rare rolls** (each contributor rolls independently): Dragon boots (1/25), Dragon 2h (1/45), Dragon full helm (1/70), Dragon pickaxe (1/90)

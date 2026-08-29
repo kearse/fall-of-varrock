@@ -3,7 +3,7 @@ title: Shops directory - every store, every price
 category: Economy & Trading
 summary: The complete vendor reference - every shop in the realm, where it stands, what it stocks and what it costs.
 order: 2
-updated: 2026-07-21
+updated: 2026-08-28
 infobox: Type = Shop reference; Location = Lumbridge courtyard market; Getting there = Teleport portal, "Market / Shops"; Currencies = Coins, Boss Tickets, Vote Tickets, Blood Money, points
 ---
 
@@ -101,7 +101,7 @@ The serious money stands at the **south end of the market**.
 
 ### The Warlord's Armoury (Quartermaster)
 
-The PvM gear chase. The **Quartermaster** trades in **Boss Tickets** (earned from every boss kill - see [bosses overview](/wiki/bosses-overview)) across six ticket tabs, plus a coins-only Barrows wing. Talk-to still takes [war-supply hand-ins](/wiki/supplying-the-war).
+The PvM gear chase. The **Quartermaster** trades in **Boss Tickets** (earned from boss kills - today that's the [Corporeal Beast war event](/wiki/corporeal-beast), 25 a kill) across six ticket tabs, plus a coins-only Barrows wing. Talk-to still takes [war-supply hand-ins](/wiki/supplying-the-war).
 
 A **Buy Tickets** tab sells Boss Tickets for **1,000 gp each** (he never buys them back). That's the coin *ceiling* on everything here - you can always earn tickets by bossing, or buy your way in with gold; a 2,500-ticket weapon is capped at ~2.5M gp, a 12,000-ticket megarare at ~12M. Prices rise as the economy grows.
 
@@ -172,7 +172,7 @@ The Bandos and Armadyl pieces here exist to feed the [Royal Smith's war-forge](/
 | 3rd age range coif / mage hat | 15,000 each |
 | 3rd age vambraces / amulet | 12,000 each |
 
-**Barrows wing** (coins - the mid-game gp sink): every brother's helm, body and legs at **12,000,000 gp** apiece, every brothers' weapon at **20,000,000 gp**. The [Barrows minigame](/wiki/bosses-overview) is the cheaper path for those with patience.
+**Barrows wing** (coins - the mid-game gp sink): every brother's helm, body and legs at **12,000,000 gp** apiece, every brothers' weapon at **20,000,000 gp**. With the Barrows crypts [retired for their rebuild](/wiki/bosses-overview), this wing and the player market are where Barrows gear comes from today.
 
 ### PK Rewards (Emblem Trader)
 
@@ -205,7 +205,6 @@ The PvP gear chase, paid in **Blood Money** - earned only from killing **real pl
 
 ## Beyond the market
 
-- **Lisa's LMS shop** - at the [Last Man Standing](/wiki/last-man-standing) lobby, **LMS points**: cooked karambwan 1, saradomin brew(4) and super restore(4) 2, super combat(4) 4, and the Saradomin/Zamorak/Guthix halos at 500 each. The island's chest gear exists only inside a match - you keep nothing and lose nothing.
 - **The Trading Post** (`::market`) - the sell-anything counter; its shelf lists only what players have sold. See [Trading Post & the market](/wiki/trading-post-and-shops).
 - **Donor Store** (`::donorstore`) - cosmetic rares for **Donor Points**: partyhats 900 (white 1,350), santa hat 1,350, h'ween masks 700. Tradeable, stat-less. See [Bonds & membership](/wiki/bonds-and-membership).
 - **Commander's Regalia** (`::prestigeshop`) - the **sanguine Torva** cosmetic set for **Prestige** points: full helm 75, platebody and platelegs 100 each. Commanders only earn Prestige.

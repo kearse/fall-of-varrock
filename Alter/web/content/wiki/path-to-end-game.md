@@ -3,7 +3,7 @@ title: Path to end game - where every rare comes from
 category: Economy & Trading
 summary: The clear route to Torva, godswords, dragon claws, megarares and spirit shields - every source, every rate, every price.
 order: 5
-updated: 2026-07-13
+updated: 2026-08-28
 infobox: Type = Gear guide; Starts at = Rank armour & rune; Ends at = Torva, Masori, Ancestral & megarares; Currencies = Boss Tickets, Blood Money, Commendations, coins
 ---
 
@@ -11,11 +11,13 @@ Fall of Varrock is **not a spawn server** - every rare in the economy was earned
 
 This page is the map. Find the item you want, and it tells you exactly where to go.
 
+One realm-wide note first: the old boss roster is **temporarily retired for a rebuild** - the [Corporeal Beast war event](/wiki/corporeal-beast) is the live boss fight, and the retired lairs return one at a time as finished fights (see [bosses](/wiki/bosses-overview)). Where a drop path below left with its boss, the shop, the market or a war route is the current source - and the drop path comes back when the boss does.
+
 ## The currencies at a glance
 
 | Currency | How you earn it | Where you spend it |
 | --- | --- | --- |
-| **Boss Tickets** (tradeable item) | Every boss kill - e.g. Zulrah 40, GWD generals 35, Fight Cave clear 150, Inferno clear 150 | Warlord's Armoury, Valaine's boss shelf |
+| **Boss Tickets** (tradeable item) | Boss kills - today that's the [Corporeal Beast war event](/wiki/corporeal-beast) at 25 a kill; the Quartermaster also sells them at 1,000 gp | Warlord's Armoury, Valaine's boss shelf |
 | **Blood Money** (tradeable item) | Killing real players: 25 + 3 per combat level (bots pay nothing) | Emblem Trader (PK Rewards) |
 | **Commendations** (untradeable) | Won [marches, campaigns and conquests](/wiki/marches-and-the-reconquest), scaled by contribution | The Royal Smith's war-forge |
 | **Warden's embers** (tradeable) | The Grand March's prize | War-forge helm recipes |
@@ -26,8 +28,8 @@ Prices and shops in full: [Shops directory](/wiki/shops-directory).
 ## The gear ladder
 
 - **Early:** rank armour from the [Apprentice's Armoury](/wiki/shops-directory) as your [title](/wiki/titles-and-citizenship) climbs, weapons to adamant off the shelf, rune from smithing and drops.
-- **Mid:** dragon via [the Forge](/wiki/the-forge), then **Barrows** - run the minigame, or pay the Quartermaster's coin prices (12m a piece, 20m a weapon).
-- **High:** farm bosses for **Boss Tickets** and unique drops; PK for **Blood Money**; buy your GWD bases.
+- **Mid:** dragon via [the Forge](/wiki/the-forge), then **Barrows gear** from the Quartermaster's coin wing (12m a piece, 20m a weapon) - the crypts themselves are retired for their rebuild, so the shop and the market are the current source.
+- **High:** fight the **[Corporeal Beast war event](/wiki/corporeal-beast)** for Boss Tickets and rares; PK for **Blood Money**; buy your GWD bases off the ticket shelf.
 - **End game:** hand Bandos, Armadyl and Ahrim's pieces to the **Royal Smith** with Commendations from the war - Torva, Masori, Ancestral. Save tickets for a megarare. Summon the Corporeal Beast for a sigil.
 
 ## Torva, Masori & Ancestral
@@ -36,18 +38,18 @@ The three war-forged sets are the best armour in the game, and the [Royal Smith]
 
 | Piece | Base item | Base comes from |
 | --- | --- | --- |
-| Torva platebody / platelegs | Bandos chestplate / tassets | General Graardor (1/384) or Armoury 600/800 tickets |
-| Torva full helm | Neitiznot faceguard | Boss drops & the market |
-| Masori body / chaps / mask | Armadyl chestplate / chainskirt / helmet | Kree'arra (1/384) or Armoury 600/800 tickets |
-| Ancestral top / bottom / hat | Ahrim's robetop / robeskirt / hood | Barrows chest, or 12m gp each at the Armoury |
+| Torva platebody / platelegs | Bandos chestplate / tassets | Armoury, 600/800 tickets (Graardor's drop returns with his rebuild) |
+| Torva full helm | Neitiznot faceguard | The market |
+| Masori body / chaps / mask | Armadyl chestplate / chainskirt / helmet | Armoury, 600/800 tickets (Kree'arra's drop returns with her rebuild) |
+| Ancestral top / bottom / hat | Ahrim's robetop / robeskirt / hood | The Armoury's Barrows wing, 12m gp each |
 
-**Torva has a second source:** [Nex](/wiki/bosses-overview) drops each finished piece directly at **1/450**. Nex also drops her own mage line - **Virtus mask, robe top and robe bottom, 1/450 each** - which no shop sells. Finished war-forged pieces are fully tradeable - a fat purse skips the march.
+Nex used to drop finished Torva pieces and her own **Virtus** mage line directly - those drop paths return when her rebuilt fight ships. Finished war-forged pieces are fully tradeable - a fat purse skips the march.
 
 ## Godswords
 
-The four God Wars generals each drop their own **hilt at 1/508** (Graardor → Bandos, K'ril → Zamorak, Kree'arra → Armadyl, Zilyana → Saradomin), and **all four** drop godsword shards 1, 2 and 3 at **1/90** each - assemble hilt + three shards. Zilyana also drops the Saradomin sword (1/254) and Armadyl crossbow (1/508).
+Two are live today: the **Armadyl godsword** - **15,000 Blood Money** at the Emblem Trader, dropped by **Lord Vexmar** atop the [Rogue Knight ladder](/wiki/rogue-knights), and carried by elite PK bots (it can land in a [loot key](/wiki/wilderness-loot-keys)) - and the **Ancient godsword** at 20,000 BM. Both are tradeable, so the market works too.
 
-The **Armadyl godsword** has faster routes: **15,000 Blood Money** at the Emblem Trader, and elite PK bots carry one - it can land in a [loot key](/wiki/wilderness-loot-keys). The **Ancient godsword** is 20,000 BM, or forge it from Nex's ancient hilt.
+The hilt-and-shards route (each God Wars general dropping its hilt, all four dropping the shards) returns with the God Wars rebuild - until then the Bandos, Zamorak and Saradomin godswords move only between players.
 
 ## Dragon claws
 
@@ -58,8 +60,7 @@ Pick your grind - the captain hunt is the designed route, the shop is bad-luck p
 | **Karn the Red**, the named captain in occupied Varrock's [war campaign](/wiki/marches-and-the-reconquest) | **1/15** per kill (hourly respawn), broadcast realm-wide |
 | Emblem Trader | 12,000 BM (ornament 16,000; burning claws 14,000) |
 | Elite PK bot loot keys | bots carry them |
-
-Chests in [Last Man Standing](/wiki/last-man-standing) also roll claws - but LMS gear only exists **inside the match**: you keep nothing and lose nothing there.
+| **Dame Nyx** and **Sir Dathen** on the [Rogue Knight ladder](/wiki/rogue-knights) | signature drops |
 
 ## The megarares
 
@@ -72,7 +73,7 @@ Raids aren't in the realm yet, so the raid weapons are sold at **career prices**
 | Sanguinesti staff | 6,000 |
 | Ghrazi rapier | 4,000 |
 
-Two of the Armoury's weapons also have drop paths: the **zaryte crossbow** builds from Nex's nihil horn (1/450), and the **venator bow** from the Phantom Muspah's venator shard (1/200).
+The **zaryte crossbow** and **venator bow** regain their drop paths (Nex's nihil horn, the Phantom Muspah's venator shard) when those rebuilt bosses return - today the shelf is their source.
 
 ## Spirit shields & sigils
 
@@ -80,21 +81,21 @@ The realm's rarest flex, and **no shop sells them**. The [Corporeal Beast](/wiki
 
 ## Special-attack weapons
 
-- **Dragon warhammer** - the named captain **Grimjaw** drops it **1/15**, or 10,000 BM at the Emblem Trader.
-- **Voidwaker** - 30,000 BM whole, or hunt the pieces from the wilderness bosses at **1/1500** each: hilt (Callisto), blade (Vet'ion), gem (Venenatis).
-- **Abyssal whip** - Abyssal Sire (with the abyssal dagger and bludgeon), or 3,000 BM.
+- **Dragon warhammer** - the named captain **Grimjaw** drops it **1/15**, or 10,000 BM at the Emblem Trader (Sir Halric on the [Rogue Knight ladder](/wiki/rogue-knights) drops it too).
+- **Voidwaker** - 30,000 BM whole; the piece hunt (hilt, blade and gem off Callisto, Vet'ion and Venenatis) returns with the wilderness-boss rebuild.
+- **Abyssal whip** - **Dame Isolde** on the [Rogue Knight ladder](/wiki/rogue-knights), or 3,000 BM.
 
 ## Boots, jewellery & the rest
 
-- **Primordial / pegasian / eternal boots** - Cerberus drops the three crystals at **1/512**, or 900 Boss Tickets each finished.
-- **Occult necklace** - Thermonuclear smoke devil **1/350**, or 800 tickets.
+- **Primordial / pegasian / eternal boots** - 900 Boss Tickets each finished (Cerberus's crystal drops return with her rebuild).
+- **Occult necklace** - 800 tickets.
 - **Torture, anguish, tormented bracelet, blood fury, the DT2 rings, ferocious gloves, lightbearer** - Armoury tickets (see the [shops directory](/wiki/shops-directory)).
-- **Dragonfire shield** - 500 tickets, or craft it from a draconic visage: KBD **1/250**, Corporeal Beast 1/200, Vorkath 1/2000.
-- **Dragon hunter lance** - 3,500 tickets, or the Alchemical Hydra's claw at **1/700**.
+- **Dragonfire shield** - 500 tickets, or craft it from a **draconic visage**: the [Corporeal Beast](/wiki/corporeal-beast) drops one at **1/200**.
+- **Dragon hunter lance** - 3,500 tickets.
 
 ## The capes
 
-The **fire cape** is earned in the [Fight Cave](/wiki/fight-cave) - every Jad kill awards one, and it's **tradeable** for a reason: [the Inferno](/wiki/inferno) charges one fire cape as its entry sacrifice. Beat TzKal-Zuk and the **infernal cape** is yours - untradeable, every clear. Neither cape is sold anywhere, ever.
+The **fire cape** and **infernal cape** are earned in the Fight Cave and the Inferno - both currently retired for their rebuild, so **no new capes are entering the game** until those fights return. Fire capes already earned are tradeable, though, so the market is the one current source. Neither cape is sold in any shop, ever.
 
 ## Relics - 3rd age & gilded
 
@@ -108,6 +109,4 @@ The Quartermaster's **Relics tab** still sells 3rd age for Boss Tickets, but onl
 
 Elite [PK bots](/wiki/pk-bots-and-highwaymen) roam the deep wilderness wearing and carrying real gear - Bandos, Ancestral pieces, fortified Masori, godswords, claws, BIS boots and jewellery. Kill one and its gear drops as a [loot key](/wiki/wilderness-loot-keys) you cash at the Lumbridge Loot Chest. It's the highest-risk, zero-cost route to end-game gear - and other players can kill *you* for your keys.
 
-## One caveat: LMS loot
-
-Everything on this page has a real, current source - but one thing looks like a source and isn't: gear you loot from [Last Man Standing](/wiki/last-man-standing) chests only exists **inside the match**. You keep nothing and lose nothing there, so it's never a way to *own* an item. When new rares open up, this page will say so.
+Everything on this page has a real, current source - and as each rebuilt boss returns, its drop paths reopen and this page will say so.

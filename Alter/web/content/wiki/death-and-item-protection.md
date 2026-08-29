@@ -3,7 +3,7 @@ title: Death & item protection
 category: PvP & Wilderness
 summary: OSRS keep-3 rules apply everywhere - what you keep, where your stuff goes, and which content is safe.
 order: 2
-updated: 2026-07-04
+updated: 2026-08-28
 ---
 
 Death works like real OSRS, **everywhere** - not just the wilderness. Dying in town, on a road, or to a monster costs you items under the same rules as a PvP death.
@@ -28,8 +28,7 @@ Untradeables are always kept and don't use up a slot. Check exactly what you'd k
 
 Some content never drops items on death:
 
-- The **Fight Cave** wave arena (`::arena`)
-- The **Zulrah** shrine (`::zulrah`)
-- Instanced content (Wizard Tower runs, raid instances)
+- **[Wizard Tower](/wiki/wizard-tower)** runs - deaths inside the instance are safe
+- The **safe road camps** of the [Rogue Knight ladder](/wiki/rogue-knights) sit on reclaim-safe ground - you still leave a reclaim pile, but no PKer can take it
 
 Everywhere else, assume full death rules apply - including your unclaimed loot keys, which are **always** destroyed on death regardless of protection.

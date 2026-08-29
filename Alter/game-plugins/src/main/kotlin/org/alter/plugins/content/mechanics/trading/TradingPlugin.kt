@@ -54,17 +54,6 @@ class TradingPlugin(
             // The trade partner instance
             val partner = player.getInteractingPlayer()
 
-            // Loaner-kit seal: nobody trades while wearing a PK-training kit (either side) — a
-            // trade would smuggle borrowed gear past the end-of-round restore.
-            if (org.alter.plugins.content.minigames.pktraining.TrainingArena.kitted(player)) {
-                player.message("You can't trade while wearing a borrowed kit.")
-                return@onPlayerOption
-            }
-            if (org.alter.plugins.content.minigames.pktraining.TrainingArena.kitted(partner)) {
-                player.message("Other player is busy at the moment.")
-                return@onPlayerOption
-            }
-
             // If the player is already in a trade
             if (partner.getTradeSession() != null || partner.isLocked()) {
                 player.message("Other player is busy at the moment.")

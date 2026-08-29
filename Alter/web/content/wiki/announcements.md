@@ -6,7 +6,7 @@ order: 6
 updated: 2026-07-12
 ---
 
-Server-wide headlines - boss spawns, war captures, marches, events, Castle Wars horns - don't scroll away in your chat. They show in the **announcement ticker**: coloured lines stacked directly **above the chat box**, each with a diamond marker, newest at the bottom.
+Server-wide headlines - boss spawns, war captures, marches, events - don't scroll away in your chat. They show in the **announcement ticker**: coloured lines stacked directly **above the chat box**, each with a diamond marker, newest at the bottom.
 
 ## How it works
 

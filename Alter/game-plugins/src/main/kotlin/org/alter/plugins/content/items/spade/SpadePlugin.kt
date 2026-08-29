@@ -15,7 +15,6 @@ import org.alter.game.model.queue.*
 import org.alter.game.model.shop.*
 import org.alter.game.model.timer.*
 import org.alter.game.plugin.*
-import org.alter.plugins.content.npcs.barrows.BarrowsMinigamePlugin
 import org.alter.rscm.RSCM.getRSCM
 
 class SpadePlugin(
@@ -26,7 +25,6 @@ class SpadePlugin(
         
     init {
         onItemOption(item = "item.spade", "dig") {
-            if (BarrowsMinigamePlugin.tryDig(player)) return@onItemOption
             player.animate(830)
             if (player.tile.x == 3229 && player.tile.z == 3209 && player.inventory.contains(getRSCM("item.treasure_scroll"))) {
                 player.queue {

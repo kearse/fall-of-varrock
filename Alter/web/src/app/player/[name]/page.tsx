@@ -118,31 +118,6 @@ export default async function PlayerPage({ params }: { params: { name: string } 
         </div>
       )}
 
-      {/* Duel Arena record (staked duels only) - hidden until they've duelled */}
-      {skills && skills.duel.wins + skills.duel.losses + skills.duel.draws > 0 && (
-        <div>
-          <h2 className="eyebrow mb-2">Duel record</h2>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {(
-              [
-                ["Duels won", fmt(skills.duel.wins)],
-                ["Duels lost", fmt(skills.duel.losses)],
-                ["Draws", fmt(skills.duel.draws)],
-                ["Biggest pot", skills.duel.biggestPot > 0 ? `${fmt(skills.duel.biggestPot)} gp` : "-"],
-              ] as const
-            ).map(([label, value]) => (
-              <div key={label} className="card card-hover py-4 text-center">
-                <div className="text-2xl font-bold tabular-nums text-lumbridge-parchment">{value}</div>
-                <div className="mt-1 text-[10px] uppercase tracking-wide text-lumbridge-parchmentdark">{label}</div>
-              </div>
-            ))}
-          </div>
-          <Link href="/duels" className="mt-2 inline-block text-xs text-lumbridge-gold hover:underline">
-            Arena scoreboard →
-          </Link>
-        </div>
-      )}
-
       {/* Skills */}
       {skills ? (
         <div>

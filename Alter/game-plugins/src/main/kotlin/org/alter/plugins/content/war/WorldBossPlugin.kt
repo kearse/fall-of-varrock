@@ -10,7 +10,6 @@ import org.alter.game.model.attr.CITY_ID_ATTR
 import org.alter.game.model.timer.TimerKey
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
-import org.alter.plugins.content.npcs.corp.CorpBeastPlugin
 import org.alter.plugins.content.teleport.TeleportService
 import org.alter.plugins.content.war.boss.BossRegistry
 import org.alter.plugins.content.war.boss.BossScheduler
@@ -45,10 +44,7 @@ class WorldBossPlugin(
 
         // One death funnel per distinct boss npc. onBossDeath no-ops for any death that
         // isn't a tracked boss, so ordinary world spawns of these npcs are unaffected.
-        // The Corporeal Beast is EXCLUDED: it also has an always-on cave lair, and only one death
-        // handler may bind per npc id, so CorpBeastPlugin owns its single handler and dispatches
-        // tracked (event) kills back to BossScheduler.onBossDeath itself.
-        BossRegistry.npcNames().filter { it != CorpBeastPlugin.NPC }.forEach { name ->
+        BossRegistry.npcNames().forEach { name ->
             onNpcDeath(name) { BossScheduler.onBossDeath(world, npc) }
         }
 
@@ -66,7 +62,6 @@ class WorldBossPlugin(
 
         // ::worldboss — teleport to the city world-boss arena (routes through TeleportService so
         // tele-block, combat lock and the teleport animation behave like a portal teleport).
-        // NB: ::boss / ::boss <name> is owned by BossTeleportCommandsPlugin (per-boss lairs).
         onCommand("worldboss", description = "Teleport to the city world boss arena") {
             val cityId = player.attr[CITY_ID_ATTR] ?: org.alter.plugins.content.war.Cities.DEFAULT_CITY_ID
             val live = BossScheduler.bossesIn(cityId).isNotEmpty()

@@ -50,13 +50,6 @@ class AlchemyPlugin(
     private fun alch(player: Player, spell: SpellMetadata, rate: Double, xp: Double) {
         val itemId = player.getInteractingItemId()
         val slot = player.getInteractingItemSlot()
-        // Loaner-kit seal (gold-faucet guard, like the bond rule below): everything a PK-training
-        // trainee holds mid-bout is borrowed — alching a loaned Dharok piece would mint its full
-        // cache value in coins, and the coins survive the end-of-round gear restore.
-        if (org.alter.plugins.content.minigames.pktraining.TrainingArena.kitted(player)) {
-            player.message("You can't alchemise borrowed gear.")
-            return
-        }
         if (itemId == getRSCM("item.coins_995")) {
             player.message("You can't alchemise coins.")
             return

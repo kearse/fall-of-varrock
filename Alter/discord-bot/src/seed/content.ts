@@ -153,7 +153,7 @@ export const SEED: SeedEntry[] = [
       "`/hiscores` — top players by total level\n" +
       "`/online` — who's online right now\n\n" +
       `In-game commands (typed with \`::\` in the client) — like \`::title\`, \`::trials\`, \`::pkstats\`, ` +
-      `\`::campaign\`, \`::kbd\` — are covered in the guides in #${CH.guides}.\n\n` +
+      `\`::campaign\`, \`::worldboss\` — are covered in the guides in #${CH.guides}.\n\n` +
       "_Staff:_ `/sync`, `/setup`, `/seed`, `/ticketpanel`, `/giveaway`.",
   },
   {
