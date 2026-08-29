@@ -34,6 +34,21 @@ object CombatMath {
 
     fun maxRoll(effectiveLevel: Double, equipmentBonus: Double): Int = (effectiveLevel * (equipmentBonus + 64.0)).toInt()
 
+    /**
+     * A player's effective level for MAGIC EVASION (the defence roll against a magic
+     * attack). Per the OSRS Wiki (Defence roll) and dps-calc
+     * `NPCVsPlayerCalc.getPlayerDefenceRoll`: the prayer-adjusted Magic and Defence
+     * levels mix 70/30 BEFORE the stance bonus and the base +8 —
+     *
+     *   trunc(effMagic × 7/10) + trunc(effDefence × 3/10) + stanceBonus + 8
+     *
+     * where effMagic = floor(magic × magicPrayer) and effDefence = floor(def × defPrayer).
+     * (The old shape — folding the +8 and stance into the 30% Defence component — under-
+     * rolled every player's magic defence by ~6.)
+     */
+    fun magicDefenceEffectiveLevel(effMagicLevel: Double, effDefenceLevel: Double, stanceBonus: Int): Double =
+        Math.floor(effMagicLevel * 7.0 / 10.0) + Math.floor(effDefenceLevel * 3.0 / 10.0) + stanceBonus + 8.0
+
     fun baseMaxHit(effectiveStrength: Double, strengthBonus: Double): Int =
         Math.floor(0.5 + effectiveStrength * (strengthBonus + 64.0) / 640.0).toInt()
 

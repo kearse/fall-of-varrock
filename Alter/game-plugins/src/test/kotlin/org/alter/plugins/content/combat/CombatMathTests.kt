@@ -54,6 +54,22 @@ class CombatMathTests {
     }
 
     @Test
+    fun `magic defence mixes 70-30 before stance and base`() {
+        // dps-calc NPCVsPlayerCalc.getPlayerDefenceRoll: trunc(effMagic*7/10) + trunc(effDef*3/10),
+        // THEN + stance, THEN + 8.
+        // 99 Magic + 99 Defence under Augury (1.25 both sides), Defensive stance:
+        //   effMagic = floor(99*1.25) = 123 -> trunc(123*0.7) = 86
+        //   effDef   = floor(99*1.25) = 123 -> trunc(123*0.3) = 36
+        //   86 + 36 + 3 + 8 = 133.
+        assertEquals(133.0, CombatMath.magicDefenceEffectiveLevel(123.0, 123.0, stanceBonus = 3))
+        // Prayerless mid-levels, neutral stance: trunc(85*0.7)=59 + trunc(70*0.3)=21 + 0 + 8 = 88.
+        assertEquals(88.0, CombatMath.magicDefenceEffectiveLevel(85.0, 70.0, stanceBonus = 0))
+        // Pure-mage tank shape: magic dominates the roll even with 1 Defence.
+        //   trunc(99*0.7)=69 + trunc(1*0.3)=0 + 0 + 8 = 77.
+        assertEquals(77.0, CombatMath.magicDefenceEffectiveLevel(99.0, 1.0, stanceBonus = 0))
+    }
+
+    @Test
     fun `ranged hit delay is 1 plus distance over 6`() {
         // OSRS: 1 + floor((3 + d) / 6) on chebyshev distance.
         fun delay(d: Int) = RangedCombatStrategy.getHitDelay(Tile(3200, 3200), Tile(3200 + d, 3200))

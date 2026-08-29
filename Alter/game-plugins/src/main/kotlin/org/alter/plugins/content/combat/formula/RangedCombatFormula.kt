@@ -145,7 +145,9 @@ object RangedCombatFormula : CombatFormula {
         if (specialAttackMultiplier == 1.0) {
             val multiplier =
                 when {
-                    player.hasEquipped(EquipmentType.WEAPON, "item.dragon_hunter_crossbow") && isDragon(target) -> 1.3
+                    // DHCB damage is ×5/4 vs dragons — only its ACCURACY is ×13/10
+                    // (dps-calc: dragonbane max-hit factor [5, 4]).
+                    player.hasEquipped(EquipmentType.WEAPON, "item.dragon_hunter_crossbow") && isDragon(target) -> 1.25
                     player.hasEquipped(EquipmentType.WEAPON, "item.twisted_bow") && target.entityType.isNpc -> {
                         // TODO: cap inside Chambers of Xeric is 350%
                         CombatMath.twistedBowDamageModifier(targetMagic(target))
@@ -207,10 +209,12 @@ object RangedCombatFormula : CombatFormula {
         return hit
     }
 
+    /** The twisted bow scales off the HIGHER of the target's Magic level and its magic
+     *  ATTACK bonus (dps-calc: `max(monster.skills.magic, monster.offensive.magic)`). */
     private fun targetMagic(target: Pawn): Int =
         when (target) {
             is Player -> target.getSkills().getCurrentLevel(Skills.MAGIC)
-            is Npc -> target.stats.getCurrentLevel(NpcSkills.MAGIC)
+            is Npc -> maxOf(target.stats.getCurrentLevel(NpcSkills.MAGIC), target.getBonus(BonusSlot.ATTACK_MAGIC))
             else -> 0
         }
 

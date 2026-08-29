@@ -142,7 +142,9 @@ object MagicCombatFormula : CombatFormula {
 
             if (pawn.hasEquipped(EquipmentType.SHIELD, "item.tome_of_fire") && spell in FIRE_SPELLS) {
                 // TODO: check tome of fire has charges
-                hit *= 1.5
+                // ×1.1 since the 2023 tome rework (dps-calc MAX_HIT_TOME factor [11, 10]);
+                // the old ×1.5 was the pre-rework value.
+                hit *= 1.1
                 hit = Math.floor(hit)
             }
 
@@ -204,19 +206,20 @@ object MagicCombatFormula : CombatFormula {
     }
 
     private fun getDefenceRoll(target: Player): Int {
-        var effectiveLvl = getEffectiveDefenceLevel(target)
+        // 70% prayer-adjusted Magic + 30% prayer-adjusted Defence, mixed BEFORE the stance
+        // bonus and the base +8 (dps-calc NPCVsPlayerCalc.getPlayerDefenceRoll; the mystic/
+        // augury prayers boost magic defence by the same factor as magic accuracy).
+        val effMagic = Math.floor(target.getSkills().getCurrentLevel(Skills.MAGIC) * getPrayerAttackMultiplier(target))
+        val effDefence = Math.floor(target.getSkills().getCurrentLevel(Skills.DEFENCE) * getPrayerDefenceMultiplier(target))
+        val stanceBonus =
+            when (CombatConfigs.getAttackStyle(target)) {
+                AttackStyle.DEFENSIVE -> 3
+                AttackStyle.CONTROLLED -> 1
+                AttackStyle.LONG_RANGE -> 3
+                else -> 0
+            }
 
-        effectiveLvl *= 0.3
-        effectiveLvl = Math.floor(effectiveLvl)
-
-        var magicLvl = target.getSkills().getCurrentLevel(Skills.MAGIC).toDouble()
-        magicLvl *= getPrayerAttackMultiplier(target)
-        magicLvl = Math.floor(magicLvl)
-
-        magicLvl *= 0.7
-        magicLvl = Math.floor(magicLvl)
-
-        val a = Math.floor(effectiveLvl + magicLvl).toInt()
+        val a = CombatMath.magicDefenceEffectiveLevel(effMagic, effDefence, stanceBonus)
         val b = getEquipmentDefenceBonus(target)
 
         val maxRoll = a * (b + 64.0)
@@ -233,7 +236,9 @@ object MagicCombatFormula : CombatFormula {
         hit *= getEquipmentMultiplier(player, target)
         hit = Math.floor(hit)
 
-        if (player.hasEquipped(EquipmentType.WEAPON, "item.mystic_smoke_staff")) {
+        // The smoke battlestaff's 10% accuracy bonus only applies on the STANDARD
+        // spellbook, same as its damage bonus (OSRS Wiki, Smoke battlestaff).
+        if (player.hasEquipped(EquipmentType.WEAPON, "item.mystic_smoke_staff") && player.hasSpellbook(Spellbook.NORMAL)) {
             hit *= 1.1
             hit = Math.floor(hit)
         }
@@ -255,28 +260,14 @@ object MagicCombatFormula : CombatFormula {
                 }
         }
 
-        effectiveLevel += 8.0
+        // Magic ACCURACY uses a +9 base, not the melee/ranged +8
+        // (dps-calc PlayerVsNPCCalc.getPlayerMaxMagicAttackRoll: `effectiveLevel += 9`).
+        effectiveLevel += 9.0
 
         if (player.hasEquipped(MAGE_VOID) || player.hasEquipped(MAGE_ELITE_VOID)) {
             effectiveLevel *= 1.45
             effectiveLevel = Math.floor(effectiveLevel)
         }
-
-        return Math.floor(effectiveLevel)
-    }
-
-    private fun getEffectiveDefenceLevel(player: Player): Double {
-        var effectiveLevel = Math.floor(player.getSkills().getCurrentLevel(Skills.DEFENCE) * getPrayerDefenceMultiplier(player))
-
-        effectiveLevel +=
-            when (CombatConfigs.getAttackStyle(player)) {
-                AttackStyle.DEFENSIVE -> 3.0
-                AttackStyle.CONTROLLED -> 1.0
-                AttackStyle.LONG_RANGE -> 3.0
-                else -> 0.0
-            }
-
-        effectiveLevel += 8.0
 
         return Math.floor(effectiveLevel)
     }
