@@ -77,15 +77,30 @@ class TeleportTabPlugin(
             inventory.remove(item = tab)
             prepareForTeleport()
             lock = LockState.FULL_WITH_DAMAGE_IMMUNITY
-            animate(id = 4069, delay = 16)
-            playSound(id = 965, volume = 1, delay = 15)
-            it.wait(cycles = 3)
-            graphic(id = 678)
-            animate(id = 4071)
-            it.wait(cycles = 2)
-            animate(id = -1)
-            unlock()
-            moveTo(tile = endArea.randomTile)
+            // Same stranded-lock guard as Pawn.teleport: if this task is terminated mid-wait
+            // (death's interruptQueues, another STRONG task) or throws, the lock must still be
+            // released — a leaked FULL lock freezes the player and blocks logout/re-login.
+            // terminateAction covers termination (finally doesn't run for a dropped coroutine);
+            // the guard keeps a lock someone else set (death's FULL) intact.
+            it.terminateAction = {
+                if (lock == LockState.FULL_WITH_DAMAGE_IMMUNITY) {
+                    unlock()
+                }
+            }
+            try {
+                animate(id = 4069, delay = 16)
+                playSound(id = 965, volume = 1, delay = 15)
+                it.wait(cycles = 3)
+                graphic(id = 678)
+                animate(id = 4071)
+                it.wait(cycles = 2)
+                animate(id = -1)
+                moveTo(tile = endArea.randomTile)
+            } finally {
+                if (lock == LockState.FULL_WITH_DAMAGE_IMMUNITY) {
+                    unlock()
+                }
+            }
         }
     }
 }
