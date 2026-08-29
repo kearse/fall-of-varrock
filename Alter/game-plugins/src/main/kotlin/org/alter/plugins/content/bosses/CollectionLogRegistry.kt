@@ -38,6 +38,13 @@ object CollectionLogRegistry {
                 "item.blessed_spirit_shield", "item.draconic_visage", "item.pet_corporeal_critter",
             ),
         ),
+        Category(
+            "vorkath", "Vorkath", "npc.vorkath_8061",
+            listOf(
+                "item.vorkaths_head_21907", "item.dragonbone_necklace", "item.jar_of_decay",
+                "item.skeletal_visage", "item.vorki",
+            ),
+        ),
     )
 
     fun byKey(key: String): Category? = categories.firstOrNull { it.key.equals(key, ignoreCase = true) }

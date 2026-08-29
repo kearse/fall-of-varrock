@@ -169,6 +169,11 @@ object MagicCombatFormula : CombatFormula {
         hit *= getDamageDealMultiplier(pawn)
         hit = Math.floor(hit)
 
+        // Parity with the melee/ranged formulas: the TARGET-side multiplier (boss immunity
+        // phases, scripted damage caps) applies to magic damage too.
+        hit *= getDamageTakeMultiplier(target)
+        hit = Math.floor(hit)
+
         // Overhead protection is NOT part of the max hit: it's applied to the rolled
         // damage at hit-application time (see dealHit), so mid-flight prayer switches work.
         return hit.toInt()
@@ -327,4 +332,6 @@ object MagicCombatFormula : CombatFormula {
         }
 
     private fun getDamageDealMultiplier(pawn: Pawn): Double = pawn.attr[Combat.DAMAGE_DEAL_MULTIPLIER] ?: 1.0
+
+    private fun getDamageTakeMultiplier(pawn: Pawn): Double = pawn.attr[Combat.DAMAGE_TAKE_MULTIPLIER] ?: 1.0
 }

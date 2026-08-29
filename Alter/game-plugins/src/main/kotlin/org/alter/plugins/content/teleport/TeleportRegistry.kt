@@ -83,7 +83,9 @@ object TeleportRegistry {
         soon("corporeal_beast", "Corporeal Beast", BOSSES, HOSTILE),
         soon("zulrah", "Zulrah", BOSSES),
         soon("barrows", "Barrows", BOSSES),
-        soon("vorkath", "Vorkath", BOSSES, HOSTILE),
+        // Lands on Ungael outside the icy spines — climb over them to enter the solo
+        // instanced arena and poke the sleeping beast (the Kronos-port pilot).
+        built("vorkath", "Vorkath", BOSSES, Tile(2272, 4052, 0), HOSTILE),
         soon("alchemical_hydra", "Alchemical Hydra", BOSSES, HOSTILE),
         soon("gwd_graardor", "General Graardor", BOSSES, HOSTILE),
         soon("gwd_kril", "K'ril Tsutsaroth", BOSSES, HOSTILE),
