@@ -45,6 +45,14 @@ object CollectionLogRegistry {
                 "item.skeletal_visage", "item.vorki",
             ),
         ),
+        Category(
+            "zulrah", "Zulrah", "npc.zulrah",
+            listOf(
+                "item.tanzanite_fang", "item.magic_fang", "item.serpentine_visage",
+                "item.uncut_onyx", "item.jar_of_swamp", "item.tanzanite_mutagen",
+                "item.magma_mutagen", "item.pet_snakeling",
+            ),
+        ),
     )
 
     fun byKey(key: String): Category? = categories.firstOrNull { it.key.equals(key, ignoreCase = true) }

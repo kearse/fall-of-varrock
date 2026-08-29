@@ -81,7 +81,9 @@ object TeleportRegistry {
         soon("world_boss", "World Boss", BOSSES, HOSTILE), // rotating spawn — wire to WorldBoss later
         soon("kbd", "King Black Dragon", BOSSES, HOSTILE),
         soon("corporeal_beast", "Corporeal Beast", BOSSES, HOSTILE),
-        soon("zulrah", "Zulrah", BOSSES),
+        // Lands at the Zul-Andra dock — board the sacred-eel boat (or ::zulrah) for a
+        // solo instanced shrine fight (Kronos port #2).
+        built("zulrah", "Zulrah", BOSSES, Tile(2199, 3056, 0), HOSTILE),
         soon("barrows", "Barrows", BOSSES),
         // Lands on Ungael outside the icy spines — climb over them to enter the solo
         // instanced arena and poke the sleeping beast (the Kronos-port pilot).

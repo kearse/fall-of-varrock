@@ -6,7 +6,7 @@ order: 4
 updated: 2026-08-28
 ---
 
-**Two bosses rule the realm right now: the [Corporeal Beast](/wiki/corporeal-beast) war event and [Vorkath](/wiki/vorkath)** — the first fight of the rebuilt roster, live on Ungael. The rest of the old lair roster - KBD, Zulrah, Barrows, God Wars, the wilderness bosses and the rest - has been **temporarily retired**. Those fights weren't up to our standard, so rather than leave rough versions live we've pulled them wholesale and are rebuilding each one properly. They'll come back **one at a time** as finished, accurate fights - watch [What's coming next](/wiki/coming-soon) and the in-game news for each return.
+**Three bosses rule the realm right now: the [Corporeal Beast](/wiki/corporeal-beast) war event, [Vorkath](/wiki/vorkath) on Ungael, and [Zulrah](/wiki/zulrah) at Zul-Andra** — the rebuilt roster is landing. The rest of the old lair roster - KBD, Barrows, God Wars, the wilderness bosses and the rest - has been **temporarily retired**. Those fights weren't up to our standard, so rather than leave rough versions live we've pulled them wholesale and are rebuilding each one properly. They'll come back **one at a time** as finished, accurate fights - watch [What's coming next](/wiki/coming-soon) and the in-game news for each return.
 
 ## The Corporeal Beast (Event)
 
@@ -19,16 +19,21 @@ The War's city world boss, fought at the **Lumbridge event arena** - and the bes
 
 Full mechanics, drop rates and sponsor shares: [Corporeal Beast](/wiki/corporeal-beast).
 
-## Vorkath — the first rebuilt fight
+## The rebuilt fights
 
-The undead dragon of Ungael is back, rebuilt from the ground up on the fixed combat core: a
-**solo instanced** fight with dodge mechanics, an acid phase and a zombified-spawn phase, paying
-superior dragon bones every kill and chase drops from **Vorkath's head** to the **skeletal
-visage** and **Vorki**. Teleport portal → Bosses → Vorkath. Full guide: [Vorkath](/wiki/vorkath).
+- **[Vorkath](/wiki/vorkath)** — the undead dragon of Ungael: solo instanced, dodge
+  mechanics, an acid phase and a zombified-spawn phase; superior dragon bones every kill,
+  chase drops from **Vorkath's head** to the **skeletal visage** and **Vorki**.
+- **[Zulrah](/wiki/zulrah)** — the serpent of Zul-Andra: solo instanced, four fixed
+  rotations of form-swapping combat (bring ranged AND magic), toxic clouds, snakelings,
+  and the fang-tier table — **tanzanite/magic fangs, serpentine visage, mutagens, the
+  pet snakeling** — rolled twice per kill.
+
+Both are in the teleport portal's Bosses tab.
 
 ## Collection log
 
-Notable boss drops are tracked automatically - you'll see a "New Collection Log slot" message on a first-time drop. Right now the log covers the Corporeal Beast and Vorkath; pages return as each rebuilt boss ships.
+Notable boss drops are tracked automatically - you'll see a "New Collection Log slot" message on a first-time drop. Right now the log covers the Corporeal Beast, Vorkath and Zulrah; pages return as each rebuilt boss ships.
 
 - `::clog` - opens the native OSRS collection log interface
 - `::cl` - plain text readout of every category and what you've ticked off
@@ -37,7 +42,7 @@ Notable boss drops are tracked automatically - you'll see a "New Collection Log 
 
 These are the fights being rebuilt. None are playable today; their old teleport commands are gone, and the portal's Bosses tab shows them greyed out as **coming soon**:
 
-- **Entry bosses** - King Black Dragon, Barrows, Zulrah
+- **Entry bosses** - King Black Dragon, Barrows (**Zulrah is back** - see above)
 - **Wilderness bosses** - Callisto, Vet'ion, Venenatis, Scorpia, Chaos Elemental, Chaos Fanatic, Crazy Archaeologist, and the Revenant Caves
 - **PvM / Slayer bosses** - Kraken, Cerberus, Giant Mole, Kalphite Queen, Sarachnis, Thermonuclear Smoke Devil, Demonic Gorillas, Skotizo, the Dagannoth Kings
 - **God Wars Dungeon** - General Graardor, K'ril Tsutsaroth, Kree'arra, Commander Zilyana
