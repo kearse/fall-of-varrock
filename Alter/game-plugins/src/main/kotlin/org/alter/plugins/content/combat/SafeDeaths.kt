@@ -17,10 +17,7 @@ import org.alter.game.model.entity.Player
 object SafeDeaths {
 
     /** Fixed-world arenas whose deaths are safe by design. */
-    private val zones = mutableListOf(
-        Area(2360, 5045, 2445, 5125), // TzHaar Fight Cave floor (::arena, single-occupancy waves)
-        Area(2190, 3060, 2210, 3080), // Zulrah shrine (::zulrah)
-    )
+    private val zones = mutableListOf<Area>()
 
     fun register(area: Area) {
         zones += area

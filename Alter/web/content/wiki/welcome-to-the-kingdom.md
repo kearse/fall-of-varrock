@@ -3,7 +3,7 @@ title: Welcome to the Kingdom
 category: Getting Started
 summary: What kind of server this is, what makes it different, and where to go first.
 order: 1
-updated: 2026-07-04
+updated: 2026-08-28
 ---
 
 **Fall of Varrock** is an OSRS-based server (revision 228) built around one big idea: the world is at war, and *everything you do feeds it*. Lumbridge is the last free city - your home, your market, and the seat of the crown. Every other city is held by the enemy, and taking them back is the endgame.
@@ -32,7 +32,7 @@ There's no membership paywall on content. Progression is driven by:
 ## Useful commands
 
 - `::spellbook` - switch spellbooks (once unlocked)
-- `::arena` - enter the Fight Cave wave minigame
+- `::worldboss` - teleport to the [Corporeal Beast](/wiki/corporeal-beast) event arena
 - `::lootkeys` - check your wilderness loot keys
 - `::claimvote` - claim vote rewards
 

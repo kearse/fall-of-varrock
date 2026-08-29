@@ -1,48 +1,39 @@
 ---
-title: Bosses - the full roster
+title: Bosses - what's live and what's returning
 category: Minigames & Bosses
-summary: Every boss lair, its teleport command, and how the collection log tracks your drops.
+summary: The Corporeal Beast war event is the realm's boss fight right now - the old lair roster is retired for a proper rebuild and returns one boss at a time.
 order: 4
-updated: 2026-07-04
+updated: 2026-08-28
 ---
 
-Bosses live in their **real OSRS lairs** with OSRS-style combat. Type `::bosses` in-game for the full teleport list, `::boss <name>` for a fuzzy match, or use the home portal's **Bosses** tab.
+**One boss rules the realm right now: the [Corporeal Beast](/wiki/corporeal-beast).** The old lair roster - KBD, Zulrah, Barrows, God Wars, the wilderness bosses and the rest - has been **temporarily retired**. Those fights weren't up to our standard, so rather than leave rough versions live we've pulled them wholesale and are rebuilding each one properly. They'll come back **one at a time** as finished, accurate fights - watch [What's coming next](/wiki/coming-soon) and the in-game news for each return.
 
-## The roster
+## The Corporeal Beast (Event)
 
-**Entry bosses**
+The War's city world boss, fought at the **Lumbridge event arena** - and the best PvM money in the game today:
 
-- **King Black Dragon** - `::kbd`. Multi-way lair. Drops dragon bones, rune gear, dragon dart tips; rares include KBD heads, **Draconic visage** and the **Prince Black Dragon** pet. 10 Boss points per kill.
-- **Barrows** - `::barrows`. The six brothers' mounds and crypts.
-- **Zulrah** - `::zulrah`. Safe death at the shrine.
+- It spawns **on a rotation** (roughly every 5 minutes after the last kill), and **Lords and above can summon it on demand**: `::summonboss corporeal_beast` costs 3,000,000 gp and deploys an allied raid squad alongside.
+- Get there with `::worldboss`, or the teleport portal's **Bosses tab → "Corp Beast (Event)"**.
+- Loot is **pooled and split by damage contribution** - everyone who fought it gets an independent payout, no loot scramble, and every kill pays **Boss Tickets** for the [Warlord's Armoury](/wiki/shops-directory).
+- The mega-rares live here: **Arcane / Spectral / Elysian sigils**, the **blessed spirit shield** (sigil + shield craft into the server's best-in-slot shields), the **draconic visage**, and the **Corporeal Critter** pet.
 
-**Wilderness bosses** *(multi-way, and yes, other players can attack you)*
-
-Callisto (`::callisto`), Vet'ion (`::vetion`), Venenatis (`::venenatis`), Scorpia (`::scorpia`), Chaos Elemental (`::chaos_elemental`), Chaos Fanatic (`::chaos_fanatic`), Crazy Archaeologist (`::crazy_arch`), plus the **Revenant Caves**.
-
-**PvM / Slayer bosses**
-
-Kraken, Cerberus, Giant Mole, Kalphite Queen, Sarachnis, Thermonuclear Smoke Devil, Demonic Gorillas, Skotizo, and the Dagannoth Kings (`::dagannoth_rex`, `::dagannoth_prime`, `::dagannoth_supreme`) - each boss has its own `::<name>` command (e.g. `::kraken`, `::cerberus`, `::thermonuclear_smoke_devil`).
-
-**God Wars Dungeon** *(multi-way, team-friendly)*
-
-General Graardor (`::gwd_graardor`), K'ril Tsutsaroth (`::gwd_kril`), Kree'arra (`::gwd_kreearra`), Commander Zilyana (`::gwd_zilyana`).
-
-**Elite tier**
-
-Vorkath (`::vorkath`), Alchemical Hydra (`::alchemical_hydra`), Phantom Muspah (`::phantom_muspah`), Abyssal Sire (`::abyssal_sire`), Nex (`::nex`), Grotesque Guardians (`::grotesque_guardians`).
-
-**City bosses** - the War's own bosses (currently the **Corporeal Beast** at Lumbridge) work differently: pooled damage-split loot, sponsor tithes and troop shares. See [Corporeal Beast](/wiki/corporeal-beast).
+Full mechanics, drop rates and sponsor shares: [Corporeal Beast](/wiki/corporeal-beast).
 
 ## Collection log
 
-Notable boss drops are tracked automatically - you'll see a "New Collection Log slot" message on a first-time drop.
+Notable boss drops are tracked automatically - you'll see a "New Collection Log slot" message on a first-time drop. Right now the log covers the Corporeal Beast; pages return as each rebuilt boss ships.
 
 - `::clog` - opens the native OSRS collection log interface
 - `::cl` - plain text readout of every category and what you've ticked off
 
-## Rules worth knowing
+## Returning soon - the retired roster
 
-- Lairs marked multi-way above allow team PvE (and in the wilderness, team PvP).
-- Wilderness boss trips risk everything under normal [death rules](/wiki/death-and-item-protection) - killers get your loot in a [loot key](/wiki/wilderness-loot-keys).
-- Boss kills pay **Boss points** as tradeable ticket items - spend them at the reward shops in the Lumbridge market.
+These are the fights being rebuilt. None are playable today; their old teleport commands are gone, and the portal's Bosses tab shows them greyed out as **coming soon**:
+
+- **Entry bosses** - King Black Dragon, Barrows, Zulrah
+- **Wilderness bosses** - Callisto, Vet'ion, Venenatis, Scorpia, Chaos Elemental, Chaos Fanatic, Crazy Archaeologist, and the Revenant Caves
+- **PvM / Slayer bosses** - Kraken, Cerberus, Giant Mole, Kalphite Queen, Sarachnis, Thermonuclear Smoke Devil, Demonic Gorillas, Skotizo, the Dagannoth Kings
+- **God Wars Dungeon** - General Graardor, K'ril Tsutsaroth, Kree'arra, Commander Zilyana
+- **Elite tier** - Vorkath, Alchemical Hydra, Phantom Muspah, Abyssal Sire, Nex, Grotesque Guardians
+
+Their **gear didn't leave with them**: Barrows sets, GWD bases, boss uniques and the rest are still in the economy and on the ticket shelves - see [Path to end game](/wiki/path-to-end-game) for where every rare comes from today.

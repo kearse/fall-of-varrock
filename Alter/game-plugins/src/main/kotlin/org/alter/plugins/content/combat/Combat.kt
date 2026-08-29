@@ -64,31 +64,6 @@ object Combat {
         target: Pawn,
         combatClass: CombatClass,
     ): Boolean {
-        // Style bans — the merged duel/sparring view (No Melee / No Ranged / No Magic). For
-        // sparring this binds the owner AND the sparring companion — the companion's kit already
-        // excludes banned styles, this is the belt to that braces.
-        if (pawn is Player) {
-            val restrictions = CombatRestrictions.of(pawn)
-            if (restrictions != null &&
-                ((combatClass == CombatClass.MELEE && restrictions.noMelee) ||
-                    (combatClass == CombatClass.RANGED && restrictions.noRanged) ||
-                    (combatClass == CombatClass.MAGIC && restrictions.noMagic))
-            ) {
-                pawn.message("That combat style isn't allowed in this ${restrictions.context}.")
-                return false
-            }
-            // Fun Weapons (duel-only): every attack must come from a whitelisted joke weapon —
-            // bare fists are NOT allowed (the classic rule). The equip point already reverts
-            // non-fun weapons, so in practice this catches punching.
-            val duelRules = org.alter.plugins.content.minigames.duel.DuelArena.rulesOf(pawn)
-            if (duelRules?.funWeapons == true &&
-                pawn.equipment[EquipmentType.WEAPON.id]?.id !in
-                org.alter.plugins.content.minigames.duel.DuelRules.FUN_WEAPONS
-            ) {
-                pawn.message("You can only attack with fun weapons in this duel.")
-                return false
-            }
-        }
         return canEngage(pawn, target) && getStrategy(combatClass).canAttack(pawn, target)
     }
 
@@ -313,11 +288,9 @@ object Combat {
         // You cannot raise a blade against your own companions. Ownership is matched through the
         // registry's normalized owner key, NOT a raw `uid.value` compare — a display name that comes
         // back in a different case would otherwise read as someone else's companion, and the guard
-        // would let a player attack their own knights. ONE exemption: a live companion-sparring
-        // bout sanctions exactly this pairing (owner vs THEIR sparring companion, post-countdown).
+        // would let a player attack their own knights.
         if (pawn is Player && target is org.alter.plugins.content.companion.Companion &&
-            org.alter.plugins.content.companion.CompanionRegistry.owns(pawn, target) &&
-            !org.alter.plugins.content.minigames.pktraining.CompanionSparring.sanctionsEngagement(pawn, target)
+            org.alter.plugins.content.companion.CompanionRegistry.owns(pawn, target)
         ) {
             pawn.message("That's your own companion.")
             return false
@@ -381,35 +354,6 @@ object Combat {
                 return false
             }
 
-            // Castle Wars outranks every other rule (including the bot bypass below): opposite-team
-            // pairs in the SAME game may fight anywhere in the arena, but a teammate may NEVER be
-            // attacked — not even by a filler bot — and outsiders can't touch participants at all.
-            run {
-                val cw = org.alter.plugins.content.minigames.castlewars.CastleWars
-                val pawnIn = pawn is Player && cw.inGame(pawn)
-                val targetIn = cw.inGame(target)
-                if (pawnIn || targetIn) {
-                    if (!pawnIn || !targetIn || cw.sameTeam(pawn as Player, target)) {
-                        (pawn as? Player)?.message("You can't attack them here.")
-                        return false
-                    }
-                    return true
-                }
-            }
-
-            // Duel isolation: an active staked duel is a sealed bubble — outsiders can't hit the
-            // duelists (nor they outsiders), nobody swings during the countdown, and COMPANIONS only
-            // join when the duel's rules allow them (KO'd companions stay benched). This must run
-            // BEFORE the bot bypass below, or any PkBot (companions included) could pierce the duel.
-            // The refusal wording is per-case classic ("The duel hasn't started yet!" during the
-            // countdown, "That is not your opponent." for friendly fire, …).
-            if (pvp && pawn is Player && target is Player) {
-                org.alter.plugins.content.minigames.duel.DuelArena.engagementBlock(pawn, target)?.let { refusal ->
-                    pawn.message(refusal)
-                    return false
-                }
-            }
-
             // Rogue Knight camp gate: a named knight refuses any real player who hasn't thinned
             // its camp's tier rogues yet ([CampClearance]). Must run BEFORE the bot bypass below,
             // which would otherwise wave the attack straight through. Because canEngage re-runs
@@ -438,25 +382,7 @@ object Combat {
                 (target is org.alter.plugins.content.bots.PkBot &&
                     target !is org.alter.plugins.content.companion.Companion)
 
-            // Two players in an active staked duel may hit each other anywhere (the Duel Arena is a
-            // safe, non-wilderness zone). Only that duel's own sanctioned pairings are unlocked —
-            // the two principals, plus both sides' companions in a companions-allowed 4v4 (the
-            // isolation check above already rejected everything the duel's rules forbid).
-            val duelCombat = pawn is Player && target is Player &&
-                org.alter.plugins.content.minigames.duel.DuelArena.sanctionsEngagement(pawn, target)
-
-            // Two players in the SAME Last Man Standing game may fight anywhere on the island instance
-            // (LMS is free-for-all PvP inside a safe instance). Only same-game pairs are unlocked.
-            val lmsCombat = pawn is Player && target is Player &&
-                org.alter.plugins.content.minigames.lms.LmsGame.sameGame(pawn, target)
-
-            // A companion-sparring bout sanctions its own pairing (owner ↔ their sparring
-            // companion, both directions) inside the private training pit. Needed on top of
-            // botCombat because a COMPANION target is deliberately excluded from that bypass.
-            val sparCombat = pawn is Player && target is Player &&
-                org.alter.plugins.content.minigames.pktraining.CompanionSparring.sanctionsEngagement(pawn, target)
-
-            if (pvp && !botCombat && !companionVsPlayer && !duelCombat && !lmsCombat && !sparCombat) {
+            if (pvp && !botCombat && !companionVsPlayer) {
                 pawn as Player
 
                 // PvP is only allowed in the wilderness (the red zone); everywhere else is safe.
@@ -489,7 +415,7 @@ object Combat {
                         return false
                     }
                 }
-            } else if (pvp && companionVsPlayer && !duelCombat && !lmsCombat && !sparCombat) {
+            } else if (pvp && companionVsPlayer) {
                 // A companion defending its owner against a real player only fights where PvP is
                 // legal at all. ONLY the safe-zone rule — the level bracket and single-way PJ
                 // checks stay waived, or a companion could never join its owner's wilderness 1v1.

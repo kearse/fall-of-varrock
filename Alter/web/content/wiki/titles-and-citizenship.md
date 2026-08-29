@@ -38,7 +38,7 @@ Every noble rank (Squire and up) comes with a **rank cape**, handed to you the m
 | Minister | Minister's cape - deep crimson cape of state | +4 / +8 / +3 / +4 |
 | King | King's cape - gold-embroidered ceremonial cape | +5 / +10 / +4 / +6 |
 
-Attack and defence bonuses apply to **all combat styles** - ranks aren't style-bound. Wearing a rank cape needs at least that rank (a Knight's cape on someone's back proves they're a Knight at minimum), so like the armour gate, the cape is proof of standing, not a costume. The capes are untradeable, and the King's cape deliberately stays a shade under the [fire cape](/wiki/fight-cave) - the earned combat capes remain the trophies.
+Attack and defence bonuses apply to **all combat styles** - ranks aren't style-bound. Wearing a rank cape needs at least that rank (a Knight's cape on someone's back proves they're a Knight at minimum), so like the armour gate, the cape is proof of standing, not a costume. The capes are untradeable, and the King's cape deliberately stays a shade under the fire cape - the earned combat capes remain the trophies.
 
 Lost yours? `::cape` reclaims your current rank's cape for free.
 

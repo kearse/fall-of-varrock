@@ -27,12 +27,6 @@ class EatingPlugin(
     init {
         Food.values.forEach { food ->
             onItemOption(item = food.item, option = "eat") {
-                org.alter.plugins.content.combat.CombatRestrictions.of(player)?.let { r ->
-                    if (r.noFood) {
-                        player.message("You can't eat in this ${r.context}.")
-                        return@onItemOption
-                    }
-                }
                 if (!Foods.canEat(player, food)) {
                     return@onItemOption
                 }

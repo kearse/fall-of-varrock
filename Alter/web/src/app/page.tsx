@@ -55,14 +55,14 @@ const COMPANION_PERKS = [
 
 // The wider content grid. Easy to keep adding to as new features ship.
 const MORE_FEATURES = [
-  { icon: "⚔️", name: "Minigames", body: "Castle Wars, Last Man Standing, Fight Caves, Inferno and more." },
-  { icon: "🐉", name: "Boss Hunting", body: "From the Corporeal Beast to God Wars, solo or in a team." },
+  { icon: "⚔️", name: "Wizard Tower", body: "Storm the tower with the Void Knight — solo or in a team of five." },
+  { icon: "🐉", name: "World Boss", body: "Rally the town against the Corporeal Beast and split its spoils." },
   { icon: "⛏️", name: "Full Skilling", body: "Mining, smithing, fishing, farming, agility and beyond." },
   { icon: "☠️", name: "Slayer", body: "Task-based combat with points, unlocks and gear rewards." },
   { icon: "🏴", name: "Wilderness PvP", body: "Deep wilderness, loot keys and real risk versus reward." },
   { icon: "📜", name: "Custom Quests", body: "Story quests that unlock the Ancient, Lunar and Arceuus spellbooks." },
-  { icon: "🎲", name: "Duel Arena", body: "Stake your items in classic one-versus-one duels." },
-  { icon: "🌀", name: "Teleport Portal", body: "One-tap travel to every boss, skill and minigame." },
+  { icon: "📈", name: "Grand Exchange", body: "A player-driven market for everything worth trading." },
+  { icon: "🌀", name: "Teleport Portal", body: "One-tap travel to every corner of the kingdom." },
 ];
 
 const STEPS = [

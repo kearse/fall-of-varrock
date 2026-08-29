@@ -3,7 +3,7 @@ title: Slayer & resource contracts
 category: Skilling
 summary: Vannaka's combat tasks and gathering contracts - streak points, auto-tracking, and the rewards shop.
 order: 3
-updated: 2026-07-04
+updated: 2026-08-28
 ---
 
 **Vannaka** is the realm's Slayer master, stationed in the Lumbridge market cluster. He hands out two kinds of work: combat tasks and gathering contracts. Reach him via `::portalto slayer_master`.
@@ -38,5 +38,5 @@ Contracts **auto-complete as you gather** - no turn-in trip needed. The coins an
 ## Why do Slayer here
 
 - Every monster drops its **real OSRS loot table**, so tasks are a genuine money faucet on top of points.
-- Several bosses are Slayer-tier content (Kraken, Cerberus, Smoke Devil - see [the boss roster](/wiki/bosses-overview)).
 - Task kills stack with everything else you're doing in the world - war frontiers included.
+- The Slayer-tier bosses (Kraken, Cerberus, Smoke Devil) are part of the [retired roster](/wiki/bosses-overview) - they return as rebuilt fights, one at a time.

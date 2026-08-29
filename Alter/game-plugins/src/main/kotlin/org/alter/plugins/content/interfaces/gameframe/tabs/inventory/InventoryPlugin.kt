@@ -44,13 +44,6 @@ class InventoryPlugin(
 
                 when (option) {
                     7 -> {
-                        // Loaner-kit seal: a PK-training kit can't be dropped — drop → round ends →
-                        // gear restore wipes only inv/equip → walk back and pick the drop up = a
-                        // free item faucet. Everything a kitted player holds is borrowed.
-                        if (org.alter.plugins.content.minigames.pktraining.TrainingArena.kitted(player)) {
-                            player.message("You can't drop borrowed gear.")
-                            return@onButton
-                        }
                         if (world.plugins.canDropItem(player, item.id)) {
                             if (!world.plugins.executeItem(player, item.id, option)) {
                                 val remove = player.inventory.remove(item, assureFullRemoval = false, beginSlot = slot)

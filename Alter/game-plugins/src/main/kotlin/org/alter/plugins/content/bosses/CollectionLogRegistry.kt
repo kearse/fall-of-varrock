@@ -11,8 +11,7 @@ import org.alter.rscm.RSCM.getRSCM
  * consumes.
  *
  * **Single source of truth:** the [Category.items] here must mirror the `log = true` drops in
- * each boss's loot table ([KbdBossPlugin], [org.alter.plugins.content.npcs.wilderness.WildernessBosses],
- * and the Corporeal Beast's `uniqueTable` in
+ * each boss's loot table (currently the Corporeal Beast's `uniqueTable` in
  * [org.alter.plugins.content.war.boss.BossRegistry] / [org.alter.plugins.content.war.boss.BossLoot]).
  *
  * Item/npc keys stay as RSCM strings and are resolved lazily + guarded, so an id not yet in the
@@ -38,38 +37,6 @@ object CollectionLogRegistry {
                 "item.arcane_sigil", "item.spectral_sigil", "item.elysian_sigil",
                 "item.blessed_spirit_shield", "item.draconic_visage", "item.pet_corporeal_critter",
             ),
-        ),
-        Category(
-            "kbd", "King Black Dragon", "npc.king_black_dragon",
-            listOf("item.dragon_med_helm", "item.kbd_heads", "item.draconic_visage", "item.prince_black_dragon"),
-        ),
-        Category(
-            "callisto", "Callisto", "npc.callisto",
-            listOf("item.dragon_pickaxe", "item.dragon_2h_sword"),
-        ),
-        Category(
-            "vetion", "Vet'ion", "npc.vetion",
-            listOf("item.dragon_pickaxe", "item.ring_of_the_gods"),
-        ),
-        Category(
-            "venenatis", "Venenatis", "npc.venenatis",
-            listOf("item.dragon_pickaxe", "item.treasonous_ring"),
-        ),
-        Category(
-            "scorpia", "Scorpia", "npc.scorpia",
-            listOf("item.malediction_shard_3", "item.odium_shard_3"),
-        ),
-        Category(
-            "chaos_elemental", "Chaos Elemental", "npc.chaos_elemental_2054",
-            listOf("item.dragon_pickaxe", "item.dragon_2h_sword"),
-        ),
-        Category(
-            "chaos_fanatic", "Chaos Fanatic", "npc.chaos_fanatic",
-            listOf("item.odium_shard_1", "item.malediction_shard_1"),
-        ),
-        Category(
-            "crazy_arch", "Crazy Archaeologist", "npc.crazy_archaeologist",
-            listOf("item.odium_shard_2", "item.malediction_shard_2"),
         ),
     )
 

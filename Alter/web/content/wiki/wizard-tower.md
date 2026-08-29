@@ -52,6 +52,6 @@ Expect the first run to be a stop-start affair. The mages hit hard enough that y
 - Always: 5,000-15,000 coins, 50-100 death runes and 40-90 blood runes
 - One of: law runes (80-150), nature runes (100-200), soul runes (60-120) or wrath runes (20-50)
 
-Two rare collection-log items can drop: the **Mystic Lava Staff** (1 in 40) and the **Master Wand** (1 in 80).
+Two rare items can drop: the **Mystic Lava Staff** (1 in 40) and the **Master Wand** (1 in 80).
 
 There's no loot timer - the instance stays up until everyone leaves, so grab your drops at your leisure.

@@ -195,12 +195,6 @@ class PotionsPlugin(
 
     private fun drink(player: Player, key: String) {
         val dose = doseByKey[key] ?: return
-        org.alter.plugins.content.combat.CombatRestrictions.of(player)?.let { r ->
-            if (r.noDrinks) {
-                player.message("You can't drink potions in this ${r.context}.")
-                return
-            }
-        }
         if (player.timers.has(POTION_DELAY)) return
         val slot = player.getInteractingSlot()
         if (player.inventory.remove(item = getRSCM(key), beginSlot = slot).hasSucceeded()) {

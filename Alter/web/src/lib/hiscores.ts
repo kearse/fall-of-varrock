@@ -47,15 +47,6 @@ export interface PvpStats {
   elo: number;
 }
 
-// Duel Arena record - the persisted duel attributes written by DuelArenaPlugin
-// (staked duels only; tournament matches never count).
-export interface DuelStats {
-  wins: number;
-  losses: number;
-  draws: number;
-  biggestPot: number;
-}
-
 export interface PlayerSkills {
   displayName: string;
   loginUsername: string;
@@ -63,7 +54,6 @@ export interface PlayerSkills {
   totalLevel: number;
   totalXp: number;
   pvp: PvpStats;
-  duel: DuelStats;
 }
 
 function parsePvp(attributes: any): PvpStats {
@@ -73,16 +63,6 @@ function parsePvp(attributes: any): PvpStats {
   const elo = Math.floor(attr.pk_elo ?? DEFAULT_ELO);
   const kdr = deaths === 0 ? kills : kills / deaths;
   return { kills, deaths, kdr, elo };
-}
-
-function parseDuel(attributes: any): DuelStats {
-  const attr = attributes?.attribute ?? {};
-  return {
-    wins: Math.max(0, Math.floor(attr.duel_wins ?? 0)),
-    losses: Math.max(0, Math.floor(attr.duel_losses ?? 0)),
-    draws: Math.max(0, Math.floor(attr.duel_draws ?? 0)),
-    biggestPot: Math.max(0, Math.floor(attr.duel_biggest_pot ?? 0)),
-  };
 }
 
 function parseSkills(displayName: string, loginUsername: string, attributes: any): PlayerSkills | null {
@@ -99,7 +79,7 @@ function parseSkills(displayName: string, loginUsername: string, attributes: any
     totalLevel += level;
     totalXp += xp;
   }
-  return { displayName, loginUsername, skills, totalLevel, totalXp, pvp: parsePvp(attributes), duel: parseDuel(attributes) };
+  return { displayName, loginUsername, skills, totalLevel, totalXp, pvp: parsePvp(attributes) };
 }
 
 export function isCombatCategory(c: string): c is CombatCategory {

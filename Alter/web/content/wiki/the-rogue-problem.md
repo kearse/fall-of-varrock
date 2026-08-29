@@ -3,7 +3,7 @@ title: The Rogue Problem
 category: Getting Started
 summary: The Act II quest that picks up after the Wizard Tower and runs a fresh Squire through the whole Rogue Knight ladder - the realm's PK schooling. It ends when every camp is broken, not when a rank is bought.
 order: 4
-updated: 2026-08-05
+updated: 2026-08-28
 infobox: Type = Quest (auto-starts); Start = Automatic once War-Prep I is done; Giver = Recruiting Sergeant (Lumbridge gate); Steps = Hunt, Knight, Report, Ladder; Guidance = Quest Journal (::rogueproblem); Reward = A soldier's purse - the ladder earns your Knighthood; Completes = When every camp on the ladder is broken; Leads to = Companions, the wilderness + War-Prep II
 ---
 
@@ -38,6 +38,6 @@ The quest and the **[Rogue Knight ladder](/wiki/rogue-knights)** are one journey
 
 ## What comes after
 
-Knight is the mid-game power spike, and you'll hit it mid-quest. With a companion at your side, sharpen up at the **[PK Training Arena](/wiki/gameplay-roadmap)** (free loaner kits, sparring bots that teach real mechanics) between rungs, and hunt for real - player kills pay **Blood Money**. Entry bosses, the Fight Cave, and the war's Marches open up along the way too.
+Knight is the mid-game power spike, and you'll hit it mid-quest. With a companion at your side, the ladder itself is your sparring school - every knight teaches the switches, baits and specs that work on real players - so hunt for real between rungs: player kills pay **Blood Money**. The [Corporeal Beast war event](/wiki/corporeal-beast) and the war's Marches open up along the way too.
 
 Breaking the final camp completes the quest - and opens **War-Prep II** (the Ranged drills, the road to Lord). Every beaten knight stays farmable for its signature gear (`::knights`). See the [Gameplay roadmap](/wiki/gameplay-roadmap) for the full journey.

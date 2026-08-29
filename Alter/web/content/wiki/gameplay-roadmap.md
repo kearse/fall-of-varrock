@@ -3,7 +3,7 @@ title: Gameplay roadmap - the player journey
 category: Getting Started
 summary: The whole journey on one page - from your first hour in steel to commanding armies as King.
 order: 3
-updated: 2026-07-13
+updated: 2026-08-28
 ---
 
 New here and wondering what the "point" of the server is? This page is the map. Everything below is one connected journey: you arrive as a Peasant recruit, earn coin and standing, climb the **feudal rank ladder**, and end up commanding armies in the reconquest of Varrock. Every activity on the server - bossing, PKing, skilling, minigames - feeds that climb somewhere.
@@ -15,7 +15,7 @@ New here and wondering what the "point" of the server is? This page is the map. 
 | 1. First hour | Peasant | free | Recruit Trials - guided tour, ends in full steel |
 | 2. First unlocks | Peasant → Commoner | 10k | War-Prep chain, spellbooks unlocked, first Marches |
 | 3. Early game | Squire → Soldier | 50k-150k | Money-making loops, mithril/adamant, finding your playstyle |
-| 4. Mid game | Knight | 500k | Rune armour, first companion, entry bosses, fire cape, real PKing |
+| 4. Mid game | Knight | 500k | Rune armour, first companion, world-boss shares, real PKing |
 | 5. Late game | Lord | 2m | ALL armour (dragon, barrows, GWD), 2 companions, commander powers |
 | 6. Endgame | Minister → King | 10m-50m | Launch campaigns and conquests - the reconquest itself |
 
@@ -53,11 +53,10 @@ Knight is the first big power spike:
 
 - **Rune, granite and void** armour (with mystic and blessed d'hide for the other styles).
 - Your **first [companion](/wiki/companions)** - a levelable bot ally who fights beside you.
-- **Entry bosses** open up in practice: [King Black Dragon, Barrows, Zulrah](/wiki/bosses-overview) - kills pay tradeable **Boss tickets** for the reward shops.
-- The **[Fight Cave](/wiki/fight-cave)** - beat Jad for a fire cape.
-- Minigames for variety and reward points: [Last Man Standing](/wiki/last-man-standing), [Castle Wars](/wiki/castle-wars), [Duel Arena staking](/wiki/duel-arena-staking).
+- The **[Corporeal Beast war event](/wiki/corporeal-beast)** opens up in practice - join a kill, earn a damage share and tradeable **Boss tickets** for the reward shops. (The wider [boss roster](/wiki/bosses-overview) is retired for a rebuild and returns one fight at a time.)
+- The **[Rogue Knight ladder](/wiki/rogue-knights)** keeps climbing with you - mid-ladder knights teach real switches, freezes and spec combos, and drop the gear to match.
 
-This is also when the **wilderness** starts making sense. Learn to fight at the [PK Training Arena](/wiki/pk-training-arena) (free loaner kits, sparring bots that teach real NH mechanics), then hunt for real: player kills pay **[Blood Money](/wiki/pk-rewards-and-stats)** and drop their risk as a [loot key](/wiki/wilderness-loot-keys), and [PK bots](/wiki/pk-bots-and-highwaymen) guarantee you fights at every depth. [Death here is OSRS-standard](/wiki/death-and-item-protection) - keep 3, risk the rest.
+This is also when the **wilderness** starts making sense. The ladder's safe road camps are your PK schooling; then hunt for real: player kills pay **[Blood Money](/wiki/pk-rewards-and-stats)** and drop their risk as a [loot key](/wiki/wilderness-loot-keys), and [PK bots](/wiki/pk-bots-and-highwaymen) guarantee you fights at every depth. [Death here is OSRS-standard](/wiki/death-and-item-protection) - keep 3, risk the rest.
 
 ## Stage 5 - Late game: Lord (2m)
 
@@ -67,7 +66,7 @@ Lord removes the armour ceiling entirely - **dragon, barrows, Armadyl, ancestral
 - `::summonboss` - summon a **city boss** like the [Corporeal Beast](/wiki/corporeal-beast) for a pooled, damage-split raid.
 - A **second companion** joins your warband.
 
-Your PvM ceiling rises to match: **God Wars Dungeon**, the elite roster (Vorkath, Alchemical Hydra, Nex, Phantom Muspah…), and the **[Inferno](/wiki/inferno)** for the infernal cape. Boss tickets buy the endgame chase gear at the Warlord's Armoury, [the Forge](/wiki/the-forge) upgrades rune into dragon, and Blood Money buys the wilderness prestige sets (Vesta's, Statius's, Morrigan's, Zuriel's) that only PKers can wear proudly.
+Your gear ceiling rises to match: Boss tickets buy the endgame chase gear at the Warlord's Armoury, [the Forge](/wiki/the-forge) upgrades rune into dragon, the [Royal Smith's war-forge](/wiki/war-forging) turns war Commendations into Torva, Masori and Ancestral, and Blood Money buys the wilderness prestige sets (Vesta's, Statius's, Morrigan's, Zuriel's) that only PKers can wear proudly. The retired elite bosses (God Wars, Vorkath, Nex and the rest) return here, one rebuilt fight at a time - see [What's coming next](/wiki/coming-soon).
 
 ## Stage 6 - Endgame: Minister and King
 
@@ -79,8 +78,8 @@ This is the loop the whole server bends toward: skillers fill the supply meter, 
 
 The rank ladder is the spine, but you climb it however you like to play:
 
-- **The PvMer** - drop tables → entry bosses → fire cape → GWD/elite bosses → Inferno. Currency: coins + Boss tickets.
-- **The PKer** - PK Training Arena → wilderness loot keys → Elo climb → spec weapons and prestige sets. Currency: Blood Money.
+- **The PvMer** - drop tables → slayer contracts → the Corporeal Beast war event → the Armoury's ticket catalogue (and the rebuilt boss roster as it returns). Currency: coins + Boss tickets.
+- **The PKer** - the Rogue Knight ladder → wilderness loot keys → Elo climb → spec weapons and prestige sets. Currency: Blood Money.
 - **The skiller** - Mire loops → Quartermaster deposits → supply meter → contracts. Currency: coins + War Effort (and campaigns literally can't launch without you).
 - **The soldier** - marches → district bounties → campaigns → troop command. Currency: pooled spoils + prestige.
 

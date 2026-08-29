@@ -59,45 +59,6 @@ object CompanionBrain {
 
     fun tick(world: World, comp: Companion) {
         if (comp.index < 0 || comp.isDead()) return
-        // Mid-SPAR the companion IS the opponent — the NH BotBrain owns it entirely (driven by
-        // CompanionSparringPlugin's 1-tick timer). This MUST come before every stand-down gate
-        // below: the owner is `TrainingArena.inBout` during the bout, and that gate would strip
-        // the sparring companion's combat target every registry tick, leaving it passive.
-        if (org.alter.plugins.content.minigames.pktraining.CompanionSparring.isSparring(comp)) return
-        // Owner competing in Last Man Standing → companions HOLD where they are. Every order's
-        // catch-up snap (moveTo on height/distance mismatch) would otherwise teleport them onto the
-        // island as free bodyguards — a battle royale with three guards isn't one. They stand down
-        // and resume the moment the owner's game ends.
-        CompanionRegistry.ownerOf(world, comp)?.let { owner ->
-            if (org.alter.plugins.content.minigames.lms.LmsGame.inGame(owner)) {
-                if (comp.isAttacking()) { comp.removeCombatTarget(); comp.resetFacePawn() }
-                return
-            }
-            // Owner in a staked DUEL → companions stand down, UNLESS the duel's rules allow
-            // companions (the 4v4) — and even then a companion knocked out of the duel stays
-            // benched (no auto-respawn reinforcements). Standing down also stops the formation
-            // snap, so barred companions wait outside the pit instead of spectating inside it.
-            org.alter.plugins.content.minigames.duel.DuelArena.duelOf(owner)?.let { duel ->
-                if (!duel.rules.allowCompanions || comp in duel.benched) {
-                    if (comp.isAttacking()) { comp.removeCombatTarget(); comp.resetFacePawn() }
-                    return
-                }
-            }
-            // Owner mid-bout at the PK TRAINING arena → companions hold too: the spar bot only
-            // targets the trainee, so a "helping" companion would beat on it for free wins and
-            // ruin the lesson. They resume the moment the round ends.
-            if (org.alter.plugins.content.minigames.pktraining.TrainingArena.inBout(owner)) {
-                if (comp.isAttacking()) { comp.removeCombatTarget(); comp.resetFacePawn() }
-                return
-            }
-            // Owner in the Fight Cave → companions HOLD. A companion follows into the private instance
-            // and tanks Jad and the waves (they retarget whoever hits them), so the player is barely
-            // attacked — the "Jad not attacking me" report. They resume when the run ends.
-            if (org.alter.plugins.content.minigames.fightcave.FightCavePlugin.inCave(owner)) {
-                if (comp.isAttacking()) { comp.removeCombatTarget(); comp.resetFacePawn() }
-                return
-            }
-        }
         CompanionLoot.sweep(world, comp) // donor perk: bank nearby loot before doing anything else
         org.alter.plugins.content.bots.BotBrain.maybeEat(comp) // survive fights from its food supply
         if (TOWN.contains(comp.tile)) CompanionGear.restock(comp) // top up food/runes at the safezone
