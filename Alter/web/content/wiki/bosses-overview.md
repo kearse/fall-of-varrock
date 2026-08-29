@@ -6,7 +6,7 @@ order: 4
 updated: 2026-08-28
 ---
 
-**One boss rules the realm right now: the [Corporeal Beast](/wiki/corporeal-beast).** The old lair roster - KBD, Zulrah, Barrows, God Wars, the wilderness bosses and the rest - has been **temporarily retired**. Those fights weren't up to our standard, so rather than leave rough versions live we've pulled them wholesale and are rebuilding each one properly. They'll come back **one at a time** as finished, accurate fights - watch [What's coming next](/wiki/coming-soon) and the in-game news for each return.
+**Two bosses rule the realm right now: the [Corporeal Beast](/wiki/corporeal-beast) war event and [Vorkath](/wiki/vorkath)** — the first fight of the rebuilt roster, live on Ungael. The rest of the old lair roster - KBD, Zulrah, Barrows, God Wars, the wilderness bosses and the rest - has been **temporarily retired**. Those fights weren't up to our standard, so rather than leave rough versions live we've pulled them wholesale and are rebuilding each one properly. They'll come back **one at a time** as finished, accurate fights - watch [What's coming next](/wiki/coming-soon) and the in-game news for each return.
 
 ## The Corporeal Beast (Event)
 
@@ -19,9 +19,16 @@ The War's city world boss, fought at the **Lumbridge event arena** - and the bes
 
 Full mechanics, drop rates and sponsor shares: [Corporeal Beast](/wiki/corporeal-beast).
 
+## Vorkath — the first rebuilt fight
+
+The undead dragon of Ungael is back, rebuilt from the ground up on the fixed combat core: a
+**solo instanced** fight with dodge mechanics, an acid phase and a zombified-spawn phase, paying
+superior dragon bones every kill and chase drops from **Vorkath's head** to the **skeletal
+visage** and **Vorki**. Teleport portal → Bosses → Vorkath. Full guide: [Vorkath](/wiki/vorkath).
+
 ## Collection log
 
-Notable boss drops are tracked automatically - you'll see a "New Collection Log slot" message on a first-time drop. Right now the log covers the Corporeal Beast; pages return as each rebuilt boss ships.
+Notable boss drops are tracked automatically - you'll see a "New Collection Log slot" message on a first-time drop. Right now the log covers the Corporeal Beast and Vorkath; pages return as each rebuilt boss ships.
 
 - `::clog` - opens the native OSRS collection log interface
 - `::cl` - plain text readout of every category and what you've ticked off
@@ -34,6 +41,6 @@ These are the fights being rebuilt. None are playable today; their old teleport 
 - **Wilderness bosses** - Callisto, Vet'ion, Venenatis, Scorpia, Chaos Elemental, Chaos Fanatic, Crazy Archaeologist, and the Revenant Caves
 - **PvM / Slayer bosses** - Kraken, Cerberus, Giant Mole, Kalphite Queen, Sarachnis, Thermonuclear Smoke Devil, Demonic Gorillas, Skotizo, the Dagannoth Kings
 - **God Wars Dungeon** - General Graardor, K'ril Tsutsaroth, Kree'arra, Commander Zilyana
-- **Elite tier** - Vorkath, Alchemical Hydra, Phantom Muspah, Abyssal Sire, Nex, Grotesque Guardians
+- **Elite tier** - Alchemical Hydra, Phantom Muspah, Abyssal Sire, Nex, Grotesque Guardians (**Vorkath is back** - see above)
 
 Their **gear didn't leave with them**: Barrows sets, GWD bases, boss uniques and the rest are still in the economy and on the ticket shelves - see [Path to end game](/wiki/path-to-end-game) for where every rare comes from today.
