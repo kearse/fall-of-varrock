@@ -80,6 +80,13 @@ object MeleeCombatFormula : CombatFormula {
         hit *= getEquipmentMultiplier(player, target)
         hit = Math.floor(hit)
 
+        // Arclight hits ×1.7 vs demons too, not just more accurately
+        // (dps-calc MAX_HIT_DEMONBANE, demonbaneFactor(70)).
+        if (player.hasEquipped(EquipmentType.WEAPON, "item.arclight") && isDemon(target)) {
+            hit *= 1.7
+            hit = Math.floor(hit)
+        }
+
         hit *= specialAttackMultiplier
         hit = Math.floor(hit)
 
@@ -106,7 +113,14 @@ object MeleeCombatFormula : CombatFormula {
         hit *= getEquipmentMultiplier(player, target)
         hit = Math.floor(hit)
 
-        hit *= (if (player.hasEquipped(EquipmentType.WEAPON, "item.arclight") && isDemon(target)) 1.7 else specialAttackMultiplier)
+        // Arclight's demonbane is its OWN ×1.7 accuracy factor vs demons (dps-calc
+        // demonbaneFactor(70)) — it composes with a special attack, never replaces it.
+        if (player.hasEquipped(EquipmentType.WEAPON, "item.arclight") && isDemon(target)) {
+            hit *= 1.7
+            hit = Math.floor(hit)
+        }
+
+        hit *= specialAttackMultiplier
         hit = Math.floor(hit)
 
         return hit
@@ -248,12 +262,14 @@ object MeleeCombatFormula : CombatFormula {
     /**
      * Salve amulets only work against the undead; black masks only against the wearer's
      * current Slayer assignment. Salve takes precedence and never stacks with the mask.
+     * The imbued variants keep their melee bonus (dps-calc melee accuracy: Salve (e)/(ei)
+     * are ×6/5, Salve/(i) are ×7/6).
      */
     private fun getEquipmentMultiplier(player: Player, target: Pawn): Double {
         val undead = isUndead(target)
         return when {
-            undead && player.hasEquipped(EquipmentType.AMULET, "item.salve_amulet_e") -> 1.2
-            undead && player.hasEquipped(EquipmentType.AMULET, "item.salve_amulet") -> 7.0 / 6.0
+            undead && player.hasEquipped(EquipmentType.AMULET, "item.salve_amulet_e", "item.salve_amuletei") -> 1.2
+            undead && player.hasEquipped(EquipmentType.AMULET, "item.salve_amulet", "item.salve_amuleti") -> 7.0 / 6.0
             (player.hasEquipped(EquipmentType.HEAD, *BLACK_MASKS) || player.hasEquipped(EquipmentType.HEAD, *BLACK_MASKS_I)) &&
                 SlayerCombat.isOnTaskAgainst(player, target) -> 7.0 / 6.0
             else -> 1.0
