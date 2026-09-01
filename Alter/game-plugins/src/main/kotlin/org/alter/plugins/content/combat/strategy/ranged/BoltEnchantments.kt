@@ -43,6 +43,14 @@ object BoltEnchantments {
             items.any { runCatching { player.hasEquipped(EquipmentType.AMMO, it) }.getOrDefault(false) }
         }?.first
 
+    /** Roll [effect]'s proc for one shot. [doubleChance] doubles the base rate (the
+     *  Armadyl crossbow spec's "Armadyl Eye"). Matches the per-shot roll in
+     *  RangedCombatStrategy (world.random(99) < percent). */
+    fun rollProc(effect: Effect, roll: Int, doubleChance: Boolean = false): Boolean {
+        val pct = if (doubleChance) effect.procPercent * 2 else effect.procPercent
+        return roll < pct
+    }
+
     /** Damage a Ruby proc deals: 20% of the target's current HP, capped at 100. */
     fun rubyDamage(targetCurrentHp: Int): Int = minOf(100, targetCurrentHp / 5)
 

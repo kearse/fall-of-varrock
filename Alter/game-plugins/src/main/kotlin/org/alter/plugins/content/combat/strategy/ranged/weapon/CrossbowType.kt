@@ -8,9 +8,11 @@ import org.alter.plugins.content.combat.strategy.ranged.ammo.Bolts.BONE_BOLTS
 import org.alter.plugins.content.combat.strategy.ranged.ammo.Bolts.BROAD_BOLTS
 import org.alter.plugins.content.combat.strategy.ranged.ammo.Bolts.BRONZE_BOLTS
 import org.alter.plugins.content.combat.strategy.ranged.ammo.Bolts.DRAGON_BOLTS
+import org.alter.plugins.content.combat.strategy.ranged.ammo.Bolts.DRAGON_GEM_TIPPED_BOLTS
 import org.alter.plugins.content.combat.strategy.ranged.ammo.Bolts.GEM_TIPPED_BOLTS
 import org.alter.plugins.content.combat.strategy.ranged.ammo.Bolts.IRON_BOLTS
 import org.alter.plugins.content.combat.strategy.ranged.ammo.Bolts.KEBBIT_BOLTS
+import org.alter.plugins.content.combat.strategy.ranged.ammo.Bolts.MITHRIL_BOLTS
 import org.alter.plugins.content.combat.strategy.ranged.ammo.Bolts.RUNITE_BOLTS
 import org.alter.plugins.content.combat.strategy.ranged.ammo.Bolts.STEEL_BOLTS
 
@@ -25,21 +27,21 @@ enum class CrossbowType(val item: Int, val ammo: Array<Int>) {
     IRON_CROSSBOW(item = getRSCM("item.iron_crossbow"), ammo = BRONZE_BOLTS + IRON_BOLTS),
     STEEL_CROSSBOW(item = getRSCM("item.steel_crossbow"), ammo = BRONZE_BOLTS + IRON_BOLTS + STEEL_BOLTS),
 
-    // @TODO MITH_CROSSBOW(item = Items.MITHRIL_CROSSBOW, ammo = BRONZE_BOLTS + IRON_BOLTS + STEEL_BOLTS + MITHRIL_BOLTS),
-    ADAMANT_CROSSBOW(item = getRSCM("item.adamant_crossbow"), ammo = BRONZE_BOLTS + IRON_BOLTS + STEEL_BOLTS + ADAMANT_BOLTS),
-    RUNE_CROSSBOW(item = getRSCM("item.rune_crossbow"), ammo = BRONZE_BOLTS + IRON_BOLTS + STEEL_BOLTS + ADAMANT_BOLTS + BROAD_BOLTS + RUNITE_BOLTS + GEM_TIPPED_BOLTS),
+    MITHRIL_CROSSBOW(item = getRSCM("item.mithril_crossbow"), ammo = BRONZE_BOLTS + IRON_BOLTS + STEEL_BOLTS + MITHRIL_BOLTS),
+    ADAMANT_CROSSBOW(item = getRSCM("item.adamant_crossbow"), ammo = BRONZE_BOLTS + IRON_BOLTS + STEEL_BOLTS + MITHRIL_BOLTS + ADAMANT_BOLTS),
+    RUNE_CROSSBOW(item = getRSCM("item.rune_crossbow"), ammo = BRONZE_BOLTS + IRON_BOLTS + STEEL_BOLTS + MITHRIL_BOLTS + ADAMANT_BOLTS + BROAD_BOLTS + RUNITE_BOLTS + GEM_TIPPED_BOLTS),
     DRAGON_CROSSBOW(
         item = getRSCM("item.dragon_crossbow"),
-        ammo = BRONZE_BOLTS + IRON_BOLTS + STEEL_BOLTS + ADAMANT_BOLTS + BROAD_BOLTS + RUNITE_BOLTS + GEM_TIPPED_BOLTS + DRAGON_BOLTS,
+        ammo = BRONZE_BOLTS + IRON_BOLTS + STEEL_BOLTS + MITHRIL_BOLTS + ADAMANT_BOLTS + BROAD_BOLTS + RUNITE_BOLTS + GEM_TIPPED_BOLTS + DRAGON_BOLTS + DRAGON_GEM_TIPPED_BOLTS,
     ),
 
     DRAGON_HUNTER_CROSSBOW(
         item = getRSCM("item.dragon_hunter_crossbow"),
-        ammo = BRONZE_BOLTS + IRON_BOLTS + STEEL_BOLTS + ADAMANT_BOLTS + BROAD_BOLTS + RUNITE_BOLTS + GEM_TIPPED_BOLTS + DRAGON_BOLTS,
+        ammo = BRONZE_BOLTS + IRON_BOLTS + STEEL_BOLTS + MITHRIL_BOLTS + ADAMANT_BOLTS + BROAD_BOLTS + RUNITE_BOLTS + GEM_TIPPED_BOLTS + DRAGON_BOLTS + DRAGON_GEM_TIPPED_BOLTS,
     ),
     ARMADYL_CROSSBOW(
         item = getRSCM("item.armadyl_crossbow"),
-        ammo = BRONZE_BOLTS + IRON_BOLTS + STEEL_BOLTS + ADAMANT_BOLTS + BROAD_BOLTS + RUNITE_BOLTS + GEM_TIPPED_BOLTS + DRAGON_BOLTS,
+        ammo = BRONZE_BOLTS + IRON_BOLTS + STEEL_BOLTS + MITHRIL_BOLTS + ADAMANT_BOLTS + BROAD_BOLTS + RUNITE_BOLTS + GEM_TIPPED_BOLTS + DRAGON_BOLTS + DRAGON_GEM_TIPPED_BOLTS,
     ),
 
     BLURITE_CROSSBOW(item = getRSCM("item.blurite_crossbow"), ammo = BRONZE_BOLTS + BLURITE_BOLTS),

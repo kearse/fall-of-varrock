@@ -34,7 +34,10 @@ class DragonScimitarPlugin(
             if (landHit) {
                 val victim = target
                 if (victim is Player) {
-                    Prayers.deactivateAll(victim)
+                    // Disables ONLY overhead/protection prayers and blocks re-activation for
+                    // 5 ticks — the old deactivateAll() also killed Piety/Rigour/etc., which
+                    // the OSRS spec does not touch.
+                    Prayers.disableOverheads(victim, cycles = 5)
                 }
             }
         }

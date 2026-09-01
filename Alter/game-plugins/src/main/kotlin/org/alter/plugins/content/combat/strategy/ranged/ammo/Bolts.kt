@@ -16,12 +16,27 @@ object Bolts {
     val BLURITE_BOLTS = arrayOf(getRSCM("item.blurite_bolts"), getRSCM("item.blurite_bolts_p"), getRSCM("item.blurite_bolts_p_9293"), getRSCM("item.blurite_bolts_p_9300"))
     val GEM_TIPPED_BOLTS =
         arrayOf(
+            getRSCM("item.opal_bolts"), getRSCM("item.opal_bolts_e"),
+            getRSCM("item.jade_bolts"), getRSCM("item.jade_bolts_e"),
+            getRSCM("item.pearl_bolts"), getRSCM("item.pearl_bolts_e"),
+            getRSCM("item.topaz_bolts"), getRSCM("item.topaz_bolts_e"),
             getRSCM("item.sapphire_bolts"), getRSCM("item.sapphire_bolts_e"),
             getRSCM("item.emerald_bolts"), getRSCM("item.emerald_bolts_e"),
             getRSCM("item.ruby_bolts"), getRSCM("item.ruby_bolts_e"),
             getRSCM("item.diamond_bolts"), getRSCM("item.diamond_bolts_e"), getRSCM("item.diamond_bolts_e_23649"),
             getRSCM("item.dragonstone_bolts"), getRSCM("item.dragonstone_bolts_e"),
             getRSCM("item.onyx_bolts"), getRSCM("item.onyx_bolts_e"),
+        )
+
+    /** Enchanted DRAGON bolts (e). Their effects are implemented in BoltEnchantments but
+     *  they were rejected by every crossbow's ammo gate. Usable in dragon-tier crossbows. */
+    val DRAGON_GEM_TIPPED_BOLTS =
+        arrayOf(
+            getRSCM("item.opal_dragon_bolts_e"), getRSCM("item.jade_dragon_bolts_e"),
+            getRSCM("item.pearl_dragon_bolts_e"), getRSCM("item.topaz_dragon_bolts_e"),
+            getRSCM("item.sapphire_dragon_bolts_e"), getRSCM("item.emerald_dragon_bolts_e"),
+            getRSCM("item.ruby_dragon_bolts_e"), getRSCM("item.diamond_dragon_bolts_e"),
+            getRSCM("item.dragonstone_dragon_bolts_e"), getRSCM("item.onyx_dragon_bolts_e"),
         )
     val BONE_BOLTS = arrayOf(getRSCM("item.bone_bolts"))
     val KEBBIT_BOLTS = arrayOf(getRSCM("item.kebbit_bolts"), getRSCM("item.long_kebbit_bolts"))

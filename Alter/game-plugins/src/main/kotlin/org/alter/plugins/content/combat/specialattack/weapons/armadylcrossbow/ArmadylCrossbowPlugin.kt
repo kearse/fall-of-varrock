@@ -18,8 +18,8 @@ import org.alter.plugins.content.mechanics.poison.Poison
 
 /**
  * Armadyl crossbow (11785) special attack: "Armadyl Eye".
- * 40% energy, double accuracy, and the equipped enchanted bolt's effect is
- * GUARANTEED to trigger (OSRS Wiki, Armadyl crossbow).
+ * 50% energy, double accuracy, and the equipped enchanted bolt's effect has DOUBLE the
+ * normal chance to trigger (OSRS Wiki, Armadyl crossbow — it is not a guaranteed proc).
  */
 class ArmadylCrossbowPlugin(
     r: PluginRepository,
@@ -28,16 +28,19 @@ class ArmadylCrossbowPlugin(
 ) : KotlinPlugin(r, world, server) {
 
     init {
-        SpecialAttacks.register("item.armadyl_crossbow", 40) {
+        SpecialAttacks.register("item.armadyl_crossbow", 50) {
             player.animate(id = 4230)
             player.fireAmmoProjectile(target)
 
             val delay = RangedCombatStrategy.getHitDelay(player.getCentreTile(), target.getCentreTile())
-            val effect = BoltEnchantments.effectFor(player)
+            // Double the proc chance rather than forcing it: the spec doubles the bolt's
+            // base rate, not a guarantee. A rolled miss falls through to a normal hit.
+            val effect = BoltEnchantments.effectFor(player)?.takeIf {
+                BoltEnchantments.rollProc(it, world.random(99), doubleChance = true)
+            }
             var maxHit = RangedCombatFormula.getMaxHit(player, target, specialAttackMultiplier = 1.0)
             var landHit = RangedCombatFormula.getAccuracy(player, target, specialAttackMultiplier = 2.0) >= world.randomDouble()
 
-            // Forced proc: same modifiers the per-shot roll applies in RangedCombatStrategy.
             val rangedLvl = player.getSkills().getCurrentLevel(Skills.RANGED)
             when (effect) {
                 BoltEnchantments.Effect.DIAMOND -> {

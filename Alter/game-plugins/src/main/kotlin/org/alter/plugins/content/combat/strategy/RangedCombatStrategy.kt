@@ -37,6 +37,20 @@ object RangedCombatStrategy : CombatStrategy {
 
     private const val MAX_ATTACK_RANGE = 10
 
+    private val SALAMANDERS = listOf(
+        "item.swamp_lizard", "item.orange_salamander", "item.red_salamander",
+        "item.black_salamander", "item.tecu_salamander",
+    ).mapNotNull { runCatching { getRSCM(it) }.getOrNull() }.toSet()
+
+    private val THROWNAXES = listOf(
+        "item.bronze_thrownaxe", "item.iron_thrownaxe", "item.steel_thrownaxe",
+        "item.mithril_thrownaxe", "item.adamant_thrownaxe", "item.rune_thrownaxe",
+        "item.dragon_thrownaxe",
+    ).mapNotNull { runCatching { getRSCM(it) }.getOrNull() }.toSet()
+
+    private val TOKTZ_XIL_UL = listOf("item.toktzxilul")
+        .mapNotNull { runCatching { getRSCM(it) }.getOrNull() }.toSet()
+
     override fun getAttackRange(pawn: Pawn): Int {
         if (pawn is Player) {
             val weapon = pawn.getEquipment(EquipmentType.WEAPON)
@@ -47,7 +61,11 @@ object RangedCombatStrategy : CombatStrategy {
                     getRSCM("item.armadyl_crossbow") -> 8
                     getRSCM("item.craws_bow"), getRSCM("item.craws_bow_u") -> 10
                     getRSCM("item.chinchompa_10033"), getRSCM("item.red_chinchompa_10034"), getRSCM("item.black_chinchompa") -> 9
-                    in Bows.LONG_BOWS -> 9
+                    getRSCM("item.toxic_blowpipe") -> 5 // OSRS: blowpipe attacks from 5 tiles
+                    in SALAMANDERS -> 1 // salamanders are 1-tile weapons
+                    in THROWNAXES -> 4
+                    in TOKTZ_XIL_UL -> 4
+                    in Bows.LONG_BOWS -> 10 // OSRS: longbows/comp bows attack from 10 tiles
                     in Knives.KNIVES -> 4 // OSRS: throwing knives attack from 4 tiles
                     in Darts.DARTS -> 3
                     in Bows.CRYSTAL_BOWS -> 10
@@ -75,6 +93,12 @@ object RangedCombatStrategy : CombatStrategy {
             if (crossbow != null && ammo?.id !in crossbow.ammo) {
                 val message = if (ammo != null) "You can't use that ammo with your crossbow." else "There is no ammo left in your quiver."
                 pawn.message(message)
+                return false
+            }
+            // Fallback: a CROSSBOW-type weapon that isn't in the enum still must not fire an
+            // empty quiver (the enum check above no-ops for unknown crossbows).
+            if (crossbow == null && pawn.hasWeaponType(WeaponType.CROSSBOW) && ammo == null) {
+                pawn.message("There is no ammo left in your quiver.")
                 return false
             }
 
@@ -155,15 +179,16 @@ object RangedCombatStrategy : CombatStrategy {
              */
             val consumable = ammoSlot != EquipmentType.WEAPON || ammoProjectile != null
             if (pawn !is PkBot && ammo != null && consumable && (ammoProjectile == null || !ammoProjectile.breakOnImpact())) {
-                // Per-cape ammo outcome bands (one roll): Ava's assembler keeps 100% (it
-                // previously still broke 20% because the break roll was independent);
-                // accumulator keeps 72%, drops 8%, breaks 20%; no device drops 80%/breaks 20%.
+                // Per-cape ammo outcome bands (one roll, OSRS Wiki "Ammo Saving"):
+                //  - Ava's assembler: saves 80%, breaks 20% (never drops on the ground);
+                //  - accumulator: saves 72%, drops 8%, breaks 20%;
+                //  - no device: drops 80%, breaks 20%.
                 val chance = world.random(99)
                 val breakAmmo: Boolean
                 val dropAmmo: Boolean
                 when {
                     pawn.hasEquipped(EquipmentType.CAPE, "item.avas_assembler") -> {
-                        breakAmmo = false
+                        breakAmmo = chance in 0..19
                         dropAmmo = false
                     }
                     pawn.hasEquipped(EquipmentType.CAPE, "item.avas_accumulator") -> {
