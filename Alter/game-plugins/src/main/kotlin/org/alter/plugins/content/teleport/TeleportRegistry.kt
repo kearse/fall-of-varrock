@@ -126,7 +126,9 @@ object TeleportRegistry {
         // Lands in front of the Void Knight at the mainland end of the tower bridge — talk to
         // him to start a solo or multi game; the instanced fight is elsewhere.
         built("wizard_tower", "Wizard Tower", MINIGAMES, Tile(3113, 3211, 0), SAFE_ZONE),
-        soon("fight_cave", "Fight Cave", MINIGAMES),
+        // Lands beside TzHaar-Mej-Jal at the live cave entrance — talk to him (or ::arena)
+        // to start a run, ::jad to practice (Kronos port #4: the real 63-wave engine).
+        built("fight_cave", "Fight Cave", MINIGAMES, Tile(2413, 5117, 0), SAFE_ZONE),
         soon("inferno", "The Inferno", MINIGAMES),
         soon("castle_wars", "Castle Wars", MINIGAMES),
         soon("last_man_standing", "Last Man Standing", MINIGAMES),
