@@ -148,7 +148,10 @@ class ZulrahCombatPlugin(
         val old = this
         world.queue {
             wait(2)
-            if (old.isDead()) return@queue
+            // Also bail if the old form was REMOVED (owner logged out/died during submerge —
+            // the allocator's world.removeAll fires index < 0 without isDead). Spawning the
+            // next form then would strand a live Zulrah in the freed instance space.
+            if (old.isDead() || old.index < 0) return@queue
             val hp = old.getCurrentHp()
             world.remove(old)
             val dest = Tile(state.anchor.x + next.loc.dx, state.anchor.z + next.loc.dz, state.anchor.height)
