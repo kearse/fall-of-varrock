@@ -64,9 +64,15 @@ class RejuvenationPoolPlugin(
 
         player.heal(player.getMaxHp()) // capValue 0 -> up to base, never strips an overheal
 
-        val basePrayer = skills.getBaseLevel(Skills.PRAYER)
-        if (skills.getCurrentLevel(Skills.PRAYER) < basePrayer) {
-            skills.setCurrentLevel(Skills.PRAYER, basePrayer)
+        // Restore EVERY drained stat to its base level — spec-weapon drains, Sara brew's
+        // attack/strength hit, skilling drains, smite'd prayer, all of it. Only lifts stats
+        // that sit BELOW base: active boosts (potions, the HP overheal above) are kept, which
+        // is the ornate-pool behaviour ("restores reduced stats") rather than a hard reset.
+        for (skill in 0 until skills.maxSkills) {
+            val base = skills.getBaseLevel(skill)
+            if (skills.getCurrentLevel(skill) < base) {
+                skills.setCurrentLevel(skill, base)
+            }
         }
 
         player.runEnergy = MAX_RUN_ENERGY
