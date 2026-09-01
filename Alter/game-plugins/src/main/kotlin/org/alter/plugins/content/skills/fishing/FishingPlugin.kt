@@ -105,7 +105,7 @@ class FishingPlugin(
                 logger.warn { "fishing: couldn't bind spot option '$opt'" }
             }
         }
-        if (opts.size < 2) logger.warn { "fishing: spot has a single option; choose-fish menu is via ::fish." }
+        if (opts.size < 2) logger.info { "fishing: spot has a single option; choose-fish menu is via ::fish." }
 
         // The spot npc carries a single cache action in this cache, so the choose-fish menu needs
         // its own entry point (guaranteed-reachable command, same pattern as ::market / ::bonds).

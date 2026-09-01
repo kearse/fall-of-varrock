@@ -4,10 +4,7 @@ import org.alter.api.EquipmentType
 import org.alter.api.ext.*
 import org.alter.game.Server
 import org.alter.game.model.World
-import org.alter.game.model.attr.CW_BOT_ATTR
 import org.alter.game.model.attr.KILLER_ATTR
-import org.alter.game.model.attr.LMS_BOT_ATTR
-import org.alter.game.model.attr.SPAR_BOT_ATTR
 import org.alter.game.model.entity.GroundItem
 import org.alter.game.model.entity.Player
 import org.alter.game.model.item.Item
@@ -62,15 +59,8 @@ class BotCombatPlugin(
         onPlayerPreDeath {
             val bot = player as? PkBot ?: return@onPlayerPreDeath
             if (bot is CompanionPawn) return@onPlayerPreDeath // companions keep their gear (Step 6 adds PvP gear-risk)
-            // Sparring partners are owned by the PK Training Arena: they NEVER drop loot (a trainee
-            // farms them for free). The arena's own death handler strips + despawns them.
-            if (bot.attr[SPAR_BOT_ATTR] == true) return@onPlayerPreDeath
-            // Last Man Standing competitors are owned by the LMS engine — it handles their round loot
-            // and despawn, so skip the wilderness full-kit faucet here (same as spar bots).
-            if (bot.attr[LMS_BOT_ATTR] == true) return@onPlayerPreDeath
-            // Castle Wars fillers respawn endlessly during a game — dropping a kit per death would be
-            // an infinite gear faucet. The Castle Wars engine owns their lifecycle.
-            if (bot.attr[CW_BOT_ATTR] == true) return@onPlayerPreDeath
+            // (The old SPAR/LMS/CW bot guards were removed: the PK arena, LMS and Castle Wars
+            // engines were purged 2026-08-28, so nothing ever set those attrs.)
             val killer = bot.attr[KILLER_ATTR]?.get() as? Player
             dropAllGear(world, bot, killer)
             creditRogueKill(bot, killer)
@@ -82,12 +72,6 @@ class BotCombatPlugin(
             // A companion is NOT despawned — the standard PlayerDeathAction already respawned it at
             // home with full HP; its brain walks it back. So a training death never loses the companion.
             if (bot is CompanionPawn) return@onPlayerDeath
-            // Sparring partners are despawned by the arena (which also messages the trainee), not here.
-            if (bot.attr[SPAR_BOT_ATTR] == true) return@onPlayerDeath
-            // LMS competitors are despawned by the LMS engine's elimination handler, not here.
-            if (bot.attr[LMS_BOT_ATTR] == true) return@onPlayerDeath
-            // Castle Wars fillers are despawned + re-queued by the Castle Wars engine, not here.
-            if (bot.attr[CW_BOT_ATTR] == true) return@onPlayerDeath
             BotManager.despawn(world, bot)
         }
     }

@@ -129,7 +129,9 @@ class Server {
                 debugPackets = devProperties.getOrDefault("debug-packets", false)
             )
 
-        System.setProperty("net.rsprot.protocol.internal.networkLogging", devContext.debugPackets.toString())
+        // RSProt expects an enum (off/trace/debug/info/warn/error), not a boolean string — passing
+        // "true"/"false" logged "Unknown network logging option" every boot and was ignored.
+        System.setProperty("net.rsprot.protocol.internal.networkLogging", if (devContext.debugPackets) "debug" else "off")
 
         PlayerDetails.init(gameContext)
         PlayerSaving.init(gameContext)

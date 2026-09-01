@@ -650,14 +650,6 @@ val KIT_LOADOUTS_ATTR = AttributeKey<String>("kit_loadouts")
 val TOURNEY_STASH_ATTR = AttributeKey<String>("tourney_stash")
 
 /**
- * Marks a [org.alter.game.model.entity.Player] bot as a **sparring partner** owned by the PK
- * Training Arena. The bot-combat plugin skips its normal "drop the full kit to the killer + despawn"
- * death handling for these — the arena owns their lifecycle and they must never faucet gear into the
- * economy (a trainee kills them for free, repeatedly). Transient (bots are never persisted).
- */
-val SPAR_BOT_ATTR = AttributeKey<Boolean>()
-
-/**
  * A JSON blob holding the player's REAL inventory + equipment + spellbook, stashed when they enter a
  * **Last Man Standing** game (content/minigames/lms) — LMS strips your own gear and hands you a starter
  * kit + chest loot for the round. Persistent by design (mirrors [PK_ARENA_STASH_ATTR] but is a SEPARATE
@@ -665,14 +657,6 @@ val SPAR_BOT_ATTR = AttributeKey<Boolean>()
  * gear on disk, restored on the next login. Cleared the moment the player leaves the game.
  */
 val LMS_STASH_ATTR = AttributeKey<String>("lms_stash")
-
-/**
- * Marks a [org.alter.game.model.entity.Player] bot as a **Last Man Standing competitor**. The bot-combat
- * plugin skips its normal "drop the full kit to the killer + despawn" death handling for these — the LMS
- * engine owns their lifecycle and their round loot. Transient (bots are never persisted). Same exemption
- * shape as [SPAR_BOT_ATTR].
- */
-val LMS_BOT_ATTR = AttributeKey<Boolean>()
 
 /**
  * Persistent per-player **Last Man Standing points** counter, earned for kills and wins and spent at the
@@ -689,13 +673,8 @@ val LMS_POINTS_ATTR = AttributeKey<Int>("lms_points")
  */
 val CW_STASH_ATTR = AttributeKey<String>("cw_stash")
 
-/**
- * Marks a [org.alter.game.model.entity.Player] bot as a **Castle Wars filler competitor**. The bot-combat
- * plugin skips its "drop the full kit to the killer + despawn" death handling for these — Castle Wars
- * bots respawn endlessly during a game, so the normal death faucet would print PK kits on repeat. Same
- * exemption shape as [SPAR_BOT_ATTR] / [LMS_BOT_ATTR]. Transient (bots are never persisted).
- */
-val CW_BOT_ATTR = AttributeKey<Boolean>()
+// (SPAR_BOT_ATTR / LMS_BOT_ATTR / CW_BOT_ATTR removed 2026-09-01: the PK arena, LMS and Castle
+//  Wars engines were purged 2026-08-28, so nothing set these and their death-handler guards were dead.)
 
 /** Persistent per-player Castle Wars career **wins** counter (shown at the lobby scoreboard). */
 val CW_WINS_ATTR = AttributeKey<Int>("cw_wins")
