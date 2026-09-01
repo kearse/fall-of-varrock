@@ -53,39 +53,9 @@ class NpcDropPlugin(
             // OSRS drops go to the killer; no human killer (AI/war kills) => no loot.
             val killer = dead.attr[KILLER_ATTR]?.get() as? Player ?: return@onAnyNpcDeath
 
-            val rows = NpcDropTables.tableFor(npcId) {
-                runCatching { getNpc(npcId).name }.getOrNull()
-            } ?: return@onAnyNpcDeath
-
-            val tile = dead.tile
-            for (row in rows) {
-                repeat(row.rolls) {
-                    if (world.randomDouble() >= row.rarity) return@repeat
-
-                    // Skip ids this cache doesn't know (osrsbox spans revisions).
-                    if (runCatching { getItem(row.itemId) }.isFailure) return@repeat
-
-                    var amount =
-                        if (row.max <= row.min) row.min else row.min + world.random(row.max - row.min)
-                    amount = scaleAmount(row.itemId, amount)
-                    if (amount <= 0) return@repeat
-
-                    world.spawn(GroundItem(row.itemId, amount, tile, killer))
-                }
-            }
+            GenericDrops.rollAndDrop(world, dead, killer)
         }
 
         logger.info { "Generic NPC drops active (${NpcDropTables.size} monster tables)." }
-    }
-
-    /** Apply the economy faucet dials: coin stacks by [NpcDropConfig.coinMultiplier], other stackables by quantityMultiplier. */
-    private fun scaleAmount(itemId: Int, amount: Int): Int {
-        val mult = if (itemId == COINS) NpcDropConfig.coinMultiplier else NpcDropConfig.quantityMultiplier
-        if (mult == 1.0) return amount
-        return (amount * mult).toInt().coerceAtLeast(1)
-    }
-
-    private companion object {
-        const val COINS = 995
     }
 }

@@ -300,7 +300,8 @@ object MagicCombatFormula : CombatFormula {
         return when {
             undead && player.hasEquipped(EquipmentType.AMULET, "item.salve_amuletei") -> 1.2
             undead && player.hasEquipped(EquipmentType.AMULET, "item.salve_amuleti") -> 1.15
-            player.hasEquipped(EquipmentType.HEAD, *BLACK_MASKS_I) && SlayerCombat.isOnTaskAgainst(player, target) -> 1.15
+            // Any IMBUED slayer head (black mask (i) or slayer helmet (i) of any colour).
+            SlayerCombat.wearingImbuedSlayerHead(player) && SlayerCombat.isOnTaskAgainst(player, target) -> 1.15
             else -> 1.0
         }
     }

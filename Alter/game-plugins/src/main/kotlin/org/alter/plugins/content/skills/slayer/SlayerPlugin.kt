@@ -114,8 +114,10 @@ class SlayerPlugin(
     private suspend fun QueueTask.say(p: Player, message: String) =
         chatNpc(p, message, npc = masterId, title = "Vannaka")
 
-    /** Tasks whose npc actually exists in the cache, keyed by RSCM npc key. */
+    /** Tasks whose npc actually exists in the cache, keyed by RSCM npc key. A task filtered
+     *  out here silently vanishes from the roster, so log a loud WARN for each drop. */
     private val tasks: Map<String, SlayerTask> = SlayerTasks.ALL
+        .onEach { if (!resolves(it.npcName)) logger.warn { "slayer: task '${it.display}' dropped — npc key '${it.npcName}' does not resolve." } }
         .filter { resolves(it.npcName) }
         .associateBy { it.npcName }
 
@@ -138,7 +140,18 @@ class SlayerPlugin(
 
         // Track every player kill against the killer's active task (cheap: non-player
         // killers and untasked players bail immediately).
-        onAnyNpcDeath { onKill(player = (npc.attr[KILLER_ATTR]?.get() as? Player), deadId = npc.id) }
+        onAnyNpcDeath {
+            val killer = npc.attr[KILLER_ATTR]?.get() as? Player
+            // OSRS Slayer xp: a monster that requires a Slayer level to harm (slayerReq > 1)
+            // grants its own slayerXp on death. WorldSpawnsPlugin loads slayerReq/slayerXp from
+            // npc_combat.json and the engine enforces the req, but this xp was never awarded —
+            // so slayer-req monsters (spectres, nechryael, ...) gave 0 Slayer xp. This is
+            // independent of the custom War-Effort contract crediting in onKill.
+            if (killer != null && npc.combatDef.slayerReq > 1 && npc.combatDef.slayerXp > 0.0) {
+                killer.addXp(Skills.SLAYER, npc.combatDef.slayerXp)
+            }
+            onKill(player = killer, deadId = npc.id)
+        }
 
         onCommand("slayer", description = "Show your Slayer task") {
             reportTask(player)

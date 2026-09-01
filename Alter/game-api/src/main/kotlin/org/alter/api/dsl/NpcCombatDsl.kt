@@ -100,10 +100,16 @@ object NpcCombatDsl {
                 magicDefence = builder.build()
             }
         }
+        @Deprecated(
+            "Per-style defence-bonus blocks have no storage in NpcCombatDef — this builder's " +
+                "result was silently discarded. Use the flat bonus columns instead until the " +
+                "combat model gains melee/range/magic defence-bonus fields.",
+            level = DeprecationLevel.WARNING,
+        )
         fun defence(init: DefenceBuilder.() -> Unit) {
             val builder = DefenceBuilder()
             builder.init()
-
+            // Intentionally unused: combatBuilder has no defence-bonus setter (see @Deprecated).
         }
 
         @CombatDslMarker
