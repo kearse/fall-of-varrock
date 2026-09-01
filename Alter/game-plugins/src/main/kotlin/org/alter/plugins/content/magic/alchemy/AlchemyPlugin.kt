@@ -12,7 +12,9 @@ import org.alter.game.model.World
 import org.alter.game.model.entity.Player
 import org.alter.game.model.timer.TimerKey
 import org.alter.game.plugin.KotlinPlugin
+import org.alter.game.service.game.ItemMetadataService
 import org.alter.game.plugin.PluginRepository
+import org.alter.plugins.content.economy.SpecialShopGuard
 import org.alter.plugins.content.magic.MagicSpells
 import org.alter.plugins.content.magic.SpellMetadata
 import org.alter.rscm.RSCM.getRSCM
@@ -71,8 +73,22 @@ class AlchemyPlugin(
             player.message("You can't alchemise that.")
             return
         }
+        // Special-currency shop wares (Boss Ticket gear etc.): alch was the other half of the
+        // ticket-shop→gp infinite loop (Justiciar chest: 1.2m in tickets → 3.6m alch).
+        if (SpecialShopGuard.isGuarded(itemId)) {
+            player.message("You can't alchemise that.")
+            return
+        }
         if (!MagicSpells.canCast(player, spell.lvl, spell.items, requiredBook = spell.spellbook)) return
-        val value = (getItem(itemId).cost * rate).toInt().coerceAtLeast(1)
+        // Explicit YAML alch overrides win over the cost-derived value; an explicit 0
+        // (TradeableCapes.yml's fire cape) means "this must never pay out" — refuse the
+        // cast entirely rather than eating the item for nothing.
+        val explicit = if (rate >= 0.6) ItemMetadataService.highAlchOverride(itemId) else ItemMetadataService.lowAlchOverride(itemId)
+        if (explicit != null && explicit <= 0) {
+            player.message("You can't alchemise that.")
+            return
+        }
+        val value = explicit ?: (getItem(itemId).cost * rate).toInt().coerceAtLeast(1)
         if (player.inventory.remove(item = itemId, amount = 1, beginSlot = slot).completed == 0) return
         MagicSpells.removeRunes(player, spell.items)
         player.inventory.add(item = getRSCM("item.coins_995"), amount = value)

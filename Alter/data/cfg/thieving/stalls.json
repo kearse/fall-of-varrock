@@ -190,15 +190,14 @@
       "object.gem_stall_54780"
     ],
     "emptyObject": "object.market_stall",
-    "respawnTicks": 24,
+    "respawnTicks": 100,
     "level": 75,
     "experience": 160.0,
     "loot": [
-      { "item": "item.uncut_sapphire", "weight": 40.0 },
-      { "item": "item.uncut_emerald", "weight": 30.0 },
-      { "item": "item.uncut_ruby", "weight": 20.0 },
-      { "item": "item.uncut_diamond", "weight": 9.0 },
-      { "item": "item.uncut_dragonstone", "weight": 1.0 }
+      { "item": "item.uncut_sapphire", "weight": 105.0 },
+      { "item": "item.uncut_emerald", "weight": 27.0 },
+      { "item": "item.uncut_ruby", "weight": 7.0 },
+      { "item": "item.uncut_diamond", "weight": 1.0 }
     ]
   }
 ]

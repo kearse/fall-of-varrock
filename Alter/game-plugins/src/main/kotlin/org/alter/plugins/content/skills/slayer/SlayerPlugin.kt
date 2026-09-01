@@ -550,6 +550,10 @@ class SlayerPlugin(
     /** Reward shop priced in War Effort (sell-only sink). Items guarded so a missing
      *  cache key is simply skipped. (item key -> War Effort cost) */
     private fun buildRewardShop() {
+        // Consumables ONLY. The old rune-gear rows (rune scim 30 / full helm 25 / amulet of
+        // power 20) were a ~200x gold loop: logs cost ~4gp in the hub shops and hand in for
+        // 1 War Effort each at the Supply Depot, so ~100gp of logs bought a 21k-alch helm.
+        // Consumables stay safe because every alch costs a 270gp shop nature rune.
         val wares = listOf(
             "item.shark" to 4,
             "item.prayer_potion4" to 8,
@@ -557,9 +561,6 @@ class SlayerPlugin(
             "item.super_strength4" to 6,
             "item.super_defence4" to 6,
             "item.super_combat_potion4" to 20,
-            "item.rune_scimitar" to 30,
-            "item.rune_full_helm" to 25,
-            "item.amulet_of_power" to 20,
         ).mapNotNull { (key, cost) -> resolveOrNull(key)?.let { it to cost } }
 
         createShop(rewardShop, PointsCurrency(PointKind.WAR_EFFORT), purchasePolicy = PurchasePolicy.BUY_NONE, stockSize = maxOf(wares.size, 1)) {

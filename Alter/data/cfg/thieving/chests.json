@@ -1,4 +1,4 @@
-[
+﻿[
   {
     "objects": [
       "object.chest_11735"
@@ -6,7 +6,7 @@
     "openObject": "object.null_11743",
     "respawnTicks": 12,
     "level": 13,
-    "experience": 7.5,
+    "experience": 7.8,
     "loot": [
       { "item": "item.coins_995", "min": 10, "max": 10 }
     ],
@@ -26,7 +26,8 @@
     "level": 28,
     "experience": 25.0,
     "loot": [
-      { "item": "item.nature_rune", "min": 3, "max": 3 }
+      { "item": "item.nature_rune", "min": 1, "max": 1 },
+      { "item": "item.coins_995", "min": 3, "max": 3 }
     ],
     "trap": {
       "enabled": true,
@@ -40,7 +41,7 @@
       "object.chest_11737"
     ],
     "openObject": "object.null_11743",
-    "respawnTicks": 16,
+    "respawnTicks": 75,
     "level": 43,
     "experience": 125.0,
     "loot": [
@@ -58,11 +59,12 @@
       "object.chest_11738"
     ],
     "openObject": "object.null_11743",
-    "respawnTicks": 16,
+    "respawnTicks": 125,
     "level": 47,
     "experience": 150.0,
     "loot": [
-      { "item": "item.steel_arrowtips", "min": 10, "max": 10 }
+      { "item": "item.steel_arrowtips", "min": 5, "max": 5 },
+      { "item": "item.coins_995", "min": 20, "max": 20 }
     ],
     "trap": {
       "enabled": true,
@@ -76,11 +78,12 @@
       "object.chest_11739"
     ],
     "openObject": "object.null_11743",
-    "respawnTicks": 20,
+    "respawnTicks": 200,
     "level": 59,
     "experience": 250.0,
     "loot": [
-      { "item": "item.blood_rune", "min": 2, "max": 2 }
+      { "item": "item.blood_rune", "min": 2, "max": 2 },
+      { "item": "item.coins_995", "min": 500, "max": 500 }
     ],
     "trap": {
       "enabled": true,
@@ -94,11 +97,14 @@
       "object.chest_11740"
     ],
     "openObject": "object.null_11743",
-    "respawnTicks": 24,
+    "respawnTicks": 400,
     "level": 72,
     "experience": 500.0,
     "loot": [
-      { "item": "item.coins_995", "min": 500, "max": 500 }
+      { "item": "item.coins_995", "min": 1000, "max": 1000 },
+      { "item": "item.raw_shark", "min": 1, "max": 1 },
+      { "item": "item.adamantite_ore", "min": 1, "max": 1 },
+      { "item": "item.uncut_sapphire", "min": 1, "max": 1 }
     ],
     "trap": {
       "enabled": true,
@@ -112,9 +118,9 @@
       "object.chest_11741"
     ],
     "openObject": "object.null_11743",
-    "respawnTicks": 24,
+    "respawnTicks": 200,
     "level": 84,
-    "experience": 500.0,
+    "experience": 701.7,
     "loot": [
       { "item": "item.blood_rune", "min": 4, "max": 4 }
     ],

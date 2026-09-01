@@ -258,24 +258,28 @@
       }
     },
     "loot": [
-      {
-        "item": "item.potato_seed",
-        "min": 1,
-        "max": 1,
-        "weight": 50.00
-      },
-      {
-        "item": "item.strawberry_seed",
-        "min": 1,
-        "max": 1,
-        "weight": 25.00
-      },
-      {
-        "item": "item.ranarr_seed",
-        "min": 1,
-        "max": 1,
-        "weight": 25.00
-      }
+      { "item": "item.potato_seed", "min": 1, "max": 4, "weight": 320.0 },
+      { "item": "item.onion_seed", "min": 1, "max": 3, "weight": 220.0 },
+      { "item": "item.cabbage_seed", "min": 1, "max": 3, "weight": 180.0 },
+      { "item": "item.tomato_seed", "min": 1, "max": 2, "weight": 100.0 },
+      { "item": "item.sweetcorn_seed", "min": 1, "max": 2, "weight": 60.0 },
+      { "item": "item.strawberry_seed", "min": 1, "max": 1, "weight": 40.0 },
+      { "item": "item.marigold_seed", "min": 1, "max": 1, "weight": 20.0 },
+      { "item": "item.watermelon_seed", "min": 1, "max": 1, "weight": 15.0 },
+      { "item": "item.nasturtium_seed", "min": 1, "max": 1, "weight": 10.0 },
+      { "item": "item.guam_seed", "min": 1, "max": 1, "weight": 12.0 },
+      { "item": "item.marrentill_seed", "min": 1, "max": 1, "weight": 8.0 },
+      { "item": "item.tarromin_seed", "min": 1, "max": 1, "weight": 6.0 },
+      { "item": "item.harralander_seed", "min": 1, "max": 1, "weight": 5.0 },
+      { "item": "item.ranarr_seed", "min": 1, "max": 1, "weight": 3.3 },
+      { "item": "item.irit_seed", "min": 1, "max": 1, "weight": 2.0 },
+      { "item": "item.avantoe_seed", "min": 1, "max": 1, "weight": 1.5 },
+      { "item": "item.kwuarm_seed", "min": 1, "max": 1, "weight": 1.2 },
+      { "item": "item.snapdragon_seed", "min": 1, "max": 1, "weight": 1.1 },
+      { "item": "item.cadantine_seed", "min": 1, "max": 1, "weight": 1.0 },
+      { "item": "item.lantadyme_seed", "min": 1, "max": 1, "weight": 0.8 },
+      { "item": "item.dwarf_weed_seed", "min": 1, "max": 1, "weight": 0.7 },
+      { "item": "item.torstol_seed", "min": 1, "max": 1, "weight": 0.35 }
     ]
   },
   {
