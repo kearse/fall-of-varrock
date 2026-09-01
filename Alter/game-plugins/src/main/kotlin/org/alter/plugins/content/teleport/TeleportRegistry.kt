@@ -91,10 +91,12 @@ object TeleportRegistry {
         // Lands by the lab rocks — climb them (or ::hydra) for the solo instanced
         // chamber and its chemical vents (Kronos port #3).
         built("alchemical_hydra", "Alchemical Hydra", BOSSES, Tile(1351, 10249, 0), HOSTILE),
-        soon("gwd_graardor", "General Graardor", BOSSES, HOSTILE),
-        soon("gwd_kril", "K'ril Tsutsaroth", BOSSES, HOSTILE),
-        soon("gwd_kreearra", "Kree'arra", BOSSES, HOSTILE),
-        soon("gwd_zilyana", "Commander Zilyana", BOSSES, HOSTILE),
+        // God Wars throne rooms (Kronos port #5, the package port) — shared-world camps,
+        // landing at each room's edge. TUNE stand-on tiles in-game.
+        built("gwd_graardor", "General Graardor", BOSSES, Tile(2871, 5352, 2), HOSTILE),
+        built("gwd_kril", "K'ril Tsutsaroth", BOSSES, Tile(2926, 5320, 2), HOSTILE),
+        built("gwd_kreearra", "Kree'arra", BOSSES, Tile(2838, 5295, 2), HOSTILE),
+        built("gwd_zilyana", "Commander Zilyana", BOSSES, Tile(2907, 5263, 0), HOSTILE),
         soon("callisto", "Callisto", BOSSES, WILD, wild = 40),
         soon("vetion", "Vet'ion", BOSSES, WILD, wild = 32),
         soon("venenatis", "Venenatis", BOSSES, WILD, wild = 33),

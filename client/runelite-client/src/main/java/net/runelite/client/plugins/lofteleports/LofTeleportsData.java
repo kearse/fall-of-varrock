@@ -111,10 +111,10 @@ final class LofTeleportsData
 			s("Barrows", "Soon", SOON, 4716),                   // dharok's helm
 			b("Vorkath", "Hostile", HOSTILE, 21634),            // vorkath's head
 			b("Alchemical Hydra", "Hostile", HOSTILE, 22988),   // hydra leather
-			s("General Graardor", "Soon", SOON, 11832),         // bandos chestplate
-			s("K'ril Tsutsaroth", "Soon", SOON, 11806),         // zamorak godsword
-			s("Kree'arra", "Soon", SOON, 11826),                // armadyl helmet
-			s("Commander Zilyana", "Soon", SOON, 11808),        // saradomin godsword
+			b("General Graardor", "Hostile", HOSTILE, 11832),   // bandos chestplate (GWD package port)
+			b("K'ril Tsutsaroth", "Hostile", HOSTILE, 11806),   // zamorak godsword
+			b("Kree'arra", "Hostile", HOSTILE, 11826),          // armadyl helmet
+			b("Commander Zilyana", "Hostile", HOSTILE, 11808),  // saradomin godsword
 			s("Callisto", "Soon", SOON, 12603),                 // tyrannical ring
 			s("Vet'ion", "Soon", SOON, 12601),                  // ring of the gods
 			s("Venenatis", "Soon", SOON, 12605),                // treasonous ring
