@@ -174,6 +174,12 @@ class TradingPlugin(
 
         // Decline the trade when a player logs out
         onLogout { player.getTradeSession()?.decline() }
+
+        // Decline the trade when a player dies. The session works on a SNAPSHOT of the
+        // inventory taken at open — the real inventory is only overwritten in complete().
+        // A session that survives death lets both players accept after the killer looted
+        // the corpse, restoring the pre-death snapshot: a full item duplication.
+        onPlayerPreDeath { player.getTradeSession()?.decline(forced = true) }
     }
 
     /**

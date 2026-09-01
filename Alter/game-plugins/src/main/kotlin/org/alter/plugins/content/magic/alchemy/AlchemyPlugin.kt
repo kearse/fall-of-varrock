@@ -10,6 +10,7 @@ import org.alter.api.ext.player
 import org.alter.game.Server
 import org.alter.game.model.World
 import org.alter.game.model.entity.Player
+import org.alter.game.model.timer.TimerKey
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
 import org.alter.plugins.content.magic.MagicSpells
@@ -35,29 +36,39 @@ class AlchemyPlugin(
         MagicSpells.getMiscSpells().values.forEach { spell ->
             val n = spell.name.lowercase()
             when {
-                n.contains("high level alchemy") -> bind(spell, 0.6, 65.0)
-                n.contains("low level alchemy") -> bind(spell, 0.4, 31.0)
+                n.contains("high level alchemy") -> bind(spell, 0.6, 65.0, HIGH_ALCH_DELAY)
+                n.contains("low level alchemy") -> bind(spell, 0.4, 31.0, LOW_ALCH_DELAY)
             }
         }
     }
 
-    private fun bind(spell: SpellMetadata, rate: Double, xp: Double) {
+    private fun bind(spell: SpellMetadata, rate: Double, xp: Double, delayTicks: Int) {
         onSpellOnItem(spell.interfaceId, spell.component, INV_INTERFACE, INV_COMPONENT) {
-            alch(player, spell, rate, xp)
+            alch(player, spell, rate, xp, delayTicks)
         }
     }
 
-    private fun alch(player: Player, spell: SpellMetadata, rate: Double, xp: Double) {
+    private fun alch(player: Player, spell: SpellMetadata, rate: Double, xp: Double, delayTicks: Int) {
+        // OSRS cast cadence: high alch is a 5-tick action, low alch 3 (the Kronos alchDelay
+        // pattern). Without this gate the spell chains as fast as packets arrive — an
+        // unbounded gp/xp faucet.
+        if (player.timers.has(ALCH_DELAY)) return
         val itemId = player.getInteractingItemId()
         val slot = player.getInteractingItemSlot()
         if (itemId == getRSCM("item.coins_995")) {
             player.message("You can't alchemise coins.")
             return
         }
-        // Bonds must NEVER mint gold (bond spec §2.3): 13190's cache cost is 2m and can't be
-        // overridden, so alching one would be a 1.2m faucet per $4.99. Hard-denied here.
+        // Bonds/tickets must NEVER mint gold (bond spec §2.3; tickets are PvM/vote point
+        // currencies, not gp). Hard-denied here.
         if (itemId in unalchable) {
-            player.message("Bonds cannot be alchemised.")
+            player.message("You can't alchemise that.")
+            return
+        }
+        // Untradeables (halos, prestige/rank capes, ...) are point-shop rewards whose cache
+        // costs were never balanced as gp — alching them is an uncontrolled points→gp mint.
+        if (!getItem(itemId).isTradeable) {
+            player.message("You can't alchemise that.")
             return
         }
         if (!MagicSpells.canCast(player, spell.lvl, spell.items, requiredBook = spell.spellbook)) return
@@ -67,16 +78,23 @@ class AlchemyPlugin(
         player.inventory.add(item = getRSCM("item.coins_995"), amount = value)
         player.addXp(Skills.MAGIC, xp)
         player.animate(ALCH_ANIM)
+        player.timers[ALCH_DELAY] = delayTicks
     }
 
     /** Items that may never be alched (gold-faucet guard). Resolved defensively at init. */
-    private val unalchable: Set<Int> = listOf("item.bond", "item.bond_untradeable")
-        .mapNotNull { key -> runCatching { getRSCM(key) }.getOrNull() }
-        .toSet()
+    private val unalchable: Set<Int> =
+        listOf("item.bond", "item.bond_untradeable", "item.boss_ticket", "item.vote_ticket")
+            .mapNotNull { key -> runCatching { getRSCM(key) }.getOrNull() }
+            .toSet()
 
     private companion object {
         const val INV_INTERFACE = 149
         const val INV_COMPONENT = 0
         const val ALCH_ANIM = 713
+        const val HIGH_ALCH_DELAY = 5
+        const val LOW_ALCH_DELAY = 3
+
+        /** Gate between alchemy casts (shared by high/low — OSRS blocks cross-casting too). */
+        val ALCH_DELAY = TimerKey()
     }
 }

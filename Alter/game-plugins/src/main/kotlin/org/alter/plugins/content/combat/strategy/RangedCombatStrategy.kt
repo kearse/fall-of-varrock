@@ -147,8 +147,14 @@ object RangedCombatStrategy : CombatStrategy {
              * Remove or drop ammo if applicable. Bots and companions are exempt: their
              * quivers are dressing (bots spawn with a single arrow), and a companion's
              * dropped ammo lands owned by its uid where the owner can never reclaim it.
+             *
+             * WEAPON-slot "ammo" (the THROWN/CHINCHOMPA categories) is only consumable
+             * when it is a KNOWN consumable projectile (knives/darts/thrownaxes/...).
+             * A thrown-category weapon with no RangedProjectile entry — the toxic
+             * blowpipe is one — must never be dropped or deleted as if it were a knife.
              */
-            if (pawn !is PkBot && ammo != null && (ammoProjectile == null || !ammoProjectile.breakOnImpact())) {
+            val consumable = ammoSlot != EquipmentType.WEAPON || ammoProjectile != null
+            if (pawn !is PkBot && ammo != null && consumable && (ammoProjectile == null || !ammoProjectile.breakOnImpact())) {
                 // Per-cape ammo outcome bands (one roll): Ava's assembler keeps 100% (it
                 // previously still broke 20% because the break roll was independent);
                 // accumulator keeps 72%, drops 8%, breaks 20%; no device drops 80%/breaks 20%.

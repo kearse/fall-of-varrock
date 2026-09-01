@@ -10,6 +10,7 @@ import org.alter.game.model.entity.GroundItem
 import org.alter.game.model.entity.Npc
 import org.alter.game.model.entity.Player
 import org.alter.game.model.queue.QueueTask
+import org.alter.game.model.timer.STUN_TIMER
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
 import org.alter.rscm.RSCM.getRSCM
@@ -38,6 +39,14 @@ class PickpocketPlugin(
     private suspend fun attemptPickpocket(task: QueueTask, player: Player, npc: Npc, entry: PickpocketEntry) {
         val npcName = npc.name.ifBlank { "target" }.lowercase()
         val level = player.getSkills().getCurrentLevel(Skills.THIEVING)
+
+        // A failed pickpocket stuns for several seconds — OSRS blocks ALL actions for the
+        // duration. The engine only enforces STUN_TIMER on object paths, so without this
+        // gate a stunned player can spam-click straight through the stun.
+        if (player.timers.has(STUN_TIMER)) {
+            player.message("You're stunned!")
+            return
+        }
 
         if (level < entry.level) {
             player.message("You need a Thieving level of ${entry.level} to pickpocket this ${npcName}.")
