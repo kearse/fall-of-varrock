@@ -81,10 +81,22 @@ object Combat {
         target: Pawn,
     ) {
         pawn.timers[ATTACK_DELAY] = CombatConfigs.getAttackDelay(pawn)
+        // BOTH combatants are combat-locked (10.2s logout block) — with only the target
+        // timed, an aggressor whose victim didn't retaliate could x-log instantly mid-fight.
+        pawn.timers[ACTIVE_COMBAT_TIMER] = 17
         target.timers[ACTIVE_COMBAT_TIMER] = 17 // 10,2 seconds
 
         pawn.attr[LAST_HIT_ATTR] = WeakReference(target)
         target.attr[LAST_HIT_BY_ATTR] = WeakReference(pawn)
+
+        // Remember who attacked whom for the skull exemption: the victim's counterattack
+        // must not skull them even after the aggressor switches target (the old check only
+        // compared the aggressor's CURRENT combat target — instantaneous and wrong).
+        if (pawn is Player && target is Player) {
+            val map = target.attr[ATTACKED_BY_ATTR] ?: HashMap<Int, Int>().also { target.attr[ATTACKED_BY_ATTR] = it }
+            map[pawn.index] = pawn.world.currentCycle + ATTACKED_BY_WINDOW
+            map.values.removeIf { it < pawn.world.currentCycle } // keep the map tiny
+        }
 
         // Both participants get PJ protection while the exchange is live.
         pawn.timers[PJ_TIMER] = PJ_TICKS
@@ -117,6 +129,10 @@ object Combat {
         if (pawn is org.alter.plugins.content.bots.PkBot || target is org.alter.plugins.content.bots.PkBot) return
         if (!PvpZones.isWilderness(pawn.tile)) return // skulling only happens in the wild
         if (target.getCombatTarget() == pawn) return // they were already attacking us → retaliation, not aggression
+        // Sliding-window memory of who attacked us: retaliating against a recent aggressor
+        // never skulls, even after they switched target or stopped attacking.
+        val attackedBy = pawn.attr[ATTACKED_BY_ATTR]
+        if (attackedBy != null && (attackedBy[target.index] ?: 0) >= pawn.world.currentCycle) return
         if (pawn.getVarbit(Varbit.PK_PREVENT_SKULL) != 0) return // player opted out
         pawn.skull(SkullIcon.WHITE, SKULL_TICKS)
         // A key-carrier's skull is the keyed variant — re-apply it over the plain white one.
@@ -124,6 +140,12 @@ object Combat {
     }
 
     private const val SKULL_TICKS = 2000 // ~20 minutes at 0.6s/tick
+
+    /** attacker index → world cycle until which retaliating against them is skull-exempt. */
+    private val ATTACKED_BY_ATTR = AttributeKey<HashMap<Int, Int>>(resetOnDeath = true)
+
+    /** 1 minute sliding window per aggressor hit — refreshed on every attack they land. */
+    private const val ATTACKED_BY_WINDOW = 100
 
     fun postDamage(
         pawn: Pawn,
@@ -344,6 +366,16 @@ object Combat {
             if (pawn is Player && target.combatDef.slayerReq > pawn.getSkills().getBaseLevel(Skills.SLAYER)) {
                 pawn.message("You need a higher Slayer level to know how to wound this monster.")
                 return false
+            }
+            // Single-way: an npc already fighting ANOTHER player can't be piled — the
+            // mirror of the player-target rule further down. NPC targets had no check at
+            // all, so single-combat zones only protected players, not their kills.
+            if (pawn is Player && PvpZones.isSingle(target.tile)) {
+                val npcTarget = target.getCombatTarget()
+                if (npcTarget is Player && npcTarget != pawn && npcTarget.index >= 0 && !npcTarget.isDead()) {
+                    pawn.message("Someone else is fighting that.")
+                    return false
+                }
             }
         } else if (target is Player) {
             if (!target.isOnline || target.invisible) {

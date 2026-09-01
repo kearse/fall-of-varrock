@@ -36,18 +36,18 @@ object RunEnergy {
     }
 
     /**
-     * OSRS rates on the 0..10000 scale (OSRS Wiki, Energy): drain per running tick is
-     * 67 + 67 x clamp(weight, 0..64)/64 (so 0 kg -> ~0.67%/tick, 64+ kg -> ~1.34%/tick),
-     * stamina cuts drain by 70%. OSRS restore per non-running tick is (floor(agility/6) + 8)
-     * hundredths of a percent, +30% with full graceful; this server restores at 2x that
-     * rate by default. The previous restore expression was computed then discarded in
-     * favour of a flat +5%/tick (0->100% in 12 seconds, agility/graceful/weight all no-ops).
+     * CURRENT OSRS rates (post-Jan-2025 rework; OSRS Wiki "Energy") on the 0..10000 scale:
+     * drain per running tick is (60 + 67 x clamp(weight, 0..64)/64) x (1 - agility/300) —
+     * Agility now reduces DRAIN, not just restore — and stamina cuts the result by 70%.
+     * Restore per non-running tick is (floor(agility/10) + 15) hundredths of a percent,
+     * +30% with full graceful; this server deliberately restores at 2x that rate.
      */
     fun drain(p: Player) {
         if (p.isRunning() && p.hasMoveDestination()) {
             if (!p.hasStorageBit(INFINITE_VARS_STORAGE, InfiniteVarsType.RUN)) {
                 val weight = min(64.0, max(0.0, p.weight))
-                var decrement = 67.0 + (67.0 * weight / 64.0)
+                val agility = p.getSkills().getCurrentLevel(Skills.AGILITY).coerceIn(1, 99)
+                var decrement = (60.0 + (67.0 * weight / 64.0)) * (1.0 - agility / 300.0)
                 if (p.timers.has(STAMINA_BOOST)) {
                     decrement *= 0.3
                 }
@@ -58,8 +58,8 @@ object RunEnergy {
                 p.sendRunEnergy(p.runEnergy.toInt())
             }
         } else if (p.runEnergy < 10000.0 && p.lock.canRestoreRunEnergy()) {
-            // Restores at 2x the OSRS rate by default.
-            var recovery = (p.getSkills().getCurrentLevel(Skills.AGILITY) / 6 + 8).toDouble() * 2.0
+            // Restores at 2x the OSRS rate by default (deliberate server buff).
+            var recovery = (p.getSkills().getCurrentLevel(Skills.AGILITY) / 10 + 15).toDouble() * 2.0
             if (isWearingFullGrace(p)) {
                 recovery *= 1.3
             }

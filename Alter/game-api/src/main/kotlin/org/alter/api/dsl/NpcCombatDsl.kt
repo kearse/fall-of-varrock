@@ -272,7 +272,9 @@ object NpcCombatDsl {
          */
         var aggroMinutes: Int = -1
             set(value) {
-                aggroTimer * 1000
+                // 1 minute = 100 game ticks. The old body computed `aggroTimer * 1000` and
+                // DISCARDED it — any user of this alias silently produced a never-aggressive npc.
+                aggroTimer = value * 100
                 field = value
             }
 
