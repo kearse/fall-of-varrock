@@ -16,7 +16,9 @@ import org.alter.game.model.timer.POISON_TIMER
 object Poison {
     private const val HP_ORB_VARP = 102
 
-    fun getDamageForTicks(ticks: Int) = (ticks / 5) + 1
+    // OSRS shape: severity 5d ticks, damage ceil(ticks/5), i.e. FIVE hits at each damage
+    // value (d, d-1, ..., 1). The old `(ticks/5)+1` gave only 2 hits at the initial damage.
+    fun getDamageForTicks(ticks: Int) = (ticks + 4) / 5
 
     fun isImmune(pawn: Pawn): Boolean =
         when (pawn) {
@@ -38,7 +40,13 @@ object Poison {
         if (isEnvenomed(pawn)) {
             return false // venom outranks poison; the two share one timer and never coexist
         }
-        val ticks = (initialDamage * 5) - 4
+        // Antipoison immunity window (negative tick counter). venom() checked this but
+        // poison() didn't — fresh poison overwrote the immunity counter, so cures granted
+        // no re-poison protection at all.
+        if ((pawn.attr[POISON_TICKS_LEFT_ATTR] ?: 0) < 0) {
+            return false
+        }
+        val ticks = initialDamage * 5
         val oldDamage = getDamageForTicks(pawn.attr[POISON_TICKS_LEFT_ATTR] ?: 0)
         if (oldDamage > getDamageForTicks(ticks)) {
             return false
@@ -87,7 +95,7 @@ object Poison {
         val damage = pawn.attr[VENOM_DAMAGE_ATTR] ?: 0
         pawn.attr.remove(VENOM_DAMAGE_ATTR)
         if (damage > 0) {
-            pawn.attr[POISON_TICKS_LEFT_ATTR] = (damage * 5) - 4
+            pawn.attr[POISON_TICKS_LEFT_ATTR] = damage * 5
             pawn.timers[POISON_TIMER] = 1
             if (pawn is Player) {
                 setHpOrb(pawn, OrbState.POISON)

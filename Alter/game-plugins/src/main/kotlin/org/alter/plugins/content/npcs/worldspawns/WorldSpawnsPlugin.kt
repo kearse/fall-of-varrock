@@ -256,7 +256,7 @@ class WorldSpawnsPlugin(
                         deathAnimation = listOf(deathAnim),
                         aggressiveRadius = if (stats[7] == 1) AGGRO_RADIUS else 0,
                         aggroTargetDelay = 8,
-                        aggressiveTimer = 200,
+                        aggressiveTimer = 1000, // OSRS tolerance: monsters stay aggressive ~10 min, not 2
                         slayerReq = stats[8],
                         slayerXp = stats[9].toDouble(),
                         // Optional 11th column: attack style (0 melee, 1 ranged, 2 magic).

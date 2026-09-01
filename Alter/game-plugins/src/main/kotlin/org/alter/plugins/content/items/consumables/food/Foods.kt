@@ -26,7 +26,14 @@ object Foods {
     fun canEat(
         p: Player,
         food: Food,
-    ): Boolean = !p.timers.has(if (food.comboFood) COMBO_FOOD_DELAY else FOOD_DELAY)
+    ): Boolean =
+        if (food.comboFood) {
+            !p.timers.has(COMBO_FOOD_DELAY)
+        } else {
+            // OSRS combo ordering: food→potion→karambwan is legal, but potion→food and
+            // karambwan→food on the same tick are NOT — regular food is gated on all three.
+            !p.timers.has(FOOD_DELAY) && !p.timers.has(POTION_DELAY) && !p.timers.has(COMBO_FOOD_DELAY)
+        }
 
     fun eat(
         p: Player,
@@ -48,6 +55,7 @@ object Foods {
                         }
                     Math.floor(p.getSkills().getBaseLevel(Skills.HITPOINTS) / 10.0).toInt() + c
                 }
+                Food.CAVEEEL -> 8 + p.world.random(4) // wiki: cave eel heals a random 8-12
                 else -> food.heal
             }
 

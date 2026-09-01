@@ -30,15 +30,15 @@ enum class Food(
     KARAMBWAN(item = "item.cooked_karambwan", heal = 18, comboFood = true),
     SHARK(item = "item.shark", heal = 20),
     SEATURTLE(item = "item.sea_turtle", heal = 21),
-    MANTA_RAY(item = "item.manta_ray", heal = 21),
+    MANTA_RAY(item = "item.manta_ray", heal = 22),
     DARK_CRAB(item = "item.dark_crab", heal = 22),
     ANGLERFISH(item = "item.anglerfish", overheal = true),
 
     /**
      * Meat.
      */
-    CHICKEN(item = "item.cooked_chicken", heal = 4),
-    MEAT(item = "item.cooked_meat", heal = 4),
+    CHICKEN(item = "item.cooked_chicken", heal = 3),
+    MEAT(item = "item.cooked_meat", heal = 3),
     ROASTBEASTMEAT(item = "item.roast_beast_meat", heal = 8),
     KEBAB(item = "item.ugthanki_kebab", heal = 19),
 

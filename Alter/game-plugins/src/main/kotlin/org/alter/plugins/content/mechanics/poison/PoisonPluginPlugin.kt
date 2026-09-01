@@ -34,6 +34,25 @@ class PoisonPluginPlugin(
             Poison.setHpOrb(player, Poison.OrbState.NONE)
         }
 
+        // The poison/venom ATTRS persist across sessions but POISON_TIMER does not — without
+        // this re-arm a relog was a free permanent cure (and a persisted venom value blocked
+        // every future poison/venom application forever). OSRS: poison resumes on login.
+        onLogin {
+            val venom = player.attr[VENOM_DAMAGE_ATTR] ?: 0
+            val poisonTicks = player.attr[POISON_TICKS_LEFT_ATTR] ?: 0
+            if (venom > 0 || poisonTicks != 0) {
+                player.timers[POISON_TIMER] = POISON_TICK_DELAY
+                Poison.setHpOrb(
+                    player,
+                    when {
+                        venom > 0 -> Poison.OrbState.VENOM
+                        poisonTicks > 0 -> Poison.OrbState.POISON
+                        else -> Poison.OrbState.NONE // negative = immunity window decaying
+                    },
+                )
+            }
+        }
+
         onTimer(POISON_TIMER) {
             val pawn = pawn
 

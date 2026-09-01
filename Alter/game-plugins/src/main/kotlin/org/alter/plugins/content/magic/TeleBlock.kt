@@ -9,7 +9,8 @@ import org.alter.game.model.timer.TimerKey
  * applied by the Tele Block spell effect, and announced as worn-off via an onTimer binding.
  */
 object TeleBlock {
-    val TIMER = TimerKey()
+    // resetOnDeath: OSRS removes a teleblock when the blocked player dies.
+    val TIMER = TimerKey(resetOnDeath = true)
 
     /** OSRS: 5 minutes = 500 ticks; halved by Protect from Magic at cast time (see TeleBlockPlugin). */
     const val DURATION_TICKS = 500

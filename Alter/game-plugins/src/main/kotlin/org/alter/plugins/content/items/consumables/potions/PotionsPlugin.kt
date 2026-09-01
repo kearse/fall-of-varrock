@@ -16,6 +16,7 @@ import org.alter.game.model.timer.POTION_DELAY
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
 import org.alter.plugins.content.mechanics.poison.Poison
+import org.alter.plugins.content.mechanics.run.RunEnergy
 import org.alter.rscm.RSCM.getRSCM
 
 private val logger = KotlinLogging.logger {}
@@ -137,13 +138,28 @@ class PotionsPlugin(
         // ---- Run energy --------------------------------------------------------------------
         family("energy_potion") { restoreEnergy(it, 10) }
         family("super_energy") { restoreEnergy(it, 20) }
-        family("stamina_potion") { restoreEnergy(it, 20) } // OSRS: +20% (reduced-drain effect not modelled)
+        family("stamina_potion") {
+            // OSRS: +20% restore AND drain x0.3 for 2 minutes per dose. The STAMINA_BOOST
+            // timer existed (RunEnergy reads it) but nothing ever SET it — the potion's
+            // signature effect was missing entirely.
+            restoreEnergy(it, 20)
+            it.timers[RunEnergy.STAMINA_BOOST] = STAMINA_BOOST_TICKS
+        }
 
         // ---- Poison / venom cures (immunity in POISON_TIMER fires, ~15s each) ---------------
         family("antipoison") { curePoison(it, IMMUNITY_ANTIPOISON) }   // 90s
         family("superantipoison") { curePoison(it, IMMUNITY_SUPER) }   // 6 min
         family("antidote") { curePoison(it, IMMUNITY_ANTIDOTE) }       // 9 min (antidote+)
         family("antivenom") { curePoison(it, IMMUNITY_ANTIVENOM) }     // 12 min, also clears venom
+        // antidote++ (5952-5958) and anti-venom+ (12913-12919) live under id-suffixed RSCM
+        // keys the family() pattern can't derive — without explicit chains, drinking either
+        // did NOTHING (checked remove, no effect, no dose progression).
+        familyChain(
+            listOf("item.antidote4_5952", "item.antidote3_5954", "item.antidote2_5956", "item.antidote1_5958"),
+        ) { curePoison(it, IMMUNITY_ANTIDOTE_PP) }  // antidote++: 12 min
+        familyChain(
+            listOf("item.antivenom4_12913", "item.antivenom3_12915", "item.antivenom2_12917", "item.antivenom1_12919"),
+        ) { curePoison(it, IMMUNITY_ANTIVENOM_P) }  // anti-venom+: 15 min
         family("relicyms_balm") { it.message("You feel cleansed of any disease.") }
 
         // ---- Antifire (timed dragonfire protection) ----------------------------------------
@@ -168,6 +184,20 @@ class PotionsPlugin(
                 // dead at boot while every other potion works — near-invisible in a warn stream.
                 logger.error(e) { "potions: couldn't bind 'drink' on $key — this potion will do NOTHING in game" }
             }
+        }
+    }
+
+    /** Register an explicit 4→1 dose chain whose RSCM keys don't follow the family()
+     *  naming pattern (id-suffixed duplicates like `antidote4_5952`). */
+    private fun familyChain(keys: List<String>, effect: (Player) -> Unit) {
+        val present = keys.filter { resolves(it) }
+        if (present.isEmpty()) {
+            logger.error { "potions: explicit chain '${keys.first()}' resolved no doses — nothing bound" }
+            return
+        }
+        present.forEachIndexed { i, key ->
+            val next = present.getOrNull(i + 1) ?: "item.vial"
+            doseByKey[key] = Dose(effect, next)
         }
     }
 
@@ -302,6 +332,11 @@ class PotionsPlugin(
         const val IMMUNITY_SUPER = 20       // 6 min
         const val IMMUNITY_ANTIDOTE = 30    // 9 min
         const val IMMUNITY_ANTIVENOM = 40   // 12 min
+        const val IMMUNITY_ANTIDOTE_PP = 40 // antidote++: 12 min
+        const val IMMUNITY_ANTIVENOM_P = 50 // anti-venom+: 15 min
+
+        // Stamina potion: drain x0.3 for 2 minutes per dose (200 ticks).
+        const val STAMINA_BOOST_TICKS = 200
 
         // Antifire protection duration in game ticks (0.6s each).
         const val ANTIFIRE_REGULAR = 600          // 6 min

@@ -56,9 +56,12 @@ val STUN_TIMER = TimerKey()
 val POISON_TIMER = TimerKey()
 
 /**
- * Timer key for dragonfire protection ticking down.
+ * Timer key for dragonfire protection ticking down. Persisted (offline time frozen):
+ * the charge/immunity ATTRS already persisted, so a relog silently dropped the actual
+ * protection while the player still believed they had it — OSRS keeps antifire through
+ * logout.
  */
-val ANTIFIRE_TIMER = TimerKey()
+val ANTIFIRE_TIMER = TimerKey(persistenceKey = "antifire", tickOffline = false)
 
 /**
  * Timer key for the delay in between a pawn's attack.
