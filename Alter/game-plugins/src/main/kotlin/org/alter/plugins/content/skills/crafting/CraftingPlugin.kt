@@ -34,7 +34,7 @@ class CraftingPlugin(
 
     private data class Gem(val uncut: String, val cut: String, val name: String, val level: Int, val xp: Double)
     private val gems = listOf(
-        Gem("item.uncut_sapphire", "item.sapphire", "sapphire", 1, 50.0),
+        Gem("item.uncut_sapphire", "item.sapphire", "sapphire", 20, 50.0), // wiki: sapphire needs 20 Crafting
         Gem("item.uncut_emerald", "item.emerald", "emerald", 27, 67.5),
         Gem("item.uncut_ruby", "item.ruby", "ruby", 34, 85.0),
         Gem("item.uncut_diamond", "item.diamond", "diamond", 43, 107.5),
@@ -52,7 +52,7 @@ class CraftingPlugin(
 
     private data class Spin(val from: String, val to: String, val name: String, val level: Int, val xp: Double)
     private val spinnables = listOf(
-        Spin("item.flax", "item.bow_string", "bow string", 1, 15.0),
+        Spin("item.flax", "item.bow_string", "bow string", 10, 15.0), // wiki: spinning flax needs 10 Crafting
         Spin("item.wool", "item.ball_of_wool", "ball of wool", 1, 2.5),
     ).filter { res(it.from) && res(it.to) }
 

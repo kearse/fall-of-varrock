@@ -33,12 +33,13 @@ class HerblorePlugin(
 
     private val recipes: List<Recipe> = listOf(
         // Step 1 — herb + vial of water → unfinished potion (no xp, minimal gate).
-        Recipe("item.guam_leaf", "item.vial_of_water", "item.guam_potion_unf", 1, 0.0, "unfinished potion"),
-        Recipe("item.tarromin", "item.vial_of_water", "item.tarromin_potion_unf", 1, 0.0, "unfinished potion"),
-        Recipe("item.ranarr_weed", "item.vial_of_water", "item.ranarr_potion_unf", 1, 0.0, "unfinished potion"),
-        Recipe("item.irit_leaf", "item.vial_of_water", "item.irit_potion_unf", 1, 0.0, "unfinished potion"),
-        Recipe("item.kwuarm", "item.vial_of_water", "item.kwuarm_potion_unf", 1, 0.0, "unfinished potion"),
-        Recipe("item.cadantine", "item.vial_of_water", "item.cadantine_potion_unf", 1, 0.0, "unfinished potion"),
+        // Unfinished-potion levels per OSRS (were all level 1).
+        Recipe("item.guam_leaf", "item.vial_of_water", "item.guam_potion_unf", 3, 0.0, "unfinished potion"),
+        Recipe("item.tarromin", "item.vial_of_water", "item.tarromin_potion_unf", 12, 0.0, "unfinished potion"),
+        Recipe("item.ranarr_weed", "item.vial_of_water", "item.ranarr_potion_unf", 30, 0.0, "unfinished potion"),
+        Recipe("item.irit_leaf", "item.vial_of_water", "item.irit_potion_unf", 45, 0.0, "unfinished potion"),
+        Recipe("item.kwuarm", "item.vial_of_water", "item.kwuarm_potion_unf", 55, 0.0, "unfinished potion"),
+        Recipe("item.cadantine", "item.vial_of_water", "item.cadantine_potion_unf", 66, 0.0, "unfinished potion"),
         // Step 2 — unfinished potion + secondary → finished potion.
         Recipe("item.guam_potion_unf", "item.eye_of_newt", "item.attack_potion3", 3, 25.0, "Attack potion"),
         Recipe("item.tarromin_potion_unf", "item.limpwurt_root", "item.strength_potion3", 12, 50.0, "Strength potion"),
@@ -48,10 +49,46 @@ class HerblorePlugin(
         Recipe("item.cadantine_potion_unf", "item.white_berries", "item.super_defence3", 66, 150.0, "Super defence"),
     ).filter { resolves(it.a) && resolves(it.b) && resolves(it.result) }
 
+    /** grimy herb -> (clean herb, Herblore level, cleaning xp) — OSRS. Grimy herbs drop heavily
+     *  but had NO cleaning handler, so they were dead-end items and the cleaning xp was
+     *  unobtainable. */
+    private data class Clean(val grimy: String, val clean: String, val level: Int, val xp: Double, val name: String)
+    private val cleanables = listOf(
+        Clean("item.grimy_guam_leaf", "item.guam_leaf", 3, 2.5, "guam leaf"),
+        Clean("item.grimy_marrentill", "item.marrentill", 5, 3.8, "marrentill"),
+        Clean("item.grimy_tarromin", "item.tarromin", 11, 5.0, "tarromin"),
+        Clean("item.grimy_harralander", "item.harralander", 20, 6.3, "harralander"),
+        Clean("item.grimy_ranarr_weed", "item.ranarr_weed", 25, 7.5, "ranarr weed"),
+        Clean("item.grimy_toadflax", "item.toadflax", 30, 8.0, "toadflax"),
+        Clean("item.grimy_irit_leaf", "item.irit_leaf", 40, 8.8, "irit leaf"),
+        Clean("item.grimy_avantoe", "item.avantoe", 48, 10.0, "avantoe"),
+        Clean("item.grimy_kwuarm", "item.kwuarm", 54, 11.3, "kwuarm"),
+        Clean("item.grimy_snapdragon", "item.snapdragon", 59, 11.8, "snapdragon"),
+        Clean("item.grimy_cadantine", "item.cadantine", 65, 12.5, "cadantine"),
+        Clean("item.grimy_lantadyme", "item.lantadyme", 67, 13.1, "lantadyme"),
+        Clean("item.grimy_dwarf_weed", "item.dwarf_weed", 70, 13.9, "dwarf weed"),
+        Clean("item.grimy_torstol", "item.torstol", 75, 15.0, "torstol"),
+    ).filter { resolves(it.grimy) && resolves(it.clean) }
+
     init {
         recipes.forEach { recipe ->
             onItemOnItem(recipe.a, recipe.b) { make(player, recipe) }
         }
+        cleanables.forEach { c ->
+            onItemOption(item = c.grimy, option = "clean") { clean(player, c) }
+        }
+    }
+
+    private fun clean(player: Player, c: Clean) {
+        if (player.getSkills().getCurrentLevel(Skills.HERBLORE) < c.level) {
+            player.message("You need a Herblore level of ${c.level} to clean this herb.")
+            return
+        }
+        val slot = player.getInteractingItemSlot()
+        if (player.inventory.remove(item = getRSCM(c.grimy), amount = 1, beginSlot = slot).completed == 0) return
+        player.inventory.add(item = getRSCM(c.clean), amount = 1)
+        player.addXp(Skills.HERBLORE, c.xp)
+        player.message("You clean the dirt off the ${c.name}.")
     }
 
     private fun make(player: Player, recipe: Recipe) {

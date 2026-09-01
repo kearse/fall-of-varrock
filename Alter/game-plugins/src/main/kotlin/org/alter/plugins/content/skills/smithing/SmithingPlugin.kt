@@ -66,21 +66,26 @@ class SmithingPlugin(
     private data class Piece(val key: String, val label: String, val bars: Int, val levelOffset: Int)
 
     private val pieces = listOf(
+        // OSRS level offsets above the metal's base (bronze: dagger 1, scimitar 5, full helm 7,
+        // kiteshield 12, platebody 18). Kiteshield and platebody were 3 and 7 levels too low.
         Piece("dagger", "dagger", 1, 0),
         Piece("scimitar", "scimitar", 2, 4),
         Piece("full_helm", "full helm", 2, 6),
-        Piece("kiteshield", "kiteshield", 3, 8),
-        Piece("platebody", "platebody", 5, 10),
+        Piece("kiteshield", "kiteshield", 3, 11),
+        Piece("platebody", "platebody", 5, 17),
     )
 
-    /** bar item key -> (metal prefix, base smithing level). */
+    /** metal prefix, base smithing level, and Smithing xp PER BAR (OSRS: 12.5×metal tier). */
+    private data class Metal(val prefix: String, val baseLevel: Int, val xpPerBar: Double)
+
+    /** bar item key -> metal. */
     private val metalByBar = mapOf(
-        "item.bronze_bar" to ("bronze" to 1),
-        "item.iron_bar" to ("iron" to 15),
-        "item.steel_bar" to ("steel" to 30),
-        "item.mithril_bar" to ("mithril" to 50),
-        "item.adamantite_bar" to ("adamant" to 70),
-        "item.runite_bar" to ("rune" to 85),
+        "item.bronze_bar" to Metal("bronze", 1, 12.5),
+        "item.iron_bar" to Metal("iron", 15, 25.0),
+        "item.steel_bar" to Metal("steel", 30, 37.5),
+        "item.mithril_bar" to Metal("mithril", 50, 50.0),
+        "item.adamantite_bar" to Metal("adamant", 70, 62.5),
+        "item.runite_bar" to Metal("rune", 85, 75.0),
     )
 
     init {
@@ -179,8 +184,8 @@ class SmithingPlugin(
         val level = p.getSkills().getCurrentLevel(Skills.SMITHING)
         val best = metalByBar.entries
             .filter { res(it.key) && p.inventory.contains(getRSCM(it.key)) }
-            .filter { it.value.second <= level }
-            .maxByOrNull { it.value.second }
+            .filter { it.value.baseLevel <= level }
+            .maxByOrNull { it.value.baseLevel }
         if (best == null) {
             p.message("You have no bars you can smith here.")
             return
@@ -190,7 +195,7 @@ class SmithingPlugin(
 
     /** Push the smith recipe list for [barKey]'s metal and pulse the window open (kind 2 = anvil). */
     private fun openAnvil(p: Player, barKey: String, station: Tile) {
-        val (metal, baseLevel) = metalByBar[barKey] ?: return
+        val (metal, baseLevel, xpPerBar) = metalByBar[barKey] ?: return
         if (!p.inventory.contains(getRSCM("item.hammer"))) {
             p.message("You need a hammer to work the metal.")
             return
@@ -203,7 +208,7 @@ class SmithingPlugin(
         p.message("${PREFIX}H|2|$title|${makeable.size}", ChatMessageType.CONSOLE)
         makeable.forEachIndexed { i, (resultId, piece) ->
             p.message(
-                "${PREFIX}R|$i|$resultId|${baseLevel + piece.levelOffset}|${(piece.bars * BAR_SMITH_XP * 10).toInt()}|$barId:${piece.bars};",
+                "${PREFIX}R|$i|$resultId|${(baseLevel + piece.levelOffset).coerceAtMost(99)}|${(piece.bars * xpPerBar * 10).toInt()}|$barId:${piece.bars};",
                 ChatMessageType.CONSOLE,
             )
         }
@@ -236,14 +241,14 @@ class SmithingPlugin(
             return
         }
         for ((barKey, metalInfo) in metalByBar) {
-            val (metal, baseLevel) = metalInfo
+            val (metal, baseLevel, xpPerBar) = metalInfo
             for (piece in pieces) {
                 if (resOrNull("item.${metal}_${piece.key}") == resultId) {
                     if (station == null || !p.tile.isWithinRadius(station, STATION_RADIUS)) {
                         p.message("You need to be at an anvil to smith.")
                         return
                     }
-                    p.queue { smith(this, p, barKey, metal, baseLevel, piece, qty) }
+                    p.queue { smith(this, p, barKey, metal, baseLevel, xpPerBar, piece, qty) }
                     return
                 }
             }
@@ -282,6 +287,13 @@ class SmithingPlugin(
             if (bar.coal > 0 && player.inventory.remove(item = getRSCM("item.coal"), amount = bar.coal).completed < bar.coal) {
                 return
             }
+            // Iron ore fails to smelt 50% of the time (OSRS), consuming the ore for nothing —
+            // without a ring of forging / superheat. The ore was already removed above.
+            if (bar.bar == "item.iron_bar" && world.chance(1, 2)) {
+                player.message("The iron is too impure and you fail to refine it.")
+                left--
+                continue
+            }
             player.inventory.add(item = getRSCM(bar.bar), amount = 1)
             player.addXp(Skills.SMITHING, bar.xp)
             player.message("You smelt a ${bar.label.lowercase()}.")
@@ -289,9 +301,9 @@ class SmithingPlugin(
         }
     }
 
-    private suspend fun smith(task: QueueTask, player: Player, bar: String, metal: String, baseLevel: Int, piece: Piece, qty: Int) {
+    private suspend fun smith(task: QueueTask, player: Player, bar: String, metal: String, baseLevel: Int, xpPerBar: Double, piece: Piece, qty: Int) {
         val result = resOrNull("item.${metal}_${piece.key}") ?: return
-        val needLevel = baseLevel + piece.levelOffset
+        val needLevel = (baseLevel + piece.levelOffset).coerceAtMost(99)
         if (!player.inventory.contains(getRSCM("item.hammer"))) {
             player.message("You need a hammer to work the metal.")
             return
@@ -315,7 +327,7 @@ class SmithingPlugin(
                 return
             }
             player.inventory.add(item = result, amount = 1)
-            player.addXp(Skills.SMITHING, piece.bars * BAR_SMITH_XP)
+            player.addXp(Skills.SMITHING, piece.bars * xpPerBar)
             player.message("You hammer the metal into a $metal ${piece.label}.")
             left--
         }
