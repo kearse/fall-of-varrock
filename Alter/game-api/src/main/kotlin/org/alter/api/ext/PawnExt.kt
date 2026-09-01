@@ -37,6 +37,10 @@ fun Pawn.getInteractingNpc(): Npc = attr[INTERACTING_NPC_ATTR]!!.get()!!
 
 fun Pawn.getInteractingPlayer(): Player = attr[INTERACTING_PLAYER_ATTR]!!.get()!!
 
+/** Null-safe variant: the WeakReference can clear if the interacting player logged off/GC'd
+ *  between the click and processing, and the `!!` form NPEs the whole game cycle. */
+fun Pawn.getInteractingPlayerOrNull(): Player? = attr[INTERACTING_PLAYER_ATTR]?.get()
+
 fun Pawn.hasPrayerIcon(icon: PrayerIcon): Boolean = prayerIcon == icon.id
 
 fun Pawn.getBonus(slot: BonusSlot): Int = equipmentBonuses[slot.id]

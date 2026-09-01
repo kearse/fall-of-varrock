@@ -146,7 +146,10 @@ class BankPlugin(
                     }
                 }
             }
-            if (!from.isEmpty) {
+            // Only "Bank full." when the bank actually has no room. A leftover can also be a
+            // quest-locked item (WarPrepChain.bonesLocked), which prints its own lock message —
+            // saying "Bank full." on top of that was a contradictory pair.
+            if (!from.isEmpty && player.bank.freeSlotCount == 0) {
                 player.message("Bank full.")
             }
         }
