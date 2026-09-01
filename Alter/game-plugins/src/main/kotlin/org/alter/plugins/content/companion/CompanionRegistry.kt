@@ -536,6 +536,50 @@ object CompanionRegistry {
         persist(player); forcePush(player)
     }
 
+    /**
+     * Re-school a live companion to a new combat [archetype] — so one companion can train every
+     * combat skill over its lifetime instead of being locked to the school it was recruited into.
+     * Skills, gear, name, retaliate toggle and ammo memory all carry over; the attack style and
+     * autocast spell reset to the new school's spawn defaults (they're per-school tunings).
+     * [Companion.archetype] is immutable by design, so the pawn is despawned and respawned in
+     * place on its own tile. Returns false if the slot is empty or the respawn failed (world
+     * full — the companion is benched, not lost, mirroring [spawnFor]'s failure path).
+     */
+    fun setArchetype(player: Player, slot: Int, archetype: CompanionStyle): Boolean {
+        val comp = ofOwner(player).getOrNull(slot) ?: return false
+        if (comp.archetype == archetype) {
+            player.message("<col=4f9b4f>Sir ${comp.username} already fights with ${archetype.display}.</col>")
+            return true
+        }
+        val world = comp.world
+        val old = snapshot(comp)
+        val data = CompanionData(
+            archetype, old.name, old.skillXp, old.equipment, old.inventory, old.dead, old.autoLoot,
+            attackStyle = -1,
+            autoRetaliate = old.autoRetaliate,
+            autocast = null,
+            lastAmmoId = old.lastAmmoId,
+        )
+        val tile = comp.tile
+        val list = byOwner[keyOf(player)] ?: return false
+        val idx = list.indexOfFirst { it === comp }
+        CompanionLoot.forget(comp)
+        BotManager.despawn(world, comp, force = true)
+        val fresh = spawn(world, player, data, tile)
+        if (fresh == null) {
+            if (idx >= 0) list.removeAt(idx)
+            data.dismissed = true
+            benchedByOwner.getOrPut(keyOf(player)) { ArrayList() } += data
+            persist(player); forcePush(player)
+            logger.error { "setArchetype ${player.username}: respawn of ${data.name} failed — benched instead of dropped." }
+            return false
+        }
+        if (idx >= 0) list[idx] = fresh else list += fresh
+        persist(player); forcePush(player)
+        player.message("<col=4f9b4f>Sir ${fresh.username} re-schools to ${archetype.display} — his other combat skills are kept.</col>")
+        return true
+    }
+
     /** Set (or clear) a mage companion's autocast spell from the panel; "auto"/null restores level-scaling. */
     fun setSpell(player: Player, slot: Int, spellName: String?) {
         val comp = ofOwner(player).getOrNull(slot) ?: return
@@ -711,6 +755,13 @@ object CompanionRegistry {
         comp.spawnCycle = world.currentCycle // orphan-sweep grace window (see sweepOrphans)
         // Real, persistent skills overwrite the vessel loadout's stub stats.
         data.skillXp.forEach { (skill, xp) -> comp.getSkills().setBaseXp(skill, xp) }
+        // Every NON-combat skill sits at 99: companions are veteran knights — only their combat
+        // stats (ids 0..6, the persisted set) are trained. Applied on every spawn, which also
+        // backfills companions saved before this rule existed; snapshot() persists only 0..6,
+        // so these never bloat the roster blob (setBaseXp fires no level-up hooks).
+        for (s in 0 until comp.getSkills().maxSkills) {
+            if (s !in 0..6) comp.getSkills().setBaseXp(s, SkillSet.getXpForLevel(99))
+        }
         applyContainers(comp, data)
         org.alter.plugins.content.bots.BotBrain.configureStyle(comp) // autocast/attack style for range/mage
         comp.setVarbit(org.alter.plugins.content.magic.MagicSpells.INF_RUNES_VARBIT, 1) // free spellcasting: no runes, level gate still applies
