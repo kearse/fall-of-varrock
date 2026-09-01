@@ -61,6 +61,38 @@ object CollectionLogRegistry {
                 "item.jar_of_chemicals", "item.ikkle_hydra",
             ),
         ),
+        Category(
+            "gwd_bandos", "General Graardor", "npc.general_graardor",
+            listOf(
+                "item.bandos_chestplate", "item.bandos_tassets", "item.bandos_boots",
+                "item.bandos_hilt", "item.godsword_shard_1", "item.godsword_shard_2",
+                "item.godsword_shard_3", "item.pet_general_graardor",
+            ),
+        ),
+        Category(
+            "gwd_saradomin", "Commander Zilyana", "npc.commander_zilyana",
+            listOf(
+                "item.saradomin_sword", "item.armadyl_crossbow", "item.saradomins_light",
+                "item.saradomin_hilt", "item.godsword_shard_1", "item.godsword_shard_2",
+                "item.godsword_shard_3", "item.pet_zilyana",
+            ),
+        ),
+        Category(
+            "gwd_zamorak", "K'ril Tsutsaroth", "npc.kril_tsutsaroth",
+            listOf(
+                "item.zamorakian_spear", "item.steam_battlestaff", "item.staff_of_the_dead",
+                "item.zamorak_hilt", "item.godsword_shard_1", "item.godsword_shard_2",
+                "item.godsword_shard_3", "item.pet_kril_tsutsaroth",
+            ),
+        ),
+        Category(
+            "gwd_armadyl", "Kree'arra", "npc.kreearra_3162",
+            listOf(
+                "item.armadyl_helmet", "item.armadyl_chestplate", "item.armadyl_chainskirt",
+                "item.armadyl_hilt", "item.godsword_shard_1", "item.godsword_shard_2",
+                "item.godsword_shard_3", "item.pet_kreearra",
+            ),
+        ),
     )
 
     fun byKey(key: String): Category? = categories.firstOrNull { it.key.equals(key, ignoreCase = true) }
