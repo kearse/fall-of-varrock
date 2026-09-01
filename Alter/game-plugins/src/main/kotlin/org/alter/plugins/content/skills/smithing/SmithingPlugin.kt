@@ -268,8 +268,20 @@ class SmithingPlugin(
             }
             player.animate(SMELT_ANIM)
             task.wait(3)
-            bar.ores.forEach { (ore, n) -> player.inventory.remove(item = getRSCM(ore), amount = n) }
-            if (bar.coal > 0) player.inventory.remove(item = getRSCM("item.coal"), amount = bar.coal)
+            // Re-verify AFTER the suspension: the inventory can change during the wait
+            // (e.g. dropping ores), and unchecked removes would still mint the bar.
+            if (bar.ores.any { (ore, n) -> player.inventory.getItemCount(getRSCM(ore)) < n } ||
+                (bar.coal > 0 && player.inventory.getItemCount(getRSCM("item.coal")) < bar.coal)
+            ) {
+                player.message("You don't have enough ore to smelt a ${bar.label.lowercase()}.")
+                return
+            }
+            if (bar.ores.any { (ore, n) -> player.inventory.remove(item = getRSCM(ore), amount = n).completed < n }) {
+                return
+            }
+            if (bar.coal > 0 && player.inventory.remove(item = getRSCM("item.coal"), amount = bar.coal).completed < bar.coal) {
+                return
+            }
             player.inventory.add(item = getRSCM(bar.bar), amount = 1)
             player.addXp(Skills.SMITHING, bar.xp)
             player.message("You smelt a ${bar.label.lowercase()}.")
@@ -296,7 +308,12 @@ class SmithingPlugin(
             }
             player.animate(SMITH_ANIM)
             task.wait(4)
-            player.inventory.remove(item = getRSCM(bar), amount = piece.bars)
+            // Checked remove AFTER the suspension: bars dropped during the wait must
+            // abort the piece, not still produce it.
+            if (player.inventory.remove(item = getRSCM(bar), amount = piece.bars).completed < piece.bars) {
+                player.message("You need ${piece.bars} ${metal} bars to make a ${piece.label}.")
+                return
+            }
             player.inventory.add(item = result, amount = 1)
             player.addXp(Skills.SMITHING, piece.bars * BAR_SMITH_XP)
             player.message("You hammer the metal into a $metal ${piece.label}.")

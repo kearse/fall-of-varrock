@@ -15,9 +15,12 @@ package org.alter.game.model.timer
 internal val RESET_PAWN_FACING_TIMER = TimerKey()
 
 /**
- * A timer for removing a skull icon.
+ * A timer for removing a skull icon. Persisted so a skulled player cannot shed the
+ * skull — and its keep-0 death penalty — by relogging (OSRS: the skull survives logout
+ * and only counts down while in game, hence tickOffline = false). The icon itself is
+ * re-derived from this timer at login (LootKeys.syncOverhead).
  */
-val SKULL_ICON_DURATION_TIMER = TimerKey()
+val SKULL_ICON_DURATION_TIMER = TimerKey(persistenceKey = "skull_icon_duration", tickOffline = false)
 
 /**
  * Timer key set when a pawn is attacked either in PvP or in PvM.

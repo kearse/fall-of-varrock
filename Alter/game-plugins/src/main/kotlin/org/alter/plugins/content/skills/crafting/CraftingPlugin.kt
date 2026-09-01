@@ -102,7 +102,11 @@ class CraftingPlugin(
             }
             task.wait(2)
             if (player.inventory.remove(item = getRSCM("item.leather"), amount = 1).completed == 0) break
-            player.inventory.remove(item = getRSCM("item.thread"), amount = 1)
+            if (player.inventory.remove(item = getRSCM("item.thread"), amount = 1).completed == 0) {
+                // Thread vanished during the wait — refund the leather, make nothing.
+                player.inventory.add(item = getRSCM("item.leather"), amount = 1)
+                break
+            }
             player.inventory.add(item = getRSCM(piece.item), amount = 1)
             player.addXp(Skills.CRAFTING, piece.xp)
             player.message("You make ${piece.name}.")

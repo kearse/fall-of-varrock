@@ -204,10 +204,23 @@ class WorldSpawnsPlugin(
         applyFallenFalador()
         applyFallenAlKharid()
         val registered = HashSet<Int>()
+        // Real bosses with no port yet: they have full stats AND their real drop table in
+        // npc_drops.json, but zero mechanics as a generic spawn — the KBD world-spawned as
+        // a safespottable 4-tick melee mob dropping 1/5000 visages. Reserved until ported.
+        val bossReserved = listOf(
+            "npc.king_black_dragon",
+            "npc.king_black_dragon_2642",
+            "npc.king_black_dragon_6502",
+            "npc.king_black_dragon_12440",
+        ).mapNotNull { key -> runCatching { getRSCM(key) }.getOrNull() }.toSet()
         val it = WorldSpawns.byRegion.iterator()
         while (it.hasNext()) {
             val list = it.next().value
             list.removeAll { rec ->
+                if (rec.id in bossReserved) {
+                    prunedBespoke++
+                    return@removeAll true
+                }
                 if (repo.hasNpcDeathHandler(rec.id)) {
                     prunedBespoke++
                     return@removeAll true

@@ -30,9 +30,13 @@ class AbyssalBludgeonPlugin(
             world.spawn(AreaSound(tile = player.tile, id = 2715, radius = 10, volume = 1, delay = 10))
             world.spawn(AreaSound(tile = player.tile, id = 1930, radius = 10, volume = 1, delay = 30))
 
-            val dmgBonus = (player.getSkills().getBaseLevel(Skills.PRAYER) - player.getSkills().getCurrentLevel(Skills.PRAYER)) * .5 / 100
+            // "Penance": +0.5% damage per MISSING prayer point (wiki Abyssal bludgeon) —
+            // a multiplier of 1.0 + missing*0.005, never a reduction. Kronos also gives
+            // the spec +25% accuracy.
+            val missingPrayer = player.getSkills().getBaseLevel(Skills.PRAYER) - player.getSkills().getCurrentLevel(Skills.PRAYER)
+            val dmgBonus = 1.0 + missingPrayer.coerceAtLeast(0) * 0.005
             val maxHit = MeleeCombatFormula.getMaxHit(player, target, specialAttackMultiplier = dmgBonus)
-            val landHit = MeleeCombatFormula.getAccuracy(player, target) >= world.randomDouble()
+            val landHit = MeleeCombatFormula.getAccuracy(player, target, specialAttackMultiplier = 1.25) >= world.randomDouble()
             player.dealHit(target = target, maxHit = maxHit, landHit = landHit, delay = 1)
         }
 

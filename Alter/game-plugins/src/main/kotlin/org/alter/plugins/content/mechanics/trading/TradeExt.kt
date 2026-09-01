@@ -7,12 +7,12 @@ import org.alter.plugins.content.mechanics.trading.impl.TradeSession
 /**
  * An attribute that represents a trade session between two players
  */
-val TRADE_SESSION_ATTR = AttributeKey<TradeSession>()
+val TRADE_SESSION_ATTR = AttributeKey<TradeSession>(resetOnDeath = true)
 
 /**
  * An attribute that represents if a player has accepted the trade
  */
-val TRADE_ACCEPTED_ATTR = AttributeKey<Boolean>()
+val TRADE_ACCEPTED_ATTR = AttributeKey<Boolean>(resetOnDeath = true)
 
 /**
  * The attribute holding the set of players who have recently requested a trade
