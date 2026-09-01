@@ -53,6 +53,14 @@ object CollectionLogRegistry {
                 "item.magma_mutagen", "item.pet_snakeling",
             ),
         ),
+        Category(
+            "alchemical_hydra", "Alchemical Hydra", "npc.alchemical_hydra",
+            listOf(
+                "item.hydras_eye", "item.hydras_fang", "item.hydras_heart",
+                "item.hydra_tail", "item.hydra_leather", "item.hydras_claw",
+                "item.jar_of_chemicals", "item.ikkle_hydra",
+            ),
+        ),
     )
 
     fun byKey(key: String): Category? = categories.firstOrNull { it.key.equals(key, ignoreCase = true) }

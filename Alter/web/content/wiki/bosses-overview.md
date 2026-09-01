@@ -6,7 +6,7 @@ order: 4
 updated: 2026-08-28
 ---
 
-**Three bosses rule the realm right now: the [Corporeal Beast](/wiki/corporeal-beast) war event, [Vorkath](/wiki/vorkath) on Ungael, and [Zulrah](/wiki/zulrah) at Zul-Andra** — the rebuilt roster is landing. The rest of the old lair roster - KBD, Barrows, God Wars, the wilderness bosses and the rest - has been **temporarily retired**. Those fights weren't up to our standard, so rather than leave rough versions live we've pulled them wholesale and are rebuilding each one properly. They'll come back **one at a time** as finished, accurate fights - watch [What's coming next](/wiki/coming-soon) and the in-game news for each return.
+**The rebuilt roster is landing: the [Corporeal Beast](/wiki/corporeal-beast) war event, [Vorkath](/wiki/vorkath) on Ungael, [Zulrah](/wiki/zulrah) at Zul-Andra, and the [Alchemical Hydra](/wiki/alchemical-hydra) in the Karuulm lab.** The rest of the old lair roster - KBD, Barrows, God Wars, the wilderness bosses and the rest - has been **temporarily retired**. Those fights weren't up to our standard, so rather than leave rough versions live we've pulled them wholesale and are rebuilding each one properly. They'll come back **one at a time** as finished, accurate fights - watch [What's coming next](/wiki/coming-soon) and the in-game news for each return.
 
 ## The Corporeal Beast (Event)
 
@@ -28,12 +28,16 @@ Full mechanics, drop rates and sponsor shares: [Corporeal Beast](/wiki/corporeal
   rotations of form-swapping combat (bring ranged AND magic), toxic clouds, snakelings,
   and the fang-tier table — **tanzanite/magic fangs, serpentine visage, mutagens, the
   pet snakeling** — rolled twice per kill.
+- **[Alchemical Hydra](/wiki/alchemical-hydra)** — the four-phase lab horror: lure it
+  over its weakness vents or your hits are quartered; poison pools, walking lightning
+  and the fire lockdown; **hydra's claw, tail, leather, the brimstone ring pieces and
+  Ikkle hydra** on the log.
 
-Both are in the teleport portal's Bosses tab.
+All are in the teleport portal's Bosses tab.
 
 ## Collection log
 
-Notable boss drops are tracked automatically - you'll see a "New Collection Log slot" message on a first-time drop. Right now the log covers the Corporeal Beast, Vorkath and Zulrah; pages return as each rebuilt boss ships.
+Notable boss drops are tracked automatically - you'll see a "New Collection Log slot" message on a first-time drop. Right now the log covers the Corporeal Beast, Vorkath, Zulrah and the Alchemical Hydra; pages return as each rebuilt boss ships.
 
 - `::clog` - opens the native OSRS collection log interface
 - `::cl` - plain text readout of every category and what you've ticked off
@@ -46,6 +50,6 @@ These are the fights being rebuilt. None are playable today; their old teleport 
 - **Wilderness bosses** - Callisto, Vet'ion, Venenatis, Scorpia, Chaos Elemental, Chaos Fanatic, Crazy Archaeologist, and the Revenant Caves
 - **PvM / Slayer bosses** - Kraken, Cerberus, Giant Mole, Kalphite Queen, Sarachnis, Thermonuclear Smoke Devil, Demonic Gorillas, Skotizo, the Dagannoth Kings
 - **God Wars Dungeon** - General Graardor, K'ril Tsutsaroth, Kree'arra, Commander Zilyana
-- **Elite tier** - Alchemical Hydra, Phantom Muspah, Abyssal Sire, Nex, Grotesque Guardians (**Vorkath is back** - see above)
+- **Elite tier** - Phantom Muspah, Abyssal Sire, Nex, Grotesque Guardians (**Vorkath and the Alchemical Hydra are back** - see above)
 
 Their **gear didn't leave with them**: Barrows sets, GWD bases, boss uniques and the rest are still in the economy and on the ticket shelves - see [Path to end game](/wiki/path-to-end-game) for where every rare comes from today.

@@ -88,7 +88,9 @@ object TeleportRegistry {
         // Lands on Ungael outside the icy spines — climb over them to enter the solo
         // instanced arena and poke the sleeping beast (the Kronos-port pilot).
         built("vorkath", "Vorkath", BOSSES, Tile(2272, 4052, 0), HOSTILE),
-        soon("alchemical_hydra", "Alchemical Hydra", BOSSES, HOSTILE),
+        // Lands by the lab rocks — climb them (or ::hydra) for the solo instanced
+        // chamber and its chemical vents (Kronos port #3).
+        built("alchemical_hydra", "Alchemical Hydra", BOSSES, Tile(1351, 10249, 0), HOSTILE),
         soon("gwd_graardor", "General Graardor", BOSSES, HOSTILE),
         soon("gwd_kril", "K'ril Tsutsaroth", BOSSES, HOSTILE),
         soon("gwd_kreearra", "Kree'arra", BOSSES, HOSTILE),
