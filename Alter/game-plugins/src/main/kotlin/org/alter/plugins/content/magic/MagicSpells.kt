@@ -67,6 +67,8 @@ object MagicSpells {
             "item.staff_of_water" to arrayOf("item.water_rune"),
             "item.water_battlestaff" to arrayOf("item.water_rune"),
             "item.mystic_water_staff" to arrayOf("item.water_rune"),
+            "item.kodai_wand" to arrayOf("item.water_rune"),
+            "item.kodai_wand_23626" to arrayOf("item.water_rune"),
             // Earth
             "item.staff_of_earth" to arrayOf("item.earth_rune"),
             "item.earth_battlestaff" to arrayOf("item.earth_rune"),

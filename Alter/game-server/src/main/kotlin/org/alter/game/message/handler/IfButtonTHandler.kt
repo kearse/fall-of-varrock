@@ -8,6 +8,11 @@ import org.alter.game.model.entity.debugItemActions
 import java.lang.ref.WeakReference
 
 class IfButtonTHandler : MessageHandler<IfButtonT> {
+    private companion object {
+        /** The inventory container interface — the "from" side of every item-on-item use. */
+        const val INVENTORY_INTERFACE = 149
+    }
+
     override fun consume(
         client: Client,
         message: IfButtonT,
@@ -23,12 +28,38 @@ class IfButtonTHandler : MessageHandler<IfButtonT> {
         val toItemId = message.targetObj
 
         /**
-         * @TODO
-         * So switch by component 149 (Parent) Will be for Inventory.
-         * SpellBook 161 (Parent)
-         *
-         * So we can switch by Parent and determine if it's item on item or spell on item
+         * A spell cast on an inventory item (High/Low Alchemy, Superheat Item, jewellery
+         * enchants) arrives with the SPELL's component as the "selected" side — it has no
+         * inventory slot, so the item-on-item path below (which resolves BOTH slots in the
+         * inventory) could never fire for it and every spell-on-item binding was dead code.
+         * Route by origin: a non-inventory "from" component is a spell-on-item cast, resolved
+         * against the bindSpellOnItem registrations (from = the spell's component hash,
+         * to = the inventory component hash).
          */
+        if (fromInterfaceId != INVENTORY_INTERFACE) {
+            val toItem = client.inventory[toSlot] ?: return
+            if (toItem.id != toItemId) {
+                return
+            }
+            if (!client.lock.canItemInteract()) {
+                return
+            }
+
+            client.attr[INTERACTING_ITEM] = WeakReference(toItem)
+            client.attr[INTERACTING_ITEM_ID] = toItem.id
+            client.attr[INTERACTING_ITEM_SLOT] = toSlot
+
+            val fromHash = (fromInterfaceId shl 16) or fromComponent
+            val toHash = (toInterfaceId shl 16) or toComponent
+            val handled = client.world.plugins.executeSpellOnItem(client, fromHash, toHash)
+            if (!handled && client.debugItemActions) {
+                client.writeMessage(
+                    "Unhandled spell on item: [from_component=[$fromInterfaceId:$fromComponent], " +
+                        "to_component=[$toInterfaceId:$toComponent], to_item=${toItem.id}, to_slot=$toSlot]",
+                )
+            }
+            return
+        }
 
         val fromItem = client.inventory[fromSlot] ?: return
         val toItem = client.inventory[toSlot] ?: return

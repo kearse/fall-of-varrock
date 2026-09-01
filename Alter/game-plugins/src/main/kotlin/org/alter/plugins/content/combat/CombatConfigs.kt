@@ -14,6 +14,7 @@ import org.alter.plugins.content.combat.strategy.CombatStrategy
 import org.alter.plugins.content.combat.strategy.MagicCombatStrategy
 import org.alter.plugins.content.combat.strategy.MeleeCombatStrategy
 import org.alter.plugins.content.combat.strategy.RangedCombatStrategy
+import org.alter.plugins.content.combat.strategy.magic.PoweredStaves
 
 /**
  * @author Tom <rspsmods@gmail.com>
@@ -133,7 +134,11 @@ object CombatConfigs {
             // OSRS: standard/ancient combat spells always cast at 5 ticks regardless of the
             // weapon held; only powered staves (tridents) attack at the weapon's own speed.
             // Without this, autocasting with a 4-tick wand barraged 25% faster than OSRS.
-            if (pawn.attr.has(Combat.CASTING_SPELL) && !pawn.hasWeaponType(WeaponType.TRIDENT)) {
+            // (Powered staves are id-keyed: nothing in this cache maps to WeaponType.TRIDENT,
+            // so the weapon-type check alone never exempted them.)
+            if (pawn.attr.has(Combat.CASTING_SPELL) && !pawn.hasWeaponType(WeaponType.TRIDENT) &&
+                pawn.attr[Combat.CASTING_SPELL] !in PoweredStaves.SPELLS
+            ) {
                 return SPELL_CAST_SPEED
             }
             val weapon = pawn.getEquipment(EquipmentType.WEAPON) ?: return default

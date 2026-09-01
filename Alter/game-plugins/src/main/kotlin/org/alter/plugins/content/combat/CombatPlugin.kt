@@ -23,6 +23,7 @@ import org.alter.game.plugin.PluginRepository
 import org.alter.plugins.content.combat.specialattack.SpecialAttacks
 import org.alter.plugins.content.combat.strategy.MeleeCombatStrategy
 import org.alter.plugins.content.combat.strategy.magic.CombatSpell
+import org.alter.plugins.content.combat.strategy.magic.PoweredStaves
 import org.alter.plugins.content.interfaces.attack.AttackTab
 import java.util.*
 
@@ -59,6 +60,20 @@ class CombatPlugin(
      */
     suspend fun cycle(pawn: Pawn, queue: QueueTask): Boolean {
         val target = pawn.getCombatTarget() ?: return false
+        // Powered staves (tridents, Sanguinesti) attack with their BUILT-IN spell — no
+        // autocast varbit involved. Armed here each cycle so equipping mid-fight works,
+        // and swapped/cleared if the wielded weapon no longer matches the armed spell
+        // (postAttack deliberately spares built-in spells from its one-shot clear).
+        if (pawn is Player) {
+            val builtIn = PoweredStaves.spellFor(pawn)
+            val current = pawn.attr[Combat.CASTING_SPELL]
+            if (current == null && builtIn != null) {
+                pawn.attr[Combat.CASTING_SPELL] = builtIn
+            } else if (current != null && current in PoweredStaves.SPELLS && current != builtIn) {
+                if (builtIn != null) pawn.attr[Combat.CASTING_SPELL] = builtIn
+                else pawn.attr.remove(Combat.CASTING_SPELL)
+            }
+        }
         // Re-arm autocast BEFORE resolving the strategy: on the first engagement tick the
         // CASTING_SPELL attr is not yet set, so resolving first made the loop pick the
         // melee strategy (range 1) and open every autocast fight with a melee swing.

@@ -24,6 +24,7 @@ import org.alter.plugins.content.combat.strategy.MagicCombatStrategy
 import org.alter.plugins.content.combat.strategy.MeleeCombatStrategy
 import org.alter.plugins.content.combat.strategy.RangedCombatStrategy
 import org.alter.plugins.content.combat.strategy.magic.CombatSpell
+import org.alter.plugins.content.combat.strategy.magic.PoweredStaves
 import java.lang.ref.WeakReference
 
 /**
@@ -89,7 +90,12 @@ object Combat {
         pawn.timers[PJ_TIMER] = PJ_TICKS
         target.timers[PJ_TIMER] = PJ_TICKS
 
-        if (pawn.attr.has(CASTING_SPELL) && pawn is Player && pawn.getVarbit(SELECTED_AUTOCAST_VARBIT) == 0) {
+        // Manual (non-autocast) casts are one-shot: clear the spell so combat breaks off.
+        // Powered-staff built-in spells are exempt — the staff keeps attacking (the combat
+        // loop re-arms/clears them by wielded weapon each cycle anyway).
+        if (pawn.attr.has(CASTING_SPELL) && pawn is Player && pawn.getVarbit(SELECTED_AUTOCAST_VARBIT) == 0 &&
+            pawn.attr[CASTING_SPELL] !in PoweredStaves.SPELLS
+        ) {
             reset(pawn)
             pawn.attr.remove(CASTING_SPELL)
         }

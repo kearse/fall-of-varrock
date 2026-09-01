@@ -465,6 +465,48 @@ enum class CombatSpell(
         baseXp = 52.0,
         freezeTicks = 32, // OSRS: Ice Barrage freezes for 32 ticks (19.2s)
     ),
+
+    /**
+     * Powered-staff built-in spells (armed automatically by the combat loop while the staff
+     * is wielded — see [org.alter.plugins.content.combat.strategy.magic.PoweredStaves]).
+     * Synthetic negative [id]s keep them out of the spellbook metadata (no runes, no rune
+     * removal, no spellbook cast requirement); [autoCastId] -1 keeps them out of the
+     * autocast varbit re-arm. Anim/gfx/projectile data from the Kronos rev-184 source
+     * (PlayerCombat.attackWithMagicWeapon). Max hits come from the magic formula's
+     * per-staff branches; the values here are the 99-magic fallbacks.
+     */
+    TRIDENT_OF_THE_SEAS(
+        id = -11907,
+        maxHit = 28,
+        castAnimation = 1167,
+        castSound = -1,
+        castGfx = Graphic(id = 1251, height = 92),
+        projectile = 1252,
+        impactGfx = Graphic(id = 1253, height = 90),
+        autoCastId = -1,
+    ),
+
+    TRIDENT_OF_THE_SWAMP(
+        id = -12899,
+        maxHit = 31,
+        castAnimation = 1167,
+        castSound = -1,
+        castGfx = Graphic(id = 665, height = 92),
+        projectile = 1040,
+        impactGfx = Graphic(id = 1042, height = 90),
+        autoCastId = -1,
+    ),
+
+    SANGUINESTI_STAFF(
+        id = -22323,
+        maxHit = 32,
+        castAnimation = 1167,
+        castSound = -1,
+        castGfx = Graphic(id = 1540, height = 92),
+        projectile = 1539,
+        impactGfx = Graphic(id = 1541, height = 90),
+        autoCastId = -1,
+    ),
     ;
 
     companion object {

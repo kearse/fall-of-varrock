@@ -6,6 +6,7 @@ import org.alter.api.ProjectileType
 import org.alter.api.Skills
 import org.alter.api.ext.freeze
 import org.alter.api.ext.hasPrayerIcon
+import org.alter.api.ext.message
 import org.alter.api.ext.playSound
 import org.alter.game.model.Graphic
 import org.alter.game.model.Tile
@@ -22,6 +23,7 @@ import org.alter.plugins.content.combat.dealHit
 import org.alter.plugins.content.combat.drainCombatStat
 import org.alter.plugins.content.combat.formula.MagicCombatFormula
 import org.alter.plugins.content.combat.strategy.magic.CombatSpell
+import org.alter.plugins.content.combat.strategy.magic.PoweredStaves
 import org.alter.plugins.content.magic.MagicSpells
 import org.alter.plugins.content.mechanics.poison.Poison
 
@@ -37,6 +39,13 @@ object MagicCombatStrategy : CombatStrategy {
     ): Boolean {
         if (pawn is Player) {
             val spell = pawn.attr[Combat.CASTING_SPELL]!!
+            // Powered staves are PvM-only, as in OSRS ("This staff's spell cannot be used
+            // against other players"). They have no spellbook metadata (no runes/level row),
+            // so the requirements check below naturally skips them.
+            if (spell in PoweredStaves.SPELLS && target is Player) {
+                pawn.message("This staff's spell cannot be used against other players.")
+                return false
+            }
             val requirements = MagicSpells.getMetadata(spell.id)
             if (requirements != null && !MagicSpells.canCast(pawn, requirements.lvl, requirements.items, requirements.spellbook)) {
                 return false
@@ -113,6 +122,10 @@ object MagicCombatStrategy : CombatStrategy {
                     val current = target.currentCombatStat(Skills.ATTACK, NpcSkills.ATTACK)
                     target.drainCombatStat(Skills.ATTACK, NpcSkills.ATTACK, (current * pct).toInt())
                 }
+                // Trident of the swamp: 1-in-4 chance to envenom on a landed hit (Kronos data).
+                if (landHit && spell == CombatSpell.TRIDENT_OF_THE_SWAMP && pawn.world.chance(1, 4)) {
+                    Poison.venom(target)
+                }
             }
         // Heal and XP happen when the hit LANDS (the projectile's arrival tick), from the
         // damage actually dealt. Splashes still award the base cast xp.
@@ -123,6 +136,14 @@ object MagicCombatStrategy : CombatStrategy {
             // "blood mage" sustain). Caps at the caster's max HP — no overheal in PvP.
             if (landHit && damage > 0 && spell in BLOOD_SPELLS) {
                 val heal = (damage * BLOOD_HEAL_RATIO).toInt()
+                if (heal > 0) {
+                    pawn.setCurrentHp(minOf(pawn.getMaxHp(), pawn.getCurrentHp() + heal))
+                }
+            }
+
+            // Sanguinesti staff: 1-in-6 chance to heal the caster for half the damage dealt.
+            if (landHit && damage > 0 && spell == CombatSpell.SANGUINESTI_STAFF && pawn.world.chance(1, 6)) {
+                val heal = damage / 2
                 if (heal > 0) {
                     pawn.setCurrentHp(minOf(pawn.getMaxHp(), pawn.getCurrentHp() + heal))
                 }
