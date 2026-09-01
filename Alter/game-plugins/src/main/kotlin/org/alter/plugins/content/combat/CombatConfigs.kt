@@ -119,7 +119,12 @@ object CombatConfigs {
      * MAGIC combat class onto it and silently prevent any hit from landing.
      */
     fun canAutocast(player: Player): Boolean =
-        player.hasWeaponType(WeaponType.MAGIC_STAFF, WeaponType.STAFF, WeaponType.TRIDENT)
+        // A powered staff (trident/sang) casts ONLY its built-in spell — it can't autocast a
+        // spellbook spell. Without this exclusion a trident (which resolves to MAGIC_STAFF,
+        // not TRIDENT) let players autocast Ice Barrage at the trident's 4-tick speed with
+        // trident damage but the barrage's freeze + rune cost.
+        !PoweredStaves.isWielding(player) &&
+            player.hasWeaponType(WeaponType.MAGIC_STAFF, WeaponType.STAFF, WeaponType.TRIDENT)
 
     /** OSRS: every standard/ancient combat spell casts at 5 ticks. */
     private const val SPELL_CAST_SPEED = 5

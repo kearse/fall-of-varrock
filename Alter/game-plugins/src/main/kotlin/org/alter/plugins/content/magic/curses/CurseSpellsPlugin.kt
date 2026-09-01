@@ -12,6 +12,7 @@ import org.alter.game.model.entity.Player
 import org.alter.game.model.timer.FROZEN_TIMER
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
+import org.alter.plugins.content.combat.formula.MagicCombatFormula
 import org.alter.plugins.content.combat.strategy.magic.CombatSpellEffects
 import org.alter.plugins.content.magic.MagicSpells
 
@@ -23,8 +24,8 @@ private val logger = KotlinLogging.logger {}
  * non-damaging combat spells, so they register through [CombatSpellEffects] (no binding collision
  * with the damage-spell table). Each handler does its own canCast/removeRunes/xp.
  *
- * NOTE: cast via the spell-on-target path with no accuracy roll, so the effect always lands
- * (the damage-dealing Ancient ice spells still roll accuracy via MagicCombatStrategy). Tunable later.
+ * Each cast rolls magic accuracy against the target; on a miss it SPLASHES (runes + base xp
+ * consumed, splash gfx shown, no effect) — the same rule the Ancient ice spells already use.
  */
 class CurseSpellsPlugin(
     r: PluginRepository,
@@ -35,7 +36,12 @@ class CurseSpellsPlugin(
     private companion object {
         const val CAST_ANIM = 1162
         const val GFX_HEIGHT = 96
+        const val SPLASH_GFX = 85
     }
+
+    /** OSRS: bind/curse/TB roll magic accuracy; a failed roll splashes (no effect). */
+    private fun lands(caster: Player, target: Pawn): Boolean =
+        MagicCombatFormula.getAccuracy(caster, target) >= caster.world.randomDouble()
 
     init {
         // name -> (player skill, npc skill, drain %, Magic xp, over-head gfx)
@@ -49,7 +55,7 @@ class CurseSpellsPlugin(
         // name -> (freeze ticks, Magic xp, over-head gfx). ~5s / ~10s / ~15s.
         registerFreeze("Bind", 8, 30.0, 181)
         registerFreeze("Snare", 16, 60.0, 180)
-        registerFreeze("Entangle", 25, 89.0, 179)
+        registerFreeze("Entangle", 24, 89.0, 179) // wiki: 24 ticks (14.4s), was 25
 
         logger.info { "curse-spells: registered 6 curses + 3 binds." }
     }
@@ -60,8 +66,12 @@ class CurseSpellsPlugin(
             MagicSpells.removeRunes(caster, spell.items)
             caster.addXp(Skills.MAGIC, xp)
             caster.animate(CAST_ANIM)
-            target.graphic(gfx, GFX_HEIGHT)
-            drain(target, playerSkill, npcSkill, pct)
+            if (lands(caster, target)) {
+                target.graphic(gfx, GFX_HEIGHT)
+                drain(target, playerSkill, npcSkill, pct)
+            } else {
+                target.graphic(SPLASH_GFX, GFX_HEIGHT)
+            }
         }
     }
 
@@ -75,8 +85,12 @@ class CurseSpellsPlugin(
             MagicSpells.removeRunes(caster, spell.items)
             caster.addXp(Skills.MAGIC, xp)
             caster.animate(CAST_ANIM)
-            target.graphic(gfx, GFX_HEIGHT)
-            target.freeze(ticks)
+            if (lands(caster, target)) {
+                target.graphic(gfx, GFX_HEIGHT)
+                target.freeze(ticks)
+            } else {
+                target.graphic(SPLASH_GFX, GFX_HEIGHT)
+            }
         }
     }
 
