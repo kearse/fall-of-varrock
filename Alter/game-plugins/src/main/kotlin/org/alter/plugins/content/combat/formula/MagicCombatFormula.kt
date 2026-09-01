@@ -104,6 +104,8 @@ object MagicCombatFormula : CombatFormula {
                 hit = (Math.floor(magic / 3.0) - 5.0)
             } else if (pawn.hasEquipped(EquipmentType.WEAPON, "item.trident_of_the_swamp", "item.trident_of_the_swamp_e")) {
                 hit = (Math.floor(magic / 3.0) - 2.0)
+            } else if (pawn.hasEquipped(EquipmentType.WEAPON, "item.sanguinesti_staff", "item.holy_sanguinesti_staff")) {
+                hit = (Math.floor(magic / 3.0) - 1.0)
             }
 
             if (pawn.hasEquipped(EquipmentType.GLOVES, "item.chaos_gauntlets") && spell != null && spell in BOLT_SPELLS) {

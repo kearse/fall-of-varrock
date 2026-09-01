@@ -46,8 +46,13 @@ Wielding an elemental staff is an **endless supply of its own rune** - it isn't 
 | Air / Water / Earth / Fire (staff, battlestaff, mystic) | That element |
 | Mist / Dust / Smoke | Air + water / air + earth / air + fire |
 | Mud / Lava / Steam | Water + earth, fire + earth, water + fire |
+| Kodai wand | Water |
 
 **Autocast** needs a staff in your hands. Cast a combat spell on a target and it stays selected - you keep casting it until you switch weapons or unequip. Casting with a non-staff weapon still works, it's just a single cast.
+
+## Powered staves
+
+The **Trident of the seas**, **Trident of the swamp** and **Sanguinesti staff** carry their own built-in spell: just attack and they cast it automatically - no runes, no autocast setup, at the staff's own faster 4-tick speed. Max hit scales with your Magic level (and magic damage bonus). The swamp trident has a 1-in-4 chance to **envenom** its target; the Sanguinesti has a 1-in-6 chance to **heal you for half the damage** it deals. Their spells are PvM-only - they refuse to fire at other players, as in OSRS.
 
 **Defensive casting** trains Defence as a mage: your casts award Magic + Defence XP (1.33 Magic + 1 Defence per damage, instead of the usual 2 Magic). Turn it on either way:
 

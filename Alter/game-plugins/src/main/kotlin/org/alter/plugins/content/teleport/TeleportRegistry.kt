@@ -59,12 +59,12 @@ object TeleportRegistry {
         built("swamp_hub", "The Mire — Skilling Grounds", SKILLING, Tile(3243, 3193, 0), SAFE_ZONE),
         built("skill_mining", "Mining", SKILLING, Tile(3214, 9617, 0), SAFE_ZONE),       // cellar mine room
         built("skill_smithing", "Smithing", SKILLING, Tile(3210, 9620, 0), SAFE_ZONE),   // cellar furnace + anvils
-        built("skill_construction", "Construction", SKILLING, Tile(3239, 3205, 0), SAFE_ZONE), // bench
+        built("skill_construction", "Construction", SKILLING, Tile(3244, 3202, 0), SAFE_ZONE), // beside the yard workbench (ConstructionPlugin.benchTile 3245,3202)
         built("skill_hunter", "Hunter", SKILLING, Tile(3231, 3172, 0), SAFE_ZONE),       // the Croaking Thickets
         built("skill_agility", "Agility", SKILLING, Tile(3227, 3174, 0), SAFE_ZONE),     // the Mire Run dispenser
-        built("skill_herblore", "Herblore", SKILLING, Tile(3236, 3206, 0), SAFE_ZONE),   // TUNE (inventory skill)
-        built("skill_fletching", "Fletching", SKILLING, Tile(3229, 3207, 0), SAFE_ZONE), // TUNE (inventory skill)
-        built("skill_thieving", "Thieving", SKILLING, Tile(2979, 3394, 0), SAFE_ZONE),   // Falador north square (neutral)
+        built("skill_herblore", "Herblore", SKILLING, Tile(3240, 3193, 0), SAFE_ZONE),   // Mire yard, W of the pad (r12849 dump: clear)
+        built("skill_fletching", "Fletching", SKILLING, Tile(3246, 3193, 0), SAFE_ZONE), // Mire yard, E of the pad (r12849 dump: clear)
+        built("skill_thieving", "Thieving", SKILLING, Tile(3242, 3189, 0), SAFE_ZONE),   // Mire yard stall row (SwampStallSpawnPlugin) — Falador flipped to a raid city, so the old landing was open PvP
 
         // ── 🗡️ The War ─────────────────────────────────────────────────────────
         built("varrock_raid", "Varrock Raid", WAR, Tile(3213, 3424, 0), HOSTILE),        // hostile target city (§3C)

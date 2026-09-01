@@ -75,9 +75,9 @@ class CompanionPlugin(
             else player.message("<col=4f9b4f>Recruited a ${archetype.display} companion (${CompanionRegistry.rosterSize(player)}/$cap).</col>")
         }
 
-        // ::companion <train|attack|follow|deploy|return|dismiss|summon> [slot] — order all your companions, or just
-        // the companion in [slot] (1-based). The RuneLite panel sends the slot form for per-companion control.
-        onCommand("companion", description = "Order companions: ::companion <train|attack|follow|deploy|return|dismiss|summon> [slot]") {
+        // ::companion <train|attack|follow|deploy|return|dismiss|summon|bones|archetype> [slot] — order all your
+        // companions, or just the companion in [slot] (1-based). The RuneLite panel sends the slot form.
+        onCommand("companion", description = "Order companions: ::companion <train|attack|follow|deploy|return|dismiss|summon|bones|archetype> [slot]") {
             val list = CompanionRegistry.ofOwner(player)
             val args = player.getCommandArgs()
 
@@ -173,6 +173,35 @@ class CompanionPlugin(
                     val equipSlot = args.getOrNull(2)?.toIntOrNull()
                     if (slot < 0 || equipSlot == null) { player.message("Usage: ::companion gear <slot> <equipSlot>"); return@onCommand }
                     CompanionRegistry.pushGearList(player, slot, equipSlot)
+                    return@onCommand
+                }
+                // ::companion bones [slot] — feed every bone in YOUR inventory to a companion
+                // (default slot 1): he buries them and gains the Prayer xp. The only Prayer
+                // training path a clientless companion can have.
+                "bones" -> {
+                    val comp = list.getOrNull((args.getOrNull(1)?.toIntOrNull() ?: 1) - 1)
+                    if (comp == null) { player.message("<col=801700>No companion in that slot.</col>"); return@onCommand }
+                    if (CompanionPrayers.feedBones(player, comp) == 0) {
+                        player.message("You have no bones to give him.")
+                    } else {
+                        CompanionRegistry.persist(player); CompanionRegistry.forcePush(player)
+                    }
+                    return@onCommand
+                }
+                // ::companion archetype <slot> <melee|range|mage> — re-school a companion so it can
+                // train a different combat style (skills + gear carry over).
+                "archetype", "school" -> {
+                    val slot = (args.getOrNull(1)?.toIntOrNull() ?: 0) - 1
+                    val style = when (args.getOrNull(2)?.lowercase()) {
+                        "melee" -> CompanionStyle.MELEE
+                        "range", "ranged" -> CompanionStyle.RANGE
+                        "mage", "magic" -> CompanionStyle.MAGE
+                        else -> null
+                    }
+                    if (slot < 0 || style == null) { player.message("Usage: ::companion archetype <slot> <melee|range|mage>"); return@onCommand }
+                    if (!CompanionRegistry.setArchetype(player, slot, style)) {
+                        player.message("<col=801700>No companion in slot ${slot + 1}.</col>")
+                    }
                     return@onCommand
                 }
                 // ::companion loot [slot] — toggle the donor auto-loot-to-bank perk (all, or one slot).

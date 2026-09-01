@@ -148,10 +148,10 @@ class LofTeleportsOverlay extends Overlay implements LofWindows.Window
 		{
 			final int rel = p.y - (oy + VP_TOP) + scroll;
 			final int i = rel / STEP;
-			// Only "built" destinations are clickable — an unbuilt ("Soon") row is drawn disabled,
-			// so it must swallow the click (fall through to INSIDE) rather than fire a teleport.
-			if (i >= 0 && i < rowCount() && (rel - i * STEP) <= CARD_H
-				&& LofTeleportsData.CATEGORIES.get(activeTab).dests.get(i).built)
+			// Every row is clickable — including unbuilt ("Soon") rows: the server rejects those
+			// with a "<name> is coming soon!" chat message, which is the click feedback. Rows used
+			// to be swallowed client-side, which read as "the teleport is broken" (UX review).
+			if (i >= 0 && i < rowCount() && (rel - i * STEP) <= CARD_H)
 			{
 				return ROW_BASE + i;
 			}

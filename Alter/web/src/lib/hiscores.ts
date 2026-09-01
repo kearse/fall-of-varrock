@@ -127,17 +127,27 @@ export async function getAllPlayerSkills(): Promise<PlayerSkills[]> {
   const details = await Collections.details();
 
   const detailDocs = await details.find({}).toArray();
+  // Logins are matched case-insensitively: the game normalizes to lowercase on login now,
+  // but details docs written by older builds (and the one-shot migration) carry mixed case —
+  // an exact-match lookup silently dropped their display names and player pages.
   const nameByLogin = new Map<string, string>();
   for (const a of await accounts.find({}, { projection: { loginUsername: 1, currentDisplayName: 1 } }).toArray()) {
-    nameByLogin.set(a.loginUsername, a.currentDisplayName);
+    nameByLogin.set(String(a.loginUsername).toLowerCase(), a.currentDisplayName);
   }
 
-  const players: PlayerSkills[] = [];
+  // Dedupe by normalized login (a stale mixed-case doc + the live lowercase doc would
+  // otherwise rank the same player twice) — the doc with the most total XP wins.
+  const byLogin = new Map<string, PlayerSkills>();
   for (const d of detailDocs) {
-    const display = nameByLogin.get(d.loginUsername) ?? d.loginUsername;
-    const parsed = parseSkills(display, d.loginUsername, d.attributes);
-    if (parsed) players.push(parsed);
+    const login = String(d.loginUsername ?? "").toLowerCase();
+    if (!login) continue;
+    const display = nameByLogin.get(login) ?? d.loginUsername;
+    const parsed = parseSkills(display, login, d.attributes);
+    if (!parsed) continue;
+    const prev = byLogin.get(login);
+    if (!prev || parsed.totalXp > prev.totalXp) byLogin.set(login, parsed);
   }
+  const players = [...byLogin.values()];
   cache = { at: Date.now(), players };
   return players;
 }
@@ -185,7 +195,8 @@ export async function getHiscoresPage(
 
 export async function getPlayerSkills(loginUsername: string): Promise<PlayerSkills | null> {
   const players = await getAllPlayerSkills();
-  return players.find((p) => p.loginUsername === loginUsername) ?? null;
+  const key = loginUsername.toLowerCase();
+  return players.find((p) => p.loginUsername.toLowerCase() === key) ?? null;
 }
 
 export function titleCase(s: string): string {

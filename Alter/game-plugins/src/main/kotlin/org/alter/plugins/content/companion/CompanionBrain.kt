@@ -63,6 +63,7 @@ object CompanionBrain {
         org.alter.plugins.content.bots.BotBrain.maybeEat(comp) // survive fights from its food supply
         if (TOWN.contains(comp.tile)) CompanionGear.restock(comp) // top up food/runes at the safezone
         CompanionMagic.ensureSpell(comp) // mage: keep autocast in step with level / owner's chosen spell
+        CompanionPrayers.update(comp) // fight: offence + PvP protection; idle: prayers off, points recharge
         if (comp.isAttacking()) CompanionPotions.maybePot(comp) // boost when fighting
         when (comp.orders) {
             CompanionOrders.TRAIN -> train(world, comp)
