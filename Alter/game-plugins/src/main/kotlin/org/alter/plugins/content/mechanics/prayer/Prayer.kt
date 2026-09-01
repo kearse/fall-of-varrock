@@ -294,7 +294,7 @@ enum class Prayer(
     SMITE(
         named = "Smite",
         child = 26,
-        quickPrayerSlot = 26,
+        quickPrayerSlot = 17, // was 26, colliding with PIETY → quick-prayer Smite lit Piety
         varbit = 4121,
         level = 52,
         sound = 2686,
@@ -310,7 +310,7 @@ enum class Prayer(
         varbit = 5466,
         level = 55,
         sound = 3825,
-        drainEffect = 3,
+        drainEffect = 2, // OSRS: 1 point / 18s (was 3 — draining 50% too fast)
         group = null,
         overlap = arrayOf(),
     ),

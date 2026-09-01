@@ -18,7 +18,7 @@ class AbyssalDaggerPlugin(
 
     init {
 
-        val SPECIAL_REQUIREMENT = 50
+        val SPECIAL_REQUIREMENT = 25 // OSRS Wiki, Abyssal dagger: 25% energy
 
         for(item in listOf(
             "item.abyssal_dagger",

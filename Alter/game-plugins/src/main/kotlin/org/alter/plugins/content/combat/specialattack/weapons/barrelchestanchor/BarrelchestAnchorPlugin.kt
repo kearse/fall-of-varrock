@@ -13,8 +13,8 @@ import org.alter.plugins.content.combat.specialattack.SpecialAttacks
 
 /**
  * Barrelchest anchor (10887) special attack: "Sunder".
- * 50% energy, +10% damage. On a successful hit it lowers the target's current
- * Defence level by 10% of the damage dealt.
+ * 50% energy, DOUBLE accuracy. On a successful hit it lowers one RANDOM combat stat
+ * (Attack/Defence/Ranged/Magic) by 10% of the damage dealt (OSRS Wiki, Barrelchest anchor).
  */
 class BarrelchestAnchorPlugin(
     r: PluginRepository,
@@ -27,17 +27,23 @@ class BarrelchestAnchorPlugin(
             player.animate(id = 5870)
             player.graphic(id = 1027, height = 100)
 
-            val maxHit = MeleeCombatFormula.getMaxHit(player, target, specialAttackMultiplier = 1.1)
-            val accuracy = MeleeCombatFormula.getAccuracy(player, target, specialAttackMultiplier = 1.1)
+            val maxHit = MeleeCombatFormula.getMaxHit(player, target, specialAttackMultiplier = 1.0)
+            val accuracy = MeleeCombatFormula.getAccuracy(player, target, specialAttackMultiplier = 2.0)
             val landHit = accuracy >= world.randomDouble()
             val victim = target
             val pawnHit = player.dealHit(target = victim, maxHit = maxHit, landHit = landHit, delay = 0)
 
             if (landHit) {
-                // Drains Defence by a tenth of the damage dealt — NPCs included.
+                // Drains ONE random combat stat by a tenth of the damage dealt (NPCs included).
+                val (skill, npcSkill) = when (world.random(3)) {
+                    0 -> Skills.ATTACK to NpcSkills.ATTACK
+                    1 -> Skills.DEFENCE to NpcSkills.DEFENCE
+                    2 -> Skills.RANGED to NpcSkills.RANGED
+                    else -> Skills.MAGIC to NpcSkills.MAGIC
+                }
                 pawnHit.hit.addAction {
                     val dealt = hitmarks.sumOf { it.damage }
-                    victim.drainCombatStat(Skills.DEFENCE, NpcSkills.DEFENCE, dealt / 10)
+                    victim.drainCombatStat(skill, npcSkill, dealt / 10)
                 }
             }
         }

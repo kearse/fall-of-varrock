@@ -10,9 +10,10 @@ import org.alter.plugins.content.combat.formula.MeleeCombatFormula
 import org.alter.plugins.content.combat.specialattack.SpecialAttacks
 
 /**
- * Saradomin's blessed sword (12809) special attack: "Flare".
- * 65% energy. Deals a melee hit and restores the attacker's Prayer by 50% of
- * the damage dealt.
+ * Saradomin's blessed sword (12809) special attack: "Blessed Blast".
+ * 65% energy, +25% max hit (OSRS Wiki, Saradomin's blessed sword). No prayer restore —
+ * that was a homebrew effect. (OSRS rolls the hit against magic defence; the shared
+ * melee accuracy path is kept here since the sword carries no magic attack bonus.)
  */
 class SaradominsBlessedSwordPlugin(
     r: PluginRepository,
@@ -23,18 +24,14 @@ class SaradominsBlessedSwordPlugin(
     init {
         SpecialAttacks.register("item.saradomins_blessed_sword", 65) {
             player.animate(id = 1133)
-            player.graphic(id = 1204, height = 100)
+            player.graphic(id = 1213, height = 100)
 
-            val maxHit = MeleeCombatFormula.getMaxHit(player, target, specialAttackMultiplier = 1.0)
-            val accuracy = MeleeCombatFormula.getAccuracy(player, target, specialAttackMultiplier = 1.25)
+            val maxHit = MeleeCombatFormula.getMaxHit(player, target, specialAttackMultiplier = 1.25)
+            val accuracy = MeleeCombatFormula.getAccuracy(player, target, specialAttackMultiplier = 1.0)
             val landHit = accuracy >= world.randomDouble()
-            val pawnHit = player.dealHit(target = target, maxHit = maxHit, landHit = landHit, delay = 1)
-
+            player.dealHit(target = target, maxHit = maxHit, landHit = landHit, delay = 1)
             if (landHit) {
-                val dealt = pawnHit.hit.hitmarks.sumOf { it.damage }
-                if (dealt > 0) {
-                    player.getSkills().alterCurrentLevel(Skills.PRAYER, dealt / 2, capValue = 0)
-                }
+                target.graphic(1196)
             }
         }
     }

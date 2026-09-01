@@ -12,7 +12,8 @@ import org.alter.plugins.content.combat.specialattack.SpecialAttacks
 
 /**
  * Toxic blowpipe (12926) special attack: "Toxic Siphon".
- * 50% energy, +50% accuracy. Heals the attacker by 50% of the damage dealt.
+ * 50% energy, +50% damage and double accuracy. Heals the attacker by 50% of the damage
+ * dealt (OSRS Wiki, Toxic blowpipe).
  */
 class ToxicBlowpipePlugin(
     r: PluginRepository,
@@ -22,12 +23,12 @@ class ToxicBlowpipePlugin(
 
     init {
         SpecialAttacks.register("item.toxic_blowpipe", 50) {
-            player.animate(id = 876)
+            player.animate(id = 5061)
             player.graphic(id = 1043, height = 96)
             player.fireAmmoProjectile(target)
 
-            val maxHit = RangedCombatFormula.getMaxHit(player, target, specialAttackMultiplier = 1.0)
-            val accuracy = RangedCombatFormula.getAccuracy(player, target, specialAttackMultiplier = 1.5)
+            val maxHit = RangedCombatFormula.getMaxHit(player, target, specialAttackMultiplier = 1.5)
+            val accuracy = RangedCombatFormula.getAccuracy(player, target, specialAttackMultiplier = 2.0)
             val landHit = accuracy >= world.randomDouble()
             val pawnHit = player.dealHit(target = target, maxHit = maxHit, landHit = landHit, delay = 2)
 

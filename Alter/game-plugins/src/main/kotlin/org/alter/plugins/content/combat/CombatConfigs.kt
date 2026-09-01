@@ -290,6 +290,11 @@ object CombatConfigs {
                     WeaponType.LONG_SWORD,
                     WeaponType.MAGIC_STAFF,
                     WeaponType.CLAWS,
+                    // MACE was missing entirely, so every mace-category weapon fell through
+                    // to NONE and got no accurate/aggressive/defensive stance bonus at all.
+                    WeaponType.MACE,
+                    WeaponType.SALAMANDER,
+                    WeaponType.STAFF_HALBERD,
                 ) ->
                     when (style) {
                         0 -> AttackStyle.ACCURATE
