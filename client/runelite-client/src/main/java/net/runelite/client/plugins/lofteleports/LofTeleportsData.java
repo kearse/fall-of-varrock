@@ -6,6 +6,10 @@
  * "::tp <catIndex> <rowIndex>" and the server resolves it by those indices. Same discipline as
  * WildernessZones mirroring the server PvpZones.
  *
+ * EVERY TeleportRegistry change ships with a sync of this file + a client deploy — the drift
+ * after the boss-roster purge left the whole Bosses tab dead and the Mini-Games rows firing the
+ * wrong destinations (the "portal teleports are broken" player reports).
+ *
  * The `icon` is a representative OSRS item id drawn via ItemManager.getImage (purely cosmetic;
  * an unknown id just renders blank).
  */
@@ -68,120 +72,101 @@ final class LofTeleportsData
 	static
 	{
 		cat("Basics",
-			b("Home (Lumbridge)", "Safe Zone", SAFE, 8008),   // Lumbridge teleport tab
-			b("Market / Shops", "Safe Zone", SAFE, 995),       // coins
-			b("Prayer Altar", "Safe Zone", SAFE, 2434),        // prayer potion
-			s("Gambling", "Soon", SOON, 1038),                 // red partyhat
+			b("Home (Lumbridge)", "Safe Zone", SAFE, 8008),     // Lumbridge teleport tab
+			b("Market / Shops", "Safe Zone", SAFE, 995),        // coins
+			b("Prayer Altar", "Safe Zone", SAFE, 2434),         // prayer potion
+			s("Gambling (Flower Poker)", "Soon", SOON, 1038),   // red partyhat
 			s("Dice Zone", "Soon", SOON, 995),
-			s("Blackjack", "Soon", SOON, 6408),                // blackjack
+			s("Blackjack", "Soon", SOON, 6408),                 // blackjack
 			s("Party Zone", "Soon", SOON, 1038));
 
 		// Mirrors TeleportRegistry SKILLING: the seven production skills consolidated into the
 		// single Mire hub row (UX review), then the skills with a distinct destination.
 		cat("Skilling",
 			b("The Mire — Skilling Grounds", "Safe Zone", SAFE, 5341), // rake (general skilling hub)
-			b("Mining", "Safe Zone", SAFE, 1275),              // rune pickaxe
-			b("Smithing", "Safe Zone", SAFE, 2347),            // hammer
-			b("Construction", "Safe Zone", SAFE, 8794),        // saw
-			b("Hunter", "Safe Zone", SAFE, 10010),             // butterfly net
-			b("Agility", "Safe Zone", SAFE, 3105),             // climbing boots
-			b("Herblore", "Safe Zone", SAFE, 233),             // pestle and mortar
-			b("Fletching", "Safe Zone", SAFE, 946),            // knife
-			b("Thieving", "Safe Zone", SAFE, 1523));           // lockpick
+			b("Mining", "Safe Zone", SAFE, 1275),               // rune pickaxe
+			b("Smithing", "Safe Zone", SAFE, 2347),             // hammer
+			b("Construction", "Safe Zone", SAFE, 8794),         // saw
+			b("Hunter", "Safe Zone", SAFE, 10010),              // butterfly net
+			b("Agility", "Safe Zone", SAFE, 3105),              // climbing boots
+			b("Herblore", "Safe Zone", SAFE, 233),              // pestle and mortar
+			b("Fletching", "Safe Zone", SAFE, 946),             // knife
+			b("Thieving", "Safe Zone", SAFE, 1523));            // lockpick
 
 		cat("The War",
-			b("Varrock Raid", "Hostile", HOSTILE, 1333),       // rune scimitar
-			b("North Frontier", "Wild Lvl 5", WILD, 1325),     // iron scimitar
-			b("Goblin Warren", "Hostile", HOSTILE, 288),       // goblin mail
-			b("Recruit Trials", "Safe Zone", SAFE, 1277),      // bronze sword
-			s("Active Campaign", "Soon", SOON, 1201));         // rune kiteshield
+			b("Varrock Raid", "Hostile", HOSTILE, 1333),        // rune scimitar
+			b("North Frontier", "Wild Lvl 5", WILD, 1325),      // iron scimitar
+			b("Goblin Warren", "Hostile", HOSTILE, 288),        // goblin mail
+			b("Recruit Trials", "Safe Zone", SAFE, 1277),       // bronze sword
+			s("Active Campaign", "Soon", SOON, 1201));          // rune kiteshield
 
-		// Mirrors TeleportRegistry BOSSES row-for-row (35 rows: apex city bosses, the four GWD
-		// generals, the wilderness single bosses, the Slayer/PvM roster, then the raids).
-		// ALL boss rows are temporarily disabled (drawn greyed, unclickable) while each lair
-		// is verified server-side — flip a row back to b(...) as its registry entry is rebuilt.
+		// Mirrors TeleportRegistry BOSSES row-for-row (18 rows): the hand-built roster was purged;
+		// bosses come back one at a time as Kronos ports and flip to b(...) here as they land.
 		cat("Bosses",
-			s("King Black Dragon", "Disabled", SOON, 1149),    // dragon med helm
-			s("Corporeal Beast", "Disabled", SOON, 13734),     // spirit shield
-			s("Corp Beast (Event)", "Disabled", SOON, 13734),  // spirit shield
-			s("World Boss", "Soon", SOON, 11864),              // slayer helmet
-			s("Zulrah", "Soon", SOON, 12934),                  // zulrah's scales
-			s("Barrows", "Disabled", SOON, 4716),              // dharok's helm
-			s("Kraken", "Disabled", SOON, 12004),              // kraken tentacle
-			s("Nex", "Disabled", SOON, 11791),                 // staff of the dead
-			s("Vorkath", "Disabled", SOON, 21634),             // vorkath's head
-			s("Alchemical Hydra", "Disabled", SOON, 22988),    // hydra leather
-			s("Phantom Muspah", "Disabled", SOON, 28323),      // venator shard
-			s("Abyssal Sire", "Disabled", SOON, 13262),        // abyssal orphan
-			s("Grotesque Guardians", "Disabled", SOON, 21730), // granite gloves
-			s("General Graardor", "Disabled", SOON, 11832),    // bandos chestplate
-			s("K'ril Tsutsaroth", "Disabled", SOON, 11806),    // zamorak godsword
-			s("Kree'arra", "Disabled", SOON, 11826),           // armadyl helmet
-			s("Commander Zilyana", "Disabled", SOON, 11808),   // saradomin godsword
-			s("Callisto", "Disabled", SOON, 12603),            // tyrannical ring
-			s("Vet'ion", "Disabled", SOON, 12601),             // ring of the gods
-			s("Venenatis", "Disabled", SOON, 12605),           // treasonous ring
-			s("Scorpia", "Disabled", SOON, 12806),             // malediction ward
-			s("Chaos Elemental", "Disabled", SOON, 7158),      // dragon 2h
-			s("Chaos Fanatic", "Disabled", SOON, 12808),       // odium shard
-			s("Crazy Archaeologist", "Disabled", SOON, 11924), // fedora
-			s("Demonic Gorillas", "Disabled", SOON, 19481),    // heavy ballista
-			s("Skotizo", "Disabled", SOON, 19685),             // dark totem
-			s("Cerberus", "Disabled", SOON, 13231),            // primordial boots
-			s("Giant Mole", "Disabled", SOON, 7418),           // mole claw
-			s("Kalphite Queen", "Disabled", SOON, 3140),       // dragon chainbody
-			s("Sarachnis", "Disabled", SOON, 23528),           // sarachnis cudgel
-			s("Thermonuclear Smoke Devil", "Disabled", SOON, 12002), // occult necklace
-			s("Dagannoth Kings", "Disabled", SOON, 6737),      // berserker ring
-			s("Theatre of Blood", "Soon", SOON, 22326),        // justiciar faceguard
-			s("Chambers of Xeric", "Soon", SOON, 20997),       // twisted bow
-			s("Revenant Caves", "Disabled", SOON, 22557));     // amulet of avarice
+			b("Corp Beast (Event)", "Hostile", HOSTILE, 13734), // spirit shield
+			s("World Boss", "Soon", SOON, 11864),               // slayer helmet
+			s("King Black Dragon", "Soon", SOON, 1149),         // dragon med helm
+			s("Corporeal Beast", "Soon", SOON, 13734),          // spirit shield
+			b("Zulrah", "Hostile", HOSTILE, 12934),             // zulrah's scales
+			s("Barrows", "Soon", SOON, 4716),                   // dharok's helm
+			b("Vorkath", "Hostile", HOSTILE, 21634),            // vorkath's head
+			b("Alchemical Hydra", "Hostile", HOSTILE, 22988),   // hydra leather
+			s("General Graardor", "Soon", SOON, 11832),         // bandos chestplate
+			s("K'ril Tsutsaroth", "Soon", SOON, 11806),         // zamorak godsword
+			s("Kree'arra", "Soon", SOON, 11826),                // armadyl helmet
+			s("Commander Zilyana", "Soon", SOON, 11808),        // saradomin godsword
+			s("Callisto", "Soon", SOON, 12603),                 // tyrannical ring
+			s("Vet'ion", "Soon", SOON, 12601),                  // ring of the gods
+			s("Venenatis", "Soon", SOON, 12605),                // treasonous ring
+			s("Theatre of Blood", "Soon", SOON, 22326),         // justiciar faceguard
+			s("Chambers of Xeric", "Soon", SOON, 20997),        // twisted bow
+			s("Revenant Caves", "Soon", SOON, 22557));          // amulet of avarice
 
 		cat("Wilderness",
-			b("Outlaw Camp", "Wild Lvl 5", WILD, 1333),        // rune scimitar
-			b("Marauder Grounds", "Wild Lvl 12", WILD, 1215),  // dragon dagger
-			b("Raider Fields", "Wild Lvl 20", WILD, 4153),     // granite maul
-			b("Warlord's Approach", "Wild Lvl 30", WILD, 4151),// abyssal whip
-			b("Wilderness PKers", "Wild Lvl 40", WILD, 11802), // armadyl godsword
+			b("Outlaw Camp", "Wild Lvl 5", WILD, 1333),         // rune scimitar
+			b("Marauder Grounds", "Wild Lvl 12", WILD, 1215),   // dragon dagger
+			b("Raider Fields", "Wild Lvl 20", WILD, 4153),      // granite maul
+			b("Warlord's Approach", "Wild Lvl 30", WILD, 4151), // abyssal whip
+			b("Wilderness PKers", "Wild Lvl 40", WILD, 11802),  // armadyl godsword
 			b("Deep Wilderness PKers", "Wild Lvl 55", WILD, 13652), // dragon claws
-			s("Fun-PK Zone", "Soon", SOON, 4587),              // dragon scimitar
-			s("Risk Zone", "Soon", SOON, 995),                 // coins
-			s("Edge PvP (Brid)", "Soon", SOON, 1333),          // rune scimitar
-			s("Camelot PvP", "Soon", SOON, 1319),              // rune 2h
-			s("F2P Zone", "Soon", SOON, 1303),                 // rune longsword
-			s("Mage Bank", "Soon", SOON, 6914),                // master wand
-			s("Ferox Enclave", "Soon", SOON, 6685));           // saradomin brew
+			s("Fun-PK Zone", "Soon", SOON, 4587),               // dragon scimitar
+			s("Risk Zone", "Soon", SOON, 995),                  // coins
+			s("Edge PvP (Brid Zone)", "Soon", SOON, 1333),      // rune scimitar
+			s("Camelot PvP", "Soon", SOON, 1319),               // rune 2h
+			s("F2P Zone", "Soon", SOON, 1303),                  // rune longsword
+			s("Mage Bank", "Soon", SOON, 6914),                 // master wand
+			s("Ferox Enclave", "Soon", SOON, 6685));            // saradomin brew
 
 		cat("Slayer",
-			b("Slayer Master", "Safe Zone", SAFE, 4155),       // enchanted gem
-			s("Slayer Cave", "Soon", SOON, 8901),              // black mask
+			b("Slayer Master", "Safe Zone", SAFE, 4155),        // enchanted gem
+			s("Slayer Cave", "Soon", SOON, 8901),               // black mask
 			s("Resource Contracts", "Soon", SOON, 995));
 
 		cat("Mini-Games",
-			b("Fight Cave", "Safe Zone", SAFE, 6570),          // fire cape
-			b("The Inferno", "Safe Zone", SAFE, 21295),        // infernal cape
-			b("Wizard Tower", "Safe Zone", SAFE, 579),         // blue wizard hat
-			s("Castle Wars", "Soon", SOON, 4037),              // castle wars decor
-			s("Last Man Standing", "Soon", SOON, 11941),       // looting bag
-			s("Duel Arena", "Soon", SOON, 2552));              // ring of dueling
+			b("Wizard Tower", "Safe Zone", SAFE, 579),          // blue wizard hat
+			b("Fight Cave", "Safe Zone", SAFE, 6570),           // fire cape
+			s("The Inferno", "Soon", SOON, 21295),              // infernal cape
+			s("Castle Wars", "Soon", SOON, 4037),               // castle wars decor
+			s("Last Man Standing", "Soon", SOON, 11941),        // looting bag
+			s("Duel Arena", "Soon", SOON, 2552));               // ring of dueling
 
 		cat("Events",
-			s("HP Event", "Soon", SOON, 13441),                // anglerfish
-			s("Automatic Tournament", "Soon", SOON, 1333),     // rune scimitar
-			s("Bloodlust", "Soon", SOON, 565),                 // blood rune
-			s("Treasure Hunt", "Soon", SOON, 405),             // casket
-			s("Clan Warfare", "Soon", SOON, 4039),             // saradomin banner
+			s("HP Event", "Soon", SOON, 13441),                 // anglerfish
+			s("Automatic Tournament", "Soon", SOON, 1333),      // rune scimitar
+			s("Bloodlust", "Soon", SOON, 565),                  // blood rune
+			s("Treasure Hunt", "Soon", SOON, 405),              // casket
+			s("Clan Warfare", "Soon", SOON, 4039),              // saradomin banner
 			s("Vote Boss", "Soon", SOON, 995));
 
 		cat("Donator",
-			s("Donator Zone", "Soon", SOON, 13190),            // old school bond
+			s("Donator Zone", "Soon", SOON, 13190),             // old school bond
 			s("Donator Dungeon", "Soon", SOON, 13190),
-			s("Royal PvM Zone", "Soon", SOON, 13652),          // dragon claws
-			s("Royal Skilling Zone", "Soon", SOON, 11920),     // dragon pickaxe
+			s("Royal PvM Zone", "Soon", SOON, 13652),           // dragon claws
+			s("Royal Skilling Zone", "Soon", SOON, 11920),      // dragon pickaxe
 			s("Divine Donator", "Soon", SOON, 13190),
-			s("Divine Monster Dungeon", "Soon", SOON, 13576),  // dragon warhammer
-			s("Divine Skilling Zone", "Soon", SOON, 23673),    // crystal axe
-			s("Divine Slayer Cave", "Soon", SOON, 11865));     // slayer helmet (i)
+			s("Divine Monster Dungeon", "Soon", SOON, 13576),   // dragon warhammer
+			s("Divine Skilling Zone", "Soon", SOON, 23673),     // crystal axe
+			s("Divine Slayer Cave", "Soon", SOON, 11865));      // slayer helmet (i)
 	}
 
 	private LofTeleportsData()
