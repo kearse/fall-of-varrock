@@ -4,6 +4,7 @@ import dev.openrune.cache.CacheManager.getItem
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.alter.api.ext.message
 import org.alter.game.model.entity.Player
+import org.alter.game.service.game.ItemMetadataService
 import org.alter.plugins.content.mechanics.shops.ItemCurrency
 import org.alter.plugins.content.war.warprep.WarPrepChain
 import org.alter.rscm.RSCM.getRSCM
@@ -416,6 +417,7 @@ object GrandExchange {
      *  reject a sell pick from the inventory grid before opening the setup box. */
     fun isListable(itemId: Int): Boolean =
         itemId != coinsId && itemId !in EXCLUDED &&
+            !ItemMetadataService.isGeExcluded(itemId) &&
             runCatching { getItem(itemId).isTradeable }.getOrDefault(false)
 
     /**

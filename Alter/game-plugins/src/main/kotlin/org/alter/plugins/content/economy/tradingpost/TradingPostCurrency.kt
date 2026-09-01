@@ -3,6 +3,7 @@ package org.alter.plugins.content.economy.tradingpost
 import org.alter.api.ext.message
 import org.alter.game.model.entity.Player
 import org.alter.game.model.shop.Shop
+import org.alter.plugins.content.economy.SpecialShopGuard
 import org.alter.plugins.content.mechanics.shops.ItemCurrency
 import org.alter.rscm.RSCM.getRSCM
 
@@ -30,6 +31,12 @@ class TradingPostCurrency : ItemCurrency(getRSCM("item.coins_995"), singularCurr
         val item = p.inventory[slot] ?: return
         if (item.toUnnoted().id in neverBuy) {
             p.message("The Trading Post doesn't deal in bonds — trade them to other players instead.")
+            return
+        }
+        // Special-currency shop wares (Boss Ticket gear etc.) may never be NPC-sold for gp —
+        // the 70% buy-back was one half of the ticket-shop→gp infinite loop the audit found.
+        if (SpecialShopGuard.isGuarded(item.toUnnoted().id)) {
+            p.message("The Trading Post doesn't buy special-stock gear — sell it to other players instead.")
             return
         }
         super.buyFromPlayer(p, shop, slot, amt)

@@ -1,6 +1,6 @@
 ---
 id: 20598
-name: "Ahrims's robetop"
+name: "Ahrim's robetop"
 
 equipment:
   skillReqs:
@@ -10,8 +10,10 @@ equipment:
       level: 70
 
 ---
-id: 4714
-name: "Ahrims's robetop"
+# 4712 = the real Ahrim's robetop (4714 is the robeskirt — the old wrong id here left the
+# actual robetop with NO requirements and renamed the robeskirt; the skirt has its own file).
+id: 4712
+name: "Ahrim's robetop"
 
 equipment:
   skillReqs:

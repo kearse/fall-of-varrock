@@ -192,8 +192,11 @@ class ItemMetadataService : Service {
              * @TODO Add better context as to why file could not be loaded.
              * @TODO Add support for remaining [`def`] properties override method.
              */
+            // Sequential + sorted: the walk used to be a parallel stream, which made two
+            // documents targeting the same item id apply in NONDETERMINISTIC order (the
+            // duplicated barrows ids surfaced as randomly-named items across boots).
             val overridesApplied = java.util.concurrent.atomic.AtomicInteger()
-            Files.walk(path.resolve("itemOverrides")).parallel().filter { it.toFile().isFile }.forEach { file ->
+            Files.walk(path.resolve("itemOverrides")).sorted().filter { it.toFile().isFile }.forEach { file ->
                 if (file.fileName.toString().contains("FileExample.yml")) return@forEach
 
                 val content = file.toFile().readText()
@@ -225,6 +228,18 @@ class ItemMetadataService : Service {
         def.examine = item.examine ?: ""
         def.isTradeable = item.tradeable
         item.weight?.let { def.weight = it }
+
+        // Economy override fields. These were parsed and silently DROPPED — TradeableCapes.yml's
+        // "cost/alch MUST stay 0" safety note relied on them applying, which left the fire cape
+        // alchable at its 65k cache Value the moment the Jad port started handing capes out.
+        // cost writes straight to the cache def (alch/shop/TP pricing all derive from it);
+        // explicit low/high alch values, GE exclusion and buy limits land in the override maps
+        // below for the systems that consume them (AlchemyPlugin, GrandExchange).
+        item.cost?.let { def.cost = it }
+        item.lowalch?.let { lowAlchOverrides[item.id] = it }
+        item.highalch?.let { highAlchOverrides[item.id] = it }
+        item.buy_limit?.let { buyLimits[item.id] = it }
+        if (item.tradeable_on_ge == false) geExcluded.add(item.id)
 
         if (item.equipment != null) {
             val equipment = item.equipment
@@ -423,10 +438,12 @@ class ItemMetadataService : Service {
         val examine: String? = null,
         val tradeable: Boolean = false,
         val weight: Double? = null,
-        val tradeable_on_ge: Boolean = false,
-        val cost: Int = 0,
-        val lowalch: Int = 0,
-        val highalch: Int = 0,
+        // Nullable so an absent YAML key is distinguishable from an explicit value — with
+        // the old `= 0` defaults, applying these would have zeroed every overridden item.
+        val tradeable_on_ge: Boolean? = null,
+        val cost: Int? = null,
+        val lowalch: Int? = null,
+        val highalch: Int? = null,
         val buy_limit: Int? = null,
         val equipment: Equipment? = null,
     )
@@ -551,5 +568,20 @@ class ItemMetadataService : Service {
 
     companion object {
         val logger = KotlinLogging.logger {}
+
+        // Explicit YAML economy overrides (see load()). Populated once at boot on the
+        // (sequential) override walk, read-only afterwards.
+        private val lowAlchOverrides = HashMap<Int, Int>()
+        private val highAlchOverrides = HashMap<Int, Int>()
+        private val buyLimits = HashMap<Int, Int>()
+        private val geExcluded = HashSet<Int>()
+
+        fun lowAlchOverride(id: Int): Int? = lowAlchOverrides[id]
+
+        fun highAlchOverride(id: Int): Int? = highAlchOverrides[id]
+
+        fun buyLimit(id: Int): Int? = buyLimits[id]
+
+        fun isGeExcluded(id: Int): Boolean = id in geExcluded
     }
 }

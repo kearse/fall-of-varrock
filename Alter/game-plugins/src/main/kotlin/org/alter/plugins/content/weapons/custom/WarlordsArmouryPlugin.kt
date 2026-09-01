@@ -13,6 +13,7 @@ import org.alter.game.model.shop.ShopCurrency
 import org.alter.game.model.shop.ShopItem
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
+import org.alter.plugins.content.economy.SpecialShopGuard
 import org.alter.plugins.content.economy.SupplyDepotShop
 import org.alter.plugins.content.mechanics.shops.CoinCurrency
 import org.alter.plugins.content.mechanics.shops.ItemCurrency
@@ -248,6 +249,14 @@ class WarlordsArmouryPlugin(
         shopWith(BARROWS, CoinCurrency(), barrowsStock)
         // Buy Boss Tickets for coins — sets the coin ceiling on everything this vendor sells.
         currencyBuyShop(BUY_TICKETS, "item.boss_ticket", GeCurrencyPrices.BOSS_TICKET)
+
+        // Every ticket-priced ware is barred from NPC gp conversion (alch / Trading Post):
+        // tickets are coin-buyable, so any ware alching above its ticket cost in coins was an
+        // infinite gold loop (Justiciar chest: 1.2m in tickets → 3.6m alch). Trade/GE stay open.
+        SpecialShopGuard.register(
+            (weaponStock + armourStock + crystalStock + accessoryStock + chargedStock + relicStock)
+                .mapNotNull { w -> runCatching { getRSCM(w.key) }.getOrNull() },
+        )
 
         // Quartermaster vendor — inside the GE hub's desk ring, east of the pillar, facing his
         // east desks. Gear OUT (the armoury), supplies IN (the §3B war-supply sink).

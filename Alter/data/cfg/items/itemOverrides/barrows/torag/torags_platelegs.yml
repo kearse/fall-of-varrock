@@ -1,5 +1,7 @@
 ---
-id: 4730
+# 4751 = the real Torag's platelegs (4730 is Guthan's chainskirt — the old wrong id here
+# left the actual platelegs with NO defence requirement and renamed the chainskirt).
+id: 4751
 name: "Torag's platelegs"
 
 equipment:
