@@ -13,6 +13,48 @@ export interface SkillStat {
   xp: number;
 }
 
+// The 23 real skills, in game id order — mirrors web/src/lib/hiscores.ts. Older saves
+// also carry a junk "skill" key (the server's unnamed slots 23/24); iterating known
+// skills instead of Object.entries keeps it out of totals so the Discord board and the
+// website agree.
+const SKILLS = [
+  "attack", "defence", "strength", "hitpoints", "ranged", "prayer", "magic",
+  "cooking", "woodcutting", "fletching", "fishing", "firemaking", "crafting",
+  "smithing", "mining", "herblore", "agility", "thieving", "slayer", "farming",
+  "runecraft", "hunter", "construction",
+] as const;
+
+// Standard OSRS XP table (levels 1..99) — levels are DERIVED from xp, like the website,
+// because the stored `level` field is the boosted/drained current level, not the base.
+const XP_FOR_LEVEL: number[] = (() => {
+  const table = [0, 0];
+  let points = 0;
+  for (let level = 1; level < 99; level++) {
+    points += Math.floor(level + 300 * Math.pow(2, level / 7));
+    table[level + 1] = Math.floor(points / 4);
+  }
+  return table;
+})();
+
+function xpToLevel(xp: number): number {
+  for (let l = 99; l >= 1; l--) {
+    if (xp >= XP_FOR_LEVEL[l]) return l;
+  }
+  return 1;
+}
+
+/** Base-level skill map from a save's skills doc — known skills only, levels from xp. */
+function parseSkillDoc(skillDoc: Record<string, any> | undefined): Map<string, SkillStat> {
+  const map = new Map<string, SkillStat>();
+  if (!skillDoc) return map;
+  for (const name of SKILLS) {
+    const xp = Math.max(0, Math.floor(Number(skillDoc[name]?.xp ?? 0)));
+    const level = name === "hitpoints" ? Math.max(10, xpToLevel(xp)) : xpToLevel(xp);
+    map.set(name, { name, level, xp });
+  }
+  return map;
+}
+
 export interface PlayerProfile {
   loginUsername: string;
   displayName: string;
@@ -64,12 +106,7 @@ export async function getProfile(nameInput: string): Promise<PlayerProfile> {
   const skillDoc = (detail?.attributes as any)?.skills as Record<string, any> | undefined;
   if (!skillDoc) return empty;
 
-  const map = new Map<string, SkillStat>();
-  for (const [name, raw] of Object.entries(skillDoc)) {
-    const level = Number(raw?.level ?? 1);
-    const xp = Number(raw?.xp ?? 0);
-    map.set(name.toLowerCase(), { name: name.toLowerCase(), level, xp });
-  }
+  const map = parseSkillDoc(skillDoc);
   const skills = [...map.values()];
 
   return {
@@ -87,16 +124,9 @@ export async function topByTotalLevel(limit = 10): Promise<{ displayName: string
   const details = await Collections.details();
   const all = await details.find({}, { projection: { loginUsername: 1, attributes: 1 } }).toArray();
   const rows = all.map((d) => {
-    const skillDoc = (d.attributes as any)?.skills as Record<string, any> | undefined;
-    const map = new Map<string, SkillStat>();
+    const map = parseSkillDoc((d.attributes as any)?.skills as Record<string, any> | undefined);
     let total = 0;
-    if (skillDoc) {
-      for (const [name, raw] of Object.entries(skillDoc)) {
-        const level = Number(raw?.level ?? 1);
-        map.set(name.toLowerCase(), { name, level, xp: 0 });
-        total += level;
-      }
-    }
+    for (const s of map.values()) total += s.level;
     return { login: d.loginUsername as string, totalLevel: total, combat: combatLevel(map) };
   });
   rows.sort((a, b) => b.totalLevel - a.totalLevel);

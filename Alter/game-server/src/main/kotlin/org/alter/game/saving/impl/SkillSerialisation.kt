@@ -17,6 +17,11 @@ class SkillSerialisation(override val name: String = "skills") : DocumentHandler
             (0 until client.getSkills().maxSkills).forEach { skillID ->
                 val skill = client.getSkills()[skillID]
                 val name = SkillSet.getSkillName(skillID).lowercase()
+                // Enum 680 names only the 23 real skills; the extra SkillSet slots (23, 24)
+                // all stringify to the default "Skill" and collide on ONE junk map key that
+                // polluted saves and hiscores totals. Skip them — loading tolerates the
+                // key's absence (old saves' junk entry decodes to slot 24 and is ignored).
+                if (name == "skill") return@forEach
                 put(name, skill.asDocument())
             }
         }
