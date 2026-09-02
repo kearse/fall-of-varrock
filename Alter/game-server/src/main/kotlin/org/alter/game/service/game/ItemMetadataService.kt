@@ -226,7 +226,10 @@ class ItemMetadataService : Service {
 
         if (item.name.isNotBlank()) def.name = item.name
         def.examine = item.examine ?: ""
-        def.isTradeable = item.tradeable
+        // Only apply when the document declares it. With the old non-null `= false` default,
+        // every override file that omitted `tradeable:` (all of barrows/**) silently flagged
+        // its items untradeable in the cache def — kept on death, refused by the GE.
+        item.tradeable?.let { def.isTradeable = it }
         item.weight?.let { def.weight = it }
 
         // Economy override fields. These were parsed and silently DROPPED — TradeableCapes.yml's
@@ -436,7 +439,8 @@ class ItemMetadataService : Service {
         val id: Int = -1,
         val name: String = "",
         val examine: String? = null,
-        val tradeable: Boolean = false,
+        // Nullable: an absent key leaves the cache default in place (see load()).
+        val tradeable: Boolean? = null,
         val weight: Double? = null,
         // Nullable so an absent YAML key is distinguishable from an explicit value — with
         // the old `= 0` defaults, applying these would have zeroed every overridden item.
