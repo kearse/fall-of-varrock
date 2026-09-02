@@ -65,9 +65,13 @@ class TradeSession(
     private val priceService = player.world.getService(ItemMarketValueService::class.java)
 
     /**
-     * The current 'stage' of the trade session
+     * The current 'stage' of the trade session. Read by [TradingPlugin]'s interface-close hooks:
+     * the confirm screen replaces the trade screen on MAIN_SCREEN, and the engine fires the trade
+     * screen's close hook for that replacement — the stage is how the hook tells the trade
+     * advancing apart from the player actually closing it.
      */
-    private var stage: TradeStage = TradeStage.TRADE_SCREEN
+    var stage: TradeStage = TradeStage.TRADE_SCREEN
+        private set
 
     /**
      * Stake-mode anti-scam lockout (the 2015 Duel Arena Rework behaviour): the world tick until
@@ -218,30 +222,84 @@ class TradeSession(
     }
 
     /**
-     * Declines the trade session for both players
+     * Declines the trade session for both players.
+     *
+     * Ends BOTH sides in one call, so whichever side triggers it (Decline button, window close,
+     * walk-away, logout, death, a space refusal) the pair is cleaned up together. Idempotent: a
+     * session that has already ended (the partner's decline ran first) is a no-op, and the
+     * partner's session is only torn down when it is the other half of THIS trade.
      */
     fun decline(forced: Boolean = false) {
-        if (partner.getTradeSession() != null) {
-            // Lower the duel confirmation overlay for both sides (no-op when it never rose).
-            if (stake != null) {
-                stakeConfirm?.invoke(player, false)
-                stakeConfirm?.invoke(partner, false)
-            }
-            // Remove the trade sessions from both players
-            player.removeTradeSession()
-            partner.removeTradeSession()
+        // Already ended (the other half's decline reached us first, or the trade completed).
+        if (player.getTradeSession() !== this) return
+        val partnerSession = partner.getTradeSession()?.takeIf { it.partner === player }
 
-            // Inform the player that they've declined, and close the trade window (duel-worded
-            // for a stake session — the classic decline lines).
-            if (!forced) player.message(if (isStake) "You decline the duel." else "You declined the trade")
-            player.closeInterface(InterfaceDestination.MAIN_SCREEN)
-            player.closeInterface(OVERLAY_INTERFACE)
+        // Lower the duel confirmation overlay for both sides (no-op when it never rose).
+        if (stake != null) {
+            stakeConfirm?.invoke(player, false)
+            stakeConfirm?.invoke(partner, false)
+        }
+        // Remove the trade sessions from both players FIRST: closing the screens below fires the
+        // interface-close hooks, which must find no session (otherwise they'd re-enter here).
+        player.removeTradeSession()
+        if (partnerSession != null) partner.removeTradeSession()
 
-            // Inform the partner that the player has declined, and close their window
+        // Inform the player that they've declined, and close the trade window (duel-worded
+        // for a stake session — the classic decline lines).
+        if (!forced) player.message(if (isStake) "You decline the duel." else "You declined the trade")
+        player.closeInterface(InterfaceDestination.MAIN_SCREEN)
+        player.closeInterface(OVERLAY_INTERFACE)
+
+        // Inform the partner that the player has declined, and close their window
+        if (partnerSession != null) {
             if (!forced) partner.message(if (isStake) "Other player declined the duel." else TRADE_DECLINED_MESSAGE)
             partner.closeInterface(InterfaceDestination.MAIN_SCREEN)
             partner.closeInterface(OVERLAY_INTERFACE)
         }
+
+        // Re-sync the real backpacks. The trade screen showed each side a TEMP copy of their
+        // inventory (with the offered items taken out) on container 93 — the real inventory's
+        // own id — and nothing else re-sends the real one after a decline, so the client kept
+        // showing the offered items as gone until a relog. Dirtying pushes the real containers
+        // on the next cycle flush.
+        resyncInventories()
+    }
+
+    /** Flag both real inventories dirty so the cycle flush overwrites the trade's temp view on the client. */
+    private fun resyncInventories() {
+        player.inventory.dirty = true
+        partner.inventory.dirty = true
+    }
+
+    /**
+     * Whether this player's backpack, as it will be once their own offer is committed out of it
+     * ([inventory], the temp copy), can take every item in the partner's offer. Stackable items
+     * (noted ones included) the backpack already holds need no slot — the Kronos/OSRS rule; the
+     * old whole-slot count refused e.g. a coin trade into a full backpack that already had coins.
+     * A stack that would overflow Int.MAX_VALUE does not fit either: the commit's add() would
+     * fail and the item would silently vanish.
+     */
+    private fun partnerOfferFits(): Boolean {
+        val offer = partner.getTradeSession()?.container ?: return true
+        var slotsNeeded = 0
+        for (item in offer) {
+            if (item == null) continue
+            val held = inventory.getItemCount(item.id)
+            if (item.getDef().stackable && held > 0) {
+                if (held.toLong() + item.amount > Int.MAX_VALUE) return false
+            } else {
+                slotsNeeded++
+            }
+        }
+        return slotsNeeded <= inventory.freeSlotCount
+    }
+
+    /** Both sides' "no space" lines, then a forced decline. [short] is the side that can't take the offer. */
+    private fun declineForSpace(short: Player) {
+        val other = if (short === player) partner else player
+        short.message("You don't have enough inventory space for this trade.")
+        other.message("Other player doesn't have enough inventory space for this trade.")
+        decline(forced = true)
     }
 
     /**
@@ -324,6 +382,15 @@ class TradeSession(
             player.message("An option or stake has changed - check before accepting!")
             return
         }
+        // Space is verified when the player ACCEPTS the first screen (the Kronos/OSRS rule): an
+        // accept that can't be honoured is refused with a message and the trade stays open, so
+        // the pair can free space or trim the offer instead of the whole trade being thrown out.
+        // Any later change to either offer clears both accepts, so this re-runs on re-accept.
+        if (accepted && stage == TradeStage.TRADE_SCREEN && !partnerOfferFits()) {
+            player.message("You don't have enough inventory space to accept this trade.")
+            partner.message("Other player doesn't have enough inventory space to accept this trade.")
+            return
+        }
         player.attr[TRADE_ACCEPTED_ATTR] = accepted
 
         // If the current trade session is on the trade screen
@@ -378,14 +445,12 @@ class TradeSession(
      * Opens the accept screen for each player
      */
     private fun openAcceptScreen() {
-        // If we don't have enough inventory space for the partner's container. Check the TEMP
+        // Defensive re-check of what progress() verified at accept time (nothing can change the
+        // offers between the two, but a stale accept must never reach complete()). Reads the TEMP
         // container (`inventory`, what complete() commits) — the real player.inventory still shows
-        // the offered items as occupying slots (they're only removed from the temp copy), so it
-        // under-counted free space and falsely rejected trades that would actually fit.
-        if (inventory.freeSlotCount < partner.getTradeSession()!!.container.occupiedSlotCount) {
-            player.message("You don't have enough inventory space for this trade.")
-            partner.message("Other player doesn't have enough inventory space for this trade.")
-            decline(forced = true)
+        // the offered items as occupying slots, so it would under-count free space.
+        if (!partnerOfferFits()) {
+            declineForSpace(player)
             return
         }
 
@@ -422,11 +487,16 @@ class TradeSession(
         player.sendItemContainer(ACCEPT_CONTAINER_KEY, container)
         partner.getTradeSession()?.let { player.sendItemContainerOther(ACCEPT_CONTAINER_KEY, it.container) }
 
-        // Open the accept screen interface
-        player.openInterface(ACCEPT_INTERFACE, InterfaceDestination.MAIN_SCREEN)
-
-        // Reset the accept state
+        // Reset the accept state: the confirm screen needs a fresh accept from both sides.
         player.attr[TRADE_ACCEPTED_ATTR] = false
+
+        // Open the accept screen interface. Both screens live on MAIN_SCREEN, so this REPLACES the
+        // trade screen (335) and the engine fires 335's interface-close hook mid-open — which is
+        // why [stage] is moved to ACCEPT_SCREEN above, before this call: the hook only declines a
+        // session still on the first screen. (Without that, every accepted trade declined itself
+        // right here: one side got "Other player declined trade." and the other was left on a
+        // confirm screen with no session behind it.)
+        player.openInterface(ACCEPT_INTERFACE, InterfaceDestination.MAIN_SCREEN)
     }
 
     /**
@@ -435,6 +505,20 @@ class TradeSession(
      */
     private fun complete() {
         if (stage != TradeStage.ACCEPT_SCREEN) return
+        // Last line of defence before anything is committed: if either side can no longer take
+        // the other's offer, nothing moves — a failed add() in the commit below would silently
+        // drop the item that didn't fit.
+        if (stake == null) {
+            if (!partnerOfferFits()) {
+                declineForSpace(player)
+                return
+            }
+            val partnerSession = partner.getTradeSession()
+            if (partnerSession != null && !partnerSession.partnerOfferFits()) {
+                declineForSpace(partner)
+                return
+            }
+        }
         stage = TradeStage.COMPLETED
 
         // STAKE MODE (Duel Arena): the two stakes are NOT swapped between the players. Each player's
@@ -491,6 +575,10 @@ class TradeSession(
         // Close the trade interface
         player.closeInterface(InterfaceDestination.MAIN_SCREEN)
         player.closeInterface(OVERLAY_INTERFACE)
+
+        // The commit already dirtied the real inventory; make it explicit so the client's
+        // container 93 (which showed the trade's temp copy) is guaranteed to be refreshed.
+        player.inventory.dirty = true
 
         // Inform the player that the trade has been accepted
         player.message("Accepted trade.")

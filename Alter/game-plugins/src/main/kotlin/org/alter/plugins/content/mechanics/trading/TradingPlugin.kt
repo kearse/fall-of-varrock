@@ -16,6 +16,7 @@ import org.alter.game.model.shop.*
 import org.alter.game.model.timer.*
 import org.alter.game.plugin.*
 import org.alter.plugins.content.mechanics.trading.impl.TradeSession
+import org.alter.plugins.content.mechanics.trading.impl.TradeStage
 import org.alter.plugins.content.mechanics.trading.impl.TradeSession.Companion.ACCEPT_INTERFACE
 import org.alter.plugins.content.mechanics.trading.impl.TradeSession.Companion.OVERLAY_INTERFACE
 import org.alter.plugins.content.mechanics.trading.impl.TradeSession.Companion.PLAYER_TRADE_CHILD
@@ -74,8 +75,8 @@ class TradingPlugin(
                 // Add the player to the partner's requests
                 partner.getTradeRequests().add(player)
 
-                // Send the trade request
-                player.message("Sending trade request...")
+                // Send the trade request (wiki/Kronos wording: "Sending trade offer...")
+                player.message("Sending trade offer...")
                 partner.message(TRADE_REQ_STRING.format(player.username), ChatMessageType.TRADE_REQ, player.username)
             } else {
 
@@ -162,15 +163,29 @@ class TradingPlugin(
         onButton(TRADE_INTERFACE, 11) { player.getTradeSession()?.decline() }
         onButton(ACCEPT_INTERFACE, 14) { player.getTradeSession()?.decline() }
 
-        // Interface close events. Always decline on close, even after accepting: closing the
-        // window after the first accept used to leave a live, dangling session on both sides
-        // (nothing moved — no dupe — but the pair stayed "in trade" and couldn't start a new one).
+        // Interface close events. A close declines even after accepting: closing the window
+        // after the first accept used to leave a live, dangling session on both sides (nothing
+        // moved — no dupe — but the pair stayed "in trade" and couldn't start a new one).
+        //
+        // BUT the trade screen (335) and the confirm screen (334) share MAIN_SCREEN, and
+        // InterfaceSet.open() closes whatever occupied the pane — firing this hook — before it
+        // registers the new one. So opening the confirm screen looks exactly like the player
+        // closing the trade screen. The session's stage tells them apart: openAcceptScreen()
+        // moves it to ACCEPT_SCREEN before opening 334, so a 335 close on a session still on
+        // TRADE_SCREEN is the player (X / walk-away / another modal) and anything else is the
+        // trade advancing. Declining unconditionally here broke every accepted trade: one side
+        // got "Other player declined trade." with their offered items still missing from the
+        // client's backpack, the other was stranded on a confirm screen with no session behind
+        // it (that screen has no X — only walking away closed it).
         onInterfaceClose(TRADE_INTERFACE) {
-            if (player.hasTradeSession()) player.getTradeSession()?.decline()
+            val trade = player.getTradeSession() ?: return@onInterfaceClose
+            if (trade.stage == TradeStage.TRADE_SCREEN) trade.decline()
         }
 
+        // Nothing legitimately replaces the confirm screen while a session is alive (complete()
+        // and decline() both drop the session before closing it), so a close here is always real.
         onInterfaceClose(ACCEPT_INTERFACE) {
-            if (player.hasTradeSession()) player.getTradeSession()?.decline()
+            player.getTradeSession()?.decline()
         }
 
         // Decline the trade when a player logs out
