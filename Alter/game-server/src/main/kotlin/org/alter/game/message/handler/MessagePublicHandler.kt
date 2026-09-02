@@ -293,10 +293,14 @@ class MessagePublicHandler : MessageHandler<MessagePublic> {
         }
 
         // "/"-prefixed chat while in the global chat-channel arrives as a friend-channel
-        // message (type 2): relay it to every online member instead of over-head chat.
+        // message (type 2): relay it to every online member instead of over-head chat. The
+        // client leaves the "/" on the text, so drop it (and any padding) before relaying —
+        // otherwise every world-chat line reads "[Varrock] Name: /hello".
         if (message.type == 2) {
-            GlobalChatChannel.sendMessage(client, message.message)
-            client.world.getService(LoggerService::class.java, searchSubclasses = true)?.logPublicChat(client, message.message)
+            val text = message.message.trimStart().removePrefix("/").trim()
+            if (text.isEmpty()) return
+            GlobalChatChannel.sendMessage(client, text)
+            client.world.getService(LoggerService::class.java, searchSubclasses = true)?.logPublicChat(client, text)
             return
         }
 

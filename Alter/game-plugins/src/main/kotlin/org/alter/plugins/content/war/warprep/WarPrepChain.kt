@@ -45,14 +45,10 @@ object WarPrepChain {
     val TIMER = TimerKey()
     private const val POLL_TICKS = 3
 
-    /**
-     * The objective was announced exactly once, when the step was entered — so a recruit who logged
-     * out on PRAYER came back to silence and no idea the Wizard Tower was waiting behind it. Nudge
-     * the live objective on login and again every [NUDGE_TICKS] while the step stays unfinished.
-     * Session-only countdown: a fresh login always nudges, and the timer restarts from there.
-     */
-    private const val NUDGE_TICKS = 500 // ~5 minutes
-    private val NUDGE_COUNTDOWN = AttributeKey<Int>()
+    // The objective is announced when a step is entered and once more on login ([resumeOnLogin]) —
+    // never on a timer. A 5-minute re-nudge used to run from the poll; the repeating chat lines
+    // were a nuisance (operator, 2026-09-02), so the reminder is login-only and `::warprep`
+    // shows it on demand.
 
     /** Protect from Magic unlocks at Prayer 37 — the Prayer step's target. */
     const val PRAYER_TARGET = 37
@@ -141,11 +137,10 @@ object WarPrepChain {
         return "${s.objective} (Prayer ${p.getSkills().getBaseLevel(Skills.PRAYER)}/$PRAYER_TARGET)"
     }
 
-    /** Say the objective and restart the nudge countdown. */
+    /** Say the objective (login + `::warprep`). */
     fun nudge(p: Player) {
-        p.attr[NUDGE_COUNTDOWN] = NUDGE_TICKS
         p.message("<col=801700>War-Prep — current objective:</col> ${objectiveLine(p)}")
-        p.message("Vannaka has more for you once it's done. Check it any time with <col=ffae00>::warprep</col>.")
+        p.message("Vannaka has more for you once it's done. Check it any time with <col=0000ff>::warprep</col>.")
     }
 
     /** Steps the poll runs on — those with a live objective (progress watched and/or arrow refreshed). */
@@ -206,9 +201,6 @@ object WarPrepChain {
         if (isTracked(step(p))) {
             updateHintArrow(p)
             p.timers[TIMER] = POLL_TICKS
-            // Periodic re-nudge so a stalled recruit isn't left guessing (see NUDGE_TICKS).
-            val left = (p.attr[NUDGE_COUNTDOWN] ?: NUDGE_TICKS) - POLL_TICKS
-            if (left <= 0) nudge(p) else p.attr[NUDGE_COUNTDOWN] = left
         }
     }
 
@@ -225,7 +217,6 @@ object WarPrepChain {
             else -> {}
         }
         if (isTracked(next)) p.timers[TIMER] = POLL_TICKS
-        p.attr[NUDGE_COUNTDOWN] = NUDGE_TICKS // this announcement counts as the nudge
         if (next != Step.NONE && next != Step.DONE) {
             p.message("<col=801700>War-Prep — next objective:</col> ${objectiveLine(p)}")
         }
@@ -327,7 +318,7 @@ object WarPrepChain {
     private fun grantCompletion(p: Player) {
         p.unlockMageBooks() // idempotent — already unlocked on the RETURN step
         p.message("<col=801700>War-Prep — Magic complete!</col> You've proven you can survive the front's magic. Fight beside the Knights of Lumbridge whenever they march on the enemy.")
-        p.message("<col=801700>Watch for the Knight-Captain's muster call</col> — it sounds before every march — and answer it with <col=ffae00>::march</col>.")
+        p.message("<col=801700>Watch for the Knight-Captain's muster call</col> — it sounds before every march — and answer it with <col=0000ff>::march</col>.")
         p.message("<col=801700>Vannaka has your next lesson</col> — the bow (War-Prep II). And the Recruiting Sergeant has an <col=ffae00>optional</col> assignment for anyone who wants to learn to fight players: the Rogue Problem.")
         // War-Prep II follows straight on (its begin() re-checks its own gate — a no-op otherwise).
         WarPrepRanged.begin(p)

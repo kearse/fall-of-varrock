@@ -54,15 +54,19 @@ class YellPlugin(
                 return@onCommand
             }
 
-            // Rank tag/colour follow the privilege set in game.yml rather than
-            // hardcoded ids, so labels stay right if the ladder is reordered.
-            val (rank, color) = when (player.privilege.name.lowercase()) {
-                "moderator" -> "<img=0>Moderator" to "<shad=16711680>"
-                "administrator", "admin" -> "<img=1>Admin" to "<shad=65280>"
-                "developer" -> "<img=21>Developer" to "<shad=53247>"
-                "owner" -> "<img=1>Owner" to "<shad=16777215>"
-                "donator", "donor" -> "<img=8>Donator" to "<shad=16711680>"
-                else -> "Player" to ""
+            // Rank tag/colour follow the privilege set in game.yml rather than hardcoded ids, so
+            // labels stay right if the ladder is reordered. Colours are `<col=hex>` — the old
+            // `<shad=decimal>` tags were meant as RGB shadow colours but the tag takes hex, so
+            // every yell rendered as plain text wearing a garbled/white shadow ("weird" yells).
+            // Dark hues: the chatbox is opaque tan, where light colours vanish (see the ::warprep
+            // hint fix, same day). Icon sits BEFORE the tag, like a mod crown in normal chat.
+            val (rank, icon, color) = when (player.privilege.name.lowercase()) {
+                "moderator" -> Triple("Moderator", "<img=0>", "1c5aa5")
+                "administrator", "admin" -> Triple("Admin", "<img=1>", "b01c1c")
+                "developer" -> Triple("Developer", "<img=21>", "0e6b7a")
+                "owner" -> Triple("Owner", "<img=1>", "7d5a00")
+                "donator", "donor" -> Triple("Donator", "<img=8>", "6a1b9a")
+                else -> Triple("Player", "", null)
             }
 
             if (!isStaff) {
@@ -70,8 +74,9 @@ class YellPlugin(
             }
 
             val name = player.username
+            val header = if (color != null) "$icon<col=$color>[$rank] $name:</col>" else "[$rank] $name:"
             player.world.players.forEach {
-                it.message("$color[$rank]$name: $text", ChatMessageType.ENGINE)
+                it.message("$header $text", ChatMessageType.ENGINE)
             }
         }
     }

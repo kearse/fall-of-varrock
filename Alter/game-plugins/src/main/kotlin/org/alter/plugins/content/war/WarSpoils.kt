@@ -163,7 +163,7 @@ object WarSpoils {
             coinStr.isEmpty() -> "a relic of the Third Age"
             else -> " and a relic of the Third Age"
         }
-        sponsor.message("<col=ffd700>The spoils of $opName await you — $coinStr$relicStr. Type <col=ffae00>::claim</col><col=ffd700> to collect them.</col>")
+        sponsor.message("<col=ffd700>The spoils of $opName await you — $coinStr$relicStr. Type <col=0000ff>::claim</col><col=ffd700> to collect them.</col>")
         toast(sponsor, "Spoils of $opName await — ::claim")
     }
 }

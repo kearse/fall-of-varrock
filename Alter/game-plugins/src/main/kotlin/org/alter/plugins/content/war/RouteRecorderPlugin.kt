@@ -68,7 +68,7 @@ class RouteRecorderPlugin(
                 "start" -> {
                     tracks[player.username] = ArrayList()
                     recording += player.username
-                    player.message("<col=4f9b4f>Route recording STARTED. Walk the path, then <col=ffae00>::recroute stop</col><col=4f9b4f>.</col>")
+                    player.message("<col=4f9b4f>Route recording STARTED. Walk the path, then <col=0000ff>::recroute stop</col><col=4f9b4f>.</col>")
                 }
                 "stop" -> {
                     recording -= player.username

@@ -124,7 +124,7 @@ object Conquest {
     private fun grantCompletion(p: Player) {
         p.addPoints(PointKind.PRESTIGE, COMPLETION_PRESTIGE)
         p.message("<col=ffcc00>King of Lumbridge complete!</col> Fallen Varrock is retaken in your name, ${p.address}.")
-        p.message("The realm's armies march at your word — command more conquests with <col=ffae00>::conquest</col>, and claim your spoils with <col=ffae00>::claim</col>.")
+        p.message("The realm's armies march at your word — command more conquests with <col=0000ff>::conquest</col>, and claim your spoils with <col=0000ff>::claim</col>.")
     }
 
     /** One-line progress report (`::kingquest` and any NPC chatter). */
