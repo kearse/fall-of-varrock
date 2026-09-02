@@ -47,16 +47,18 @@ export const POSTBACK_ADAPTERS: Record<string, PostbackAdapter> = {
     }),
   },
 
-  // rulocus.com: fires only on a successful vote, sending callback (the value
-  // from our vote link's callback= param, i.e. the player's login name) + ip.
-  // They send NO secret of their own, so ours rides in the callback URL we
-  // register with them: .../api/vote/postback/rulocus?key=<RULOCUS_SECRET>.
+  // rulocus.com (rulocus.com/tutorials/callback-documentation): fires on a
+  // successful vote, GET and POST, sending callback (the value from our vote
+  // link's callback= param, i.e. the player's login name), ip, and secret (the
+  // "callback secret" set in their server settings — must equal RULOCUS_SECRET).
+  // `key` is also accepted so a URL registered as
+  // .../api/vote/postback/rulocus?key=<RULOCUS_SECRET> works without a dashboard secret.
   rulocus: {
     siteId: "rulocus",
     secretEnv: "RULOCUS_SECRET",
     allowTestSecret: true,
     parse: (p) => ({
-      secret: p.get("key"),
+      secret: p.get("secret") ?? p.get("key"),
       voted: true,
       userid: p.get("callback"),
     }),
@@ -71,7 +73,7 @@ export const POSTBACK_ADAPTERS: Record<string, PostbackAdapter> = {
     secretEnv: "TOPG_SECRET",
     allowTestSecret: true,
     parse: (p) => ({
-      secret: p.get("key"),
+      secret: p.get("key") ?? p.get("secret"),
       voted: true,
       userid: p.get("p_resp"),
     }),
@@ -87,7 +89,7 @@ export const POSTBACK_ADAPTERS: Record<string, PostbackAdapter> = {
     secretEnv: "TOP100ARENA_SECRET",
     allowTestSecret: true,
     parse: (p) => ({
-      secret: p.get("key"),
+      secret: p.get("key") ?? p.get("secret"),
       voted: true,
       userid: p.get("postback"),
     }),
@@ -108,13 +110,24 @@ export const POSTBACK_ADAPTERS: Record<string, PostbackAdapter> = {
           .map((k) => p.get(k))
           .find((v) => v && v.trim()) ?? null;
       const voted = p.get("voted");
-      return { secret: p.get("key"), voted: voted === null || voted === "1", userid };
+      return {
+        secret: p.get("key") ?? p.get("secret"),
+        voted: voted === null || voted === "1",
+        userid,
+      };
     },
   },
 };
 
 export function postbackSecretOk(adapter: PostbackAdapter, secret: string | null): boolean {
   const expected = process.env[adapter.secretEnv];
+  if (!expected) {
+    // The #1 reason votes silently never credit: the secret was never put in
+    // /opt/kol/.env, so every real postback 403s. Make it loud in `logs web`.
+    console.warn(
+      `[vote] ${adapter.secretEnv} is not set — every ${adapter.siteId} postback is rejected until it is (see deploy/README.md).`,
+    );
+  }
   if (expected && secret === expected) return true;
   // Callback testers send a literal "TEST" secret; honour it only outside
   // production so a missing env secret can never be exploited live.

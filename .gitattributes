@@ -8,3 +8,5 @@ gradlew text eol=lf
 *.jar binary
 *.dat2 binary
 *.idx* binary
+# Shell scripts are scp'd from Windows checkouts to the VPS - CRLF breaks bash there
+*.sh text eol=lf

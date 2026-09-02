@@ -36,21 +36,28 @@ async function handle(req: NextRequest, siteId: string): Promise<NextResponse> {
   }
 
   const { secret, voted, userid } = adapter.parse(params);
+  // One line per postback in `server.sh logs web` so "did the toplist ever call
+  // us, and why didn't it credit?" is answerable without a debugger.
+  const tag = `[vote] ${siteId} ${req.method} userid=${userid ?? "-"}`;
 
   if (!postbackSecretOk(adapter, secret)) {
+    console.warn(`${tag} -> rejected: invalid secret (params: ${[...params.keys()].join(",")})`);
     return NextResponse.json({ error: "Invalid secret." }, { status: 403 });
   }
 
   if (!voted) {
     // Failed/duplicate vote on the toplist's side — acknowledged, nothing to credit.
+    console.info(`${tag} -> voted=0, nothing credited`);
     return NextResponse.json({ received: true, credited: false });
   }
 
   if (!userid?.trim()) {
+    console.warn(`${tag} -> missing userid (params: ${[...params.keys()].join(",")})`);
     return NextResponse.json({ received: true, credited: false, reason: "missing userid" });
   }
 
   const result = await creditVote(adapter.siteId, userid);
+  console.info(`${tag} -> ${JSON.stringify(result)}`);
   return NextResponse.json({ received: true, ...result });
 }
 

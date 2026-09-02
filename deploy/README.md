@@ -85,9 +85,30 @@ PAYPAL_CLIENT_SECRET=...
 PAYPAL_ENV=live
 COINBASE_COMMERCE_API_KEY=...
 COINBASE_COMMERCE_WEBHOOK_SECRET=...
+# Toplist vote postbacks — REQUIRED for voting to credit anything. With these
+# empty every callback is answered 403 "Invalid secret" and no Vote Tickets
+# are ever queued (the vote page + ::vote still open the toplists fine, which
+# makes the failure look like "can't claim"). See Alter/web/.env.example.
+RSPS_LIST_SECRET=<API secret from the rsps-list.com dashboard>
+RULOCUS_SECRET=<long random string; same value as the RuLocus "callback secret">
+TOPG_SECRET=
+TOP100ARENA_SECRET=
+MOPARSCAPE_SECRET=
 ```
 
-`chmod 600 /opt/kol/.env`.
+`chmod 600 /opt/kol/.env`. Editing `.env` later needs `server.sh start web` (compose
+recreates the container with the new environment); a plain `restart` keeps the old one.
+
+Callback URLs to register in each toplist dashboard:
+
+| Toplist | Callback URL |
+| --- | --- |
+| rsps-list.com | `https://fallofvarrock.com/api/vote/postback/rsps-list` |
+| RuLocus | `https://fallofvarrock.com/api/vote/postback/rulocus` (+ the callback secret in its settings) |
+| TopG | `https://fallofvarrock.com/api/vote/postback/topg?key=<TOPG_SECRET>` |
+
+Verify from the web log: every postback logs one `[vote] <site> ...` line, including
+`rejected: invalid secret` when the secret is missing or wrong.
 
 ### 5. Upload runtime files
 
