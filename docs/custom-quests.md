@@ -138,3 +138,41 @@ Upgrade steps for our Journal, in rough order of value:
 | Client plugin | `client/runelite-client/.../plugins/lofquests/` (9 files + panel icon) |
 | Varp contract | `LofQuestVarps.java` ↔ `QuestJournal.kt` (must stay in sync) |
 | Quest registry | `LofQuest.java` (step ordinals must match the server enums) |
+| **Quest framework** | `Alter/game-plugins/.../content/quests/framework/` (see §6) |
+
+## 6. Quest framework ✅ (Block 1, 2026-09-02)
+
+The six hand-written step-machine chains above are **LEGACY** (the pre-Block-2 onboarding
+hallway). New quests are authored against `content/quests/framework/` and never touch the
+chains; the chains are presented through the same registry by thin adapters
+(`LegacyChains.kt`, which also carry the exact journal-varp packings — the client contract is
+unchanged).
+
+| Piece | What it is |
+|-------|------------|
+| `QuestStates` | One JSON blob per player (`quest_states` attr): step **id strings**, counters, complete flag. |
+| `Objective` / `Prerequisite` / `Reward` / `QuestStep` | The vocabulary: `KillNpcs` (keys/name/area/filter), `ReachArea`, `TalkTo`, `HaveItems(consume)`, `Predicate`, `Manual`; `QuestComplete(key)` (legacy keys work), `RankAtLeast`, `WarEffortAtLeast`, `FlagSet`, `Custom`; `Items/Coins/WarEffort/Prestige/Xp/Flag/UnlockRoute/Custom`. |
+| `QuestDefinition` | Subclass as an `object`: key, name, `chainIndex`/`journalVarp` (claim in overlay-design-system §8), `adminOnly`, `optional`, `prerequisites`, `steps`, `completionRewards`, `autoBegin`, `talk(npc, step) { … }` sugar. |
+| `QuestRegistry` / `QuestChain` | Every quest by key; `isComplete(p, key)`; `activeChainIndex(p)` (what `::quests` focuses). Framework quests register from their plugin init; legacy adapters self-register. |
+| `QuestEngine` | begin / advance / advanceTo / satisfy / complete / reset; kill counting; the poll (areas, items, predicates, nudges); completion sets the `quest.<key>.done` flag; generic varp publish. |
+| `QuestArrows` | `TargetMarker` provider (priority 30) → the current step's `anchorNpc` (throttled nearest scan) or `anchor` tile; honours both mutes. |
+| `NpcTalk` + `bindTalk` | Priority-ordered dialogue branches per NPC; `KotlinPlugin.bindTalk(npcKey)` is the ONE defensive Talk-to binder (cache option pre-checked, deduplicated — never a construction-time throw). |
+| `QuestInstances` | Per-player private map copies over `RaidInstance`: `enter(...)`, `spawnNpc` (translated, loot-less, renamed), `end(reason)` idempotent; ends on leave/death/logout/timeout; benches the companion via `CompanionPolicy`. |
+| `QuestFrameworkPlugin` | The wiring: poll timer, instance sweep, login resume, npc-death hook, death/logout teardown, rank-up auto-begin, boot line `[quests] registry: N legacy chains, M framework quests`. |
+| `QuestDebugPlugin` | `::questdebug <dump|varps|flags|begin|complete|reset|set|satisfy|instance>` (admin), `::demoquest`. |
+| `demo/DemoQuest` | The living regression test: TALK → REACH → KILL → INSTANCE → HAVE → rewards + flag. Admin-only, hidden. |
+
+**Authoring checklist** (a Block-2 brief → code):
+1. `object MyQuest : QuestDefinition("my_quest", "My Quest", chainIndex = …)` — `prerequisites`
+   (`QuestComplete("warprep_magic")`, `RankAtLeast(Title.KNIGHT)`, `WarEffortAtLeast(150)`,
+   `FlagSet(Flags.Known.VETERAN_OF_VARROCK)`), then `steps` in order with `anchor`/`anchorNpc`.
+2. Dialogue: `init { talk("npc.x", "brief") { p -> chatNpc(...); QuestEngine.satisfy(p, this, "brief") } }`
+   and make sure the NPC's click is routed with `bindTalk("npc.x")` in some plugin (once).
+3. Side effects go in `QuestStep.onEnter`/`onLeave` (open a `QuestInstances.enter(...)`, spawn a
+   tagged npc, start a war op); war results call `QuestEngine.satisfy` from their hooks.
+4. `QuestRegistry.register(MyQuest)` in a plugin init. Run `::questdebug begin my_quest` and walk
+   it; `::questdebug varps` before/after any legacy-chain refactor must be identical.
+5. Client: add the `LofQuest` entry (same step order) only when the quest should show in the
+   journal — otherwise leave `chainIndex` null. Wiki article in the same PR.
+6. Legacy keys for prerequisites: `recruit_trials`, `warprep_magic`, `rogue_hunting_1`,
+   `rogue_hunting_2` (both optional), `warprep_ranged`, `warprep_survival`, `king_of_lumbridge`.
