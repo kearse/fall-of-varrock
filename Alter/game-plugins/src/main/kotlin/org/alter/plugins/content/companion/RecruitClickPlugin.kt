@@ -53,15 +53,15 @@ class RecruitClickPlugin(
             "mage", "magic" -> CompanionStyle.MAGE
             else -> return
         }
-        val cap = CompanionRegistry.companionCap(p)
+        val cap = CompanionRegistry.rosterCap(p)
         if (cap == 0) {
-            val firstRank = Title.values().first { it.companions > 0 }.display
+            val firstRank = Title.values().first { it.roster > 0 }.display
             p.message("Only those of rank may lead soldiers — rise to $firstRank and the General will muster your first.")
             return
         }
         // Roster size, not the fielded count: a dismissed companion still occupies a banner slot.
         if (CompanionRegistry.rosterSize(p) >= cap) {
-            p.message("Your banner is full — a ${p.title.display} may field $cap.")
+            p.message("Your banner is full — a ${p.title.display} may keep $cap.")
             return
         }
         val coins = getRSCM("item.coins_995")
@@ -70,13 +70,14 @@ class RecruitClickPlugin(
             return
         }
         p.inventory.remove(coins, RecruitMenu.RECRUIT_COST)
-        val comp = CompanionRegistry.recruit(world, p, style)
-        if (comp == null) {
+        val rec = CompanionRegistry.recruit(world, p, style)
+        if (rec == null) {
             p.inventory.add(coins, RecruitMenu.RECRUIT_COST) // refund if the muster failed
             p.message("No soldier could be raised just now. Try again shortly.")
             return
         }
-        p.message("<col=4f9b4f>A ${style.display} soldier joins your banner — Sir ${comp.username}. You field ${CompanionRegistry.rosterSize(p)} of $cap.</col>")
+        val where = if (rec.dismissed) "He waits on the bench — summon him from the companion panel to swap him in." else "He takes the field beside you."
+        p.message("<col=4f9b4f>A ${style.display} soldier joins your banner — Sir ${rec.name}. Your roster holds ${CompanionRegistry.rosterSize(p)} of $cap. $where</col>")
         RecruitMenu.refresh(p) // update the open window's banner strip in place
     }
 

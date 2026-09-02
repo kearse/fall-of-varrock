@@ -8,11 +8,13 @@ class CompItem(val id: Int, val amount: Int)
 
 /**
  * The persistent state of one companion: archetype, per-skill XP, worn gear, carried supplies, and
- * whether he is fielded, off duty ([dismissed]) or [dead]. Serialized to/from a bson [Document]
- * (the same primitive the player save system uses for items), then the whole roster is one JSON blob
- * on `COMPANIONS_ATTR`.
+ * whether he is fielded or off duty ([dismissed]). Serialized to/from a bson [Document] (the same
+ * primitive the player save system uses for items), then the whole roster is one JSON blob on
+ * `COMPANIONS_ATTR`.
  *
  * Decoding never throws — a malformed blob yields an empty roster — so a bad save can't brick login.
+ * A legacy `dead` flag (the removed revive-at-Zo path) decodes as [dismissed]: nothing is lost, he
+ * is simply summonable again.
  */
 class CompanionData(
     val archetype: CompanionStyle,
@@ -20,12 +22,11 @@ class CompanionData(
     val skillXp: MutableMap<Int, Double>,
     val equipment: MutableMap<Int, CompItem>,
     val inventory: MutableMap<Int, CompItem>,
-    var dead: Boolean,
     var autoLoot: Boolean = false,
     /**
-     * Owner sent this companion off duty: he stays on the roster (levels + gear intact) but is NOT
-     * spawned — not on login, not until the owner summons him back from the panel. This is the
-     * "stop following me around" switch; unlike [dead] it costs nothing to undo.
+     * Off duty: he stays on the roster (levels + gear intact) but is NOT spawned — not on login,
+     * not until the owner summons him. Only ONE companion is ever fielded
+     * ([CompanionRegistry.ACTIVE_MAX]), so every other roster entry lives here.
      */
     var dismissed: Boolean = false,
     /** Saved attack-style varp (0-3); -1 = use the spawn default ([org.alter.plugins.content.bots.BotBrain.configureStyle]). */
@@ -39,7 +40,6 @@ class CompanionData(
 ) {
     fun toDocument(): Document = Document("archetype", archetype.name).apply {
         append("name", name)
-        append("dead", dead)
         append("autoLoot", autoLoot)
         append("dismissed", dismissed)
         append("attackStyle", attackStyle)
@@ -62,7 +62,7 @@ class CompanionData(
                 ATTACK to 0.0, STRENGTH to 0.0, DEFENCE to 0.0, RANGED to 0.0, MAGIC to 0.0, PRAYER to 0.0,
                 HITPOINTS to SkillSet.getXpForLevel(10),
             )
-            return CompanionData(archetype, CompanionNames.pick(taken), xp, mutableMapOf(), mutableMapOf(), dead = false)
+            return CompanionData(archetype, CompanionNames.pick(taken), xp, mutableMapOf(), mutableMapOf())
         }
 
         private fun fromDocument(doc: Document): CompanionData {
@@ -73,8 +73,9 @@ class CompanionData(
             doc.get("skills", Document::class.java)?.forEach { (k, v) -> skills[k.toInt()] = (v as Number).toDouble() }
             return CompanionData(
                 archetype, name, skills, itemsFrom(doc, "equipment"), itemsFrom(doc, "inventory"),
-                doc.getBoolean("dead", false), doc.getBoolean("autoLoot", false),
-                dismissed = doc.getBoolean("dismissed", false),
+                doc.getBoolean("autoLoot", false),
+                // A pre-Block-1 "slain" companion simply comes back benched — no revive fee any more.
+                dismissed = doc.getBoolean("dismissed", false) || doc.getBoolean("dead", false),
                 attackStyle = doc.getInteger("attackStyle", -1),
                 autoRetaliate = doc.getBoolean("autoRetaliate", true),
                 autocast = doc.getString("autocast"),

@@ -68,8 +68,8 @@ class RankMenuPlugin(
                 val now = p.title
                 p.message("<col=e8c15a>Arise, ${now.display}!</col> You may now wear ${now.maxTier.display} armour.")
                 val prev = Title.values()[now.ordinal - 1]
-                if (now.companions > prev.companions) {
-                    p.message("Your new station entitles you to ${now.companions} soldier companion${if (now.companions > 1) "s" else ""} — General Zo will muster them.")
+                if (now.roster > prev.roster) {
+                    p.message("Your new station entitles you to a roster of ${now.roster} soldier companion${if (now.roster > 1) "s" else ""} (one at your side at a time) — General Zo will muster them.")
                 }
                 RankMenu.open(p) // re-pulse so the open window advances the ladder in place
             }

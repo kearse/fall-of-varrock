@@ -6,7 +6,7 @@ order: 3
 updated: 2026-09-02
 ---
 
-Everyone is a citizen of a city (Lumbridge, for now - it's the only free one), and every citizen has a **feudal rank**. Rank is **standing**: Duke Horacio in Lumbridge Castle raises you when you bring him the coin *and* a record of real service - your lifetime **War Effort** (see [Supplying the war](/wiki/supplying-the-war)). It gates three things: the heaviest armour you may wear, your [companion](/wiki/companions) roster, and which wars you may **start**.
+Everyone is a citizen of a city (Lumbridge, for now - it's the only free one), and every citizen has a **feudal rank**. Rank is **standing**: Duke Horacio in Lumbridge Castle raises you when you bring him the coin *and* a record of real service - your lifetime **War Effort** (see [Supplying the war](/wiki/supplying-the-war)). It gates three things: the heaviest armour you may wear, the size of your [companion](/wiki/companions) roster, and which wars you may **start**.
 
 Check your current rank, armour tier and exactly what the next rank still needs with `::title`. Check your citizenship with `::city`, your service record with `::service`.
 
@@ -16,7 +16,7 @@ Check your current rank, armour tier and exactly what the next rank still needs 
 
 ## The ladder
 
-| Rank | Coins | Lifetime War Effort | Melee armour | Ranged armour | Magic armour | Companions | War powers |
+| Rank | Coins | Lifetime War Effort | Melee armour | Ranged armour | Magic armour | Companion roster | War powers |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Peasant | Free | - | Bronze & Iron | Leather | Basic robes | - | join any war |
 | Commoner | 10,000 gp | - | Steel | Studded | - | - | join any war |
@@ -27,7 +27,7 @@ Check your current rank, armour tier and exactly what the next rank still needs 
 | Minister | 10,000,000 gp | 1,500 | All armour | All armour | All armour | 3 | + `::campaign` |
 | King | 50,000,000 gp | 4,000 | All armour | All armour | All armour | 3 | + `::conquest` |
 
-The War Effort floors are the first pass of "rank is earned" and will be tuned; Minister will also ask for the **Veteran of Varrock** mark once the first major assault on the fallen city exists to award it, and **King is a long-term career achievement** - the crown is never a quest reward.
+The companion roster is how many soldiers you may *keep* - everyone fields **one** at a time (see [Companions](/wiki/companions)). The War Effort floors are the first pass of "rank is earned" and will be tuned; Minister will also ask for the **Veteran of Varrock** mark once the first major assault on the fallen city exists to award it, and **King is a long-term career achievement** - the crown is never a quest reward.
 
 From Squire up, your title displays in colour over your head - rank here is earned status, not a cosmetic you buy in a store.
 

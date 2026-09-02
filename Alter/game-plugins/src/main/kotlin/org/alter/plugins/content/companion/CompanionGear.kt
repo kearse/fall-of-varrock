@@ -18,9 +18,10 @@ import org.alter.rscm.RSCM.getRSCM
 /**
  * Player-given gear + the server's free food supply for companions.
  *
- * **Gear** is the owner's responsibility: they wear the kit they want to give and choose "Gear" on
- * the companion, which moves their WORN equipment onto it (the companion's old kit returns to the
- * owner's inventory). "Dismiss" hands it all back. (Phase 1 — the bank-drag UI is Phase 2.)
+ * **Gear** is the owner's responsibility and moves between the owner's BANK and the companion
+ * through the RuneLite panel ([equipFromBank] / [unequipToBank]); [dismiss] hands a whole kit
+ * back to the inventory. Level requirements are checked against the companion's own skills and
+ * armour is capped by the OWNER's feudal rank ([rankAllowsArmour]).
  *
  * **Food** is NOT player-given: the server keeps a companion topped up with a standard food supply,
  * restocked whenever it's in a safezone (town). The brain eats it via `BotBrain.maybeEat`.
@@ -88,33 +89,6 @@ object CompanionGear {
         if (def.equipSlot !in RANK_GATED_ARMOUR_SLOTS) return true
         val tier = armourTier(def.name) ?: return true
         return owner.canWear(tier)
-    }
-
-    /** Move the owner's currently-worn equipment onto [comp]; the companion's old kit returns.
-     *  (Dead Phase-1 path — gear is now bank/panel-driven — but kept guardrailed: pieces the companion
-     *  isn't a high enough level for are skipped and left on the owner, mirroring [equipFromBank].) */
-    fun gearFromOwner(owner: Player, comp: Companion) {
-        var moved = 0
-        var blocked = 0
-        for (slot in 0 until comp.equipment.capacity) {
-            val give = owner.equipment[slot] ?: continue
-            if (!EquipAction.meetsLevelRequirements(comp, give.id)) { blocked++; continue } // same gear-level guardrail as players
-            if (!rankAllowsArmour(owner, give.id)) { blocked++; continue } // owner's feudal rank caps companion armour too
-            val old = comp.equipment[slot]
-            comp.equipment[slot] = Item(give.id, give.amount)
-            owner.equipment[slot] = null
-            old?.let { returnToOwner(owner, it.id, it.amount) } // lossless even with a full inventory
-            moved++
-        }
-        if (blocked > 0) owner.message("<col=801700>Sir ${comp.username} wasn't a high enough level for $blocked item(s); they were left on you.</col>")
-        if (moved == 0) {
-            if (blocked == 0) owner.message("Wear the gear you want to give first, then choose Gear.")
-            return
-        }
-        owner.calculateBonuses()
-        PlayerInfo(owner).syncAppearance()
-        refreshGear(comp)
-        owner.message("<col=4f9b4f>Your companion is outfitted.</col>")
     }
 
     /** Return the companion's whole worn kit to the owner's inventory. */

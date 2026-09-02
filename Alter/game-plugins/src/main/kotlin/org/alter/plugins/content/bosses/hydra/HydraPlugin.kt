@@ -19,6 +19,7 @@ import org.alter.plugins.content.bosses.DropEntry
 import org.alter.plugins.content.bosses.DropTable
 import org.alter.plugins.content.economy.PointKind
 import org.alter.plugins.content.economy.awardTickets
+import org.alter.plugins.content.companion.CompanionPolicy
 import org.alter.plugins.content.raids.RaidInstance
 import org.alter.rscm.RSCM.getRSCM
 
@@ -71,6 +72,10 @@ class HydraPlugin(
     )
 
     init {
+        // Classic boss, companion-UNAWARE by design: companions stand down inside the lab
+        // instance rather than the fight being edited for them (CompanionPolicy, Block 1).
+        CompanionPolicy.denyInstanceOf(LAB_SOURCE, "the Hydra's chamber is a solo fight")
+
         // ── Entry/exit: the lab rocks. Outside → allocate + enter; inside an instance the
         // copied rocks climb back out (the Vorkath both-ways handler).
         val rocksId = getRSCM("object.rocks_34548")

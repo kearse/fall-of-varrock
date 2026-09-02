@@ -55,12 +55,12 @@ class TitlePlugin(
         onCommand("title", description = "Show your rank, armour tier, and next rank cost") {
             val t = player.title
             player.message("Rank: <col=ffae00>${t.display}</col> — you may wear up to <col=ff9040>${t.maxTier.display}</col> armour. You must also meet the armour's usual level requirements.")
-            if (t.companions > 0) {
-                player.message("Your rank may field <col=ffae00>${t.companions}</col> soldier companion${if (t.companions > 1) "s" else ""} (General Zo).")
+            if (t.roster > 0) {
+                player.message("Your rank keeps a roster of <col=ffae00>${t.roster}</col> soldier companion${if (t.roster > 1) "s" else ""} (General Zo) — one takes the field at a time.")
             }
             val next = player.nextTitle
             if (next != null) {
-                val compPerk = if (next.companions > t.companions) " + ${next.companions} companion${if (next.companions > 1) "s" else ""}" else ""
+                val compPerk = if (next.roster > t.roster) " + a roster of ${next.roster} companion${if (next.roster > 1) "s" else ""}" else ""
                 player.message("Next: <col=ffae00>${next.display}</col> — unlocks ${next.maxTier.display} armour$compPerk. See Duke Horacio in Lumbridge Castle.")
                 val ready = RankEligibility.isEligible(player, next)
                 player.message("Requires: ${RankEligibility.summary(player, next)} — ${if (ready) "<col=4f9b4f>you qualify</col>" else "<col=801700>not yet</col>"}.")
