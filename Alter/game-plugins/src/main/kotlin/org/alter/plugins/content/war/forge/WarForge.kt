@@ -6,11 +6,14 @@ import org.alter.game.model.entity.Player
 import org.alter.rscm.RSCM.getRSCM
 
 /**
- * **War-forging** (story-and-grind-design §6) — the endgame gear chase. The Royal Smith
- * upgrades an elite base item into its best-in-slot successor for a recipe that touches
- * every pillar: the **base item** (PvM / wilderness loot keys, tradeable), **Commendations**
- * (war service — untradeable, the anti-swipe valve), **runite bars** (skilling / the
- * contract economy, tradeable) and a **coin fee** (the sink).
+ * **War-forging** — the endgame gear chase (design authority §9: war-forging stays, untied
+ * from any liberated-district or city-pressure state — audited in Block 1 PR-10: the recipe
+ * reads only the four pillars below and the Grand March's embers, nothing about Varrock's
+ * status). The Royal Smith upgrades an elite base item into its best-in-slot successor for a
+ * recipe that touches every pillar: the **base item** (PvM / wilderness loot keys, tradeable),
+ * **Commendations** (war service — untradeable, the anti-swipe valve), **runite bars**
+ * (skilling / the contract economy, tradeable) and a **coin fee** (the sink); the helm tier
+ * adds a **Warden's ember** from a Grand March target's Warden (`MarchTargets`).
  *
  * Commendations are an ITEM token (`item.ectotoken` — stackable and cache-untradeable;
  * renamed to "Commendation" with a Thurgo-pointing examine by ItemDefTool's `commendation`

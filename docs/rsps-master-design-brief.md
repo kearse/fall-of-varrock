@@ -1,4 +1,16 @@
 # Fall of Varrock — Master Design Brief
+
+> **LEGACY (2026-09-02, Block 1).** Superseded by the September-2026 design authority in
+> `docs/design/` (`design-authority-dev-handoff.md`, `development-block-1-scope.md`,
+> `master-story-and-quest-plan.md`) — see `docs/LEGACY.md`. Where this brief and the authority
+> disagree, the authority wins. Known conflicts: §0 names Falador a neutral hub and Al Kharid a
+> raid target (both are now ordinary safe towns; Varrock is the one permanently fallen city and
+> the only campaign/conquest target); §5's defensive command (General Zo's siege) is deleted
+> (git tag `pre-block1-siege-engine`) — the war is offensive-only; ranks are earned standing
+> (coins + War Effort + milestones — `war/RankEligibility.kt`), never a plain purchase; one
+> companion is fielded at a time. The First-10-Minutes / War-Contracts / supply-loop sections
+> still describe live systems.
+
 ### War-led identity: First 10 Minutes → War Effort loop → Feudal endgame → Monetization
 
 **What this is.** An architecture/design spec authored as the "mastermind" brief. A separate
