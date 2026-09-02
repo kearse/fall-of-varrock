@@ -44,7 +44,9 @@ export const VOTE_SITES: VoteSite[] = [
     name: "RuLocus",
     // Base URL comes from the RuLocus account's listing page; `callback`
     // carries the voter's login name back in the postback's `callback` param.
-    url: "https://www.rulocus.com/top-rsps-list/fall-of-varrock/vote?callback={username}",
+    // `username` is RuLocus's own optional param — without it they don't count
+    // votes made from mobile devices (rulocus.com/tutorials/callback-documentation).
+    url: "https://www.rulocus.com/top-rsps-list/fall-of-varrock/vote?callback={username}&username={username}",
     reward: "1 vote point",
     icon: "🛡️",
     rewardPoints: DEFAULT_VOTE_POINTS,
