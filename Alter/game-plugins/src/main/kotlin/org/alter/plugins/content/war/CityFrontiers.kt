@@ -96,8 +96,8 @@ data class DefenderLine(
 /**
  * Configuration for one city's **hostile frontier**: one or more layered [enemyLines]
  * and an optional friendly [defender] line. [CityFrontierPlugin] turns each frontier
- * into a single [HostileZone] (mirrors [Sieges]/[SiegePlugin]); adding a city = adding
- * a [FrontierConfig] to [CityFrontiers.all], no new code.
+ * into a single [HostileZone]; adding a city = adding a [FrontierConfig] to
+ * [CityFrontiers.all], no new code.
  */
 data class FrontierConfig(
     val cityKey: String,
@@ -117,8 +117,8 @@ data class FrontierConfig(
     /**
      * The castle **keep** — the new-player respawn courtyard — hard-protected on top of
      * [cityLimits] (no aggro in, leashed out). Usually a sub-area of [cityLimits]; kept separate so
-     * the spawn stays safe even if [cityLimits] is retuned. The war half of this rule is
-     * [SiegeConfig.castleKeep]; both point at the same box. Null = none.
+     * the spawn stays safe even if [cityLimits] is retuned ([CityFrontiers.LUMBRIDGE_KEEP]).
+     * Null = none.
      */
     val keep: Area? = null,
     /**
@@ -135,6 +135,12 @@ data class FrontierConfig(
  * generic.
  */
 object CityFrontiers {
+
+    /** The protected castle **keep**: the new-player respawn courtyard (respawn tile 3209,3216).
+     *  Frontier enemies are hard-leashed OUT of this box and never target a player inside it, so a
+     *  fresh account can never be spawn-camped. Drawn around the courtyard from the region-12850
+     *  dump. TUNABLE. */
+    val LUMBRIDGE_KEEP = Area(3204, 3206, 3229, 3228)
 
     // --- combat defs (TUNE to taste) ---
 
@@ -238,7 +244,7 @@ object CityFrontiers {
         // The castle keep (shared with the siege) — roaming frontier goblins are leashed out of the
         // respawn courtyard and never aggro a player inside it. (Already inside cityLimits, but kept
         // explicit so the spawn is hard-protected regardless of how cityLimits is tuned.)
-        keep = Sieges.LUMBRIDGE_KEEP,
+        keep = LUMBRIDGE_KEEP,
     )
 
     // ====================== VARROCK — the DEMON-HELD city, the commanders' HOSTILE target (§3C slice) ==========

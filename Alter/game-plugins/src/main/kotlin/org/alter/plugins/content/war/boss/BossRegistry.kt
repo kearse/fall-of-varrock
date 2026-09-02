@@ -11,7 +11,7 @@ import org.alter.rscm.RSCM.getRSCM
  * Lord+ — see [BossScheduler]/[BossSummon]); players travel there, fight it, and split
  * its loot by damage contribution ([BossLoot]).
  *
- * Loot is kept as the proven, low-risk `RaidRewards`-style shape — a coin range plus a
+ * Loot is kept as the proven, low-risk shape — a coin range plus a
  * curated rare table of rscm keys, resolved lazily and guarded so an id not yet in the
  * cache is skipped rather than crashing a kill. (We deliberately avoid the loot-table DSL
  * here: its builder is wired to push into an `NpcCombatBuilder`, which is awkward for a

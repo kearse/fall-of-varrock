@@ -28,7 +28,7 @@ private val logger = KotlinLogging.logger {}
  * Spawns the Recruiting Sergeant by the Lumbridge gate, frames the war on a new account's
  * first login, and drives the four-pillar chain in [RecruitTrials]:
  *  - FIGHT  — counted on the additive `onAnyNpcDeath` list (never clashes with the keyed
- *             goblin-death hook in `WarEffortPlugin`).
+ *             goblin-death hook elsewhere).
  *  - RANK   — advanced by a one-line notify in `DukeHoracioPlugin`.
  *  - SLAY   — polled from the player's active Slayer task by [RecruitTrials.TRIAL_TIMER].
  *  - SUPPLY — polled from a supply-skill xp gain by the same timer.

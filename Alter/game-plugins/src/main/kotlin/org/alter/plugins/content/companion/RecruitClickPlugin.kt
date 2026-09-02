@@ -9,7 +9,7 @@ import org.alter.game.model.World
 import org.alter.game.model.entity.Player
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
-import org.alter.plugins.content.war.Sieges
+import org.alter.plugins.content.areas.lumbridge.npcs.GeneralZoPlugin
 import org.alter.plugins.content.war.Title
 import org.alter.plugins.content.war.title
 import org.alter.rscm.RSCM.getRSCM
@@ -30,19 +30,13 @@ class RecruitClickPlugin(
 
     init {
         onCommand("zoclick", description = "Muster Companions window action (client overlay channel)") {
-            // The token arrives from raw public chat anywhere — keep the General's storefront at
-            // his courtyard post (radius allows for his movement as the war's attackable VIP).
-            if (!player.tile.isWithinRadius(Sieges.LUMBRIDGE.zoTile, ZO_RADIUS)) {
-                player.message("General Zo musters troops at his courtyard post in Lumbridge castle.")
+            // The token arrives as raw public chat from anywhere — keep the walk-to-Zo
+            // invariant for his storefront, like the depot/forge/dice/contract channels.
+            if (!player.tile.isWithinRadius(GeneralZoPlugin.ZO_TILE, ZO_RADIUS)) {
+                player.message("General Zo musters soldiers at his post in Lumbridge castle.")
                 return@onCommand
             }
             val a = player.getCommandArgs()
-            // The token arrives as raw public chat from anywhere — keep the walk-to-Zo
-            // invariant for his storefront, like the depot/forge/dice/contract channels.
-            if (!player.tile.isWithinRadius(Sieges.LUMBRIDGE.zoTile, ZO_RADIUS)) {
-                player.message("General Zo musters soldiers at his courtyard post.")
-                return@onCommand
-            }
             when (a.getOrNull(0)?.lowercase()) {
                 "recruit" -> recruit(player, a.getOrNull(1))
                 // The window's Regalia tab: the native points shop draws the real sanguine
@@ -89,6 +83,6 @@ class RecruitClickPlugin(
     private fun fmt(n: Int): String = "%,d".format(n)
 
     private companion object {
-        const val ZO_RADIUS = 15 // muster range around the General's courtyard post
+        const val ZO_RADIUS = 15 // muster range around the General's post
     }
 }

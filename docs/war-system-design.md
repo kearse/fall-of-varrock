@@ -1,5 +1,15 @@
 # Fall of Varrock — The War: Siege & Citizenship Design
 
+> **LEGACY — SUPERSEDED (Development Block 1, September 2026).** This document describes the
+> *defensive* siege (General Zo, siege pressure, the AI War Brain). That product loop is retired:
+> the design authority is now the September-2026 docs (`FoV_Current_Design_Authority_Dev_Handoff`,
+> `FoV_Development_Block_1_Scope`, `Fall_of_Varrock_Master_Story_and_Quest_Plan`) — the war is
+> **offensive** (public Marches/Grand Marches, Lord operations, Campaigns, Conquests) and Lumbridge
+> is never besieged. The engine files described below (`AttackDirector`, `Commander`, `WarFront`,
+> `TacticalMap`, `TargetSelector`, `Sieges`, …) were **deleted**; recover them from git tag
+> `pre-block1-siege-engine` if the flow-field / targeting AI is ever wanted again. Only §10
+> (engine-fit findings: instancing, `WarState` persistence) still describes live code.
+
 > **Concept:** A dystopian RuneScape. Civilization has collapsed to a handful of
 > walled cities. Everything outside is overrun. Humanity is *losing*. Players are
 > citizens who fight at the front to hold the line, level up, and eventually

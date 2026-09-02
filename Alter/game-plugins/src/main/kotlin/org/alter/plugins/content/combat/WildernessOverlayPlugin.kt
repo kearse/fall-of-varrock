@@ -26,7 +26,7 @@ import org.alter.game.plugin.PluginRepository
  * sets varbit 5963 = 1 (and opens the wilderness level overlay) whenever a real player is at
  * wilderness coordinates (`Tile.getWildernessLevel() > 0`), clearing both on exit — on a short world
  * timer, post login (opening interfaces during the login sequence crashes the client; see
- * WarHudPlugin). With 5963 set + the `SetPlayerOp("Attack")` sent on login, the client renders the
+ * the retired war HUD). With 5963 set + the `SetPlayerOp("Attack")` sent on login, the client renders the
  * Attack option; the server then permits/denies the hit via `Combat.canEngage` (`SafeZones`).
  */
 class WildernessOverlayPlugin(

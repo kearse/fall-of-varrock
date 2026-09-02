@@ -45,6 +45,13 @@ class GoblinCampPlugin(
     server: Server,
 ) : KotlinPlugin(r, world, server) {
 
+    /** Mild default for the plain goblin so natural (non-war) goblins still fight back. */
+    private val goblinDef = NpcCombatDef.DEFAULT.copy(
+        attack = 25, strength = 25, defence = 18, hitpoints = 18,
+        attackAnimation = 6184, blockAnimation = 6183, deathAnimation = listOf(6182),
+        aggressiveRadius = 6, aggroTargetDelay = 8, aggressiveTimer = 200,
+    )
+
     /** Knights of Lumbridge — a notch below the war knights, tuned to skirmish with camp goblins. */
     private val knightDef = NpcCombatDef.DEFAULT.copy(
         attack = 60, strength = 55, defence = 60, hitpoints = 70,
@@ -64,6 +71,11 @@ class GoblinCampPlugin(
     private var pkerRespawnAt = 0
 
     init {
+        // The plain `npc.goblin` (the camp's own DSL spawns + every other ambient goblin) gets a mild
+        // default combat def so it actually fights. Lived in the retired siege plugin; moved here
+        // because the camp is the one place that depends on goblins swinging back.
+        setCombatDef(GOBLIN_NPC, goblinDef)
+
         val timer = TimerKey()
         onWorldInit { world.timers[timer] = TICK }
         onTimer(timer) {
@@ -220,6 +232,7 @@ class GoblinCampPlugin(
         const val TICK = 5 // ~3s upkeep cadence, matching the world-spawn / frontier sweeps
         const val RESPAWN_TICKS = 6 // ~18s from a knight's death to its respawn
 
+        const val GOBLIN_NPC = "npc.goblin"
         const val KNIGHT_NPC = "npc.knight_of_saradomin"
         const val KNIGHT_WALK = 5
 

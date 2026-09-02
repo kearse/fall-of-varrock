@@ -52,9 +52,9 @@ enum class CampaignTier(
 }
 
 /**
- * Where and how an offensive operation runs against one city. Offensive analogue of
- * [SiegeConfig], but lighter: the frontier geography already exists ([CityFrontiers]); a
- * campaign only needs where allied troops muster, where they push, and the band they fight in.
+ * Where and how an offensive operation runs against one city. Deliberately light: the frontier
+ * geography already exists ([CityFrontiers]); a campaign only needs where allied troops muster,
+ * where they push, and the band they fight in.
  *
  * @param cityKey matches the [FrontierConfig.cityKey] so [Frontiers] resolves the enemy zone.
  * @param stagingTile where allied troops spawn (the city gate, just inside the safe edge).
@@ -80,7 +80,7 @@ data class CampaignOp(
     val route: List<Tile> = emptyList(),
     /**
      * Bridge-deck spans on the [route] whose level-0 tile is the river's BLOCK flag (the deck renders
-     * on level 1). Cleared at boot so NPCs can path across — same fix as [SiegeConfig.bridgeSpans].
+     * on level 1). Cleared at boot so NPCs can path across.
      */
     val bridgeSpans: List<Area> = emptyList(),
     /**

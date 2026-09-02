@@ -22,7 +22,6 @@ import org.alter.plugins.content.economy.grandexchange.GeCurrencyPrices
 import org.alter.plugins.content.economy.grandexchange.currencyBuyShop
 import org.alter.plugins.content.war.ApprenticeArmoury
 import org.alter.plugins.content.war.WarNpcNames
-import org.alter.plugins.content.war.WarServices
 import org.alter.rscm.RSCM.getRSCM
 
 /**
@@ -107,15 +106,9 @@ class LumbridgeShopHubPlugin(
         bindVendorOptions(npc) { ShopTabs.open(player, store, guard = hubGuard) }
     }
 
-    /** War guard, shared by every hub storefront (re-checked on each tab switch too). */
-    private val hubGuard: (Player) -> Boolean = { p ->
-        if (WarServices.shopsClosed()) {
-            p.message("The shopkeepers have fled the fighting — come back when Lumbridge is safe.")
-            false
-        } else {
-            true
-        }
-    }
+    /** Storefront guard, shared by every hub storefront (re-checked on each tab switch too). The
+     *  Last Free City's market never closes; the hook stays so a future condition has one seam. */
+    private val hubGuard: (Player) -> Boolean = { _ -> true }
 
     private fun openOrClosed(player: Player, shop: String) {
         if (hubGuard(player)) player.openShop(shop)
