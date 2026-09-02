@@ -464,6 +464,7 @@ class CampaignDirector(
         Frontiers.zone(op.cityKey)?.suppressed = false // rings repopulate as normal
         troops.forEach { if (it.index >= 0 && world.npcs.contains(it)) world.remove(it) }
         troops.clear()
+        recordService(victory)
 
         if (victory) {
             if (tier == CampaignTier.RAID) {
@@ -484,6 +485,29 @@ class CampaignDirector(
         }
         runCatching { onResult?.invoke(victory) } // outcome hook (e.g. the march's Warden teardown)
         onFinished(this)
+    }
+
+    /**
+     * File the op in every participant's persistent [org.alter.plugins.content.war.events.ServiceRecord]
+     * — wins AND losses — before the payout discards the runtime participation map. The sponsor is
+     * credited even with no fighting share (0%). RAID parties are boss support, not service.
+     */
+    private fun recordService(victory: Boolean) {
+        if (tier == CampaignTier.RAID) return
+        runCatching {
+            val contrib = participation.filterKeys { it.index >= 0 }
+            val total = contrib.values.sum().coerceAtLeast(1)
+            val credited = HashSet<String>()
+            contrib.forEach { (p, score) ->
+                credited += p.username
+                org.alter.plugins.content.war.events.ServiceRecords.recordOp(
+                    p, tier, op, sponsored = sponsor != null, sharePct = score * 100 / total, won = victory,
+                )
+            }
+            sponsor?.takeIf { it.index >= 0 && it.username !in credited }?.let {
+                org.alter.plugins.content.war.events.ServiceRecords.recordOp(it, tier, op, sponsored = true, sharePct = 0, won = victory)
+            }
+        }.onFailure { logger.error(it) { "Campaign '${op.cityKey}' ${tier.name}: service record write failed" } }
     }
 
     // Campaign rallies/captures are headlines → route through the announcement ticker.

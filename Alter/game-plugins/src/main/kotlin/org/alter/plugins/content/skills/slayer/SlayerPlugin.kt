@@ -104,7 +104,6 @@ class SlayerPlugin(
     // [Talk-to, Assignment, Trade, Rewards].
     private val master = "npc.vannaka"
     private val masterTile = Triple(3222, 3212, 0) // GE hub desk ring — east slot of the north face, beside the clerk
-    private val rewardShop = "War Rewards"
 
     /** Resolved master id, passed to every dialogue line explicitly: the contract window's
      *  `::con` actions run WITHOUT an interacting npc (the default chatNpc resolution throws). */
@@ -131,8 +130,6 @@ class SlayerPlugin(
     }.toMap()
 
     init {
-        buildRewardShop()
-
         spawnNpc(master, x = masterTile.first, z = masterTile.second, height = masterTile.third, walkRadius = 0, direction = Direction.NORTH)
         bindTalk()
 
@@ -187,7 +184,7 @@ class SlayerPlugin(
             when (player.getCommandArgs().getOrNull(0)?.lowercase()) {
                 "combat" -> player.queue { assignTask(player); ContractMenu.push(player) }
                 "resource" -> player.queue { assignResource(player); ContractMenu.push(player) }
-                "rewards" -> player.openShop(rewardShop)
+                "rewards" -> player.queue { serviceRecordTalk(player) }
             }
         }
 
@@ -209,8 +206,8 @@ class SlayerPlugin(
             when {
                 opt.equals("Talk-to", true) -> onNpcOption(master, option = opt) { player.queue { dialog(player) } }
                 opt.equals("Assignment", true) -> onNpcOption(master, option = opt) { player.queue { assignTask(player) } }
-                opt.equals("Rewards", true) -> onNpcOption(master, option = opt) { player.openShop(rewardShop) }
-                opt.equals("Trade", true) -> onNpcOption(master, option = opt) { player.openShop(rewardShop) }
+                opt.equals("Rewards", true) -> onNpcOption(master, option = opt) { player.queue { serviceRecordTalk(player) } }
+                opt.equals("Trade", true) -> onNpcOption(master, option = opt) { player.queue { serviceRecordTalk(player) } }
             }
         }
     }
@@ -547,25 +544,14 @@ class SlayerPlugin(
         ContractMenu.push(player) // refresh the contract board if the window is open (hidden line otherwise)
     }
 
-    /** Reward shop priced in War Effort (sell-only sink). Items guarded so a missing
-     *  cache key is simply skipped. (item key -> War Effort cost) */
-    private fun buildRewardShop() {
-        // Consumables ONLY. The old rune-gear rows (rune scim 30 / full helm 25 / amulet of
-        // power 20) were a ~200x gold loop: logs cost ~4gp in the hub shops and hand in for
-        // 1 War Effort each at the Supply Depot, so ~100gp of logs bought a 21k-alch helm.
-        // Consumables stay safe because every alch costs a 270gp shop nature rune.
-        val wares = listOf(
-            "item.shark" to 4,
-            "item.prayer_potion4" to 8,
-            "item.super_attack4" to 6,
-            "item.super_strength4" to 6,
-            "item.super_defence4" to 6,
-            "item.super_combat_potion4" to 20,
-        ).mapNotNull { (key, cost) -> resolveOrNull(key)?.let { it to cost } }
-
-        createShop(rewardShop, PointsCurrency(PointKind.WAR_EFFORT), purchasePolicy = PurchasePolicy.BUY_NONE, stockSize = maxOf(wares.size, 1)) {
-            wares.forEachIndexed { i, (id, cost) -> items[i] = ShopItem(item = id, amount = 1000, sellPrice = cost) }
-        }
+    /**
+     * War Effort is a lifetime service record, never a purse (design authority §8) — the old
+     * War-Effort-priced consumable shelf is gone. "Rewards"/"Trade" now explain where the
+     * player's standing goes instead of opening a shop.
+     */
+    private suspend fun QueueTask.serviceRecordTalk(p: Player) {
+        chatNpc(p, "Rewards? Your War Effort IS the reward, soldier — a record of<br>your service the Duke reads when you seek rank, and the<br>realm reads when it picks its commanders.", npc = masterId, title = "Vannaka")
+        chatNpc(p, "Contracts, hand-ins and the war all add to it, and nothing<br>ever spends it. Supplies you buy with coin at the market.<br>Check your standing with <col=801700>::service</col>.", npc = masterId, title = "Vannaka")
     }
 
     private fun resolves(npcKey: String): Boolean = try { getRSCM(npcKey); true } catch (e: Exception) { false }

@@ -35,6 +35,11 @@ class PointsCurrency(private val kind: PointKind) : ShopCurrency {
     }
 
     override fun sellToPlayer(p: Player, shop: Shop, slot: Int, amt: Int) {
+        if (!kind.spendable) {
+            // A lifetime record (War Effort) can never buy anything — a shop built on it is a config bug.
+            p.message("${kind.display} is a record of your service, not a purse — it can't be spent.")
+            return
+        }
         val shopItem = shop.items[slot] ?: return
         val cost = shopItem.sellPrice ?: getSellPrice(p.world, shopItem.item)
         val affordable = if (cost <= 0) amt else p.points(kind) / cost

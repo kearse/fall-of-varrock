@@ -25,7 +25,8 @@ enum class CampaignTier(
     val cost: Int,
     val coinPool: Int,
     val prestige: Int,
-    /** Realm war-supply the operation requires AND consumes on launch (the Mire fills it). RAID is free. */
+    /** Realm Supplies the operation requires AND consumes on launch (the Mire fills the stockpile).
+     *  Only CAMPAIGN/CONQUEST spend; RAID, MARCH, GRAND_MARCH (and a Lord's operation) are free. */
     val supplyCost: Int,
     /** Max Commendations (the war-forging service token) a participant earns from a WON op,
      *  scaled by contribution share ([CapturePayout]). RAID pays via the boss instead. */

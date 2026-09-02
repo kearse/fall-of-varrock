@@ -139,14 +139,14 @@ class CampaignCommandPlugin(
         // ::supply — anyone can check the Realm Supplies stockpile (filled by skilling the Mire +
         // handing supplies to a Quartermaster; campaigns/conquests can only launch when it's high
         // enough — marches and Lord operations never touch it).
-        onCommand("supply", description = "Check the realm's war-supply stores") {
+        onCommand("supply", description = "Check the Realm Supplies stockpile") {
             player.message(RealmSupply.status())
         }
-        // ::setsupply — admin: seed the meter to test the campaign gate without grinding supplies.
-        onCommand("setsupply", Privilege.ADMIN_POWER, description = "Set the realm war-supply meter (test): ::setsupply <n>") {
+        // ::setsupply — admin: seed the stockpile to test the campaign gate without grinding supplies.
+        onCommand("setsupply", Privilege.ADMIN_POWER, description = "Set the Realm Supplies stockpile (test): ::setsupply <n>") {
             val n = player.getCommandArgs().getOrNull(0)?.toIntOrNull() ?: 0
             WarState.setSupplyMeter(n)
-            player.message("<col=4f9b4f>[test] Realm war-stores set to ${RealmSupply.meter()}/${RealmSupply.max()}.</col>")
+            player.message("<col=4f9b4f>[test] ${RealmSupply.NAME} set to ${RealmSupply.meter()}/${RealmSupply.max()}.</col>")
         }
 
         // ::marchdebug — admin: toggle per-tick troop-position logging ("MARCHDBG" lines) so the
@@ -232,7 +232,7 @@ class CampaignCommandPlugin(
         }
         // The realm must be supplied before it can march — the whole point of the Mire skilling loop.
         if (!RealmSupply.canAfford(tier.supplyCost)) {
-            player.message("<col=801700>The realm's war-stores are too low to march a ${tier.display} — the people must supply the war first (${RealmSupply.meter()}/${tier.supplyCost} needed). Skill the Mire and hand supplies to a Quartermaster.</col>")
+            player.message("<col=801700>The ${RealmSupply.NAME} are too low to march a ${tier.display} — the people must supply the war first (${RealmSupply.meter()}/${tier.supplyCost} needed). Skill the Mire and hand supplies to a Quartermaster.</col>")
             return
         }
         player.inventory.remove(coins, tier.cost)

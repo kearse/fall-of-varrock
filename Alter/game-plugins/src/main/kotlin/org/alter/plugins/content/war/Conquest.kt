@@ -47,7 +47,7 @@ object Conquest {
     // Quest Journal varp the client reads).
     enum class Step(val objective: String) {
         NONE("(not started)"),
-        SUPPLY("Stock the realm's war-stores to $SUPPLY_TARGET for the march on Fallen Varrock — skill the Mire and hand finished goods to a Quartermaster (::supply to check)."),
+        SUPPLY("Stock the Realm Supplies to $SUPPLY_TARGET for the march on Fallen Varrock — skill the Mire and hand finished goods to a Quartermaster (::supply to check)."),
         LAUNCH("Muster your army and launch the conquest of Fallen Varrock — gather your war-chest, then command ::conquest varrock."),
         WIN("Lead your army to victory — break Fallen Varrock's garrison and take the city."),
         DONE("King of Lumbridge — Fallen Varrock is retaken. The realm marches at your word."),
@@ -130,7 +130,7 @@ object Conquest {
     /** One-line progress report (`::kingquest` and any NPC chatter). */
     fun statusLine(p: Player): String = when (step(p)) {
         Step.NONE -> "King of Lumbridge: reach the rank of King (buy it from Duke Horacio) to begin."
-        Step.SUPPLY -> "King of Lumbridge: stock the realm's war-stores — <col=4f9b4f>${RealmSupply.meter()}/$SUPPLY_TARGET</col> for a conquest."
+        Step.SUPPLY -> "King of Lumbridge: stock the Realm Supplies — <col=4f9b4f>${RealmSupply.meter()}/$SUPPLY_TARGET</col> for a conquest."
         Step.DONE -> "King of Lumbridge: <col=4f9b4f>complete</col> — Fallen Varrock is yours."
         else -> "King of Lumbridge — current objective: ${step(p).objective}"
     }

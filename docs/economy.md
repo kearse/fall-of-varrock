@@ -15,7 +15,13 @@
     Valaine) — see the sink table + `economy/grandexchange/CurrencyExchange`. Peg: Boss Ticket
     ≈ 1,000 gp, Blood Money ≈ 800 gp, Vote Ticket ≈ 2,000 gp (raise as the economy grows).
 - **Reward points** (persistent counters, NOT items — can't be dropped/traded/duped/GE'd):
-  - Slayer, War Effort, Prestige, Donor, LMS — spent at sell-only reward shops.
+  - Prestige, Donor, LMS — spent at sell-only reward shops.
+  - **War Effort** — a **lifetime service record**, `PointKind.spendable = false`: it only ever
+    climbs, no shop or sink may debit it (Block 1 PR-4). Read by rank eligibility and the daily
+    War Effort bonus; `::service` shows the per-player ledger (`war/events/ServiceRecord.kt`).
+  - **Realm Supplies** — the SHARED consumable stockpile (`war/RealmSupply.kt`, persisted in
+    `WarState`): every Quartermaster hand-in raises it by the item's War Effort value; only
+    Campaigns (1,500) and Conquests (2,800) spend it. Marches and Lord operations are free.
   - See `content/economy/Currencies.kt` (`PointKind`) + `PointsCurrency.kt`.
 
 ## Faucets (sources) — current
@@ -39,7 +45,7 @@
 | Sink | Drains | Status |
 |---|---|---|
 | Shops (buy) | gp | live (general store, smith, etc.) |
-| Slayer reward shop | Slayer points | **live** (`SlayerPlugin`) |
+| ~~War Effort reward shelf~~ | — | **removed** (Block 1 PR-4): War Effort is a lifetime record, not a currency |
 | Boss reward shop (valaine) | Boss points | **live** (`LumbridgeShopHubPlugin`) |
 | Duke Horacio ranks | gp (rank purchases) | live (`DukeHoracioPlugin`) |
 | Forge / Upgrade gear | gp + rune gear + runite bars | **live** (`economy/forge/ForgePlugin`) — the marquee sink; KBD runite bars feed it |

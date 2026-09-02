@@ -1,12 +1,23 @@
 ---
 title: Supplying the war - the Quartermaster
 category: Skilling
-summary: What the Quartermaster pays for supplies, how the sell-only Supply Depot works, and how Supply Drives double your War Effort.
+summary: What the Quartermaster pays for supplies, how the sell-only Supply Depot works, how Supply Drives double your War Effort, and the difference between War Effort and Realm Supplies.
 order: 2
-updated: 2026-07-20
+updated: 2026-09-02
 ---
 
-The **Quartermaster** - at the Lumbridge shop hub and in the Mire crypt - is the end of every production chain: hand him supplies and he pays **War Effort** points, consumes the items, and adds them to the realm's war-supply meter that gates campaigns (`::supply` to check it).
+The **Quartermaster** - at the Lumbridge shop hub and in the Mire crypt - is the end of every production chain: hand him supplies and he consumes the items and credits two things at once - your personal **War Effort** (your lifetime service record) and the kingdom's shared **Realm Supplies** stockpile (`::supply` to check it).
+
+## War Effort vs Realm Supplies
+
+| | War Effort | Realm Supplies |
+| --- | --- | --- |
+| Whose | **yours** - a personal, lifetime record | **the kingdom's** - one shared stockpile |
+| Goes up when | wars, contracts, hand-ins, rogue hunting, kingdom work | skillers hand supplies to a Quartermaster |
+| Goes down when | **never** - it is your standing, not a purse | a Minister launches a campaign (1,500) or a King a conquest (2,800) |
+| Used for | rank eligibility, the daily bonus, contribution checks (`::service`) | letting the commanders launch the biggest operations |
+
+Scheduled marches, Grand Marches and Lord operations never touch Realm Supplies - the war keeps moving whatever the stockpile says.
 
 ## The Supply Depot
 
@@ -63,6 +74,6 @@ At any given time one category - food, potions, bars, ores, logs or raw fish - i
 
 ## What War Effort gets you
 
-War Effort is your personal contribution score - it feeds rank progression and daily bonuses, and marks you as a wartime contributor when loot pools split. Between the Quartermaster, [resource contracts](/wiki/slayer-and-contracts), and defending frontiers, a dedicated skiller can climb the ladder without ever winning a duel.
+War Effort is your personal, lifetime service record - it feeds rank eligibility and daily bonuses, and it is never spent. Between the Quartermaster, [resource contracts](/wiki/slayer-and-contracts) and the marches, a dedicated skiller can climb the ladder without ever winning a duel. `::service` shows your full ledger: wars fought and won, supplies handed in, lifetime War Effort.
 
 Earning War Effort through the day also builds a **daily bonus** to your XP rate and drop rate - it tiers up the more you contribute and resets each day. Check your current tier and progress with `::warbonus`.
