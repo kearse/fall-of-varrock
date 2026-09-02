@@ -10,94 +10,41 @@ import kotlin.io.path.readText
 import kotlin.io.path.writeText
 
 /**
- * Persistent, server-wide state for **The War** (the AI-commanded raid system).
+ * Persistent, server-wide state for **The War** (the offensive war: marches, operations,
+ * campaigns and conquests).
  *
  * The alter engine persists nothing globally — [org.alter.game.model.World.attr]
  * is runtime-only and there is no shutdown hook — so this object owns the war's
  * server-wide state and its own JSON persistence.
  *
- * ### What it stores, per *front*
- * - **Persisted:** the castle's surviving **knight pool** (battle losses must
- *   survive a restart) and any **city-fallen** recovery ticks (the lasting penalty
- *   when General Zo's castle is overrun).
- * - **Runtime only:** the live [RaidStatus] (phase / tier / goblins alive), written
- *   by the [AttackDirector] each tick and read by the HUD, General Zo, citizenship,
- *   etc. A restart simply resets this to peace, which is fine.
+ * ### What it stores
+ * - the realm's **Realm Supplies** meter (skillers fill it, commanders spend it),
+ * - the launched-march counter (every Nth march is a GRAND MARCH),
+ * - the store's patron-funded march queue,
+ * - district pressure (legacy — removed by the march-target rework; tolerated on load).
  *
- * The old 0–100 *siege pressure* / four-band model has been retired in favour of
- * this discrete, event-driven status.
+ * Schema history: v1 = the retired 0–100 siege-pressure model; v2 = per-front knight pools +
+ * city-fallen timers for the retired defensive siege; **v3** = offensive war only (the `fronts`
+ * section is ignored on load and no longer written).
  *
  * @see WarStatePlugin for the lifecycle wiring.
  */
 object WarState {
     private val logger = KotlinLogging.logger {}
 
-    /** Bumped when the on-disk schema changes (was 1 for the old pressure model). */
-    private const val SCHEMA_VERSION = 2
+    /** Bumped when the on-disk schema changes (1 = pressure model, 2 = defensive siege, 3 = offensive war). */
+    private const val SCHEMA_VERSION = 3
 
-    /** Realm-wide war-supply meter cap — skilling the Mire fills it, campaigns drain it. TUNABLE. */
+    /** Realm Supplies cap — skilling the Mire fills it, campaigns/conquests drain it. TUNABLE. */
     private const val SUPPLY_METER_MAX = 3000
 
     private val saveFile: Path = Paths.get("../data/saves/world/war_state.json")
     private val prettyPrint: JsonWriterSettings = JsonWriterSettings.builder().indent(true).build()
 
-    /** The three discrete states a front can be in. */
-    enum class Phase { PEACE, UNDER_RAID, CITY_FALLEN }
-
-    /**
-     * The live, player-facing snapshot of a front's raid (runtime only). Written by
-     * the [AttackDirector]; read by the HUD / General Zo / `::war` etc.
-     */
-    data class RaidStatus(
-        val phase: Phase = Phase.PEACE,
-        val tierName: String = "",
-        val goblinsAlive: Int = 0,
-        /** The raid's starting roster, so the HUD bar can show a remaining-fraction. */
-        val peakRoster: Int = 0,
-    )
-
-    // --- persisted ---
-    private val knightPoolByFront = HashMap<String, Int>()
-    private val knightPoolMaxByFront = HashMap<String, Int>()
-    private val cityFallenTicksByFront = HashMap<String, Int>()
-
-    // --- runtime only ---
-    private val raidStatusByFront = HashMap<String, RaidStatus>()
-
     @Volatile
     private var dirty = false
 
-    /**
-     * Ensure [frontId] exists. Idempotent — call on world init for every front so a
-     * freshly-added front appears with a full garrison without a save-file edit.
-     */
-    fun registerFront(frontId: String, poolMax: Int = 100) {
-        knightPoolMaxByFront[frontId] = poolMax
-        if (!knightPoolByFront.containsKey(frontId)) {
-            knightPoolByFront[frontId] = poolMax
-            dirty = true
-        }
-    }
-
-    fun knightPoolMax(frontId: String): Int = knightPoolMaxByFront[frontId] ?: 100
-
-    /** The castle's surviving knight count for [frontId] (clamped to its max). */
-    fun getKnightPool(frontId: String): Int =
-        knightPoolByFront.getOrDefault(frontId, knightPoolMax(frontId)).coerceIn(0, knightPoolMax(frontId))
-
-    /** Set the surviving knight count (clamped). Marks state dirty. */
-    fun setKnightPool(frontId: String, value: Int) {
-        val clamped = value.coerceIn(0, knightPoolMax(frontId))
-        if (knightPoolByFront.put(frontId, clamped) != clamped) dirty = true
-    }
-
-    /** Add [delta] (may be negative) to the knight pool; returns the new value. */
-    fun addKnightPool(frontId: String, delta: Int): Int {
-        setKnightPool(frontId, getKnightPool(frontId) + delta)
-        return getKnightPool(frontId)
-    }
-
-    // --- realm war-supply meter (single realm-wide value; the Mire fills it, campaigns drain it) ---
+    // --- Realm Supplies meter (single realm-wide value; the Mire fills it, campaigns drain it) ---
     private var supplyMeter = 0
 
     fun supplyMeterMax(): Int = SUPPLY_METER_MAX
@@ -138,7 +85,7 @@ object WarState {
         return e.substringBeforeLast('|') to e.endsWith("|1")
     }
 
-    // --- district pressure (the reconquest of Varrock — story-and-grind-design §5) ---
+    // --- district pressure (legacy Falador reconquest meter; the march-target rework retires it) ---
     private val districtPressureByKey = HashMap<String, Int>()
 
     fun getDistrictPressure(key: String): Int = districtPressureByKey[key] ?: 0
@@ -154,52 +101,11 @@ object WarState {
         return getDistrictPressure(key)
     }
 
-    // --- city-fallen (lasting penalty after General Zo's castle is overrun) ---
-
-    fun isCityFallen(frontId: String): Boolean = (cityFallenTicksByFront[frontId] ?: 0) > 0
-    fun cityFallenTicksLeft(frontId: String): Int = cityFallenTicksByFront[frontId] ?: 0
-
-    fun setCityFallen(frontId: String, ticks: Int) {
-        cityFallenTicksByFront[frontId] = ticks.coerceAtLeast(0)
-        dirty = true
-    }
-
-    /** Count the fallen timer down by [ticks]; returns the ticks remaining. */
-    fun decayCityFallen(frontId: String, ticks: Int): Int {
-        val left = ((cityFallenTicksByFront[frontId] ?: 0) - ticks).coerceAtLeast(0)
-        cityFallenTicksByFront[frontId] = left
-        dirty = true
-        return left
-    }
-
-    fun clearCityFallen(frontId: String) {
-        if ((cityFallenTicksByFront[frontId] ?: 0) != 0) {
-            cityFallenTicksByFront[frontId] = 0
-            dirty = true
-        }
-    }
-
-    // --- live raid status (runtime) ---
-
-    fun raidStatus(frontId: String): RaidStatus = raidStatusByFront[frontId] ?: RaidStatus()
-
-    fun setRaidStatus(frontId: String, status: RaidStatus) {
-        raidStatusByFront[frontId] = status
-    }
-
-    /** The effective phase: city-fallen overrides the live raid status. */
-    fun phaseOf(frontId: String): Phase =
-        if (isCityFallen(frontId)) Phase.CITY_FALLEN else raidStatus(frontId).phase
-
-    fun isAtPeace(frontId: String): Boolean = phaseOf(frontId) == Phase.PEACE
-
-    fun knownFronts(): Set<String> = knightPoolByFront.keys.toSet()
-
     /**
      * Load war state from disk. Safe when no file exists (starts fresh) and never
-     * throws — a corrupt file is logged and treated as "start fresh". Older v1
-     * (pressure) saves are simply ignored: the new fields are absent, so every
-     * front begins at a full garrison and at peace.
+     * throws — a corrupt file is logged and treated as "start fresh". Older saves are
+     * read leniently: the v2 `fronts` section (knight pools / city-fallen timers of the
+     * retired defensive siege) is simply ignored.
      */
     fun load() {
         try {
@@ -208,13 +114,9 @@ object WarState {
                 return
             }
             val doc = Document.parse(saveFile.readText().trimStart('﻿'))
-            val fronts = doc.get("fronts", Document::class.java) ?: Document()
-            knightPoolByFront.clear()
-            cityFallenTicksByFront.clear()
-            for ((frontId, value) in fronts) {
-                val sub = value as? Document ?: continue
-                (sub.get("knightPool") as? Number)?.let { knightPoolByFront[frontId] = it.toInt().coerceAtLeast(0) }
-                (sub.get("cityFallen") as? Number)?.let { cityFallenTicksByFront[frontId] = it.toInt().coerceAtLeast(0) }
+            val version = (doc.get("version") as? Number)?.toInt() ?: 0
+            if (version < SCHEMA_VERSION && doc.containsKey("fronts")) {
+                logger.info { "War state v$version → v$SCHEMA_VERSION: dropping the retired defensive-siege 'fronts' section." }
             }
             (doc.get("supplyMeter") as? Number)?.let { supplyMeter = it.toInt().coerceIn(0, SUPPLY_METER_MAX) }
             districtPressureByKey.clear()
@@ -224,8 +126,8 @@ object WarState {
             (doc.get("marchCount") as? Number)?.let { marchCount = it.toInt().coerceAtLeast(0) }
             patronQueue.clear()
             (doc.get("patronMarches") as? List<*>)?.forEach { (it as? String)?.let(patronQueue::add) }
-            dirty = false
-            logger.info { "Loaded war state: ${knightPoolByFront.size} front(s) from $saveFile." }
+            dirty = version != SCHEMA_VERSION // rewrite an older schema on the next save tick
+            logger.info { "Loaded war state (v$version): supplies $supplyMeter/$SUPPLY_METER_MAX, marches $marchCount, patron queue ${patronQueue.size}." }
         } catch (e: Exception) {
             logger.error(e) { "Failed to load war state from $saveFile; starting fresh." }
         }
@@ -236,28 +138,17 @@ object WarState {
         if (!dirty && !force) return
         try {
             Files.createDirectories(saveFile.parent)
-            val fronts = Document()
-            val keys = knightPoolByFront.keys + cityFallenTicksByFront.keys
-            keys.forEach { frontId ->
-                fronts.append(
-                    frontId,
-                    Document()
-                        .append("knightPool", knightPoolByFront[frontId] ?: knightPoolMax(frontId))
-                        .append("cityFallen", cityFallenTicksByFront[frontId] ?: 0),
-                )
-            }
             val districts = Document()
             districtPressureByKey.forEach { (key, value) -> districts.append(key, value) }
             val doc = Document()
                 .append("version", SCHEMA_VERSION)
                 .append("supplyMeter", supplyMeter)
-                .append("fronts", fronts)
                 .append("districts", districts)
                 .append("marchCount", marchCount)
                 .append("patronMarches", patronQueue.toList())
             saveFile.writeText(doc.toJson(prettyPrint))
             dirty = false
-            logger.info { "Saved war state: ${knightPoolByFront.size} front(s) to $saveFile." }
+            logger.info { "Saved war state to $saveFile." }
         } catch (e: Exception) {
             logger.error(e) { "Failed to save war state to $saveFile; will retry." }
         }

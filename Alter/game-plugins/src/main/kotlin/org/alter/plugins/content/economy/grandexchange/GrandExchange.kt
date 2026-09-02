@@ -21,7 +21,7 @@ import kotlin.io.path.writeText
  * calls [createBuy]/[createSell]/[collect]/[cancel]; a world service ticks [matchTick].
  *
  * **Slots.** Each player owns 8 boxes (0..7). A `(owner, box)` pair is one [GeOffer]. Offers persist
- * independently of the session (JSON world save, [WarMemory] pattern) so a match can complete while
+ * independently of the session (JSON world save, [org.alter.plugins.content.war.WarState] pattern) so a match can complete while
  * the maker is offline and the proceeds wait in that offer's collection fields until collected.
  *
  * **Money conservation.** Escrow leaves the player on create; every fill only *moves* value between
@@ -460,7 +460,7 @@ object GrandExchange {
     private fun put(o: GeOffer) { offers.add(o); markDirty() }
     private fun markDirty() { dirty = true }
 
-    // ---- persistence (WarMemory pattern) -------------------------------------------------------
+    // ---- persistence (WarState JSON pattern) --------------------------------------------------
 
     fun load() {
         try {

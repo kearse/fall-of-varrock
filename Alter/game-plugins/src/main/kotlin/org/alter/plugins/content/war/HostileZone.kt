@@ -95,7 +95,8 @@ class MonsterPack(
  * A hostile area beyond the cities (The War / open world — `docs/war-system-design.md`:
  * "only cities are safe"). Maintains packs of monsters that roam, aggro, and fight
  * back with real combat stats. Loot is handled by the owning plugin's `onNpcDeath`.
- * Mirrors the robust spawn/maintain pattern from [WarFront].
+ * Spawn/maintain pattern inherited from the retired defensive siege's WarFront (git tag
+ * `pre-block1-siege-engine`).
  *
  * When a zone holds at least one [Faction.FRIENDLY] pack it also runs a lightweight
  * NPC-vs-NPC [skirmish] each tick: enemies fight back whatever friendly (or player)
@@ -109,11 +110,10 @@ class HostileZone(
     /** A protected area (e.g. the city) that ENEMY npcs never aggro into and are leashed out
      *  of — so the town stays safe no matter how thin the spawn buffer is. Null = no leash. */
     private val safeArea: Area? = null,
-    /** The castle **keep** — the new-player respawn courtyard ([Sieges.LUMBRIDGE_KEEP]). Treated
-     *  exactly like [safeArea] (no aggro in, leashed out) but kept as its OWN box so the spawn stays
-     *  hard-protected even if [safeArea] is ever shrunk. Usually a sub-area of [safeArea]; null =
-     *  none. This is the frontier half of the "goblins never enter the castle" rule (the war half
-     *  lives in [WarFront.keep]). */
+    /** The castle **keep** — the new-player respawn courtyard ([CityFrontiers.LUMBRIDGE_KEEP]).
+     *  Treated exactly like [safeArea] (no aggro in, leashed out) but kept as its OWN box so the
+     *  spawn stays hard-protected even if [safeArea] is ever shrunk. Usually a sub-area of
+     *  [safeArea]; null = none. This is the "enemies never enter the castle" rule. */
     private val keep: Area? = null,
     /**
      * Activation gate: each tick the zone is "live" only while this returns true. When it flips to

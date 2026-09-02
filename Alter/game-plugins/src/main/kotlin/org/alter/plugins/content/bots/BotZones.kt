@@ -10,7 +10,7 @@ import org.alter.plugins.content.combat.PvpZones
  * A zone is an open-world [Area] that, while a real player is near, maintains a small population of
  * roaming [PkBot]s drawn from a depth-tiered loadout pool — so leaving a city gets more dangerous
  * the deeper you go. Adding a zone = one [BotZoneConfig]; [BotSpawnPlugin] picks it up automatically
- * (mirrors [org.alter.plugins.content.war.CityFrontiers] / `Sieges`).
+ * (mirrors [org.alter.plugins.content.war.CityFrontiers]).
  *
  * Geometry is intentionally generous: muster points are filtered to walkable land at runtime by
  * [org.alter.plugins.content.war.StaticTerrain] (the in-code twin of the `mapDump`), and spawns are

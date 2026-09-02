@@ -139,7 +139,7 @@ class CityFrontierPlugin(
         // Far-flung frontiers (e.g. Varrock) have NO runtime collision until a player streams the
         // region in — so their NPCs would spawn unable to path or fight. Force-load every frontier's
         // battle regions at world-init (idempotent; near-spawn Lumbridge is effectively a no-op).
-        // Mirrors AttackDirector.forceLoadBattlefieldRegions.
+        // Regions only get collision once a player is near; force-load so far-flung defenders path.
         onWorldInit { forceLoadFrontierRegions(world) }
 
         val timer = TimerKey()
