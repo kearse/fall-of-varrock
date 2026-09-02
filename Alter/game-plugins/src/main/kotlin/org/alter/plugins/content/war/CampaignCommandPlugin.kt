@@ -77,7 +77,7 @@ class CampaignCommandPlugin(
                 player.inventory.add(coins, SEND_TROOPS_COST) // race lost — refund
                 player.message("<col=801700>Your men could not muster.</col>")
             } else {
-                player.message("<col=4f9b4f>Your men march on the boss — you earn a share of all they slay. Use <col=ffae00>::troops follow</col><col=4f9b4f> to recall them to your side.</col>")
+                player.message("<col=4f9b4f>Your men march on the boss — you earn a share of all they slay. Use <col=0000ff>::troops follow</col><col=4f9b4f> to recall them to your side.</col>")
             }
         }
 
@@ -126,7 +126,7 @@ class CampaignCommandPlugin(
                 return@onCommand
             }
             val m = t.op.route.first()
-            player.message("<col=4f9b4f>Your operation on ${t.display} musters at (${m.x}, ${m.z}) — any soldier may rally to it with <col=ffae00>::march</col><col=4f9b4f>. Win it and the commander's tithe is yours (::claim).</col>")
+            player.message("<col=4f9b4f>Your operation on ${t.display} musters at (${m.x}, ${m.z}) — any soldier may rally to it with <col=0000ff>::march</col><col=4f9b4f>. Win it and the commander's tithe is yours (::claim).</col>")
         }
 
         onCommand("campaign", description = "March a campaign on a hostile city (Minister+): ::campaign [city]") {
@@ -246,7 +246,7 @@ class CampaignCommandPlugin(
         // The commander is NOT teleported — they stay where they are and rally to the army themselves.
         if (op.route.isNotEmpty()) {
             val m = op.route.first()
-            player.message("<col=4f9b4f>Your ${tier.display} musters at (${m.x}, ${m.z}) and marches on ${op.displayName}! Get to the field to earn your share — or use <col=ffae00>::troops follow</col><col=4f9b4f> to bring them to you.</col>")
+            player.message("<col=4f9b4f>Your ${tier.display} musters at (${m.x}, ${m.z}) and marches on ${op.displayName}! Get to the field to earn your share — or use <col=0000ff>::troops follow</col><col=4f9b4f> to bring them to you.</col>")
         } else {
             player.message("<col=4f9b4f>You lead your ${tier.display} on ${op.displayName} — your men muster at the front.</col>")
         }

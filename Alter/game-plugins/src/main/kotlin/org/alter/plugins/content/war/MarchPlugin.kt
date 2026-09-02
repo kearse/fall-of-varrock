@@ -92,7 +92,7 @@ class MarchPlugin(
                     player.message("<col=801700>No march is in the field — $eta. Watch for the muster call.</col>")
                 }
                 is WarEvents.JoinResult.NeedsConfirm ->
-                    player.message("<col=801700>The column is already fighting — ${r.reason}.</col> Type <col=ffae00>::march</col> again to rally to them anyway.")
+                    player.message("<col=801700>The column is already fighting — ${r.reason}.</col> Type <col=0000ff>::march</col> again to rally to them anyway.")
                 WarEvents.JoinResult.Joined -> {}
             }
         }
@@ -171,13 +171,13 @@ class MarchPlugin(
         val wild = if (t.kind == MarchTargetKind.VARROCK_OUTSKIRTS) " (wilderness ground — PvP)" else ""
         when {
             funded != null && grand ->
-                Announce.broadcast(world, "<col=ffcc00>${funded.first}, Patron of the Realm, funds a GRAND MARCH against <col=ffae00>${t.warden?.title ?: t.display}</col><col=ffcc00> at ${t.display}$wild — ${tier.troops} knights set out in ~$mins minutes! <col=ffae00>::march</col><col=ffcc00> to fight!</col>")
+                Announce.broadcast(world, "<col=ffcc00>${funded.first}, Patron of the Realm, funds a GRAND MARCH against <col=ffae00>${t.warden?.title ?: t.display}</col><col=ffcc00> at ${t.display}$wild — ${tier.troops} knights set out in ~$mins minutes! <col=0000ff>::march</col><col=ffcc00> to fight!</col>")
             funded != null ->
-                Announce.broadcast(world, "<col=4f9b4f>${funded.first}, Patron of the Realm, funds a march on <col=ffae00>${t.display}</col><col=4f9b4f>$wild — it sets out in ~$mins minutes! Fight beside their banner: <col=ffae00>::march</col><col=4f9b4f>.</col>")
+                Announce.broadcast(world, "<col=4f9b4f>${funded.first}, Patron of the Realm, funds a march on <col=ffae00>${t.display}</col><col=4f9b4f>$wild — it sets out in ~$mins minutes! Fight beside their banner: <col=0000ff>::march</col><col=4f9b4f>.</col>")
             grand ->
-                Announce.broadcast(world, "<col=ffcc00>A GRAND MARCH musters against <col=ffae00>${t.warden?.title ?: t.display}</col><col=ffcc00> at ${t.display}$wild — ${tier.troops} knights set out in ~$mins minutes! The Warden's embers feed the Royal Smith's forge. <col=ffae00>::march</col><col=ffcc00> to fight!</col>")
+                Announce.broadcast(world, "<col=ffcc00>A GRAND MARCH musters against <col=ffae00>${t.warden?.title ?: t.display}</col><col=ffcc00> at ${t.display}$wild — ${tier.troops} knights set out in ~$mins minutes! The Warden's embers feed the Royal Smith's forge. <col=0000ff>::march</col><col=ffcc00> to fight!</col>")
             else ->
-                Announce.broadcast(world, "<col=4f9b4f>The Knight-Captain musters a march on <col=ffae00>${t.display}</col><col=4f9b4f>$wild — it sets out in ~$mins minutes! Any soldier may fight beside the column: answer with <col=ffae00>::march</col><col=4f9b4f>.</col>")
+                Announce.broadcast(world, "<col=4f9b4f>The Knight-Captain musters a march on <col=ffae00>${t.display}</col><col=4f9b4f>$wild — it sets out in ~$mins minutes! Any soldier may fight beside the column: answer with <col=0000ff>::march</col><col=4f9b4f>.</col>")
         }
         state = State.MUSTERING
         schedule(world, timer, WARN_TICKS)

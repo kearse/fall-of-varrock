@@ -121,11 +121,11 @@ class RogueProblemPlugin(
                 val target = RogueKnightLadder.activeDef(p)
                 if (target != null) {
                     chatNpc(p, "The rank and file are thinned and your soldier's purse is paid — buy <col=ffae00>Soldier</col> from Duke Horacio if you haven't. Now for the ladder, ${p.address}: ${target.briefLine}", npc = s, title = "Recruiting Sergeant")
-                    chatNpc(p, "You'll find the cur at <col=801700>${target.camp.display}</col> — ${target.camp.directions} The marker will lead you; <col=ffae00>::knights</col> tracks the hunt.", npc = s, title = "Recruiting Sergeant")
+                    chatNpc(p, "You'll find the cur at <col=801700>${target.camp.display}</col> — ${target.camp.directions} The marker will lead you; <col=0000ff>::knights</col> tracks the hunt.", npc = s, title = "Recruiting Sergeant")
                     chatNpc(p, "Mind: the camp guards its own. Cut down <col=ffae00>${CampClearance.goal(target.camp)}</col> of its rogues first — only then will the knight take the field against you.", npc = s, title = "Recruiting Sergeant")
                     chatNpc(p, "Expect to lose a fight or two before you take them — every knight on this ladder guards the gear that beats the next one. Dying is training. Going back is winning.", npc = s, title = "Recruiting Sergeant")
                 } else {
-                    chatNpc(p, "Your first Rogue Knight waits — <col=ffae00>::knights</col> shows the hunt, the marker leads the way.", npc = s, title = "Recruiting Sergeant")
+                    chatNpc(p, "Your first Rogue Knight waits — <col=0000ff>::knights</col> shows the hunt, the marker leads the way.", npc = s, title = "Recruiting Sergeant")
                 }
             }
             RogueProblem.Step.REPORT -> {
@@ -141,7 +141,7 @@ class RogueProblemPlugin(
                 val target = RogueKnightLadder.assignedDef(p)
                 if (target != null) {
                     chatNpc(p, "Your mark: ${target.briefLine}", npc = s, title = "Recruiting Sergeant")
-                    chatNpc(p, "Find them at <col=801700>${target.camp.display}</col> — ${target.camp.directions} The marker leads; <col=ffae00>::knights</col> tracks the climb.", npc = s, title = "Recruiting Sergeant")
+                    chatNpc(p, "Find them at <col=801700>${target.camp.display}</col> — ${target.camp.directions} The marker leads; <col=0000ff>::knights</col> tracks the climb.", npc = s, title = "Recruiting Sergeant")
                     if (!CampClearance.cleared(p, target.camp)) {
                         chatNpc(p, "The camp guards its own: ${CampClearance.statusLine(p, target.camp)}", npc = s, title = "Recruiting Sergeant")
                     }

@@ -168,7 +168,7 @@ sealed class Reward {
  * One step of a quest. [id] is the persisted key (stable, human-readable); [anchor]/[anchorNpc]
  * feed the guidance arrow ([QuestArrows]); [onEnter]/[onLeave] are the side-effect hooks (open an
  * instance, spawn an npc, start a war); [rewards] pay when the step clears; [nudge] is an extra
- * hint line printed with the periodic reminder.
+ * hint line printed on step entry and with the login reminder.
  */
 class QuestStep(
     val id: String,

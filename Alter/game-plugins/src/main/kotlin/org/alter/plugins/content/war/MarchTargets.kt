@@ -339,9 +339,9 @@ object MarchTargets {
             lines += "  ${t.display} (${t.kind.display}$grand$wild): $state"
         }
         lines += when {
-            live != null -> "A ${if (grandNext) "GRAND MARCH" else "march"} is in the field — <col=ffae00>::march</col> to rally to the column."
+            live != null -> "A ${if (grandNext) "GRAND MARCH" else "march"} is in the field — <col=0000ff>::march</col> to rally to the column."
             mustering != null -> "The ${if (grandNext) "GRAND MARCH" else "march"} on ${mustering.display} sets out in ~$nextMusterMins minute(s)."
-            else -> "The next march musters in ~$nextMusterMins minute(s)${if (grandNext) " — a GRAND MARCH" else ""}. Lords may sponsor one now: <col=ffae00>::operation <target></col>."
+            else -> "The next march musters in ~$nextMusterMins minute(s)${if (grandNext) " — a GRAND MARCH" else ""}. Lords may sponsor one now: <col=0000ff>::operation <target></col>."
         }
         return lines
     }

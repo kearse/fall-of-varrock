@@ -194,14 +194,14 @@ class RecruitTrialsPlugin(
                         1 -> {
                             val target = RogueKnightLadder.activeDef(p)
                             if (target == null) {
-                                chatNpc(p, "You've cleared the whole ladder, ${p.address} — all ${org.alter.plugins.content.bots.knights.RogueKnights.LADDER.size} of them. The realm's deadliest blade. Any of them can be hunted again for their gear: <col=ffae00>::knights</col>.", npc = s, title = "Recruiting Sergeant")
+                                chatNpc(p, "You've cleared the whole ladder, ${p.address} — all ${org.alter.plugins.content.bots.knights.RogueKnights.LADDER.size} of them. The realm's deadliest blade. Any of them can be hunted again for their gear: <col=0000ff>::knights</col>.", npc = s, title = "Recruiting Sergeant")
                             } else {
                                 val farming = target.rank < RogueKnightLadder.rank(p)
                                 if (farming) {
-                                    chatNpc(p, "You're back on <col=801700>${target.name}</col> for the spoils — good hunting. ${RogueKnightLadder.statusLine(p)} (<col=ffae00>::huntnext</col> returns you to the ladder.)", npc = s, title = "Recruiting Sergeant")
+                                    chatNpc(p, "You're back on <col=801700>${target.name}</col> for the spoils — good hunting. ${RogueKnightLadder.statusLine(p)} (<col=0000ff>::huntnext</col> returns you to the ladder.)", npc = s, title = "Recruiting Sergeant")
                                 } else {
                                     chatNpc(p, "Your mark: ${target.briefLine}", npc = s, title = "Recruiting Sergeant")
-                                    chatNpc(p, "Find them at <col=801700>${target.camp.display}</col> — ${target.camp.directions} The marker leads; <col=ffae00>::knights</col> lists the whole ladder, and any beaten knight can be farmed again.", npc = s, title = "Recruiting Sergeant")
+                                    chatNpc(p, "Find them at <col=801700>${target.camp.display}</col> — ${target.camp.directions} The marker leads; <col=0000ff>::knights</col> lists the whole ladder, and any beaten knight can be farmed again.", npc = s, title = "Recruiting Sergeant")
                                     if (!CampClearance.cleared(p, target.camp)) {
                                         chatNpc(p, "The camp guards its own: ${CampClearance.statusLine(p, target.camp)}", npc = s, title = "Recruiting Sergeant")
                                     }
@@ -230,7 +230,7 @@ class RecruitTrialsPlugin(
                     chatNpc(p, "There's harder work waiting for you — the rogues bleeding our roads — but not before Vannaka's magic drills, <col=801700>War-Prep I</col>, are behind you. Finish those and ask me again.", npc = s, title = "Recruiting Sergeant")
                 }
                 if (RogueHunt.kills(p) == 0) {
-                    chatNpc(p, "If you're hunting work: the rogue family crawls over the road camps west of Lumbridge and the ruins of <col=801700>Fallen Varrock</col> alike. The realm pays a bounty at every milestone of cutthroats you put down — report your tally to me. <col=ffae00>::rogues</col> tracks it.", npc = s, title = "Recruiting Sergeant")
+                    chatNpc(p, "If you're hunting work: the rogue family crawls over the road camps west of Lumbridge and the ruins of <col=801700>Fallen Varrock</col> alike. The realm pays a bounty at every milestone of cutthroats you put down — report your tally to me. <col=0000ff>::rogues</col> tracks it.", npc = s, title = "Recruiting Sergeant")
                     chatNpc(p, "Fair warning: Varrock's streets are the wilderness — the road camps are safe. Take nothing into the ruins you can't afford to lose; the tally, at least, is yours forever.", npc = s, title = "Recruiting Sergeant")
                 } else {
                     chatNpc(p, RogueHunt.statusLine(p), npc = s, title = "Recruiting Sergeant")

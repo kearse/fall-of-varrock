@@ -4,7 +4,6 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import org.alter.api.ext.getVarp
 import org.alter.api.ext.message
 import org.alter.api.ext.setVarp
-import org.alter.game.model.attr.AttributeKey
 import org.alter.game.model.entity.Npc
 import org.alter.game.model.entity.Player
 import org.alter.plugins.content.mechanics.Flags
@@ -14,20 +13,18 @@ private val logger = KotlinLogging.logger {}
 /**
  * Drives every framework [QuestDefinition]: begin / advance / complete / reset, objective
  * evaluation (kills from the npc-death hook, areas/items/predicates from the poll), rewards,
- * completion flags (`quest.<key>.done` in [Flags]), the periodic objective nudge, and the generic
+ * completion flags (`quest.<key>.done` in [Flags]), the login objective reminder, and the generic
  * journal-varp publish. Pure state + messaging — [QuestFrameworkPlugin] owns the wiring.
+ *
+ * Objectives are announced on step entry and once on login — never on a timer (a 5-minute
+ * re-nudge was cut 2026-09-02 as chat spam).
  *
  * Mutate-before-narrate: every transition writes and saves state FIRST, then talks — a
  * `p.queue{}` dialogue can die on death/logout/attack, the state must not.
  */
 object QuestEngine {
 
-    private const val NUDGE_TICKS = 500 // ~5 minutes between reminders
-    private const val POLL_TICKS = 3 // QuestFrameworkPlugin's poll cadence (nudge countdown unit)
     private const val KILLS = "kills"
-
-    /** Session-only per-quest nudge countdown. */
-    private val NUDGE_LEFT = AttributeKey<MutableMap<String, Int>>()
 
     // ---- state reads -------------------------------------------------------------------------
 
@@ -151,7 +148,6 @@ object QuestEngine {
         runCatching { step.onEnter?.invoke(p) }.onFailure { logger.error(it) { "onEnter threw: ${q.key}/${step.id}" } }
         p.message("<col=801700>${q.displayName} — next objective:</col> ${step.objective.text}")
         step.nudge?.let { p.message(it) }
-        resetNudge(p, q)
         publish(p, q)
     }
 
@@ -172,7 +168,7 @@ object QuestEngine {
         }
     }
 
-    /** The poll: areas, items, predicates; then the periodic nudge. */
+    /** The poll: areas, items, predicates. */
     fun pollTick(p: Player) {
         for (q in QuestRegistry.frameworkQuests()) {
             val cur = step(p, q) ?: continue
@@ -182,9 +178,7 @@ object QuestEngine {
                 is Objective.Predicate -> runCatching { o.test(p) }.getOrDefault(false)
                 else -> false
             }
-            if (done) { advance(p, q); continue }
-            val left = (nudges(p)[q.key] ?: NUDGE_TICKS) - POLL_TICKS
-            if (left <= 0) nudge(p, q, cur) else nudges(p)[q.key] = left
+            if (done) advance(p, q)
         }
     }
 
@@ -198,15 +192,11 @@ object QuestEngine {
         step(p, q)?.let { nudge(p, q, it) }
     }
 
+    /** The login reminder (also what `::questdebug` and a step's own callers use to restate the objective). */
     fun nudge(p: Player, q: QuestDefinition, step: QuestStep) {
         p.message("<col=801700>${q.displayName} — current objective:</col> ${objectiveLine(p, q)}")
         step.nudge?.let { p.message(it) }
-        resetNudge(p, q)
     }
-
-    private fun nudges(p: Player): MutableMap<String, Int> = p.attr[NUDGE_LEFT] ?: HashMap<String, Int>().also { p.attr[NUDGE_LEFT] = it }
-
-    private fun resetNudge(p: Player, q: QuestDefinition) { nudges(p)[q.key] = NUDGE_TICKS }
 
     // ---- journal ------------------------------------------------------------------------------
 

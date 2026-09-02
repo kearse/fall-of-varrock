@@ -51,7 +51,7 @@ class WarSpoilsPlugin(
 
         onLogin {
             if (!WarSpoils.isEmpty(player)) {
-                player.message("<col=ffd700>You have unclaimed war spoils — type <col=ffae00>::claim</col><col=ffd700> to collect them.</col>")
+                player.message("<col=ffd700>You have unclaimed war spoils — type <col=0000ff>::claim</col><col=ffd700> to collect them.</col>")
             }
         }
 

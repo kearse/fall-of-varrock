@@ -2,7 +2,6 @@ package org.alter.plugins.content.war.warprep
 
 import org.alter.api.Skills
 import org.alter.game.model.attr.ARENA_BEST_WAVE_ATTR
-import org.alter.game.model.attr.AttributeKey
 import org.alter.game.model.attr.WARPREP_SURVIVAL_DRILL_TOPUPS_ATTR
 import org.alter.game.model.attr.WARPREP_SURVIVAL_STEP_ATTR
 import org.alter.api.ext.message
@@ -35,8 +34,8 @@ object WarPrepSurvival {
     val TIMER = TimerKey()
     private const val POLL_TICKS = 3
 
-    private const val NUDGE_TICKS = 500 // ~5 minutes
-    private val NUDGE_COUNTDOWN = AttributeKey<Int>()
+    // The objective is announced on step entry and once on login — never on a timer (the old
+    // 5-minute re-nudge was cut 2026-09-02 as chat spam; `::warpsurvival` shows it on demand).
 
     /** The Hitpoints level the DRILL step trains to. TUNABLE. */
     const val HP_TARGET = 60
@@ -117,11 +116,10 @@ object WarPrepSurvival {
         else -> step(p).objective
     }
 
-    /** Say the objective and restart the nudge countdown. */
+    /** Say the objective (login + `::warpsurvival`). */
     fun nudge(p: Player) {
-        p.attr[NUDGE_COUNTDOWN] = NUDGE_TICKS
         p.message("<col=801700>War-Prep III — current objective:</col> ${objectiveLine(p)}")
-        p.message("General Zo has more for you once it's done. Check it any time with <col=ffae00>::warpsurvival</col>.")
+        p.message("General Zo has more for you once it's done. Check it any time with <col=0000ff>::warpsurvival</col>.")
     }
 
     // --- pillar hooks -------------------------------------------------------------------
@@ -169,8 +167,6 @@ object WarPrepSurvival {
         }
         if (isTracked(step(p))) {
             p.timers[TIMER] = POLL_TICKS
-            val left = (p.attr[NUDGE_COUNTDOWN] ?: NUDGE_TICKS) - POLL_TICKS
-            if (left <= 0) nudge(p) else p.attr[NUDGE_COUNTDOWN] = left
         }
     }
 
@@ -185,7 +181,6 @@ object WarPrepSurvival {
             else -> {}
         }
         if (isTracked(next)) p.timers[TIMER] = POLL_TICKS
-        p.attr[NUDGE_COUNTDOWN] = NUDGE_TICKS
         if (next != Step.NONE && next != Step.DONE) {
             p.message("<col=801700>War-Prep III — next objective:</col> ${objectiveLine(p)}")
         }
