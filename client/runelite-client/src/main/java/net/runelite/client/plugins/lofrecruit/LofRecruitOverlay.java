@@ -59,7 +59,8 @@ class LofRecruitOverlay extends Overlay implements LofWindows.Window
 	private static final int[] CAP_BY_TITLE = {0, 0, 0, 0, 1, 2, 3, 3};
 	private static final String[] TITLE_NAMES = {"Peasant", "Commoner", "Squire", "Soldier", "Knight", "Lord", "Minister", "King"};
 
-	private static final int RECRUIT_COST = 1_000_000; // mirror of server RecruitMenu.RECRUIT_COST
+	/** Price of each soldier by how many the player already keeps — mirror of server RecruitMenu.RECRUIT_COSTS. */
+	private static final int[] RECRUIT_COSTS = {10_000_000, 100_000_000, 500_000_000};
 	private static final int COINS_ID = 995;
 	private static final int COMP_STATUS_BASE = 4613;  // CompanionRegistry status varps
 	private static final int MAX_COMPANIONS = 3;
@@ -129,10 +130,16 @@ class LofRecruitOverlay extends Overlay implements LofWindows.Window
 	// Scaled placement published by render() on the client thread; the mouse thread hit-tests via this cache only.
 	private volatile LofModal.Placement placement;
 
+	/** The price of the NEXT soldier: the ladder climbs with the roster size the server sent. */
+	private int nextCost()
+	{
+		return RECRUIT_COSTS[Math.min(Math.max(count, 0), RECRUIT_COSTS.length - 1)];
+	}
+
 	/** Cards accept clicks only when a muster could actually go through. */
 	boolean recruitable()
 	{
-		return cap > 0 && count < cap && coinsCached >= RECRUIT_COST;
+		return cap > 0 && count < cap && coinsCached >= nextCost();
 	}
 
 	// Placement single-sourced in LofModal (§6A) — same anchor as every modal.
@@ -286,16 +293,16 @@ class LofRecruitOverlay extends Overlay implements LofWindows.Window
 				drawCentred(g, ox, oy + STRIP_Y + STRIP_H + 52, "Rise to " + TITLE_NAMES[higher] + " and the General will muster you another.", LofTheme.GOLD);
 			}
 		}
-		else if (coins < RECRUIT_COST)
+		else if (coins < nextCost())
 		{
-			drawCentred(g, ox, oy + STRIP_Y + STRIP_H + 34, "A trained soldier costs " + fmt(RECRUIT_COST) + " coins.", new Color(255, 138, 117));
+			drawCentred(g, ox, oy + STRIP_Y + STRIP_H + 34, "Your next soldier costs " + fmt(nextCost()) + " coins.", new Color(255, 138, 117));
 		}
 
 		// status + footer
 		g.setFont(FontManager.getRunescapeSmallFont());
 		final String status = locked || cap == 0
 			? "Companions fight, train and carry your banner into the war."
-			: "A " + TITLE_NAMES[titleOrdinal] + " may field " + cap + " companion" + (cap > 1 ? "s" : "") + ". Manage them with the Companions panel.";
+			: "A " + TITLE_NAMES[titleOrdinal] + " fields up to " + cap + " at once. Soldiers cost 10M, then 100M, then 500M.";
 		LofTheme.shadowText(g, status, ox + PAD, oy + WIN_H - 40, LofTheme.TEXT_DIM);
 		LofTheme.shadowText(g, "Coins carried: " + fmt(coins), ox + PAD, oy + WIN_H - 18, LofTheme.TEXT_DIM);
 
@@ -372,7 +379,7 @@ class LofRecruitOverlay extends Overlay implements LofWindows.Window
 			ly += 14;
 		}
 
-		final String cost = fmt(RECRUIT_COST) + " coins";
+		final String cost = fmt(nextCost()) + " coins";
 		LofTheme.shadowText(g, cost, r.x + (r.width - fm.stringWidth(cost)) / 2, r.y + r.height - 12,
 			active ? LofTheme.GOLD : LofTheme.TEXT_DIM);
 

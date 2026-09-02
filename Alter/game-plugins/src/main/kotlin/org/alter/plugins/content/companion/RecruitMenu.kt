@@ -24,8 +24,20 @@ object RecruitMenu {
      */
     const val OPEN_VARP = 4619
 
-    /** Coin price to raise one companion soldier (was General Zo's dialogue price — TUNABLE). */
-    const val RECRUIT_COST = 1_000_000
+    /**
+     * Coin price of each soldier, by how many the player already keeps (fielded or benched): the
+     * first is 10M, the second 100M, the third 500M. The whole banner takes the field at once
+     * ([CompanionRegistry.ACTIVE_MAX]) — real combat power — so this ladder is the sink that pays
+     * for it (operator decision 2026-09-02). The client draws the same ladder from the roster size
+     * in the varp: keep `LofRecruitOverlay.RECRUIT_COSTS` in step. TUNABLE.
+     */
+    val RECRUIT_COSTS = intArrayOf(10_000_000, 100_000_000, 500_000_000)
+
+    /** The price of the NEXT soldier for a player who already keeps [rosterSize]. */
+    fun recruitCost(rosterSize: Int): Int = RECRUIT_COSTS[rosterSize.coerceIn(0, RECRUIT_COSTS.lastIndex)]
+
+    /** The price of [p]'s next soldier. */
+    fun nextCost(p: Player): Int = recruitCost(CompanionRegistry.rosterSize(p))
 
     /** Pulse the open signal. */
     fun open(p: Player) = pulse(p)

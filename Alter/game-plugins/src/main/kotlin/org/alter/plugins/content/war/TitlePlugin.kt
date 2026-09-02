@@ -56,7 +56,7 @@ class TitlePlugin(
             val t = player.title
             player.message("Rank: <col=ffae00>${t.display}</col> — you may wear up to <col=ff9040>${t.maxTier.display}</col> armour. You must also meet the armour's usual level requirements.")
             if (t.roster > 0) {
-                player.message("Your rank keeps a roster of <col=ffae00>${t.roster}</col> soldier companion${if (t.roster > 1) "s" else ""} (General Zo) — one takes the field at a time.")
+                player.message("Your rank keeps a roster of <col=ffae00>${t.roster}</col> soldier companion${if (t.roster > 1) "s" else ""} (General Zo)${if (t.roster > 1) " — all of them may take the field at once" else ""}.")
             }
             val next = player.nextTitle
             if (next != null) {

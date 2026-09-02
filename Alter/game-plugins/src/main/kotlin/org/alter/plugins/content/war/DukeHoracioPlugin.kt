@@ -125,7 +125,7 @@ class DukeHoracioPlugin(
             is RankPurchase.Result.Success -> {
                 chatNpc(player, "Then it is done. Arise, ${next.display}! You may now wear ${next.maxTier.display} armour.")
                 if (next.roster > prev.roster) {
-                    chatNpc(player, "Your new station also entitles you to a roster of ${next.roster} soldier companion${if (next.roster > 1) "s" else ""} — one at your side at a time. General Zo in the castle courtyard will muster them.")
+                    chatNpc(player, "Your new station also entitles you to a roster of ${next.roster} soldier companion${if (next.roster > 1) "s" else ""}${if (next.roster > 1) " — all at your side at once" else ""}. General Zo in the castle courtyard will muster them.")
                 }
             }
             else -> {} // NotNext/Maxed can't happen from the quest beats (they pass player.nextTitle)

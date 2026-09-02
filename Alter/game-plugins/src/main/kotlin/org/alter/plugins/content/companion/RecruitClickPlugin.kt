@@ -18,7 +18,7 @@ import org.alter.rscm.RSCM.getRSCM
  * Handles actions from the Muster Companions overlay. The client sends
  * `::zo recruit <melee|range|mage>` as public chat; `MessagePublicHandler` routes it here as
  * the `zoclick` command. The transaction mirrors what General Zo's dialogue used to do:
- * rank-cap gate, coin price ([RecruitMenu.RECRUIT_COST]), refund if the muster fails.
+ * rank-cap gate, the tiered coin price ([RecruitMenu.RECRUIT_COSTS]), refund if the muster fails.
  *
  * Also testable directly by typing `::zoclick recruit melee` in chat.
  */
@@ -64,19 +64,22 @@ class RecruitClickPlugin(
             p.message("Your banner is full — a ${p.title.display} may keep $cap.")
             return
         }
+        // The price climbs with every soldier already on the banner (10M, 100M, 500M).
+        val cost = RecruitMenu.nextCost(p)
+        val nth = listOf("first", "second", "third").getOrElse(CompanionRegistry.rosterSize(p)) { "next" }
         val coins = getRSCM("item.coins_995")
-        if (p.inventory.getItemCount(coins) < RecruitMenu.RECRUIT_COST) {
-            p.message("A trained soldier costs ${fmt(RecruitMenu.RECRUIT_COST)} coins — your purse is short.")
+        if (p.inventory.getItemCount(coins) < cost) {
+            p.message("Your $nth soldier costs ${fmt(cost)} coins — your purse is short.")
             return
         }
-        p.inventory.remove(coins, RecruitMenu.RECRUIT_COST)
+        p.inventory.remove(coins, cost)
         val rec = CompanionRegistry.recruit(world, p, style)
         if (rec == null) {
-            p.inventory.add(coins, RecruitMenu.RECRUIT_COST) // refund if the muster failed
+            p.inventory.add(coins, cost) // refund if the muster failed
             p.message("No soldier could be raised just now. Try again shortly.")
             return
         }
-        val where = if (rec.dismissed) "He waits on the bench — summon him from the companion panel to swap him in." else "He takes the field beside you."
+        val where = if (rec.dismissed) "He waits on the bench — summon him from the companion panel." else "He takes the field beside you."
         p.message("<col=4f9b4f>A ${style.display} soldier joins your banner — Sir ${rec.name}. Your roster holds ${CompanionRegistry.rosterSize(p)} of $cap. $where</col>")
         RecruitMenu.refresh(p) // update the open window's banner strip in place
     }

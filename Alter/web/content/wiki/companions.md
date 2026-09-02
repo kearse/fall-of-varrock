@@ -1,28 +1,36 @@
 ---
 title: Companions
 category: Companions & Progression
-summary: Recruit, train, gear and command your own levelable AI fighter - one at your side, a roster that grows with your rank.
+summary: Recruit, train, gear and command your own levelable AI fighters - up to three at your side, a roster that grows with your rank and a price that climbs with every soldier.
 order: 1
 updated: 2026-09-02
 ---
 
-**Companions** are player-owned AI fighters - real combatants with real skills that level from combat, wearing real gear you give them. **One companion stands beside you at a time**, whoever you are; your [feudal rank](/wiki/titles-and-citizenship) sets how many you may *keep* on your banner and swap between. They come in melee, ranged and mage archetypes, spawn when you log in, follow you across the world, and fight beside you.
+**Companions** are player-owned AI fighters - real combatants with real skills that level from combat, wearing real gear you give them. Your [feudal rank](/wiki/titles-and-citizenship) sets how many you may keep on your banner, and **every one of them fights beside you at once** - up to three. They come in melee, ranged and mage archetypes, spawn when you log in, follow you across the world in formation, and fight beside you.
 
 ## Recruiting and the roster
 
-Companions are recruited through **General Zo** at the castle. Your rank sets your **roster** - how many soldiers you may keep: a **Knight** keeps 1, a **Lord** 2, and a **Minister** or **King** 3. Only one of them is ever in the world with you; the rest wait **on the bench** with their levels and gear intact. Each starts with archetype-appropriate gear and a supply pack (brews, restores, sharks, karambwans and a combat potion - restocked free).
+Companions are recruited through **General Zo** at the castle. Your rank sets your **roster** - how many soldiers you may keep: a **Knight** keeps 1, a **Lord** 2, and a **Minister** or **King** 3. All of them take the field together. Each starts with archetype-appropriate gear and a supply pack (brews, restores, sharks, karambwans and a combat potion - restocked free).
 
-Recruit with someone already at your side and the new soldier goes straight to the bench, ready to swap in.
+Three soldiers at once is real combat power, so the price climbs steeply with every soldier already on your banner:
 
-## Swapping, dismissing, summoning
+| Soldier | Price |
+| --- | --- |
+| First | 10,000,000 coins |
+| Second | 100,000,000 coins |
+| Third | 500,000,000 coins |
 
-- `::companion dismiss` - send your fielded companion off duty. He leaves the world but not the roster.
-- `::companion summon <slot>` - call a benched companion to your side. If someone is already fielded, this is a **swap**: he stands down first, the other steps up. (A companion who is being attacked by another player can't stand down for 10 seconds - the same rule as logging out.)
+The Muster window shows the price of your *next* soldier on every card.
+
+## Dismissing and summoning
+
+- `::companion dismiss [slot]` - send a companion (or, with no slot, all of them) off duty. He leaves the world but not the roster - levels and gear stay intact.
+- `::companion summon [slot]` - call a benched companion (or, with no slot, everyone) back to your side. (A companion who is being attacked by another player can't stand down for 10 seconds - the same rule as logging out.)
 - The Companions side panel in the custom client does all of this with buttons; benched companions show as cards you can summon.
 
 ## Where companions stand down
 
-Some content is yours alone. Your companion **stands down automatically** - with a message saying why - when you enter the **Fight Cave** or a **solo boss instance** (Vorkath, Zulrah, the Alchemical Hydra), and **rejoins you the moment you leave**. Summoning inside is refused with the same reason. Shared-world fights (marches, God Wars, the Wizard Tower) are open to companions; classic bosses are never redesigned around them - they simply sit those out.
+Some content is yours alone. Your companions **stand down automatically** - with a message saying why - when you enter the **Fight Cave** or a **solo boss instance** (Vorkath, Zulrah, the Alchemical Hydra), and **rejoin you the moment you leave**. Summoning inside is refused with the same reason. Shared-world fights (marches, God Wars, the Wizard Tower) are open to companions; classic bosses are never redesigned around them - they simply sit those out.
 
 ## Commands
 
