@@ -54,6 +54,6 @@ The [3rd age](/wiki/path-to-end-game) antique sets are earned in the war, two wa
 
 Both are announced realm-wide. The Quartermaster still sells 3rd age as a slow, tripled-price pity-path, and buys pieces back from Lord+ at a third of shelf value - but the drop is the real story.
 
-## Defending the realm
+## Lumbridge is never besieged
 
-When enemy raids hit a city's frontier, defenders earn War Effort for their kills. A successful defence pays coin bounties (scaling with contribution, capped at 50,000 gp) and rolls a rare-loot table - dragon scimitar, dragon dagger, rune platebody, abyssal whip and more. The player who lands the finishing blow is MVP and gets a **guaranteed** rare.
+The war is fought *out* of Lumbridge, never against it: the Last Free City's shops, bank and gates stay open no matter how the offensives go. General Zo at the castle reports the live war and musters your [companions](/wiki/companions); the frontier goblins outside the gate are the recruit's training ground, not a siege.

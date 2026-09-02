@@ -15,7 +15,7 @@ Every coin shop also **buys back what it stocks at 70% of value** (right-click a
 
 The market is the **Lumbridge courtyard**, just east of the castle's east wall - two facing shop rows with a walkable aisle between them. The fastest route is the **teleport portal → Basics → "Market / Shops"**, which lands you in the middle of the aisle. Home teleport puts you a few steps away.
 
-One warning: the market belongs to Lumbridge. If the city **falls during a siege**, the shops board up until it's retaken - see [the war explained](/wiki/the-war-explained).
+The market belongs to Lumbridge, the Last Free City - it never closes. The war is fought *out* of Lumbridge, not against it - see [the war explained](/wiki/the-war-explained).
 
 ## The west row - combat & basics
 

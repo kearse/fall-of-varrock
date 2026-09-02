@@ -254,7 +254,7 @@ class DailyVotePlugin(
          */
         val VOTE_SITES = listOf(
             VoteSite("rsps-list", "RSPS-List", "https://www.rsps-list.com/index.php?a=in&u=BizzyZ&id={username}", "https://www.rsps-list.com/images/vote.jpg"),
-            VoteSite("rulocus", "RuLocus", "https://www.rulocus.com/top-rsps-list/fall-of-varrock/vote?callback={username}", ""),
+            VoteSite("rulocus", "RuLocus", "https://www.rulocus.com/top-rsps-list/fall-of-varrock/vote?callback={username}&username={username}", ""),
             VoteSite("moparscape", "Moparscape", "https://www.moparscape.org/rsps-list/server/fall-of-varrock?incentive={username}", ""),
             VoteSite("top100arena", "Top100Arena", "https://www.top100arena.com/listing/LISTING_ID/vote?incentive={username}", ""),
             VoteSite("topg", "TopG", "https://topg.org/runescape-private-servers/server-684312-{username}#vote", "https://topg.org/topg.gif"),

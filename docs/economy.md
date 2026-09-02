@@ -21,8 +21,10 @@
 ## Faucets (sources) — current
 | Source | Output | Notes |
 |---|---|---|
-| War goblin kills | gp (coins to inventory) | `WarEffortPlugin` (~50/kill) |
-| War shock-troop / Warlord kills | gp + class gear pieces | `WarDrops` |
+| Frontier kills (Lumbridge goblin/hobgoblin/ogre rings) | gp + occasional gear piece | `war/CityFrontierPlugin.registerLoot` (`EnemyLine.coinMin/coinMax`, `gearDropOneIn`) |
+| Won marches / campaigns / conquests | gp (pooled war-chest, split by contribution) + Commendations (untradeable) + War Effort | `war/CapturePayout`; Commendations spent only at the Royal Smith (`war/forge`) |
+| Grand March Warden | Warden's embers (tradeable forge component) | `war/MarchPlugin.onWardenSlain` |
+| Named captains | 100k gp banked + 2 Commendations + 25 War Effort + 1/15 signature weapon | `war/captains/NamedCaptainsPlugin` |
 | Mining | ores (skilling) | `MiningPlugin` |
 | Thieving | gp + items | pickpocket/stall/chest |
 | Slayer | **Slayer points** + Slayer xp | `SlayerPlugin` (points are a counter, mild faucet) |

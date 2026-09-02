@@ -32,7 +32,7 @@ class ChatSpawnsPlugin(
 
         // Combat/woodsman tutors removed to declutter the Lumbridge surface.
         // NB: do NOT re-add npc.melee_combat_tutor here — that id is repurposed as General Zo,
-        // who is spawned and owned by the war's AttackDirector (see GeneralZoPlugin).
+        // who is spawned and owned by GeneralZoPlugin.
 
         // Smithing Apprentice — the metal-armour gear vendor, stationed right at the Lumbridge
         // furnace (furnace object @3227,3257). His shop logic + a cellar copy live in

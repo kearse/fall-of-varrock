@@ -14,7 +14,6 @@ import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
 import org.alter.plugins.content.mechanics.shops.GeneralStoreCurrency
 import org.alter.plugins.content.mechanics.shops.bindVendorOptions
-import org.alter.plugins.content.war.WarServices
 import org.alter.rscm.RSCM.getRSCM
 
 /**
@@ -48,10 +47,6 @@ class LumbridgeGeneralStorePlugin(
     }
 
     private fun open(player: Player) {
-        if (WarServices.shopsClosed()) {
-            player.message("The shopkeepers have fled the fighting — come back when Lumbridge is safe.")
-            return
-        }
         player.openShop(SHOP)
     }
 

@@ -1,33 +1,41 @@
 package org.alter.plugins.content.areas.lumbridge.npcs
 
+import io.github.oshai.kotlinlogging.KotlinLogging
+import org.alter.api.NpcSkills
 import org.alter.api.ext.chatNpc
 import org.alter.api.ext.chatPlayer
 import org.alter.api.ext.options
 import org.alter.api.ext.player
 import org.alter.game.Server
+import org.alter.game.model.Direction
+import org.alter.game.model.Tile
 import org.alter.game.model.World
+import org.alter.game.model.combat.NpcCombatDef
+import org.alter.game.model.entity.Npc
 import org.alter.game.model.entity.Player
 import org.alter.game.model.queue.QueueTask
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
 import org.alter.plugins.content.companion.RecruitMenu
-import org.alter.plugins.content.war.Sieges
-import org.alter.plugins.content.war.WarState
+import org.alter.plugins.content.war.CampaignRegistry
+import org.alter.plugins.content.war.WarNpcNames
 import org.alter.plugins.content.war.address
 import org.alter.plugins.content.war.warprep.WarPrepSurvival
+import org.alter.rscm.RSCM.getRSCM
+
+private val logger = KotlinLogging.logger {}
 
 /**
- * **General Zo** — commander of Lumbridge's defense, standing in the castle courtyard.
+ * **General Zo** — Lumbridge's garrison commander, standing at his post in the castle.
  *
- * He is the goblins' objective: their raids drive for the castle goal where he commands,
- * and a breach (the city falls) is narratively the horde reaching him. For now he runs the
- * defense automatically and reports its live status. The "take command" / "recruit troops"
- * options are wired but gated behind a future feudal rank (lord/minister/king) — the hooks
- * the player-controlled war + troop purchasing will drop into.
+ * The war is fought OUT of Lumbridge (marches, operations, campaigns, conquests — see
+ * `war/MarchPlugin` and `war/CampaignCommandPlugin`); the old defensive siege he used to
+ * command is retired. He now: reports the live offensive war, musters companions
+ * ([RecruitMenu]), and gives/drives the War-Prep III (Survival) quest.
  *
  * NB: this repurposes the old **Melee combat tutor** (npc id 3216). The "General Zo"
  * display name is applied at spawn via [WarNpcNames] (extended-info, no cache edit); the
- * rscm key stays `npc.melee_combat_tutor`.
+ * rscm key stays `npc.melee_combat_tutor`. This plugin owns his spawn.
  */
 class GeneralZoPlugin(
     r: PluginRepository,
@@ -35,13 +43,40 @@ class GeneralZoPlugin(
     server: Server,
 ) : KotlinPlugin(r, world, server) {
 
+    private var zo: Npc? = null
+
     init {
-        // NB: General Zo is spawned + owned by the war's AttackDirector (he's the attackable VIP
-        // with combat stats, death = city falls, respawn on recovery), so this plugin only wires
-        // his conversation — it must NOT spawn a second copy.
-        onNpcOption(npc = "npc.melee_combat_tutor", option = "talk-to") {
+        onWorldInit { spawnZo(world) }
+
+        onNpcOption(npc = ZO_NPC, option = "talk-to") {
             player.queue { dialog(player) }
         }
+    }
+
+    /** Post Zo at [ZO_TILE] with his tanky stats (players can't attack him — his cache NPC has no
+     *  Attack option — but the stats keep him standing if anything ever swings at him). */
+    private fun spawnZo(world: World) {
+        runCatching {
+            val npc = Npc(getRSCM(ZO_NPC), ZO_TILE, world)
+            npc.routeLogic = 1
+            // MUST be before world.spawn: the client avatar takes its facing at alloc time, so a
+            // direction set after spawn never renders. Faces his west desks in the hub's ring,
+            // same as Duke Horacio one tile north — the pair stand facing the same way.
+            npc.lastFacingDirection = Direction.WEST
+            world.spawn(npc)
+            // MUST be after world.spawn: setNpcDefaults() resets combatDef + HP to the cache default
+            // on spawn, so applying his stats earlier would be silently clobbered.
+            npc.combatDef = ZO_DEF
+            npc.stats.setMaxLevel(NpcSkills.ATTACK, ZO_DEF.attack); npc.stats.setCurrentLevel(NpcSkills.ATTACK, ZO_DEF.attack)
+            npc.stats.setMaxLevel(NpcSkills.STRENGTH, ZO_DEF.strength); npc.stats.setCurrentLevel(NpcSkills.STRENGTH, ZO_DEF.strength)
+            npc.stats.setMaxLevel(NpcSkills.DEFENCE, ZO_DEF.defence); npc.stats.setCurrentLevel(NpcSkills.DEFENCE, ZO_DEF.defence)
+            npc.setCurrentHp(ZO_DEF.hitpoints)
+            WarNpcNames.apply(npc, ZO_NPC) // display "General Zo" without a cache edit
+            npc.respawns = false
+            npc.setActive(true)
+            zo = npc
+            logger.info { "General Zo posted at $ZO_TILE." }
+        }.onFailure { logger.error(it) { "General Zo failed to spawn at $ZO_TILE." } }
     }
 
     private suspend fun QueueTask.dialog(player: Player) {
@@ -55,17 +90,17 @@ class GeneralZoPlugin(
             WarPrepSurvival.Step.REPORT -> { survivalDebrief(player); return }
             else -> {}
         }
-        chatNpc(player, "Well met, citizen. I am General Zo, commander of the<br>Lumbridge defense. The goblin horde tests our walls.", title = ZO)
+        chatNpc(player, "Well met, ${player.address}. I am General Zo, commander of<br>the Lumbridge garrison. The realm's war is fought out<br>there — on the roads and in the ruins.", title = ZO)
         when (options(
             player,
             "How goes the war, General?",
-            "Let me take command of the defense.",
-            "I'd like to recruit troops under my banner.",
+            "How do I take command?",
+            "I'd like to recruit soldiers under my banner.",
             "Nothing for now.",
             title = ZO,
         )) {
             1 -> reportStatus(player)
-            2 -> gatedCommand(player)
+            2 -> commandLadder(player)
             // Recruiting is the client-drawn Muster Companions window (lofrecruit): discipline
             // cards + banner strip, with the rank gate / full-banner states drawn, not spoken.
             3 -> RecruitMenu.open(player)
@@ -73,27 +108,24 @@ class GeneralZoPlugin(
         }
     }
 
+    /** The live offensive war: the realm's march in the field, or the commanders' campaign. */
     private suspend fun QueueTask.reportStatus(player: Player) {
-        val front = Sieges.LUMBRIDGE.frontId
-        val pool = WarState.getKnightPool(front)
-        val max = WarState.knightPoolMax(front)
-        when (WarState.phaseOf(front)) {
-            WarState.Phase.PEACE -> chatNpc(player,
-                "The line holds and the city is at peace. $pool of<br>$max knights stand ready. Stay sharp — the horde<br>always returns.", title = ZO)
-            WarState.Phase.UNDER_RAID -> {
-                val s = WarState.raidStatus(front)
-                chatNpc(player,
-                    "We are UNDER ATTACK — a ${s.tierName.lowercase()} of ${s.goblinsAlive}<br>goblins still stands. I have committed the knights;<br>get to the fields and help us throw them back!", title = ZO)
-            }
-            WarState.Phase.CITY_FALLEN -> chatNpc(player,
-                "The castle was overrun and I was forced to fall back.<br>We are regrouping to retake the city. Dark days,<br>citizen — but we WILL rebuild.", title = ZO)
+        val march = CampaignRegistry.activeMarch()
+        val campaign = CampaignRegistry.isAttacking("varrock")
+        when {
+            campaign -> chatNpc(player,
+                "A commander has the army in <col=801700>Fallen Varrock</col> this<br>very hour. Every sword counts — get to the front!", title = ZO)
+            march != null -> chatNpc(player,
+                "The Knight-Captain's ${march.tier.display} is in the field —<br>${march.progressPct(player.world)}% of the way to its objective. Rally to<br>the column with <col=801700>::march</col>; the realm pays its soldiers<br>from the spoils.", title = ZO)
+            else -> chatNpc(player,
+                "The garrison stands ready and no column is out just now.<br>The Knight-Captain musters a march every half hour —<br>watch for the call, and answer it with <col=801700>::march</col>.", title = ZO)
         }
     }
 
-    private suspend fun QueueTask.gatedCommand(player: Player) {
-        chatPlayer(player, "Let me take command of the defense.")
+    private suspend fun QueueTask.commandLadder(player: Player) {
+        chatPlayer(player, "How do I take command?")
         chatNpc(player,
-            "Bold! But only a Lord of Lumbridge may command my<br>knights. Earn that title and I'll hand you the field —<br>you'll move troops where you will, even march on<br>other cities.", title = ZO)
+            "Any citizen may fight in a march — rank gates who may<br>START a war, never who may join one. A Lord may sponsor<br>a squad; a Minister launches campaigns; only the King<br>calls a conquest. Earn your standing, ${player.address}.", title = ZO)
     }
 
     // ───────────────────────────── War-Prep III — Survival ─────────────────────────────
@@ -147,7 +179,19 @@ class GeneralZoPlugin(
         chatNpc(player, "When your purse reaches ${"%,d".format(org.alter.plugins.content.war.Title.MINISTER.cost)}, the Duke will raise you.<br>A Minister stands within reach of the crown itself —<br>and the King's endgame.", title = ZO)
     }
 
-    private companion object {
+    companion object {
         const val ZO = "General Zo"
+        const val ZO_NPC = "npc.melee_combat_tutor"
+
+        /** His post: inside the hub's desk ring, west column — one tile south of Duke Horacio
+         *  (3220,3211), against the 2x2 pillar (3221-3222 x 3210-3211). TUNE in-game. */
+        val ZO_TILE = Tile(3220, 3210, 0)
+
+        /** Tanky garrison-commander stats (he is not attackable by players; kept so nothing that
+         *  ever swings at him one-shots the realm's general). TUNE. */
+        val ZO_DEF: NpcCombatDef = NpcCombatDef.DEFAULT.copy(
+            attack = 110, strength = 110, defence = 120, hitpoints = 400,
+            attackAnimation = 407,
+        )
     }
 }

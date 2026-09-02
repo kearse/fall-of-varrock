@@ -41,7 +41,7 @@ enum class SquadMode { ADVANCE, FOLLOW }
  * The enemy set is the target city's live frontier enemies ([Frontiers]) plus any boss in the city
  * ([BossScheduler]). A campaign/conquest also suppresses the frontier's respawn while it runs, so
  * the ground the army clears actually stays cleared (the kill quota can be met). The offensive
- * analogue of [AttackDirector], written fresh.
+ * analogue of the retired defensive AttackDirector (git tag `pre-block1-siege-engine`), written fresh.
  */
 class CampaignDirector(
     private val op: CampaignOp,
