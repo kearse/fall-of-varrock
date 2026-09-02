@@ -75,6 +75,7 @@ class GeneralZoPlugin(
             npc.respawns = false
             npc.setActive(true)
             zo = npc
+            logger.info { "General Zo posted at $ZO_TILE." }
         }.onFailure { logger.error(it) { "General Zo failed to spawn at $ZO_TILE." } }
     }
 
