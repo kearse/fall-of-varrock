@@ -52,6 +52,13 @@ class CombatSpellsPlugin(
         pawn: Pawn,
         spellMetadata: SpellMetadata,
     ) {
+        // Powered staves (tridents/sang) fire only their own built-in attack — OSRS does not
+        // let you cast a spellbook spell while one is wielded. The combat loop arms the staff's
+        // spell each attack, so just refuse the spellbook cast here.
+        if (PoweredStaves.isWielding(player)) {
+            player.message("You can only use this weapon's own attack.")
+            return
+        }
         val combatSpell = CombatSpell.values.firstOrNull { spell -> spell.id == spellMetadata.paramItem }
         if (combatSpell != null) {
             player.attr[Combat.CASTING_SPELL] = combatSpell

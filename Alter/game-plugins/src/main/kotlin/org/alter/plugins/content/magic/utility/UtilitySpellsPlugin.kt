@@ -27,18 +27,26 @@ class UtilitySpellsPlugin(
     server: Server,
 ) : KotlinPlugin(r, world, server) {
 
-    /** A smeltable bar: all ores it needs + coal, the Smithing xp, and the spell-cast min level. */
-    private data class Bar(val bar: String, val ores: Map<String, Int>, val coal: Int, val smithXp: Double)
+    /** A smeltable bar: ores + coal, the Smithing xp, and the Smithing level it requires. */
+    private data class Bar(val bar: String, val ores: Map<String, Int>, val coal: Int, val smithXp: Double, val smithLevel: Int)
 
-    // Superheat recipes (mirror SmithingPlugin's smelt data). Steel is omitted because it shares
-    // iron ore with the iron bar, which would make the ore→bar trigger ambiguous.
+    // Superheat recipes (mirror SmithingPlugin's smelt data), now WITH the Smithing level each
+    // bar requires (OSRS gates superheat on the bar's Smithing level).
     private val bars = listOf(
-        Bar("item.bronze_bar", mapOf("item.copper_ore" to 1, "item.tin_ore" to 1), 0, 6.2),
-        Bar("item.iron_bar", mapOf("item.iron_ore" to 1), 0, 12.5),
-        Bar("item.mithril_bar", mapOf("item.mithril_ore" to 1), 4, 30.0),
-        Bar("item.adamantite_bar", mapOf("item.adamantite_ore" to 1), 6, 37.5),
-        Bar("item.runite_bar", mapOf("item.runite_ore" to 1), 8, 50.0),
+        Bar("item.bronze_bar", mapOf("item.copper_ore" to 1, "item.tin_ore" to 1), 0, 6.2, 1),
+        Bar("item.iron_bar", mapOf("item.iron_ore" to 1), 0, 12.5, 15),
+        Bar("item.silver_bar", mapOf("item.silver_ore" to 1), 0, 13.7, 20),
+        Bar("item.gold_bar", mapOf("item.gold_ore" to 1), 0, 22.5, 40),
+        Bar("item.mithril_bar", mapOf("item.mithril_ore" to 1), 4, 30.0, 50),
+        Bar("item.adamantite_bar", mapOf("item.adamantite_ore" to 1), 6, 37.5, 70),
+        Bar("item.runite_bar", mapOf("item.runite_ore" to 1), 8, 50.0, 85),
     ).filter { res(it.bar) && it.ores.keys.all { o -> res(o) } && (it.coal == 0 || res("item.coal")) }
+
+    // The steel special-case: superheating iron ore with >= 2 coal always yields a STEEL bar
+    // (OSRS). Resolved in superheat() so iron ore isn't ambiguous between iron and steel.
+    private val steelBar: Bar? =
+        Bar("item.steel_bar", mapOf("item.iron_ore" to 1), 2, 17.5, 30)
+            .takeIf { res(it.bar) && res("item.iron_ore") && res("item.coal") }
 
     // Triggering ore -> bar (first bar wins per ore).
     private val oreToBar: Map<Int, Bar> = buildMap {
@@ -78,12 +86,23 @@ class UtilitySpellsPlugin(
 
     private fun superheat(player: Player, spell: SpellMetadata) {
         val oreId = player.getInteractingItemId()
-        val bar = oreToBar[oreId]
+        var bar = oreToBar[oreId]
         if (bar == null) {
             player.message("You can't superheat that.")
             return
         }
+        // Iron ore + at least 2 coal makes STEEL (OSRS), not iron.
+        if (steelBar != null && oreId == getRSCM("item.iron_ore") &&
+            player.inventory.getItemCount(getRSCM("item.coal")) >= steelBar.coal
+        ) {
+            bar = steelBar
+        }
         if (!MagicSpells.canCast(player, spell.lvl, spell.items, requiredBook = spell.spellbook)) return
+        // Gate on the bar's Smithing level (OSRS requires it to superheat).
+        if (player.getSkills().getCurrentLevel(Skills.SMITHING) < bar.smithLevel) {
+            player.message("You need a Smithing level of ${bar.smithLevel} to superheat that.")
+            return
+        }
 
         // Verify all required ores + coal are present before consuming anything.
         for ((ore, amt) in bar.ores) {

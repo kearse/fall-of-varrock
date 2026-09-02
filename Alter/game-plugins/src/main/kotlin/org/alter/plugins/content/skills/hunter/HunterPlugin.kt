@@ -38,7 +38,7 @@ class HunterPlugin(
 
     private data class Chin(val item: String, val name: String, val level: Int, val xp: Double)
     private val boxLadder = listOf(
-        Chin("item.chinchompa", "chinchompa", 27, 198.0),
+        Chin("item.chinchompa", "grey chinchompa", 53, 198.4), // wiki: grey chin needs 53 Hunter (was 27)
         Chin("item.red_chinchompa", "red chinchompa", 63, 265.0),
     ).filter { res(it.item) }
 

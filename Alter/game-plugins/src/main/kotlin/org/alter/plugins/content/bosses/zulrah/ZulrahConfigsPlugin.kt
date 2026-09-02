@@ -26,6 +26,7 @@ class ZulrahConfigsPlugin(
 
     init {
         setCombatDef("npc.zulrah") {
+            immunities { poison = true; venom = true } // Zulrah: 100% poison/venom resist (wiki + donor)
             configs {
                 attackSpeed = 3
                 respawnDelay = 0 // never engine-respawned: forms spawn with respawns=false
@@ -57,6 +58,7 @@ class ZulrahConfigsPlugin(
         }
 
         setCombatDef("npc.zulrah_2043") {
+            immunities { poison = true; venom = true }
             configs {
                 attackSpeed = 5
                 respawnDelay = 0
@@ -88,6 +90,7 @@ class ZulrahConfigsPlugin(
         }
 
         setCombatDef("npc.zulrah_2044") {
+            immunities { poison = true; venom = true }
             configs {
                 attackSpeed = 3
                 respawnDelay = 0
@@ -117,6 +120,7 @@ class ZulrahConfigsPlugin(
         }
 
         setCombatDef("npc.snakeling") {
+            immunities { poison = true; venom = true } // donor Snakeling.json
             configs {
                 attackSpeed = 4
                 respawnDelay = 0

@@ -7,6 +7,7 @@ import org.alter.game.Server
 import org.alter.game.model.World
 import org.alter.game.model.entity.Player
 import org.alter.game.model.queue.QueueTask
+import org.alter.game.model.timer.BURY_BONE_DELAY
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
 import org.alter.rscm.RSCM.getRSCM
@@ -119,10 +120,14 @@ class PrayerAltarPlugin(
     }
 
     private fun bury(player: Player, bone: Bone) {
+        // ~2-tick action (OSRS): the old handler had no cooldown, so spam-clicking buried
+        // far faster than the game allows.
+        if (player.timers.has(BURY_BONE_DELAY)) return
         val slot = player.getInteractingSlot()
         if (player.inventory.remove(item = getRSCM(bone.key), amount = 1, beginSlot = slot).hasSucceeded()) {
             player.animate(827)
             player.addXp(Skills.PRAYER, bone.xp)
+            player.timers[BURY_BONE_DELAY] = 2
             player.message("You dig a hole in the ground and bury the bones.")
         }
     }

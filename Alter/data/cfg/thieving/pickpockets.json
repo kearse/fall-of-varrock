@@ -175,7 +175,7 @@
       "npc.rogue_526"
     ],
     "level": 32,
-    "experience": 35.5,
+    "experience": 36.5,
     "baseSuccess": 0.42,
     "successBonusPerLevel": 0.009,
     "stun": {
@@ -376,7 +376,7 @@
       "npc.paladin_3294"
     ],
     "level": 70,
-    "experience": 151.75,
+    "experience": 131.8,
     "baseSuccess": 0.3,
     "successBonusPerLevel": 0.006,
     "stun": {
@@ -407,7 +407,7 @@
       "npc.hero_11934"
     ],
     "level": 80,
-    "experience": 275.0,
+    "experience": 163.3,
     "baseSuccess": 0.26,
     "successBonusPerLevel": 0.0055,
     "stun": {

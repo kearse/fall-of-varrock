@@ -48,7 +48,9 @@ class CookingPlugin(
 
     // Range objects that should cook: the river/convenience range (spawned below) + the static Range
     // inside the Mire's house (id 26181, aliased object.kitchen_range) so cooking works there.
-    private val ranges = listOf("object.cooking_range", "object.kitchen_range")
+    // Firemaking fires (object.fire_3769) are also cookable — food could not be cooked on a fire
+    // at all before, since only ranges were bound.
+    private val ranges = listOf("object.cooking_range", "object.kitchen_range", "object.fire_3769")
 
     init {
         // Spawn the river/convenience range; the house range is a static map object already in the world.

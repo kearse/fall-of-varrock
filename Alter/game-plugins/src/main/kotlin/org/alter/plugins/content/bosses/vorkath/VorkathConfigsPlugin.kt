@@ -28,7 +28,8 @@ class VorkathConfigsPlugin(
         // The sleeping form never fights, but a registered def keeps any stray attack
         // from hitting an undefined-combat npc. No aggro, no respawn.
         setCombatDef("npc.vorkath_8059") {
-            species { +NpcSpecies.DRACONIC }
+            species { +NpcSpecies.DRACONIC; +NpcSpecies.UNDEAD; +NpcSpecies.FIERY }
+            immunities { poison = true; venom = true } // Vorkath: 100% poison/venom resist (wiki)
             configs {
                 attackSpeed = 5
                 respawnDelay = 0 // never engine-respawned: every form spawns with respawns=false
@@ -45,7 +46,10 @@ class VorkathConfigsPlugin(
         // The awake fight form — Kronos Vorkath.json: hp 750, atk 560 / str 308 /
         // def 214 / ranged 308 / magic 150; 5-tick attacks; death anim 7949.
         setCombatDef("npc.vorkath_8061") {
-            species { +NpcSpecies.DRACONIC }
+            // Vorkath is Draconic, Undead AND Fiery (wiki) — the missing UNDEAD tag meant
+            // salve amulet(ei), the standard Vorkath amulet, gave no bonus.
+            species { +NpcSpecies.DRACONIC; +NpcSpecies.UNDEAD; +NpcSpecies.FIERY }
+            immunities { poison = true; venom = true } // 100% poison/venom resist (wiki + donor)
             configs {
                 attackSpeed = 5
                 respawnDelay = 0 // never engine-respawned: every form spawns with respawns=false
@@ -84,6 +88,7 @@ class VorkathConfigsPlugin(
         // scripted self-destruct in [VorkathCombatPlugin].
         setCombatDef("npc.zombified_spawn_8063") {
             species { +NpcSpecies.UNDEAD }
+            immunities { poison = true; venom = true } // donor Zombified_spawn.json
             configs {
                 attackSpeed = 5
                 respawnDelay = 0 // never engine-respawned: every form spawns with respawns=false

@@ -65,7 +65,7 @@ class FishingPlugin(
         Fish("item.raw_lobster", "lobster", 40, 90.0, cage),
         Fish("item.raw_bass", "bass", 46, 100.0, bigNet),
         Fish("item.raw_swordfish", "swordfish", 50, 100.0, harpoon),
-        Fish("item.raw_monkfish", "monkfish", 62, 120.0, bigNet),
+        Fish("item.raw_monkfish", "monkfish", 62, 120.0, net), // wiki: monkfish are caught with a small net
         Fish("item.raw_shark", "shark", 76, 110.0, harpoon),
     ).filter { resolves(it.raw) && resolves(it.method.tool) && (it.method.bait == null || resolves(it.method.bait)) }
 
@@ -105,7 +105,7 @@ class FishingPlugin(
                 logger.warn { "fishing: couldn't bind spot option '$opt'" }
             }
         }
-        if (opts.size < 2) logger.warn { "fishing: spot has a single option; choose-fish menu is via ::fish." }
+        if (opts.size < 2) logger.info { "fishing: spot has a single option; choose-fish menu is via ::fish." }
 
         // The spot npc carries a single cache action in this cache, so the choose-fish menu needs
         // its own entry point (guaranteed-reachable command, same pattern as ::market / ::bonds).
@@ -121,10 +121,37 @@ class FishingPlugin(
         val lvl = player.getSkills().getCurrentLevel(Skills.FISHING)
         return ladder.filter { f ->
             lvl >= f.level &&
-                player.inventory.getItemCount(getRSCM(f.method.tool)) > 0 &&
+                hasMethodTool(player, f.method) &&
                 (f.method.bait == null || player.inventory.getItemCount(getRSCM(f.method.bait)) > 0)
         }
     }
+
+    /** Harpoon tiers (best first) with their fishing anims. Any of these — in the inventory OR
+     *  the weapon slot — counts as a harpoon; the old code demanded exactly item.harpoon in the
+     *  inventory, so a player wielding a dragon/infernal/crystal harpoon couldn't fish at all. */
+    private val HARPOONS: List<Pair<String, Int>> = listOf(
+        "item.crystal_harpoon" to 8336,
+        "item.infernal_harpoon" to 7402, "item.infernal_harpoon_or" to 7402,
+        "item.dragon_harpoon" to 7401, "item.dragon_harpoon_or" to 7401,
+        "item.barbtail_harpoon" to 618,
+        "item.harpoon" to 618,
+    ).filter { resolves(it.first) }
+
+    private fun hasHarpoon(player: Player, key: String): Boolean {
+        val id = getRSCM(key)
+        return player.inventory.getItemCount(id) > 0 ||
+            player.getEquipment(org.alter.api.EquipmentType.WEAPON)?.id == id
+    }
+
+    /** True when the player carries the method's tool (harpoon = any tier, inv or wielded). */
+    private fun hasMethodTool(player: Player, method: Method): Boolean =
+        if (method === harpoon) HARPOONS.any { hasHarpoon(player, it.first) }
+        else player.inventory.getItemCount(getRSCM(method.tool)) > 0
+
+    /** The animation for a method's catch — for the harpoon, the best tier the player holds. */
+    private fun methodAnim(player: Player, method: Method): Int =
+        if (method === harpoon) HARPOONS.firstOrNull { hasHarpoon(player, it.first) }?.second ?: ANIM_HARPOON
+        else method.anim
 
     /** The catch to go for, in order: the player's explicit pick, then the fish Vannaka has them
      *  contracted to gather, then the best eligible. Without the contract step a player at level
@@ -177,7 +204,7 @@ class FishingPlugin(
                 break
             }
             val catch = target(player) ?: run { noGear(player); return }
-            player.animate(catch.method.anim)
+            player.animate(methodAnim(player, catch.method))
             player.message(catch.method.verb)
             task.wait(CATCH_TICKS)
             if (player.tile != standing) break
@@ -199,7 +226,7 @@ class FishingPlugin(
         // Per-tool fishing animations (were all hard-played as the net cast, 621).
         const val ANIM_NET = 621     // small net
         const val ANIM_BIG_NET = 620 // big net
-        const val ANIM_ROD = 622     // bait & fly rods
+        const val ANIM_ROD = 623     // bait & fly rods (622 is the OILY rod cast)
         const val ANIM_CAGE = 619    // lobster pot
         const val ANIM_HARPOON = 618 // harpoon
         const val CATCH_TICKS = 4

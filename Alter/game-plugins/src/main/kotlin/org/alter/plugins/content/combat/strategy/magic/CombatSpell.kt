@@ -358,7 +358,7 @@ enum class CombatSpell(
         castSound = 171,
         castGfx = null,
         projectile = 366,
-        impactGfx = Graphic(id = 389, height = 0),
+        impactGfx = Graphic(id = 363, height = 0), // was 389 (Smoke Burst's impact gfx)
         autoCastId = 38,
         projectilEndHeight = 0,
         baseXp = 40.0,

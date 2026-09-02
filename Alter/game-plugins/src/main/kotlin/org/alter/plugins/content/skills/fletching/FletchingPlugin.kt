@@ -32,7 +32,7 @@ class FletchingPlugin(
     )
 
     private val cuts = listOf(
-        Cut("item.logs", "logs", "item.shortbow_u", 1, 5.0, "item.longbow_u", 10, 10.0),
+        Cut("item.logs", "logs", "item.shortbow_u", 5, 5.0, "item.longbow_u", 10, 10.0), // wiki: shortbow needs 5
         Cut("item.oak_logs", "oak logs", "item.oak_shortbow_u", 20, 16.5, "item.oak_longbow_u", 25, 25.0),
         Cut("item.willow_logs", "willow logs", "item.willow_shortbow_u", 35, 33.3, "item.willow_longbow_u", 40, 41.5),
         Cut("item.maple_logs", "maple logs", "item.maple_shortbow_u", 50, 50.0, "item.maple_longbow_u", 55, 58.3),

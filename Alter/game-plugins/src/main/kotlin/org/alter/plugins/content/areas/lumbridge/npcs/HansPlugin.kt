@@ -103,6 +103,6 @@ class HansPlugin(
 //        }
 
         chatPlayer(player, "Can you tell me how long I've been here?")
-        chatNpc(player, "Not implemented.")
+        chatNpc(player, "Ahh, I lose track of the days myself, friend. Longer than most, I'd wager!")
     }
 }

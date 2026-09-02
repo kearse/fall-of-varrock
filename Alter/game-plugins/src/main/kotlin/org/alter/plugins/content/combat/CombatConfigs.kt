@@ -1,5 +1,6 @@
 package org.alter.plugins.content.combat
 
+import dev.openrune.cache.CacheManager.getItem
 import org.alter.api.EquipmentType
 import org.alter.api.WeaponType
 import org.alter.api.ext.getAttackStyle
@@ -119,7 +120,12 @@ object CombatConfigs {
      * MAGIC combat class onto it and silently prevent any hit from landing.
      */
     fun canAutocast(player: Player): Boolean =
-        player.hasWeaponType(WeaponType.MAGIC_STAFF, WeaponType.STAFF, WeaponType.TRIDENT)
+        // A powered staff (trident/sang) casts ONLY its built-in spell — it can't autocast a
+        // spellbook spell. Without this exclusion a trident (which resolves to MAGIC_STAFF,
+        // not TRIDENT) let players autocast Ice Barrage at the trident's 4-tick speed with
+        // trident damage but the barrage's freeze + rune cost.
+        !PoweredStaves.isWielding(player) &&
+            player.hasWeaponType(WeaponType.MAGIC_STAFF, WeaponType.STAFF, WeaponType.TRIDENT)
 
     /** OSRS: every standard/ancient combat spell casts at 5 ticks. */
     private const val SPELL_CAST_SPEED = 5
@@ -177,11 +183,14 @@ object CombatConfigs {
             val style = pawn.getAttackStyle()
 
             return when {
-                pawn.hasEquipped(EquipmentType.WEAPON, *GODSWORDS) -> 7045
+                // Godsword: smash is the crush overhead (7054), defensive the block-stance swing
+                // (7055); accurate/aggressive keep the slash chop (7045).
+                pawn.hasEquipped(EquipmentType.WEAPON, *GODSWORDS) -> when (style) { 2 -> 7054; 3 -> 7055; else -> 7045 }
                 pawn.hasEquipped(EquipmentType.WEAPON, "item.granite_maul") -> 1665
                 // Dharok's greataxe: smash (crush) undercuts, chop/hack/block swing overhead.
                 pawn.hasEquipped(EquipmentType.WEAPON, *DHAROKS_GREATAXES) -> if (style == 2) 2066 else 2067
-                pawn.hasWeaponType(WeaponType.AXE) -> if (style == 1) 401 else 395
+                // Axe: smash (crush, style 2) is the 401 overhead; chop/hack use the 395 slash.
+                pawn.hasWeaponType(WeaponType.AXE) -> if (style == 2) 401 else 395
                 pawn.hasWeaponType(WeaponType.HAMMER) -> 401
                 pawn.hasWeaponType(WeaponType.BULWARK) -> 7511
                 pawn.hasWeaponType(WeaponType.BLUDGEON) -> 3298
@@ -190,12 +199,13 @@ object CombatConfigs {
                 pawn.hasWeaponType(WeaponType.CROSSBOW) -> 4230
                 pawn.hasWeaponType(WeaponType.LONG_SWORD) -> if (style == 2) 386 else 390
                 pawn.hasWeaponType(WeaponType.TWO_HANDED) -> if (style == 2) 406 else 407
-                pawn.hasWeaponType(WeaponType.PICKAXE) -> if (style == 2) 400 else 401
+                // Pickaxe: stab styles use 400, smash (style 2) uses 401 — was inverted.
+                pawn.hasWeaponType(WeaponType.PICKAXE) -> if (style == 2) 401 else 400
                 pawn.hasWeaponType(WeaponType.DAGGER) -> if (style == 2) 390 else 386
                 pawn.hasWeaponType(WeaponType.MAGIC_STAFF) || pawn.hasWeaponType(WeaponType.STAFF) -> 419
                 pawn.hasWeaponType(WeaponType.MACE) -> if (style == 2) 400 else 401
                 pawn.hasWeaponType(WeaponType.CHINCHOMPA) -> 7618
-                pawn.hasWeaponType(WeaponType.THROWN) -> if (pawn.hasEquipped(EquipmentType.WEAPON, "item.toktzxilul")) 7558 else 929
+                pawn.hasWeaponType(WeaponType.THROWN) -> thrownAnim(pawn)
                 pawn.hasWeaponType(WeaponType.WHIP) -> 1658
                 pawn.hasWeaponType(WeaponType.SPEAR) || pawn.hasWeaponType(WeaponType.HALBERD) ->
                     if (style == 1) {
@@ -211,6 +221,18 @@ object CombatConfigs {
         }
 
         throw IllegalArgumentException("Invalid pawn type.")
+    }
+
+    /** Thrown-weapon attack anim by kind: blowpipe 5061, toktz-xil-ul 7558, thrownaxes 929,
+     *  knives/darts 806 (the old code played the 929 thrownaxe fling for every thrown weapon). */
+    private fun thrownAnim(pawn: Player): Int {
+        val name = pawn.getEquipment(EquipmentType.WEAPON)?.let { runCatching { getItem(it.id).name.lowercase() }.getOrNull() } ?: ""
+        return when {
+            pawn.hasEquipped(EquipmentType.WEAPON, "item.toxic_blowpipe") -> 5061
+            pawn.hasEquipped(EquipmentType.WEAPON, "item.toktzxilul") -> 7558
+            name.contains("thrownaxe") -> 929
+            else -> 806 // knives, darts
+        }
     }
 
     fun getBlockAnimation(pawn: Pawn): Int {
@@ -234,6 +256,8 @@ object CombatConfigs {
                 pawn.hasWeaponType(WeaponType.DAGGER) -> 378
                 pawn.hasWeaponType(WeaponType.LONG_SWORD) -> 388
                 pawn.hasWeaponType(WeaponType.PICKAXE, WeaponType.CLAWS) -> 397
+                pawn.hasWeaponType(WeaponType.AXE) -> 397 // was falling through to 424
+                pawn.hasWeaponType(WeaponType.HAMMER) -> 403 // warhammer block, was 424
                 pawn.hasWeaponType(WeaponType.MACE) -> 403
                 pawn.hasWeaponType(WeaponType.TWO_HANDED) -> 410
                 pawn.hasWeaponType(WeaponType.MAGIC_STAFF) -> 420

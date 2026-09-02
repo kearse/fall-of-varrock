@@ -13,6 +13,7 @@ import org.alter.game.model.combat.CombatStyle
 import org.alter.game.model.entity.DynamicObject
 import org.alter.game.model.entity.Npc
 import org.alter.game.model.entity.Pawn
+import org.alter.game.model.timer.FROZEN_TIMER
 import org.alter.game.model.entity.Player
 import org.alter.game.model.queue.QueueTask
 import org.alter.game.plugin.KotlinPlugin
@@ -80,7 +81,7 @@ class VorkathCombatPlugin(
                     val acid = attr[VORKATH_ACID_NEXT] ?: world.chance(1, 2)
                     if (acid) acidSpecial(target) else spawnSpecial(target)
                     attr[VORKATH_ACID_NEXT] = !acid
-                    attr[VORKATH_COUNTER] = 1
+                    attr[VORKATH_COUNTER] = 0 // donor resets to 0 → a full 6 regulars before the next special
                 } else {
                     regularAttack(task, target)
                     attr[VORKATH_COUNTER] = count + 1
@@ -169,7 +170,7 @@ class VorkathCombatPlugin(
         animate(7960)
         world.spawn(createProjectile(target, gfx = 395, startHeight = 43, endHeight = 31, delay = 41, angle = 15, steepness = 127))
         target.graphic(369, 0, 60)
-        target.freeze(cycles = 25) {
+        target.freeze(cycles = 30) {
             (target as? Player)?.message("<col=ff0000>Vorkath's icy breath freezes you in place!</col>")
         }
 
@@ -192,6 +193,9 @@ class VorkathCombatPlugin(
             while (!add.isDead() && add.index >= 0 && !boss.isDead()) {
                 wait(1)
             }
+            // OSRS: once the spawn is killed (or explodes) the ice freeze wears off — the
+            // player shouldn't stand frozen for the rest of the 30 ticks after clearing it.
+            target.timers.remove(FROZEN_TIMER)
             boss.clearImmunity()
         }
     }
@@ -222,7 +226,12 @@ class VorkathCombatPlugin(
         }
         tiles.forEach { t -> world.spawn(createProjectile(t, gfx = 1483, type = ProjectileType.MAGIC)) }
 
-        boss.queue {
+        // Run on world.queue, NOT boss.queue: PawnQueueTaskSet only cycles the HEAD task, so the
+        // per-fireball inner boss.queue froze the outer loop and halved the fireball cadence
+        // (~2 ticks each) — doubling the x0.5 window. A world queue also runs to completion after
+        // the boss dies, so the pool cleanup below fires on a mid-phase chain kill (a boss.queue
+        // would be killed by interruptQueues, leaking ~31 acid pools).
+        world.queue {
             wait(2)
             tiles.forEach { t ->
                 val pool = DynamicObject(acidPoolId, 10, world.random(3), t)
@@ -246,7 +255,7 @@ class VorkathCombatPlugin(
                     val marked = Tile(victim.tile.x, victim.tile.z, victim.tile.height)
                     world.spawn(boss.createProjectile(marked, gfx = 1482, type = ProjectileType.MAGIC))
                     world.spawn(TileGraphic(marked, 131, 0, delay = 60))
-                    boss.queue {
+                    world.queue {
                         wait(2)
                         val v = boss.getCombatTarget() ?: return@queue
                         if (!boss.isDead() && v.tile.sameAs(marked)) {

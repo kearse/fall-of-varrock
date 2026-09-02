@@ -21,11 +21,11 @@ object SlayerHuntingGrounds {
         "npc.rat_2854" to Tile(3206, 3202, 0),     // castle courtyard rats
         "npc.giant_rat" to Tile(3163, 3173, 0),    // the western swamp
         "npc.giant_spider" to Tile(3246, 3248, 0), // the eastern spider nest
-        "npc.man" to Tile(3216, 3219, 0),          // townsfolk by the castle
+        "npc.man_385" to Tile(3216, 3219, 0),      // townsfolk by the castle (keys match SlayerTasks)
         "npc.woman" to Tile(3217, 3205, 0),
         "npc.cow" to Tile(3178, 3316, 0),          // the cow field, north-west
-        "npc.chicken" to Tile(3172, 3293, 0),      // the farm pen
-        "npc.guard" to Tile(3221, 3222, 0),        // castle guards
+        "npc.chicken_1173" to Tile(3172, 3293, 0), // the farm pen
+        "npc.guard_397" to Tile(3221, 3222, 0),    // castle guards
         "npc.zombie" to Tile(3231, 3191, 0),       // the Mire undead corner, SW of the yard house (SwampHubPlugin)
         // ── Rank-tiered contracts (SlayerTasks minTitle) ──
         "npc.hobgoblin" to Tile(2910, 3287, 0),    // the hobgoblin peninsula, south of the crafting guild
