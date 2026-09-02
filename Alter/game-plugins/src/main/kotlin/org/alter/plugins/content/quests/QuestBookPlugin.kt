@@ -8,11 +8,7 @@ import org.alter.game.model.attr.INTERACTING_SLOT_ATTR
 import org.alter.game.model.entity.Player
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
-import org.alter.plugins.content.war.Conquest
-import org.alter.plugins.content.war.roguehunt.RogueProblem
-import org.alter.plugins.content.war.warprep.WarPrepChain
-import org.alter.plugins.content.war.warprep.WarPrepRanged
-import org.alter.plugins.content.war.warprep.WarPrepSurvival
+import org.alter.plugins.content.quests.framework.QuestRegistry
 
 private val logger = KotlinLogging.logger {}
 
@@ -67,23 +63,7 @@ class QuestBookPlugin(
         )
     }
 
-    /** The quest the window defaults to: the deepest in-progress chain quest, else the next one
-     *  the player is due to start, else Recruit Trials. Mirrors the client's active-quest pick. */
-    private fun activeChainIndex(p: Player): Int {
-        val r = RogueProblem.step(p).ordinal
-        val knight = RogueProblem.Step.KNIGHT.ordinal
-        return when {
-            Conquest.started(p) && !Conquest.complete(p) -> QuestBook.KING
-            WarPrepSurvival.started(p) && !WarPrepSurvival.complete(p) -> QuestBook.WARPREP_SURVIVAL
-            WarPrepRanged.started(p) && !WarPrepRanged.complete(p) -> QuestBook.WARPREP_RANGED
-            r >= knight && !RogueProblem.complete(p) -> QuestBook.ROGUE_HUNTING_II
-            RogueProblem.started(p) && !RogueProblem.complete(p) -> QuestBook.ROGUE_HUNTING_I
-            WarPrepChain.started(p) && !WarPrepChain.complete(p) -> QuestBook.WARPREP_MAGIC
-            // nothing in progress — point at the next unstarted rung
-            RogueProblem.complete(p) -> QuestBook.WARPREP_RANGED
-            r >= knight -> QuestBook.ROGUE_HUNTING_II
-            WarPrepChain.complete(p) -> QuestBook.ROGUE_HUNTING_I
-            else -> QuestBook.RECRUIT_TRIALS
-        }
-    }
+    /** The quest the window defaults to: the deepest in-progress listed quest, else the next
+     *  main-road quest due to start (see [QuestRegistry.activeChainIndex]). */
+    private fun activeChainIndex(p: Player): Int = QuestRegistry.activeChainIndex(p)
 }

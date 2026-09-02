@@ -20,14 +20,28 @@ import org.alter.rscm.RSCM.getRSCM
  * gp ([item.coins_995]) and Blood Money ([item.blood_money]) stay as inventory items
  * (use the existing ItemCurrency for those); points are counters so they can't be
  * dropped/traded/duped and are simple to award from any plugin.
+ *
+ * A kind with [spendable] = false is a **lifetime record**, never a balance: it only ever
+ * goes up ([Player.addPoints] with a positive amount) and no shop or sink may debit it.
+ * **War Effort** is the one such record — the player's personal lifetime service to the
+ * kingdom (design authority §8), read by rank eligibility and the daily bonus, never spent.
+ * The shared consumable stockpile the commanders spend is a different thing entirely:
+ * Realm Supplies ([org.alter.plugins.content.war.RealmSupply]).
  */
-enum class PointKind(val display: String, val attr: AttributeKey<Int>, val ticketKey: String? = null) {
+enum class PointKind(
+    val display: String,
+    val attr: AttributeKey<Int>,
+    val ticketKey: String? = null,
+    /** False = a lifetime record that can never be debited (see the class doc). */
+    val spendable: Boolean = true,
+) {
     // BOSS/VOTE are now a tradeable, stackable ITEM currency (coins-like) — earned as ticket items,
     // spent directly in the reward shop via ItemCurrency (DECISIONS.md §8). The [attr] counter is
-    // retained but vestigial for these two. WAR_EFFORT/PRESTIGE/DONOR stay pure counters.
+    // retained but vestigial for these two. PRESTIGE/DONOR stay pure counters.
     BOSS("Boss Tickets", BOSS_POINTS_ATTR, "item.boss_ticket"),
     VOTE("Vote Tickets", VOTE_POINTS_ATTR, "item.vote_ticket"),
-    WAR_EFFORT("War Effort", WAR_EFFORT_POINTS_ATTR),
+    /** Lifetime service record — earned by wars, skilling, contracts, rogue hunting; NEVER spent. */
+    WAR_EFFORT("War Effort", WAR_EFFORT_POINTS_ATTR, spendable = false),
     PRESTIGE("Prestige", PRESTIGE_POINTS_ATTR),
     DONOR("Donor points", DONOR_POINTS_ATTR),
     // LMS points are a pure counter (like OSRS) spent at the Last Man Standing reward shop.
@@ -40,17 +54,21 @@ val Player.isDonor: Boolean get() = privilege.powers.contains(Privilege.DONOR_PO
 /** Current balance of [kind]. */
 fun Player.points(kind: PointKind): Int = attr[kind.attr] ?: 0
 
-/** Add (or, with a negative [amount], subtract) [kind] points; returns the new balance. */
+/** Add (or, with a negative [amount], subtract) [kind] points; returns the new balance. A
+ *  non-[PointKind.spendable] record ignores negative amounts (it only ever climbs). */
 fun Player.addPoints(kind: PointKind, amount: Int): Int {
+    if (amount < 0 && !kind.spendable) return points(kind)
     val next = (points(kind) + amount).coerceAtLeast(0)
     attr[kind.attr] = next
-    // War Effort earned (not spent) feeds the daily XP/drop bonus (master design brief §3A).
+    // War Effort earned feeds the daily XP/drop bonus (master design brief §3A).
     if (kind == PointKind.WAR_EFFORT && amount > 0) WarEffortBonus.recordEarned(this, amount)
     return next
 }
 
-/** Spend [amount] of [kind] if affordable; returns true on success (balance debited). */
+/** Spend [amount] of [kind] if affordable; returns true on success (balance debited). Always false
+ *  for a non-[PointKind.spendable] record — War Effort is a service record, not a purse. */
 fun Player.spendPoints(kind: PointKind, amount: Int): Boolean {
+    if (!kind.spendable) return false
     if (amount <= 0) return true
     if (points(kind) < amount) return false
     attr[kind.attr] = points(kind) - amount

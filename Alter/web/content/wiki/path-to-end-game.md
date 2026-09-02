@@ -57,7 +57,7 @@ Pick your grind - the captain hunt is the designed route, the shop is bad-luck p
 
 | Source | Rate / price |
 | --- | --- |
-| **Karn the Red**, the named captain in occupied Varrock's [war campaign](/wiki/marches-and-the-reconquest) | **1/15** per kill (hourly respawn), broadcast realm-wide |
+| **Karn the Red**, the [wanted captain](/wiki/marches-and-the-reconquest) of Fallen Varrock's Slums | **1/15** per kill (hourly respawn), broadcast realm-wide |
 | Emblem Trader | 12,000 BM (ornament 16,000; burning claws 14,000) |
 | Elite PK bot loot keys | bots carry them |
 | **Dame Nyx** and **Sir Dathen** on the [Rogue Knight ladder](/wiki/rogue-knights) | signature drops |

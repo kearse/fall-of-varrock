@@ -150,6 +150,11 @@ object RogueKnights {
     val CAMPS = listOf(BANDIT_HIDEOUT, DRAYNOR, SARIM_ROAD, PORT_SARIM, FALLEN_VARROCK, WILD_BANDIT_CAMP, ROGUE_REDOUBT)
 
     // ---- the ladder (rank == index; ~14 now, add more freely — numbers/items TUNE) ----
+    //
+    // PVP-TRAINING SEAM (design authority §8): the ladder is OPTIONAL progression, reached through
+    // the Recruiting Sergeant's Rogue Problem assignment. A future PvP Training Academy should
+    // recommend a knight per lesson from this list (rank order = difficulty order) rather than
+    // inventing its own opponents — every knight here is a tuned, per-hunter, PK-style bot.
 
     val LADDER: List<RogueKnightDef> = listOf(
         RogueKnightDef(

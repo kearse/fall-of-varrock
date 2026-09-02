@@ -45,8 +45,8 @@ object Cities {
         respawnTile = Tile(x = 3213, z = 3424, height = 0), // Varrock square
     )
 
-    /** Falador — registered so its [cityId]=3 resolves to a name (the march-target rework decides
-     *  its role; see [Campaigns]). */
+    /** Falador — a fortified surviving power and a safe hub (design authority, Sept 2026). Not a
+     *  war target and not a citizenship home; registered so [cityId]=3 resolves to a name. */
     val FALADOR = City(
         id = 3,
         key = "falador",

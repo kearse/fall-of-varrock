@@ -132,15 +132,17 @@ mechanics.**
 - ✅ **Rev Caves** — `content/npcs/revenants/RevenantCavesPlugin.kt`: the 12 revenant types
   spawned through the cave with style-switching combat + prayer-sap + the shared revenant drop
   table; `::revcaves` + teleport entry built; cave region force-loaded. (Not a raid — done.)
-- ✅ **R0 framework core** (`content/raids/`, compiles): `RaidInstance` (allocate a chunk-aligned
-  arena copy via `world.instanceAllocator` + force-load source regions + `translate()` source→
-  instance tiles + auto-teardown), `RaidDefinition`/`RaidStage`/`RaidSpawn` (declarative
-  per-raid data), `RaidController` (the generalized wave/room state machine — party-aware list,
-  spawn→clear→advance→reward→teardown), `Raids` registry, `RaidsPlugin` (one timer ticks all
-  live controllers + `::<key>` entry per raid, solo-first private instance). Validated by a
-  `::testraid` 3-wave smoke encounter over the TzHaar floor (coords TUNE; encounter NPCs need a
-  registered combat def to spawn with real stats).
-- ⬜ **R1 Inferno → R2 Nightmare → R3 parties+ToB → R4 CoX** — now just `RaidDefinition`s + per-
-  encounter mechanics on this core. Next: confirm the Inferno arena exists in-cache (`mapDump`),
-  then build the wave table + Jad/Zuk.
+- 🔶 **R0 framework core** — CORRECTION (2026-09-02): only **`RaidInstance`** exists in
+  `content/raids/` (allocate a chunk-aligned arena copy via `world.instanceAllocator` + force-load
+  source regions + `translate()` source→instance tiles + `allocateFloors` islands + auto-teardown,
+  and since Block 1 a live map→source registry, `RaidInstance.sourceOf`, for `CompanionPolicy`).
+  The `RaidDefinition`/`RaidController`/`Raids`/`RaidsPlugin`/`::testraid` pieces this section
+  used to claim were never committed — the 2026-08-28 purge removed the boss/minigame framework
+  and the Kronos ports (Vorkath, Zulrah, Hydra, Jad, GWD) allocate `RaidInstance` directly. The
+  quest framework's `QuestInstances` (`content/quests/framework/QuestInstances.kt`) is the
+  reusable per-player instance lifecycle (enter / tagged spawns / end on leave, death, logout,
+  timeout) and the natural base for a wave controller when the deferred tier is picked up.
+- ⬜ **R1 Inferno → R2 Nightmare → R3 parties+ToB → R4 CoX** — need the wave/room controller
+  above first. Next: confirm the Inferno arena exists in-cache (`mapDump`), then build the wave
+  table + Jad/Zuk on `QuestInstances`/`RaidInstance`.
 </content>

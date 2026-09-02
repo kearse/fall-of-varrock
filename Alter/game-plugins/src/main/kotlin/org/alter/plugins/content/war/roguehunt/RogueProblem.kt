@@ -13,28 +13,25 @@ import org.alter.plugins.content.war.warprep.WarPrepChain
 import org.alter.rscm.RSCM.getRSCM
 
 /**
- * **The Rogue Problem** — the Act II quest (story-and-grind-design §4) that answers "what now?"
- * the moment the [WarPrepChain] (Wizard Tower / War-Prep I — Magic) finishes at the Squire rung.
- * It is the guided bridge across the **Squire → Knight** climb that the roadmap otherwise leaves as
- * an open-ended grind: the Recruiting Sergeant sets the new Squire on the rogue rank and file —
- * huntable on the SAFE road camps west of Lumbridge (the jail hideout, Draynor, south of Port
- * Sarim — see `BotZones`) or, denser but lawless, in **Fallen Falador** (where the cutthroats fled
- * when demons took Varrock — see `WorldSpawnsPlugin.applyFallenFalador`; the city is a raid-city
- * PvP ground, which was farming fresh Squires when the quest steered them there first) —
- * then opens the **Rogue Knight ladder** (`bots/knights/`) with the player's
- * first assigned named knight. Clearing the hunt pays a **soldier's purse** ([HUNT_PURSE] — no
- * rung skipped); **Knighthood is earned on the ladder** (knight coin + kit drops + bounties) and
- * bought whenever the purse allows — buying it never ends the quest. The quest's true finish
- * line is the LADDER step: **every camp broken, every named knight beaten**, ending with the
- * Rogue Commander — the quest IS the realm's PK curriculum. Beaten knights stay farmable after.
- * This
- * is the pure state machine; [RogueProblemPlugin] owns the wiring (login resume, poll timer, kill
- * hooks), the Recruiting Sergeant speaks the beats, and Duke Horacio reports the rank-up.
+ * **The Rogue Problem** — the **optional** PK-schooling assignment (design authority §8: Rogue
+ * Knights are optional progression, never the main road). Once the [WarPrepChain] (Wizard Tower /
+ * War-Prep I — Magic) is done, the Recruiting Sergeant OFFERS it ([offerable]); nothing starts it
+ * automatically and nothing else waits on it — War-Prep II opens off War-Prep I, ranks come from
+ * coin + War Effort ([org.alter.plugins.content.war.RankEligibility]).
  *
- * State is a single persistent step ordinal ([ROGUE_PROBLEM_STEP_ATTR]) plus a quest-scoped hunt
- * counter ([ROGUE_PROBLEM_KILLS_ATTR]); the chain survives relogs and never re-fires once
- * [Step.DONE]. Its live step is published to the Quest Journal (client hint arrows + native quest
- * tab) so the quest helper guides the player the whole way.
+ * The assignment: thin the rogue rank and file — huntable on the SAFE road camps west of
+ * Lumbridge (the jail hideout, Draynor, south of Port Sarim — see `BotZones`) or, denser but
+ * lawless, in **Fallen Varrock** (the wilderness; only its bank pockets are safe) — then climb the
+ * **Rogue Knight ladder** (`bots/knights/`) from the first assigned named knight. Clearing the hunt
+ * pays a **soldier's purse** ([HUNT_PURSE]); the ladder pays coin, kit drops and bounties. The
+ * quest's finish line is the LADDER step: **every camp broken, every named knight beaten**, ending
+ * with the Rogue Commander — the quest IS the realm's PK curriculum. Beaten knights stay farmable.
+ *
+ * LEGACY chain (pre-Block-2): this is the pure state machine; [RogueProblemPlugin] owns the wiring
+ * (login resume, poll timer, kill hooks) and the Recruiting Sergeant speaks the beats. State is a
+ * single persistent step ordinal ([ROGUE_PROBLEM_STEP_ATTR]) plus a quest-scoped hunt counter
+ * ([ROGUE_PROBLEM_KILLS_ATTR]); the chain survives relogs and never re-fires once [Step.DONE]. Its
+ * live step is published to the Quest Journal (client hint arrows + native quest tab).
  */
 object RogueProblem {
 
@@ -65,8 +62,8 @@ object RogueProblem {
     // along the way as the spoils allow). A player saved mid-step simply gets the new objective.
     enum class Step(val objective: String) {
         NONE("(not started)"),
-        BRIEF("Speak to the Recruiting Sergeant about the rogues overrunning Fallen Falador."),
-        HUNT("Cut down $HUNT_GOAL of the rogue family — kills count anywhere. Hunt the safe road camps first (the jail west of Lumbridge, Draynor, south of Port Sarim); Fallen Falador is richer hunting but lawless raid ground. ::rogueproblem tracks it."),
+        BRIEF("Speak to the Recruiting Sergeant about the rogues infesting the roads west and the ruins of Fallen Varrock."),
+        HUNT("Cut down $HUNT_GOAL of the rogue family — kills count anywhere. Hunt the safe road camps first (the jail west of Lumbridge, Draynor, south of Port Sarim); Fallen Varrock is richer hunting but it is the wilderness. ::rogueproblem tracks it."),
         KNIGHT("Buy Soldier with your hunt purse, then thin your assigned Rogue Knight's camp and cut the knight down — ::knights tracks both and the marker leads the way."),
         REPORT("Return to the Recruiting Sergeant with word of the knight's fall."),
         LADDER("Break every knight on the ladder, camp by camp — ::knights tracks the climb, the marker leads. Buy your ranks from Duke Horacio as the spoils come in; the ladder pays for them."),
@@ -83,12 +80,17 @@ object RogueProblem {
     fun huntKills(p: Player): Int = (p.attr[ROGUE_PROBLEM_KILLS_ATTR] ?: 0).coerceAtLeast(0)
 
     /**
-     * Begin the chain. Gated on the War-Prep chain being finished (the quest is Act II — it only
-     * makes sense once the Wizard Tower and the Squire rank-up are behind the player). Idempotent.
+     * True when the Sergeant may offer the assignment: not yet started, War-Prep I done (the
+     * story assumes the Wizard Tower and the Squire rank-up are behind the player).
+     */
+    fun offerable(p: Player): Boolean = step(p) == Step.NONE && WarPrepChain.complete(p)
+
+    /**
+     * Begin the chain — only ever called when the player ACCEPTS the Sergeant's offer (nothing
+     * auto-starts it). Gated on the War-Prep chain being finished. Idempotent.
      */
     fun begin(p: Player) {
-        if (step(p) != Step.NONE) return
-        if (!WarPrepChain.complete(p)) return
+        if (!offerable(p)) return
         advanceTo(p, Step.BRIEF)
     }
 
@@ -189,14 +191,12 @@ object RogueProblem {
         if (p.title.ordinal < Title.KNIGHT.ordinal) {
             p.message("<col=ffae00>Your spoils are long past a Knighthood</col> — buy your ranks from Duke Horacio: rune armour and a companion of your own (General Zo musters them) await.")
         }
-        // The broken ladder is Act II's exit — hand straight into Act III (its begin() re-checks
-        // every gate itself, so this is a no-op for anyone not actually eligible yet).
-        org.alter.plugins.content.war.warprep.WarPrepRanged.begin(p)
     }
 
     /** One-line progress report (`::rogueproblem` and the Sergeant's chatter). */
     fun statusLine(p: Player): String = when (val s = step(p)) {
-        Step.NONE -> "Rogue Hunting I: finish the War-Prep chain first."
+        Step.NONE -> if (WarPrepChain.complete(p)) "Rogue Hunting I: an optional assignment — ask the Recruiting Sergeant at the Lumbridge gate."
+                     else "Rogue Hunting I: finish the War-Prep chain first, then ask the Recruiting Sergeant."
         Step.HUNT -> "Rogue Hunting I: <col=801700>${huntKills(p)}/$HUNT_GOAL</col> of the rogue family felled."
         Step.LADDER -> "Rogue Hunting II: <col=801700>${RogueKnightLadder.rank(p)}/${RogueKnights.LADDER.size}</col> knights of the ladder broken — ::knights leads the hunt."
         Step.DONE -> "Rogue Hunting II: <col=4f9b4f>complete</col> — every camp broken; the streets fear you."

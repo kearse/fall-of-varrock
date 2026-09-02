@@ -15,7 +15,7 @@ import org.alter.game.plugin.PluginRepository
 import org.alter.plugins.content.announce.Announce
 import org.alter.plugins.content.economy.PointKind
 import org.alter.plugins.content.economy.addPoints
-import org.alter.plugins.content.war.District
+import org.alter.plugins.content.war.VarrockDistrict
 import org.alter.plugins.content.war.WarNpcNames
 import org.alter.plugins.content.war.forge.WarForge
 import org.alter.rscm.RSCM.getRSCM
@@ -23,12 +23,11 @@ import org.alter.rscm.RSCM.getRSCM
 private val logger = KotlinLogging.logger {}
 
 /**
- * **Named captains** (story-and-grind-design §4/§6) — the bounty board's marquee targets.
- * One elite, uniquely-named cutthroat per district on a long respawn. Since the demons took
- * Varrock, the captains fled the city and now hole up in overrun Falador (their district labels
- * carry over for the bounty board / pressure meter). Killing one pays a fat bounty (coins +
- * Commendations + War Effort) and rolls their **signature weapon** — the spec-weapon chase the
- * forge's armour lines don't cover.
+ * **Named captains** — the bounty board's marquee targets. One elite, uniquely-named cutthroat
+ * per district of **Fallen Varrock** ([VarrockDistrict]) on a long respawn: the rogue warlords
+ * who run the ruined city's streets. Killing one pays a fat bounty (coins + Commendations + War
+ * Effort) and rolls their **signature weapon** — the spec-weapon chase the forge's armour lines
+ * don't cover. Part of the repeatable Fallen Varrock endgame (design authority §7).
  *
  * `::bounties` shows the board. Captains use their base model's combat def with boosted
  * stats, so animations stay right; their base ids are rogue-family, so a captain kill also
@@ -42,26 +41,24 @@ class NamedCaptainsPlugin(
 
     private data class CaptainDef(
         val name: String,
-        val district: District,
+        val district: VarrockDistrict,
         val npcKey: String,
-        val tile: Tile,
         val signatureKey: String,
         val signatureDisplay: String,
-    )
+    ) {
+        /** The captain's post: the district's street centre (snapped to walkable at spawn). */
+        val tile: Tile get() = district.center
+    }
 
-    /** One captain per district — driven out of demon-held Varrock, they now hole up in overrun
-     *  Falador (see WorldSpawnsPlugin.applyFallenFalador). Tiles TUNE. */
+    /** One captain per Varrock district, posted at the district's street centre (all four sit on
+     *  wilderness single-combat ground outside the bank safe pockets — see [VarrockDistrict]). TUNE. */
     private val DEFS = listOf(
-        // Karn holds the street north-east of the east bank — his old lair (3013,3357) sat
-        // in the east bank block, inside the BankSafezonePlugin 8-tile safe pocket.
-        CaptainDef("Karn the Red", District.SLUMS, "npc.rogue_526", Tile(3030, 3370, 0), "item.dragon_claws", "Dragon claws"),
-        // Silas holds the Old Market crossroads NE of the west bank — his old lair (2957,3371)
-        // sat on the bank's back wall, inside the BankSafezonePlugin 8-tile safe pocket.
-        CaptainDef("Silas the Hollow", District.OLD_MARKET, "npc.dark_wizard", Tile(2966, 3383, 0), "item.nightmare_staff", "Nightmare staff"),
-        CaptainDef("Vex of the Row", District.EAST_QUARTER, "npc.highwayman", Tile(3045, 3336, 0), "item.armadyl_crossbow", "Armadyl crossbow"),
+        CaptainDef("Karn the Red", VarrockDistrict.SLUMS, "npc.rogue_526", "item.dragon_claws", "Dragon claws"),
+        CaptainDef("Silas the Hollow", VarrockDistrict.OLD_MARKET, "npc.dark_wizard", "item.nightmare_staff", "Nightmare staff"),
+        CaptainDef("Vex of the Row", VarrockDistrict.EAST_QUARTER, "npc.highwayman", "item.armadyl_crossbow", "Armadyl crossbow"),
         // Base must be a COMBAT def: bandit_leader (733) has no Attack action / combat level in the
         // cache, which made Grimjaw permanently unattackable (Combat.canEngage checks the cache def).
-        CaptainDef("Grimjaw", District.MUSEUM_QUARTER, "npc.bandit_champion", Tile(2977, 3341, 0), "item.dragon_warhammer", "Dragon warhammer"),
+        CaptainDef("Grimjaw", VarrockDistrict.MUSEUM_QUARTER, "npc.bandit_champion", "item.dragon_warhammer", "Dragon warhammer"),
     )
 
     /** Live captain NPC per def index; absent = slain and awaiting respawn. */
@@ -109,8 +106,8 @@ class NamedCaptainsPlugin(
         }
 
         // ::bounties — the board: who's at large, who's down and for how long.
-        onCommand("bounties", description = "Show the wanted captains holed up in Fallen Falador") {
-            player.message("<col=801700>Wanted — the captains holed up in Fallen Falador:</col>")
+        onCommand("bounties", description = "Show the wanted captains who run Fallen Varrock's districts") {
+            player.message("<col=801700>Wanted — the captains who run the ruins of Fallen Varrock:</col>")
             DEFS.forEachIndexed { i, def ->
                 if (alive.containsKey(i)) {
                     player.message("  ${def.name} — ${def.district.display}: <col=801700>AT LARGE</col> (carries the ${def.signatureDisplay})")
@@ -125,7 +122,10 @@ class NamedCaptainsPlugin(
 
     private fun spawnCaptain(idx: Int, def: CaptainDef) {
         runCatching {
-            val npc = Npc(getRSCM(def.npcKey), def.tile, world)
+            // Snap onto walkable ground: the district centre is a street tile, but a decor edit or a
+            // retuned centre must never leave a captain stuck inside a wall.
+            val tile = world.findRandomTileAround(def.tile, radius = 2) ?: def.tile
+            val npc = Npc(getRSCM(def.npcKey), tile, world)
             npc.walkRadius = 3
             world.spawn(npc)
             WarNpcNames.rename(npc, def.name)

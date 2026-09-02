@@ -226,8 +226,8 @@ object RecruitTrials {
         val id = runCatching { getRSCM(BRONZE_DAGGER) }.getOrNull() ?: return false
         if (p.inventory.getItemCount(id) < 1) return false
         p.inventory.remove(id, 1)
-        p.addPoints(PointKind.WAR_EFFORT, DELIVER_WAR_EFFORT)
-        org.alter.plugins.content.war.RealmSupply.contribute(p.world, DELIVER_WAR_EFFORT) // feeds the campaign-gating meter
+        // War Effort + Realm Supplies + the service ledger, exactly like a real depot hand-in.
+        org.alter.plugins.content.economy.SupplyDepot.credit(p, DELIVER_WAR_EFFORT)
         advanceTo(p, Step.RETURN)
         return true
     }

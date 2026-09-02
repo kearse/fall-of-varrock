@@ -29,7 +29,7 @@ object PvpZones {
 
     /** RED — the PvP wilderness. Southern edge dropped to the TOP OF LUMBRIDGE (z3258, right after
      *  the furnace at 3226,3256) across the whole width. Safe towns inside this band (Falador, the
-     *  banks, GE) are carved out below. */
+     *  Varrock/Edgeville banks, the GE) are carved out below. */
     /** Lumbridge CONTESTED FRONTIER (master design brief §4): a guarded PvP ring at the hobgoblin/
      *  knight band on the WEST and EAST sides (the north is already wilderness; the safe core below
      *  protects town + spawn + the goblin front). Level is CAPPED to [FRONTIER_LEVEL] (not open
@@ -61,10 +61,11 @@ object PvpZones {
         Area(2995, 3865, 3035, 3900),  // the Rogue Commander's Redoubt
     )
 
-    /** Safe carve-outs INSIDE the red (everywhere OUTSIDE the red is already safe).
-     *  Falador is NO LONGER carved out — it's a raid city now ([RaidCities]): full PvP streets,
-     *  with only its banks safe (auto-carved by [BankSafezonePlugin]). */
+    /** Safe carve-outs INSIDE the red (everywhere OUTSIDE the red is already safe). */
     private val SAFE_INSIDE_RED: List<Area> = listOf(
+        // Falador — a fortified surviving power and a safe hub (design authority, Sept 2026); the
+        // whole walled city is carved out of the wild it sits in. Same box the old raid config used.
+        Area(2942, 3300, 3066, 3400),
         Area(3140, 3470, 3185, 3515), // Grand Exchange
         Area(3178, 3432, 3196, 3453), // Varrock west bank
         Area(3250, 3416, 3257, 3424), // Varrock east bank
@@ -79,11 +80,11 @@ object PvpZones {
     private val safeDynamic = mutableListOf<Area>()
 
     /**
-     * RAID CITIES ([org.alter.plugins.content.raidzones.RaidCities]) — overrun cities turned
-     * open-PvP loot grounds (Falador, Al Kharid). Each is red at a FIXED wilderness level
-     * (its `raidWildLevel`) regardless of depth, and cities outside [mainWilderness]
-     * (Al Kharid is south of the line) become red through this list. Their banks stay safe
-     * via [BankSafezonePlugin]'s dynamic carve-outs.
+     * EXTRACTION ZONES ([org.alter.plugins.content.raidzones.RaidCities]) — hostile ground turned
+     * open-PvP loot grounds. Each is red at a FIXED wilderness level (its `raidWildLevel`)
+     * regardless of depth, and ground outside [mainWilderness] becomes red through this list.
+     * Their banks stay safe via [BankSafezonePlugin]'s dynamic carve-outs. Currently EMPTY (the
+     * framework is dormant until a replacement location is chosen).
      *
      * A `get()` (not an eager val) so classload order never matters: RaidCities never
      * references this object back, but bots/plugins touch [mainWilderness] during their own

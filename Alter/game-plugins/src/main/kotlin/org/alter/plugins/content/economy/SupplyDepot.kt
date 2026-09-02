@@ -147,17 +147,27 @@ object SupplyDepot {
             we += count * value * mult
         }
         if (we > 0) {
-            p.addPoints(PointKind.WAR_EFFORT, we)
-            // Supplies also feed the realm war-supply meter that gates campaigns (the Mire loop).
-            org.alter.plugins.content.war.RealmSupply.contribute(p.world, we)
+            credit(p, we)
             if (boosted) {
                 p.message("<col=ffae00>Supply Drive bonus!</col> Your ${SupplyDrive.active?.display?.lowercase()} paid ${SupplyDrive.MULTIPLIER}x War Effort.")
             }
-            // UX: show the supplier what their hand-in did to the realm's stores — the meter
-            // only used to speak when it crossed a campaign threshold.
-            p.message("The realm's war-stores rise to <col=4f9b4f>${org.alter.plugins.content.war.RealmSupply.meter()}/${org.alter.plugins.content.war.RealmSupply.max()}</col> — marches and campaigns feed on them.")
+            // UX: show the supplier what their hand-in did to the realm's stockpile — it only used
+            // to speak when it crossed a campaign threshold.
+            p.message("The ${org.alter.plugins.content.war.RealmSupply.NAME} rise to <col=4f9b4f>${org.alter.plugins.content.war.RealmSupply.meter()}/${org.alter.plugins.content.war.RealmSupply.max()}</col> — the commanders' campaigns feed on them.")
         }
         return items to we
+    }
+
+    /**
+     * One hand-in worth [we]: the supplier's personal War Effort (lifetime service record) rises,
+     * the shared Realm Supplies stockpile rises by the same amount, and the supplier's service
+     * ledger notes the contribution. The one place all three are kept in step.
+     */
+    fun credit(p: Player, we: Int) {
+        if (we <= 0) return
+        p.addPoints(PointKind.WAR_EFFORT, we)
+        org.alter.plugins.content.war.RealmSupply.contribute(p.world, we)
+        org.alter.plugins.content.war.events.ServiceRecords.recordSupplies(p, we)
     }
 
     /**
@@ -175,8 +185,7 @@ object SupplyDepot {
         val mult = SupplyDrive.multiplierFor(key)
         val we = count * value * mult
         if (we > 0) {
-            p.addPoints(PointKind.WAR_EFFORT, we)
-            org.alter.plugins.content.war.RealmSupply.contribute(p.world, we)
+            credit(p, we)
             if (mult > 1) {
                 p.message("<col=ffae00>Supply Drive bonus!</col> That paid ${SupplyDrive.MULTIPLIER}x War Effort.")
             }

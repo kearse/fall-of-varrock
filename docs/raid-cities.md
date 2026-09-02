@@ -1,5 +1,13 @@
 # Raid Cities — the Tarkov loop
 
+> **STATUS (Development Block 1, September 2026): dormant framework, ZERO configured locations.**
+> Falador and Al Kharid were removed as raid cities — the design authority makes Falador a
+> fortified surviving power (a safe hub) and Al Kharid fortified and neutral. The extraction loop
+> below (`RaidCities`, `RaidLootPlugin`, `RareDropPlugin`, the client `lofsupplydrop` marker) is kept
+> intact and boots idle; replacement hostile locations (wilderness forts, rogue-held ruins,
+> occupied camps) are an OPEN design choice. Treat "raid city" as a legacy label — see "Adding a
+> city" for how to bring the system back online.
+
 The post-apocalyptic frame the world already has — demon-held Varrock, PK bots prowling the
 custom wilderness, overrun Falador — extended into an extraction-raid game loop: **raid
 cities** are open-world PvP loot grounds. Gear spawns at authored street spots, a warned

@@ -6,7 +6,7 @@ order: 3
 updated: 2026-08-28
 ---
 
-New here and wondering what the "point" of the server is? This page is the map. Everything below is one connected journey: you arrive as a Peasant recruit, earn coin and standing, climb the **feudal rank ladder**, and end up commanding armies in the reconquest of Varrock. Every activity on the server - bossing, PKing, skilling, minigames - feeds that climb somewhere.
+New here and wondering what the "point" of the server is? This page is the map. Everything below is one connected journey: you arrive as a Peasant recruit, earn coin and standing, climb the **feudal rank ladder**, and end up commanding armies against Fallen Varrock. Every activity on the server - bossing, PKing, skilling, minigames - feeds that climb somewhere.
 
 ## The journey at a glance
 
@@ -17,7 +17,7 @@ New here and wondering what the "point" of the server is? This page is the map. 
 | 3. Early game | Squire → Soldier | 50k-150k | Money-making loops, mithril/adamant, finding your playstyle |
 | 4. Mid game | Knight | 500k | Rune armour, first companion, world-boss shares, real PKing |
 | 5. Late game | Lord | 2m | ALL armour (dragon, barrows, GWD), 2 companions, commander powers |
-| 6. Endgame | Minister → King | 10m-50m | Launch campaigns and conquests - the reconquest itself |
+| 6. Endgame | Minister → King | 10m-50m | Launch campaigns and conquests - the assaults on Fallen Varrock |
 
 Check where you are anytime with `::title` - it shows your rank, your armour ceiling, and the price of the next rung.
 
@@ -31,13 +31,13 @@ While you're at it, walk the **castle courtyard market** (every shop in one plac
 
 The **War-Prep chain** picks up straight after the trials: Vannaka trains you to Prayer 37, gears you in mystic, and sends you to the [Wizard Tower](/wiki/wizard-tower) - clearing it permanently unlocks the **Ancient, Lunar and Arceuus spellbooks** (see [Unlocking the magic books](/wiki/unlocking-spellbooks)).
 
-This is also when the War first pays you: scheduled **[Marches](/wiki/marches-and-the-reconquest)** into Fallen Varrock are free, need no rank, and run on a timer - join one with `::march`, fight alongside allied knights, and take a share of the pooled spoils.
+This is also when the War first pays you: scheduled **[Marches](/wiki/marches-and-the-reconquest)** on the hostile camps and roads around the realm (and, for the bold, the Varrock outskirts) are free, need no rank, and run on a timer - join one with `::march`, fight alongside allied knights, and take a share of the pooled spoils.
 
 ## Stage 3 - Early game: build your bankroll
 
-Straight out of the Wizard Tower, **[Rogue Hunting I & II](/wiki/the-rogue-problem)** pick you up: the Recruiting Sergeant sets the new Squire on the rogues' rank and file (a soldier's purse when the hunt clears), then opens the **[Rogue Knight ladder](/wiki/rogue-knights)** - the camp-by-camp PK schooling whose spoils earn your **Knighthood**, complete when every camp is broken. It's the guided bridge across this stage - follow the Quest Journal and you're never left wondering what's next.
+Straight out of the Wizard Tower, **War-Prep II** picks you up (Vannaka's bow lesson - the road to Lord), and the Recruiting Sergeant has an **optional** assignment for anyone who wants to learn to fight players: **[The Rogue Problem](/wiki/the-rogue-problem)** - thin the rogues' rank and file (a soldier's purse when the hunt clears), then climb the **[Rogue Knight ladder](/wiki/rogue-knights)**, the camp-by-camp PK schooling whose spoils fund your ranks. Say no and nothing on the main road waits on it; say yes and the Quest Journal guides the whole climb.
 
-Beyond (and after) the quest, ranks are bought with coins, so the early game is about finding the money-making loop you enjoy. All of these work from day one:
+Beyond (and after) the quest, ranks are raised for coins plus a floor of lifetime War Effort (from Soldier up), so the early game is about finding the money-making loop you enjoy - and every one of them also builds your service record. All of these work from day one:
 
 - **Monster drops** - every NPC in the world uses its **real OSRS drop table**. Grinding anything pays.
 - **[Slayer & resource contracts](/wiki/slayer-and-contracts)** - Vannaka pays coins + War Effort for kill tasks and gathering orders.
@@ -62,6 +62,7 @@ This is also when the **wilderness** starts making sense. The ladder's safe road
 
 Lord removes the armour ceiling entirely - **dragon, barrows, Armadyl, ancestral, everything** - and turns you from soldier into **commander**:
 
+- `::operation <target>` - sponsor your own public march on any target from `::marches`; anyone can join, and you take the commander's tithe if it wins.
 - `::sendtroops` - sponsor a knight squad and earn a damage share on everything they kill.
 - `::summonboss` - summon a **city boss** like the [Corporeal Beast](/wiki/corporeal-beast) for a pooled, damage-split raid.
 - A **second companion** joins your warband.
@@ -72,7 +73,7 @@ Your gear ceiling rises to match: Boss tickets buy the endgame chase gear at the
 
 **Minister** (10m) unlocks `::campaign`; **King** (50m) unlocks `::conquest`. These are the server's biggest events - [full offensives against Fallen Varrock](/wiki/the-war-explained) with dozens of allied knights, supply-meter requirements filled by the realm's skillers, and pooled rewards split by every participant's contribution (the sponsor keeps a 10% tithe - rank has its privileges).
 
-This is the loop the whole server bends toward: skillers fill the supply meter, soldiers fight the marches, Lords field troops and summon bosses, and Ministers and Kings spend fortunes to push the reconquest. Where it goes next - more cities, more fronts - is on [What's coming next](/wiki/coming-soon).
+This is the loop the whole server bends toward: skillers fill the Realm Supplies, soldiers fight the marches, Lords sponsor operations and summon bosses, and Ministers and Kings spend fortunes to carry the war into Fallen Varrock - a city that stays fallen, and stays worth fighting for. Where it goes next - more cities, more fronts - is on [What's coming next](/wiki/coming-soon).
 
 ## One journey, many roads
 
@@ -81,6 +82,6 @@ The rank ladder is the spine, but you climb it however you like to play:
 - **The PvMer** - drop tables → slayer contracts → the Corporeal Beast war event → the Armoury's ticket catalogue (and the rebuilt boss roster as it returns). Currency: coins + Boss tickets.
 - **The PKer** - the Rogue Knight ladder → wilderness loot keys → Elo climb → spec weapons and prestige sets. Currency: Blood Money.
 - **The skiller** - Mire loops → Quartermaster deposits → supply meter → contracts. Currency: coins + War Effort (and campaigns literally can't launch without you).
-- **The soldier** - marches → district bounties → campaigns → troop command. Currency: pooled spoils + prestige.
+- **The soldier** - marches → captain bounties → Lord operations → campaigns → troop command. Currency: pooled spoils + Commendations + prestige.
 
 All four roads pay coins, all four feed the War, and all four meet at the top of the ladder.

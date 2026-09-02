@@ -20,8 +20,6 @@ import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
 import org.alter.plugins.content.bots.PkBot
 import org.alter.plugins.content.combat.PvpZones
-import org.alter.plugins.content.raidzones.AlKharidRaid
-import org.alter.plugins.content.raidzones.RaidCities
 import org.alter.rscm.RSCM.getRSCM
 import java.io.File
 
@@ -201,8 +199,6 @@ class WorldSpawnsPlugin(
     private fun finalizeSpawnData() {
         stripGrandExchange()
         applyFallenVarrock()
-        applyFallenFalador()
-        applyFallenAlKharid()
         val registered = HashSet<Int>()
         // Real bosses with no port yet: they have full stats AND their real drop table in
         // npc_drops.json, but zero mechanics as a generic spawn — the KBD world-spawned as
@@ -345,67 +341,39 @@ class WorldSpawnsPlugin(
     }
 
     /**
-     * FALLEN VARROCK (story): the demons took the city in under a day and killed everyone in
-     * it — so Varrock holds NOTHING but demons now (and the PKers who prowl the ruins, spawned
-     * separately by [org.alter.plugins.content.bots.BotZones]). Applied to the loaded spawn
-     * data before the normal finalize pass:
+     * FALLEN VARROCK (story — design authority, Sept 2026): Zemouregal's undead assault and the
+     * Senntisten catastrophe beneath the city killed or scattered everyone in it twelve years ago,
+     * and Varrock stays fallen — the dead still walk its streets and the realm's rogues moved into
+     * the ruins (plus the PKers who prowl them, spawned separately by
+     * [org.alter.plugins.content.bots.BotZones]). Applied to the loaded spawn data before the
+     * normal finalize pass:
      *  - EVERY ambient record inside the city box is stripped — townsfolk, the lawful garrison,
-     *    the old wildlife/rogues, even the bank clerks (the carve-outs are no longer spared:
-     *    everyone there is dead);
-     *  - each stripped GROUND-floor spot respawns as a greater/lesser demon ([VARROCK_DEMON_POOL],
-     *    lesser-heavy) so the streets crawl with the occupiers and every kill feeds the demon
-     *    drop tables;
-     *  - upstairs (plane > 0) records are simply dropped (no demons stuck in bedrooms);
-     *  - a handful of **tormented demons** are hand-placed at the city's landmarks
-     *    ([VARROCK_BOSS_TILES]) as the set-piece demon bosses;
+     *    the old wildlife, even the bank clerks (the carve-outs are no longer spared: everyone
+     *    there is dead);
+     *  - each stripped GROUND-floor spot respawns from the undead-heavy occupier pool
+     *    ([VARROCK_UNDEAD_POOL]) so the streets crawl with the dead and their rogue scavengers,
+     *    and every kill feeds the real drop tables;
+     *  - upstairs (plane > 0) records are simply dropped (no zombies stuck in bedrooms);
+     *  - a handful of **skeleton warlords** are hand-placed at the city's landmarks
+     *    ([VARROCK_BOSS_TILES]) as the set-piece undead bosses;
      *  - the demolished Grand Exchange ([stripGrandExchange] emptied it first) gets its own
-     *    scatter of demons + one tormented demon in the rubble ([injectGrandExchangeDemons]).
+     *    scatter of the dead + one warlord in the rubble ([injectGrandExchangeUndead]).
      */
     private fun applyFallenVarrock() {
-        val demons = resolveMonsterPool(VARROCK_DEMON_POOL, "FALLEN VARROCK")
-        val (replaced, dropped) = repopulateFallenCity(FALLEN_VARROCK, demons)
-        val bosses = injectVarrockDemonBosses()
-        val geDemons = injectGrandExchangeDemons(demons)
+        val pool = resolveMonsterPool(VARROCK_UNDEAD_POOL, "FALLEN VARROCK")
+        val (replaced, dropped) = repopulateFallenCity(FALLEN_VARROCK, pool)
+        val bosses = injectVarrockUndeadBosses()
+        val geUndead = injectGrandExchangeUndead(pool)
         logger.info {
-            "[FALLEN VARROCK] city purged: $replaced street spots now demons (${demons.size}-kind pool), " +
-                "$dropped records dropped (upstairs), $bosses tormented-demon boss(es) at landmarks, " +
-                "$geDemons demon(s) in the GE ruins."
+            "[FALLEN VARROCK] city fallen: $replaced street spots now undead/rogues (${pool.size}-kind pool), " +
+                "$dropped records dropped (upstairs), $bosses skeleton-warlord boss(es) at landmarks, " +
+                "$geUndead undead in the GE ruins."
         }
     }
 
-    /**
-     * FALLEN FALADOR (story): the bandits, bosses and other enemy npcs that used to hold Varrock
-     * are driven out — they overrun Falador. Falador falls the same way Varrock did: every ambient
-     * record inside the city box is stripped (White Knights, guards, bankers, wildlife, the lot),
-     * and each ground-floor spot respawns as a random enemy from the relocated pool
-     * ([FALADOR_ENEMY_POOL]). The four named district captains ([NamedCaptainsPlugin]) are moved
-     * here too. Upstairs records are dropped.
-     */
-    private fun applyFallenFalador() {
-        val enemies = resolveMonsterPool(FALADOR_ENEMY_POOL, "FALLEN FALADOR")
-        val (replaced, dropped) = repopulateFallenCity(FALLEN_FALADOR, enemies)
-        logger.info {
-            "[FALLEN FALADOR] city overrun: $replaced spots now bandits/enemies (${enemies.size}-kind pool), " +
-                "$dropped records dropped (upstairs)."
-        }
-    }
-
-    /**
-     * FALLEN AL KHARID (story): the desert gate town, cut off since the fall — scorpion swarms
-     * out of the mines and the desert gangs picked it clean. Falls the same way the other two
-     * did: every ambient record inside the raid box ([AlKharidRaid] is the box's single source
-     * of truth) is stripped and each ground-floor spot respawns from the desert pool
-     * ([AL_KHARID_ENEMY_POOL]). Al Kharid is a raid city ([RaidCities]) — its streets are the
-     * loot grounds this population defends.
-     */
-    private fun applyFallenAlKharid() {
-        val enemies = resolveMonsterPool(AL_KHARID_ENEMY_POOL, "FALLEN AL KHARID")
-        val (replaced, dropped) = repopulateFallenCity(AlKharidRaid.config.area, enemies)
-        logger.info {
-            "[FALLEN AL KHARID] town overrun: $replaced spots now scorpions/gangs (${enemies.size}-kind pool), " +
-                "$dropped records dropped (upstairs)."
-        }
-    }
+    // Falador and Al Kharid are NOT fallen (design authority, Sept 2026): Falador is a fortified
+    // surviving power, Al Kharid fortified and neutral. Their ambient populations (White Knights,
+    // guards, bankers, townsfolk) load from the JSON untouched.
 
     /**
      * Boot-verify a weighted `name -> weight` monster pool into `id -> weight`: each id must
@@ -432,8 +400,8 @@ class WorldSpawnsPlugin(
 
     /**
      * Strip EVERY ambient spawn record inside [box] and repopulate each ground-floor spot with a
-     * weighted pick from [pool] (upstairs records are dropped). The shared engine behind both fallen
-     * cities. Returns `replaced to dropped`.
+     * weighted pick from [pool] (upstairs records are dropped). The engine behind the fallen city
+     * (reusable for any future overrun ground). Returns `replaced to dropped`.
      */
     private fun repopulateFallenCity(box: Area, pool: List<Pair<Int, Int>>): Pair<Int, Int> {
         val totalWeight = pool.sumOf { it.second }
@@ -466,17 +434,17 @@ class WorldSpawnsPlugin(
     }
 
     /**
-     * Hand-place tormented-demon bosses at Varrock's landmarks (added as ordinary spawn records so
-     * they ride the same presence-gating + respawn machinery as the street demons; the finalize
+     * Hand-place skeleton-warlord bosses at Varrock's landmarks (added as ordinary spawn records so
+     * they ride the same presence-gating + respawn machinery as the street undead; the finalize
      * pass registers their combat def from `npc_combat.json`). Returns how many were placed.
      */
-    private fun injectVarrockDemonBosses(): Int {
-        val id = runCatching { getRSCM("npc.tormented_demon") }.getOrNull() ?: run {
-            logger.warn { "[FALLEN VARROCK] 'npc.tormented_demon' unresolved — no demon bosses placed." }
+    private fun injectVarrockUndeadBosses(): Int {
+        val id = runCatching { getRSCM(VARROCK_BOSS_NPC) }.getOrNull() ?: run {
+            logger.warn { "[FALLEN VARROCK] '$VARROCK_BOSS_NPC' unresolved — no undead bosses placed." }
             return 0
         }
         if (WorldSpawns.statsFor(id) == null) {
-            logger.warn { "[FALLEN VARROCK] tormented demon has no combat stats — bosses would be pruned; add them to npc_combat.json." }
+            logger.warn { "[FALLEN VARROCK] $VARROCK_BOSS_NPC has no combat stats — bosses would be pruned; add them to npc_combat.json." }
         }
         for ((x, z) in VARROCK_BOSS_TILES) {
             val regionId = ((x shr 6) shl 8) or (z shr 6)
@@ -486,12 +454,12 @@ class WorldSpawnsPlugin(
     }
 
     /**
-     * The demons spilled into the demolished Grand Exchange too (emptied by [stripGrandExchange]
-     * before this runs): a scatter of greater/lesser demons across the rubble on a coarse grid,
-     * plus a single tormented demon lording over the ruin's heart. Records are added straight into
+     * The dead spilled into the demolished Grand Exchange too (emptied by [stripGrandExchange]
+     * before this runs): a scatter of the occupier pool across the rubble on a coarse grid, plus a
+     * single skeleton warlord lording over the ruin's heart. Records are added straight into
      * `byRegion` after the strip/repopulate passes so nothing removes them again. Returns the count.
      */
-    private fun injectGrandExchangeDemons(pool: List<Pair<Int, Int>>): Int {
+    private fun injectGrandExchangeUndead(pool: List<Pair<Int, Int>>): Int {
         fun place(id: Int, x: Int, z: Int, walk: Int) {
             val regionId = ((x shr 6) shl 8) or (z shr 6)
             WorldSpawns.byRegion.getOrPut(regionId) { ArrayList() }.add(WorldSpawns.Rec(id, x, z, 0, walk))
@@ -499,10 +467,10 @@ class WorldSpawnsPlugin(
         var placed = 0
         val totalWeight = pool.sumOf { it.second }
         if (totalWeight > 0) {
-            var x = GE_RUINS.bottomLeftX + GE_DEMON_MARGIN
-            while (x <= GE_RUINS.topRightX - GE_DEMON_MARGIN) {
-                var z = GE_RUINS.bottomLeftY + GE_DEMON_MARGIN
-                while (z <= GE_RUINS.topRightY - GE_DEMON_MARGIN) {
+            var x = GE_RUINS.bottomLeftX + GE_SCATTER_MARGIN
+            while (x <= GE_RUINS.topRightX - GE_SCATTER_MARGIN) {
+                var z = GE_RUINS.bottomLeftY + GE_SCATTER_MARGIN
+                while (z <= GE_RUINS.topRightY - GE_SCATTER_MARGIN) {
                     var r = world.random(totalWeight - 1)
                     var pick = pool.first().first
                     for ((id, w) in pool) {
@@ -514,13 +482,13 @@ class WorldSpawnsPlugin(
                     }
                     place(pick, x, z, FALLEN_WALK)
                     placed++
-                    z += GE_DEMON_SPACING
+                    z += GE_SCATTER_SPACING
                 }
-                x += GE_DEMON_SPACING
+                x += GE_SCATTER_SPACING
             }
         }
-        runCatching { getRSCM("npc.tormented_demon") }.getOrNull()?.let { td ->
-            place(td, GE_TORMENTED_TILE.first, GE_TORMENTED_TILE.second, BOSS_WALK)
+        runCatching { getRSCM(VARROCK_BOSS_NPC) }.getOrNull()?.let { boss ->
+            place(boss, GE_WARLORD_TILE.first, GE_WARLORD_TILE.second, BOSS_WALK)
             placed++
         }
         return placed
@@ -619,30 +587,7 @@ class WorldSpawnsPlugin(
         // the full lifecycle (refill on death, remove on gate close).
         npc.respawns = false
         npc.setActive(true)
-        applyRaidCityAggro(npc)
         return npc
-    }
-
-    /**
-     * RAID-CITY AGGRESSION ([RaidCities]): occupiers inside a raid city hunt raiders harder
-     * than the world defaults — wider spot radius, faster re-targeting, longer interest — and
-     * ignore the level-tolerance rule (a maxed raider is stalked as readily as a fresh one).
-     * Applied per-INSTANCE (the shared per-id defs also cover spawns outside the cities), and
-     * only to ids that are already aggro-flagged; passive pool picks stay passive.
-     *
-     * The aggroCheck lambda runs on the engine's aggro path OUTSIDE any try/catch — a throw
-     * there kills the game-loop task (see [org.alter.plugins.content.war.HostileZone]). It must
-     * stay a constant-true.
-     */
-    private fun applyRaidCityAggro(npc: Npc) {
-        val aggro = RaidCities.at(npc.tile)?.aggro ?: return
-        if (npc.combatDef.aggressiveRadius <= 0) return
-        npc.combatDef = npc.combatDef.copy(
-            aggressiveRadius = aggro.radius,
-            aggroTargetDelay = aggro.targetDelay,
-            aggressiveTimer = aggro.timer,
-        )
-        npc.aggroCheck = { _, _ -> true } // MUST stay throw-free (engine path is unguarded)
     }
 
     private companion object {
@@ -663,10 +608,6 @@ class WorldSpawnsPlugin(
         /** The walled city + gates. TUNABLE — everything inside is "the fallen city". */
         val FALLEN_VARROCK = Area(3155, 3376, 3300, 3520)
 
-        /** Falador — the enemy npcs driven out of Varrock overrun it (see applyFallenFalador).
-         *  Same box as the [PvpZones] Falador carve-out. TUNABLE. */
-        val FALLEN_FALADOR = Area(2942, 3300, 3066, 3400)
-
         /** The demolished Grand Exchange footprint — every npc spawn inside is stripped (see stripGrandExchange). */
         val GE_RUINS = Area(3149, 3468, 3190, 3517)
 
@@ -676,57 +617,41 @@ class WorldSpawnsPlugin(
         /** Castle-Wars faction recruiters at the GE — stripped by id within [GE_APPROACH] (they sit west of the box). */
         val GE_RECRUITERS = listOf("npc.saradominist_recruiter", "npc.zamorakian_recruiter")
 
-        /** Weighted DEMON pool the emptied Varrock streets respawn as — lesser-heavy so the city is
-         *  dangerous but traversable; the tormented-demon bosses are placed separately at landmarks. */
-        val VARROCK_DEMON_POOL = listOf(
-            "npc.lesser_demon" to 3,
-            "npc.greater_demon" to 2,
+        /** Weighted occupier pool the emptied Varrock streets respawn as — undead-heavy (Zemouregal's
+         *  dead) with the rogue scavengers who moved into the ruins, so the city is dangerous but
+         *  traversable; the skeleton-warlord bosses are placed separately at landmarks. Every id must
+         *  be attackable + statted and not owned by bespoke content (see [resolveMonsterPool]). */
+        val VARROCK_UNDEAD_POOL = listOf(
+            "npc.zombie" to 5,
+            "npc.skeleton" to 5,
+            "npc.ghost" to 2,
+            "npc.undead_druid" to 1,
+            "npc.rogue_526" to 3,
+            "npc.thug" to 2,
+            "npc.mugger" to 2,
+            "npc.highwayman" to 2,
+            "npc.dark_wizard" to 2,
+            "npc.black_knight" to 1,
+            "npc.bandit_690" to 1,
         )
 
-        /** Demons scattered across the ruined Grand Exchange ([injectGrandExchangeDemons]): a coarse
-         *  grid step + edge margin inside [GE_RUINS], and the tile the lone tormented demon holds. TUNABLE. */
-        const val GE_DEMON_SPACING = 12
-        const val GE_DEMON_MARGIN = 4
-        val GE_TORMENTED_TILE = 3165 to 3490 // heart of the demolished octagon
+        /** The set-piece undead boss at each Varrock landmark + the GE ruin (must have stats in
+         *  `npc_combat.json` — it rides the ordinary spawn machinery). TUNABLE. */
+        const val VARROCK_BOSS_NPC = "npc.skeleton_warlord"
 
-        /** Landmark tiles that each get a tormented-demon boss ([injectVarrockDemonBosses]). TUNABLE. */
+        /** The dead scattered across the ruined Grand Exchange ([injectGrandExchangeUndead]): a coarse
+         *  grid step + edge margin inside [GE_RUINS], and the tile the lone warlord holds. TUNABLE. */
+        const val GE_SCATTER_SPACING = 12
+        const val GE_SCATTER_MARGIN = 4
+        val GE_WARLORD_TILE = 3165 to 3490 // heart of the demolished octagon
+
+        /** Landmark tiles that each get a skeleton-warlord boss ([injectVarrockUndeadBosses]). TUNABLE. */
         val VARROCK_BOSS_TILES = listOf(
             3213 to 3428, // Varrock square (the heart of the city)
             3213 to 3468, // palace gates / courtyard
             3225 to 3494, // palace interior
             3182 to 3436, // west slums street
             3253 to 3428, // east market street
-        )
-
-        /** Weighted enemy pool that overruns fallen Falador — the bandits/rogues/other enemy npcs
-         *  relocated out of Varrock (see applyFallenFalador). Rogue-heavy on purpose. */
-        val FALADOR_ENEMY_POOL = listOf(
-            "npc.mugger" to 4,
-            "npc.thug" to 4,
-            "npc.highwayman" to 3,
-            "npc.rogue_526" to 3,
-            "npc.zombie" to 2,
-            "npc.skeleton" to 2,
-            "npc.dark_wizard" to 2,
-            "npc.chaos_druid" to 2,
-            "npc.black_knight" to 1,
-            "npc.bandit_690" to 1,
-        )
-
-        /** Weighted desert pool that overruns Al Kharid ([applyFallenAlKharid]) — scorpions out
-         *  of the mine plus the desert gangs. Every pick except the bandits is aggro-flagged in
-         *  npc_combat.json (stats[7]==1), so the raid-city aggro boost bites. */
-        val AL_KHARID_ENEMY_POOL = listOf(
-            "npc.scorpion" to 4,
-            "npc.thug" to 4,
-            "npc.mugger" to 3,
-            "npc.skeleton" to 2,
-            "npc.dark_wizard" to 2,
-            "npc.wolf" to 2,
-            "npc.pit_scorpion" to 2,
-            "npc.king_scorpion" to 1,
-            "npc.black_knight" to 1,
-            "npc.bandit_690" to 1,
         )
 
         /** Streets-roaming radius for the replacement monsters (civilians wandered 2). */

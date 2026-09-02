@@ -19,10 +19,10 @@ import org.alter.plugins.content.quests.QuestBook
  * FIELD step (cheap — bails instantly off the tracked step, mirroring [org.alter.plugins.content.war.roguehunt.RogueProblemPlugin]),
  * and serves `::warpranged`.
  *
- * The quest is *given* by Vannaka (see `SlayerPlugin`), who drills the recruit, arms the marksman kit
- * and debriefs; this plugin only owns the passive wiring. It auto-begins the moment the player finishes
- * The Rogue Problem (the Knight rank-up — see `RankPurchase`), and the login hook here catches anyone
- * who reached Knight before this quest existed.
+ * The quest is *given* by Vannaka (see `SlayerPlugin`), who arms the marksman kit and debriefs;
+ * this plugin only owns the passive wiring. It auto-begins the moment the player finishes War-Prep I
+ * (see `WarPrepChain.grantCompletion` / the rank-bought hook in `LegacyRankHooks`), and the login
+ * hook here catches anyone who finished War-Prep I before this gate existed.
  */
 class WarPrepRangedPlugin(
     r: PluginRepository,
@@ -32,7 +32,7 @@ class WarPrepRangedPlugin(
 
     init {
         onLogin {
-            // Legacy / interrupted: a player already past The Rogue Problem never got the quest started.
+            // Legacy / interrupted: a player already past War-Prep I never got the quest started.
             WarPrepRanged.begin(player)
             WarPrepRanged.resumeOnLogin(player)
         }

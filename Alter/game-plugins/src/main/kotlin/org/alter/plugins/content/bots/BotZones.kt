@@ -154,19 +154,6 @@ object BotZones {
     ))
 
     /**
-     * RAIDER tier — the pinned pool for the raid cities ([org.alter.plugins.content.raidzones.RaidCities]:
-     * Falador, Al Kharid). These PKers camp the loot spots, so they're a real threat — a
-     * mithril→rune metal ladder plus the budget PK sets — but deliberately capped below the
-     * mid/high/elite meta: a raid death should cost you your haul, not be unwinnable. Pinning
-     * the tier (instead of the city's wild depth) keeps both cities equally raidable whatever
-     * their latitude says.
-     */
-    private val T_RAIDER = BotTier(listOf(
-        "mithril_pker" to 4, "adamant_pker" to 3, "rune_pker" to 2,
-        "budget_pure" to 3, "budget_zerker" to 2, "budget_main" to 1,
-    ))
-
-    /**
      * Loadout tier for a given custom wilderness level ([PvpZones.wildernessLevel], depth north from
      * the wild's south edge). The single source of truth for "tier PKers by depth": a bot's danger is
      * decided by how deep it spawned. Wild 1–10 is a metal-armour ladder for new players; past 10 the
@@ -251,7 +238,7 @@ object BotZones {
         // THE SAFE ROAD WEST — ladder camps between the hideout and Port Sarim (RogueKnights.DRAYNOR
         // hosts Sir Oswin, SARIM_ROAD hosts Sir Malrik), so the Sergeant's assignments march the
         // whole road. The Act II hunt counts rogue-family kills anywhere, so a fresh Squire can also
-        // fill the tally on reclaim-death ground here instead of marching into raid-city Falador.
+        // fill the tally on reclaim-death ground here instead of braving Fallen Varrock's wilderness.
         add(
             BotZoneConfig(
                 key = "draynor",
@@ -287,7 +274,6 @@ object BotZones {
         // gate exactly like every other camp. Deliberately separate from the SIEGE battle scene
         // (`areas/portsarim/PortSiegePlugin` — Knights of Lumbridge vs Rogue Raider NPC waves):
         // raids are their own triggered content and never mix with the Sergeant's hunt.
-        // (Fallen Falador needs no dedicated camp — the raid-city colony below covers it.)
         add(
             BotZoneConfig(
                 key = "port_sarim",
@@ -353,29 +339,8 @@ object BotZones {
                 activationPadding = 24,
             ),
         )
-
-        // RAID CITIES ([org.alter.plugins.content.raidzones.RaidCities]) — each gets a dedicated,
-        // denser colony pinned to [T_RAIDER]: PKers who camp the loot spots are the "other raiders"
-        // half of the Tarkov loop. Falador's grid cells also self-populate now the city is red;
-        // Al Kharid sits OUTSIDE [PvpZones.mainWilderness] (south of the line), so its colony is
-        // the town's only bot source. Tight roam/leash so bots prowl the streets without chasing a
-        // raider into a bank pocket (the muster filter's walkable + isWilderness check self-trims
-        // the bank carve-outs anyway).
-        for (city in org.alter.plugins.content.raidzones.RaidCities.all) {
-            add(
-                BotZoneConfig(
-                    key = "raid_${city.key.replace('-', '_')}",
-                    displayName = "${city.display} raiders",
-                    area = city.area,
-                    tier = T_RAIDER,
-                    target = 4,
-                    spacing = 5,
-                    roamRadius = 8,
-                    leashRadius = 14,
-                    activationPadding = 24,
-                ),
-            )
-        }
+        // (Extraction zones — `raidzones/RaidCities` — used to add a pinned "raiders" colony per zone
+        // here. The framework is dormant with zero locations; re-add the loop when one is chosen.)
     }
 
     /** Even grid of candidate muster tiles across [area] at [spacing] (walkability filtered later). */

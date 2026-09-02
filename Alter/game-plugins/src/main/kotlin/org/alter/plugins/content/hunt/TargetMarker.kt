@@ -45,6 +45,7 @@ object TargetMarker {
     const val PRIORITY_BOUNTY = 100 // bounty hunter (future): an assigned player kill outranks all
     const val PRIORITY_LADDER = 50 // the Rogue Knight ladder's assigned / farm knight
     const val PRIORITY_HUNT = 40 // the Rogue Problem HUNT step: the nearest safe-road rogue to fell
+    const val PRIORITY_QUEST = 30 // framework quests' current-step anchor (quests/framework/QuestArrows)
 
     /** Within this range the arrow locks onto the target itself (entity arrows render in scene). */
     const val IN_SCENE_RADIUS = 15

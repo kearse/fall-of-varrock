@@ -44,6 +44,13 @@ object TeleportService {
             player.message("<col=801700>${dest.displayName}</col> is coming soon!")
             return false
         }
+        // Route-gated destination (quest-unlocked transport): refuse with the route's own line.
+        dest.routeKey?.let { route ->
+            if (!TransportRoutes.isUnlocked(player, route)) {
+                player.message("<col=801700>${TransportRoutes.lockedMessage(route)}</col>")
+                return false
+            }
+        }
         if (!player.canTeleport(dest.teleType)) return false
 
         player.teleport(landingTile(player, dest), dest.teleType)

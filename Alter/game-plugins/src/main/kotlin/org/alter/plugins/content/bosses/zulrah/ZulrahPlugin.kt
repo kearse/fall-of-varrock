@@ -19,6 +19,7 @@ import org.alter.plugins.content.bosses.DropEntry
 import org.alter.plugins.content.bosses.DropTable
 import org.alter.plugins.content.economy.PointKind
 import org.alter.plugins.content.economy.awardTickets
+import org.alter.plugins.content.companion.CompanionPolicy
 import org.alter.plugins.content.raids.RaidInstance
 import org.alter.rscm.RSCM.getRSCM
 
@@ -72,6 +73,10 @@ class ZulrahPlugin(
     )
 
     init {
+        // Classic boss, companion-UNAWARE by design: companions stand down inside the shrine
+        // instance rather than the fight being edited for them (CompanionPolicy, Block 1).
+        CompanionPolicy.denyInstanceOf(SHRINE_SOURCE, "Zulrah's shrine is a solo fight")
+
         // ── Entry: the sacred-eel boat. The rev-228 def is nameless (`null_10068`), so bind
         // whatever click action the cache actually carries (the Barrows binding pattern).
         val boatId = getRSCM("object.null_10068")

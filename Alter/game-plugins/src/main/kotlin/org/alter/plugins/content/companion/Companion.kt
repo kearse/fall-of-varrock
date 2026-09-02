@@ -42,8 +42,6 @@ class Companion(
     var huntAnchor: Tile? = null
     /** Donor perk: auto-pick nearby loot straight into the owner's bank (see [CompanionLoot]). */
     var autoLoot: Boolean = false
-    /** Slain-and-awaiting-recovery flag (revived at General Zo for a fee — keeps level + gear). */
-    var dead: Boolean = false
     /** World cycle of the last honor-system chat message, so it isn't spammed each tick. */
     var lastHonorMsg: Int = 0
     /**

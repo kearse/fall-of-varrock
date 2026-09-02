@@ -32,12 +32,12 @@ enum LofTask
 	HOBGOBLINS("Hobgoblins", "Hobgoblin", "The hobgoblin peninsula south of the Crafting Guild.", 22),
 	DARK_WIZARDS("Dark wizards", "Dark wizard", "The wizards' stone circle south-west of Falador.", 20),
 	// ── Squire ──
-	BLACK_KNIGHTS("Black Knights", "Black Knight", "The Black Knights' grounds north of fallen Falador.", 30),
+	BLACK_KNIGHTS("Black Knights", "Black Knight", "The Black Knights' grounds north of Falador.", 30),
 	HILL_GIANTS("Hill Giants", "Hill Giant", "The giant camp east of Al Kharid.", 28),
-	// ── Soldier — the demons that overran the fallen cities ──
-	LESSER_DEMONS("Lesser demons", "Lesser demon", "The demolished Grand Exchange in fallen Varrock.", 45),
+	// ── Soldier ──
+	LESSER_DEMONS("Lesser demons", "Lesser demon", "The Karamja volcano dungeon.", 45),
 	// ── Knight — top of the ladder ──
-	GREATER_DEMONS("Greater demons", "Greater demon", "Fallen Varrock's east street — raid-city ground, go armed.", 55);
+	GREATER_DEMONS("Greater demons", "Greater demon", "Brimhaven dungeon — go armed.", 55);
 
 	/** Plural label, matching Vannaka's contract wording (server SlayerTask.display). */
 	private final String displayName;

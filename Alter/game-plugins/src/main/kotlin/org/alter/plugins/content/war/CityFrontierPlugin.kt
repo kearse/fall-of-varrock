@@ -44,7 +44,9 @@ class CityFrontierPlugin(
         val seen = HashSet<String>()
         val zones = ArrayList<HostileZone>()
 
-        for (cfg in CityFrontiers.all) {
+        // The city frontiers plus every scheduled-march target's garrison ([MarchTargets]) — a march
+        // target is just a small campaign-gated frontier keyed by the target key.
+        for (cfg in CityFrontiers.all + MarchTargets.frontiers) {
           try {
             val packs = ArrayList<MonsterPack>()
             var totalEnemies = 0
@@ -165,8 +167,9 @@ class CityFrontierPlugin(
      *  - **Home frontier** ([FrontierConfig.protectCity] = true, Lumbridge): live only while a player
      *    is inside the battlefield box (cityLimits grown by the deepest ring + a streaming margin), so
      *    the ~480-strong frontier despawns when nobody's around and re-musters as a player approaches.
-     *  - **Enemy city** (protectCity = false, Varrock): live only while a CAMPAIGN besieges it — so
-     *    the garrison exists ONLY during a raid and the city is otherwise just guards + players.
+     *  - **Enemy ground** (protectCity = false: Varrock, every march target): live only while an op
+     *    fights over it ([CampaignRegistry.isAttacking]) — so the garrison exists ONLY during the war
+     *    and the ground is otherwise just its ambient spawns + players.
      */
     private fun activationGate(cfg: FrontierConfig): (World) -> Boolean {
         if (!cfg.protectCity) {
@@ -186,7 +189,8 @@ class CityFrontierPlugin(
      *  player nearby. Idempotent — [org.alter.game.fs.DefinitionSet.loadRegions] skips active regions. */
     private fun forceLoadFrontierRegions(world: World) {
         val regions = sortedSetOf<Int>()
-        for (cfg in CityFrontiers.all) {
+        val all = CityFrontiers.all + MarchTargets.frontiers
+        for (cfg in all) {
             val reach = (cfg.enemyLines.maxOfOrNull { it.gap + it.depth } ?: 0) + 8
             val box = cfg.cityLimits
             val xMin = box.bottomLeftX - reach; val xMax = box.topRightX + reach
@@ -195,7 +199,7 @@ class CityFrontierPlugin(
         }
         runCatching { world.definitions.loadRegions(world, world.chunks, regions.toIntArray()) }
             .onFailure { logger.error(it) { "[FRONTIER] region force-load failed" } }
-        logger.info { "[FRONTIER] force-loaded ${regions.size} region(s) for ${CityFrontiers.all.size} frontier(s)." }
+        logger.info { "[FRONTIER] force-loaded ${regions.size} region(s) for ${all.size} frontier(s) (incl. ${MarchTargets.frontiers.size} march target(s))." }
     }
 
     /** Coins on every player kill, plus a low-rate tiered weapon/armour drop. While a CAMPAIGN is

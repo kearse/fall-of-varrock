@@ -5,22 +5,27 @@ import org.alter.game.model.Tile
 import org.alter.plugins.content.bosses.DropTable
 
 /**
- * **Raid cities** — the Tarkov loop on top of the fallen world (see docs/raid-cities.md).
+ * **Extraction zones** — the Tarkov loop on top of the fallen world (see docs/raid-cities.md).
  *
- * A raid city is an overrun city turned open-world PvP ground: gear spawns at authored street
- * spots ([LootSpot]), a rare supply drop lands on a warned timer ([RaidCityConfig.rareTable]),
- * and the only safety inside the walls is the banks (auto-protected by
+ * An extraction zone is hostile ground turned open-world PvP loot grounds: gear spawns at
+ * authored street spots ([LootSpot]), a rare supply drop lands on a warned timer
+ * ([RaidCityConfig.rareTable]), and the only safety inside is the banks (auto-protected by
  * [org.alter.plugins.content.combat.BankSafezonePlugin]) plus any explicit [RaidCityConfig.extractions].
  * Death on the streets follows wilderness rules — the killer takes your loot — so every run is
  * a get-in, grab, extract gamble against the occupiers, the PK bots and everyone else raiding.
  *
- * Adding a city = one [RaidCityConfig] in [RaidCities.all] (mirrors
- * [org.alter.plugins.content.bots.BotZones] / `CityFrontiers` — data in, no new plugin code).
- * Varrock is deliberately NOT here: the demon war owns it; raids happen in the other cities.
+ * **STATUS: dormant framework, zero configured locations** (design authority, Sept 2026). The
+ * two launch locations were Falador and Al Kharid; both conflict with the current world state —
+ * Falador is a fortified surviving power (a safe hub), Al Kharid fortified and neutral — so their
+ * configs were removed. The system is kept intact for future hostile zones (wilderness forts,
+ * rogue-held ruins, occupied camps; exact maps are OPEN). Adding a location = one
+ * [RaidCityConfig] in [RaidCities.all] plus, if the ground isn't already overrun, an ambient
+ * takeover pass in `WorldSpawnsPlugin` — data in, no new plugin code. Varrock is deliberately NOT
+ * an extraction zone: the war owns it.
  *
  * IMPORTANT: this object must never reference [org.alter.plugins.content.combat.PvpZones] —
- * PvpZones reads [RaidCities.all] (raid cities are PvP ground), and a reference back would be
- * a classload cycle.
+ * PvpZones reads [RaidCities.all] (zones are PvP ground), and a reference back would be a
+ * classload cycle.
  */
 
 /** One authored ground-loot spawn point. Snapped to walkable at boot; rerolled from the
@@ -74,7 +79,8 @@ data class RaidCityConfig(
 
 object RaidCities {
 
-    val all: List<RaidCityConfig> = listOf(FaladorRaid.config, AlKharidRaid.config)
+    /** Every configured extraction zone. Empty until a replacement hostile location is chosen. */
+    val all: List<RaidCityConfig> = emptyList()
 
     fun at(tile: Tile): RaidCityConfig? = all.firstOrNull { it.area.contains(tile) }
 

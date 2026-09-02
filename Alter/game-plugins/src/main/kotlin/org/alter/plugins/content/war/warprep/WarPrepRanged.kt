@@ -7,24 +7,22 @@ import org.alter.api.ext.message
 import org.alter.game.model.entity.Player
 import org.alter.game.model.timer.TimerKey
 import org.alter.plugins.content.war.Title
-import org.alter.plugins.content.war.roguehunt.RogueProblem
 import org.alter.plugins.content.war.title
 import org.alter.rscm.RSCM.getRSCM
 
 /**
- * **War-Prep II — Ranged** — the Act II prep quest that follows [RogueProblem] and readies the new
- * Knight for the front's skirmish lines by teaching the bow. It is built as a **separate** state
- * machine (the [RogueProblem] pattern), not an extension of [WarPrepChain]: the War-Prep chain's
- * Quest 1 (Magic) closes at the Squire rung, The Rogue Problem carries Squire→Knight, and this quest
- * picks up there and carries **Knight→Lord** — filling the otherwise-unguided mid-game climb.
+ * **War-Prep II — Ranged** — the prep quest that follows [WarPrepChain] (War-Prep I — Magic) and
+ * readies the soldier for the front's skirmish lines by teaching the bow. It is built as a
+ * **separate** state machine, not an extension of [WarPrepChain]: Quest 1 (Magic) closes at the
+ * Squire rung and this quest carries the player on toward **Lord**. The Rogue Problem (the PK
+ * ladder) is an OPTIONAL side assignment and no longer gates it (design authority §8).
  *
- * Shape: gear-up → field test → report → rank-up. Vannaka arms the Knight with a **marksman's
+ * Shape: gear-up → field test → report → rank-up. Vannaka arms the player with a **marksman's
  * kit**, sends them to fell [FIELD_GOAL] enemies with a ranged weapon, then debriefs and pays a
  * **skirmish bounty** ([SKIRMISH_BOUNTY] — pay for the task, never the rank). The Lordship itself
- * is EARNED from the mid-game loops the Knight rank opened — knight farming, city raids, loot
- * keys — and the RANK step tracks until it's bought. (The old "train Ranged to 40" DRILL step was
- * cut — the Rogue Hunting ladder trains combat for real; its ordinal survives as a legacy no-op
- * that migrates straight to GEAR.)
+ * is EARNED — marches, knight farming, loot keys, War Effort — and the RANK step tracks until
+ * it's bought. (The old "train Ranged to 40" DRILL step was cut; its ordinal survives as a legacy
+ * no-op that migrates straight to GEAR.)
  *
  * All state is a single persistent step ordinal ([WARPREP_RANGED_STEP_ATTR]) plus a quest-scoped
  * FIELD kill counter ([WARPREP_RANGED_KILLS_ATTR]); the chain survives relogs and never re-fires once
@@ -73,7 +71,7 @@ object WarPrepRanged {
         GEAR("Return to Vannaka for the marksman's kit."),
         FIELD("Skirmish test: fell $FIELD_GOAL enemies with a ranged weapon; ::warpranged tracks it."),
         REPORT("Return to Vannaka with word of the skirmish."),
-        RANK("Earn your Lordship and buy it at Duke Horacio — farm the Rogue Knights for their kits and rares, raid the fallen cities' loot spots, hunt the wild for loot keys. Heavier armour and command await."),
+        RANK("Earn your Lordship and buy it at Duke Horacio — fight the marches for War Effort and spoils, farm the Rogue Knights for their kits, hunt the wild for loot keys. Heavier armour and command await."),
         DONE("War-Prep — Ranged mastered: you can hold a skirmish line."),
     }
 
@@ -87,13 +85,13 @@ object WarPrepRanged {
     fun fieldKills(p: Player): Int = (p.attr[WARPREP_RANGED_KILLS_ATTR] ?: 0).coerceAtLeast(0)
 
     /**
-     * Begin the chain. Gated on The Rogue Problem being finished (this is Act II's second prep quest —
-     * it only makes sense once the player has reached Knight). Idempotent.
+     * Begin the chain. Gated on War-Prep I (the Wizard Tower chain) being finished — the Rogue
+     * Problem is optional and never gates it. Idempotent.
      */
     fun begin(p: Player) {
         if (step(p) != Step.NONE) return
-        if (!RogueProblem.complete(p)) return
-        advanceTo(p, Step.GEAR) // straight to the kit — the ladder already trained their combat
+        if (!WarPrepChain.complete(p)) return
+        advanceTo(p, Step.GEAR) // straight to the kit — no drill step
     }
 
     /** On login, re-arm the poll timer if on a tracked step, and remind the player of the objective. */
@@ -201,7 +199,7 @@ object WarPrepRanged {
     /** RANK entry: Vannaka's skirmish bounty — pay for the task; the Lordship is earned. */
     private fun grantRankPurse(p: Player) {
         giveItem(p, COINS, SKIRMISH_BOUNTY)
-        p.message("<col=801700>Vannaka pays your skirmish bounty: ${"%,d".format(SKIRMISH_BOUNTY)} coins.</col> The ${TARGET_TITLE.display}ship's ${"%,d".format(TARGET_TITLE.cost)} you'll earn — knight farming, city raids, loot keys — then buy it at Duke Horacio.")
+        p.message("<col=801700>Vannaka pays your skirmish bounty: ${"%,d".format(SKIRMISH_BOUNTY)} coins.</col> The ${TARGET_TITLE.display}ship's ${"%,d".format(TARGET_TITLE.cost)} you'll earn — marches, knight farming, loot keys — then buy it at Duke Horacio.")
     }
 
     private fun grantCompletion(p: Player) {
@@ -210,7 +208,7 @@ object WarPrepRanged {
 
     /** One-line progress report (`::warpranged` and Vannaka's chatter). */
     fun statusLine(p: Player): String = when (step(p)) {
-        Step.NONE -> "War-Prep II — Ranged: finish Rogue Hunting II first."
+        Step.NONE -> "War-Prep II — Ranged: finish War-Prep I (the Wizard Tower) first."
         Step.FIELD -> "War-Prep II — Ranged: <col=801700>${fieldKills(p)}/$FIELD_GOAL</col> felled with a ranged weapon."
         Step.DONE -> "War-Prep II — Ranged: <col=4f9b4f>complete</col>."
         else -> "War-Prep II — Ranged — current objective: ${step(p).objective}"

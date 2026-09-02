@@ -17,9 +17,10 @@ import org.alter.plugins.content.war.title
 import org.alter.rscm.RSCM.getRSCM
 
 /**
- * **War-Prep quest chain** — the onboarding that picks up where the [Recruit Trials] leave off and
- * readies a citizen-soldier for the war's **raids** (raid access is gated on [complete]). It is a
- * short chain of "prep quests", each teaching a pillar the player will need on the front. This is
+ * **War-Prep quest chain** (LEGACY onboarding, pre-Block-2) — picks up where the Recruit Trials
+ * leave off and readies a citizen-soldier for the front. Joining the war is never gated on it
+ * (marches are open to every citizen); it is the guided hallway. [complete] opens War-Prep II
+ * ([WarPrepRanged]) and lets the Recruiting Sergeant offer the optional Rogue Problem. This is
  * the pure state machine; [WarPrepChainPlugin] owns the wiring (login resume, the poll timer).
  *
  * **Quest 1 — Magic** (built): the only way to wield Ancient/Lunar/Arceuus magic is to clear the
@@ -116,9 +117,6 @@ object WarPrepChain {
 
     fun started(p: Player): Boolean = step(p) != Step.NONE
     fun complete(p: Player): Boolean = step(p) == Step.DONE
-
-    /** Raid access gate: the recruit must finish the war-prep chain before joining the war's raids. */
-    fun raidReady(p: Player): Boolean = complete(p)
 
     /** Begin the chain (called from Vannaka's Recruit-Trials finale). Idempotent — won't restart it. */
     fun begin(p: Player) {
@@ -328,8 +326,11 @@ object WarPrepChain {
 
     private fun grantCompletion(p: Player) {
         p.unlockMageBooks() // idempotent — already unlocked on the RETURN step
-        p.message("<col=801700>War-Prep — Magic complete!</col> You've proven you can survive the front's magic. You may now fight beside the Knights of Lumbridge when they march on the enemy.")
+        p.message("<col=801700>War-Prep — Magic complete!</col> You've proven you can survive the front's magic. Fight beside the Knights of Lumbridge whenever they march on the enemy.")
         p.message("<col=801700>Watch for the Knight-Captain's muster call</col> — it sounds before every march — and answer it with <col=ffae00>::march</col>.")
+        p.message("<col=801700>Vannaka has your next lesson</col> — the bow (War-Prep II). And the Recruiting Sergeant has an <col=ffae00>optional</col> assignment for anyone who wants to learn to fight players: the Rogue Problem.")
+        // War-Prep II follows straight on (its begin() re-checks its own gate — a no-op otherwise).
+        WarPrepRanged.begin(p)
     }
 
     /** Add [amount] of [key] to the bag; whatever doesn't fit overflows to the bank. Defensive on keys. */

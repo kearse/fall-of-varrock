@@ -52,7 +52,14 @@ class RareDropPlugin(
 
     init {
         val timer = TimerKey()
-        onWorldInit { world.timers[timer] = cadence() }
+        onWorldInit {
+            // Dormant while no extraction zone is configured — nothing to warn about, no timer.
+            if (RaidCities.all.isEmpty()) {
+                logger.info { "[SUPPLY DROP] no extraction zones configured — supply drops disabled." }
+            } else {
+                world.timers[timer] = cadence()
+            }
+        }
         onTimer(timer) {
             when (state) {
                 State.IDLE -> {
@@ -86,6 +93,10 @@ class RareDropPlugin(
         }
 
         onCommand("rarespawn", Privilege.ADMIN_POWER, description = "Force the supply-drop cycle forward (test)") {
+            if (RaidCities.all.isEmpty()) {
+                player.message("<col=801700>[test] No extraction zones are configured — supply drops are dormant.</col>")
+                return@onCommand
+            }
             world.timers[timer] = 1
             player.message("<col=4f9b4f>[test] Supply-drop cycle advanced (${if (state == State.IDLE) "warning" else "landing"} next tick).</col>")
         }
@@ -95,6 +106,7 @@ class RareDropPlugin(
     private fun cadence(): Int = BASE_TICKS + world.random(-JITTER_TICKS..JITTER_TICKS)
 
     private fun warn() {
+        if (RaidCities.all.isEmpty()) return // dormant: nothing to land a drop on
         val city = RaidCities.all[world.random(RaidCities.all.size - 1)]
         val district = city.districts[world.random(city.districts.size - 1)]
         targetCity = city

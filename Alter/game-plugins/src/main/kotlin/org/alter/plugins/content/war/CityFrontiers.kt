@@ -247,73 +247,47 @@ object CityFrontiers {
         keep = LUMBRIDGE_KEEP,
     )
 
-    // ====================== VARROCK — the DEMON-HELD city, the commanders' HOSTILE target (§3C slice) ==========
-    // STORY: Varrock FELL to demons — they took the city in under a day and hold it still (see
-    // WorldSpawnsPlugin.applyFallenVarrock, the ambient layer). A Minister/King campaign/conquest here
-    // is a PURGE of the demon occupation: lesser demons on the approach + lower square, greater demons
-    // through the square, and the tormented demons who hold the ruined palace. Same street staging +
-    // war-chest economy as before ([CapturePayout]); only the occupiers changed — the bandits/rogues who
-    // used to hold Varrock fled to Falador ([FALADOR] below). These are END-GAME enemies (no aggro-floor).
+    // ====================== VARROCK — the FALLEN city, the commanders' HOSTILE target ==========
+    // STORY (design authority, Sept 2026): Varrock fell twelve years ago to Zemouregal's undead
+    // assault and the Senntisten catastrophe beneath it; it stays fallen. The dead still hold its
+    // streets (see WorldSpawnsPlugin.applyFallenVarrock, the ambient layer) alongside the rogues who
+    // moved in. A Minister/King campaign/conquest here is a temporary battlefield victory over that
+    // host — never a reclamation: the risen dead on the approach + lower square, skeletal warriors
+    // through the square, the undead champions who hold the ruined palace. The rogue occupiers
+    // (marauders, Black Knights) hold the southern road OUTSIDE the walls — the public marches'
+    // ground ([MarchTargets.VARROCK_OUTSKIRTS]). These are END-GAME enemies (no aggro-floor).
     //
-    // Demon npc ids are DELIBERATELY the unused variants (lesser_demon_2006, greater_demon_2026/2027) so
-    // the frontier's global combat def + death handler don't collide with the ambient demons
-    // (lesser_demon 2005 / greater_demon 2025) that WorldSpawnsPlugin already spawns in the city.
-    // attackAnimation/block/death are the classic demon melee anims — TUNABLE if the swing looks off.
+    // Undead npc ids are DELIBERATELY variants with no ambient world spawns (zombie_880, skeleton_924,
+    // skeleton_hero) so the frontier's global combat def + death handler don't collide with the
+    // ambient undead (zombie 26 / skeleton 70) that WorldSpawnsPlugin spawns in the city. The
+    // NpcAnims layer supplies each model's own attack/block/death set (see NpcAnims). TUNABLE.
 
-    /** Lesser demons — the front line holding the approach + lower square. */
-    private val V_LESSER_DEMON_DEF = NpcCombatDef.DEFAULT.copy(
+    /** The risen dead — the front line holding the approach + lower square. */
+    private val V_RISEN_DEAD_DEF = NpcCombatDef.DEFAULT.copy(
         attack = 60, strength = 65, defence = 50, hitpoints = 80,
-        attackSpeed = 5, attackAnimation = 64, blockAnimation = 65, deathAnimation = listOf(67),
+        attackSpeed = 5,
         aggressiveRadius = 6, aggroTargetDelay = 4, aggressiveTimer = 400,
     )
 
-    /** Greater demons — the heavy line through the square. */
-    private val V_GREATER_DEMON_DEF = NpcCombatDef.DEFAULT.copy(
+    /** Skeletal warriors — the heavy line through the square. */
+    private val V_SKELETAL_WARRIOR_DEF = NpcCombatDef.DEFAULT.copy(
         attack = 95, strength = 90, defence = 80, hitpoints = 130,
-        attackSpeed = 5, attackAnimation = 64, blockAnimation = 65, deathAnimation = listOf(67),
+        attackSpeed = 5,
         aggressiveRadius = 6, aggroTargetDelay = 4, aggressiveTimer = 400,
     )
 
-    /** Tormented demons — the palace line, deepest and richest (they hold the demons' plunder). */
-    private val V_TORMENTED_DEMON_DEF = NpcCombatDef.DEFAULT.copy(
+    /** Undead champions — the palace line, deepest and richest (they hold the city's plunder). */
+    private val V_UNDEAD_CHAMPION_DEF = NpcCombatDef.DEFAULT.copy(
         attack = 120, strength = 120, defence = 100, hitpoints = 180,
-        attackSpeed = 5, attackAnimation = 64, blockAnimation = 65, deathAnimation = listOf(67),
-        aggressiveRadius = 6, aggroTargetDelay = 4, aggressiveTimer = 400,
-    )
-
-    // The old Varrock occupiers — marauders, Black Knights and rogue captains — fled the demons and now
-    // garrison overrun Falador ([FALADOR] below). Their combat defs are kept and reused there. Human
-    // models, so the generic melee anims (422/424/836) look right for the bare-handed rabble — but NOT
-    // for the Black Knights, who visibly wield a black sword + kiteshield and were punching with it.
-    // They get the human sword slash (390) and shield block (1156) instead (see NpcAnims.ARMED, which
-    // also covers every other black-knight spawn path).
-
-    /** Marauders — the street rabble holding the Falador approach + streets. */
-    private val V_MARAUDER_DEF = NpcCombatDef.DEFAULT.copy(
-        attack = 30, strength = 28, defence = 25, hitpoints = 40,
-        attackSpeed = 5, attackAnimation = 422, blockAnimation = 424, deathAnimation = listOf(836),
-        aggressiveRadius = 6, aggroTargetDelay = 4, aggressiveTimer = 400,
-    )
-
-    /** Black Knights — the heavy infantry of the Falador occupation. Sword slash + shield block,
-     *  not the unarmed 422/424 (they carry a black sword — punching with it read as a bug). */
-    private val V_BLACK_KNIGHT_DEF = NpcCombatDef.DEFAULT.copy(
-        attack = 70, strength = 65, defence = 70, hitpoints = 90,
-        attackSpeed = 5, attackAnimation = 390, blockAnimation = 1156, deathAnimation = listOf(836),
-        aggressiveRadius = 6, aggroTargetDelay = 4, aggressiveTimer = 400,
-    )
-
-    /** Rogue captains — the deepest, richest Falador line (they hoard the plunder they carried out). */
-    private val V_ROGUE_CAPTAIN_DEF = NpcCombatDef.DEFAULT.copy(
-        attack = 85, strength = 80, defence = 80, hitpoints = 110,
-        attackSpeed = 5, attackAnimation = 422, blockAnimation = 424, deathAnimation = listOf(836),
+        attackSpeed = 5,
         aggressiveRadius = 6, aggroTargetDelay = 4, aggressiveTimer = 400,
     )
 
     /** BizzyZ's hand-WALKED Varrock streets + central square (via `::recroute`) — every tile is on
      *  reachable public ground, so defenders placed here never sit in a sealed building. Partitioned
-     *  by depth into the three lines below; the deep-castle overshoot (z>3472) is trimmed. */
-    private val VARROCK_STREETS: List<Tile> = listOf(
+     *  by depth into the three lines below; the deep-castle overshoot (z>3472) is trimmed. Also the
+     *  source of the [VarrockDistrict] centres. */
+    internal val VARROCK_STREETS: List<Tile> = listOf(
         // South main street (x3211, climbing north into the city)
         Tile(3211, 3384, 0), Tile(3211, 3386, 0), Tile(3211, 3388, 0), Tile(3211, 3390, 0),
         Tile(3211, 3392, 0), Tile(3211, 3394, 0), Tile(3211, 3396, 0), Tile(3211, 3398, 0),
@@ -355,36 +329,37 @@ object CityFrontiers {
         // Unused for spawn geometry now (explicit street staging below); kept for reference/leash off.
         cityLimits = Area(3180, 3400, 3270, 3472),
         enemyLines = listOf(
-            // Demons stand on the WALKED streets (one per tile), tiered by depth: lesser demons on the
-            // approach + lower square, greater demons through the square, tormented demons by the palace.
-            // Small walkRadius so they hold their street and don't wander into a building. maxEnemies
-            // high (no cap — the tile counts ARE the garrison). campaignKillValue tuned for a ~10m pool.
-            // Demon variant ids (2006/2026/2027) are unused by the ambient demon layer (2005/2025), so the
-            // frontier's global combat def + death handler stay separate. Boot logs a loud ERROR if any id
-            // turns out not attackable.
+            // The undead host stands on the WALKED streets (one per tile), tiered by depth: the risen
+            // dead on the approach + lower square, skeletal warriors through the square, the undead
+            // champions by the palace. Small walkRadius so they hold their street and don't wander into
+            // a building. maxEnemies high (no cap — the tile counts ARE the garrison). campaignKillValue
+            // tuned for a ~10m pool. The ids are variants with no ambient world spawns (zombie_880,
+            // skeleton_924, skeleton_hero), so the frontier's global combat def + death handler never
+            // collide with the ambient undead layer (zombie 26 / skeleton 70). Boot logs a loud ERROR
+            // if any id turns out not attackable.
             EnemyLine(
-                level = 3, npcName = "npc.lesser_demon_2006", combatDef = V_LESSER_DEMON_DEF,
+                level = 3, npcName = "npc.zombie_880", combatDef = V_RISEN_DEAD_DEF,
                 gap = 0, depth = 0, spacing = 1, maxEnemies = 200, walkRadius = 4,
                 explicitStaging = VARROCK_STREETS.filter { it.z <= 3439 },
-                enemyNoun = "lesser demon", coinMin = 80, coinMax = 180, gearDropOneIn = 12,
+                enemyNoun = "risen dead", coinMin = 80, coinMax = 180, gearDropOneIn = 12,
                 campaignKillValue = 140_000,
                 combatLevelOverride = 82,
                 singleCombat = true, // 1v1 + anti-stack: defenders fight one foe, the rest wait their turn
             ),
             EnemyLine(
-                level = 2, npcName = "npc.greater_demon_2026", combatDef = V_GREATER_DEMON_DEF,
+                level = 2, npcName = "npc.skeleton_924", combatDef = V_SKELETAL_WARRIOR_DEF,
                 gap = 0, depth = 0, spacing = 1, maxEnemies = 200, walkRadius = 4,
                 explicitStaging = VARROCK_STREETS.filter { it.z in 3440..3459 },
-                enemyNoun = "greater demon", coinMin = 200, coinMax = 400, gearDropOneIn = 8,
+                enemyNoun = "skeletal warrior", coinMin = 200, coinMax = 400, gearDropOneIn = 8,
                 campaignKillValue = 350_000,
                 combatLevelOverride = 121,
                 singleCombat = true,
             ),
             EnemyLine(
-                level = 1, npcName = "npc.greater_demon_2027", combatDef = V_TORMENTED_DEMON_DEF,
+                level = 1, npcName = "npc.skeleton_hero", combatDef = V_UNDEAD_CHAMPION_DEF,
                 gap = 0, depth = 0, spacing = 1, maxEnemies = 200, walkRadius = 4,
                 explicitStaging = VARROCK_STREETS.filter { it.z in 3460..3472 },
-                enemyNoun = "tormented demon", coinMin = 400, coinMax = 800, gearDropOneIn = 5,
+                enemyNoun = "undead champion", coinMin = 400, coinMax = 800, gearDropOneIn = 5,
                 campaignKillValue = 700_000,
                 combatLevelOverride = 145,
                 singleCombat = true,
@@ -395,79 +370,7 @@ object CityFrontiers {
         protectCity = false,
     )
 
-    // ====================== FALADOR — the OVERRUN city, the scheduled marches' target ==========================
-    // STORY: when the demons took Varrock its old occupiers — the bandits, Black Knights and rogue
-    // captains — fled west and overran Falador (see WorldSpawnsPlugin.applyFallenFalador, the ambient
-    // layer, and the named captains in NamedCaptainsPlugin who hole up here). The realm's scheduled
-    // MARCHes/GRAND_MARCHes ([MarchPlugin]) move on this city district by district ([Districts]); the
-    // garrison reuses the relocated occupier defs above. protectCity=false, campaign-gated: the garrison
-    // exists only while a march holds the front. Ids are the freed occupier ids (bandit_735 /
-    // black_knight_4959 / rogue_6603), proven attackable in the old Varrock frontier.
-
-    /** Main Falador thoroughfares (east–west high road ~z3353 + the north–south road ~x3013 + a few
-     *  side streets) — coarse street tiles so the garrison stands on open roads, not sealed buildings.
-     *  Walkability-filtered at build. TUNABLE — re-record with `::recroute` for full street coverage. */
-    private val FALADOR_STREETS: List<Tile> = listOf(
-        // East–west high road (east gate x3047 → west gate x2951), one tile every ~4
-        Tile(3047, 3353, 0), Tile(3043, 3353, 0), Tile(3039, 3353, 0), Tile(3035, 3353, 0),
-        Tile(3031, 3353, 0), Tile(3027, 3353, 0), Tile(3023, 3353, 0), Tile(3019, 3353, 0),
-        Tile(3015, 3353, 0), Tile(3011, 3353, 0), Tile(3007, 3353, 0), Tile(3003, 3353, 0),
-        Tile(2999, 3353, 0), Tile(2995, 3353, 0), Tile(2991, 3353, 0), Tile(2987, 3353, 0),
-        Tile(2983, 3353, 0), Tile(2979, 3353, 0), Tile(2975, 3353, 0), Tile(2971, 3353, 0),
-        Tile(2967, 3353, 0), Tile(2963, 3353, 0), Tile(2959, 3353, 0), Tile(2955, 3353, 0),
-        Tile(2951, 3353, 0),
-        // North–south road (south gate z3306 → north gate z3396)
-        Tile(3013, 3311, 0), Tile(3013, 3319, 0), Tile(3013, 3327, 0), Tile(3013, 3335, 0),
-        Tile(3013, 3343, 0), Tile(3013, 3361, 0), Tile(3013, 3369, 0), Tile(3013, 3377, 0),
-        Tile(3013, 3385, 0), Tile(3013, 3393, 0),
-        // Central square + east-market / west-castle side streets
-        Tile(3009, 3357, 0), Tile(3017, 3357, 0), Tile(3009, 3349, 0), Tile(3017, 3349, 0),
-        Tile(3043, 3345, 0), Tile(3043, 3361, 0), Tile(3035, 3345, 0), Tile(3035, 3361, 0),
-        Tile(2965, 3361, 0), Tile(2957, 3345, 0), Tile(2957, 3361, 0), Tile(2973, 3345, 0),
-    )
-
-    val FALADOR = FrontierConfig(
-        cityKey = "falador",
-        displayName = "Falador",
-        // Leash-off reference box (the fallen-Falador footprint from WorldSpawnsPlugin). Spawn geometry
-        // is the explicit street staging below, not this box.
-        cityLimits = Area(2942, 3300, 3066, 3400),
-        enemyLines = listOf(
-            // The relocated occupiers hold the Falador streets, tiered east→west (deeper into the city):
-            // marauders on the east approach, Black Knights through the centre, rogue captains to the west.
-            EnemyLine(
-                level = 3, npcName = "npc.bandit_735", combatDef = V_MARAUDER_DEF,
-                gap = 0, depth = 0, spacing = 1, maxEnemies = 200, walkRadius = 4,
-                explicitStaging = FALADOR_STREETS.filter { it.x >= 3018 },
-                enemyNoun = "marauder", coinMin = 60, coinMax = 140, gearDropOneIn = 12,
-                campaignKillValue = 90_000,
-                combatLevelOverride = 34,
-                singleCombat = true,
-            ),
-            EnemyLine(
-                level = 2, npcName = "npc.black_knight_4959", combatDef = V_BLACK_KNIGHT_DEF,
-                gap = 0, depth = 0, spacing = 1, maxEnemies = 200, walkRadius = 4,
-                explicitStaging = FALADOR_STREETS.filter { it.x in 2985..3017 },
-                enemyNoun = "Black Knight", coinMin = 150, coinMax = 320, gearDropOneIn = 8,
-                campaignKillValue = 220_000,
-                combatLevelOverride = 68,
-                singleCombat = true,
-            ),
-            EnemyLine(
-                level = 1, npcName = "npc.rogue_6603", combatDef = V_ROGUE_CAPTAIN_DEF,
-                gap = 0, depth = 0, spacing = 1, maxEnemies = 200, walkRadius = 4,
-                explicitStaging = FALADOR_STREETS.filter { it.x <= 2984 },
-                enemyNoun = "rogue captain", coinMin = 300, coinMax = 640, gearDropOneIn = 5,
-                campaignKillValue = 420_000,
-                combatLevelOverride = 110,
-                singleCombat = true,
-            ),
-        ),
-        // Same as Varrock: an enemy city we ASSAULT — no friendly defenders, no keep, no safe-area leash.
-        protectCity = false,
-    )
-
-    val all: List<FrontierConfig> = listOf(LUMBRIDGE, VARROCK, FALADOR)
+    val all: List<FrontierConfig> = listOf(LUMBRIDGE, VARROCK)
 
     /** Expand an [Area] outward by [m] tiles on every side. */
     private fun Area.expand(m: Int) =

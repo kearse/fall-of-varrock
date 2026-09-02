@@ -17,6 +17,7 @@ import org.alter.game.plugin.PluginRepository
 import org.alter.plugins.content.bosses.CollectionLog
 import org.alter.plugins.content.bosses.DropEntry
 import org.alter.plugins.content.bosses.DropTable
+import org.alter.plugins.content.companion.CompanionPolicy
 import org.alter.plugins.content.economy.PointKind
 import org.alter.plugins.content.economy.awardTickets
 import org.alter.plugins.content.raids.RaidInstance
@@ -69,6 +70,10 @@ class VorkathPlugin(
     )
 
     init {
+        // Classic boss, companion-UNAWARE by design: the fight is never edited for companions,
+        // they simply stand down inside the arena instance (CompanionPolicy, Block 1).
+        CompanionPolicy.denyInstanceOf(ARENA_SOURCE, "Vorkath's arena is a solo fight")
+
         // ── Entry / exit: the icy spines on Ungael. Outside → allocate + enter; the
         // instance's copied spines → exit back to the island surface.
         onObjOption(obj = "object.ice_chunks_31990", option = "climb-over") {

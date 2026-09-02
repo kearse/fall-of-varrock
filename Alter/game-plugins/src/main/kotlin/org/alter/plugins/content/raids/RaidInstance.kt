@@ -54,6 +54,27 @@ class RaidInstance private constructor(
 
     companion object {
         /**
+         * Live instances → the source area each one copies, so content can ask "what is this
+         * instance tile a copy of?" without the allocating plugin tracking its own instances
+         * (`CompanionPolicy.denyInstanceOf`). Stale entries (deallocated maps) are pruned on the
+         * next allocation — the allocator no longer resolves their corner tile to that map.
+         */
+        private val sources = HashMap<InstancedMap, Area>()
+
+        /** The source [Area] the instance under [tile] was copied from, or null if [tile] isn't instanced. */
+        fun sourceOf(world: World, tile: Tile): Area? {
+            val map = world.instanceAllocator.getMap(tile) ?: return null
+            return sources[map]
+        }
+
+        private fun remember(world: World, map: InstancedMap, source: Area) {
+            sources.keys.removeAll { stale ->
+                world.instanceAllocator.getMap(Tile(stale.area.bottomLeftX, stale.area.bottomLeftY, 0)) !== stale
+            }
+            sources[map] = source
+        }
+
+        /**
          * Allocate an instance copying [sourceArea] (snapped to chunk bounds) for [owner].
          * Returns null if the instance space is full. Force-loads the source regions first so
          * their collision/objects are present to copy even if no player has visited them.
@@ -99,6 +120,7 @@ class RaidInstance private constructor(
                 .build()
 
             val map = world.instanceAllocator.allocate(world, builder.build(), config) ?: return null
+            remember(world, map, sourceArea)
             return RaidInstance(map, baseX, baseZ)
         }
 
@@ -167,6 +189,7 @@ class RaidInstance private constructor(
                 .build()
 
             val map = world.instanceAllocator.allocate(world, builder.build(), config) ?: return null
+            remember(world, map, sourceArea)
             return RaidInstance(map, baseX, baseZ, floorStrideTiles = strideChunks shl 3)
         }
     }

@@ -21,7 +21,8 @@ class EconomyPlugin(
         onCommand("points", description = "Show your reward-point balances") {
             player.message("--- Your reward points ---")
             PointKind.values().forEach { kind ->
-                player.message("${kind.display}: <col=801700>${player.points(kind)}</col>")
+                val note = if (kind.spendable) "" else " <col=808080>(lifetime service record — never spent; ::service)</col>"
+                player.message("${kind.display}: <col=801700>${player.points(kind)}</col>$note")
             }
         }
     }

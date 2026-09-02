@@ -307,6 +307,10 @@ Reusable pieces — reach for these before inventing a new one. Metrics above.
     which is exactly the double-claim this list exists to prevent: once the varp-table ceiling
     fix let kit publishes complete, every `::kits` open pulsed "quest book open" via the chest
     slot varp. If a varp isn't in this list, it isn't yours.
+    **4686-4699 RESERVED, unclaimed — framework quest journal varps** (`QuestDefinition.journalVarp`,
+    generic packing `stepIndex+1 (bits 0-7) | progress (bits 8-19) | state (bits 20-21: 0 none,
+    1 in progress, 2 complete)` — `QuestEngine.publish`). Block 1 claims none; a Block-2 quest that
+    needs a journal row takes the next id from this block and records it here individually.
     (4601/4609/4616 all feed the `lofdials` dial row.)
     Every id in this map is guaranteed writable server-side: the varp table is sized
     `maxOf(cache varp count, Player.CUSTOM_VARP_CEILING = 6000)` — the cache count alone sat BELOW

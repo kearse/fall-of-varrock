@@ -20,9 +20,14 @@ enum class ArmourTier(val display: String) {
 }
 
 /**
- * The feudal rank ladder (The War / progression — see `docs/war-system-design.md`).
- * Ranks are **bought with coins** from Duke Horacio (not earned passively). Coins
- * come from fighting goblins and from skilling + selling to the general store.
+ * The feudal rank ladder — **standing and authority** (design authority §5). Ranks are raised
+ * by Duke Horacio once [RankEligibility] is met: the coin price below is one requirement, a
+ * floor of lifetime War Effort (service) is another, and milestones such as Veteran of Varrock
+ * will join them. Never automatic from a quest, never bought with cash.
+ *
+ * THE INVARIANT: rank gates what you may WEAR and which wars you may START
+ * ([CommandTier] / [Player.canCommand]); it never gates JOINING a war that is under way —
+ * `::march` and every rally are open to every citizen.
  *
  * Rank is an ADDITIONAL armour requirement on top of the classic skill-level
  * requirements (loaded for all gear in ItemMetadataService — 40 Defence for rune
@@ -33,29 +38,31 @@ enum class ArmourTier(val display: String) {
  *  - Commoner (10k): steel armour
  *  - Squire (50k): black armour + coloured name (Squire and up) + rank cape ([RankCapes], Squire and up)
  *  - Soldier (150k): mithril & adamant armour
- *  - Knight (500k): rune armour + 1 companion soldier ([companions])
- *  - Lord (2M): ALL armour + field troops & summon bosses ([CommandTier.RAID]) + 2 companions
- *  - Minister (10M): launch war campaigns ([CommandTier.CAMPAIGN]) + 3 companions
+ *  - Knight (500k): rune armour + a companion soldier ([roster] 1)
+ *  - Lord (2M): ALL armour + field troops & summon bosses ([CommandTier.RAID]) + roster of 2
+ *  - Minister (10M): launch war campaigns ([CommandTier.CAMPAIGN]) + roster of 3
  *  - King (50M): launch conquests, lead the realm ([CommandTier.CONQUEST])
  *
- * [cost] is the price to BUY that rank. [PEASANT] is the free starting rank.
- * [companions] is how many companion soldiers the rank may field (General Zo).
+ * [cost] is the coin price of that rank (the sink half of eligibility). [PEASANT] is the free
+ * starting rank. [roster] is how many companion soldiers the rank may KEEP on its banner (General
+ * Zo) — never how many stand beside you: everyone fields ONE at a time
+ * (`CompanionRegistry.ACTIVE_MAX`); a bigger roster means more soldiers to swap between.
  */
 enum class Title(
     val display: String,
     val cost: Int,
     val maxTier: ArmourTier,
     val nameColor: String? = null,
-    val companions: Int = 0,
+    val roster: Int = 0,
 ) {
     PEASANT("Peasant", 0, ArmourTier.IRON),
     COMMONER("Commoner", 10_000, ArmourTier.STEEL),
     SQUIRE("Squire", 50_000, ArmourTier.BLACK, "9acd32"),    // yellow-green
     SOLDIER("Soldier", 150_000, ArmourTier.ADAMANT, "1e90ff"), // blue - mithril & adamant
-    KNIGHT("Knight", 500_000, ArmourTier.RUNE, "c0c0c0", companions = 1),      // silver - rune
-    LORD("Lord", 2_000_000, ArmourTier.DRAGON, "a020f0", companions = 2),      // purple
-    MINISTER("Minister", 10_000_000, ArmourTier.DRAGON, "dc143c", companions = 3), // crimson
-    KING("King", 50_000_000, ArmourTier.DRAGON, "ffd700", companions = 3),     // gold
+    KNIGHT("Knight", 500_000, ArmourTier.RUNE, "c0c0c0", roster = 1),      // silver - rune
+    LORD("Lord", 2_000_000, ArmourTier.DRAGON, "a020f0", roster = 2),      // purple
+    MINISTER("Minister", 10_000_000, ArmourTier.DRAGON, "dc143c", roster = 3), // crimson
+    KING("King", 50_000_000, ArmourTier.DRAGON, "ffd700", roster = 3),     // gold
     ;
 
     companion object {

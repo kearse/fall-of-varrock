@@ -9,8 +9,8 @@ import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
 
 /**
- * **War-supply dial feed** — keeps the realm's war-supply meter ([RealmSupply]) in front of every
- * player. Publishes one packed varp [VARP] that the client's dial row
+ * **Realm Supplies dial feed** — keeps the realm's shared stockpile ([RealmSupply]) in front of
+ * every player. Publishes one packed varp [VARP] that the client's dial row
  * (`net.runelite.client.plugins.lofdials`) reads and draws as the far-right supply gauge; same
  * continuous-state pattern as [WarProgressPlugin] (refresh timer + onLogin, only sent on change).
  *

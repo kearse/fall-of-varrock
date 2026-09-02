@@ -30,6 +30,7 @@ import org.alter.plugins.content.bosses.isProtectedFrom
 import org.alter.plugins.content.combat.*
 import org.alter.plugins.content.combat.formula.MagicCombatFormula
 import org.alter.plugins.content.combat.formula.RangedCombatFormula
+import org.alter.plugins.content.companion.CompanionPolicy
 import org.alter.plugins.content.economy.PointKind
 import org.alter.plugins.content.economy.awardTickets
 import org.alter.plugins.content.raids.RaidInstance
@@ -188,6 +189,9 @@ class FightCavePlugin(
             }
         }
         onLogout { sessionOf(player)?.let { cleanup(it, teleport = false) } }
+
+        // Companions stand down for the run (they'd tank Jad and the waves, stealing all the aggro).
+        CompanionPolicy.register { owner, _ -> if (inCave(owner)) CompanionPolicy.Verdict("the Fight Cave is a solo trial") else null }
     }
 
     // ───────────────────────────── session lifecycle ─────────────────────────────
@@ -610,7 +614,7 @@ class FightCavePlugin(
          *  aggro — "Jad not attacking me"). Updated in [start]/[cleanup]. */
         private val activeOwners = HashSet<PlayerUID>()
 
-        /** True while [p] is fighting in the cave — read by CompanionBrain to bench companions. */
+        /** True while [p] is fighting in the cave — the CompanionPolicy rule registered in init reads it. */
         fun inCave(p: Player): Boolean = activeOwners.contains(p.uid)
 
         // The fight-cave wave roster — rev-228 cache ids via RSCM (3116..3128).
