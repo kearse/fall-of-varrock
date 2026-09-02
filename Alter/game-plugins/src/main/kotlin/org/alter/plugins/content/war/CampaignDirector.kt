@@ -83,6 +83,12 @@ class CampaignDirector(
     /** This op's battlefield box (the band it fights and counts kills in). */
     val battleArea: Area get() = op.battleArea
 
+    /** The service-ledger key this op files under when it ends (`WarEvents.didParticipate`). */
+    val opKey: String get() = org.alter.plugins.content.war.events.ServiceRecords.opKey(tier, op, sponsor != null)
+
+    /** Player-facing name of the op's target. */
+    val displayName: String get() = op.displayName
+
     /** The op's kill quota — the tier's base. */
     private var quota = tier.quota
 

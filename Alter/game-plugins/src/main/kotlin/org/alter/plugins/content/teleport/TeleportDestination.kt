@@ -49,6 +49,9 @@ enum class DestState { BUILT, COMING_SOON }
  * @param wildLevel wilderness level shown next to [DangerTag.WILDERNESS] (null otherwise).
  * @param teleType animation/gfx + wild-level restriction used when teleporting.
  * @param icon sprite id for the row (assigned when the cache UI is authored; -1 = none yet).
+ * @param routeKey optional [TransportRoutes] key gating this destination per player (null = always
+ *   open). Appended LAST with a default so the catalog rows — and the client mirror
+ *   `LofTeleportsData.java` — are untouched by the field's existence.
  */
 data class TeleportDestination(
     val key: String,
@@ -60,6 +63,7 @@ data class TeleportDestination(
     val state: DestState = DestState.BUILT,
     val teleType: TeleportType = TeleportType.MODERN,
     val icon: Int = -1,
+    val routeKey: String? = null,
 ) {
     val isBuilt: Boolean get() = state == DestState.BUILT
 

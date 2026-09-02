@@ -7,13 +7,12 @@ import org.alter.game.Server
 import org.alter.game.model.World
 import org.alter.game.model.entity.Npc
 import org.alter.game.model.entity.Player
-import org.alter.game.model.move.moveTo
 import org.alter.game.model.priv.Privilege
 import org.alter.game.model.timer.TimerKey
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
 import org.alter.plugins.content.announce.Announce
-import org.alter.plugins.content.combat.PvpZones
+import org.alter.plugins.content.war.events.WarEvents
 import org.alter.plugins.content.war.forge.WarForge
 import org.alter.rscm.RSCM.getRSCM
 
@@ -52,8 +51,6 @@ class MarchPlugin(
     private var state = State.IDLE
     /** World cycle the current timer leg completes at (drives the "next march in Xm" line). */
     private var nextFireCycle = 0
-    /** username -> world cycle until which their `::march` hot-zone confirmation stands. */
-    private val hotConfirm = HashMap<String, Int>()
     /** The target the mustering march will move on (picked at the muster call). */
     private var target: MarchTarget? = null
     /** The target the march in the field is fighting over, if any. */
@@ -85,27 +82,19 @@ class MarchPlugin(
             }
         }
 
-        // ::march — rally to the column. Free, for everyone; the march is the public war.
+        // ::march — rally to the column. Free, for everyone; the march is the public war. The
+        // join itself (with its PvP double-confirm) lives in WarEvents so quests share it.
         onCommand("march", description = "Rally to the knights' march on the enemy") {
-            val march = CampaignRegistry.activeMarch()
-            if (march == null) {
-                val mins = etaMinutes(world)
-                val eta = if (state == State.MUSTERING) "it sets out in ~$mins minute(s)" else "the next musters in ~$mins minute(s)"
-                player.message("<col=801700>No march is in the field — $eta. Watch for the muster call.</col>")
-                return@onCommand
+            when (val r = WarEvents.join(player, world)) {
+                WarEvents.JoinResult.NoMarch -> {
+                    val mins = etaMinutes(world)
+                    val eta = if (state == State.MUSTERING) "it sets out in ~$mins minute(s)" else "the next musters in ~$mins minute(s)"
+                    player.message("<col=801700>No march is in the field — $eta. Watch for the muster call.</col>")
+                }
+                is WarEvents.JoinResult.NeedsConfirm ->
+                    player.message("<col=801700>The column is already fighting — ${r.reason}.</col> Type <col=ffae00>::march</col> again to rally to them anyway.")
+                WarEvents.JoinResult.Joined -> {}
             }
-            val dest = march.rallyTile(world)
-            // Rallying into the live battle line, or onto wilderness ground (the Varrock outskirts),
-            // where other players can attack you — make them say it twice.
-            if ((march.coversBattle(dest) || PvpZones.isWilderness(dest)) && (hotConfirm[player.username] ?: 0) < world.currentCycle) {
-                hotConfirm[player.username] = world.currentCycle + CONFIRM_WINDOW
-                val why = if (PvpZones.isWilderness(dest)) "that is wilderness ground and other players can attack you" else "that is the live battle line"
-                player.message("<col=801700>The column is already fighting — $why.</col> Type <col=ffae00>::march</col> again to rally to them anyway.")
-                return@onCommand
-            }
-            hotConfirm.remove(player.username)
-            player.moveTo(dest)
-            player.message("<col=4f9b4f>You rally to the knights' column. Fight beside them — the realm pays its soldiers from the spoils.</col>")
         }
 
         // Warden kill: additive death hook, bails instantly unless a Grand March Warden is up.
@@ -299,8 +288,6 @@ class MarchPlugin(
         const val INTERVAL_TICKS = 3000
         /** Muster warning lead time (~5 min). TUNE. */
         const val WARN_TICKS = 500
-        /** How long a `::march` hot-zone confirmation stands (~30s). */
-        const val CONFIRM_WINDOW = 50
         /** Every Nth launched march is a GRAND MARCH (persisted counter in [WarState]). TUNE. */
         const val GRAND_EVERY = 8
         /** 1-in-N Warden's-ember roll for non-MVP fighters. TUNE. */
