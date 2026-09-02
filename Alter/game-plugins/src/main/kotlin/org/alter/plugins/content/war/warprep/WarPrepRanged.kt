@@ -1,6 +1,5 @@
 package org.alter.plugins.content.war.warprep
 
-import org.alter.game.model.attr.AttributeKey
 import org.alter.game.model.attr.WARPREP_RANGED_KILLS_ATTR
 import org.alter.game.model.attr.WARPREP_RANGED_STEP_ATTR
 import org.alter.api.ext.message
@@ -36,8 +35,8 @@ object WarPrepRanged {
     val TIMER = TimerKey()
     private const val POLL_TICKS = 3
 
-    private const val NUDGE_TICKS = 500 // ~5 minutes
-    private val NUDGE_COUNTDOWN = AttributeKey<Int>()
+    // The objective is announced on step entry and once on login — never on a timer (the old
+    // 5-minute re-nudge was cut 2026-09-02 as chat spam; `::warpranged` shows it on demand).
 
     /** Enemies to fell with a ranged weapon on the FIELD step (quest-scoped). TUNABLE. */
     const val FIELD_GOAL = 20
@@ -112,11 +111,10 @@ object WarPrepRanged {
         else -> step(p).objective
     }
 
-    /** Say the objective and restart the nudge countdown. */
+    /** Say the objective (login + `::warpranged`). */
     fun nudge(p: Player) {
-        p.attr[NUDGE_COUNTDOWN] = NUDGE_TICKS
         p.message("<col=801700>War-Prep II — current objective:</col> ${objectiveLine(p)}")
-        p.message("Vannaka has more for you once it's done. Check it any time with <col=ffae00>::warpranged</col>.")
+        p.message("Vannaka has more for you once it's done. Check it any time with <col=0000ff>::warpranged</col>.")
     }
 
     // --- pillar hooks -------------------------------------------------------------------
@@ -167,8 +165,6 @@ object WarPrepRanged {
         }
         if (isTracked(step(p))) {
             p.timers[TIMER] = POLL_TICKS
-            val left = (p.attr[NUDGE_COUNTDOWN] ?: NUDGE_TICKS) - POLL_TICKS
-            if (left <= 0) nudge(p) else p.attr[NUDGE_COUNTDOWN] = left
         }
     }
 
@@ -183,7 +179,6 @@ object WarPrepRanged {
             else -> {}
         }
         if (isTracked(next)) p.timers[TIMER] = POLL_TICKS
-        p.attr[NUDGE_COUNTDOWN] = NUDGE_TICKS
         if (next != Step.NONE && next != Step.DONE) {
             p.message("<col=801700>War-Prep II — next objective:</col> ${objectiveLine(p)}")
         }

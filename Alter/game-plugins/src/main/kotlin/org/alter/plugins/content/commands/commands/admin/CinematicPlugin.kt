@@ -80,7 +80,7 @@ class CinematicPlugin(
                             player.attr[camOn] = true
                             sendFollow(player)
                             player.timers[camFollow] = 1
-                            player.message("<col=4f9b4f>Follow-cam ON — tracks you as the army marches. <col=ffae00>::cam follow off</col><col=4f9b4f> to stop.</col>")
+                            player.message("<col=4f9b4f>Follow-cam ON — tracks you as the army marches. <col=0000ff>::cam follow off</col><col=4f9b4f> to stop.</col>")
                         }
                     }
                     "free" -> {
@@ -90,7 +90,7 @@ class CinematicPlugin(
                         } else {
                             stopFollow(player)
                             player.write(OculusSync(1))
-                            player.message("<col=4f9b4f>FREE CAMERA ON — fly the camera with your keyboard/mouse, detached from your character. Press <col=ffae00>ESC</col><col=4f9b4f> to exit (or <col=ffae00>::cam free off</col><col=4f9b4f>).</col>")
+                            player.message("<col=4f9b4f>FREE CAMERA ON — fly the camera with your keyboard/mouse, detached from your character. Press <col=ffae00>ESC</col><col=4f9b4f> to exit (or <col=0000ff>::cam free off</col><col=4f9b4f>).</col>")
                         }
                     }
                     "turn" -> player.write(CamRotateTo(a[1].toInt(), a[2].toInt(), a.getOrNull(3)?.toIntOrNull() ?: 50, CameraEaseFunction.EASE_IN_OUT_SINE.id))

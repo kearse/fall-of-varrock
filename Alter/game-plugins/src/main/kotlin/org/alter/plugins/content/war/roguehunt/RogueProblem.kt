@@ -187,7 +187,7 @@ object RogueProblem {
 
     private fun grantCompletion(p: Player) {
         p.message("<col=801700>Rogue Hunting II complete!</col> Every rogue camp is broken and the Commander is dead — you learned to fight players the hard way, and won.")
-        p.message("<col=801700>The ladder stays yours to farm:</col> every beaten knight can be hunted again for its gear (<col=ffae00>::knights</col>) — and the open wilderness pays Blood Money for real hunts.")
+        p.message("<col=801700>The ladder stays yours to farm:</col> every beaten knight can be hunted again for its gear (<col=0000ff>::knights</col>) — and the open wilderness pays Blood Money for real hunts.")
         if (p.title.ordinal < Title.KNIGHT.ordinal) {
             p.message("<col=ffae00>Your spoils are long past a Knighthood</col> — buy your ranks from Duke Horacio: rune armour and a companion of your own (General Zo musters them) await.")
         }

@@ -185,7 +185,7 @@ class CampaignDirector(
         logger.info { "Campaign '${op.cityKey}' ${tier.name} [$mode] marching=$marching: ${troops.size}/${tier.troops} '$troopName' mustering at $anchor (start enemies=$startEnemies)." }
         val cry = when {
             sponsor == null ->
-                "<col=4f9b4f>The Knights of Lumbridge march on ${op.displayName}! Any soldier of the realm may fight beside them — <col=ffae00>::march</col><col=4f9b4f> to rally to the column.</col>"
+                "<col=4f9b4f>The Knights of Lumbridge march on ${op.displayName}! Any soldier of the realm may fight beside them — <col=0000ff>::march</col><col=4f9b4f> to rally to the column.</col>"
             tier == CampaignTier.RAID ->
                 "<col=4f9b4f>${sponsor.username}, ${sponsor.title.display}, sends their men to the fight!</col>"
             else ->
