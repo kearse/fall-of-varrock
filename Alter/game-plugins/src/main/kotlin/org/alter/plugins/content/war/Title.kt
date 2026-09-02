@@ -20,9 +20,14 @@ enum class ArmourTier(val display: String) {
 }
 
 /**
- * The feudal rank ladder (The War / progression — see `docs/war-system-design.md`).
- * Ranks are **bought with coins** from Duke Horacio (not earned passively). Coins
- * come from fighting goblins and from skilling + selling to the general store.
+ * The feudal rank ladder — **standing and authority** (design authority §5). Ranks are raised
+ * by Duke Horacio once [RankEligibility] is met: the coin price below is one requirement, a
+ * floor of lifetime War Effort (service) is another, and milestones such as Veteran of Varrock
+ * will join them. Never automatic from a quest, never bought with cash.
+ *
+ * THE INVARIANT: rank gates what you may WEAR and which wars you may START
+ * ([CommandTier] / [Player.canCommand]); it never gates JOINING a war that is under way —
+ * `::march` and every rally are open to every citizen.
  *
  * Rank is an ADDITIONAL armour requirement on top of the classic skill-level
  * requirements (loaded for all gear in ItemMetadataService — 40 Defence for rune
@@ -38,8 +43,8 @@ enum class ArmourTier(val display: String) {
  *  - Minister (10M): launch war campaigns ([CommandTier.CAMPAIGN]) + 3 companions
  *  - King (50M): launch conquests, lead the realm ([CommandTier.CONQUEST])
  *
- * [cost] is the price to BUY that rank. [PEASANT] is the free starting rank.
- * [companions] is how many companion soldiers the rank may field (General Zo).
+ * [cost] is the coin price of that rank (the sink half of eligibility). [PEASANT] is the free
+ * starting rank. [companions] is how many companion soldiers the rank may field (General Zo).
  */
 enum class Title(
     val display: String,

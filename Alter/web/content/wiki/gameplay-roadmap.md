@@ -37,7 +37,7 @@ This is also when the War first pays you: scheduled **[Marches](/wiki/marches-an
 
 Straight out of the Wizard Tower, **[Rogue Hunting I & II](/wiki/the-rogue-problem)** pick you up: the Recruiting Sergeant sets the new Squire on the rogues' rank and file (a soldier's purse when the hunt clears), then opens the **[Rogue Knight ladder](/wiki/rogue-knights)** - the camp-by-camp PK schooling whose spoils earn your **Knighthood**, complete when every camp is broken. It's the guided bridge across this stage - follow the Quest Journal and you're never left wondering what's next.
 
-Beyond (and after) the quest, ranks are bought with coins, so the early game is about finding the money-making loop you enjoy. All of these work from day one:
+Beyond (and after) the quest, ranks are raised for coins plus a floor of lifetime War Effort (from Soldier up), so the early game is about finding the money-making loop you enjoy - and every one of them also builds your service record. All of these work from day one:
 
 - **Monster drops** - every NPC in the world uses its **real OSRS drop table**. Grinding anything pays.
 - **[Slayer & resource contracts](/wiki/slayer-and-contracts)** - Vannaka pays coins + War Effort for kill tasks and gathering orders.

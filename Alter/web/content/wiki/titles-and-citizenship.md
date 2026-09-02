@@ -1,33 +1,39 @@
 ---
 title: Titles & citizenship
 category: The War
-summary: The feudal rank ladder - what each title costs, what it unlocks, and why armour is rank-gated.
+summary: The feudal rank ladder - what each title requires (coins and service), what it unlocks, why armour is rank-gated, and the one rule of the war: anyone may join, only the ranked may start.
 order: 3
-updated: 2026-07-08
+updated: 2026-09-02
 ---
 
-Everyone is a citizen of a city (Lumbridge, for now - it's the only free one), and every citizen has a **feudal rank**. Rank is bought with coins from **Duke Horacio** in Lumbridge Castle, and it gates three things: the heaviest metal armour you may wear, how many [companions](/wiki/companions) you can field, and your political power in the War.
+Everyone is a citizen of a city (Lumbridge, for now - it's the only free one), and every citizen has a **feudal rank**. Rank is **standing**: Duke Horacio in Lumbridge Castle raises you when you bring him the coin *and* a record of real service - your lifetime **War Effort** (see [Supplying the war](/wiki/supplying-the-war)). It gates three things: the heaviest armour you may wear, your [companion](/wiki/companions) roster, and which wars you may **start**.
 
-Check your current rank, armour tier and next rank price with `::title`. Check your citizenship with `::city`.
+Check your current rank, armour tier and exactly what the next rank still needs with `::title`. Check your citizenship with `::city`, your service record with `::service`.
+
+## The one rule of the war
+
+**Any citizen may join any war. Only the ranked may start one.** A Peasant can `::march` into the realm's warband the minute they log in; a Lord may sponsor an operation, a Minister launch a campaign, and only the King call a conquest. Rank is authority, never a door on participation.
 
 ## The ladder
 
-| Rank | Cost | Melee armour | Ranged armour | Magic armour | Companions | War powers |
-| --- | --- | --- | --- | --- | --- | --- |
-| Peasant | Free | Bronze & Iron | Leather | Basic robes | - | - |
-| Commoner | 10,000 gp | Steel | Studded | - | - | - |
-| Squire | 50,000 gp | Black | Snakeskin | - | - | Name shown in colour |
-| Soldier | 150,000 gp | Mithril & Adamant | Green d'hide | - | - | - |
-| Knight | 500,000 gp | Rune, granite, fremennik, void | Blue/red & blessed d'hide | Mystic, splitbark, enchanted, infinity | 1 | - |
-| Lord | 2,000,000 gp | **All armour** - Dragon, barrows, godwars, endgame sets | Black d'hide, karil's, armadyl | Ahrim's, ancestral | 2 | `::operation`, `::sendtroops`, `::summonboss` |
-| Minister | 10,000,000 gp | All armour | All armour | All armour | 3 | + `::campaign` |
-| King | 50,000,000 gp | All armour | All armour | All armour | 3 | + `::conquest` |
+| Rank | Coins | Lifetime War Effort | Melee armour | Ranged armour | Magic armour | Companions | War powers |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Peasant | Free | - | Bronze & Iron | Leather | Basic robes | - | join any war |
+| Commoner | 10,000 gp | - | Steel | Studded | - | - | join any war |
+| Squire | 50,000 gp | - | Black | Snakeskin | - | - | Name shown in colour |
+| Soldier | 150,000 gp | 50 | Mithril & Adamant | Green d'hide | - | - | - |
+| Knight | 500,000 gp | 150 | Rune, granite, fremennik, void | Blue/red & blessed d'hide | Mystic, splitbark, enchanted, infinity | 1 | - |
+| Lord | 2,000,000 gp | 500 | **All armour** - Dragon, barrows, godwars, endgame sets | Black d'hide, karil's, armadyl | Ahrim's, ancestral | 2 | `::operation`, `::sendtroops`, `::summonboss` |
+| Minister | 10,000,000 gp | 1,500 | All armour | All armour | All armour | 3 | + `::campaign` |
+| King | 50,000,000 gp | 4,000 | All armour | All armour | All armour | 3 | + `::conquest` |
+
+The War Effort floors are the first pass of "rank is earned" and will be tuned; Minister will also ask for the **Veteran of Varrock** mark once the first major assault on the fallen city exists to award it, and **King is a long-term career achievement** - the crown is never a quest reward.
 
 From Squire up, your title displays in colour over your head - rank here is earned status, not a cosmetic you buy in a store.
 
 ## Rank capes
 
-Every noble rank (Squire and up) comes with a **rank cape**, handed to you the moment you buy the rank. The capes go from plain to elaborate up the ladder, and each one's colour echoes the rank's name colour - so you can read someone's standing off their back at a glance:
+Every noble rank (Squire and up) comes with a **rank cape**, handed to you the moment you are raised. The capes go from plain to elaborate up the ladder, and each one's colour echoes the rank's name colour - so you can read someone's standing off their back at a glance:
 
 | Rank | Cape | Cape bonuses (attack / defence / strength / prayer) |
 | --- | --- | --- |
@@ -52,4 +58,4 @@ The armour gate is the server's core progression brake: you can't buy your way i
 
 ## Rank and the War
 
-Lords and above stop being just soldiers and become **commanders**: they pay to field troops, summon city bosses and (at Minister/King) launch campaigns and conquests - and take a 10% tithe from the pooled loot when their operation succeeds. See [The War explained](/wiki/the-war-explained).
+Lords and above stop being just soldiers and become **commanders**: they sponsor operations, field troops, summon city bosses and (at Minister/King) launch campaigns and conquests - and take a 10% tithe from the pooled loot when their operation succeeds. Everyone below still fights in every one of those wars, and is paid by contribution. See [The War explained](/wiki/the-war-explained).

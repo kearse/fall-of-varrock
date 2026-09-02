@@ -75,6 +75,10 @@ class RankMenuPlugin(
             }
             is RankPurchase.Result.Insufficient ->
                 p.message("The rank of ${target.display} costs ${fmt(r.cost)} coins — you carry ${fmt(r.have)}.")
+            is RankPurchase.Result.Blocked -> {
+                p.message("<col=801700>Not yet — ${target.display} is earned standing. Still owed: ${RankEligibility.describeAll(r.unmet)}.</col>")
+                RankMenu.open(p) // keep the window in step
+            }
             is RankPurchase.Result.NotNext ->
                 RankMenu.open(p) // client was stale; refresh it to the real ladder state
             is RankPurchase.Result.Maxed ->
