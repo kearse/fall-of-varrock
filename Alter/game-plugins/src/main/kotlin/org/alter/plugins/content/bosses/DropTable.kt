@@ -36,21 +36,27 @@ class DropTable(
     private val main: List<DropEntry> = emptyList(),
     private val rare: List<DropEntry> = emptyList(),
 ) {
-    /** Roll the whole table for one kill. */
-    fun roll(world: World): List<RolledDrop> {
+    /**
+     * Roll the whole table for one kill. [mainRolls] independent picks from the MAIN tier
+     * (OSRS "N rolls on the drop table") — the always and rare tiers still roll once, so a
+     * boss with two main rolls doesn't also double its 1/N uniques.
+     */
+    fun roll(world: World, mainRolls: Int = 1): List<RolledDrop> {
         val out = ArrayList<RolledDrop>()
 
         always.forEach { out += it.resolve(world) }
 
         if (main.isNotEmpty()) {
             val total = main.sumOf { it.weight }
-            var pick = world.random(total - 1) // 0..total-1
-            for (e in main) {
-                if (pick < e.weight) {
-                    out += e.resolve(world)
-                    break
+            repeat(mainRolls.coerceAtLeast(1)) {
+                var pick = world.random(total - 1) // 0..total-1
+                for (e in main) {
+                    if (pick < e.weight) {
+                        out += e.resolve(world)
+                        break
+                    }
+                    pick -= e.weight
                 }
-                pick -= e.weight
             }
         }
 

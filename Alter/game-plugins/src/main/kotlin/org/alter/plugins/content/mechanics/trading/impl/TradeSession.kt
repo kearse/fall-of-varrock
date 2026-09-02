@@ -101,13 +101,17 @@ class TradeSession(
      */
     private fun ItemContainer.getItemValues(): Array<Int> =
         rawItems.map {
-            if (it == null) 0 else (priceService?.get(it.id) ?: it.getDef().cost ?: 0) * it.amount
+            if (it == null) 0 else ((priceService?.get(it.id) ?: it.getDef().cost ?: 0).toLong() * it.amount)
+                .coerceAtMost(Int.MAX_VALUE.toLong()).toInt()
         }.toTypedArray()
 
     /**
-     * An extension function for retrieving the sum of each item's value in an [ItemContainer]
+     * An extension function for retrieving the sum of each item's value in an [ItemContainer].
+     * Accumulates as Long: a full inventory of mid-value stacks overflowed Int and showed a
+     * negative "Value: ... coins".
      */
-    private fun ItemContainer.getValue() = getItemValues().sum()
+    private fun ItemContainer.getValue(): Long =
+        rawItems.sumOf { if (it == null) 0L else (priceService?.get(it.id) ?: it.getDef().cost ?: 0).toLong() * it.amount }
 
     /**
      * Opens the trade session, and configures the interfaces
@@ -168,9 +172,9 @@ class TradeSession(
         player.runClientScript(UPDATE_PLAYER_ITEM_PRICE_SCRIPT, *values)
         partner.runClientScript(UPDATE_PARTNER_ITEM_PRICE_SCRIPT, *values)
 
-        // Calculate the trade value
-        val containerValue = values.sum()
-        val partnerValue = partner.getTradeSession()?.container?.getValue() ?: 0
+        // Calculate the trade value (Long — a full inventory of stacks overflows Int)
+        val containerValue = container.getValue()
+        val partnerValue = partner.getTradeSession()?.container?.getValue() ?: 0L
 
         // The prefix of each line
         val playerPrefix = if (partnerValue > containerValue) "<col=FF0000>" else ""
@@ -374,8 +378,11 @@ class TradeSession(
      * Opens the accept screen for each player
      */
     private fun openAcceptScreen() {
-        // If we don't have enough inventory space for the partner's container
-        if (player.inventory.freeSlotCount < partner.getTradeSession()!!.container.occupiedSlotCount) {
+        // If we don't have enough inventory space for the partner's container. Check the TEMP
+        // container (`inventory`, what complete() commits) — the real player.inventory still shows
+        // the offered items as occupying slots (they're only removed from the temp copy), so it
+        // under-counted free space and falsely rejected trades that would actually fit.
+        if (inventory.freeSlotCount < partner.getTradeSession()!!.container.occupiedSlotCount) {
             player.message("You don't have enough inventory space for this trade.")
             partner.message("Other player doesn't have enough inventory space for this trade.")
             decline(forced = true)

@@ -81,13 +81,17 @@ class VorkathPlugin(
         }
 
         // ── Poke the sleeping form awake (Kronos wake sequence).
+        // Driven from world.queue, NOT player.queue: the player stepping away would
+        // interrupt a player queue mid-wake (VORKATH_WAKING already set), leaving the boss
+        // permanently unwakeable in that instance. A world queue survives player movement
+        // and the mid-sequence npc removal.
         onNpcOption(npc = "npc.vorkath_8059", option = "poke") {
             val sleeping = npc
             if (sleeping.attr[VORKATH_WAKING] == true) return@onNpcOption
             sleeping.attr[VORKATH_WAKING] = true
             player.animate(827)
-            player.queue {
-                sleeping.animate(7950)
+            sleeping.animate(7950)
+            world.queue {
                 wait(5)
                 if (sleeping.isDead() || sleeping.index < 0) return@queue
                 val spawnTile = sleeping.attr[VORKATH_SPAWN_TILE] ?: sleeping.tile
@@ -108,7 +112,9 @@ class VorkathPlugin(
 
             if (killer != null) {
                 killer.awardTickets(PointKind.BOSS, BOSS_POINTS_PER_KILL)
-                table.roll(world).forEach { drop ->
+                // Vorkath rolls the main drop table TWICE (OSRS/donor); the head/visage rares
+                // still roll once each (mainRolls only multiplies the main tier).
+                table.roll(world, mainRolls = 2).forEach { drop ->
                     val id = getRSCM(drop.item)
                     world.spawn(GroundItem(id, drop.amount, boss.tile, killer))
                     val name = getItem(id).name

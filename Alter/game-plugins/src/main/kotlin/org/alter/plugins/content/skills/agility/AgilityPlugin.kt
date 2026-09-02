@@ -159,9 +159,10 @@ class AgilityPlugin(
         Obstacle("balancing ledge", 3559, listOf("Walk-on", "Walk-across", "Cross"), Tile(3214, 3171, 0), listOf(Tile(3214, 3172, 0)), 22.0, ANIM_LEDGE, objType = GROUND_DECOR),
         // 8. Balancing rope east over the marsh waist.
         Obstacle("balancing rope", 3551, listOf("Walk-on"), Tile(3215, 3173, 0), listOf(Tile(3222, 3174, 0)), 25.0, ANIM_BALANCE, objType = GROUND_DECOR, rot = 1),
-        // 9. Second log balance along the marsh path, landing by the dispenser (3554 is the
-        //    sibling id of the verified 3553 log — same Underground-Pass def family).
-        Obstacle("log balance", 3554, listOf("Walk-on"), Tile(3223, 3174, 0), listOf(Tile(3225, 3174, 0)), 20.0, ANIM_BALANCE, objType = GROUND_DECOR, rot = 1),
+        // 9. Second log balance along the marsh path, landing by the dispenser. Object 3554's
+        //    cache def rejected "Walk-on" (boot WARN dropped it from the lap), so bind defensively
+        //    against the whole log-balance verb family — the first one the def actually carries wins.
+        Obstacle("log balance", 3554, listOf("Walk-on", "Walk-across", "Cross", "Jump-to"), Tile(3223, 3174, 0), listOf(Tile(3225, 3174, 0)), 20.0, ANIM_BALANCE, objType = GROUND_DECOR, rot = 1),
     )
 
     /**

@@ -51,8 +51,13 @@ class TradingPlugin(
          */
         onPlayerOption(option = "Trade with") {
 
-            // The trade partner instance
-            val partner = player.getInteractingPlayer()
+            // The trade partner instance. getInteractingPlayer() hard-dereferences a WeakReference
+            // (double-!!) and NPEs the whole game cycle if the partner just logged off; guard it.
+            val partner = player.getInteractingPlayerOrNull()
+            if (partner == null) {
+                player.message("Unable to trade with that player.")
+                return@onPlayerOption
+            }
 
             // If the player is already in a trade
             if (partner.getTradeSession() != null || partner.isLocked()) {
@@ -157,19 +162,15 @@ class TradingPlugin(
         onButton(TRADE_INTERFACE, 11) { player.getTradeSession()?.decline() }
         onButton(ACCEPT_INTERFACE, 14) { player.getTradeSession()?.decline() }
 
-        // Interface close events
+        // Interface close events. Always decline on close, even after accepting: closing the
+        // window after the first accept used to leave a live, dangling session on both sides
+        // (nothing moved — no dupe — but the pair stayed "in trade" and couldn't start a new one).
         onInterfaceClose(TRADE_INTERFACE) {
-
-            if (player.hasTradeSession() && !player.hasAcceptedTrade()) {
-                player.getTradeSession()?.decline()
-            }
+            if (player.hasTradeSession()) player.getTradeSession()?.decline()
         }
 
         onInterfaceClose(ACCEPT_INTERFACE) {
-
-            if (player.hasTradeSession() && !player.hasAcceptedTrade()) {
-                player.getTradeSession()?.decline()
-            }
+            if (player.hasTradeSession()) player.getTradeSession()?.decline()
         }
 
         // Decline the trade when a player logs out

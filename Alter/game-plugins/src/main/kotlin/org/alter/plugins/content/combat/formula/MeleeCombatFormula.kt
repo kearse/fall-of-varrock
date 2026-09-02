@@ -270,8 +270,9 @@ object MeleeCombatFormula : CombatFormula {
         return when {
             undead && player.hasEquipped(EquipmentType.AMULET, "item.salve_amulet_e", "item.salve_amuletei") -> 1.2
             undead && player.hasEquipped(EquipmentType.AMULET, "item.salve_amulet", "item.salve_amuleti") -> 7.0 / 6.0
-            (player.hasEquipped(EquipmentType.HEAD, *BLACK_MASKS) || player.hasEquipped(EquipmentType.HEAD, *BLACK_MASKS_I)) &&
-                SlayerCombat.isOnTaskAgainst(player, target) -> 7.0 / 6.0
+            // Any black mask OR slayer-helmet variant grants +16.67% melee on task (was only
+            // the plain black mask — every slayer helmet colour/tier gave nothing).
+            SlayerCombat.wearingSlayerHead(player) && SlayerCombat.isOnTaskAgainst(player, target) -> 7.0 / 6.0
             else -> 1.0
         }
     }

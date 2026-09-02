@@ -9,6 +9,7 @@ import org.alter.game.model.attr.CITY_ID_ATTR
 import org.alter.game.model.attr.KILLER_ATTR
 import org.alter.game.model.entity.Player
 import org.alter.plugins.content.bots.PkBot
+import org.alter.plugins.content.drops.GenericDrops
 // Aliased: this class has its own `companion object`, whose implicit name `Companion` would SHADOW
 // a bare `import ...companion.Companion`, making `killer is Companion` always-false.
 import org.alter.plugins.content.companion.Companion as CompanionPawn
@@ -37,23 +38,34 @@ class WarEffortPlugin(
 
     init {
         // --- Coins + contribution per rabble goblin killed in a war field. ---
+        // Registering this per-id handler marks goblin (655) as handler-owned everywhere, which
+        // suppresses the generic drop table globally — so a goblin killed OUTSIDE a raid must roll
+        // the normal table here or it drops nothing anywhere.
         onNpcDeath("npc.goblin") {
             val goblin = npc
-            val front = Sieges.frontAt(goblin.tile) ?: return@onNpcDeath
-            if (WarState.phaseOf(front) != WarState.Phase.UNDER_RAID) return@onNpcDeath
-            val killer = creditKiller(goblin.attr[KILLER_ATTR]?.get() as? Player) ?: return@onNpcDeath
-            killer.inventory.add(COINS, COINS_PER_GOBLIN)
-            WarParticipation.record(front, killer, 1)
+            val killer = goblin.attr[KILLER_ATTR]?.get() as? Player
+            val front = Sieges.frontAt(goblin.tile)
+            if (front == null || WarState.phaseOf(front) != WarState.Phase.UNDER_RAID) {
+                if (killer != null) GenericDrops.rollAndDrop(world, goblin, killer)
+                return@onNpcDeath
+            }
+            val credited = creditKiller(killer) ?: return@onNpcDeath
+            credited.inventory.add(COINS, COINS_PER_GOBLIN)
+            WarParticipation.record(front, credited, 1)
         }
 
         // --- Shock troops (hobgoblins) drop the richer war table + more contribution. ---
         onNpcDeath("npc.hobgoblin") {
             val hob = npc
-            val front = Sieges.frontAt(hob.tile) ?: return@onNpcDeath
-            if (WarState.phaseOf(front) != WarState.Phase.UNDER_RAID) return@onNpcDeath
-            val killer = creditKiller(hob.attr[KILLER_ATTR]?.get() as? Player) ?: return@onNpcDeath
-            WarDrops.onShockTroopKill(world, killer, hob)
-            WarParticipation.record(front, killer, 3)
+            val killer = hob.attr[KILLER_ATTR]?.get() as? Player
+            val front = Sieges.frontAt(hob.tile)
+            if (front == null || WarState.phaseOf(front) != WarState.Phase.UNDER_RAID) {
+                if (killer != null) GenericDrops.rollAndDrop(world, hob, killer)
+                return@onNpcDeath
+            }
+            val credited = creditKiller(killer) ?: return@onNpcDeath
+            WarDrops.onShockTroopKill(world, credited, hob)
+            WarParticipation.record(front, credited, 3)
         }
 
         // --- Warn players who log in while THEIR city is in trouble. ---
