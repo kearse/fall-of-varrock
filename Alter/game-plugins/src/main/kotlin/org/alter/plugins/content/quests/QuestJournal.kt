@@ -200,7 +200,7 @@ object QuestJournal {
         }
         setVarpSafely(p, ROGUE_LADDER_QUEST_VARP, ladderVal)
 
-        // War-Prep II — Ranged: NONE (locked until The Rogue Problem finishes / not begun) is not
+        // War-Prep II — Ranged: NONE (locked until War-Prep I finishes / not begun) is not
         // started; DONE is complete; any drill/skirmish/rank step in between is in progress.
         val ranged = WarPrepRanged.step(p)
         val rangedVal = when {

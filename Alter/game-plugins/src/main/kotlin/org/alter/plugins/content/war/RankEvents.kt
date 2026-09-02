@@ -3,7 +3,6 @@ package org.alter.plugins.content.war
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.alter.game.model.entity.Player
 import org.alter.plugins.content.war.recruit.RecruitTrials
-import org.alter.plugins.content.war.roguehunt.RogueProblem
 import org.alter.plugins.content.war.warprep.WarPrepChain
 import org.alter.plugins.content.war.warprep.WarPrepRanged
 import org.alter.plugins.content.war.warprep.WarPrepSurvival
@@ -40,8 +39,9 @@ object RankEvents {
 
 /**
  * The legacy quest chains' rank hooks, registered in the exact order [RankPurchase.buy] used to
- * call them (the order matters: War-Prep I's RANK step must close before The Rogue Problem's
- * `begin` reads `WarPrepChain.complete`). Installed once by [TitlePlugin].
+ * call them (the order matters: War-Prep I's RANK step must close before War-Prep II's `begin`
+ * reads `WarPrepChain.complete`). Installed once by [TitlePlugin]. The Rogue Problem is NOT here:
+ * it is optional and only ever starts from the Recruiting Sergeant's offer.
  *
  * LEGACY: these chains are the pre-Block-2 onboarding hallway; the Block-2 quest framework
  * subscribes to [RankEvents] itself and these registrations retire with the chains.
@@ -54,8 +54,7 @@ object LegacyRankHooks {
         installed = true
         RankEvents.onRankBought(800) { p, _ -> RecruitTrials.onBuyRank(p) }      // intro quest's RANK step
         RankEvents.onRankBought(700) { p, _ -> WarPrepChain.onRankBought(p) }    // War-Prep I RANK step
-        RankEvents.onRankBought(600) { p, _ -> RogueProblem.begin(p) }           // Act II opens at Squire
-        RankEvents.onRankBought(500) { p, _ -> WarPrepRanged.begin(p) }          // War-Prep II (gated on its prerequisite)
+        RankEvents.onRankBought(500) { p, _ -> WarPrepRanged.begin(p) }          // War-Prep II opens once War-Prep I closes
         RankEvents.onRankBought(400) { p, _ -> WarPrepRanged.onRankBought(p) }   // War-Prep II closes at Lord
         RankEvents.onRankBought(300) { p, _ -> WarPrepSurvival.begin(p) }        // War-Prep III opens at Lord
         RankEvents.onRankBought(200) { p, _ -> WarPrepSurvival.onRankBought(p) } // War-Prep III closes at Minister

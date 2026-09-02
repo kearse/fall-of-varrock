@@ -4,7 +4,7 @@ category: PvP & Wilderness
 summary: Fourteen named boss PKers across seven organized camps. The Sergeant assigns them weakest to strongest - each one you beat unlocks the gear for the next, all the way to AGS-class loot.
 order: 6
 updated: 2026-08-05
-infobox: Type = Boss ladder (repeatable); Start = The Rogue Problem quest (auto); Giver = Recruiting Sergeant (Lumbridge gate); Length = 14 knights, 7 camps; Tracking = Hint arrow (toggle with ::huntarrow) + ::knights; Reward = PK gear per knight, up to AGS / dragon claws / Ancient Warrior sets
+infobox: Type = Boss ladder (repeatable, optional); Start = The Rogue Problem assignment (ask the Recruiting Sergeant after War-Prep I); Giver = Recruiting Sergeant (Lumbridge gate); Length = 14 knights, 7 camps; Tracking = Hint arrow (toggle with ::huntarrow) + ::knights; Reward = PK gear per knight, up to AGS / dragon claws / Ancient Warrior sets
 ---
 
 The deserters who lead Varrock's rogues style themselves **Rogue Knights** - a ladder of **fourteen named boss PKers**, weakest to strongest, camped from the Lumbridge road to the deepest wilderness. The **Recruiting Sergeant** assigns them **in order**: kill your mark, rank up, and he names the next. Every knight you beat hands you a **first-kill gear unlock** - deliberately the core of the kit that beats the *next* one - so the ladder is both your PK training and your gear progression in one track.
@@ -83,6 +83,6 @@ The four **Ancient Warrior knights** (Halric, Nyx, Dathen, and Vexmar's Zuriel k
 
 ## Related
 
-- [The Rogue Problem](/wiki/the-rogue-problem) - the quest whose finish line is this ladder: a soldier's purse up front, Knighthood earned on the climb, complete when every camp is broken
+- [The Rogue Problem](/wiki/the-rogue-problem) - the optional assignment whose finish line is this ladder: a soldier's purse up front, the climb's spoils toward your ranks, complete when every camp is broken. Nothing on the main road waits on it.
 - [PK bots of the wilderness](/wiki/pk-bots-and-highwaymen) - the ambient PKer population and its loot pools
 - [Wilderness loot keys](/wiki/wilderness-loot-keys) · [Death & item protection](/wiki/death-and-item-protection)

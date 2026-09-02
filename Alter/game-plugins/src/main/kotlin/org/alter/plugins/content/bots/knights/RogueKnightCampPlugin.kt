@@ -43,6 +43,10 @@ private val logger = KotlinLogging.logger {}
  * This plugin only registers the ladder's claim ([TargetMarker.PRIORITY_LADDER]); the marker owns
  * the drawing, deduping and the guidance mute. Dying to a knight never clears the assignment —
  * walk back and the arrow leads you straight in.
+ *
+ * PVP-TRAINING SEAM: the camps and their per-hunter knight instances are the realm's PK
+ * curriculum, reached through the OPTIONAL Rogue Problem assignment. A future PvP Training
+ * Academy plugs in here (spawn a chosen ladder knight for a lesson) — see [RogueKnights.LADDER].
  */
 class RogueKnightCampPlugin(
     r: PluginRepository,

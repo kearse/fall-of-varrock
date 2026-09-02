@@ -67,20 +67,20 @@ enum LofQuest
 			"The Ancient, Lunar and Arceuus spellbooks (::spellbook)",
 			"Mystic gear, runes and prayer potions",
 			"A purse that covers your next feudal rank",
-			"Access to the war's raids"
+			"War-Prep II — Ranged, and the Sergeant's optional Rogue Problem assignment"
 		)),
 
 	ROGUE_HUNTING_I(
 		"Rogue Hunting I",
-		"Lumbridge holds, but when Varrock fell its rogues, muggers and highwaymen — led by "
+		"OPTIONAL. Lumbridge holds, but when Varrock fell its rogues, muggers and highwaymen — led by "
 			+ "deserters who style themselves Rogue Knights — scattered onto the roads west and "
-			+ "into the ruins of the fallen city. The Recruiting Sergeant sets the new Squire on "
-			+ "their rank and file: thin the cutthroats on the safe road camps west of Lumbridge, "
-			+ "or in Fallen Varrock's wilderness streets for the bold. Clearing the hunt pays a "
-			+ "soldier's purse — and opens the Rogue Knight ladder.",
+			+ "into the ruins of the fallen city. Ask the Recruiting Sergeant for the assignment: "
+			+ "thin the cutthroats on the safe road camps west of Lumbridge, or in Fallen Varrock's "
+			+ "wilderness streets for the bold. Clearing the hunt pays a soldier's purse — and opens "
+			+ "the Rogue Knight ladder, the realm's PK schooling. Nothing else waits on it.",
 		3, // complete once the hunt clears (RogueProblem.Step.KNIGHT ordinal)
 		Arrays.asList(
-			new LofQuestStep(1, "Speak to the Recruiting Sergeant", "He has harder work now you're a Squire — by the Lumbridge gate.", new WorldPoint(3217, 3220, 0)),
+			new LofQuestStep(1, "Ask the Recruiting Sergeant for the assignment", "Optional — by the Lumbridge gate, once War-Prep I is done.", new WorldPoint(3217, 3220, 0)),
 			// No fixed anchor: the server's hint arrow leads this step — to the nearest safe road
 			// camp from afar, locking onto live rogues once they're in reach (like the knight hunt).
 			new LofQuestStep(2, "Thin out the rogue rank and file", "Cut down 30 of the rogue family — kills count anywhere; the arrow leads to the nearest safe road camp and locks onto rogues in reach. Fallen Varrock is denser but it is the wilderness — only the bank pockets are safe.", null)
@@ -106,27 +106,26 @@ enum LofQuest
 			new LofQuestStep(5, "Break every camp on the ladder", "All 14 knights, weakest to strongest — the Commander last. Buy Soldier and Knight from Duke Horacio as the spoils come in; ::knights tracks the climb.", null)
 		),
 		Arrays.asList(
-			"Knighthood — earned from the ladder's spoils: rune armour",
+			"The ladder's spoils — coin and kits toward your Knighthood: rune armour",
 			"Your first companion (General Zo musters them)",
-			"The wilderness / PK loop (start at the PK Training Arena)",
+			"The wilderness / PK loop",
 			"Every beaten knight stays farmable for its signature gear (::knights)",
-			"The realm's PK schooling: switches, baits, spec combos — learned camp by camp",
-			"War-Prep II — Ranged"
+			"The realm's PK schooling: switches, baits, spec combos — learned camp by camp"
 		)),
 
 	WARPREP_RANGED(
 		"War-Prep II — Ranged",
-		"The front's skirmish lines are won with the bow. The rogues' ladder made a fighter of you — "
+		"The front's skirmish lines are won with the bow. The tower made a mage of you — "
 			+ "now Vannaka arms you with a marksman's kit and sends you to prove you can hold a "
-			+ "line at distance. He pays a skirmish bounty; the Lordship itself you earn — knight "
-			+ "farming, city raids, loot keys — and buy when your purse allows.",
+			+ "line at distance. He pays a skirmish bounty; the Lordship itself you earn — marches, "
+			+ "knight farming, loot keys — and buy when your purse and service allow.",
 		6, // DONE ordinal (WarPrepRanged.Step)
 		// World anchors are best-effort — TUNE against the live map.
 		Arrays.asList(
 			new LofQuestStep(2, "Return to Vannaka for the marksman's kit", new WorldPoint(3222, 3212, 0)),
 			new LofQuestStep(3, "Fell 20 enemies with a ranged weapon", "Bow, crossbow or thrown — Fallen Varrock's rogues will do.", new WorldPoint(3212, 3428, 0)),
 			new LofQuestStep(4, "Report back to Vannaka", new WorldPoint(3222, 3212, 0)),
-			new LofQuestStep(5, "Earn your Lordship at Duke Horacio", "The realm's loops pay the 2,000,000 — farm the Rogue Knights for kits and rares, raid the fallen cities' loot spots, hunt the wild for loot keys.", new WorldPoint(3220, 3211, 0))
+			new LofQuestStep(5, "Earn your Lordship at Duke Horacio", "The realm's loops pay the 2,000,000 and the War Effort — fight the marches, farm the Rogue Knights for kits, hunt the wild for loot keys.", new WorldPoint(3220, 3211, 0))
 		),
 		Arrays.asList(
 			"The rank of Lord — dragon armour",
@@ -280,15 +279,15 @@ enum LofQuest
 				return ord >= doneOrdinal ? LofQuestState.FINISHED
 					: ord == 0 ? LofQuestState.LOCKED : LofQuestState.IN_PROGRESS;
 			case ROGUE_HUNTING_I:
-				// Act II opener — locked until War-Prep I (Magic) finishes (its DONE ordinal is 6);
-				// after that the chain auto-begins at step 1, so ordinal 0 still reads as locked.
+				// OPTIONAL assignment — locked until War-Prep I (Magic) finishes (its DONE ordinal
+				// is 6); after that the Sergeant offers it, so ordinal 0 reads as NOT STARTED.
 				// Complete the moment the hunt clears (the chain reaches its KNIGHT beat, ordinal 3).
 				if (LofQuestVarps.warprepStep(client) < 6)
 				{
 					return LofQuestState.LOCKED;
 				}
 				return ord >= doneOrdinal ? LofQuestState.FINISHED
-					: ord == 0 ? LofQuestState.LOCKED : LofQuestState.IN_PROGRESS;
+					: ord == 0 ? LofQuestState.NOT_STARTED : LofQuestState.IN_PROGRESS;
 			case ROGUE_HUNTING_II:
 				// The ladder — locked until Rogue Hunting I clears (the shared chain reaches
 				// ordinal 3); complete when every camp is broken (DONE, ordinal 6).
@@ -298,9 +297,10 @@ enum LofQuest
 				}
 				return ord >= doneOrdinal ? LofQuestState.FINISHED : LofQuestState.IN_PROGRESS;
 			case WARPREP_RANGED:
-				// Locked until Rogue Hunting II finishes (the rogue chain's DONE ordinal is 6);
-				// then auto-begins, so ordinal 0 still reads as locked.
-				if (LofQuestVarps.rogueProblemStep(client) < 6)
+				// Locked until War-Prep I (Magic) finishes (its DONE ordinal is 6); then
+				// auto-begins, so ordinal 0 still reads as locked. The Rogue Problem is optional
+				// and never gates it.
+				if (LofQuestVarps.warprepStep(client) < 6)
 				{
 					return LofQuestState.LOCKED;
 				}
@@ -341,7 +341,7 @@ enum LofQuest
 		}
 		if (this == WARPREP_RANGED && state(client) == LofQuestState.LOCKED)
 		{
-			return "Finish Rogue Hunting II first.";
+			return "Finish War-Prep I — Magic first.";
 		}
 		if (this == WARPREP_SURVIVAL && state(client) == LofQuestState.LOCKED)
 		{

@@ -178,9 +178,16 @@ class RecruitTrialsPlugin(
             RecruitTrials.Step.DELIVER -> chatNpc(p, "Now take that dagger to the Quartermaster in The Mire and hand it in for the war — follow the marker.", npc = s, title = "Recruiting Sergeant")
             RecruitTrials.Step.RETURN -> chatNpc(p, "Supplies handed in? Report back to Vannaka — he'll square you up.", npc = s, title = "Recruiting Sergeant")
             RecruitTrials.Step.DONE -> {
-                // Act II — "The Rogue Problem" (story-and-grind-design §4). Once the War-Prep chain is
-                // done the Sergeant's dialogue becomes this quest's giver/paymaster; it falls through
-                // to the free-play milestone chatter below when the quest is inactive (NONE) or DONE.
+                // "The Rogue Problem" — the OPTIONAL PK-schooling assignment (design authority §8).
+                // Once War-Prep I is done the Sergeant offers it; accepting starts the chain and the
+                // BRIEF beat below follows in the same conversation. Declining just falls through to
+                // the free-play chatter — he'll offer again next visit.
+                if (RogueProblem.offerable(p)) {
+                    chatNpc(p, "There's harder work than reporting in, ${p.address} — an assignment, if you want it. The rogues who bleed our roads, and the deserters who lead them. It's optional, mind: the war marches with or without it, and Vannaka's lessons don't wait on it.", npc = s, title = "Recruiting Sergeant")
+                    if (options(p, "Tell me about the rogues.", "Not today, sergeant.", title = "Recruiting Sergeant") == 1) {
+                        RogueProblem.begin(p)
+                    }
+                }
                 when (RogueProblem.step(p)) {
                     RogueProblem.Step.BRIEF -> {
                         chatNpc(p, "Now you're blooded and ranked, ${p.address}, I've harder work. When Varrock fell, its rogues, muggers and highwaymen scattered — onto the roads west of Lumbridge and into the ruins of <col=801700>Fallen Varrock</col> itself. They bleed our supply roads dry.", npc = s, title = "Recruiting Sergeant")
@@ -232,7 +239,7 @@ class RecruitTrialsPlugin(
                         chatNpc(p, "And keep buying your ranks off Duke Horacio as the spoils come in — a Knighthood pays for itself on this road, and its rune and companion will carry you up the harder rungs.", npc = s, title = "Recruiting Sergeant")
                         return
                     }
-                    else -> {} // NONE (War-Prep unfinished) or DONE — fall through to the ladder/milestone chatter
+                    else -> {} // NONE (declined / War-Prep unfinished) or DONE — fall through to the ladder/milestone chatter
                 }
 
                 // The Rogue Knight ladder outlives the quest — the Sergeant stays its quartermaster.

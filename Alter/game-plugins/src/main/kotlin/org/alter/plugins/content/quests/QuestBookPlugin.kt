@@ -79,8 +79,9 @@ class QuestBookPlugin(
             r >= knight && !RogueProblem.complete(p) -> QuestBook.ROGUE_HUNTING_II
             RogueProblem.started(p) && !RogueProblem.complete(p) -> QuestBook.ROGUE_HUNTING_I
             WarPrepChain.started(p) && !WarPrepChain.complete(p) -> QuestBook.WARPREP_MAGIC
-            // nothing in progress — point at the next unstarted rung
-            RogueProblem.complete(p) -> QuestBook.WARPREP_RANGED
+            // nothing in progress — point at the next unstarted rung (War-Prep II follows War-Prep I
+            // directly; the Rogue Problem is the optional side assignment)
+            WarPrepChain.complete(p) && !WarPrepRanged.started(p) -> QuestBook.WARPREP_RANGED
             r >= knight -> QuestBook.ROGUE_HUNTING_II
             WarPrepChain.complete(p) -> QuestBook.ROGUE_HUNTING_I
             else -> QuestBook.RECRUIT_TRIALS

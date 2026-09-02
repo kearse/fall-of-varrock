@@ -22,10 +22,9 @@ import org.alter.plugins.content.quests.QuestBook
  * login, drives the poll timer, counts quest-scoped rogue kills on the additive death list (cheap —
  * bails instantly for non-rogue kills, mirroring [RogueHuntPlugin]), and serves `::rogueproblem`.
  *
- * The quest is *given* by the Recruiting Sergeant and its captain beat is reported by
- * `NamedCaptainsPlugin`; this plugin only owns the passive wiring. It auto-begins the moment the
- * player finishes the War-Prep chain (the Squire rank-up — see `DukeHoracioPlugin`), and the login
- * hook here catches anyone who finished War-Prep before this quest existed.
+ * The quest is *offered* by the Recruiting Sergeant once War-Prep I is done — it is OPTIONAL and
+ * nothing auto-starts it (design authority §8); this plugin only owns the passive wiring for a
+ * player who accepted.
  */
 class RogueProblemPlugin(
     r: PluginRepository,
@@ -34,11 +33,7 @@ class RogueProblemPlugin(
 ) : KotlinPlugin(r, world, server) {
 
     init {
-        onLogin {
-            // Legacy / interrupted: a player already past War-Prep never got the quest started.
-            RogueProblem.begin(player)
-            RogueProblem.resumeOnLogin(player)
-        }
+        onLogin { RogueProblem.resumeOnLogin(player) }
 
         onTimer(RogueProblem.TIMER) { RogueProblem.pollTick(player) }
 

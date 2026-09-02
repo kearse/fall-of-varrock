@@ -1,20 +1,20 @@
 ---
 title: The Rogue Problem
 category: Getting Started
-summary: The Act II quest that picks up after the Wizard Tower and runs a fresh Squire through the whole Rogue Knight ladder - the realm's PK schooling. It ends when every camp is broken, not when a rank is bought.
+summary: The optional PK-schooling assignment - ask the Recruiting Sergeant after the Wizard Tower and he sets you on the rogues, then the whole Rogue Knight ladder. Nothing else waits on it.
 order: 4
-updated: 2026-08-28
-infobox: Type = Quest (auto-starts); Start = Automatic once War-Prep I is done; Giver = Recruiting Sergeant (Lumbridge gate); Steps = Hunt, Knight, Report, Ladder; Guidance = Quest Journal (::rogueproblem); Reward = A soldier's purse - the ladder earns your Knighthood; Completes = When every camp on the ladder is broken; Leads to = Companions, the wilderness + War-Prep II
+updated: 2026-09-02
+infobox: Type = Optional quest; Start = Ask the Recruiting Sergeant (Lumbridge gate) once War-Prep I is done; Giver = Recruiting Sergeant; Steps = Hunt, Knight, Report, Ladder; Guidance = Quest Journal (::rogueproblem); Reward = A soldier's purse + the ladder's coin and kits; Completes = When every camp on the ladder is broken; Required for = Nothing - it's the PK road, not the main road
 ---
 
-**The Rogue Problem** is the story arc that answers "what now?" the moment you clear the [Wizard Tower](/wiki/wizard-tower) and claim your Squire rank. In the quest tab it's **two quests**: **Rogue Hunting I** (the 30-rogue hunt) and **Rogue Hunting II** (the Rogue Knight ladder). Where the roadmap used to drop you into an open-ended grind toward Knight, these hand you a guided path - and the [Quest Journal](/wiki/gameplay-roadmap) points the way at every step.
+**The Rogue Problem** is the realm's **optional** PK schooling. Once you've cleared the [Wizard Tower](/wiki/wizard-tower) and claimed your Squire rank, the **Recruiting Sergeant** by the Lumbridge gate has an assignment for anyone who wants to learn to fight players - and only for them. In the quest tab it's **two quests**: **Rogue Hunting I** (the 30-rogue hunt) and **Rogue Hunting II** (the [Rogue Knight ladder](/wiki/rogue-knights)). The [Quest Journal](/wiki/gameplay-roadmap) points the way at every step once you're on it.
 
-It's the first chapter of **Act II - The Soldier**: the Sergeant sets you on the rogue rank and file - hunted along the **safe road camps** west of Lumbridge or, when you're ready for it, in the ruins of **[Fallen Varrock](/wiki/fallen-varrock)** itself, where the rogues scavenge among the dead.
+**It is not required for anything.** Your ranks come from coin and [War Effort](/wiki/supplying-the-war), War-Prep II opens straight after the tower, and every march is open to you whether or not you ever touch a rogue. Take it because you want the PK curriculum and the gear it drops.
 
 ## Getting in
 
-- The quest **auto-starts** the moment you finish the [War-Prep chain](/wiki/wizard-tower) (the Wizard Tower and the Squire rank-up). No need to seek it out.
-- Talk to the **Recruiting Sergeant** by the Lumbridge gate - he's had harder work waiting for you since you earned your rank.
+- Finish the [War-Prep chain](/wiki/wizard-tower) (the Wizard Tower and the Squire rank-up).
+- Talk to the **Recruiting Sergeant** by the Lumbridge gate and say yes when he offers the assignment. Say no and he'll offer again next visit - there's no penalty either way.
 - The Quest Journal tracks your objective the whole way. Type `::rogueproblem` for a quick status check, or `::rogues` for your lifetime rogue tally.
 
 ## The quest
@@ -22,9 +22,9 @@ It's the first chapter of **Act II - The Soldier**: the Sergeant sets you on the
 | Step | What to do |
 | --- | --- |
 | **Hunt** | Cut down **30 of the rogue family** (rogues, muggers, highwaymen, thugs, bandits, outlaws - and bot "Rogue Knights" - all count). Kills count **anywhere**: the safe road camps at the **jail west of Lumbridge**, **Draynor's outskirts** and **south of Port Sarim** are the intended first hunting grounds; **Fallen Varrock** is denser hunting but it is the wilderness. |
-| **Knight** | Clearing the hunt pays a **soldier's purse** (150,000 - buy **Soldier** at Duke Horacio, no rung skipped). Then kill your **first assigned [Rogue Knight](/wiki/rogue-knights)** - the Sergeant names the mark, the marker arrow leads you to the camp, and `::knights` tracks the hunt. |
+| **Knight** | Clearing the hunt pays a **soldier's purse** (150,000 - toward **Soldier** at Duke Horacio, once your War Effort qualifies). Then kill your **first assigned [Rogue Knight](/wiki/rogue-knights)** - the Sergeant names the mark, the marker arrow leads you to the camp, and `::knights` tracks the hunt. |
 | **Report** | Return to the Recruiting Sergeant with word of the knight's fall. |
-| **Ladder** | **Break every camp on the [Rogue Knight ladder](/wiki/rogue-knights)** - all fourteen knights, weakest to strongest, the Commander last. The spoils (knight kills, worn-kit drops, camp loot, bounties) pay your **Knighthood** along the way - buy it at Duke Horacio whenever your purse allows; buying it never ends the quest. |
+| **Ladder** | **Break every camp on the [Rogue Knight ladder](/wiki/rogue-knights)** - all fourteen knights, weakest to strongest, the Commander last. The spoils (knight kills, worn-kit drops, camp loot, bounties) fund your ranks along the way; buying a rank never ends the quest. |
 
 The **road camps are all safe, reclaimable ground** - die there and your gear waits in a pile. Fallen Varrock is not: its streets are the **wilderness**, where only the bank pockets are safe. Cut your teeth on the roads first, and take nothing into the ruins you can't afford to lose; the rogue tally, at least, is yours forever and death never resets it. See [Death & item protection](/wiki/death-and-item-protection). Your first assigned Rogue Knight also waits on safe ground, at the **Bandit Hideout west of Lumbridge**: if he beats you (he might!), you walk straight back for the rematch.
 
@@ -32,12 +32,10 @@ The quest and the **[Rogue Knight ladder](/wiki/rogue-knights)** are one journey
 
 ## Rewards
 
-- A **soldier's purse** (150,000) the moment the hunt clears - exactly enough to buy **Soldier** from Duke Horacio, so no rung is skipped.
-- **Knighthood is earned, not gifted**: the ladder pays it - every knight drops coin and its full worn kit, the camp rogues drop theirs, and the Sergeant's rogue-hunting bounties keep coming. Climb until your purse covers the 500,000.
-- **Knighthood** unlocks **rune armour**, your **first [companion](/wiki/companions)** (a levelable bot ally - muster one from General Zo in the castle courtyard), and the real **wilderness / PK loop**.
+- A **soldier's purse** (150,000) the moment the hunt clears.
+- The ladder's spoils: every knight drops coin and its full worn kit, the camp rogues drop theirs, and the Sergeant's rogue-hunting bounties keep coming - the fastest gear-and-coin road for a PKer.
+- The **wilderness / PK loop** itself: player kills pay **Blood Money** and drop [loot keys](/wiki/wilderness-loot-keys).
 
 ## What comes after
 
-Knight is the mid-game power spike, and you'll hit it mid-quest. With a companion at your side, the ladder itself is your sparring school - every knight teaches the switches, baits and specs that work on real players - so hunt for real between rungs: player kills pay **Blood Money**. The [Corporeal Beast war event](/wiki/corporeal-beast) and the war's Marches open up along the way too.
-
-Breaking the final camp completes the quest - and opens **War-Prep II** (the Ranged drills, the road to Lord). Every beaten knight stays farmable for its signature gear (`::knights`). See the [Gameplay roadmap](/wiki/gameplay-roadmap) for the full journey.
+Every beaten knight stays farmable for its signature gear (`::knights`), and the ladder's knights are the sparring partners a future PvP academy will send you back to. Your main road - War-Prep II, the marches, the ranks - was never waiting: see the [Gameplay roadmap](/wiki/gameplay-roadmap).

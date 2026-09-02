@@ -355,9 +355,9 @@ class SlayerPlugin(
     }
 
     /** War-Prep II (Ranged) GEAR step: arm the marksman kit and send them to the skirmish (fell
-     *  enemies with a ranged weapon). The rogue ladder already trained their combat — no drill. */
+     *  enemies with a ranged weapon). No drill step. */
     private suspend fun QueueTask.warPrepRangedArm(p: Player) {
-        say(p, "The rogues' ladder made a fighter of you — now let's make a marksman. A raider holds the line at distance too.")
+        say(p, "The tower made a mage of you — now let's make a marksman. A soldier holds the line at distance too.")
         // Advance immediately with the handout — a say between them let an early chat-close strand
         // the step on GEAR and re-claim the kit (same dupe as the tower kit above).
         WarPrepRanged.armForSkirmish(p) // bow + d'hide + arrows
@@ -375,7 +375,7 @@ class SlayerPlugin(
      *  BOUNTY; the Lordship itself is earned from the mid-game loops and bought when it is. */
     private suspend fun QueueTask.warPrepRangedDebrief(p: Player) {
         say(p, "A clean skirmish — I watched the reports come in. You can hold a line at range now, ${p.address}.")
-        say(p, "The realm pays for the task: <col=801700>${"%,d".format(WarPrepRanged.SKIRMISH_BOUNTY)} coins</col>, a skirmish bounty. The <col=801700>Lordship</col> you'll EARN — farm the rogues' ladder for their kits and rares, raid the fallen cities' loot spots, hunt the wild for loot keys.")
+        say(p, "The realm pays for the task: <col=801700>${"%,d".format(WarPrepRanged.SKIRMISH_BOUNTY)} coins</col>, a skirmish bounty. The <col=801700>Lordship</col> you'll EARN — fight the marches for War Effort and spoils, farm the rogues' ladder for their kits, hunt the wild for loot keys.")
         WarPrepRanged.onReportedToVannaka(p) // REPORT → RANK: pays the bounty
         say(p, "When your purse reaches <col=801700>${"%,d".format(org.alter.plugins.content.war.Title.LORD.cost)} coins</col>, Duke Horacio will raise you. A Lord commands knights — and General Zo will have words for you once you wear the title.")
     }
