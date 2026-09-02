@@ -19,6 +19,7 @@ import org.alter.plugins.content.quests.framework.NpcTalk
 import org.alter.plugins.content.quests.framework.bindTalk
 import org.alter.plugins.content.war.address
 import org.alter.plugins.content.war.roguehunt.RogueHunt
+import org.alter.plugins.content.war.roguehunt.RogueProblem
 import org.alter.rscm.RSCM.getRSCM
 
 private val logger = KotlinLogging.logger {}
@@ -222,6 +223,12 @@ class RecruitTrialsPlugin(
                 chatNpc(p, "At ease, ${p.address}. You've fought, ranked, slain and supplied — a true citizen-soldier of Lumbridge. Make us proud.", npc = s, title = "Recruiting Sergeant")
                 // UX: the teleport portal was undiscoverable — nothing in the game ever mentioned it.
                 chatNpc(p, "One more thing every soldier should know: the <col=801700>glowing portal over the courtyard fountain</col> carries you to every front, skilling ground and arena the realm holds. Use it.", npc = s, title = "Recruiting Sergeant")
+                // The Rogue Problem is offered by the quest-priority branch (RogueProblemPlugin) once
+                // War-Prep I is done; until then say WHAT is coming and WHY it isn't offered yet, so a
+                // soldier who came for "rogue hunting" doesn't leave thinking the Sergeant has nothing.
+                if (RogueProblem.step(p) == RogueProblem.Step.NONE) {
+                    chatNpc(p, "There's harder work waiting for you — the rogues bleeding our roads — but not before Vannaka's magic drills, <col=801700>War-Prep I</col>, are behind you. Finish those and ask me again.", npc = s, title = "Recruiting Sergeant")
+                }
                 if (RogueHunt.kills(p) == 0) {
                     chatNpc(p, "If you're hunting work: the rogue family crawls over the road camps west of Lumbridge and the ruins of <col=801700>Fallen Varrock</col> alike. The realm pays a bounty at every milestone of cutthroats you put down — report your tally to me. <col=ffae00>::rogues</col> tracks it.", npc = s, title = "Recruiting Sergeant")
                     chatNpc(p, "Fair warning: Varrock's streets are the wilderness — the road camps are safe. Take nothing into the ruins you can't afford to lose; the tally, at least, is yours forever.", npc = s, title = "Recruiting Sergeant")

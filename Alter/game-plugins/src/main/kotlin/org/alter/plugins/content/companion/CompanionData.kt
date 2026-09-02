@@ -25,8 +25,8 @@ class CompanionData(
     var autoLoot: Boolean = false,
     /**
      * Off duty: he stays on the roster (levels + gear intact) but is NOT spawned — not on login,
-     * not until the owner summons him. Only ONE companion is ever fielded
-     * ([CompanionRegistry.ACTIVE_MAX]), so every other roster entry lives here.
+     * not until the owner summons him. Also where [org.alter.plugins.content.companion.CompanionPolicy]
+     * parks a companion while the owner stands somewhere companions are denied.
      */
     var dismissed: Boolean = false,
     /** Saved attack-style varp (0-3); -1 = use the spawn default ([org.alter.plugins.content.bots.BotBrain.configureStyle]). */

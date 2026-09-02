@@ -16,10 +16,10 @@ import org.alter.game.plugin.PluginRepository
 import org.alter.plugins.content.companion.Companion as CompanionPawn
 
 /**
- * Host plugin for the **companion** system: spawns a player's fielded companion on login, stores +
- * despawns it on logout, ticks the companion brain, and exposes the `::companion` command channel
- * the RuneLite panel drives. Recruiting lives at General Zo ([RecruitClickPlugin]). One companion
- * at your side, always ([CompanionRegistry.ACTIVE_MAX]).
+ * Host plugin for the **companion** system: spawns a player's fielded companions on login, stores +
+ * despawns them on logout, ticks the companion brain, and exposes the `::companion` command channel
+ * the RuneLite panel drives. Recruiting lives at General Zo ([RecruitClickPlugin]). The whole
+ * roster takes the field at once ([CompanionRegistry.ACTIVE_MAX]).
  */
 class CompanionPlugin(
     r: PluginRepository,
@@ -73,7 +73,7 @@ class CompanionPlugin(
             }
             val rec = CompanionRegistry.recruit(world, player, archetype)
             if (rec == null) player.message("<col=801700>Could not recruit a companion.</col>")
-            else player.message("<col=4f9b4f>Recruited Sir ${rec.name}, a ${archetype.display} companion (${CompanionRegistry.rosterSize(player)}/$cap)${if (rec.dismissed) " — benched; summon him to swap" else ""}.</col>")
+            else player.message("<col=4f9b4f>Recruited Sir ${rec.name}, a ${archetype.display} companion (${CompanionRegistry.rosterSize(player)}/$cap)${if (rec.dismissed) " — benched; summon him from the panel" else ""}.</col>")
         }
 
         // ::companion <train|attack|follow|deploy|return|dismiss|summon|bones|archetype> [slot] — order all your
@@ -85,8 +85,8 @@ class CompanionPlugin(
             // Dismiss / summon come FIRST: they're the only actions that make sense with nobody
             // fielded (the whole point of summon is that your companion is off duty).
             //   ::companion dismiss [slot]  — send him off duty; he leaves the world entirely
-            //   ::companion summon  [slot]  — call one back to your side (a SWAP if someone is fielded)
-            // [slot] is 1-based over the roster the panel was sent: the live companion first, then the bench.
+            //   ::companion summon  [slot]  — call one (or, with no slot, everyone) back to your side
+            // [slot] is 1-based over the roster the panel was sent: the live companions first, then the bench.
             when (args.getOrNull(0)?.lowercase()) {
                 "dismiss" -> {
                     val slot = args.getOrNull(1)?.toIntOrNull()
@@ -101,7 +101,8 @@ class CompanionPlugin(
                     val slot = args.getOrNull(1)?.toIntOrNull()
                     if (slot != null) {
                         CompanionRegistry.summon(player, slot - 1)
-                    } else if (CompanionRegistry.summonAll(player) == 0) {
+                    } else if (CompanionRegistry.summonAll(player) == 0 && CompanionRegistry.benchedOf(player).isEmpty()) {
+                        // (a refused summon — policy-denied, world full — has already said why)
                         player.message("You have no dismissed companions to summon.")
                     }
                     return@onCommand
@@ -245,14 +246,14 @@ class CompanionPlugin(
             }
         }
 
-        // ::companions — list your roster (the fielded one first, then the bench).
+        // ::companions — list your roster (the fielded ones first, then the bench).
         onCommand("companions", description = "List your companions") {
             val list = CompanionRegistry.ofOwner(player)
             val benched = CompanionRegistry.benchedOf(player)
             if (list.isEmpty() && benched.isEmpty()) {
                 player.message("You have no companions. Recruit one from General Zo."); return@onCommand
             }
-            player.message("Your roster (${CompanionRegistry.rosterSize(player)}/${CompanionRegistry.rosterCap(player)}) — one takes the field at a time:")
+            player.message("Your roster (${CompanionRegistry.rosterSize(player)}/${CompanionRegistry.rosterCap(player)}):")
             list.forEach { player.message(" - Sir ${it.username} (${it.archetype.display}), combat ${it.combatLevel} [${it.orders.name.lowercase()}]") }
             benched.forEachIndexed { i, d ->
                 player.message(" - Sir ${d.name} (${d.archetype.display}) [off duty — ::companion summon ${list.size + i + 1}]")

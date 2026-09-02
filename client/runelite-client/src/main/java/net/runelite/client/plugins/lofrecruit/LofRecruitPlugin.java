@@ -5,8 +5,9 @@
  *   bit 0 open flag · bits 1-3 companions fielded · bits 4-6 rank cap · bits 7-10 title ordinal.
  * This plugin opens the recruiter window (three discipline cards + the banner strip). Clicking a
  * card sends "::zo recruit <melee|range|mage>" as public chat, which the server intercepts
- * (MessagePublicHandler → zoclick), runs the 1,000,000-coin muster, and re-pulses the varp so the
- * banner strip updates in place.
+ * (MessagePublicHandler → zoclick), runs the muster at the tiered price (10M, 100M, 500M by roster
+ * size — server RecruitMenu.RECRUIT_COSTS), and re-pulses the varp so the banner strip updates in
+ * place.
  */
 package net.runelite.client.plugins.lofrecruit;
 

@@ -35,16 +35,18 @@ private val logger = KotlinLogging.logger {}
  * brain drive. Persistence rides on a JSON blob stored on the owner's `COMPANIONS_ATTR`
  * (rebuilt on change + periodically so autosave catches it).
  *
- * **One at your side** (design authority §7): every player fields at most [ACTIVE_MAX] companion
- * at a time, whatever their rank. Rank scales the ROSTER ([rosterCap] — how many soldiers you may
- * keep on the banner and swap between), never how many stand beside you. [CompanionPolicy] says
- * where even that one must stand down (solo boss instances, the Fight Cave).
+ * **The whole banner at your side** (operator decision 2026-09-02, superseding the design
+ * authority's one-active rule): a player fields every companion they keep, up to [ACTIVE_MAX].
+ * Rank scales the ROSTER ([rosterCap] — how many soldiers you may keep on the banner), and the
+ * muster price climbs steeply per soldier (`RecruitMenu.RECRUIT_COSTS`: 10M, 100M, 500M) so
+ * three at once is paid for. [CompanionPolicy] says where they must all stand down (solo boss
+ * instances, the Fight Cave).
  */
 object CompanionRegistry {
     /** Hard roster ceiling (also the client panel's card/varp slots). Rank caps below it ([rosterCap]). */
     const val MAX = 3
-    /** How many companions may be IN THE WORLD for one owner. One, for everyone. */
-    const val ACTIVE_MAX = 1
+    /** How many companions may be IN THE WORLD for one owner: the whole roster. */
+    const val ACTIVE_MAX = MAX
     private const val SAVE_EVERY = 30 // brain ticks between blob refreshes (~36s)
     /** Varps the server writes each tick with the owner's companion world-indices (+1; 0 = empty),
      *  so the "Fall of Varrock Companions" RuneLite plugin can find exactly THIS player's companions by index
@@ -98,11 +100,12 @@ object CompanionRegistry {
      */
     private val benchedByOwner = HashMap<Any, MutableList<CompanionData>>()
     /**
-     * owner key -> the companion [CompanionPolicy] benched in place (owner walked into a denied
-     * area). Transient: he rejoins automatically the tick the owner is somewhere allowed again, and
-     * a logout un-benches him in the blob so he spawns on the next login as usual.
+     * owner key -> the companions [CompanionPolicy] benched in place (owner walked into a denied
+     * area), in formation order. Transient: they rejoin automatically the tick the owner is
+     * somewhere allowed again, and a logout un-benches them in the blob so they spawn on the next
+     * login as usual.
      */
-    private val policyBenched = HashMap<Any, CompanionData>()
+    private val policyBenched = HashMap<Any, MutableList<CompanionData>>()
     /** owner key -> their tile last tick + their current facing (dx,dz), for the follow formation. */
     private val ownerLastTile = HashMap<Any, Tile>()
     private val ownerFacing = HashMap<Any, Pair<Int, Int>>()
@@ -149,16 +152,17 @@ object CompanionRegistry {
 
     /**
      * How many companions [owner] may KEEP — their feudal rank's roster (Knight 1, Lord 2,
-     * Minister/King 3; below Knight none), clamped to the hard [MAX]. Only [ACTIVE_MAX] of them is
-     * ever fielded. Rank is raised by Duke Horacio; existing rosters above a (never-decreasing)
-     * rank's allowance are kept, this only gates NEW recruits.
+     * Minister/King 3; below Knight none), clamped to the hard [MAX]. Every one of them may be
+     * fielded at once ([ACTIVE_MAX]). Rank is raised by Duke Horacio; existing rosters above a
+     * (never-decreasing) rank's allowance are kept, this only gates NEW recruits.
      */
     fun rosterCap(owner: Player): Int = minOf(MAX, owner.title.roster)
 
     /**
-     * Recruit a fresh (naked, level-1) companion of [archetype]. He takes the field if the owner
-     * has nobody fielded (and stands somewhere companions are allowed); otherwise he joins the
-     * bench, ready to be summoned in a swap. Returns null if the roster is at the rank cap.
+     * Recruit a fresh (naked, level-1) companion of [archetype]. He takes the field beside the
+     * owner unless the field is full ([ACTIVE_MAX]) or the owner stands somewhere companions are
+     * denied; then he joins the bench, ready to be summoned. Returns null if the roster is at the
+     * rank cap.
      */
     fun recruit(world: World, owner: Player, archetype: CompanionStyle): CompanionData? {
         if (rosterSize(owner) >= rosterCap(owner)) return null
@@ -227,10 +231,10 @@ object CompanionRegistry {
     }
 
     /**
-     * Login: respawn the owner's ONE fielded companion beside them. Dismissed companions stay off
-     * duty (they only come back when summoned) and are kept on the bench ([benchedByOwner]) so they
-     * survive the next [persist]. A pre-Block-1 save with several fielded companions keeps the first
-     * and benches the rest, with a one-time notice.
+     * Login: respawn the owner's fielded companions beside them (up to [ACTIVE_MAX]). Dismissed
+     * companions stay off duty (they only come back when summoned) and are kept on the bench
+     * ([benchedByOwner]) so they survive the next [persist]. A save with more fielded than the
+     * field allows keeps the first [ACTIVE_MAX] and benches the rest, with a one-time notice.
      */
     fun spawnFor(world: World, player: Player) {
         // Ghost-buster: clear any companions this owner already has registered BEFORE respawning.
@@ -239,6 +243,7 @@ object CompanionRegistry {
         // can't survive — and drop any stale byOwner tracking entry too.
         byOwner.remove(keyOf(player))
         benchedByOwner.remove(keyOf(player))
+        policyBenched.remove(keyOf(player))
         val ghosts = despawnOwned(world, keyOf(player))
         if (ghosts > 0) logger.warn { "spawnFor ${player.username}: cleared $ghosts stale companion ghost(s) before respawn." }
 
@@ -257,20 +262,21 @@ object CompanionRegistry {
         val benched = ArrayList<CompanionData>()
         val verdict = CompanionPolicy.verdict(player) // logged in somewhere companions may not stand?
         var overflow = 0
+        var policyBenchedCount = 0 // fielded-but-denied go to the FRONT of the bench, in formation order
         roster.forEach { data ->
             if (data.dismissed) { benched += data; return@forEach }
-            if (list.size >= ACTIVE_MAX) {
-                // Legacy save with several fielded: only one may take the field now.
+            if (list.size + policyBenchedCount >= ACTIVE_MAX) {
+                // A save with more fielded than the field allows: the rest wait on the bench.
                 data.dismissed = true
                 benched += data
                 overflow++
                 return@forEach
             }
             if (verdict != null) {
-                // Bench in place; he rejoins the moment the owner is somewhere allowed (tick()).
+                // Bench in place; they rejoin the moment the owner is somewhere allowed (tick()).
                 data.dismissed = true
-                benched.add(0, data)
-                policyBenched[keyOf(player)] = data
+                benched.add(policyBenchedCount++, data)
+                policyBenched.getOrPut(keyOf(player)) { ArrayList() } += data
                 CompanionPolicy.notify(player, data.name, verdict)
                 return@forEach
             }
@@ -290,11 +296,9 @@ object CompanionRegistry {
         benchedByOwner[keyOf(player)] = benched
         if (overflow > 0) {
             persist(player)
-            val fielded = list.firstOrNull()?.username
             player.message(
-                "<col=801700>Only one companion may take the field now" +
-                    (if (fielded != null) " — Sir $fielded stands with you" else "") +
-                    "; $overflow wait on the bench. Summon one from the companion panel to swap.</col>",
+                "<col=801700>Only $ACTIVE_MAX companions may take the field at once — " +
+                    "$overflow wait on the bench. Summon them from the companion panel.</col>",
             )
         }
         logger.info { "spawnFor ${player.username}: spawned ${list.size} companion(s), indices=${list.map { it.index }}, names=${list.map { it.username }}, benched=${benched.map { it.name }}" }
@@ -306,9 +310,9 @@ object CompanionRegistry {
         val benched = benchedByOwner.remove(keyOf(player))
         ownerLastTile.remove(keyOf(player))
         ownerFacing.remove(keyOf(player))
-        // A companion benched by policy (owner logged out inside a solo instance) was never
-        // dismissed by choice: store him as fielded so he spawns on the next login as usual.
-        policyBenched.remove(keyOf(player))?.dismissed = false
+        // Companions benched by policy (owner logged out inside a solo instance) were never
+        // dismissed by choice: store them as fielded so they spawn on the next login as usual.
+        policyBenched.remove(keyOf(player))?.forEach { it.dismissed = false }
         // Persist the roster blob FIRST, but never let a snapshot/encode failure skip the despawn
         // below — an orphaned-but-registered companion becomes a frozen ghost on the next login.
         if (list != null || benched != null) {
@@ -484,10 +488,9 @@ object CompanionRegistry {
     //
     // "Dismiss" is the answer to "I don't want him trailing me everywhere": the companion leaves the
     // world but NOT the roster — levels, gear and supplies are snapshotted exactly as a logout would,
-    // and he stays off duty across logins until the owner summons him back. "Summon" is also the
-    // SWAP: with one fielded, summoning a benched companion stands the fielded one down first.
-    // Slots are addressed the way every other panel command addresses them: 0-based over the roster
-    // the panel was sent, which is live companions first, then the bench.
+    // and he stays off duty across logins until the owner summons him back. Slots are addressed the
+    // way every other panel command addresses them: 0-based over the roster the panel was sent,
+    // which is live companions first, then the bench.
 
     /** Send the live companion at roster [slot] off duty. Returns false if there's nobody there. */
     fun dismiss(player: Player, slot: Int, quiet: Boolean = false): Boolean {
@@ -511,20 +514,26 @@ object CompanionRegistry {
     }
 
     /**
-     * Bench the fielded companion IN PLACE because [CompanionPolicy] denies where the owner stands.
-     * Skips the PvP rule (the owner has just walked into a solo instance — nobody is hitting the
-     * companion there) and remembers him in [policyBenched] so [tick] brings him back on exit.
+     * Bench every fielded companion IN PLACE because [CompanionPolicy] denies where the owner
+     * stands. Skips the PvP rule (the owner has just walked into a solo instance — nobody is hitting
+     * the companions there) and remembers them in [policyBenched] so [tick] brings them back on exit.
      */
     private fun benchByPolicy(key: Any, owner: Player, live: MutableList<Companion>, v: CompanionPolicy.Verdict) {
-        val comp = live.firstOrNull() ?: return
-        val data = snapshot(comp).also { it.dismissed = true }
-        live.remove(comp)
-        benchedByOwner.getOrPut(key) { ArrayList() }.add(0, data) // front of the bench — the one to summon back
-        policyBenched[key] = data
-        CompanionLoot.forget(comp)
-        BotManager.despawn(comp.world, comp, force = true)
+        if (live.isEmpty()) return
+        val bench = benchedByOwner.getOrPut(key) { ArrayList() }
+        val waiting = policyBenched.getOrPut(key) { ArrayList() }
+        val names = ArrayList<String>()
+        live.toList().forEachIndexed { i, comp ->
+            val data = snapshot(comp).also { it.dismissed = true }
+            live.remove(comp)
+            bench.add(i, data) // front of the bench, formation order kept — the ones to summon back
+            waiting += data
+            names += data.name
+            CompanionLoot.forget(comp)
+            BotManager.despawn(comp.world, comp, force = true)
+        }
         persist(owner); forcePush(owner)
-        CompanionPolicy.notify(owner, data.name, v)
+        names.forEach { CompanionPolicy.notify(owner, it, v) }
     }
 
     /** Send every live companion off duty (skipping any that can't right now). Returns how many stood down. */
@@ -541,9 +550,8 @@ object CompanionRegistry {
 
     /**
      * Recall the dismissed companion at roster [slot] (i.e. an index past the live rows) to the
-     * owner's side. With someone already fielded this is a **swap**: the fielded companion stands
-     * down first (the PvP rule in [dismiss] can refuse that, which refuses the summon). Refused
-     * outright where [CompanionPolicy] denies companions.
+     * owner's side. Refused when the field is already full ([ACTIVE_MAX]) and outright where
+     * [CompanionPolicy] denies companions.
      */
     fun summon(player: Player, slot: Int): Boolean {
         val key = keyOf(player)
@@ -555,11 +563,10 @@ object CompanionRegistry {
             return false
         }
         if (live.size >= ACTIVE_MAX) {
-            // Swap: the fielded one stands down (quietly — the summon line below tells the story).
-            // `data` was captured above, so the bench shifting under us is harmless.
-            if (!dismiss(player, 0, quiet = true)) return false
+            player.message("<col=801700>You can only field $ACTIVE_MAX companions at once — dismiss one first.</col>")
+            return false
         }
-        if (policyBenched[key] === data) policyBenched.remove(key) // summoned by hand — no auto-resume owed
+        policyBenched[key]?.remove(data) // summoned by hand — no auto-resume owed
         data.dismissed = false
         val comp = spawn(player.world, player, data, player.tile)
         if (comp == null) {
@@ -575,18 +582,18 @@ object CompanionRegistry {
     }
 
     /**
-     * "Summon" with no slot: recall the FIRST benched companion if nobody is fielded. Returns how
-     * many answered (0 or 1 — one at your side). With someone already fielded, the owner must name
-     * who to swap in.
+     * "Summon" with no slot: recall every benched companion, up to [ACTIVE_MAX] fielded. Returns
+     * how many answered. Stops at the first refusal (policy-denied, world full) — [summon] has
+     * already told the owner why.
      */
     fun summonAll(player: Player): Int {
-        if (count(player) >= ACTIVE_MAX) {
-            val fielded = ofOwner(player).first().username
-            player.message("<col=801700>Sir $fielded already stands with you — pick a companion to swap in from the panel.</col>")
-            return 0
+        var n = 0
+        var guard = 0
+        while (count(player) < ACTIVE_MAX && benchedOf(player).isNotEmpty() && guard++ < MAX) {
+            if (!summon(player, count(player))) break // the first benched entry is at the live count
+            n++
         }
-        if (benchedOf(player).isEmpty()) return 0
-        return if (summon(player, count(player))) 1 else 0
+        return n
     }
 
     /** Tag for the gear-picker reply channel (bank items that fit a slot). Mirrors the client parser. */
@@ -811,14 +818,16 @@ object CompanionRegistry {
         if (policyBenched.isNotEmpty()) {
             val it = policyBenched.entries.iterator()
             while (it.hasNext()) {
-                val (key, data) = it.next()
+                val (key, waiting) = it.next()
                 val owner = world.players.firstOrNull { p -> p !is Companion && keyOf(p) == key }
-                if (owner == null) { it.remove(); continue } // gone without a logout — blob keeps him benched
+                if (owner == null) { it.remove(); continue } // gone without a logout — blob keeps them benched
                 if (CompanionPolicy.denied(owner)) continue
-                it.remove()
-                if (count(owner) >= ACTIVE_MAX) continue // owner fielded someone else meanwhile
-                val idx = benchedByOwner[key]?.indexOf(data) ?: -1
-                if (idx >= 0) summon(owner, count(owner) + idx)
+                it.remove() // BEFORE summoning: summon() only touches the (now detached) list, never this map
+                for (data in waiting) {
+                    if (count(owner) >= ACTIVE_MAX) break // owner filled the field by hand meanwhile
+                    val idx = benchedByOwner[key]?.indexOf(data) ?: -1
+                    if (idx >= 0) summon(owner, count(owner) + idx)
+                }
             }
         }
         // Retire any companion no roster claims at all (account reset/rename orphans).

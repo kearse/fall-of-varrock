@@ -4,7 +4,6 @@ import dev.openrune.cache.CacheManager.getNpc
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.alter.api.ext.chatNpc
 import org.alter.api.ext.message
-import org.alter.api.ext.npc
 import org.alter.api.ext.player
 import org.alter.game.model.entity.Player
 import org.alter.game.model.queue.QueueTask
@@ -101,7 +100,12 @@ fun KotlinPlugin.bindTalk(npcKey: String): Boolean {
     }
     talkBound += id
     onNpcOption(npcKey, option = talk) {
-        if (!NpcTalk.talk(player, npc.id)) player.message("They have nothing to say to you right now.")
+        // Route by the BOUND id, never `npc.id`: an npc-option plugin runs with the clicking
+        // player as its context, so the `Plugin.npc` accessor (`ctx as Npc`) throws a
+        // ClassCastException here — which is exactly how the Sergeant went mute after PR-9
+        // (the engine swallowed the throw and the click did nothing). The binding is per npc
+        // id anyway, so the id is the right key.
+        if (!NpcTalk.talk(player, id)) player.message("They have nothing to say to you right now.")
     }
     return true
 }

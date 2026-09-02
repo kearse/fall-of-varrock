@@ -196,6 +196,8 @@ Players can recruit, train, equip, and develop persistent named soldiers, but ma
 | REMOVE | Rank-based active count | Lord/Minister/King do not increase simultaneous companion count. |
 | MONETIZATION GUARDRAIL | Donor benefits | Extra roster/recruit/cosmetic options are safer than allowing extra active companions, which would become direct combat power. |
 
+> **Amendment 2026-09-02 (operator decision, in code):** the active limit above is lifted - a player fields their whole roster at once (`CompanionRegistry.ACTIVE_MAX = MAX`, three). The guardrail is price instead of count: the first soldier costs 10M coins, the second 100M, the third 500M (`RecruitMenu.RECRUIT_COSTS`). Rank still sets the roster size (Knight 1 / Lord 2 / Minister+ 3).
+
 ## 11. War-Forging and Gear Economy
 
 OSRS content gets the player the base gear. FoV endgame lets the player War-Forge it.
