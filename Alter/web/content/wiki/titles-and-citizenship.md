@@ -19,7 +19,7 @@ Check your current rank, armour tier and next rank price with `::title`. Check y
 | Squire | 50,000 gp | Black | Snakeskin | - | - | Name shown in colour |
 | Soldier | 150,000 gp | Mithril & Adamant | Green d'hide | - | - | - |
 | Knight | 500,000 gp | Rune, granite, fremennik, void | Blue/red & blessed d'hide | Mystic, splitbark, enchanted, infinity | 1 | - |
-| Lord | 2,000,000 gp | **All armour** - Dragon, barrows, godwars, endgame sets | Black d'hide, karil's, armadyl | Ahrim's, ancestral | 2 | `::sendtroops`, `::summonboss` |
+| Lord | 2,000,000 gp | **All armour** - Dragon, barrows, godwars, endgame sets | Black d'hide, karil's, armadyl | Ahrim's, ancestral | 2 | `::operation`, `::sendtroops`, `::summonboss` |
 | Minister | 10,000,000 gp | All armour | All armour | All armour | 3 | + `::campaign` |
 | King | 50,000,000 gp | All armour | All armour | All armour | 3 | + `::conquest` |
 

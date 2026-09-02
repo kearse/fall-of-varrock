@@ -1,5 +1,6 @@
 package org.alter.plugins.content.war
 
+import org.alter.game.model.Area
 import org.alter.game.model.Tile
 import org.alter.game.model.World
 import org.alter.game.model.entity.Npc
@@ -27,11 +28,19 @@ object CampaignRegistry {
     /** Every active squad operating in [cityId] (used to pay out each Lord's damage share). */
     fun squadsIn(cityId: Int): List<CampaignDirector> = active.filter { it.cityId == cityId }
 
-    /** True if a CAMPAIGN/CONQUEST (not a boss-backing RAID) is currently besieging [cityKey] — the
-     *  signal a campaign-gated frontier ([CityFrontierPlugin]) uses to keep that city's garrison
-     *  mustered. When this flips false (the campaign ended) the frontier despawns the garrison. */
-    fun isAttacking(cityKey: String): Boolean =
-        active.any { it.tier != CampaignTier.RAID && it.targetCityKey.equals(cityKey, ignoreCase = true) }
+    /** True if a non-RAID op (a march, operation, campaign or conquest) is currently fighting over
+     *  [targetKey] — a hostile city key or a [MarchTargets] key. This is the signal a campaign-gated
+     *  frontier ([CityFrontierPlugin]) uses to keep that garrison mustered; when it flips false (the
+     *  op ended) the frontier despawns the garrison. */
+    fun isAttacking(targetKey: String): Boolean =
+        active.any { it.tier != CampaignTier.RAID && it.targetCityKey.equals(targetKey, ignoreCase = true) }
+
+    /** True if any active non-RAID op's battlefield intersects [area] — two ops must never share ground
+     *  (kills would cross-credit the first director whose box covers the tile). */
+    fun overlapsActive(area: Area): Boolean = active.any { it.tier != CampaignTier.RAID && it.battleArea.intersects(area) }
+
+    private fun Area.intersects(o: Area): Boolean =
+        bottomLeftX <= o.topRightX && o.bottomLeftX <= topRightX && bottomLeftY <= o.topRightY && o.bottomLeftY <= topRightY
 
     /** The realm's scheduled warband currently in the field (MARCH or GRAND_MARCH), if any. */
     fun activeMarch(): CampaignDirector? =
@@ -41,7 +50,7 @@ object CampaignRegistry {
      * Begin a [tier] operation for [sponsor] (null = the realm's own scheduled MARCH). Returns
      * false (and does nothing) if that Lord already has a squad out — callers must charge only
      * after this succeeds, or refund on false. [onResult] fires once with the outcome
-     * (true = victory) — e.g. the march's district pressure credit.
+     * (true = victory) — e.g. the march's Warden teardown.
      */
     fun start(world: World, op: CampaignOp, tier: CampaignTier, sponsor: Player?, onResult: ((Boolean) -> Unit)? = null): Boolean {
         if (sponsor != null && hasSquad(sponsor)) return false

@@ -1,5 +1,15 @@
 # Story Arc, Marches & the Endgame Grind — Design
 
+> **PARTLY SUPERSEDED (Development Block 1, September 2026).** The design authority is now the
+> September-2026 docs (`FoV_Current_Design_Authority_Dev_Handoff`, `FoV_Development_Block_1_Scope`,
+> `Fall_of_Varrock_Master_Story_and_Quest_Plan`). What changed: §1's three-act quest hallway ending
+> in the *reconquest* of Varrock is retired — **Varrock stays fallen** and is the permanent endgame
+> zone; §5's **district pressure / liberation meter is RETIRED** (districts survive only as location
+> identity, `war/VarrockDistricts.kt`); marches strike a **pool of hostile ground** (`war/MarchTargets.kt`)
+> rather than Varrock/Falador districts; the Lord's on-demand tier is the public `::operation`. §2
+> (marches), §3 (supply contracts), §4 (rogue tracks — now OPTIONAL progression, not a rank gate), §6
+> (war-forging) and §7 (monetization) remain accurate as build notes.
+
 > The master plan for keeping players moving: the three-act quest spine, the **March**
 > system (scheduled knight warbands anyone can join), the mid-game grind loops that feed
 > it, and the endgame gear economy — max gear as the months-long goal, earned across every

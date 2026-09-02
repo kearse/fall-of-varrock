@@ -4,6 +4,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import org.alter.api.NpcSkills
 import org.alter.api.ext.message
 import org.alter.plugins.content.announce.Announce
+import org.alter.game.model.Area
 import org.alter.game.model.Direction
 import org.alter.game.model.Tile
 import org.alter.game.model.World
@@ -48,7 +49,7 @@ class CampaignDirector(
     val tier: CampaignTier,
     /** The Lord who paid for this squad — or null for a realm-sponsored [CampaignTier.MARCH]. */
     private val sponsor: Player?,
-    /** Optional outcome hook (true = victory) — e.g. district pressure credit for a march. */
+    /** Optional outcome hook (true = victory) — e.g. the march's Warden teardown. */
     private val onResult: ((Boolean) -> Unit)? = null,
     private val onFinished: (CampaignDirector) -> Unit,
 ) {
@@ -79,7 +80,10 @@ class CampaignDirector(
     /** True if [tile] is inside this campaign's battlefield (where enemy loot pools to [lootPool]). */
     fun coversBattle(tile: Tile): Boolean = op.battleArea.contains(tile)
 
-    /** The op's effective kill quota — the tier's base, shaved by broken districts ([Districts]). */
+    /** This op's battlefield box (the band it fights and counts kills in). */
+    val battleArea: Area get() = op.battleArea
+
+    /** The op's kill quota — the tier's base. */
     private var quota = tier.quota
 
     /** 0-100 "how far through" this campaign is = enemies cleared toward the kill quota. */
@@ -146,7 +150,7 @@ class CampaignDirector(
     private val ignoreEnemy = HashMap<Npc, HashMap<Int, Int>>()
 
     fun init(world: World) {
-        quota = Districts.effectiveQuota(op.cityKey, tier) // broken districts weaken the garrison
+        quota = tier.quota
         val zone = Frontiers.zone(op.cityKey)
         // Only a full campaign/conquest freezes the city's respawn (so clearing the garrison
         // sticks). A small boss-backing RAID party just adds muscle — it must NOT halt the
@@ -478,7 +482,7 @@ class CampaignDirector(
             val whose = sponsor?.let { "${it.username}'s" } ?: "The realm's"
             broadcast(world, "<col=801700>$whose ${tier.display} was driven back from ${op.displayName}.</col>")
         }
-        runCatching { onResult?.invoke(victory) } // outcome hook (e.g. district pressure credit)
+        runCatching { onResult?.invoke(victory) } // outcome hook (e.g. the march's Warden teardown)
         onFinished(this)
     }
 

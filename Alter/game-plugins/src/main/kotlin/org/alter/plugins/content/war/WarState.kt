@@ -20,12 +20,12 @@ import kotlin.io.path.writeText
  * ### What it stores
  * - the realm's **Realm Supplies** meter (skillers fill it, commanders spend it),
  * - the launched-march counter (every Nth march is a GRAND MARCH),
- * - the store's patron-funded march queue,
- * - district pressure (legacy — removed by the march-target rework; tolerated on load).
+ * - the store's patron-funded march queue.
  *
  * Schema history: v1 = the retired 0–100 siege-pressure model; v2 = per-front knight pools +
- * city-fallen timers for the retired defensive siege; **v3** = offensive war only (the `fronts`
- * section is ignored on load and no longer written).
+ * city-fallen timers for the retired defensive siege (+ the retired Falador district-pressure
+ * meter); **v3** = offensive war only (the `fronts` and `districts` sections are ignored on load
+ * and no longer written).
  *
  * @see WarStatePlugin for the lifecycle wiring.
  */
@@ -85,22 +85,6 @@ object WarState {
         return e.substringBeforeLast('|') to e.endsWith("|1")
     }
 
-    // --- district pressure (legacy Falador reconquest meter; the march-target rework retires it) ---
-    private val districtPressureByKey = HashMap<String, Int>()
-
-    fun getDistrictPressure(key: String): Int = districtPressureByKey[key] ?: 0
-
-    fun setDistrictPressure(key: String, value: Int) {
-        val v = value.coerceAtLeast(0)
-        if (districtPressureByKey.put(key, v) != v) dirty = true
-    }
-
-    /** Add [delta] (may be negative) to a district's pressure; returns the new value. */
-    fun addDistrictPressure(key: String, delta: Int): Int {
-        setDistrictPressure(key, getDistrictPressure(key) + delta)
-        return getDistrictPressure(key)
-    }
-
     /**
      * Load war state from disk. Safe when no file exists (starts fresh) and never
      * throws — a corrupt file is logged and treated as "start fresh". Older saves are
@@ -115,18 +99,15 @@ object WarState {
             }
             val doc = Document.parse(saveFile.readText().trimStart('﻿'))
             val version = (doc.get("version") as? Number)?.toInt() ?: 0
-            if (version < SCHEMA_VERSION && doc.containsKey("fronts")) {
-                logger.info { "War state v$version → v$SCHEMA_VERSION: dropping the retired defensive-siege 'fronts' section." }
+            val legacy = listOf("fronts", "districts").filter { doc.containsKey(it) }
+            if (legacy.isNotEmpty()) {
+                logger.info { "War state v$version: dropping retired section(s) ${legacy.joinToString()} (defensive siege / district pressure)." }
             }
             (doc.get("supplyMeter") as? Number)?.let { supplyMeter = it.toInt().coerceIn(0, SUPPLY_METER_MAX) }
-            districtPressureByKey.clear()
-            (doc.get("districts", Document::class.java))?.forEach { (key, value) ->
-                (value as? Number)?.let { districtPressureByKey[key] = it.toInt().coerceAtLeast(0) }
-            }
             (doc.get("marchCount") as? Number)?.let { marchCount = it.toInt().coerceAtLeast(0) }
             patronQueue.clear()
             (doc.get("patronMarches") as? List<*>)?.forEach { (it as? String)?.let(patronQueue::add) }
-            dirty = version != SCHEMA_VERSION // rewrite an older schema on the next save tick
+            dirty = version != SCHEMA_VERSION || legacy.isNotEmpty() // rewrite an older shape on the next save tick
             logger.info { "Loaded war state (v$version): supplies $supplyMeter/$SUPPLY_METER_MAX, marches $marchCount, patron queue ${patronQueue.size}." }
         } catch (e: Exception) {
             logger.error(e) { "Failed to load war state from $saveFile; starting fresh." }
@@ -138,12 +119,9 @@ object WarState {
         if (!dirty && !force) return
         try {
             Files.createDirectories(saveFile.parent)
-            val districts = Document()
-            districtPressureByKey.forEach { (key, value) -> districts.append(key, value) }
             val doc = Document()
                 .append("version", SCHEMA_VERSION)
                 .append("supplyMeter", supplyMeter)
-                .append("districts", districts)
                 .append("marchCount", marchCount)
                 .append("patronMarches", patronQueue.toList())
             saveFile.writeText(doc.toJson(prettyPrint))

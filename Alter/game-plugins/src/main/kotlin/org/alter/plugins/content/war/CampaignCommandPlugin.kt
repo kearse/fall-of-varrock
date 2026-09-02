@@ -26,11 +26,16 @@ private val logger = KotlinLogging.logger {}
  *
  *  - `::sendtroops` (Lord+)   — pay to field your own escort squad; you earn a share of all your
  *                               men slay (their damage to the boss buys you a cut of its loot).
- *  - `::campaign` (Minister+) — push the city's frontier; wins by breaking the garrison.
- *  - `::conquest` (King)      — a full army seizes the city and its spoils.
+ *  - `::operation` (Lord+)    — sponsor a small public offensive on a [MarchTargets] target:
+ *                               coin-funded, supply-free, anyone may join; the sponsor takes the
+ *                               commander's tithe ([CapturePayout]).
+ *  - `::campaign` (Minister+) — push the city's frontier; wins by breaking the garrison. Spends
+ *                               Realm Supplies.
+ *  - `::conquest` (King)      — a full army seizes the city and its spoils. Spends Realm Supplies.
  *
- * Several Lords can field squads at once (a boss fight draws many), but each Lord may only have
- * ONE squad out at a time.
+ * Participation is never rank-gated — only STARTING an op is (design authority §5). Several Lords
+ * can field squads at once (a boss fight draws many), but each Lord may only have ONE squad out
+ * at a time.
  */
 class CampaignCommandPlugin(
     r: PluginRepository,
@@ -88,6 +93,42 @@ class CampaignCommandPlugin(
             }
         }
 
+        // ::operation <target> — a Lord's own small offensive on a march target. Public (anyone
+        // rallies with ::march), coin-funded (the fee is the Lord's contribution — not refunded),
+        // supply-free. Runs as a MARCH-tier column with the Lord as sponsor.
+        onCommand("operation", description = "Sponsor a small offensive on a march target (Lord+): ::operation <target>") {
+            if (!player.canCommand(CommandTier.RAID)) {
+                player.message("<col=801700>Only a Lord or higher may sponsor an operation. Any soldier may still join one with ::march.</col>")
+                return@onCommand
+            }
+            val targets = MarchTargets.pool.joinToString(", ") { it.key }
+            val key = player.getCommandArgs().getOrNull(0)
+            val t = key?.let { MarchTargets.byKey(it) }
+            if (t == null) {
+                player.message("<col=801700>Usage: ::operation <target>. Targets: $targets.</col>")
+                return@onCommand
+            }
+            if (CampaignRegistry.hasSquad(player)) {
+                player.message("<col=801700>You already have a squad in the field.</col>"); return@onCommand
+            }
+            if (CampaignRegistry.activeMarch() != null || CampaignRegistry.isAttacking(t.key) || CampaignRegistry.overlapsActive(t.op.battleArea)) {
+                player.message("<col=801700>A column is already in the field on that ground — wait for it to return.</col>"); return@onCommand
+            }
+            val have = player.inventory.getItemCount(coins)
+            if (have < OPERATION_COST) {
+                player.message("<col=801700>Sponsoring an operation costs ${fmt(OPERATION_COST)} coins; you carry only ${fmt(have)}.</col>")
+                return@onCommand
+            }
+            player.inventory.remove(coins, OPERATION_COST)
+            if (!CampaignRegistry.start(world, t.op, CampaignTier.MARCH, player)) {
+                player.inventory.add(coins, OPERATION_COST) // race lost — refund
+                player.message("<col=801700>The operation could not set out.</col>")
+                return@onCommand
+            }
+            val m = t.op.route.first()
+            player.message("<col=4f9b4f>Your operation on ${t.display} musters at (${m.x}, ${m.z}) — any soldier may rally to it with <col=ffae00>::march</col><col=4f9b4f>. Win it and the commander's tithe is yours (::claim).</col>")
+        }
+
         onCommand("campaign", description = "March a campaign on a hostile city (Minister+): ::campaign [city]") {
             launch(player, CampaignTier.CAMPAIGN, CommandTier.CAMPAIGN)
         }
@@ -95,8 +136,9 @@ class CampaignCommandPlugin(
             launch(player, CampaignTier.CONQUEST, CommandTier.CONQUEST)
         }
 
-        // ::supply — anyone can check the realm's war-supply stores (filled by skilling the Mire +
-        // handing supplies to a Quartermaster; campaigns can only launch when it's high enough).
+        // ::supply — anyone can check the Realm Supplies stockpile (filled by skilling the Mire +
+        // handing supplies to a Quartermaster; campaigns/conquests can only launch when it's high
+        // enough — marches and Lord operations never touch it).
         onCommand("supply", description = "Check the realm's war-supply stores") {
             player.message(RealmSupply.status())
         }
@@ -138,7 +180,7 @@ class CampaignCommandPlugin(
     }
 
     /** Force-load every routed op's march-route corridor and open its bridge decks (once, at boot) —
-     *  the commanders' hostile targets plus the scheduled marches' Falador route ([Campaigns.ROUTED]). */
+     *  the commanders' hostile targets plus every scheduled-march target ([Campaigns.ROUTED]). */
     private fun prepareMarchCorridors(world: World) {
         val regions = sortedSetOf<Int>()
         for (op in Campaigns.ROUTED) {
@@ -215,6 +257,7 @@ class CampaignCommandPlugin(
     private companion object {
         const val TICK = 2 // ~1.2s operation cadence (matches the frontier upkeep)
         const val SEND_TROOPS_COST = 1_000_000 // a Lord's standalone escort-squad deployment fee
+        const val OPERATION_COST = 500_000 // a Lord's sponsored public operation (not refunded). TUNE.
         const val CORRIDOR_PAD = 16 // tiles of margin around a march route when force-loading its regions
     }
 }
