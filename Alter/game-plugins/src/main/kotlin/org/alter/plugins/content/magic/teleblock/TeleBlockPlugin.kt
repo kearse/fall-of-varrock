@@ -11,6 +11,7 @@ import org.alter.game.model.World
 import org.alter.game.model.entity.Player
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
+import org.alter.plugins.content.combat.formula.MagicCombatFormula
 import org.alter.plugins.content.combat.strategy.magic.CombatSpellEffects
 import org.alter.plugins.content.magic.MagicSpells
 import org.alter.plugins.content.magic.TeleBlock
@@ -30,8 +31,10 @@ class TeleBlockPlugin(
 ) : KotlinPlugin(r, world, server) {
 
     private companion object {
-        const val TELEBLOCK_XP = 80.0
+        const val TELEBLOCK_XP_LAND = 95.0  // OSRS: 95 xp on a successful cast
+        const val TELEBLOCK_XP_SPLASH = 84.0 // 84 xp on a splash (failed magic roll)
         const val CAST_ANIM = 1819
+        const val SPLASH_GFX = 85
     }
 
     init {
@@ -46,8 +49,15 @@ class TeleBlockPlugin(
             }
             if (!MagicSpells.canCast(caster, spell.lvl, spell.items, requiredBook = spell.spellbook)) return@register
             MagicSpells.removeRunes(caster, spell.items)
-            caster.addXp(Skills.MAGIC, TELEBLOCK_XP)
             caster.animate(CAST_ANIM)
+            // OSRS: teleblock rolls magic accuracy; a miss splashes (no block, less xp).
+            if (MagicCombatFormula.getAccuracy(caster, target) < caster.world.randomDouble()) {
+                caster.addXp(Skills.MAGIC, TELEBLOCK_XP_SPLASH)
+                target.graphic(SPLASH_GFX, 96)
+                caster.message("Your spell splashes harmlessly against ${target.username}.")
+                return@register
+            }
+            caster.addXp(Skills.MAGIC, TELEBLOCK_XP_LAND)
             // OSRS: Protect from Magic halves the teleblock to 2.5 minutes.
             val ticks =
                 if (target.hasPrayerIcon(PrayerIcon.PROTECT_FROM_MAGIC)) {

@@ -6,6 +6,7 @@ import org.alter.api.ProjectileType
 import org.alter.api.Skills
 import org.alter.api.ext.freeze
 import org.alter.api.ext.hasPrayerIcon
+import org.alter.api.ext.isMulti
 import org.alter.api.ext.message
 import org.alter.api.ext.playSound
 import org.alter.game.model.Graphic
@@ -153,7 +154,78 @@ object MagicCombatStrategy : CombatStrategy {
                 addCombatXp(pawn as Player, target, damage, spell)
             }
         }
+
+        // Bursts and barrages hit every other target in the 3x3 around the primary target,
+        // but only in multi-combat (OSRS). Each secondary gets an independent accuracy roll
+        // and carries the same freeze/poison/drain/heal effects.
+        if (pawn is Player && spell in AOE_SPELLS &&
+            (org.alter.plugins.content.combat.PvpZones.isMulti(target.tile) ||
+                target.tile.isMulti(world))
+        ) {
+            val extras = ArrayList<Pawn>()
+            world.npcs.forEach { npc ->
+                if (npc != null && npc != target && !npc.isDead() &&
+                    npc.def.isAttackable() && npc.combatDef.hitpoints != -1 &&
+                    npc.tile.isWithinRadius(target.tile, 1) &&
+                    Combat.canEngage(pawn, npc)
+                ) {
+                    extras.add(npc)
+                }
+            }
+            world.players.forEach { other ->
+                if (other != null && other != pawn && other != target && !other.isDead() &&
+                    other.tile.isWithinRadius(target.tile, 1) &&
+                    Combat.canEngage(pawn, other)
+                ) {
+                    extras.add(other)
+                }
+            }
+            extras.forEach { victim -> castAoeHit(pawn, victim, spell, world) }
+        }
     }
+
+    /** An independent burst/barrage splash on a secondary [victim] (multi-combat only). */
+    private fun castAoeHit(pawn: Player, victim: Pawn, spell: CombatSpell, world: org.alter.game.model.World) {
+        if (spell.projectile > 0) {
+            world.spawn(pawn.createProjectile(victim, gfx = spell.projectile, type = ProjectileType.MAGIC, endHeight = spell.projectilEndHeight))
+        }
+        spell.impactGfx?.let { gfx -> victim.graphic(Graphic(gfx.id, gfx.height)) }
+        val accuracy = MagicCombatFormula.getAccuracy(pawn, victim)
+        val maxHit = MagicCombatFormula.getMaxHit(pawn, victim)
+        val landHit = accuracy >= world.randomDouble()
+        val hitDelay = getHitDelay(pawn.getCentreTile(), victim.getCentreTile())
+        val pawnHit = pawn.dealHit(target = victim, maxHit = maxHit, landHit = landHit, delay = hitDelay) {
+            if (landHit && spell.freezeTicks > 0) {
+                var ticks = spell.freezeTicks
+                if (victim is Player && victim.hasPrayerIcon(PrayerIcon.PROTECT_FROM_MAGIC)) ticks /= 2
+                victim.freeze(ticks)
+            }
+            if (landHit && spell in SMOKE_SPELLS && world.chance(1, 5)) {
+                Poison.poison(victim, initialDamage = if (spell in SMOKE_STRONG) 4 else 2)
+            }
+            if (landHit && spell in SHADOW_SPELLS) {
+                val pct = if (spell in SHADOW_STRONG) 0.15 else 0.10
+                val current = victim.currentCombatStat(Skills.ATTACK, NpcSkills.ATTACK)
+                victim.drainCombatStat(Skills.ATTACK, NpcSkills.ATTACK, (current * pct).toInt())
+            }
+        }
+        pawnHit.hit.addAction {
+            val damage = hitmarks.sumOf { it.damage }
+            if (landHit && damage > 0 && spell in BLOOD_SPELLS) {
+                val heal = (damage * BLOOD_HEAL_RATIO).toInt()
+                if (heal > 0) pawn.setCurrentHp(minOf(pawn.getMaxHp(), pawn.getCurrentHp() + heal))
+            }
+            addCombatXp(pawn, victim, damage, spell)
+        }
+    }
+
+    /** Bursts + barrages hit a 3x3 in multi-combat. */
+    private val AOE_SPELLS = setOf(
+        CombatSpell.ICE_BURST, CombatSpell.ICE_BARRAGE,
+        CombatSpell.BLOOD_BURST, CombatSpell.BLOOD_BARRAGE,
+        CombatSpell.SMOKE_BURST, CombatSpell.SMOKE_BARRAGE,
+        CombatSpell.SHADOW_BURST, CombatSpell.SHADOW_BARRAGE,
+    )
 
     /** Ancient blood spells: heal the caster for 25% of the damage they deal. */
     private const val BLOOD_HEAL_RATIO = 0.25
