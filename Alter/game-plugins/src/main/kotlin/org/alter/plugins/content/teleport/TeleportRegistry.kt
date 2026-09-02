@@ -64,7 +64,7 @@ object TeleportRegistry {
         built("skill_agility", "Agility", SKILLING, Tile(3227, 3174, 0), SAFE_ZONE),     // the Mire Run dispenser
         built("skill_herblore", "Herblore", SKILLING, Tile(3240, 3193, 0), SAFE_ZONE),   // Mire yard, W of the pad (r12849 dump: clear)
         built("skill_fletching", "Fletching", SKILLING, Tile(3246, 3193, 0), SAFE_ZONE), // Mire yard, E of the pad (r12849 dump: clear)
-        built("skill_thieving", "Thieving", SKILLING, Tile(3242, 3189, 0), SAFE_ZONE),   // Mire yard stall row (SwampStallSpawnPlugin) — Falador flipped to a raid city, so the old landing was open PvP
+        built("skill_thieving", "Thieving", SKILLING, Tile(3242, 3189, 0), SAFE_ZONE),   // Mire yard stall row (SwampStallSpawnPlugin) — the supply-skilling hub
 
         // ── 🗡️ The War ─────────────────────────────────────────────────────────
         built("varrock_raid", "Varrock Raid", WAR, Tile(3213, 3424, 0), HOSTILE),        // hostile target city (§3C)

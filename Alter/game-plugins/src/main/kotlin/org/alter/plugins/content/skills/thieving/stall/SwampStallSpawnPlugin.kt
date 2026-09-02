@@ -13,10 +13,9 @@ private val logger = KotlinLogging.logger {}
 
 /**
  * Spawns the tiered Thieving stall row in the **Mire working yard** (west of the yard bank,
- * approached from the south). The row originally lived in Falador's north square back when Falador
- * was a neutral city — but Falador is a RAID CITY now (PvpZones: full PvP streets), which turned the
- * "Safe Zone" thieving teleport into a PK ambush. The yard is the war-supply skilling hub, so the
- * stalls join the bank + processing stations there. The existing [StallThievingPlugin] binds
+ * approached from the south). The row originally lived in Falador's north square; it moved home
+ * with the rest of the supply skilling — the yard is the war-supply hub, so the stalls join the
+ * bank + processing stations there. The existing [StallThievingPlugin] binds
  * "Steal-from" globally by object id (via the stalls.json service) and handles the empty/respawn
  * swap — so this plugin only SPAWNS the stall objects; no bind logic. Each stall key is guarded so a
  * missing id is skipped, not fatal.

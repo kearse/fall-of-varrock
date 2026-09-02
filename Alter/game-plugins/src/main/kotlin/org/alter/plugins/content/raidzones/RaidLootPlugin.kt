@@ -73,8 +73,9 @@ class RaidLootPlugin(
             world.timers[timer] = SWEEP_TICKS
         }
 
-        onCommand("raidloot", Privilege.DEV_POWER, description = "Raid-city loot spot states (add 'reset' to force-refill)") {
+        onCommand("raidloot", Privilege.DEV_POWER, description = "Extraction-zone loot spot states (add 'reset' to force-refill)") {
             val reset = player.getCommandArgs().firstOrNull() == "reset"
+            if (RaidCities.all.isEmpty()) player.message("[raidloot] no extraction zones configured — the loot-spot engine is dormant.")
             for (city in RaidCities.all) {
                 val mine = spots.filter { it.city === city }
                 val live = mine.count { it.live != null }
@@ -110,7 +111,7 @@ class RaidLootPlugin(
                 }
             }
         }
-        logger.info { "[RAID LOOT] ${spots.size} loot spot(s) armed across ${RaidCities.all.size} raid cit(ies), $skippedSpots skipped." }
+        logger.info { "[RAID LOOT] ${spots.size} loot spot(s) armed across ${RaidCities.all.size} extraction zone(s), $skippedSpots skipped." }
         auditSafeSpots()
     }
 

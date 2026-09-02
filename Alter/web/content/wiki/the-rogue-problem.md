@@ -9,7 +9,7 @@ infobox: Type = Quest (auto-starts); Start = Automatic once War-Prep I is done; 
 
 **The Rogue Problem** is the story arc that answers "what now?" the moment you clear the [Wizard Tower](/wiki/wizard-tower) and claim your Squire rank. In the quest tab it's **two quests**: **Rogue Hunting I** (the 30-rogue hunt) and **Rogue Hunting II** (the Rogue Knight ladder). Where the roadmap used to drop you into an open-ended grind toward Knight, these hand you a guided path - and the [Quest Journal](/wiki/gameplay-roadmap) points the way at every step.
 
-It's the first chapter of **Act II - The Soldier**: the Sergeant sets you on the rogue rank and file - hunted along the **safe road camps** west of Lumbridge or, when you're ready for it, in **Fallen Falador**, the city the rogues seized when the demons took Varrock.
+It's the first chapter of **Act II - The Soldier**: the Sergeant sets you on the rogue rank and file - hunted along the **safe road camps** west of Lumbridge or, when you're ready for it, in the ruins of **[Fallen Varrock](/wiki/fallen-varrock)** itself, where the rogues scavenge among the dead.
 
 ## Getting in
 
@@ -21,12 +21,12 @@ It's the first chapter of **Act II - The Soldier**: the Sergeant sets you on the
 
 | Step | What to do |
 | --- | --- |
-| **Hunt** | Cut down **30 of the rogue family** (rogues, muggers, highwaymen, thugs, bandits, outlaws - and bot "Rogue Knights" - all count). Kills count **anywhere**: the safe road camps at the **jail west of Lumbridge**, **Draynor's outskirts** and **south of Port Sarim** are the intended first hunting grounds; **Fallen Falador** is denser hunting but lawless raid ground. |
+| **Hunt** | Cut down **30 of the rogue family** (rogues, muggers, highwaymen, thugs, bandits, outlaws - and bot "Rogue Knights" - all count). Kills count **anywhere**: the safe road camps at the **jail west of Lumbridge**, **Draynor's outskirts** and **south of Port Sarim** are the intended first hunting grounds; **Fallen Varrock** is denser hunting but it is the wilderness. |
 | **Knight** | Clearing the hunt pays a **soldier's purse** (150,000 - buy **Soldier** at Duke Horacio, no rung skipped). Then kill your **first assigned [Rogue Knight](/wiki/rogue-knights)** - the Sergeant names the mark, the marker arrow leads you to the camp, and `::knights` tracks the hunt. |
 | **Report** | Return to the Recruiting Sergeant with word of the knight's fall. |
 | **Ladder** | **Break every camp on the [Rogue Knight ladder](/wiki/rogue-knights)** - all fourteen knights, weakest to strongest, the Commander last. The spoils (knight kills, worn-kit drops, camp loot, bounties) pay your **Knighthood** along the way - buy it at Duke Horacio whenever your purse allows; buying it never ends the quest. |
 
-The **road camps are all safe, reclaimable ground** - die there and your gear waits in a pile. Fallen Falador is not: it's **lawless PvP ground**, a raid city where only the banks are safe, and the road there crosses open wilderness. Cut your teeth on the roads first, and take nothing into Falador you can't afford to lose; the rogue tally, at least, is yours forever and death never resets it. See [Death & item protection](/wiki/death-and-item-protection). Your first assigned Rogue Knight also waits on safe ground, at the **Bandit Hideout west of Lumbridge**: if he beats you (he might!), you walk straight back for the rematch.
+The **road camps are all safe, reclaimable ground** - die there and your gear waits in a pile. Fallen Varrock is not: its streets are the **wilderness**, where only the bank pockets are safe. Cut your teeth on the roads first, and take nothing into the ruins you can't afford to lose; the rogue tally, at least, is yours forever and death never resets it. See [Death & item protection](/wiki/death-and-item-protection). Your first assigned Rogue Knight also waits on safe ground, at the **Bandit Hideout west of Lumbridge**: if he beats you (he might!), you walk straight back for the rematch.
 
 The quest and the **[Rogue Knight ladder](/wiki/rogue-knights)** are one journey: fourteen named boss PKers, weakest to strongest, each guarding the gear that beats the next. **The Rogue Problem completes only when the whole ladder is broken** - that climb is where you actually learn to PK: switches at the low camps, prayer baits and freezers in the middle, held spec combos and momentum play at the top. Every beaten knight stays farmable after.
 

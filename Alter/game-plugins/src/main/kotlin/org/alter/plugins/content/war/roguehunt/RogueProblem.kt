@@ -18,9 +18,9 @@ import org.alter.rscm.RSCM.getRSCM
  * It is the guided bridge across the **Squire → Knight** climb that the roadmap otherwise leaves as
  * an open-ended grind: the Recruiting Sergeant sets the new Squire on the rogue rank and file —
  * huntable on the SAFE road camps west of Lumbridge (the jail hideout, Draynor, south of Port
- * Sarim — see `BotZones`) or, denser but lawless, in **Fallen Falador** (where the cutthroats fled
- * when demons took Varrock — see `WorldSpawnsPlugin.applyFallenFalador`; the city is a raid-city
- * PvP ground, which was farming fresh Squires when the quest steered them there first) —
+ * Sarim — see `BotZones`) or, denser but lawless, in **Fallen Varrock** (the ruined city is the
+ * wilderness — only its bank pockets are safe — which was farming fresh Squires when the quest
+ * steered them there first) —
  * then opens the **Rogue Knight ladder** (`bots/knights/`) with the player's
  * first assigned named knight. Clearing the hunt pays a **soldier's purse** ([HUNT_PURSE] — no
  * rung skipped); **Knighthood is earned on the ladder** (knight coin + kit drops + bounties) and
@@ -65,8 +65,8 @@ object RogueProblem {
     // along the way as the spoils allow). A player saved mid-step simply gets the new objective.
     enum class Step(val objective: String) {
         NONE("(not started)"),
-        BRIEF("Speak to the Recruiting Sergeant about the rogues overrunning Fallen Falador."),
-        HUNT("Cut down $HUNT_GOAL of the rogue family — kills count anywhere. Hunt the safe road camps first (the jail west of Lumbridge, Draynor, south of Port Sarim); Fallen Falador is richer hunting but lawless raid ground. ::rogueproblem tracks it."),
+        BRIEF("Speak to the Recruiting Sergeant about the rogues infesting the roads west and the ruins of Fallen Varrock."),
+        HUNT("Cut down $HUNT_GOAL of the rogue family — kills count anywhere. Hunt the safe road camps first (the jail west of Lumbridge, Draynor, south of Port Sarim); Fallen Varrock is richer hunting but it is the wilderness. ::rogueproblem tracks it."),
         KNIGHT("Buy Soldier with your hunt purse, then thin your assigned Rogue Knight's camp and cut the knight down — ::knights tracks both and the marker leads the way."),
         REPORT("Return to the Recruiting Sergeant with word of the knight's fall."),
         LADDER("Break every knight on the ladder, camp by camp — ::knights tracks the climb, the marker leads. Buy your ranks from Duke Horacio as the spoils come in; the ladder pays for them."),

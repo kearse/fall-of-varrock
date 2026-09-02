@@ -72,18 +72,18 @@ enum LofQuest
 
 	ROGUE_HUNTING_I(
 		"Rogue Hunting I",
-		"Lumbridge holds, but when the demons took Varrock its rogues, muggers and highwaymen — led "
-			+ "by deserters who style themselves Rogue Knights — fled west and overran Fallen "
-			+ "Falador. The Recruiting Sergeant sets the new Squire on their rank and file: thin "
-			+ "the cutthroats on the safe road camps west of Lumbridge, or in Falador's lawless "
-			+ "streets for the bold. Clearing the hunt pays a soldier's purse — and opens the "
-			+ "Rogue Knight ladder.",
+		"Lumbridge holds, but when Varrock fell its rogues, muggers and highwaymen — led by "
+			+ "deserters who style themselves Rogue Knights — scattered onto the roads west and "
+			+ "into the ruins of the fallen city. The Recruiting Sergeant sets the new Squire on "
+			+ "their rank and file: thin the cutthroats on the safe road camps west of Lumbridge, "
+			+ "or in Fallen Varrock's wilderness streets for the bold. Clearing the hunt pays a "
+			+ "soldier's purse — and opens the Rogue Knight ladder.",
 		3, // complete once the hunt clears (RogueProblem.Step.KNIGHT ordinal)
 		Arrays.asList(
 			new LofQuestStep(1, "Speak to the Recruiting Sergeant", "He has harder work now you're a Squire — by the Lumbridge gate.", new WorldPoint(3217, 3220, 0)),
 			// No fixed anchor: the server's hint arrow leads this step — to the nearest safe road
 			// camp from afar, locking onto live rogues once they're in reach (like the knight hunt).
-			new LofQuestStep(2, "Thin out the rogue rank and file", "Cut down 30 of the rogue family — kills count anywhere; the arrow leads to the nearest safe road camp and locks onto rogues in reach. Fallen Falador is denser but a raid city — only its banks are safe.", null)
+			new LofQuestStep(2, "Thin out the rogue rank and file", "Cut down 30 of the rogue family — kills count anywhere; the arrow leads to the nearest safe road camp and locks onto rogues in reach. Fallen Varrock is denser but it is the wilderness — only the bank pockets are safe.", null)
 		),
 		Arrays.asList(
 			"A soldier's purse (150,000) — buys the Soldier rank at Duke Horacio",

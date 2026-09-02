@@ -42,4 +42,4 @@ There's one bot that breaks the wilderness-only rule. A lone, genuinely weak **B
 - Bots **don't** pay Blood Money and don't count toward your PK stats or Elo - they're loot and practice, not ladder points.
 - They fight back properly, chase hard, and killing you **destroys your loot keys** like any other death.
 
-Safe zones are absolute for the wilderness bots: they never muster, roam or chase onto a safe tile - banks inside the wilderness (including the Varrock bank pockets and the raid-city banks) are protected ground. The deliberate exceptions are the lone Lumbridge goblin-camp ambusher above and the safe [Bandit Hideout camp](/wiki/rogue-knights), where the warband fights on reclaim-safe ground by design.
+Safe zones are absolute for the wilderness bots: they never muster, roam or chase onto a safe tile - banks inside the wilderness (including the Varrock bank pockets) are protected ground, and so are the surviving cities - Falador is a safe hub, not the wild. The deliberate exceptions are the lone Lumbridge goblin-camp ambusher above and the safe [Bandit Hideout camp](/wiki/rogue-knights), where the warband fights on reclaim-safe ground by design.

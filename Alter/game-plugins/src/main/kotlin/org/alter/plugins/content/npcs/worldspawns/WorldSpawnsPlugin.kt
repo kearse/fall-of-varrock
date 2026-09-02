@@ -20,8 +20,6 @@ import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
 import org.alter.plugins.content.bots.PkBot
 import org.alter.plugins.content.combat.PvpZones
-import org.alter.plugins.content.raidzones.AlKharidRaid
-import org.alter.plugins.content.raidzones.RaidCities
 import org.alter.rscm.RSCM.getRSCM
 import java.io.File
 
@@ -201,8 +199,6 @@ class WorldSpawnsPlugin(
     private fun finalizeSpawnData() {
         stripGrandExchange()
         applyFallenVarrock()
-        applyFallenFalador()
-        applyFallenAlKharid()
         val registered = HashSet<Int>()
         // Real bosses with no port yet: they have full stats AND their real drop table in
         // npc_drops.json, but zero mechanics as a generic spawn — the KBD world-spawned as
@@ -375,39 +371,9 @@ class WorldSpawnsPlugin(
         }
     }
 
-    /**
-     * FALLEN FALADOR (story): the bandits, bosses and other enemy npcs that used to hold Varrock
-     * are driven out — they overrun Falador. Falador falls the same way Varrock did: every ambient
-     * record inside the city box is stripped (White Knights, guards, bankers, wildlife, the lot),
-     * and each ground-floor spot respawns as a random enemy from the relocated pool
-     * ([FALADOR_ENEMY_POOL]). The four named district captains ([NamedCaptainsPlugin]) are moved
-     * here too. Upstairs records are dropped.
-     */
-    private fun applyFallenFalador() {
-        val enemies = resolveMonsterPool(FALADOR_ENEMY_POOL, "FALLEN FALADOR")
-        val (replaced, dropped) = repopulateFallenCity(FALLEN_FALADOR, enemies)
-        logger.info {
-            "[FALLEN FALADOR] city overrun: $replaced spots now bandits/enemies (${enemies.size}-kind pool), " +
-                "$dropped records dropped (upstairs)."
-        }
-    }
-
-    /**
-     * FALLEN AL KHARID (story): the desert gate town, cut off since the fall — scorpion swarms
-     * out of the mines and the desert gangs picked it clean. Falls the same way the other two
-     * did: every ambient record inside the raid box ([AlKharidRaid] is the box's single source
-     * of truth) is stripped and each ground-floor spot respawns from the desert pool
-     * ([AL_KHARID_ENEMY_POOL]). Al Kharid is a raid city ([RaidCities]) — its streets are the
-     * loot grounds this population defends.
-     */
-    private fun applyFallenAlKharid() {
-        val enemies = resolveMonsterPool(AL_KHARID_ENEMY_POOL, "FALLEN AL KHARID")
-        val (replaced, dropped) = repopulateFallenCity(AlKharidRaid.config.area, enemies)
-        logger.info {
-            "[FALLEN AL KHARID] town overrun: $replaced spots now scorpions/gangs (${enemies.size}-kind pool), " +
-                "$dropped records dropped (upstairs)."
-        }
-    }
+    // Falador and Al Kharid are NOT fallen (design authority, Sept 2026): Falador is a fortified
+    // surviving power, Al Kharid fortified and neutral. Their ambient populations (White Knights,
+    // guards, bankers, townsfolk) load from the JSON untouched.
 
     /**
      * Boot-verify a weighted `name -> weight` monster pool into `id -> weight`: each id must
@@ -434,8 +400,8 @@ class WorldSpawnsPlugin(
 
     /**
      * Strip EVERY ambient spawn record inside [box] and repopulate each ground-floor spot with a
-     * weighted pick from [pool] (upstairs records are dropped). The shared engine behind both fallen
-     * cities. Returns `replaced to dropped`.
+     * weighted pick from [pool] (upstairs records are dropped). The engine behind the fallen city
+     * (reusable for any future overrun ground). Returns `replaced to dropped`.
      */
     private fun repopulateFallenCity(box: Area, pool: List<Pair<Int, Int>>): Pair<Int, Int> {
         val totalWeight = pool.sumOf { it.second }
@@ -621,30 +587,7 @@ class WorldSpawnsPlugin(
         // the full lifecycle (refill on death, remove on gate close).
         npc.respawns = false
         npc.setActive(true)
-        applyRaidCityAggro(npc)
         return npc
-    }
-
-    /**
-     * RAID-CITY AGGRESSION ([RaidCities]): occupiers inside a raid city hunt raiders harder
-     * than the world defaults — wider spot radius, faster re-targeting, longer interest — and
-     * ignore the level-tolerance rule (a maxed raider is stalked as readily as a fresh one).
-     * Applied per-INSTANCE (the shared per-id defs also cover spawns outside the cities), and
-     * only to ids that are already aggro-flagged; passive pool picks stay passive.
-     *
-     * The aggroCheck lambda runs on the engine's aggro path OUTSIDE any try/catch — a throw
-     * there kills the game-loop task (see [org.alter.plugins.content.war.HostileZone]). It must
-     * stay a constant-true.
-     */
-    private fun applyRaidCityAggro(npc: Npc) {
-        val aggro = RaidCities.at(npc.tile)?.aggro ?: return
-        if (npc.combatDef.aggressiveRadius <= 0) return
-        npc.combatDef = npc.combatDef.copy(
-            aggressiveRadius = aggro.radius,
-            aggroTargetDelay = aggro.targetDelay,
-            aggressiveTimer = aggro.timer,
-        )
-        npc.aggroCheck = { _, _ -> true } // MUST stay throw-free (engine path is unguarded)
     }
 
     private companion object {
@@ -664,10 +607,6 @@ class WorldSpawnsPlugin(
         // ---- Fallen Varrock (see applyFallenVarrock) ----
         /** The walled city + gates. TUNABLE — everything inside is "the fallen city". */
         val FALLEN_VARROCK = Area(3155, 3376, 3300, 3520)
-
-        /** Falador — the enemy npcs driven out of Varrock overrun it (see applyFallenFalador).
-         *  Same box as the [PvpZones] Falador carve-out. TUNABLE. */
-        val FALLEN_FALADOR = Area(2942, 3300, 3066, 3400)
 
         /** The demolished Grand Exchange footprint — every npc spawn inside is stripped (see stripGrandExchange). */
         val GE_RUINS = Area(3149, 3468, 3190, 3517)
@@ -713,37 +652,6 @@ class WorldSpawnsPlugin(
             3225 to 3494, // palace interior
             3182 to 3436, // west slums street
             3253 to 3428, // east market street
-        )
-
-        /** Weighted enemy pool that overruns fallen Falador — the bandits/rogues/other enemy npcs
-         *  relocated out of Varrock (see applyFallenFalador). Rogue-heavy on purpose. */
-        val FALADOR_ENEMY_POOL = listOf(
-            "npc.mugger" to 4,
-            "npc.thug" to 4,
-            "npc.highwayman" to 3,
-            "npc.rogue_526" to 3,
-            "npc.zombie" to 2,
-            "npc.skeleton" to 2,
-            "npc.dark_wizard" to 2,
-            "npc.chaos_druid" to 2,
-            "npc.black_knight" to 1,
-            "npc.bandit_690" to 1,
-        )
-
-        /** Weighted desert pool that overruns Al Kharid ([applyFallenAlKharid]) — scorpions out
-         *  of the mine plus the desert gangs. Every pick except the bandits is aggro-flagged in
-         *  npc_combat.json (stats[7]==1), so the raid-city aggro boost bites. */
-        val AL_KHARID_ENEMY_POOL = listOf(
-            "npc.scorpion" to 4,
-            "npc.thug" to 4,
-            "npc.mugger" to 3,
-            "npc.skeleton" to 2,
-            "npc.dark_wizard" to 2,
-            "npc.wolf" to 2,
-            "npc.pit_scorpion" to 2,
-            "npc.king_scorpion" to 1,
-            "npc.black_knight" to 1,
-            "npc.bandit_690" to 1,
         )
 
         /** Streets-roaming radius for the replacement monsters (civilians wandered 2). */

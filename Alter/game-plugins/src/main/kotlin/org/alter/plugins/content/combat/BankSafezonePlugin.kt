@@ -70,6 +70,6 @@ class BankSafezonePlugin(
     private companion object {
         const val BANK_SAFE_RADIUS = 8           // tiles of safety around each bank object
         val REGION_X = 46..53                    // x 2944..3519 — covers the wilderness width
-        val REGION_Y = 49..62                    // z 3136..4031 — covers z3258..3968 + the Al Kharid raid city (bank at z~3167)
+        val REGION_Y = 49..62                    // z 3136..4031 — covers z3258..3968 (+ Al Kharid's bank at z~3167, harmless outside the red)
     }
 }

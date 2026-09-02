@@ -105,7 +105,7 @@ class BotColony(private val cfg: BotZoneConfig) {
             bot.roamRadius = cfg.roamRadius
             bot.leashRadius = cfg.leashRadius
             bot.zoneKey = cfg.key
-            // Safe-ground camps (Bandit Hideout / Fallen Falador): the bots patrol + aggro on their
+            // Safe-ground camps (Bandit Hideout / the road camps): the bots patrol + aggro on their
             // safe posts like the goblin-camp ambusher; the brain's wilderness guards stay on elsewhere.
             bot.ambushEverywhere = cfg.allowSafe
             pool += bot

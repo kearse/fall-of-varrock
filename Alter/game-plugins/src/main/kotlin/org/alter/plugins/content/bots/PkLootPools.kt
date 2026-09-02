@@ -47,7 +47,7 @@ object PkLootPools {
         ),
     )
 
-    /** Budget tier (wild 11–20 + Fallen Falador): the PURE + ZERKER kit chase. */
+    /** Budget tier (wild 11–20): the PURE + ZERKER kit chase. */
     private val PURE_ZERKER_KIT = DropTable(
         rare = listOf(
             // pure kit
