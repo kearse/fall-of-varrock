@@ -154,6 +154,8 @@ object CollectionLogRegistry {
         ),
         // Fallen Varrock PvM layer — the War-Forging materials the ruins give up.
         Category("fallen_varrock", "Fallen Varrock", "npc.zombies_champion", listOf("item.varrock_relic", "item.burnt_page")),
+        // Senntisten Expeditions — the Custodian's log page and the relics beneath the Digsite.
+        Category("senntisten", "Senntisten Expeditions", "npc.lesser_demon_champion", listOf("item.expedition_log", "item.varrock_relic")),
     )
 
     fun byKey(key: String): Category? = categories.firstOrNull { it.key.equals(key, ignoreCase = true) }

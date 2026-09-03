@@ -1,0 +1,14 @@
+---
+# Senntisten Expeditions (Team 4 PR 7): the expedition log page — a lore collectible the
+# Custodian yields. Repurposes the otherwise-unobtainable "Old journal" (1493). Untradeable
+# by design (a Collection Log chase, not a market item); no equipment block.
+id: 1493
+name: "Senntisten expedition log"
+examine: "A page of the Adventurer's hand, recovered from beneath the Digsite. Every run adds a line."
+tradeable: false
+weight: 0.1
+tradeable_on_ge: false
+cost: 0
+lowalch: 0
+highalch: 0
+buy_limit: null
