@@ -52,8 +52,9 @@
 | Campaigns / Conquests | Realm Supplies (1,500 / 2,800) + the sponsor's war-chest | live (`CampaignCommandPlugin`) — the only drains on the shared stockpile |
 | Forge / Upgrade gear | gp + rune gear + runite bars | **live** (`economy/forge/ForgePlugin`) — the marquee sink; KBD runite bars feed it |
 | High/Low Alchemy | item destroyed (gp partial faucet) | **live** (`magic/alchemy/AlchemyPlugin`) — item sink |
-| Trading Post trade margin | gp | **live** (`economy/tradingpost`) — 30% buy/sell spread (the shared `ItemCurrency.BUY_RATE` 70%), value-derived; no house stock — the shelf lists only player-sold items |
-| Grand Exchange commodity margin | gp | **live (engine)** — 30% band (floor 70% / ceiling 100% of value) on the commodity allowlist (`grandexchange/GrandExchangeCommodities`); same sink as the Trading Post, now inside the GE offer book |
+| Trading Post trade margin | gp | **live** (`economy/tradingpost`) — 30% buy/sell spread (the shared `ItemCurrency.BUY_RATE` 70%), value-derived; no house stock — the shelf lists only player-sold items. **Since the 2026-09 audit it buys ONLY the GE commodity allowlist** (gear/crafted goods go to the GE) |
+| General Store junk sink | gp | **live** — buys any tradeable with cache cost ≤ 500 (was 5,000) at 70%, refuses guarded wares |
+| Grand Exchange commodity margin | gp | **live (engine)** — NPC floor at 70% of value for every commodity (`grandexchange/GrandExchangeCommodities`); NPC ceiling at 100% ONLY for the two-sided necessities (runes, arrows, cooked food, planks). Raw materials (bars, ores, logs, gems, essence, herbs, raw fish) are floor-only: the NPC never sells them (the 2026-09 audit's S0 tap) |
 | Buy-currency-for-coins tabs | gp | **live** (`grandexchange/CurrencyExchange`) — Boss Tickets 1,000 / Blood Money 800 / Vote Tickets 2,000 gp each; **one-way** (no NPC buyback) so it's a pure coin sink, and it sets the coin ceiling on special-currency gear |
 | PK Rewards shop (emblem trader) | Blood Money | **live** (`economy/pk`) — PK supplies (food/potions), no tradeable gear |
 | Gambling rake | gp | **live** (`economy/gambling`) — 5% house edge on dice |
@@ -70,9 +71,13 @@ consolidates trade and lets stores set the price floors.
   between an offer's escrow and its collectable proceeds — a player↔player match never mints or destroys
   coins/items. The NPC commodity backstop is the *only* faucet/sink and is gated to the allowlist.
 - **Store minimums (backstop):** commodity-allowlist items (runes, bars, ores, logs, food, herbs, mats)
-  get an NPC floor (70% of value — the shared NPC buy rate) and ceiling (value). Gear, megarares and the currency items have **no**
-  backstop — they float on the pure player market. The allowlist excludes the deliberately premium-priced
-  items (death rune, adamant arrow, cooked swordfish) and load-bearing sinks (runite bar, dragon bones).
+  get an NPC floor (70% of value — the shared NPC buy rate). Only the **two-sided** tier (runes, arrows,
+  cooked food, planks — the necessities the shops sell without limit) also gets an NPC ceiling (value);
+  the **floor-only** tier (bars, ores, logs, gems, essence, herbs, raw fish) is never NPC-sold, because
+  unlimited NPC raw materials at 100% of value fed every craft loop in the 2026-09 audit. Gear, megarares
+  and the currency items have **no** backstop — they float on the pure player market. The allowlist
+  excludes the deliberately premium-priced items (death rune, adamant arrow, cooked swordfish) and
+  load-bearing sinks (runite bar, dragon bones).
 - **Price band (all items):** every offer's price must sit within **a tenth to ten times** the item's
   economy value (`grandexchange/GrandExchangePricing`, enforced server-side in `validNew`, and mirrored
   to the client on the setup wire so the steppers clamp before Confirm). This is a sanity rail, not a

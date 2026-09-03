@@ -9,7 +9,7 @@ infobox: Type = Shop reference; Location = Lumbridge courtyard market; Getting t
 
 Every vendor in the realm, in one place. For how the market *works* - instant-open shops, tab strips, the Trading Post - see [Trading Post & the market](/wiki/trading-post-and-shops). This page is the reference: **who sells what, where, and for how much**.
 
-Every coin shop also **buys back what it stocks at 70% of value** (right-click an inventory item while the shop is open). The [Trading Post](/wiki/trading-post-and-shops) takes anything at the same 70%; for a better price, sell to other players on the Grand Exchange. Only the ticket/reward vendors never buy back.
+Every coin shop also **buys back what it stocks at 70% of value** (right-click an inventory item while the shop is open). The [Trading Post](/wiki/trading-post-and-shops) buys everyday commodities at the same 70% and the general store buys odds and ends under 500 gp; gear, crafted goods and reward-shelf items are sold to other players on the Grand Exchange. The ticket/reward vendors never buy back.
 
 ## Getting there
 
@@ -89,7 +89,7 @@ Two reward tabs, two ticket currencies - both tickets are **tradeable items**, s
 
 ## The general store
 
-The classic **general store by the bridge** (shop keeper and assistant behind the counter) sells pots, jugs, buckets, tinderboxes, shears, knives, chisels, hammers and spades - and it **buys almost any tradeable** at 70% of value, the market's junk-disposal counter.
+The classic **general store by the bridge** (shop keeper and assistant behind the counter) sells pots, jugs, buckets, tinderboxes, shears, knives, chisels, hammers and spades - and it **buys odds and ends** (any tradeable worth up to 500 gp) at 70% of value, the market's junk-disposal counter. Anything dearer than that is for other players.
 
 ## Rank armour - the Apprentice's Armoury
 
@@ -205,7 +205,7 @@ The PvP gear chase, paid in **Blood Money** - earned only from killing **real pl
 
 ## Beyond the market
 
-- **The Trading Post** (`::market`) - the sell-anything counter; its shelf lists only what players have sold. See [Trading Post & the market](/wiki/trading-post-and-shops).
+- **The Trading Post** (`::market`) - the commodities counter (runes, ores, bars, logs, food, herbs, gems, essence, planks); its shelf lists only what players have sold. See [Trading Post & the market](/wiki/trading-post-and-shops).
 - **Donor Store** (`::donorstore`) - cosmetic rares for **Donor Points**: partyhats 900 (white 1,350), santa hat 1,350, h'ween masks 700. Tradeable, stat-less. See [Bonds & membership](/wiki/bonds-and-membership).
 - **Commander's Regalia** (`::prestigeshop`) - the **sanguine Torva** cosmetic set for **Prestige** points: full helm 75, platebody and platelegs 100 each. Commanders only earn Prestige.
 - **Aggie's dyes** (`::dyes`) - red, blue and green dye at 1,000,000 gp, purple at 2,500,000. Used on a Champion's Cape to recolour it (the dye and the old cape are both consumed).

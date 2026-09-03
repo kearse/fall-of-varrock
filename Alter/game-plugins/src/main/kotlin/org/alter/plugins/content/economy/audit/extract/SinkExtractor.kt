@@ -6,6 +6,7 @@ import org.alter.plugins.content.economy.audit.model.EdgeKind
 import org.alter.plugins.content.economy.audit.model.ItemInfo
 import org.alter.plugins.content.economy.audit.model.NodeId
 import org.alter.plugins.content.economy.audit.model.Stack
+import org.alter.plugins.content.economy.grandexchange.GrandExchangeCommodities
 import org.alter.plugins.content.economy.grandexchange.GrandExchangePricing
 import org.alter.plugins.content.magic.MagicSpells
 import org.alter.plugins.content.mechanics.shops.ItemCurrency
@@ -77,15 +78,18 @@ object SinkExtractor {
             val ceiling = info.cost
             val floor = (ceiling * ItemCurrency.BUY_RATE).toInt().coerceAtLeast(1)
             val band = GrandExchangePricing.bounds(ceiling)
-            out += Edge(
-                id = "ge:buy:${info.key ?: info.id}",
-                kind = EdgeKind.GE_BUY,
-                source = "GrandExchange.backstop",
-                inputs = listOf(Stack(NodeId.ItemNode(coins), ceiling.toDouble())),
-                outputs = listOf(Stack(NodeId.ItemNode(info.id), 1.0)),
-                ticksPerUnit = ActionTimeModel.GE_OFFER_TICKS,
-                levelNote = "band ${band.first}..${band.second}",
-            )
+            // The NPC only SELLS two-sided commodities; floor-only raw materials have no GE_BUY edge.
+            if (GrandExchangeCommodities.isNpcSold(info.id)) {
+                out += Edge(
+                    id = "ge:buy:${info.key ?: info.id}",
+                    kind = EdgeKind.GE_BUY,
+                    source = "GrandExchange.backstop",
+                    inputs = listOf(Stack(NodeId.ItemNode(coins), ceiling.toDouble())),
+                    outputs = listOf(Stack(NodeId.ItemNode(info.id), 1.0)),
+                    ticksPerUnit = ActionTimeModel.GE_OFFER_TICKS,
+                    levelNote = "band ${band.first}..${band.second}",
+                )
+            }
             out += Edge(
                 id = "ge:sell:${info.key ?: info.id}",
                 kind = EdgeKind.GE_SELL,
