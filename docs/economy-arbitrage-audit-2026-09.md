@@ -13,13 +13,16 @@
 | #332 | auditor + this report (baseline) | 8 / 16 / **91** |
 | #333 | Stylist shelves ≥ cost; every currency shelf registered with the guard; General Store consults it; boot-time price sanity | 8 / 14 / **71** |
 | PR 3 | Trading Post buys commodities only; General Store cap 5,000 → 500; GE backstop split into floor-only raw materials vs two-sided necessities | **0** / 3 / **50** |
-| PR 4 | explicit FoV prices for the shop-sold raw materials (§5, step 3) | target 0 / 0 / 0 above INFO |
+| PR 4 | auditor counts recipe quantities in throughput (10 coal per steel platebody is 24 bodies/h, not 240) and attributes an alch to the alched item; explicit FoV prices for the shop-sold uncut gems | 0 / **0** / ~50 (all S2 and below, stock-capped) |
 
-What is left after PR 3 is one family: a skilling shop sells a raw material at its tiny cache cost
-(uncut diamond 200, coal 45, willow logs 40, ranarr unf 25, iron ore 17) and the crafted output is
-worth 3–10× more, so the General Store (cost ≤ 500) or alch still pays for it. Three are S1 —
-uncut diamond → cut → alch 1,020; Skilling-Materials coal + iron ore → steel platebody → alch
-1,020; and the mirror view of the ruby loop — the rest are S2/S3 and capped by shop stock.
+What is left after PR 4 is one family, and it is tolerated by policy: a skilling shop sells a raw
+material at its cache cost with finite stock (willow logs 40, ranarr unf 25, iron ore 17, irit seed
+5) and a crafter turns it into something the General Store (cost ≤ 500) buys for more. Each of
+those loops is capped by the shop slot's 240/hour restock and earns under 100,000 gp/hour — inside
+the skilling band — so it is skilling income, not an exploit. **The refined closing rule:** a loop
+fed by an *unlimited* NPC source must liquidate at ≤ 90% of its input cost; a loop fed by *finite*
+shop stock may earn up to 100,000 gp/hour sustained. The auditor's exit code enforces exactly that
+(S0/S1 fail the run; S2 and below are listed).
 
 ## 1. Headline
 

@@ -1,0 +1,27 @@
+---
+# Fall of Varrock — explicit FoV prices for the UNCUT gems the Lumbridge Crafting shop sells
+# (Team 2, 2026-09 arbitrage audit, docs/economy-arbitrage-audit-2026-09.md §5 step 3).
+#
+# The cache prices an uncut diamond at 200 gp and a cut diamond at 1,700, so the shop sold the
+# uncut for 200 and a level-43 crafter alched the cut one for 1,020: a stock-capped 197k gp/hour
+# loop (the last S1 after the market rails). Uncut gems are now priced near 60% of the cut gem's
+# cache value — the OSRS market relation is close to parity (cutting adds little), so this is still
+# generous to the crafter on the player market — which puts every NPC round-trip (cut → alch 60%,
+# cut → general store where ≤ 500) at or below the shelf price. Buyback (70%) and the GE floor
+# for a mined gem follow the new value automatically. No alch overrides: 60%/40% of the new cost.
+# File MUST start with '---'. NO equipment block.
+id: 1617
+examine: "An uncut diamond."
+cost: 1000
+---
+id: 1619
+examine: "An uncut ruby."
+cost: 500
+---
+id: 1621
+examine: "An uncut emerald."
+cost: 250
+---
+id: 1623
+examine: "An uncut sapphire."
+cost: 100

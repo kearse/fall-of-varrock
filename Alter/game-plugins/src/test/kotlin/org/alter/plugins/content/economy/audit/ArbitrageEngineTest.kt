@@ -185,6 +185,20 @@ class ArbitrageEngineTest {
     }
 
     @Test
+    fun `the alched item is the subject of an alch even when the rune costs more`() {
+        // uncut ruby 100 -> cut -> alch 600 with a 180 gp nature rune: the ruby's loop, not the rune's.
+        val m = model(
+            listOf(sell("A", 1, 100.0, stock = 300), sell("Magic", 2, 180.0), recipe("r:cut", listOf(1 to 1.0), listOf(3 to 1.0)),
+                Edge("alch:high:3", EdgeKind.ALCH_HIGH, "alch", listOf(Stack(item(3), 1.0), Stack(item(2), 1.0)), listOf(Stack(item(coins), 600.0)), 5.0)),
+            info(1, 100, "uncut_ruby"), info(2, 180, "nature_rune"), info(3, 1000, "ruby"),
+        )
+        val fs = builder(m).findings()
+        assertEquals(listOf(item(3)), fs.map { it.node })
+        assertEquals(420.0, fs.single().liquidateGp)   // 600 - the rune
+        assertEquals(240.0, fs.single().throughput.unitsSustained)   // capped by the uncut ruby slot
+    }
+
+    @Test
     fun `pass-through inputs are dropped transitively`() {
         // essence -> nature rune -> (alch a platebody): the essence must not become a finding either.
         val m = model(
@@ -215,5 +229,20 @@ class ArbitrageEngineTest {
         assertEquals(240.0, t.unitsSustained)
         val u = ActionTimeModel.throughput(listOf(alch(1, 20.0)))
         assertEquals(1200.0, u.unitsSustained)
+    }
+
+    @Test
+    fun `recipe quantities scale the stock cap`() {
+        // 5 bars per platebody, bars from a shop slot of 100: 240 bars/h sustained = 48 platebodies/h.
+        val bars = sell("A", 1, 100.0, stock = 100)
+        val smith = recipe("r:body", listOf(1 to 5.0), listOf(2 to 1.0))
+        val t = ActionTimeModel.throughput(item(2), listOf(bars, smith), listOf(buy("B", 2, 1000.0)))
+        assertEquals(48.0, t.unitsSustained)
+        assertEquals(68.0, t.unitsFirstHour)
+        // 1 seed -> 2 herbs: a 100-seed slot yields 480 herbs/h sustained.
+        val seeds = sell("A", 3, 5.0, stock = 100)
+        val farm = recipe("r:farm", listOf(3 to 1.0), listOf(4 to 2.0))
+        val h = ActionTimeModel.throughput(item(4), listOf(seeds, farm), listOf(buy("B", 4, 50.0)))
+        assertEquals(480.0, h.unitsSustained)
     }
 }
