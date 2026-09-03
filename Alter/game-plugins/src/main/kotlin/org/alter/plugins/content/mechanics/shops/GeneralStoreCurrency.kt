@@ -19,15 +19,19 @@ class GeneralStoreCurrency : ItemCurrency(getRSCM("item.coins_995"), "coin", "co
 
     override fun buyFromPlayer(p: Player, shop: Shop, slot: Int, amt: Int) {
         val item = p.inventory[slot] ?: return
-        if (getItem(item.toUnnoted().id).cost > MAX_BUYBACK_COST) {
+        if (!accepts(item.toUnnoted().id)) {
             p.message("The general store won't buy that — try the Trading Post (::market).")
             return
         }
         super.buyFromPlayer(p, shop, slot, amt)
     }
 
-    private companion object {
+    companion object {
         /** Above this cache cost an item is "valuable" — route it to the Trading Post, not here. */
         const val MAX_BUYBACK_COST = 5000
+
+        /** The store's buy-back rule for an (unnoted) item id — one predicate shared by the live
+         *  shop path and the offline economy auditor, so the two can never disagree. */
+        fun accepts(unnotedId: Int): Boolean = getItem(unnotedId).cost <= MAX_BUYBACK_COST
     }
 }

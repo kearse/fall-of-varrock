@@ -90,6 +90,16 @@ consolidates trade and lets stores set the price floors.
 - **Cross-playstyle trade routes stay open:** a PKer sells Blood Money to a PvMer for gp, etc. — the coin
   ceiling (currency tabs above) caps those prices without hard-pegging them.
 
+## Arbitrage audit (Team 2, 2026-09-03)
+`gradlew :game-plugins:economyAudit "-PeconCache=<data/cache>"` boots the shops and recipes offline and
+searches every NPC value loop (buy → craft → sell, shop → shop, shop → alch, GE floor, currency → item →
+gp, ...). Findings + fix queue: `docs/economy-arbitrage-audit-2026-09.md`; generated tables:
+`docs/economy-arbitrage-audit.{md,json}` (re-run after every reprice — the JSON diff is the proof).
+Headline: cache `cost` is not consistent across recipes, and the 70% NPC buyback (Trading Post: anything;
+General Store: cost ≤ 5,000) plus the GE backstop's 100% NPC *selling* of bars/logs/essence make most
+mid/high skilling recipes coin printers. The fix queue restricts the NPC sinks and splits the backstop
+allowlist into floor-only raw materials vs two-sided necessities.
+
 ## Balance to-dos
 - Audit shop buy/sell spreads + high-alch values so gp drains as fast as it faucets.
 - When custom-boss drops land (Phase 4), pair each tradeable faucet with a forge/tax sink.

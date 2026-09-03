@@ -17,7 +17,9 @@ import org.alter.plugins.content.war.warprep.WarPrepChain
  * @author Tom <rspsmods@gmail.com>
  */
 open class ItemCurrency(
-    private val currencyItem: Int,
+    /** The inventory item this currency is paid in (coins, a ticket, blood money). Public so the
+     *  offline economy auditor can identify a shop's currency node without parsing labels. */
+    val currencyItem: Int,
     private val singularCurrency: String,
     private val pluralCurrency: String,
 ) : ShopCurrency {

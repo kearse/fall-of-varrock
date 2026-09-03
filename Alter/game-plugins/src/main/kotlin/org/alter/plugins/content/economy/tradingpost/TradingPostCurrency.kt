@@ -25,24 +25,41 @@ class TradingPostCurrency : ItemCurrency(getRSCM("item.coins_995"), singularCurr
     /**
      * Bonds must NEVER be NPC-sold for gold (bond spec §2.3): the tradeable bond's cache cost is
      * 2m (not overridable), so the post's 70% buy would mint 1.4m gp per $4.99 bond. Denied —
-     * bonds change hands player-to-player only.
+     * bonds change hands player-to-player only. Special-currency shop wares (Boss Ticket gear
+     * etc.) may never be NPC-sold for gp either — the 70% buy-back was one half of the
+     * ticket-shop→gp infinite loop the audit found. Both rules live in [refusalReason] so the
+     * offline economy auditor reads exactly what the live shop enforces.
      */
     override fun buyFromPlayer(p: Player, shop: Shop, slot: Int, amt: Int) {
         val item = p.inventory[slot] ?: return
-        if (item.toUnnoted().id in neverBuy) {
-            p.message("The Trading Post doesn't deal in bonds — trade them to other players instead.")
-            return
-        }
-        // Special-currency shop wares (Boss Ticket gear etc.) may never be NPC-sold for gp —
-        // the 70% buy-back was one half of the ticket-shop→gp infinite loop the audit found.
-        if (SpecialShopGuard.isGuarded(item.toUnnoted().id)) {
-            p.message("The Trading Post doesn't buy special-stock gear — sell it to other players instead.")
-            return
+        when (refusalReason(item.toUnnoted().id)) {
+            REFUSE_BOND -> {
+                p.message("The Trading Post doesn't deal in bonds — trade them to other players instead.")
+                return
+            }
+            REFUSE_GUARDED -> {
+                p.message("The Trading Post doesn't buy special-stock gear — sell it to other players instead.")
+                return
+            }
         }
         super.buyFromPlayer(p, shop, slot, amt)
     }
 
-    private val neverBuy: Set<Int> = listOf("item.bond", "item.bond_untradeable")
-        .mapNotNull { key -> runCatching { getRSCM(key) }.getOrNull() }
-        .toSet()
+    companion object {
+        const val REFUSE_BOND = "TradingPost.bond"
+        const val REFUSE_GUARDED = "SpecialShopGuard"
+
+        private val neverBuy: Set<Int> by lazy {
+            listOf("item.bond", "item.bond_untradeable")
+                .mapNotNull { key -> runCatching { getRSCM(key) }.getOrNull() }
+                .toSet()
+        }
+
+        /** Why the post refuses to buy the (unnoted) item id, or null when it will buy it. */
+        fun refusalReason(unnotedId: Int): String? = when {
+            unnotedId in neverBuy -> REFUSE_BOND
+            SpecialShopGuard.isGuarded(unnotedId) -> REFUSE_GUARDED
+            else -> null
+        }
+    }
 }
