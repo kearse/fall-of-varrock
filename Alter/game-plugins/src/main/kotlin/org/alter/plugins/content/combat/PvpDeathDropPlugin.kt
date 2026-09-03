@@ -1,15 +1,11 @@
 package org.alter.plugins.content.combat
 
-import org.alter.api.SkullIcon
-import org.alter.api.ext.hasSkullIcon
 import org.alter.api.ext.hit
 import org.alter.api.ext.message
 import org.alter.api.ext.player
 import org.alter.game.Server
 import org.alter.game.model.World
 import org.alter.game.model.attr.KILLER_ATTR
-import org.alter.game.model.attr.PROTECT_ITEM_ATTR
-import org.alter.game.model.container.ItemContainer
 import org.alter.game.model.entity.GroundItem
 import org.alter.game.model.entity.Player
 import org.alter.game.model.item.Item
@@ -18,6 +14,7 @@ import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
 import org.alter.plugins.content.bots.PkBot
 import org.alter.plugins.content.economy.pk.LootKeys
+import org.alter.plugins.content.economy.pk.PkKillGuard
 import org.alter.plugins.service.marketvalue.ItemMarketValueService
 
 /**
@@ -56,6 +53,9 @@ class PvpDeathDropPlugin(
             val victim = player
             if (victim is PkBot) return@onPlayerPreDeath          // bots + companions drop their kit elsewhere
             if (SafeDeaths.isSafeDeath(victim)) return@onPlayerPreDeath
+            // Price the risk BEFORE the containers are stripped — the PK kill guard (Blood Money /
+            // Elo legitimacy) reads it whichever pre-death hook runs first.
+            PkKillGuard.captureRisk(world, victim)
             dropOnDeath(victim)
         }
 
@@ -65,40 +65,22 @@ class PvpDeathDropPlugin(
     }
 
     private fun dropOnDeath(victim: Player) {
+        // The keep-N split is computed by [DeathRisk] (read-only, key handles excluded) so the PK
+        // kill guard can price the same risk BEFORE anything below mutates the containers.
+        // Untradeables never drop; the [DeathRisk.Plan.keep] most valuable ITEMS (units, not
+        // stacks) stay — a stack of blood runes keeps [keep] units and drops the remainder.
+        val plan = DeathRisk.plan(victim, priceService)
+
         // Unclaimed loot keys are ALWAYS lost on death (OSRS) — no keep slot, no Protect Item:
         // the handles are destroyed and the sealed contents join the rest of the lost loot below.
         val keyLoot = LootKeys.confiscate(victim)
 
-        val protectItem = victim.attr[PROTECT_ITEM_ATTR] == true
-        val skulled = victim.hasSkullIcon(SkullIcon.WHITE) || victim.hasSkullIcon(SkullIcon.RED)
-        val keep = when {
-            skulled && protectItem -> 1
-            skulled -> 0
-            protectItem -> 4
-            else -> 3
-        }
-
-        // Everything worn + carried, as (container, slot, item). Key handles are already gone.
-        val held = ArrayList<Triple<ItemContainer, Int, Item>>()
-        for (i in 0 until victim.equipment.capacity) victim.equipment[i]?.let { held += Triple(victim.equipment, i, it) }
-        for (i in 0 until victim.inventory.capacity) victim.inventory[i]?.let { held += Triple(victim.inventory, i, it) }
-
-        // Untradeables never drop; the [keep] most valuable ITEMS (units, not stacks) stay
-        // too. OSRS protects single items per keep slot — a stack of blood runes no longer
-        // shields the whole stack: up to [keep] units survive and the remainder drops.
-        var keepLeft = keep
         val lostLoot = ArrayList<Item>()
-        held.filter { it.third.getDef().isTradeable }
-            .sortedByDescending { unitValue(it.third) }
-            .forEach { (container, slot, item) ->
-                val protected = minOf(keepLeft, item.amount)
-                keepLeft -= protected
-                val lostAmount = item.amount - protected
-                if (lostAmount > 0) {
-                    lostLoot += Item(item, lostAmount)
-                    container[slot] = if (protected > 0) Item(item, protected) else null
-                }
-            }
+        for (s in plan.slots) {
+            if (s.lost <= 0) continue
+            lostLoot += Item(s.item, s.lost)
+            s.container[s.slot] = if (s.kept > 0) Item(s.item, s.kept) else null
+        }
         if (lostLoot.isEmpty() && keyLoot.isEmpty()) return
 
         val loot = lostLoot + keyLoot
@@ -123,12 +105,6 @@ class PvpDeathDropPlugin(
             }
             victim.message("Your items lie where you fell. You have ~15 minutes to return and reclaim them.")
         }
-    }
-
-    /** Per-item market value, falling back to the cache cost when the price service has none. */
-    private fun unitValue(item: Item): Int {
-        val price = priceService?.get(item.id) ?: 0
-        return if (price > 0) price else (item.getDef().cost ?: 0)
     }
 
     companion object {

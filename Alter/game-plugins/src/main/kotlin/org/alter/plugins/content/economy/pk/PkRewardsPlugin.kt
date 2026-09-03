@@ -12,7 +12,6 @@ import org.alter.game.model.shop.PurchasePolicy
 import org.alter.game.model.shop.ShopItem
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
-import org.alter.plugins.content.bots.PkBot
 import org.alter.plugins.content.economy.grandexchange.GeCurrencyPrices
 import org.alter.plugins.content.economy.grandexchange.currencyBuyShop
 import org.alter.plugins.content.mechanics.shops.ItemCurrency
@@ -124,18 +123,23 @@ class PkRewardsPlugin(
 
         onPlayerPreDeath {
             val victim = player
+            // One legitimacy verdict per death ([PkKillGuard]): self/bot kills, safe-zone deaths,
+            // same-address alts, repeat victims, daily caps, no-risk and fresh-account victims all
+            // pay nothing. Bots don't PAY either (wiki: "loot and practice, not ladder points") —
+            // minting currency from farmable bots would flood the Blood-Money gear economy.
+            val verdict = PkKillGuard.verdictFor(world, victim) ?: return@onPlayerPreDeath
             val killer = victim.attr[KILLER_ATTR]?.get() as? Player ?: return@onPlayerPreDeath
-            if (killer === victim || killer is PkBot) return@onPlayerPreDeath // bots/self don't earn
-            // Bots don't PAY either (wiki: "loot and practice, not ladder points") — minting
-            // currency from farmable bots would flood the Blood-Money gear economy.
-            if (victim is PkBot) return@onPlayerPreDeath
+            if (!verdict.ok) {
+                if (verdict.rule.audited()) PkKillGuard.audit(killer, victim, verdict, reward = 0)
+                return@onPlayerPreDeath
+            }
 
             val reward = BM_BASE + victim.combatLevel * BM_PER_LEVEL
             val added = killer.inventory.add(item = bm, amount = reward, assureFullInsertion = false)
             val leftover = reward - added.completed
             if (leftover > 0) world.spawn(GroundItem(bm, leftover, killer.tile, killer))
             killer.message("<col=990000>Blood money:</col> +${"%,d".format(reward)} for slaying ${victim.username}.")
-            logger.info { "PK ${killer.username} killed ${victim.username} (cb ${victim.combatLevel}) -> $reward blood money" }
+            PkKillGuard.audit(killer, victim, verdict, reward)
         }
     }
 
@@ -163,6 +167,13 @@ class PkRewardsPlugin(
     }
 
     private fun resolveOrNull(key: String): Int? = try { getRSCM(key) } catch (e: Exception) { null }
+
+    /** Denials worth a `pk-audit` line: a human-vs-human kill that failed a fair-play rule (not the
+     *  routine self/bot/NPC cases, which would flood the log on every bot death). */
+    private fun PkKillGuard.Rule.audited(): Boolean = when (this) {
+        PkKillGuard.Rule.SELF, PkKillGuard.Rule.BOT_VICTIM, PkKillGuard.Rule.NOT_HUMAN -> false
+        else -> true
+    }
 
     private companion object {
         const val SUPPLIES = "PK Rewards"

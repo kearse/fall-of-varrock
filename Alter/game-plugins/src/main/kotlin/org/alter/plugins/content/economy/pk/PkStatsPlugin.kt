@@ -79,16 +79,18 @@ class PkStatsPlugin(
             val victim = player
             val killer = victim.attr[KILLER_ATTR]?.get() as? Player ?: return@onPlayerPreDeath
             if (killer === victim) return@onPlayerPreDeath
+            // Same per-death verdict PkRewardsPlugin pays on ([PkKillGuard]): a kill the fair-play
+            // rules refuse moves no Elo / kill count either (elo/kill-count stays real players only).
+            val verdict = PkKillGuard.verdictFor(world, victim) ?: return@onPlayerPreDeath
 
-            // PK QoL: every PvP kill — bot targets included — refills the killer's special
-            // attack. Runs BEFORE the real-vs-real guard below so bot kills count for it
-            // (elo/kill-count stays real players only).
-            if (killer !is PkBot) {
+            // PK QoL: a legitimate PvP kill — or a bot practice kill — refills the killer's special
+            // attack. A denied human kill (alt, repeat victim, no risk...) does NOT.
+            if (killer !is PkBot && (verdict.ok || verdict.rule == PkKillGuard.Rule.BOT_VICTIM)) {
                 org.alter.plugins.content.interfaces.attack.AttackTab.setEnergy(killer, 100)
                 killer.message("<col=801700>Your special attack energy has been restored.</col>")
             }
 
-            if (killer is PkBot || victim is PkBot) return@onPlayerPreDeath // real-vs-real only
+            if (!verdict.ok) return@onPlayerPreDeath
 
             val ke = killer.elo()
             val ve = victim.elo()

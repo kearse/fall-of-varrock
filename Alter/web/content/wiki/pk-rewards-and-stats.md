@@ -3,7 +3,7 @@ title: PK rewards, Blood Money & Elo
 category: PvP & Wilderness
 summary: What killing players pays, where to spend Blood Money, and how your Elo and rank percentile work.
 order: 3
-updated: 2026-07-04
+updated: 2026-09-03
 ---
 
 Killing **real players** pays in three ways: their risked loot (as a [loot key](/wiki/wilderness-loot-keys) in the wilderness), **Blood Money**, and your climb up the Elo ladder.
@@ -15,6 +15,19 @@ Every real-player kill drops Blood Money into your inventory:
 - **25 base + 3 per combat level of the victim** - a level-126 kill pays 403.
 - It's a real inventory item, so it's riskable and lootable like anything else.
 - Bot kills pay **nothing** - Blood Money only comes from humans.
+
+### Fair-play rules
+
+Blood Money is a real, tradeable currency, so a kill only pays when it was a real fight. The loot key is **always** yours - only the Blood Money and the Elo are gated:
+
+- Only **wilderness** kills of **real players** pay. Bots, companions and safe-zone deaths never mint.
+- **Shared connection** - two accounts logged in from the same address don't pay each other.
+- **Repeat victims** - the same victim pays once per 30 minutes, and a pair of players can only pay each other **3 times a day** (in either direction - trading kills counts as one pair).
+- **Caps** - a victim can only fund **10** payouts a day, and a killer earns from at most **20** kills a day.
+- **Risk** - the victim must have risked at least **20,000 gp** of tradeables (their kept items don't count; unclaimed loot keys they were carrying do).
+- **New accounts** - victims on accounts under **24 hours old** don't pay.
+
+When a kill is refused you see why in chat (`Blood money: none - ...`). Staff can audit every payout, so farming alts is a fast way to lose the account.
 
 Spend it at the **PK Rewards vendor** (`::pkshop`, or the Emblem Trader in the Lumbridge market's east row) - four shelves:
 
@@ -43,7 +56,7 @@ PvM chase gear (tbow, scythe, GWD bases…) deliberately is NOT here - that's th
 Only human-vs-human fights count - bots never touch your record.
 
 - **Kills / Deaths / K-D** - lifetime, saved on your account.
-- **Elo** - you start at 1000; every real PvP death moves rating between killer and victim using standard Elo math (beating higher-rated players pays more).
+- **Elo** - you start at 1000; every real PvP death moves rating between killer and victim using standard Elo math (beating higher-rated players pays more). Kills the fair-play rules above reject don't move Elo or your kill count.
 - **Rank percentile** - your standing against *every* account on the server (online and offline), shown as "TOP x.x%".
 
 Check yourself with `::pkstats`, or just look at the **PK info box** overlay in the client (top-left), which live-updates kills, deaths, K/D, Elo and rank. Full leaderboards - Top Kills, Deaths, K-D and Elo - are on the site's [Hiscores](/hiscores) under the combat tabs.
