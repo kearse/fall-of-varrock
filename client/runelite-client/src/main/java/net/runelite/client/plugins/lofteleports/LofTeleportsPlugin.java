@@ -109,10 +109,27 @@ public class LofTeleportsPlugin extends Plugin
 		}
 	}
 
-	/** Send the chosen teleport to the server as a public-chat token it intercepts + suppresses. */
+	/**
+	 * Send the chosen teleport to the server as a public-chat token it intercepts + suppresses.
+	 *
+	 * The row's display NAME rides along after the indices. The server resolves by name first and
+	 * only falls back to the indices, so a client build whose {@link LofTeleportsData} mirror has
+	 * drifted from the server registry (rows inserted mid-list on the server, client not yet
+	 * redeployed) still lands on the boss the player clicked instead of whatever now sits at that
+	 * index — the "every boss teleport goes somewhere else" failure of 2026-09-03.
+	 */
 	void sendTeleport(int categoryIndex, int rowIndex)
 	{
-		final String msg = "::loftp " + categoryIndex + " " + rowIndex;
+		String name = "";
+		if (categoryIndex >= 0 && categoryIndex < LofTeleportsData.CATEGORIES.size())
+		{
+			final LofTeleportsData.Category cat = LofTeleportsData.CATEGORIES.get(categoryIndex);
+			if (rowIndex >= 0 && rowIndex < cat.dests.size())
+			{
+				name = " " + cat.dests.get(rowIndex).name;
+			}
+		}
+		final String msg = "::loftp " + categoryIndex + " " + rowIndex + name;
 		clientThread.invokeLater(() -> client.runScript(ScriptID.CHAT_SEND, msg, 0, 0, 0, -1));
 	}
 }

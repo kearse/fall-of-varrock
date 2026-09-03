@@ -10,6 +10,11 @@
  * after the boss-roster purge left the whole Bosses tab dead and the Mini-Games rows firing the
  * wrong destinations (the "portal teleports are broken" player reports).
  *
+ * Since 2026-09-03 the click also carries the row's display name and the server resolves by
+ * name before index (TeleportClickPlugin), so a stale client build lands on the boss it shows
+ * rather than the row now at that index. Names must therefore match the server's displayName
+ * exactly; keeping the ORDER in sync is still required for the greyed "Soon" rows to line up.
+ *
  * The `icon` is a representative OSRS item id drawn via ItemManager.getImage (purely cosmetic;
  * an unknown id just renders blank).
  */
