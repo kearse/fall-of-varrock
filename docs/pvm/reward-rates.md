@@ -62,6 +62,27 @@ rescaled to ≈ equal weight). Uniques keep OSRS-era odds. All seven lairs are W
 | Boss Tickets | Callisto/Vet'ion/Venenatis 25; Scorpia/Chaos Ele 20; Fanatic/Arch 15 | — | FoV | ⚠️ |
 | Coin rows | Callisto 12–20k (8/~300), Vet'ion 15–20k (6/~330), Venenatis 15–20k (29/~330), Scorpia ≤3987, Chaos Ele 7.5k (4/~230), Fanatic ≤4k, Arch ≤4k | — | Kronos | ⚠️ |
 
+## Slayer bosses (PR 4, `content/bosses/slayer/`)
+
+Main tables are the Kronos `drops/eco/<Name>.json` sub-tables folded flat. Kraken 87 /
+Cerberus 91 / Thermy 93 Slayer gates are engine-enforced. Skotizo costs a dark totem per kill.
+
+| Boss | Reward | Rate | Source | Review |
+|---|---|---|---|---|
+| Kraken | Trident of the seas / Kraken tentacle | 1/512 / 1/400 | OSRS | ⚠️ |
+| Kraken | Jar of dirt / Pet kraken | 1/1000 each | FoV (OSRS 1/1000 / 1/3000) | ⚠️ |
+| Cerberus | Primordial / Pegasian / Eternal crystal, Smouldering stone | 1/512 each | OSRS | ⚠️ |
+| Cerberus | Jar of souls / Hellpuppy | 1/1000 each | FoV (OSRS 1/2000 / 1/3000) | ⚠️ |
+| Thermy | Occult necklace / Smoke battlestaff | 1/350 / 1/512 | OSRS | ⚠️ |
+| Thermy | Dragon chainbody / Pet smoke devil | 1/1000 each | FoV | ⚠️ |
+| Skotizo | Dark claw / Skotos | 1/25 / 1/65 | OSRS | ⚠️ |
+| Skotizo | Uncut onyx / Jar of darkness | 1/128 / 1/500 | FoV (OSRS ~1/... / 1/2500) | ⚠️ |
+| Skotizo | Ancient shards 1-3 + hard clue | always | OSRS | — |
+| Demonic gorilla | Zenyte shard | 1/300 | OSRS | ⚠️ |
+| Demonic gorilla | Ballista limbs / spring / Heavy frame / Monkey tail | 1/500 each | OSRS-ish | ⚠️ |
+| Demonic gorilla | Coins | 15–25k at 7/~150 (Kronos had 150–250k GUARANTEED — cut ×10 and moved off the always tier) | FoV | ⚠️ |
+| Boss Tickets | Kraken 20 · Cerberus 30 · Thermy 20 · Skotizo 30 · gorilla 5 | — | FoV | ⚠️ |
+
 ## Boss Ticket rates already live (for comparison)
 
 | Boss | Tickets/kill | Source |
