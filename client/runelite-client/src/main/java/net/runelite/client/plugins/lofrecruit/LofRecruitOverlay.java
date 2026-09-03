@@ -1,7 +1,8 @@
 /*
  * Fall of Varrock — Muster Companions window (renderer + hit-testing).
  *
- * Three discipline cards (melee / ranged / mage) + the banner strip showing the fielded roster.
+ * Three discipline cards (melee / ranged / mage) + the banner strip: the one fielded companion lit,
+ * then dashed slots up to the rank's roster cap (one takes the field at a time; the rest are benched).
  * States: recruitable, rank-locked (below Knight — cards dim, path shown), banner full, and
  * short-of-coin. All icons are the website's real art (discipline_melee.png = forum/war.png
  * crossed polearms; banner_horn.png = icon-warroom.png; archer/mage deliberately re-use
@@ -302,7 +303,7 @@ class LofRecruitOverlay extends Overlay implements LofWindows.Window
 		g.setFont(FontManager.getRunescapeSmallFont());
 		final String status = locked || cap == 0
 			? "Companions fight, train and carry your banner into the war."
-			: "A " + TITLE_NAMES[titleOrdinal] + " fields up to " + cap + " at once. Soldiers cost 10M, then 100M, then 500M.";
+			: "A " + TITLE_NAMES[titleOrdinal] + " keeps up to " + cap + " on the banner; one takes the field at a time. Soldiers cost 10M, then 100M, then 500M.";
 		LofTheme.shadowText(g, status, ox + PAD, oy + WIN_H - 40, LofTheme.TEXT_DIM);
 		LofTheme.shadowText(g, "Coins carried: " + fmt(coins), ox + PAD, oy + WIN_H - 18, LofTheme.TEXT_DIM);
 

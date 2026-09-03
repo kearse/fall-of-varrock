@@ -27,7 +27,7 @@ Check your current rank, armour tier and exactly what the next rank still needs 
 | Minister | 10,000,000 gp | 1,500 | All armour | All armour | All armour | 3 | + `::campaign` |
 | King | 50,000,000 gp | 4,000 | All armour | All armour | All armour | 3 | + `::conquest` |
 
-The companion roster is how many soldiers you may keep - and **all of them fight beside you at once**; the muster price climbs from 10M for the first to 100M and then 500M (see [Companions](/wiki/companions)). The War Effort floors are the first pass of "rank is earned" and will be tuned; Minister will also ask for the **Veteran of Varrock** mark once the first major assault on the fallen city exists to award it, and **King is a long-term career achievement** - the crown is never a quest reward.
+The companion roster is how many soldiers you may keep and swap between - **one stands beside you at a time, at every rank**; the muster price climbs from 10M for the first to 100M and then 500M (see [Companions](/wiki/companions)). The War Effort floors are the first pass of "rank is earned" and will be tuned; Minister will also ask for the **Veteran of Varrock** mark once the first major assault on the fallen city exists to award it, and **King is a long-term career achievement** - the crown is never a quest reward.
 
 From Squire up, your title displays in colour over your head - rank here is earned status, not a cosmetic you buy in a store.
 

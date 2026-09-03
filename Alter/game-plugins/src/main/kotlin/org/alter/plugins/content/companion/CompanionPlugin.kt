@@ -18,8 +18,9 @@ import org.alter.plugins.content.companion.Companion as CompanionPawn
 /**
  * Host plugin for the **companion** system: spawns a player's fielded companions on login, stores +
  * despawns them on logout, ticks the companion brain, and exposes the `::companion` command channel
- * the RuneLite panel drives. Recruiting lives at General Zo ([RecruitClickPlugin]). The whole
- * roster takes the field at once ([CompanionRegistry.ACTIVE_MAX]).
+ * the RuneLite panel drives. Recruiting lives at General Zo ([RecruitClickPlugin]). One companion
+ * takes the field at a time ([CompanionRegistry.ACTIVE_MAX]); the rest of the roster waits on the
+ * bench and summoning one swaps him in.
  */
 class CompanionPlugin(
     r: PluginRepository,
@@ -85,7 +86,8 @@ class CompanionPlugin(
             // Dismiss / summon come FIRST: they're the only actions that make sense with nobody
             // fielded (the whole point of summon is that your companion is off duty).
             //   ::companion dismiss [slot]  — send him off duty; he leaves the world entirely
-            //   ::companion summon  [slot]  — call one (or, with no slot, everyone) back to your side
+            //   ::companion summon  [slot]  — call a benched companion back (swapping out the fielded one);
+            //                                 with no slot, the first benched one if nobody is fielded
             // [slot] is 1-based over the roster the panel was sent: the live companions first, then the bench.
             when (args.getOrNull(0)?.lowercase()) {
                 "dismiss" -> {
@@ -101,9 +103,14 @@ class CompanionPlugin(
                     val slot = args.getOrNull(1)?.toIntOrNull()
                     if (slot != null) {
                         CompanionRegistry.summon(player, slot - 1)
-                    } else if (CompanionRegistry.summonAll(player) == 0 && CompanionRegistry.benchedOf(player).isEmpty()) {
+                    } else if (CompanionRegistry.summonAll(player) == 0) {
                         // (a refused summon — policy-denied, world full — has already said why)
-                        player.message("You have no dismissed companions to summon.")
+                        val fielded = list.firstOrNull()
+                        val benched = CompanionRegistry.benchedOf(player)
+                        when {
+                            benched.isEmpty() -> player.message("You have no dismissed companions to summon.")
+                            fielded != null -> player.message("Sir ${fielded.username} already stands with you — <col=0000ff>::companion summon <slot></col> swaps him for a benched soldier (one at your side).")
+                        }
                     }
                     return@onCommand
                 }

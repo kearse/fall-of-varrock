@@ -2,7 +2,7 @@
  * Fall of Varrock — Muster Companions window.
  *
  * General Zo (server) pulses varp 4619, packed:
- *   bit 0 open flag · bits 1-3 companions fielded · bits 4-6 rank cap · bits 7-10 title ordinal.
+ *   bit 0 open flag · bits 1-3 roster size (fielded + benched) · bits 4-6 rank cap · bits 7-10 title ordinal.
  * This plugin opens the recruiter window (three discipline cards + the banner strip). Clicking a
  * card sends "::zo recruit <melee|range|mage>" as public chat, which the server intercepts
  * (MessagePublicHandler → zoclick), runs the muster at the tiered price (10M, 100M, 500M by roster

@@ -1,18 +1,18 @@
 ---
 title: Companions
 category: Companions & Progression
-summary: Recruit, train, gear and command your own levelable AI fighters - up to three at your side, a roster that grows with your rank and a price that climbs with every soldier.
+summary: Recruit, train, gear and command your own levelable AI fighters - one at your side, a roster that grows with your rank, and a price that climbs with every soldier you keep.
 order: 1
 updated: 2026-09-02
 ---
 
-**Companions** are player-owned AI fighters - real combatants with real skills that level from combat, wearing real gear you give them. Your [feudal rank](/wiki/titles-and-citizenship) sets how many you may keep on your banner, and **every one of them fights beside you at once** - up to three. They come in melee, ranged and mage archetypes, spawn when you log in, follow you across the world in formation, and fight beside you.
+**Companions** are player-owned AI fighters - real combatants with real skills that level from combat, wearing real gear you give them. Your [feudal rank](/wiki/titles-and-citizenship) sets how many you may keep on your banner, but **one companion stands beside you at a time** - for every rank, and no donor perk changes that. They come in melee, ranged and mage archetypes, spawn when you log in, follow you across the world, and fight beside you.
 
 ## Recruiting and the roster
 
-Companions are recruited through **General Zo** at the castle. Your rank sets your **roster** - how many soldiers you may keep: a **Knight** keeps 1, a **Lord** 2, and a **Minister** or **King** 3. All of them take the field together. Each starts with archetype-appropriate gear and a supply pack (brews, restores, sharks, karambwans and a combat potion - restocked free).
+Companions are recruited through **General Zo** at the castle. Your rank sets your **roster** - how many soldiers you may keep and swap between: a **Knight** keeps 1, a **Lord** 2, and a **Minister** or **King** 3. Only one takes the field; the others wait on the bench with their levels and gear intact. Each starts with archetype-appropriate gear and a supply pack (brews, restores, sharks, karambwans and a combat potion - restocked free).
 
-Three soldiers at once is real combat power, so the price climbs steeply with every soldier already on your banner:
+The price climbs steeply with every soldier already on your banner:
 
 | Soldier | Price |
 | --- | --- |
@@ -24,8 +24,8 @@ The Muster window shows the price of your *next* soldier on every card.
 
 ## Dismissing and summoning
 
-- `::companion dismiss [slot]` - send a companion (or, with no slot, all of them) off duty. He leaves the world but not the roster - levels and gear stay intact.
-- `::companion summon [slot]` - call a benched companion (or, with no slot, everyone) back to your side. (A companion who is being attacked by another player can't stand down for 10 seconds - the same rule as logging out.)
+- `::companion dismiss [slot]` - send your companion off duty. He leaves the world but not the roster - levels and gear stay intact.
+- `::companion summon <slot>` - call a benched companion to your side. With someone already fielded this is a **swap**: the fielded companion stands down first. (A companion who is being attacked by another player can't stand down for 10 seconds - the same rule as logging out - which also blocks the swap.)
 - The Companions side panel in the custom client does all of this with buttons; benched companions show as cards you can summon.
 
 ## Where companions stand down
@@ -58,4 +58,4 @@ Everything runs through `::companion` (and `::companions` to list your roster):
 
 ## Why they matter
 
-A companion is the solo player's answer to group content - a reliable duo partner for shared-world bosses, an extra body in marches, and someone to watch your back on the roads. Gear him like you'd gear an alt.
+A companion is the solo player's answer to group content - a reliable duo partner for shared-world bosses, an extra body in marches, and someone to watch your back on the roads. Gear him like you'd gear an alt. A bigger roster means a specialist for every job - a mage for one fight, a ranger for the next - never a bigger army.

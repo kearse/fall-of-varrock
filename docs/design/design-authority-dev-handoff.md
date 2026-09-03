@@ -196,7 +196,7 @@ Players can recruit, train, equip, and develop persistent named soldiers, but ma
 | REMOVE | Rank-based active count | Lord/Minister/King do not increase simultaneous companion count. |
 | MONETIZATION GUARDRAIL | Donor benefits | Extra roster/recruit/cosmetic options are safer than allowing extra active companions, which would become direct combat power. |
 
-> **Amendment 2026-09-02 (operator decision, in code):** the active limit above is lifted - a player fields their whole roster at once (`CompanionRegistry.ACTIVE_MAX = MAX`, three). The guardrail is price instead of count: the first soldier costs 10M coins, the second 100M, the third 500M (`RecruitMenu.RECRUIT_COSTS`). Rank still sets the roster size (Knight 1 / Lord 2 / Minister+ 3).
+> **Amendment history 2026-09-02:** for one day the active limit was lifted (`CompanionRegistry.ACTIVE_MAX = MAX`, PR #309) with a price ladder as the guardrail. The operator then re-locked it the same day per docs *03 Ranks, War & Core Systems* §5 and *06 Development Authority* §3: **one active companion for every rank and donor tier** (`ACTIVE_MAX = 1`, enforced every tick). The muster price ladder stays as the ROSTER price (10M / 100M / 500M, `RecruitMenu.RECRUIT_COSTS`); rank still sets the roster size (Knight 1 / Lord 2 / Minister+ 3). The table above is current.
 
 ## 11. War-Forging and Gear Economy
 

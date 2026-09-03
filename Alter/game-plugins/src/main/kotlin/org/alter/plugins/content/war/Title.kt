@@ -45,8 +45,9 @@ enum class ArmourTier(val display: String) {
  *
  * [cost] is the coin price of that rank (the sink half of eligibility). [PEASANT] is the free
  * starting rank. [roster] is how many companion soldiers the rank may keep on its banner (General
- * Zo) — and every one of them takes the field at once (`CompanionRegistry.ACTIVE_MAX`); the
- * steeply tiered muster price (`RecruitMenu.RECRUIT_COSTS`: 10M, 100M, 500M) is what pays for it.
+ * Zo) and swap between — never how many stand beside the player: that is ONE for every rank
+ * (`CompanionRegistry.ACTIVE_MAX`, locked). The tiered muster price (`RecruitMenu.RECRUIT_COSTS`:
+ * 10M, 100M, 500M) prices the roster.
  */
 enum class Title(
     val display: String,

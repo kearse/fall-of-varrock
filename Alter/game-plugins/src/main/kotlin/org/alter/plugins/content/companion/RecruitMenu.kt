@@ -26,10 +26,10 @@ object RecruitMenu {
 
     /**
      * Coin price of each soldier, by how many the player already keeps (fielded or benched): the
-     * first is 10M, the second 100M, the third 500M. The whole banner takes the field at once
-     * ([CompanionRegistry.ACTIVE_MAX]) — real combat power — so this ladder is the sink that pays
-     * for it (operator decision 2026-09-02). The client draws the same ladder from the roster size
-     * in the varp: keep `LofRecruitOverlay.RECRUIT_COSTS` in step. TUNABLE.
+     * first is 10M, the second 100M, the third 500M. This prices the ROSTER (a coin sink on how
+     * many soldiers you keep and swap between); it never buys more than one at your side
+     * ([CompanionRegistry.ACTIVE_MAX] is locked at one). The client draws the same ladder from the
+     * roster size in the varp: keep `LofRecruitOverlay.RECRUIT_COSTS` in step. TUNABLE.
      */
     val RECRUIT_COSTS = intArrayOf(10_000_000, 100_000_000, 500_000_000)
 
