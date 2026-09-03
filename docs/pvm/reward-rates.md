@@ -96,6 +96,22 @@ OSRS-wiki rules; the Moons drop nothing themselves — the Lunar Chest pays.
 | Camp supply crates | 8 cooked bream per 3-minute cooldown (v1 stand-in for the gathering loop) | FoV | ⚠️ |
 | Food heals | cooked bream 12, cooked moonlight antelope 26 (`Food.kt`) | OSRS (TUNE) | ⚠️ |
 
+## Fallen Varrock PvM layer (PR 6, `content/pvm/varrock/`)
+
+FoV-original. Materials: **Varrock salvage** (numulite 21555 renamed, stackable, tradeable, cost 0)
+and **Relic of old Varrock** (relic part 2373 renamed, tradeable, cost 0) — the War-Forging
+ingredients the war team's recipes will consume (their wiring). War Effort / Commendations go
+through `addPoints` / `WarForge.awardCommendations`.
+
+| Source | Reward | Rate | Review |
+|---|---|---|---|
+| Elite undead (7 kinds, 16 posts) | salvage 1–3 (30/100), runes/food/bars/coins 500–2500 (12/100) | per kill | ⚠️ |
+| Elite undead | Relic | 1/60 | ⚠️ |
+| Salvage pile (28, 90 s refill) | salvage 2–5; relic 1/40; 1/8 wakes an elite | per search | ⚠️ |
+| Malachai the Hollow (every ~20 min) | 2 relics + 8–14 salvage always; supplies; 15 tickets, 20 WE, 3 Commendations | per kill | ⚠️ |
+| Palace Warden (15-min respawn) | 1–2 relics + 12–20 salvage + 2 dragon bones always; supplies; 30 tickets, 40 WE, 5 Commendations; Warden's ember 1/8 | per kill | ⚠️ |
+| Arrav Intelligence | Purge 15 WE + 2 Comm + 5 salvage · Salvage 12 WE + 2 Comm + 1/6 relic · Bounty 25 WE + 4 Comm + relic · Warden 40 WE + 6 Comm + 2 relics | per assignment | ⚠️ |
+
 ## Boss Ticket rates already live (for comparison)
 
 | Boss | Tickets/kill | Source |

@@ -1,0 +1,26 @@
+---
+# Fallen Varrock PvM materials (Team 4 PR 6). Both repurpose otherwise-unobtainable cache
+# items (no shop, drop or minigame here hands them out): Numulite (stackable) becomes the
+# salvage material; Relic part 1 becomes the War-Forging relic. No equipment block — pure
+# inventory items. cost 0 keeps them off the alch/buy-back gold loop.
+id: 21555
+name: "Varrock salvage"
+examine: "Twisted metal and stone pulled from the ruins of Varrock. The Royal Smith wants it."
+tradeable: true
+weight: 0.0
+tradeable_on_ge: true
+cost: 0
+lowalch: 0
+highalch: 0
+buy_limit: null
+---
+id: 2373
+name: "Relic of old Varrock"
+examine: "A piece of the city that was. The forge can wake what sleeps in it."
+tradeable: true
+weight: 1.0
+tradeable_on_ge: true
+cost: 0
+lowalch: 0
+highalch: 0
+buy_limit: null

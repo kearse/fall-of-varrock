@@ -37,7 +37,11 @@
 - Instanced deaths are safe automatically; shared-world lairs need
   `world.definitions.loadRegions(...)` at `onWorldInit` or npcs freeze.
 - Boot check: `.claude/launch.json` → `pvm-server` (port 43597), green line is
-  `All N plugins loaded with no failures`.
+  `All N plugins loaded with no failures`. **World-init hooks run ~45 s AFTER that line**
+  (a Mongo-waiting hook earlier in the chain blocks the rest) — poll for your plugin's
+  world-init log late, and the game-loop `Entities:` line later still.
+- `PluginRepository.executeWorldInit` now isolates each hook (PR 6): a throwing hook logs
+  `World-init hook #i threw` instead of silently skipping every hook registered after it.
 
 ## PR queue (status: ⬜ todo · 🔨 in progress · ✅ open/merged)
 
@@ -48,7 +52,7 @@
 | 3 | `pvm/03-wilderness-bosses` | Callisto, Vet'ion (2 phases + hellhounds), Venenatis, Scorpia (+guardians), Chaos Elemental, Chaos Fanatic, Crazy Archaeologist | Kronos | ✅ PR open (stacked on 2; boot-verified 347 plugins, 7 bosses / 9 regions) |
 | 4 | `pvm/04-slayer-bosses` | Kraken (+tentacles), Cerberus (+souls), Thermonuclear Smoke Devil, Skotizo (+altars), Demonic Gorillas; Abyssal Sire deferred | Kronos | ✅ PR open (stacked on 3; boot-verified 350 plugins, 7 regions, all spawns) |
 | 5 | `pvm/05-moons-of-peril` | Neypotzli loop: supplies → Blood/Blue/Eclipse Moon encounters → Lunar Chest; enraged variants; sets + weapons | OSRS wiki (rev-228 cache has npcs/items/objects) | ✅ PR open (stacked on 4; boot-verified 353 plugins; v1 = fights + chest + enraged, gathering loop v2) |
-| 6 | `pvm/06-fallen-varrock-pvm` | Elite undead tier, salvage piles → materials/relics, rare encounters, Arrav Intelligence assignment board, Palace exploration boss, captain kill ledger | FoV-original | ⬜ |
+| 6 | `pvm/06-fallen-varrock-pvm` | Elite undead tier, salvage piles → materials/relics, rare encounters, Arrav Intelligence assignment board, Palace exploration boss, captain kill ledger | FoV-original | ✅ PR open (stacked on 5; boot-verified 357 plugins, 11 elite posts / 27 piles / Warden / Rovin). Captain KC = one-line request to Team 1's NamedCaptainsPlugin |
 | 7 | `pvm/07-senntisten-expeditions` | Instanced expedition (Digsite entry): escalating rooms, materials, relics/logs, end boss; Deep Senntisten tier behind flag | FoV-original | ⬜ |
 | 8 | `pvm/08-story-bosses` | Repeatable Zemouregal (after Defender of Varrock) and Convergence manifestation (after The Fracture), flag-gated | FoV-original | ⬜ |
 | 9 | `pvm/09-minigames-a` | Pest Control (Void), Wintertodt | Kronos | ⬜ |
