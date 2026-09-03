@@ -121,6 +121,19 @@ FoV-original. One 12-minute solo run = 3 waves + the Custodian.
 | Wave cleared (×3) | Varrock salvage 2–4 | per wave | ⚠️ |
 | The Custodian | 2 relics + 10 salvage + 1 expedition log (untradeable, old journal 1493 renamed) always; runes/bars/bones/restores main; 25 tickets, 30 WE, 4 Commendations | per kill | ⚠️ |
 
+## Story bosses (PR 8, `content/pvm/story/`)
+
+FoV-original, quest-gated once Team 3 lands the quests (Knight rank meanwhile). Warden's embers
+are the top War-Forging material; `arravs_axe` (30320) is untradeable in the cache — a cosmetic
+chase, not a market item (Team 2: flip via YAML if you want it traded).
+
+| Boss | Reward | Rate | Review |
+|---|---|---|---|
+| Zemouregal (1200 HP, +Arrav ally) | 3 relics + 15 salvage always; runes/bars/bones/potions main; 40 tickets, 50 WE, 6 Commendations | per kill | ⚠️ |
+| Zemouregal | Warden's ember | 1/5 | ⚠️ |
+| Zemouregal | Arrav's axe (cosmetic) / Mahjarrat notes a–j / k–z (lore) | 1/150 / 1/40 / 1/40 | ⚠️ |
+| The Convergence (1500 HP) | 4 relics + 20 salvage + **1 Warden's ember** always; high runes (incl. wrath)/bars/bones/potions main; 60 tickets, 80 WE, 10 Commendations | per kill | ⚠️ |
+
 ## Boss Ticket rates already live (for comparison)
 
 | Boss | Tickets/kill | Source |

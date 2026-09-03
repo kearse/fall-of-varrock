@@ -156,6 +156,8 @@ object CollectionLogRegistry {
         Category("fallen_varrock", "Fallen Varrock", "npc.zombies_champion", listOf("item.varrock_relic", "item.burnt_page")),
         // Senntisten Expeditions — the Custodian's log page and the relics beneath the Digsite.
         Category("senntisten", "Senntisten Expeditions", "npc.lesser_demon_champion", listOf("item.expedition_log", "item.varrock_relic")),
+        // Story bosses — Zemouregal's chase cosmetics and lore; the Convergence pays materials only.
+        Category("story_bosses", "Zemouregal & the Convergence", "npc.zemouregal", listOf("item.arravs_axe", "item.mahjarrat_notes_aj", "item.mahjarrat_notes_kz")),
     )
 
     fun byKey(key: String): Category? = categories.firstOrNull { it.key.equals(key, ignoreCase = true) }
