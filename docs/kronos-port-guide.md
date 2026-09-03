@@ -67,6 +67,14 @@ and copy over unchanged into rev 228.
   a ported boss's custom table is authoritative automatically.
 - Verify plugin LOAD, not just compile: boot the server and grep the log for
   `Failed to load` / `loaded with failures`.
+- **Multi-locs (varbit-transformed objects) have no actions on the base def** — e.g. the
+  Barrows chest 20973 (varbit 1394 → 20723 `[Open]` / 20724 `[Search, Close]`). The client
+  sends the BASE id with the child's option slot, so `onObjOption(obj, "open")` throws
+  ("Option not found"); bind by slot instead — `onObjOption(obj = "object.null_20973",
+  option = 1)` — and drive the varbit server-side (`player.setVarbit`). Find the children
+  with `gradlew :game-server:objCheck -PobjArgs="<id>"` (prints varbit/varp → transforms).
+- **KDoc gotcha:** never write `dir/*.java` inside a `/** */` block — Kotlin nests block
+  comments, so the `/*` opens one and the whole file fails with "Unclosed comment".
 
 ## What still needs a non-Kronos source
 

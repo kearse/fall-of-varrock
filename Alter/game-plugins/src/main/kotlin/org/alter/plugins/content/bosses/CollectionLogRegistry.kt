@@ -105,6 +105,27 @@ object CollectionLogRegistry {
                 "item.veracs_helm", "item.veracs_brassard", "item.veracs_plateskirt", "item.veracs_flail",
             ),
         ),
+        // Lair-boss package (LairBosses): mirrors each table's log = true rares + pet.
+        Category(
+            "kbd", "King Black Dragon", "npc.king_black_dragon",
+            listOf("item.kbd_heads", "item.dragon_pickaxe", "item.draconic_visage", "item.prince_black_dragon"),
+        ),
+        Category(
+            "giant_mole", "Giant Mole", "npc.giant_mole",
+            listOf("item.mole_claw", "item.mole_skin", "item.baby_mole"),
+        ),
+        Category(
+            "kalphite_queen", "Kalphite Queen", "npc.kalphite_queen_963",
+            listOf("item.dragon_chainbody", "item.dragon_2h_sword", "item.kq_head", "item.jar_of_sand", "item.kalphite_princess"),
+        ),
+        Category(
+            "dagannoth_kings", "Dagannoth Kings", "npc.dagannoth_rex",
+            listOf(
+                "item.berserker_ring", "item.warrior_ring", "item.seers_ring", "item.archers_ring",
+                "item.mud_battlestaff", "item.seercull", "item.dragon_axe",
+                "item.pet_dagannoth_rex", "item.pet_dagannoth_prime", "item.pet_dagannoth_supreme",
+            ),
+        ),
     )
 
     fun byKey(key: String): Category? = categories.firstOrNull { it.key.equals(key, ignoreCase = true) }

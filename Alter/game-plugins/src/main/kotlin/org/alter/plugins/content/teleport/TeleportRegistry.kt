@@ -79,7 +79,8 @@ object TeleportRegistry {
         // except the war's world-boss event arena, which is live war content.
         built("corp_beast", "Corp Beast (Event)", BOSSES, Tile(3247, 3319, 0), HOSTILE), // Lumbridge world-boss event arena (::worldboss)
         soon("world_boss", "World Boss", BOSSES, HOSTILE), // rotating spawn — wire to WorldBoss later
-        soon("kbd", "King Black Dragon", BOSSES, HOSTILE),
+        // Lands inside the KBD lair island (Kronos port #7, the lair-boss package). TUNE.
+        built("kbd", "King Black Dragon", BOSSES, Tile(2271, 4680, 0), HOSTILE),
         soon("corporeal_beast", "Corporeal Beast", BOSSES, HOSTILE),
         // Lands at the Zul-Andra dock — board the sacred-eel boat (or ::zulrah) for a
         // solo instanced shrine fight (Kronos port #2).
@@ -87,6 +88,10 @@ object TeleportRegistry {
         // Lands just north of the mounds — dig into a mound with a spade to enter its crypt
         // (Kronos port #6: the full crypt run, `content/minigames/barrows/`).
         built("barrows", "Barrows", BOSSES, Tile(3565, 3306, 0), SAFE_ZONE),
+        // Lair-boss package (Kronos port #7): shared-world, multi-way lairs. TUNE stand-on tiles.
+        built("giant_mole", "Giant Mole", BOSSES, Tile(1760, 5175, 0), HOSTILE),
+        built("kalphite_queen", "Kalphite Queen", BOSSES, Tile(3480, 9483, 0), HOSTILE),
+        built("dagannoth_kings", "Dagannoth Kings", BOSSES, Tile(2898, 4450, 0), HOSTILE),
         // Lands on Ungael outside the icy spines — climb over them to enter the solo
         // instanced arena and poke the sleeping beast (the Kronos-port pilot).
         built("vorkath", "Vorkath", BOSSES, Tile(2272, 4052, 0), HOSTILE),
