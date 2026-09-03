@@ -45,7 +45,7 @@
 |---|--------|-------|-------|--------|
 | 1 | `pvm/01-barrows` | Barrows minigame: dig → crypt → sarcophagus fight (six set effects) → random tunnel crypt → chest (reward potential) → sixth-brother ambush; prayer drain; kill ledger; clog page; portal row | Kronos `activities/barrows/*` + pre-purge coords | ✅ PR open (boot-verified 341 plugins; client mirror row → deploy on merge) |
 | 2 | `pvm/02-lair-bosses` | KBD, Giant Mole, Kalphite Queen (2 forms), Dagannoth Kings (+spinolyps) at real lairs, multi flags, force-load | Kronos | ✅ PR open (stacked on 1; boot-verified 344 plugins, 6 bosses + 12 spinolyps spawned) |
-| 3 | `pvm/03-wilderness-bosses` | Callisto, Vet'ion (2 phases + hellhounds), Venenatis, Scorpia (+guardians), Chaos Elemental, Chaos Fanatic, Crazy Archaeologist | Kronos | ⬜ |
+| 3 | `pvm/03-wilderness-bosses` | Callisto, Vet'ion (2 phases + hellhounds), Venenatis, Scorpia (+guardians), Chaos Elemental, Chaos Fanatic, Crazy Archaeologist | Kronos | ✅ PR open (stacked on 2; boot-verified 347 plugins, 7 bosses / 9 regions) |
 | 4 | `pvm/04-slayer-bosses` | Kraken (+tentacles), Cerberus (+souls), Thermonuclear Smoke Devil, Skotizo (+altars), Demonic Gorillas; Abyssal Sire last | Kronos | ⬜ |
 | 5 | `pvm/05-moons-of-peril` | Neypotzli loop: supplies → Blood/Blue/Eclipse Moon encounters → Lunar Chest; enraged variants; sets + weapons | OSRS wiki (rev-228 cache has npcs/items/objects) | ⬜ |
 | 6 | `pvm/06-fallen-varrock-pvm` | Elite undead tier, salvage piles → materials/relics, rare encounters, Arrav Intelligence assignment board, Palace exploration boss, captain kill ledger | FoV-original | ⬜ |

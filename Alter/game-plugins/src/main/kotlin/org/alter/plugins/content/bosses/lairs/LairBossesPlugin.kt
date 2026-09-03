@@ -1,6 +1,5 @@
 package org.alter.plugins.content.bosses.lairs
 
-import dev.openrune.cache.CacheManager.getItem
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.alter.api.ext.*
 import org.alter.game.Server
@@ -8,16 +7,13 @@ import org.alter.game.model.Tile
 import org.alter.game.model.World
 import org.alter.game.model.attr.AttributeKey
 import org.alter.game.model.attr.KILLER_ATTR
-import org.alter.game.model.entity.GroundItem
 import org.alter.game.model.entity.Npc
 import org.alter.game.model.entity.Player
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
+import org.alter.plugins.content.bosses.BossDeath
 import org.alter.plugins.content.bosses.BossKills
-import org.alter.plugins.content.bosses.CollectionLog
 import org.alter.plugins.content.combat.Combat
-import org.alter.plugins.content.economy.PointKind
-import org.alter.plugins.content.economy.awardTickets
 import org.alter.rscm.RSCM.getRSCM
 
 private val logger = KotlinLogging.logger {}
@@ -101,42 +97,12 @@ class LairBossesPlugin(
         }
     }
 
-    private fun payout(boss: LairBosses.LairBoss, dead: Npc, killer: Player) {
-        killer.awardTickets(PointKind.BOSS, boss.tickets)
-        val kc = BossKills.record(killer, boss.key)
-        boss.drops.roll(world, mainRolls = boss.mainRolls).forEach { drop ->
-            val id = runCatching { getRSCM(drop.item) }.getOrNull()
-            if (id == null) {
-                logger.warn { "lair-bosses: unknown drop key ${drop.item} on ${boss.key}" }
-                return@forEach
-            }
-            world.spawn(GroundItem(id, drop.amount, dead.tile, killer))
-            val name = getItem(id).name
-            if (drop.announce) {
-                world.players.forEach {
-                    it.message("<col=ff0000>News: ${killer.username} just received <col=ffae00>$name</col> from ${boss.name}!</col>")
-                }
-            }
-            if (drop.log && CollectionLog.record(killer, id)) {
-                killer.message("<col=ffae00>New Collection Log slot: $name!</col>")
-            }
-        }
-        val petKey = boss.pet
-        if (petKey != null && world.chance(1, boss.petOneIn)) {
-            val pet = runCatching { getRSCM(petKey) }.getOrNull()
-            if (pet != null) {
-                val add = killer.inventory.add(item = pet, amount = 1, assureFullInsertion = false)
-                if (add.completed == 0) killer.bank.add(pet, 1)
-                world.players.forEach {
-                    it.message("<col=ff0000>News: ${killer.username} just received a <col=ffae00>${getItem(pet).name}</col> from ${boss.name}!</col>")
-                }
-                if (CollectionLog.record(killer, pet)) {
-                    killer.message("<col=ffae00>New Collection Log slot: ${getItem(pet).name}!</col>")
-                }
-            }
-        }
-        killer.message("<col=ff0000>You have slain ${boss.name}.</col> Kill count: $kc (+${boss.tickets} Boss Tickets)")
-    }
+    private fun payout(boss: LairBosses.LairBoss, dead: Npc, killer: Player) =
+        BossDeath.payout(
+            world, killer, Tile(dead.tile.x, dead.tile.z, dead.tile.height),
+            key = boss.key, name = boss.name, drops = boss.drops, tickets = boss.tickets,
+            pet = boss.pet, petOneIn = boss.petOneIn, mainRolls = boss.mainRolls,
+        )
 
     companion object {
         /** Where a lair npc was placed — the mole's burrow anchor and the KQ respawn point. */

@@ -104,9 +104,15 @@ object TeleportRegistry {
         built("gwd_kril", "K'ril Tsutsaroth", BOSSES, Tile(2926, 5320, 2), HOSTILE),
         built("gwd_kreearra", "Kree'arra", BOSSES, Tile(2838, 5295, 2), HOSTILE),
         built("gwd_zilyana", "Commander Zilyana", BOSSES, Tile(2907, 5263, 0), HOSTILE),
-        soon("callisto", "Callisto", BOSSES, WILD, wild = 40),
-        soon("vetion", "Vet'ion", BOSSES, WILD, wild = 32),
-        soon("venenatis", "Venenatis", BOSSES, WILD, wild = 33),
+        // Wilderness-boss package (Kronos port #8): the donor's surface lairs, all multi-way.
+        // Landing tiles sit a few squares off each spawn — TUNE in-game.
+        built("callisto", "Callisto", BOSSES, Tile(3287, 3840, 0), WILD, wild = 41),
+        built("vetion", "Vet'ion", BOSSES, Tile(3218, 3782, 0), WILD, wild = 34),
+        built("venenatis", "Venenatis", BOSSES, Tile(3332, 3734, 0), WILD, wild = 28),
+        built("scorpia", "Scorpia", BOSSES, Tile(3232, 10335, 0), WILD, wild = 54),
+        built("chaos_elemental", "Chaos Elemental", BOSSES, Tile(3248, 3918, 0), WILD, wild = 51),
+        built("chaos_fanatic", "Chaos Fanatic", BOSSES, Tile(2976, 3840, 0), WILD, wild = 41),
+        built("crazy_archaeologist", "Crazy Archaeologist", BOSSES, Tile(2972, 3696, 0), WILD, wild = 23),
         soon("theatre_of_blood", "Theatre of Blood", BOSSES),
         soon("chambers_of_xeric", "Chambers of Xeric", BOSSES),
         soon("revenant_caves", "Revenant Caves", BOSSES, WILD, wild = 17),

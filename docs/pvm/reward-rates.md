@@ -46,6 +46,22 @@ weight). Uniques keep OSRS odds; pets and the KBD chase items use the Vorkath-pi
 | Dagannoth Kings | Boss Tickets | 15/king | FoV | ⚠️ |
 | All four | Coin rows | KBD none; Mole none; KQ 15–20k (1/12 of "Other"); DKS 126–3000 | Kronos | ⚠️ |
 
+## Wilderness bosses (PR 3, `content/bosses/wilderness/`)
+
+Main tables are the Kronos `drops/eco/<Name>.json` sub-tables folded flat (each sub-table
+rescaled to ≈ equal weight). Uniques keep OSRS-era odds. All seven lairs are Wilderness PvP.
+
+| Boss | Reward | Rate | Source | Review |
+|---|---|---|---|---|
+| Callisto / Vet'ion / Venenatis | Tyrannical / Ring of the gods / Treasonous ring | 1/512 | OSRS (pre-2023) | ⚠️ |
+| Callisto / Vet'ion / Venenatis / Chaos Elemental | Dragon pickaxe | 1/256 | OSRS (pre-2023) | ⚠️ |
+| Callisto / Vet'ion / Venenatis / Scorpia | Pets (cub / jr / spiderling / offspring) | 1/1000 | FoV (OSRS 1/2000) | ⚠️ |
+| Chaos Elemental | Pet chaos elemental | 1/300 | OSRS | ⚠️ |
+| Chaos Fanatic / Crazy Archaeologist / Scorpia | Odium + Malediction shards 1 / 2 / 3 | 1/256 each | OSRS | ⚠️ |
+| Crazy Archaeologist | Fedora | 1/128 | OSRS | ⚠️ |
+| Boss Tickets | Callisto/Vet'ion/Venenatis 25; Scorpia/Chaos Ele 20; Fanatic/Arch 15 | — | FoV | ⚠️ |
+| Coin rows | Callisto 12–20k (8/~300), Vet'ion 15–20k (6/~330), Venenatis 15–20k (29/~330), Scorpia ≤3987, Chaos Ele 7.5k (4/~230), Fanatic ≤4k, Arch ≤4k | — | Kronos | ⚠️ |
+
 ## Boss Ticket rates already live (for comparison)
 
 | Boss | Tickets/kill | Source |
