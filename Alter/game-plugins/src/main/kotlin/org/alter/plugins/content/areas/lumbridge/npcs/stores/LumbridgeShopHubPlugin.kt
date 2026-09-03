@@ -13,6 +13,7 @@ import org.alter.game.model.shop.Shop
 import org.alter.game.model.shop.ShopItem
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
+import org.alter.plugins.content.economy.SpecialShopGuard
 import org.alter.plugins.content.mechanics.shops.CoinCurrency
 import org.alter.plugins.content.mechanics.shops.ItemCurrency
 import org.alter.plugins.content.mechanics.shops.ShopTabs
@@ -62,8 +63,11 @@ class LumbridgeShopHubPlugin(
     server: Server
 ) : KotlinPlugin(r, world, server) {
 
-    /** One item line in a shop. Null prices fall back to cache value via the currency. */
-    private data class Ware(val key: String, val amount: Int, val sell: Int? = null, val buy: Int? = null)
+    /** One item line in a shop. Null prices fall back to cache value via the currency. [guarded]
+     *  (ticket shops only) registers the ware with [SpecialShopGuard]: gear and cosmetics bought for a
+     *  currency may never be NPC-converted to gp; consumables that ordinary shops also sell stay
+     *  vendorable, so they are marked false. */
+    private data class Ware(val key: String, val amount: Int, val sell: Int? = null, val buy: Int? = null, val guarded: Boolean = true)
 
     // ----------------------------------- shop builders -----------------------------------
 
@@ -88,6 +92,10 @@ class LumbridgeShopHubPlugin(
         createShop(name, ItemCurrency(ticketId, singular, plural), purchasePolicy = PurchasePolicy.BUY_NONE, stockSize = maxOf(stock.size, 1)) {
             stock.forEachIndexed { i, item -> items[i] = item }
         }
+        // Ticket-priced gear/cosmetics may never be NPC-converted to gp (alch, Trading Post, General
+        // Store) — the 2026-09 arbitrage audit found this shelf was the only currency shop that never
+        // registered, so its safety rested on prices alone. Supplies (guarded = false) stay vendorable.
+        SpecialShopGuard.register(wares.filter { it.guarded }.mapNotNull { resolveOrNull(it.key) })
     }
 
     // ----------------------------------- vendor wiring -----------------------------------
@@ -314,19 +322,19 @@ class LumbridgeShopHubPlugin(
     private val bossRewardStock = listOf(
         Ware("item.champions_cape", 1000, 75),   // cosmetic
         Ware("item.divine_halo", 1000, 150),     // cosmetic (premium)
-        Ware("item.shark", 1000, 4),
-        Ware("item.prayer_potion4", 1000, 8),
-        Ware("item.super_combat_potion4", 1000, 20),
-        Ware("item.saradomin_brew4", 1000, 12),
+        Ware("item.shark", 1000, 4, guarded = false),
+        Ware("item.prayer_potion4", 1000, 8, guarded = false),
+        Ware("item.super_combat_potion4", 1000, 20, guarded = false),
+        Ware("item.saradomin_brew4", 1000, 12, guarded = false),
     )
 
     private val voteRewardStock = listOf(
         Ware("item.royal_partyhat", 1000, 40),   // cosmetic
-        Ware("item.super_restore4", 1000, 6),
-        Ware("item.ranging_potion4", 1000, 6),
+        Ware("item.super_restore4", 1000, 6, guarded = false),
+        Ware("item.ranging_potion4", 1000, 6, guarded = false),
         // Shop-economy-redesign §4: the vote shelf was 3 items thin — two QoL consumables.
-        Ware("item.stamina_potion4", 1000, 6),
-        Ware("item.divine_super_combat_potion4", 1000, 15),
+        Ware("item.stamina_potion4", 1000, 6, guarded = false),
+        Ware("item.divine_super_combat_potion4", 1000, 15, guarded = false),
         // The gilded line — rune-stat cosmetics, the vote loyalty chase (§4 asked for
         // cosmetic shelf items). Tickets are tradeable, so non-voters buy off voters;
         // a full set is months of daily votes.

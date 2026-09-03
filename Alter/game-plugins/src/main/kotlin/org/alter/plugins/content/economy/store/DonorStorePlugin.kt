@@ -9,6 +9,7 @@ import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
 import org.alter.plugins.content.economy.PointKind
 import org.alter.plugins.content.economy.PointsCurrency
+import org.alter.plugins.content.economy.SpecialShopGuard
 import org.alter.rscm.RSCM.getRSCM
 
 /**
@@ -47,6 +48,9 @@ class DonorStorePlugin(
             purchasePolicy = PurchasePolicy.BUY_NONE, stockSize = maxOf(stock.size, 1)) {
             stock.forEachIndexed { i, item -> items[i] = item }
         }
+        // Donor cosmetics are tradeable so they can change hands between players, but never through
+        // an NPC gp conversion (alch / Trading Post / General Store) — the audit's guard rule.
+        SpecialShopGuard.register(stock.map { it.item })
 
         onCommand("donorstore", description = "Open the Donor Store (Donor Points)") {
             player.openShop(SHOP_NAME)
