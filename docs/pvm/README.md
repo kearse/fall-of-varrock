@@ -56,7 +56,10 @@
 | 7 | `pvm/07-senntisten-expeditions` | Instanced expedition (Digsite entry): escalating rooms, materials, relics/logs, end boss; Deep Senntisten tier behind flag | FoV-original | ✅ PR open (stacked on 6; boot-verified 360 plugins; v1 = temple region 13722: 3 waves + the Custodian, Digsite winch entry; Deep Senntisten = regions 13466/13721, v2 behind Beneath the Fallen Empire) |
 | 8 | `pvm/08-story-bosses` | Repeatable Zemouregal (after Defender of Varrock) and Convergence manifestation (after The Fracture), flag-gated | FoV-original | ✅ PR open (stacked on 7; boot-verified 363 plugins, Arrav hub posted; Zemouregal 12614 + Arrav ally 12612 in an instanced palace hall, region 12854; the Convergence = Nightmare form 9425 in the instanced Digsite dungeon, region 13465; Bosses tab now 32 rows → client deploy on merge) |
 | 9 | `pvm/09-minigames-a` | Pest Control (Void), Wintertodt | Kronos | ✅ PR open (stacked on 8; boot-verified 368 plugins, braziers/pyromancers + landers posted). Wintertodt region 6462 is BRIDGE-flagged: plane-1 objects register at plane 0, donor coords work as-is; PC = RaidInstance of 10536 per game, party min 1 |
-| 10 | `pvm/10-minigames-b` | Tempoross, Guardians of the Rift, Giants' Foundry, Blast Furnace, Barbarian Assault | OSRS wiki | ⬜ |
+| 10 | `pvm/10-retire-boss-tickets` | Boss Tickets retired from every boss/minigame; Champion's cape / Divine halo at 100 / 500 boss kills | — | ✅ PR #337 open (rebased on main) |
+| 11 | `pvm/12-guardians-of-the-rift` | Guardians of the Rift (operator pick 2026-09-03): temple lobby/round loop, mining → essence → altar portals → Great Guardian, barrier line vs abyssal creatures, points, Rewards Guardian + Temple Supplies (Team 2 approved) — spec `docs/pvm/minigames-b-spec.md` | OSRS wiki | ✅ PR open (stacked on the portal fix #339; boot-verified 383 plugins, temple armed) |
+| 12 | `pvm/13-blast-furnace` | Blast Furnace (operator pick): belt → machine → dispenser, coal bag, ice gloves, OSRS coffer 72k/h (Team 2), no Ordan | OSRS wiki | ✅ PR open (stacked on 11; boot-verified, room armed) |
+| — | deferred | Tempoross, Giants' Foundry, Barbarian Assault (operator: not now) | OSRS wiki | ⬜ |
 
 Cross-cutting, shipped with PR 1: `BossKills` per-boss kill ledger (`::kc`), the
 reward-rate ledger, this tracker.
