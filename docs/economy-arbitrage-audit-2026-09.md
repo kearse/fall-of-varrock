@@ -6,6 +6,21 @@
 > `a0d4eb45` + this branch; the generated tables are in `economy-arbitrage-audit.md` / `.json`
 > next to this file. Re-run after every reprice — the JSON diff is the proof.
 
+## 0. Status (updated as the fix PRs land)
+
+| PR | Change | Loops (S0 / S1 / total) |
+|---|---|---|
+| #332 | auditor + this report (baseline) | 8 / 16 / **91** |
+| #333 | Stylist shelves ≥ cost; every currency shelf registered with the guard; General Store consults it; boot-time price sanity | 8 / 14 / **71** |
+| PR 3 | Trading Post buys commodities only; General Store cap 5,000 → 500; GE backstop split into floor-only raw materials vs two-sided necessities | **0** / 3 / **50** |
+| PR 4 | explicit FoV prices for the shop-sold raw materials (§5, step 3) | target 0 / 0 / 0 above INFO |
+
+What is left after PR 3 is one family: a skilling shop sells a raw material at its tiny cache cost
+(uncut diamond 200, coal 45, willow logs 40, ranarr unf 25, iron ore 17) and the crafted output is
+worth 3–10× more, so the General Store (cost ≤ 500) or alch still pays for it. Three are S1 —
+uncut diamond → cut → alch 1,020; Skilling-Materials coal + iron ore → steel platebody → alch
+1,020; and the mirror view of the ruby loop — the rest are S2/S3 and capped by shop stock.
+
 ## 1. Headline
 
 The economy has **one structural hole**, and it is the whole skilling economy:

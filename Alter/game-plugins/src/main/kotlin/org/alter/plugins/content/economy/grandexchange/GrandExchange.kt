@@ -287,16 +287,20 @@ object GrandExchange {
     private fun backstopSweep(): Boolean {
         var changed = false
         for (o in offers.filter { it.isActive && it.remaining > 0 }) {
-            val ceiling = commodityCeiling(o.itemId) ?: continue // null = not backstopped
-            val floor = commodityFloor(o.itemId) ?: continue
-            if (o.buy && o.price >= ceiling) {
+            val floor = commodityFloor(o.itemId) ?: continue // null = not backstopped
+            if (o.buy) {
+                // The NPC only SELLS two-sided commodities (boring necessities); floor-only raw
+                // materials wait for a player seller (2026-09 audit: unlimited NPC bars/logs/essence
+                // at 100% of value were the tap behind every craft loop).
+                val ceiling = commodityCeiling(o.itemId) ?: continue
+                if (o.price < ceiling) continue
                 val q = o.remaining
                 // Full reservation (o.price each) leaves escrow: ceiling*q is the NPC sink, the
                 // (o.price - ceiling) overpay per item is refunded into collectCoins.
                 o.filled += q; o.escrowCoins -= o.price * q
                 o.collectItems += q; o.collectCoins += (o.price - ceiling) * q
                 o.refreshState(); changed = true; noticeIfComplete(o)
-            } else if (!o.buy && o.price <= floor) {
+            } else if (o.price <= floor) {
                 val q = o.remaining
                 o.filled += q; o.escrowItems -= q
                 o.collectCoins += floor * q
@@ -319,14 +323,17 @@ object GrandExchange {
     fun economyValue(itemId: Int): Int? =
         runCatching { getItem(itemId).cost }.getOrNull()?.takeIf { it > 0 }
 
-    /** Ceiling = full item value; null when not a backstopped commodity, or when it has no value. */
+    /** Ceiling = full item value, only for the commodities the NPC also SELLS
+     *  ([GrandExchangeCommodities.isNpcSold]); null for floor-only raw materials, for anything
+     *  unbacked, and for an item with no value. */
     private fun commodityCeiling(itemId: Int): Int? =
-        if (isBackstopped(itemId)) economyValue(itemId) else null
+        if (GrandExchangeCommodities.isNpcSold(itemId)) economyValue(itemId) else null
 
-    /** Floor = [ItemCurrency.BUY_RATE] (70%) of value — the same rate every NPC buyer pays (coin
-     *  shops, Trading Post), so a sell offer can never do worse here than vendoring. */
+    /** Floor = [ItemCurrency.BUY_RATE] (70%) of value for EVERY commodity (floor-only and two-sided)
+     *  — the same rate every NPC buyer pays (coin shops, Trading Post), so a sell offer can never do
+     *  worse here than vendoring. */
     private fun commodityFloor(itemId: Int): Int? =
-        commodityCeiling(itemId)?.let { (it * ItemCurrency.BUY_RATE).toInt().coerceAtLeast(1) }
+        if (isBackstopped(itemId)) economyValue(itemId)?.let { (it * ItemCurrency.BUY_RATE).toInt().coerceAtLeast(1) } else null
 
     /** The `(min, max)` prices the book will accept for [itemId], or null when it has no value to band
      *  against (see [economyValue]). The offer-setup window shows this so a price is refused *before*
@@ -339,11 +346,12 @@ object GrandExchange {
     /** Guide price (economy value) shown in the offer-setup box; 1 when the item has no value. */
     fun guidePrice(itemId: Int): Int = economyValue(itemId) ?: 1
 
-    /** The store band `(floor, ceiling)` if [itemId] is a backstopped commodity, else null (floats). */
+    /** The store band `(floor, ceiling)` if [itemId] is a backstopped commodity, else null (floats).
+     *  The ceiling is -1 for a floor-only commodity: the NPC buys at the floor but never sells, so the
+     *  top of the market is whatever players ask (the setup wire already treats -1 as "none"). */
     fun band(itemId: Int): Pair<Int, Int>? {
-        val ceil = commodityCeiling(itemId) ?: return null
         val floor = commodityFloor(itemId) ?: return null
-        return floor to ceil
+        return floor to (commodityCeiling(itemId) ?: -1)
     }
 
     // ---- market view (read-only order-book queries for the offer-setup panel) -------------------
