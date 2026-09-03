@@ -100,7 +100,7 @@ final class LofTeleportsData
 			b("Recruit Trials", "Safe Zone", SAFE, 1277),       // bronze sword
 			s("Active Campaign", "Soon", SOON, 1201));          // rune kiteshield
 
-		// Mirrors TeleportRegistry BOSSES row-for-row (25 rows): the hand-built roster was purged;
+		// Mirrors TeleportRegistry BOSSES row-for-row (30 rows): the hand-built roster was purged;
 		// bosses come back one at a time as Kronos ports and flip to b(...) here as they land.
 		cat("Bosses",
 			b("Corp Beast (Event)", "Hostile", HOSTILE, 13734), // spirit shield
@@ -125,6 +125,11 @@ final class LofTeleportsData
 			b("Chaos Elemental", "Wild Lvl 51", WILD, 11995),   // pet chaos elemental
 			b("Chaos Fanatic", "Wild Lvl 41", WILD, 11928),     // odium shard 1
 			b("Crazy Archaeologist", "Wild Lvl 23", WILD, 11990), // fedora
+			b("Kraken", "Hostile", HOSTILE, 12004),             // kraken tentacle (slayer-boss package port)
+			b("Cerberus", "Hostile", HOSTILE, 13231),           // primordial crystal
+			b("Thermonuclear Smoke Devil", "Hostile", HOSTILE, 12002), // occult necklace
+			b("Skotizo (Catacombs altar)", "Hostile", HOSTILE, 21275), // dark claw
+			b("Demonic Gorillas", "Hostile", HOSTILE, 19529),   // zenyte shard
 			s("Theatre of Blood", "Soon", SOON, 22326),         // justiciar faceguard
 			s("Chambers of Xeric", "Soon", SOON, 20997),        // twisted bow
 			s("Revenant Caves", "Soon", SOON, 22557));          // amulet of avarice

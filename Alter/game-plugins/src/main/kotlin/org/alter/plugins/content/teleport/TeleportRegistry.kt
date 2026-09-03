@@ -113,6 +113,13 @@ object TeleportRegistry {
         built("chaos_elemental", "Chaos Elemental", BOSSES, Tile(3248, 3918, 0), WILD, wild = 51),
         built("chaos_fanatic", "Chaos Fanatic", BOSSES, Tile(2976, 3840, 0), WILD, wild = 41),
         built("crazy_archaeologist", "Crazy Archaeologist", BOSSES, Tile(2972, 3696, 0), WILD, wild = 23),
+        // Slayer-boss package (Kronos port #9). Kraken/Cerberus/Thermy are Slayer-gated (87/91/93);
+        // Skotizo needs a dark totem at the catacombs altar. TUNE stand-on tiles in-game.
+        built("kraken", "Kraken", BOSSES, Tile(2276, 10030, 0), HOSTILE),
+        built("cerberus", "Cerberus", BOSSES, Tile(1240, 1240, 0), HOSTILE),
+        built("thermonuclear_smoke_devil", "Thermonuclear Smoke Devil", BOSSES, Tile(2360, 9445, 0), HOSTILE),
+        built("skotizo", "Skotizo (Catacombs altar)", BOSSES, Tile(1665, 10046, 0), HOSTILE),
+        built("demonic_gorillas", "Demonic Gorillas", BOSSES, Tile(2090, 5660, 0), HOSTILE),
         soon("theatre_of_blood", "Theatre of Blood", BOSSES),
         soon("chambers_of_xeric", "Chambers of Xeric", BOSSES),
         soon("revenant_caves", "Revenant Caves", BOSSES, WILD, wild = 17),

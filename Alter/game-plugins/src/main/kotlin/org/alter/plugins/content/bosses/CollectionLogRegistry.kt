@@ -134,6 +134,15 @@ object CollectionLogRegistry {
         Category("chaos_elemental", "Chaos Elemental", "npc.chaos_elemental_2054", listOf("item.dragon_pickaxe", "item.pet_chaos_elemental")),
         Category("chaos_fanatic", "Chaos Fanatic", "npc.chaos_fanatic", listOf("item.odium_shard_1", "item.malediction_shard_1")),
         Category("crazy_archaeologist", "Crazy Archaeologist", "npc.crazy_archaeologist", listOf("item.fedora", "item.odium_shard_2", "item.malediction_shard_2")),
+        // Slayer-boss package (SlayerBosses): each table's log = true rares + pet.
+        Category("kraken", "Kraken", "npc.kraken", listOf("item.trident_of_the_seas_full", "item.kraken_tentacle", "item.jar_of_dirt", "item.pet_kraken")),
+        Category(
+            "cerberus", "Cerberus", "npc.cerberus",
+            listOf("item.primordial_crystal", "item.pegasian_crystal", "item.eternal_crystal", "item.smouldering_stone", "item.jar_of_souls", "item.hellpuppy"),
+        ),
+        Category("thermonuclear_smoke_devil", "Thermonuclear Smoke Devil", "npc.thermonuclear_smoke_devil", listOf("item.occult_necklace", "item.smoke_battlestaff", "item.dragon_chainbody", "item.pet_smoke_devil")),
+        Category("skotizo", "Skotizo", "npc.skotizo", listOf("item.dark_claw", "item.uncut_onyx", "item.jar_of_darkness", "item.skotos")),
+        Category("demonic_gorilla", "Demonic Gorillas", "npc.demonic_gorilla", listOf("item.zenyte_shard", "item.ballista_limbs", "item.ballista_spring", "item.heavy_frame", "item.monkey_tail")),
     )
 
     fun byKey(key: String): Category? = categories.firstOrNull { it.key.equals(key, ignoreCase = true) }
