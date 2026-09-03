@@ -32,7 +32,7 @@ import kotlin.system.exitProcess
  *
  * ```
  * gradlew :game-plugins:economyAudit "-PeconCache=<path to data/cache>" [-PeconMode=audit|selftest]
- *         [-PeconPegs=boss_ticket=1000,blood_money=800] [-PeconFlags=assume-tp-stock,no-guards]
+ *         [-PeconPegs=blood_money=800,vote_ticket=2000] [-PeconFlags=assume-tp-stock,no-guards]
  * ```
  * Writes `docs/economy-arbitrage-audit.{md,json}`. Exit code 1 when any S0/S1 loop, unexplained
  * converter bind or broken recipe adapter exists, so it can gate a CI job later.
@@ -51,7 +51,8 @@ object EconomyAuditTool {
         var cache = "../data/cache"
         var out = "../../docs"
         var mode = "audit"
-        var pegs = "boss_ticket=1000,blood_money=800,vote_ticket=2000,points:DONOR=4444"
+        // Assumed player-market gp per currency unit when no NPC sells it (Boss Tickets are retired).
+        var pegs = "blood_money=800,vote_ticket=2000,points:DONOR=4444"
         var flags = ""
         for (a in argv) {
             when {

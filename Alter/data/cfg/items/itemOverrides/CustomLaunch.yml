@@ -7,12 +7,15 @@
 # reuse them for currency. Slayer/War/Prestige below stay dormant untradeable tokens for now (they'll
 # need stackable ids too when their shops go live). NO equipment block (it would wipe stats — these
 # are tokens, not gear). File MUST start with '---'.
+# RETIRED 2026-09 (design doc 04 §13): no shop charges Boss Tickets and no boss pays them. Existing
+# stacks are inert — untradeable, worthless — until the operator decides on a conversion (see
+# docs/economy-arbitrage-audit-2026-09.md §0). Delete this document with PointKind.BOSS.
 id: 4067
 name: "Boss Ticket"
-examine: "Currency won from Lumbridge's great foes. Spend it at the Reward Exchange, or trade it."
-tradeable: true
+examine: "A retired ticket. It no longer buys anything."
+tradeable: false
 weight: 0.0
-tradeable_on_ge: true
+tradeable_on_ge: false
 cost: 0
 lowalch: 0
 highalch: 0
