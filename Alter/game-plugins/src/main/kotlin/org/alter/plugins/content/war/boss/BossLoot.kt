@@ -87,8 +87,8 @@ object BossLoot {
         contrib.forEach { (player, dmg) ->
             val coins = (splitPool.toLong() * dmg / total).toInt().coerceAtLeast(1)
             world.spawn(GroundItem(coinId, coins, player.tile, player))
-            player.awardTickets(PointKind.BOSS, def.bossPointsPerKill)
-            player.message("<col=4f9b4f>You slew the ${def.displayName}! Your share: ${fmt(coins)} coins and ${def.bossPointsPerKill} Boss Tickets.</col>")
+            // (Boss Tickets retired 2026-09 — the coin share and the drop table are the payout.)
+            player.message("<col=4f9b4f>You slew the ${def.displayName}! Your share: ${fmt(coins)} coins.</col>")
 
             // The HIGH-VALUE tiered table — every contributor rolls it (always supplies + a weighted
             // gear/resource pick + independent chase rolls). The MVP rolls it TWICE for the kill blow.

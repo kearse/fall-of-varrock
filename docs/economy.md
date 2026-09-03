@@ -9,11 +9,13 @@
 - **Tradeable special currencies** (inventory items — can be traded, dropped, and sold for coins
   on the Grand Exchange, player-listed):
   - **Blood Money** (`item.blood_money`) — PK currency.
-  - **Boss Tickets** (`item.boss_ticket`) — PvM currency (migrated from a counter to a ticket item).
-  - **Vote Tickets** (`item.vote_ticket`) — vote currency (likewise a ticket item).
-  - Each has a **coin ceiling** set by an NPC "buy for coins" tab (Quartermaster / Emblem Trader /
-    Valaine) — see the sink table + `economy/grandexchange/CurrencyExchange`. Peg: Boss Ticket
-    ≈ 1,000 gp, Blood Money ≈ 800 gp, Vote Ticket ≈ 2,000 gp (raise as the economy grows).
+  - **Vote Tickets** (`item.vote_ticket`) — vote currency (a ticket item).
+  - No NPC sells either any more (the "buy for coins" tabs went 2026-09-02): their gp value is what
+    players pay on the GE. `GeCurrencyPrices` keeps the ASSUMED pegs (BM ≈ 800, Vote ≈ 2,000) for
+    the auditor only.
+  - **Boss Tickets** (`item.boss_ticket`, 4067) — **RETIRED 2026-09** (design doc 04 §13): no shop
+    charges them, `awardTickets(BOSS, n)` is a no-op, the item is untradeable. `PointKind.BOSS` stays
+    until Team 4 strips the boss plugins' calls; existing stacks await an operator decision on conversion.
 - **Reward points** (persistent counters, NOT items — can't be dropped/traded/duped/GE'd):
   - Prestige, Donor, LMS — spent at sell-only reward shops.
   - **War Effort** — a **lifetime service record**, `PointKind.spendable = false`: it only ever
@@ -46,7 +48,7 @@
 |---|---|---|
 | Shops (buy) | gp | live (general store, smith, etc.) |
 | ~~War Effort reward shelf~~ | — | **removed** (Block 1 PR-4): War Effort is a lifetime record, not a currency |
-| Boss reward shop (valaine) | Boss points | **live** (`LumbridgeShopHubPlugin`) |
+| ~~Boss reward shop (valaine)~~ / ~~Warlord's Armoury ticket wings~~ | — | **removed 2026-09** with the Boss Ticket; the Armoury keeps only the coins Barrows wing; the former catalogue is NPC-unsellable chase gear (`economy/ChaseGearGuardPlugin`) |
 | Duke Horacio ranks | gp (rank purchases) | live (`DukeHoracioPlugin` → `RankPurchase`) — Block 1 PR-5: coins are one requirement; a lifetime War Effort floor (`RankEligibility`, TUNE) gates each rank too, so the sink only fires for players who have served |
 | Lord operation (`::operation <target>`) | gp (500k war-chest, **refunded on a win**) | **live** (`CampaignCommandPlugin`, Block 1 PR-2) — a sink only when the operation is lost; Marches / Grand Marches are free and spend no Realm Supplies |
 | Campaigns / Conquests | Realm Supplies (1,500 / 2,800) + the sponsor's war-chest | live (`CampaignCommandPlugin`) — the only drains on the shared stockpile |
@@ -55,7 +57,7 @@
 | Trading Post trade margin | gp | **live** (`economy/tradingpost`) — 30% buy/sell spread (the shared `ItemCurrency.BUY_RATE` 70%), value-derived; no house stock — the shelf lists only player-sold items. **Since the 2026-09 audit it buys ONLY the GE commodity allowlist** (gear/crafted goods go to the GE) |
 | General Store junk sink | gp | **live** — buys any tradeable with cache cost ≤ 500 (was 5,000) at 70%, refuses guarded wares |
 | Grand Exchange commodity margin | gp | **live (engine)** — NPC floor at 70% of value for every commodity (`grandexchange/GrandExchangeCommodities`); NPC ceiling at 100% ONLY for the two-sided necessities (runes, arrows, cooked food, planks). Raw materials (bars, ores, logs, gems, essence, herbs, raw fish) are floor-only: the NPC never sells them (the 2026-09 audit's S0 tap) |
-| Buy-currency-for-coins tabs | gp | **live** (`grandexchange/CurrencyExchange`) — Boss Tickets 1,000 / Blood Money 800 / Vote Tickets 2,000 gp each; **one-way** (no NPC buyback) so it's a pure coin sink, and it sets the coin ceiling on special-currency gear |
+| ~~Buy-currency-for-coins tabs~~ | — | **removed 2026-09-02** (PR #313): currencies are earned, never bought from an NPC |
 | PK Rewards shop (emblem trader) | Blood Money | **live** (`economy/pk`) — PK supplies (food/potions), no tradeable gear |
 | Gambling rake | gp | **live** (`economy/gambling`) — 5% house edge on dice |
 | Degradable gear charges | gp | planned (Phase 2) |
