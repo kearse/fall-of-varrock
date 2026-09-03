@@ -146,7 +146,7 @@ class PestControlPlugin(
         boat.waiting += p
         p.moveTo(Tile(p.tile.x + offset, p.tile.z, p.tile.height))
         p.unlock()
-        p.message("<col=0000ff>You board the ${boat.lander.title} lander.</col> Commendation points: ${p.attr[PestControl.COMMENDATIONS] ?: 0}. " + departureText(boat))
+        p.message("<col=0000ff>You board the ${boat.lander.title} lander.</col> Pest Control points: ${p.attr[PestControl.PC_POINTS] ?: 0}. " + departureText(boat))
     }
 
     private fun leaveBoat(p: Player, boat: Boat, message: String) {
@@ -314,14 +314,14 @@ class PestControlPlugin(
             p.moveTo(g.lander.exit)
             p.queue {
                 when {
-                    failed -> chatNpc(p, "The Void Knight has fallen, or the portals stood too long —<br>no commendations this time.", npc = squire, title = "Squire")
+                    failed -> chatNpc(p, "The Void Knight has fallen, or the portals stood too long —<br>no Pest Control pointsthis time.", npc = squire, title = "Squire")
                     activity < PestControl.ACTIVITY_NEEDED -> chatNpc(p, "The knights noticed your lack of zeal in that battle and<br>have not presented you with any points.", npc = squire, title = "Squire")
                     else -> {
                         val pts = g.lander.points
-                        p.attr[PestControl.COMMENDATIONS] = (p.attr[PestControl.COMMENDATIONS] ?: 0) + pts
+                        p.attr[PestControl.PC_POINTS] = (p.attr[PestControl.PC_POINTS] ?: 0) + pts
                         val winsKey = when (g.lander) { PestControl.Lander.NOVICE -> PestControl.NOVICE_WINS; PestControl.Lander.INTERMEDIATE -> PestControl.INTERMEDIATE_WINS; PestControl.Lander.VETERAN -> PestControl.VETERAN_WINS }
                         p.attr[winsKey] = (p.attr[winsKey] ?: 0) + 1
-                        chatNpc(p, "Congratulations! You managed to destroy all the portals!<br>We've awarded you $pts Void Knight Commendation points.<br>You now have ${p.attr[PestControl.COMMENDATIONS]}.", npc = squire, title = "Squire")
+                        chatNpc(p, "Congratulations! You managed to destroy all the portals!<br>We've awarded you $pts Pest Control points.<br>You now have ${p.attr[PestControl.PC_POINTS]}.", npc = squire, title = "Squire")
                     }
                 }
             }
@@ -343,7 +343,7 @@ class PestControlPlugin(
     private fun status(p: Player) {
         val g = gameOf(p)
         if (g == null) {
-            p.message("<col=0000ff>Pest Control:</col> commendations ${p.attr[PestControl.COMMENDATIONS] ?: 0}; wins novice ${p.attr[PestControl.NOVICE_WINS] ?: 0} / intermediate ${p.attr[PestControl.INTERMEDIATE_WINS] ?: 0} / veteran ${p.attr[PestControl.VETERAN_WINS] ?: 0}.")
+            p.message("<col=0000ff>Pest Control:</col> Pest Control points${p.attr[PestControl.PC_POINTS] ?: 0}; wins novice ${p.attr[PestControl.NOVICE_WINS] ?: 0} / intermediate ${p.attr[PestControl.INTERMEDIATE_WINS] ?: 0} / veteran ${p.attr[PestControl.VETERAN_WINS] ?: 0}.")
             return
         }
         val portals = g.portals.joinToString(" ") { "${it.def.name}: ${if (it.dead) "<col=ff0000>down</col>" else if (it.shieldDropped) "<col=00ff00>${it.npc?.getCurrentHp() ?: 0}</col>" else "<col=ffff00>shielded</col>"}" }
@@ -356,12 +356,12 @@ class PestControlPlugin(
     private suspend fun QueueTask.knightTalk(p: Player) {
         val id = getRSCM(PestControl.SHOP_KNIGHT_KEY)
         chatNpc(p, "Welcome to the Void Knights' Outpost. The landers leave from the<br>docks — novice, intermediate and veteran. Bring the portals down and<br>the Order pays in commendations; I hold the armoury.", npc = id, title = "Void Knight")
-        chatNpc(p, "You have ${p.attr[PestControl.COMMENDATIONS] ?: 0} commendation points.", npc = id, title = "Void Knight")
+        chatNpc(p, "You have ${p.attr[PestControl.PC_POINTS] ?: 0} Pest Control points.", npc = id, title = "Void Knight")
     }
 
     private suspend fun QueueTask.shop(p: Player) {
         val id = getRSCM(PestControl.SHOP_KNIGHT_KEY)
-        val pts = p.attr[PestControl.COMMENDATIONS] ?: 0
+        val pts = p.attr[PestControl.PC_POINTS] ?: 0
         val page1 = PestControl.REWARDS.take(4)
         val page2 = PestControl.REWARDS.drop(4)
         val first = options(p, *page1.map { "${it.name} (${it.cost})" }.toTypedArray(), "More...", title = "Void Knight armoury — $pts points")
@@ -377,8 +377,8 @@ class PestControlPlugin(
     }
 
     private suspend fun QueueTask.buy(p: Player, reward: PestControl.Reward, npcId: Int) {
-        val pts = p.attr[PestControl.COMMENDATIONS] ?: 0
-        if (pts < reward.cost) { chatNpc(p, "You need ${reward.cost} commendation points for that — you have $pts.", npc = npcId, title = "Void Knight"); return }
+        val pts = p.attr[PestControl.PC_POINTS] ?: 0
+        if (pts < reward.cost) { chatNpc(p, "You need ${reward.cost} Pest Control points for that — you have $pts.", npc = npcId, title = "Void Knight"); return }
         if (p.inventory.freeSlotCount == 0) { p.message("You do not have enough space in your inventory."); return }
         val base = PestControl.ELITE_BASE[reward.key]
         if (base != null) {
@@ -389,7 +389,7 @@ class PestControlPlugin(
             }
             p.inventory.remove(item = baseId, amount = 1)
         }
-        p.attr[PestControl.COMMENDATIONS] = pts - reward.cost
+        p.attr[PestControl.PC_POINTS] = pts - reward.cost
         p.inventory.add(getRSCM(reward.key), 1)
         chatNpc(p, "The Order thanks you. ${reward.name} — ${pts - reward.cost} points remain.", npc = npcId, title = "Void Knight")
     }

@@ -9,11 +9,11 @@ import org.alter.game.model.attr.AttributeKey
  * Three landers at the Void Knights' Outpost (region 10537) dispatch games into a private
  * copy of the battleground (region 10536): four shielded portals, a Void Knight to defend,
  * pests streaming from every unshielded portal, a twenty-minute clock. Destroy all four
- * portals with enough activity and the Order pays commendation points, spent with the
+ * portals with enough activity and the Order pays Pest Control points, spent with the
  * Void Knight at the outpost for Void Knight equipment.
  *
  * FoV tuning: the party minimum is one (low population — the constant is right here),
- * departures every 60 s while someone waits, no coin reward (FoV rule), commendations
+ * departures every 60 s while someone waits, no coin reward (FoV rule), Pest Control points
  * 10 / 15 / 20 per win (the donor paid 14 / 24 / 30; OSRS 2 / 3 / 4 — Team 2 review).
  */
 object PestControl {
@@ -90,7 +90,8 @@ object PestControl {
     /** Elite upgrades consume the plain piece (OSRS: 200 points + the base item). */
     val ELITE_BASE = mapOf("item.elite_void_top" to "item.void_knight_top", "item.elite_void_robe" to "item.void_knight_robe")
 
-    val COMMENDATIONS = AttributeKey<Int>(persistenceKey = "pest_points")
+    /** "Pest Control points" in code and player text — never "commendations" (that word is the war team's Commendation currency). */
+    val PC_POINTS = AttributeKey<Int>(persistenceKey = "pest_points")
     val NOVICE_WINS = AttributeKey<Int>(persistenceKey = "pest_novice_wins")
     val INTERMEDIATE_WINS = AttributeKey<Int>(persistenceKey = "pest_intermediate_wins")
     val VETERAN_WINS = AttributeKey<Int>(persistenceKey = "pest_veteran_wins")

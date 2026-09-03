@@ -7,6 +7,16 @@ bosses keep classic loot), **Kronos** = the donor server's rate, **FoV** = our o
 
 Legend for Team 2: ✅ reviewed · ⚠️ needs review · — n/a.
 
+**Per-boss cache-value expectation** (expected qty × cache cost per kill, per hour, 0.7× realised, band
+vs Team 2's mid/endgame bands): `docs/pvm/cache-value-expectation.md`.
+
+**Team 2 review, 2026-09-03: every table below is approved as-is** (all rows at or below the mid band;
+FoV-original content being low in gp terms is the design — its value is War-Forging inputs + War Effort).
+Standing conditions from Team 2: **no new coin rows anywhere without their sign-off** (coins are the one
+thing their sink caps cannot touch; Zulrah's 17k/kill is the only coin-dominated row and stays), and
+Boss Tickets are being retired — `BossDeath.payout(tickets =)` is the single seam to no-op when they ping.
+The ⚠️ marks below are therefore historical; new or changed rates re-open review.
+
 ## Barrows (PR 1, `content/minigames/barrows/`)
 
 | Reward | Rate | Source | Review |
@@ -152,7 +162,7 @@ Kronos donor + OSRS wiki. Points: light 25, fix 25, root 10, kindling 25, heal 3
 
 | Reward | Rate | Source | Review |
 |---|---|---|---|
-| Commendations per win | novice 10 / intermediate 15 / veteran 20 (activity ≥ 50) | FoV (Kronos 14/24/30, OSRS 2/3/4) | ⚠️ |
+| Pest Control points per win (attr `pest_points`; never "commendations" — that word is the war team's currency) | novice 10 / intermediate 15 / veteran 20 (activity ≥ 50) | FoV (Kronos 14/24/30, OSRS 2/3/4) | ⚠️ |
 | Coins per win | none (Kronos paid 3–7k) | FoV rule | — |
 | Armoury prices | top/robe/mace 250, gloves 150, helms 200, elite top/robe 200 + plain piece | OSRS | ⚠️ |
 | Party minimum / departure | 1 player / 60 s | FoV (low pop) | ⚠️ |

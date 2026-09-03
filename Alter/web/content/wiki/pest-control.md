@@ -1,10 +1,10 @@
 ---
 title: Pest Control
 category: Minigames & Bosses
-summary: The Void Knights' classic - board a lander, defend the Void Knight, destroy four portals, earn commendations for Void Knight equipment.
+summary: The Void Knights' classic - board a lander, defend the Void Knight, destroy four portals, earn Pest Control points for Void Knight equipment.
 order: 19
 updated: 2026-09-03
-infobox: Type = Team combat minigame (private battleground, safe death); Location = Void Knights' Outpost landers (teleport portal, Mini-Games tab); Requirement = Combat 40 / 70 / 100 by lander; Rewards = Commendation points → Void Knight top, robe, gloves, mace, helms, elite void
+infobox: Type = Team combat minigame (private battleground, safe death); Location = Void Knights' Outpost landers (teleport portal, Mini-Games tab); Requirement = Combat 40 / 70 / 100 by lander; Rewards = Pest Control points → Void Knight top, robe, gloves, mace, helms, elite void
 ---
 
 Pest Control plays as it does in OSRS, sized for our population: a lander departs **one
@@ -13,7 +13,7 @@ copy of the battleground.
 
 ## Landers
 
-| Lander | Combat | Commendations per win |
+| Lander | Combat | Pest Control points per win |
 |---|---|---|
 | Novice | 40 | 10 |
 | Intermediate | 70 | 15 |
@@ -39,6 +39,6 @@ early.
 
 ## Rewards
 
-Spend commendations with the **Void Knight** at the outpost (Exchange): void knight top /
+Spend Pest Control points with the **Void Knight** at the outpost (Exchange): void knight top /
 robe / mace (250), gloves (150), the three void helms (200 each), and **elite** top / robe
 (200 each plus the plain piece). No coins.
