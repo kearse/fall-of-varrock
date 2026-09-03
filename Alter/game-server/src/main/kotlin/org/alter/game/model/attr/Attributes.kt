@@ -36,6 +36,16 @@ val MEMBERS_EXPIRES_ATTR = AttributeKey<String>("members_expires")
 val NEW_ACCOUNT_ATTR = AttributeKey<Boolean>()
 
 /**
+ * Epoch millis the account was created — the `accounts` document's `createdAt`, or "now" for an
+ * account registered this session. Absent for legacy accounts that predate the field (treat as
+ * old). SESSION-ONLY on purpose: a [Long] must never ride the save layer (it comes back as an
+ * Int/Double), and the accounts collection is the source of truth anyway. Read by the PK
+ * kill-legitimacy guard (content/economy/pk/PkKillGuard) so throwaway accounts can't feed
+ * Blood Money.
+ */
+val ACCOUNT_CREATED_AT_ATTR = AttributeKey<Long>()
+
+/**
  * Indicates the last [Date.time] the player claimed a free bond (tradeable)
  *   Note| due to GSON/JSON limitation on types, storing [Long] as [String] instead
  *   despite imposed costs

@@ -42,6 +42,15 @@ class Client(world: World) : Player(world) {
     lateinit var uuid: String
 
     /**
+     * The address this session logged in from (dotted quad / IPv6 text), captured from the login
+     * channel; null if it could not be read. Session-only, never persisted. Households, CGNAT and
+     * a reverse proxy all put many real players behind ONE address, so this is only ever used to
+     * DENY a payout (PK Blood Money / Elo between two accounts on the same address) — never to
+     * block a login or a fight.
+     */
+    var remoteIp: String? = null
+
+    /**
      * The xteas for the current log-in session.
      */
     lateinit var currentXteaKeys: IntArray
@@ -159,6 +168,9 @@ class Client(world: World) : Player(world) {
             client.username = block.username
             client.uuid = block.uuid.toString()
             client.currentXteaKeys = block.seed
+            client.remoteIp = runCatching {
+                (request.ctx.channel().remoteAddress() as? java.net.InetSocketAddress)?.address?.hostAddress
+            }.getOrNull()
             return client
         }
 

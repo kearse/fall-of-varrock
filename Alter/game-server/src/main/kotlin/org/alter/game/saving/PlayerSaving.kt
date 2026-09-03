@@ -6,6 +6,7 @@ import net.rsprot.protocol.loginprot.incoming.util.AuthenticationType
 import net.rsprot.protocol.loginprot.incoming.util.LoginBlock
 import org.alter.game.GameContext
 import org.alter.game.model.PlayerUID
+import org.alter.game.model.attr.ACCOUNT_CREATED_AT_ATTR
 import org.alter.game.model.attr.APPEARANCE_SET_ATTR
 import org.alter.game.model.attr.NEW_ACCOUNT_ATTR
 import org.alter.game.model.attr.ONBOARD_STEP_ATTR
@@ -77,6 +78,7 @@ object PlayerSaving {
                 return PlayerLoadResult.INVALID_CREDENTIALS
             }
             client.uid = PlayerUID(client.loginUsername)
+            client.attr.put(ACCOUNT_CREATED_AT_ATTR, System.currentTimeMillis())
             savePlayer(client)
             return PlayerLoadResult.NEW_ACCOUNT
         }
@@ -107,6 +109,8 @@ object PlayerSaving {
                 client.tile = client.world.gameContext.home
                 client.username = displayName ?: client.loginUsername
                 client.uid = PlayerUID(client.username)
+                // Website-registered account: the site stamps createdAt; fall back to now.
+                client.attr.put(ACCOUNT_CREATED_AT_ATTR, accountCreatedAt(accountDoc) ?: System.currentTimeMillis())
                 savePlayer(client)
                 return PlayerLoadResult.NEW_ACCOUNT
             }
@@ -129,6 +133,8 @@ object PlayerSaving {
             if (!loadAttributes(client, document.get("attributes", Document::class.java))) {
                 return PlayerLoadResult.MALFORMED
             }
+            // Session-only account age (legacy accounts without createdAt simply carry none).
+            accountCreatedAt(accountDoc)?.let { client.attr.put(ACCOUNT_CREATED_AT_ATTR, it) }
 
             PlayerLoadResult.LOAD_ACCOUNT
         } catch (e: Exception) {
@@ -136,6 +142,11 @@ object PlayerSaving {
             PlayerLoadResult.MALFORMED
         }
     }
+
+    /** The `accounts` document's creation stamp (epoch millis), written by in-game registration
+     *  ([PlayerDetails.registerAccount]) and by the website; null when the field is absent. */
+    private fun accountCreatedAt(accountDoc: Document?): Long? =
+        (accountDoc?.get("createdAt") as? Number)?.toLong()
 
     private fun validateAuthentication(previousXteas : IntArray, client: Client, block: LoginBlock<*>): PlayerLoadResult {
         when (val auth = block.authentication) {
