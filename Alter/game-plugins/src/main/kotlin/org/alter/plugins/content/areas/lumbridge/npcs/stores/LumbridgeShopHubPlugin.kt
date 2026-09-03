@@ -314,19 +314,14 @@ class LumbridgeShopHubPlugin(
     // TODO: expand with proper UNTRADEABLE rewards (cosmetics, imbues, convenience) once those
     // items exist. Reward shops must never sell tradeable end-game gear (inflation trap).
 
-    // Valaine IS the single Reward Exchange. Boss/Vote Tickets (a tradeable, stackable ITEM currency —
+    // Valaine IS the single Reward Exchange. Vote Tickets (a tradeable, stackable ITEM currency —
     // DECISIONS.md §8) buy COSMETICS (statless overrides in items/itemOverrides/CustomLaunch.yml — pure
     // flair, no power) + real supplies, directly (no redemption step). Prices below are in TICKETS. No
     // tradeable end-game gear (inflation trap). The ticket item IS the currency, so it's not stocked
     // here — you can't buy the currency with the currency.
-    private val bossRewardStock = listOf(
-        Ware("item.champions_cape", 1000, 75),   // cosmetic
-        Ware("item.divine_halo", 1000, 150),     // cosmetic (premium)
-        Ware("item.shark", 1000, 4, guarded = false),
-        Ware("item.prayer_potion4", 1000, 8, guarded = false),
-        Ware("item.super_combat_potion4", 1000, 20, guarded = false),
-        Ware("item.saradomin_brew4", 1000, 12, guarded = false),
-    )
+    // (The Boss-Ticket shelf — Champion's Cape, Divine Halo, supplies — was retired with the ticket in
+    // 2026-09, design doc 04 §13. Those two cosmetics need a new home: a boss kill-count milestone is
+    // the natural one — Team 4's call, see docs/economy-arbitrage-audit-2026-09.md §0.)
 
     private val voteRewardStock = listOf(
         Ware("item.royal_partyhat", 1000, 40),   // cosmetic
@@ -371,7 +366,6 @@ class LumbridgeShopHubPlugin(
         coinShop(BONES, PurchasePolicy.BUY_STOCK, bonesStock)
         coinShop(CRAFTING, PurchasePolicy.BUY_STOCK, craftingStock)
         coinShop(CONSTRUCTION, PurchasePolicy.BUY_STOCK, constructionStock)
-        ticketShop(BOSS_REWARDS, "item.boss_ticket", "Boss Ticket", "Boss Tickets", bossRewardStock)
         ticketShop(VOTE_REWARDS, "item.vote_ticket", "Vote Ticket", "Vote Tickets", voteRewardStock)
         // (The "Buy Vote Tickets" coin tab was removed 2026-09-02 at the operator's request:
         // vote tickets are earned by voting, not bought.)
@@ -412,8 +406,7 @@ class LumbridgeShopHubPlugin(
             ShopTabs.Tab("Farm tools", FARM_TOOLS, icon = "item.rake"))
         singleVendor("npc.sawmill_operator", 3215, 3227, Direction.SOUTH, CONSTRUCTION) // planks/nails
         // Valaine mans the GE hub's desk ring (east slot of the south face), not the shop rows.
-        tabVendor("npc.valaine", 3222, 3209, Direction.SOUTH,                        // boss/vote tickets
-            ShopTabs.Tab("Boss rewards", BOSS_REWARDS, icon = "item.boss_ticket"),
+        tabVendor("npc.valaine", 3222, 3209, Direction.SOUTH,                        // vote tickets
             ShopTabs.Tab("Vote rewards", VOTE_REWARDS, icon = "item.vote_ticket"))
 
         // End-game / war cluster mans the GE hub's desk ring (Quartermaster @ 3223,3211,
@@ -476,7 +469,6 @@ class LumbridgeShopHubPlugin(
         const val BONES = "Lumbridge Bones & Prayer"
         const val CRAFTING = "Lumbridge Crafting Supplies"
         const val CONSTRUCTION = "Lumbridge Construction Supplies"
-        const val BOSS_REWARDS = "Lumbridge Boss Rewards"
         const val VOTE_REWARDS = "Lumbridge Vote Rewards"
     }
 }
