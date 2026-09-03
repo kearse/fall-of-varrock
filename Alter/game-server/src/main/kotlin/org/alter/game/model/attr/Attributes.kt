@@ -173,6 +173,13 @@ val LOOT_KEYS_ATTR = AttributeKey<String>("loot_keys")
 val WAR_SPOILS_ATTR = AttributeKey<String>("war_spoils")
 
 /**
+ * A player's **Hostile Zone extraction record** — how many times they've extracted, their best
+ * haul and where (content/hostilezones/ExtractionRecords). JSON blob, same pattern as
+ * [LOOT_KEYS_ATTR]. Persistent; future achievements/titles read it.
+ */
+val HOSTILE_EXTRACTIONS_ATTR = AttributeKey<String>("hostile_extractions")
+
+/**
  * **Donor points** — the monetization-side currency (master design brief §6: "money buys time and
  * flair"). Earned by donating and as the donor's campaign perk (a 1% cut of a won campaign's loot,
  * MINTED in donor points so it never inflates gp or skims the participants' earned pool — see
