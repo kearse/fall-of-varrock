@@ -46,6 +46,10 @@ object Combat {
     val PJ_TIMER = TimerKey()
     const val PJ_TICKS = 20
 
+    /** Throttle for the "can't attack another player's companion" veto ([canEngage] re-fires every cycle). */
+    private val COMPANION_VETO_MSG_CYCLE_ATTR = AttributeKey<Int>()
+    private const val COMPANION_VETO_MSG_COOLDOWN = 8
+
     fun reset(pawn: Pawn) {
         pawn.attr.remove(COMBAT_TARGET_FOCUS_ATTR)
     }
@@ -324,6 +328,22 @@ object Combat {
             return false
         }
 
+        // Companions are PvE-ONLY in human PvP (operator decision, 2026-09-02): a real player can
+        // never attack someone else's companion, and a companion never attacks a real player (the
+        // companion branch further down). Human fights stay human — no 2v1 with a free-respawning
+        // bodyguard, and no free-XP punchbag either. Bots/NPCs vs companions are unaffected.
+        if (pawn is Player && pawn !is org.alter.plugins.content.bots.PkBot &&
+            target is org.alter.plugins.content.companion.Companion
+        ) {
+            val now = pawn.world.currentCycle
+            val last = pawn.attr[COMPANION_VETO_MSG_CYCLE_ATTR] ?: -COMPANION_VETO_MSG_COOLDOWN
+            if (now - last >= COMPANION_VETO_MSG_COOLDOWN) {
+                pawn.attr[COMPANION_VETO_MSG_CYCLE_ATTR] = now
+                pawn.message("You can't attack another player's companion.")
+            }
+            return false
+        }
+
         val maxDistance =
             when {
                 pawn is Player && pawn.hasLargeViewport() -> Player.LARGE_VIEW_DISTANCE
@@ -414,13 +434,10 @@ object Combat {
             // may attack players anywhere. Real player-vs-player keeps the normal rules.
             //
             // A COMPANION is the exception on BOTH sides: it's a player's property, not a
-            // free-for-all PK bot. On the target side, hitting someone else's companion obeys the
-            // ordinary PvP rules (wilderness zone + level range, or a sanctioned duel/LMS fight) —
-            // without this, anyone could stand in Lumbridge and farm another player's knights, and
-            // an orphaned companion was an endless free-XP punchbag. On the attacker side, a
-            // companion swinging at a REAL player is held to the wilderness safe-zone rule below
-            // (companionVsPlayer) — a stale threat reading must never let it beat someone to death
-            // in a safe zone. Companion vs bots/NPCs keeps the full bypass.
+            // free-for-all PK bot. A real player attacking someone else's companion was already
+            // refused above; a companion swinging at a REAL player is refused in the
+            // companionVsPlayer branch below (PvE-only). Companion vs bots/NPCs keeps the full
+            // bypass, and a bot may still attack a companion.
             val companionVsPlayer = pawn is org.alter.plugins.content.companion.Companion &&
                 target !is org.alter.plugins.content.bots.PkBot
             val botCombat = (pawn is org.alter.plugins.content.bots.PkBot && !companionVsPlayer) ||
@@ -448,9 +465,12 @@ object Combat {
                 // Single-combat: you can't pile a target who's already fighting another PLAYER,
                 // and the PJ timer keeps them protected for 20 ticks after their last exchange.
                 // NPC fights don't count here — a player killing green dragons in the single
-                // zone is exactly who single-way PvP exists to let you attack.
+                // zone is exactly who single-way PvP exists to let you attack. PK bots and
+                // companions are Players in the engine but NPCs in spirit: fighting a Rogue Knight
+                // (or having your own companion beside you) never shields you from a real PKer.
                 if (PvpZones.isSingle(target.tile)) {
-                    val theirTarget = target.getCombatTarget()?.takeIf { it is Player }
+                    val theirTarget = target.getCombatTarget()
+                        ?.takeIf { it is Player && it !is org.alter.plugins.content.bots.PkBot }
                     if (theirTarget != null && theirTarget != pawn) {
                         pawn.message("${target.username} is already in combat.")
                         return false
@@ -461,12 +481,10 @@ object Combat {
                     }
                 }
             } else if (pvp && companionVsPlayer) {
-                // A companion defending its owner against a real player only fights where PvP is
-                // legal at all. ONLY the safe-zone rule — the level bracket and single-way PJ
-                // checks stay waived, or a companion could never join its owner's wilderness 1v1.
-                if (!PvpZones.isWilderness(pawn.tile) || !PvpZones.isWilderness(target.tile)) {
-                    return false
-                }
+                // PvE-only: a companion never raises a blade against a REAL player — not even in
+                // its owner's defence. The brain makes it stand back instead
+                // (CompanionBrain.holdForOwnersFight); the fight is the owner's alone.
+                return false
             }
         }
         return true
