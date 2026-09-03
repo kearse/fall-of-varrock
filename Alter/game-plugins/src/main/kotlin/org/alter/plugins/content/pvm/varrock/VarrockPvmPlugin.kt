@@ -108,7 +108,7 @@ class VarrockPvmPlugin(
             val dead = npc
             hollow = null
             val killer = dead.attr[KILLER_ATTR]?.get() as? Player ?: return@onNpcDeath
-            BossDeath.payout(world, killer, Tile(dead.tile.x, dead.tile.z, dead.tile.height), key = "malachai", name = VarrockPvm.HOLLOW_NAME, drops = VarrockPvm.HOLLOW_DROPS, tickets = VarrockPvm.HOLLOW_TICKETS)
+            BossDeath.payout(world, killer, Tile(dead.tile.x, dead.tile.z, dead.tile.height), key = "malachai", name = VarrockPvm.HOLLOW_NAME, drops = VarrockPvm.HOLLOW_DROPS)
             killer.addPoints(PointKind.WAR_EFFORT, VarrockPvm.HOLLOW_WAR_EFFORT)
             WarForge.awardCommendations(killer, VarrockPvm.HOLLOW_COMMENDATIONS)
             ArravIntelligence.onHollowKill(killer)
@@ -121,7 +121,7 @@ class VarrockPvmPlugin(
             warden = null
             wardenRespawnAt = world.currentCycle + VarrockPvm.WARDEN_RESPAWN_TICKS
             val killer = dead.attr[KILLER_ATTR]?.get() as? Player ?: return@onNpcDeath
-            BossDeath.payout(world, killer, Tile(dead.tile.x, dead.tile.z, dead.tile.height), key = "palace_warden", name = VarrockPvm.WARDEN_NAME, drops = VarrockPvm.WARDEN_DROPS, tickets = VarrockPvm.WARDEN_TICKETS)
+            BossDeath.payout(world, killer, Tile(dead.tile.x, dead.tile.z, dead.tile.height), key = "palace_warden", name = VarrockPvm.WARDEN_NAME, drops = VarrockPvm.WARDEN_DROPS)
             killer.addPoints(PointKind.WAR_EFFORT, VarrockPvm.WARDEN_WAR_EFFORT)
             WarForge.awardCommendations(killer, VarrockPvm.WARDEN_COMMENDATIONS)
             if (world.chance(1, VarrockPvm.WARDEN_EMBER_ONE_IN)) {

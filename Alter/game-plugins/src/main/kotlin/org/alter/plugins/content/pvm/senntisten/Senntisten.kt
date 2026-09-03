@@ -97,7 +97,6 @@ object Senntisten {
             DropEntry("item.super_restore4", 2, 3, weight = 5),
         ),
     )
-    const val CUSTODIAN_TICKETS = 25
     const val CUSTODIAN_WAR_EFFORT = 30
     const val CUSTODIAN_COMMENDATIONS = 4
 

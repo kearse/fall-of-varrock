@@ -26,7 +26,7 @@ The Mahjarrat who broke Varrock, met again in his stolen palace — and this tim
 
 **Drops (every kill):** 3 Relics of old Varrock, 15 Varrock salvage, plus runes, bars, bones and
 potions. **Chase:** *Arrav's axe* (1/150, cosmetic), *Mahjarrat notes* (two volumes, 1/40 each).
-**Pays** 40 Boss Tickets, 50 War Effort, 6 Commendations; a **Warden's ember** one kill in five.
+**Pays** 50 War Effort, 6 Commendations; a **Warden's ember** one kill in five.
 
 ## The Convergence
 
@@ -40,7 +40,7 @@ Senntisten. Magic only — bring the prayer and the restores.
 - At two-thirds and one-third health it births **three echoes**.
 
 **Drops (every kill):** 4 relics, 20 salvage and a **Warden's ember**, plus high runes, bars,
-bones and potions. **Pays** 60 Boss Tickets, 80 War Effort, 10 Commendations. Your Convergence
+bones and potions. **Pays** 80 War Effort, 10 Commendations. Your Convergence
 kill count is recorded — the *Fracture-Sealer* standing will hang on it.
 
 `::kc` tracks both.

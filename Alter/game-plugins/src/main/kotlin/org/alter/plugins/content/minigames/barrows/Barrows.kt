@@ -16,8 +16,6 @@ import org.alter.game.model.move.moveTo
 import org.alter.plugins.content.bosses.BossKills
 import org.alter.plugins.content.bosses.CollectionLog
 import org.alter.plugins.content.combat.getCombatTarget
-import org.alter.plugins.content.economy.PointKind
-import org.alter.plugins.content.economy.awardTickets
 import org.alter.rscm.RSCM.getRSCM
 
 private val logger = KotlinLogging.logger {}
@@ -79,7 +77,6 @@ object Barrows {
 
     const val LEVEL_CAP = 1000
     const val MAX_ROLLS = 7
-    const val TICKETS_PER_BROTHER = 3
     const val PIECE_BASE = 450
     const val PIECE_PER_BROTHER = 58
     const val CLUE_BASE = 200
@@ -409,14 +406,12 @@ object Barrows {
             give(p, "item.clue_scroll_elite", 1)
         }
 
-        val tickets = TICKETS_PER_BROTHER * brothers
-        p.awardTickets(PointKind.BOSS, tickets)
         val chests = (p.attr[CHESTS_ATTR] ?: 0) + 1
         p.attr[CHESTS_ATTR] = chests
         BossKills.record(p, "barrows")
         p.message("<col=801700>You loot the Barrows chest.</col> Reward potential $potential, $rolls rolls" +
             (if (pieces > 0) ", $pieces Barrows piece${if (pieces > 1) "s" else ""}" else "") +
-            (if (tickets > 0) ", +$tickets Boss Tickets" else "") + ".")
+            ".")
         p.message("Your Barrows chest count is: <col=ff0000>$chests</col>.")
 
         clear(p)

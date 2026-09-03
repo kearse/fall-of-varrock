@@ -17,8 +17,6 @@ import org.alter.game.plugin.PluginRepository
 import org.alter.plugins.content.bosses.CollectionLog
 import org.alter.plugins.content.bosses.DropEntry
 import org.alter.plugins.content.bosses.DropTable
-import org.alter.plugins.content.economy.PointKind
-import org.alter.plugins.content.economy.awardTickets
 import org.alter.plugins.content.companion.CompanionPolicy
 import org.alter.plugins.content.raids.RaidInstance
 import org.alter.rscm.RSCM.getRSCM
@@ -37,7 +35,7 @@ private val logger = KotlinLogging.logger {}
  *  - **Exit**: dying teleports you home (instanced deaths are safe); winning spawns the
  *    Zul-Andra return portal (object 11701) beside the shrine.
  *  - **Death**: the drop table rolls TWICE (Kronos `dropItems` calls super twice) +
- *    Boss Tickets + Collection Log + rare broadcast.
+ *    Collection Log + rare broadcast.
  */
 class ZulrahPlugin(
     r: PluginRepository,
@@ -110,14 +108,13 @@ class ZulrahPlugin(
             logger.warn { "Zulrah: return portal $portalId has no bindable cache option." }
         }
 
-        // ── Death: double drop roll + tickets + log + broadcast, on every form's id.
+        // ── Death: double drop roll + log + broadcast, on every form's id.
         for (key in listOf("npc.zulrah", "npc.zulrah_2043", "npc.zulrah_2044")) {
             onNpcDeath(key) {
                 val boss = npc
                 ZulrahCombatPlugin.cleanupEncounter(world, boss)
                 val killer = boss.attr[KILLER_ATTR]?.get() as? Player ?: return@onNpcDeath
 
-                killer.awardTickets(PointKind.BOSS, BOSS_POINTS_PER_KILL)
                 repeat(2) {
                     table.roll(world).forEach { drop ->
                         val id = getRSCM(drop.item)
@@ -133,7 +130,7 @@ class ZulrahPlugin(
                         }
                     }
                 }
-                killer.message("<col=ff0000>You have slain Zulrah.</col> (+$BOSS_POINTS_PER_KILL Boss Tickets)")
+                killer.message("<col=ff0000>You have slain Zulrah.</col>")
             }
         }
     }
@@ -172,6 +169,5 @@ class ZulrahPlugin(
         /** Zul-Andra dock — entry boat, exit portal target, and instance exit tile. */
         val ZUL_ANDRA_DOCK = Tile(2199, 3056, 0)
 
-        const val BOSS_POINTS_PER_KILL = 20
     }
 }

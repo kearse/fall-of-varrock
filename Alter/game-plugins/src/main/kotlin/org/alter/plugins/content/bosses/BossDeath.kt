@@ -7,18 +7,19 @@ import org.alter.game.model.Tile
 import org.alter.game.model.World
 import org.alter.game.model.entity.GroundItem
 import org.alter.game.model.entity.Player
-import org.alter.plugins.content.economy.PointKind
-import org.alter.plugins.content.economy.awardTickets
 import org.alter.rscm.RSCM.getRSCM
 
 private val logger = KotlinLogging.logger {}
 
 /**
  * The **shared boss payout** — the KBD/Vorkath death pattern in one place so every ported
- * boss pays the same way: Boss Tickets, the kill ledger, a [DropTable] roll spawned as
- * owned ground items (rare broadcast + Collection Log), and an optional pet roll that goes
- * to inventory or bank. Unknown item keys are logged and skipped rather than thrown, so a
- * typo in a table can never kill a death handler.
+ * boss pays the same way: the kill ledger (with its kill-count milestones), a [DropTable]
+ * roll spawned as owned ground items (rare broadcast + Collection Log), and an optional pet
+ * roll that goes to inventory or bank. Unknown item keys are logged and skipped rather than
+ * thrown, so a typo in a table can never kill a death handler.
+ *
+ * Boss Tickets were retired with the economy team's #336 (2026-09-03): bosses pay in drops,
+ * nothing replaces the ticket.
  */
 object BossDeath {
 
@@ -29,12 +30,10 @@ object BossDeath {
         key: String,
         name: String,
         drops: DropTable,
-        tickets: Int,
         pet: String? = null,
         petOneIn: Int = 0,
         mainRolls: Int = 1,
     ) {
-        killer.awardTickets(PointKind.BOSS, tickets)
         val kc = BossKills.record(killer, key)
 
         drops.roll(world, mainRolls = mainRolls).forEach { drop ->
@@ -70,6 +69,6 @@ object BossDeath {
             }
         }
 
-        killer.message("<col=ff0000>You have slain $name.</col> Kill count: $kc (+$tickets Boss Tickets)")
+        killer.message("<col=ff0000>You have slain $name.</col> Kill count: $kc")
     }
 }

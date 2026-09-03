@@ -25,7 +25,6 @@ object LairBosses {
         /** Every npc form spawned/managed for this boss (spawn tile + walk radius). */
         val spawns: List<Spawn>,
         val drops: DropTable,
-        val tickets: Int,
         val pet: String?,
         val petOneIn: Int,
         val mainRolls: Int = 1,
@@ -77,7 +76,7 @@ object LairBosses {
                 DropEntry("item.draconic_visage", 1, 1, oneInN = 1000, announce = true, log = true),
             ),
         ),
-        tickets = 20, pet = "item.prince_black_dragon", petOneIn = 1000,
+        pet = "item.prince_black_dragon", petOneIn = 1000,
     )
 
     // ───────────────────────────── Giant Mole ─────────────────────────────
@@ -123,7 +122,7 @@ object LairBosses {
                 DropEntry("item.clue_scroll_elite", 1, 1, weight = 3),
             ),
         ),
-        tickets = 15, pet = "item.baby_mole", petOneIn = 1000,
+        pet = "item.baby_mole", petOneIn = 1000,
     )
 
     // ───────────────────────────── Kalphite Queen ─────────────────────────────
@@ -189,7 +188,7 @@ object LairBosses {
                 DropEntry("item.jar_of_sand", 1, 1, oneInN = 128, log = true),
             ),
         ),
-        tickets = 25, pet = "item.kalphite_princess", petOneIn = 1000,
+        pet = "item.kalphite_princess", petOneIn = 1000,
     )
 
     // ───────────────────────────── Dagannoth Kings ─────────────────────────────
@@ -247,7 +246,7 @@ object LairBosses {
                 DropEntry("item.dragon_axe", 1, 1, oneInN = 128, announce = true, log = true),
             ),
         ),
-        tickets = 15, pet = "item.pet_dagannoth_rex", petOneIn = 1000,
+        pet = "item.pet_dagannoth_rex", petOneIn = 1000,
     )
 
     val DAGANNOTH_PRIME = LairBoss(
@@ -298,7 +297,7 @@ object LairBosses {
                 DropEntry("item.dragon_axe", 1, 1, oneInN = 128, announce = true, log = true),
             ),
         ),
-        tickets = 15, pet = "item.pet_dagannoth_prime", petOneIn = 1000,
+        pet = "item.pet_dagannoth_prime", petOneIn = 1000,
     )
 
     val DAGANNOTH_SUPREME = LairBoss(
@@ -353,7 +352,7 @@ object LairBosses {
                 DropEntry("item.dragon_axe", 1, 1, oneInN = 128, announce = true, log = true),
             ),
         ),
-        tickets = 15, pet = "item.pet_dagannoth_supreme", petOneIn = 1000,
+        pet = "item.pet_dagannoth_supreme", petOneIn = 1000,
     )
 
     /** The twelve spinolyps ringing the kings' chamber (Kronos waterbirth.json, the 4448 set). */

@@ -20,7 +20,7 @@ trident or the best spell you have. It never leaves its pool. When it dies the t
 and the pools reset a few seconds later.
 
 **Uniques:** Trident of the seas (1/512), Kraken tentacle (1/400), Jar of dirt (1/1000), Pet
-kraken (1/1000). 20 Boss Tickets.
+kraken (1/1000).
 
 ## Cerberus (91 Slayer)
 
@@ -36,7 +36,7 @@ with three signature moves:
   the final flare hurts more. Step off.
 
 **Uniques:** Primordial, Pegasian and Eternal crystals (1/512 each), Smouldering stone (1/512),
-Jar of souls (1/1000), Hellpuppy (1/1000). 30 Boss Tickets.
+Jar of souls (1/1000), Hellpuppy (1/1000).
 
 ## Thermonuclear Smoke Devil (93 Slayer)
 
@@ -45,7 +45,7 @@ Portal → **Thermonuclear Smoke Devil**, deep in the smoke devil dungeon (multi
 one it spits a fast ranged attack (2 ticks, max 8); Protect from Missiles.
 
 **Uniques:** Occult necklace (1/350), Smoke battlestaff (1/512), Dragon chainbody (1/1000), Pet
-smoke devil (1/1000). 20 Boss Tickets.
+smoke devil (1/1000).
 
 ## Skotizo (dark totem)
 
@@ -57,7 +57,7 @@ and casts (max 38). Four **altars** around the room wake on their own; every awa
 returned to the catacombs.
 
 **Uniques:** Dark claw (1/25), Skotos pet (1/65), Uncut onyx (1/128), Jar of darkness (1/500);
-always a hard clue and 1–3 ancient shards. 30 Boss Tickets.
+always a hard clue and 1–3 ancient shards.
 
 ## Demonic Gorillas
 
@@ -69,6 +69,6 @@ just used, so bring two styles. Its **boulder** lands on your tile every so ofte
 of your health — move when it raises its arms.
 
 **Uniques:** Zenyte shard (1/300), Ballista limbs, Ballista spring, Heavy frame and Monkey tail
-(1/500 each). 5 Boss Tickets per gorilla.
+(1/500 each).
 
 All uniques and pets are **Collection Log** entries; every boss counts toward `::kc`.

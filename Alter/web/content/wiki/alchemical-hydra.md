@@ -58,7 +58,7 @@ thrownaxes among them). The chase drops, all Collection Log entries:
 | Jar of chemicals | 1/500 |
 | Ikkle hydra (pet) | 1/1000 |
 
-Kills pay **25 Boss Tickets**. After a kill, a fresh hydra rises in the chamber —
+Every kill rolls the drop table and counts toward `::kc`. After a kill, a fresh hydra rises in the chamber —
 chain away.
 
 ## See also

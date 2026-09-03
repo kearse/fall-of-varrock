@@ -55,8 +55,8 @@ The chest uses the Old School reward rules:
   runes, bolt racks, key halves and, at full potential, the dragon med helm.
 - An **elite clue scroll** rolls separately (1/200, improving to 1/29 with all six brothers).
 
-Every Barrows piece is a **Collection Log** entry, and each chest pays **3 Boss Tickets per
-brother killed**. `::kc` tracks your chest count and per-brother kills.
+Every Barrows piece is a **Collection Log** entry. `::kc` tracks your chest count and
+per-brother kills, and every chest counts toward the boss kill milestones.
 
 ## See also
 

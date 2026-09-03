@@ -19,8 +19,6 @@ import org.alter.game.plugin.PluginRepository
 import org.alter.plugins.content.bosses.BossKills
 import org.alter.plugins.content.bosses.CollectionLog
 import org.alter.plugins.content.companion.CompanionPolicy
-import org.alter.plugins.content.economy.PointKind
-import org.alter.plugins.content.economy.awardTickets
 import org.alter.plugins.content.raids.RaidInstance
 import org.alter.plugins.content.war.WarNpcNames
 import org.alter.rscm.RSCM.getRSCM
@@ -197,14 +195,12 @@ class MoonsPlugin(
             }
         }
         repeat(rolls) { Moons.COMMON.roll(world).forEach { give(p, it.item, it.amount) } }
-        val tickets = Moons.TICKETS_PER_MOON * subduedMoons.size
-        p.awardTickets(PointKind.BOSS, tickets)
         val chests = (p.attr[Moons.CHESTS_ATTR] ?: 0) + 1
         p.attr[Moons.CHESTS_ATTR] = chests
         BossKills.record(p, "lunar_chest")
         p.message(
             "<col=801700>You claim the Lunar Chest.</col> ${subduedMoons.size} Moon${if (subduedMoons.size > 1) "s" else ""}, $rolls roll${if (rolls > 1) "s" else ""}" +
-                (if (uniques > 0) ", $uniques unique${if (uniques > 1) "s" else ""}" else "") + ", +$tickets Boss Tickets. Chest count: $chests.",
+                (if (uniques > 0) ", $uniques unique${if (uniques > 1) "s" else ""}" else "") + ". Chest count: $chests.",
         )
         run.subdued = 0
         run.unlocked = true

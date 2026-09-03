@@ -51,7 +51,6 @@ it with any number subdued this run:
   - Blood Moon: helm, chestplate, tassets, **Dual macuahuitl**
   - Blue Moon: helm, chestplate, tassets, **Blue moon spear**
   - Eclipse Moon: helm, chestplate, tassets, **Eclipse atlatl**
-- **10 Boss Tickets** per Moon.
 
 Claiming re-locks the run. All twelve uniques are **Collection Log** entries; `::kc` tracks each
 Moon and your chest count.

@@ -37,5 +37,4 @@ uniques, all **Collection Log** entries, at Old School odds:
 | Prime | Seers ring, Mud battlestaff, Dragon axe |
 | Supreme | Archers ring, Seercull, Dragon axe |
 
-Each king also has a **1/1000** pet. Kills pay **15 Boss Tickets** per king and count toward
-`::kc` individually.
+Each king also has a **1/1000** pet. Kills count toward `::kc` individually.

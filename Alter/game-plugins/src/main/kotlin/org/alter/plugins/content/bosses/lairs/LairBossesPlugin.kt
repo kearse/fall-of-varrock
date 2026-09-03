@@ -21,7 +21,7 @@ private val logger = KotlinLogging.logger {}
 /**
  * Wires the [LairBosses] registry into the world: region force-load + multi-combat flags,
  * direct spawns at world init (engine-respawned by their def's `respawnDelay`), the shared
- * death → loot / tickets / Collection Log / kill ledger / pet hook, and the Kalphite Queen's
+ * death → loot / Collection Log / kill ledger / pet hook, and the Kalphite Queen's
  * two-form life cycle (form 1 dies into form 2 at full health after the donor's transform
  * animation and 11-tick immunity; form 2 pays out and form 1 rises again 50 ticks later).
  */
@@ -100,7 +100,7 @@ class LairBossesPlugin(
     private fun payout(boss: LairBosses.LairBoss, dead: Npc, killer: Player) =
         BossDeath.payout(
             world, killer, Tile(dead.tile.x, dead.tile.z, dead.tile.height),
-            key = boss.key, name = boss.name, drops = boss.drops, tickets = boss.tickets,
+            key = boss.key, name = boss.name, drops = boss.drops,
             pet = boss.pet, petOneIn = boss.petOneIn, mainRolls = boss.mainRolls,
         )
 

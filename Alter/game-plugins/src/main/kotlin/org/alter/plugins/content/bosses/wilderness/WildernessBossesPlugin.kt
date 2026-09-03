@@ -47,7 +47,7 @@ class WildernessBossesPlugin(
                 if (killer != null) {
                     BossDeath.payout(
                         world, killer, Tile(dead.tile.x, dead.tile.z, dead.tile.height),
-                        key = boss.key, name = boss.name, drops = boss.drops, tickets = boss.tickets,
+                        key = boss.key, name = boss.name, drops = boss.drops,
                         pet = boss.pet, petOneIn = boss.petOneIn,
                     )
                 }

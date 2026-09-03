@@ -60,7 +60,7 @@ The chase drops, all Collection Log entries:
 | Tanzanite / Magma mutagen | 1/1500 |
 | Pet snakeling | 1/1000 |
 
-Kills pay **20 Boss Tickets**. After the kill, a portal rises beside the shrine to take
+Kills count toward `::kc`. After the kill, a portal rises beside the shrine to take
 you back to Zul-Andra.
 
 ## See also

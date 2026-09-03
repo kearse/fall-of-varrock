@@ -131,7 +131,6 @@ object VarrockPvm {
             DropEntry("item.super_restore4", 2, 2, weight = 5),
         ),
     )
-    const val HOLLOW_TICKETS = 15
     const val HOLLOW_WAR_EFFORT = 20
     const val HOLLOW_COMMENDATIONS = 3
 
@@ -159,7 +158,6 @@ object VarrockPvm {
             DropEntry("item.saradomin_brew4", 3, 3, weight = 5),
         ),
     )
-    const val WARDEN_TICKETS = 30
     const val WARDEN_WAR_EFFORT = 40
     const val WARDEN_COMMENDATIONS = 5
     const val WARDEN_EMBER_ONE_IN = 8

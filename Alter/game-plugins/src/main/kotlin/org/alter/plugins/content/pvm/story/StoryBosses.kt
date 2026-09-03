@@ -77,7 +77,6 @@ object StoryBosses {
             DropEntry("item.mahjarrat_notes_kz", 1, 1, oneInN = 40, log = true),
         ),
     )
-    const val ZEMOUREGAL_TICKETS = 40
     const val ZEMOUREGAL_WAR_EFFORT = 50
     const val ZEMOUREGAL_COMMENDATIONS = 6
     const val ZEMOUREGAL_EMBER_ONE_IN = 5
@@ -111,7 +110,6 @@ object StoryBosses {
             DropEntry("item.saradomin_brew4", 3, 4, weight = 4),
         ),
     )
-    const val CONVERGENCE_TICKETS = 60
     const val CONVERGENCE_WAR_EFFORT = 80
     const val CONVERGENCE_COMMENDATIONS = 10
     const val CONVERGENCE_EMBERS = 1

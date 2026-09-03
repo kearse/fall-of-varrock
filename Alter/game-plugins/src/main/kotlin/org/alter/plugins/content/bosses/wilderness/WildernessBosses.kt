@@ -28,7 +28,6 @@ object WildernessBosses {
         val wildLevel: Int,
         val regions: IntArray,
         val drops: DropTable,
-        val tickets: Int,
         val pet: String?,
         val petOneIn: Int,
     )
@@ -60,7 +59,7 @@ object WildernessBosses {
             ),
             rare = listOf(rare("item.dragon_pickaxe", 256), rare("item.tyrannical_ring", 512)),
         ),
-        tickets = 25, pet = "item.callisto_cub", petOneIn = 1000,
+        pet = "item.callisto_cub", petOneIn = 1000,
     )
 
     // ───────────────────────────── Vet'ion ─────────────────────────────
@@ -91,7 +90,7 @@ object WildernessBosses {
             ),
             rare = listOf(rare("item.dragon_pickaxe", 256), rare("item.ring_of_the_gods", 512)),
         ),
-        tickets = 25, pet = "item.vetion_jr", petOneIn = 1000,
+        pet = "item.vetion_jr", petOneIn = 1000,
     )
 
     // ───────────────────────────── Venenatis ─────────────────────────────
@@ -116,7 +115,7 @@ object WildernessBosses {
             ),
             rare = listOf(rare("item.dragon_pickaxe", 256), rare("item.treasonous_ring", 512)),
         ),
-        tickets = 25, pet = "item.venenatis_spiderling", petOneIn = 1000,
+        pet = "item.venenatis_spiderling", petOneIn = 1000,
     )
 
     // ───────────────────────────── Scorpia ─────────────────────────────
@@ -139,7 +138,7 @@ object WildernessBosses {
             ),
             rare = listOf(rare("item.odium_shard_3", 256), rare("item.malediction_shard_3", 256)),
         ),
-        tickets = 20, pet = "item.scorpias_offspring", petOneIn = 1000,
+        pet = "item.scorpias_offspring", petOneIn = 1000,
     )
 
     // ───────────────────────────── Chaos Elemental ─────────────────────────────
@@ -166,7 +165,7 @@ object WildernessBosses {
             ),
             rare = listOf(rare("item.dragon_pickaxe", 256)),
         ),
-        tickets = 20, pet = "item.pet_chaos_elemental", petOneIn = 300,
+        pet = "item.pet_chaos_elemental", petOneIn = 300,
     )
 
     // ───────────────────────────── Chaos Fanatic ─────────────────────────────
@@ -191,7 +190,7 @@ object WildernessBosses {
             ),
             rare = listOf(rare("item.odium_shard_1", 256), rare("item.malediction_shard_1", 256)),
         ),
-        tickets = 15, pet = null, petOneIn = 0,
+        pet = null, petOneIn = 0,
     )
 
     // ───────────────────────────── Crazy Archaeologist ─────────────────────────────
@@ -216,7 +215,7 @@ object WildernessBosses {
             ),
             rare = listOf(rare("item.fedora", 128), rare("item.odium_shard_2", 256), rare("item.malediction_shard_2", 256)),
         ),
-        tickets = 15, pet = null, petOneIn = 0,
+        pet = null, petOneIn = 0,
     )
 
     val all: List<WildBoss> = listOf(CALLISTO, VETION, VENENATIS, SCORPIA, CHAOS_ELEMENTAL, CHAOS_FANATIC, CRAZY_ARCHAEOLOGIST)

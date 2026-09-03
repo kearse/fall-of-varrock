@@ -26,5 +26,5 @@ Chase it down and keep hitting.
 
 Every kill drops **big bones, a mole claw and 1–3 mole skins** plus a roll on the classic
 table (adamant/mithril gear, rune med helm, runes, noted iron ore, sharks, yew logs, oyster
-pearls, elite clues). The **Baby mole** pet (1/1000) is the Collection Log chase. Kills pay
-**15 Boss Tickets** and count toward `::kc`.
+pearls, elite clues). The **Baby mole** pet (1/1000) is the Collection Log chase. Kills count
+toward `::kc`.

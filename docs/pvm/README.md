@@ -61,6 +61,11 @@
 Cross-cutting, shipped with PR 1: `BossKills` per-boss kill ledger (`::kc`), the
 reward-rate ledger, this tracker.
 
+**Boss Tickets retired 2026-09-03** (economy #336 + our `pvm/10-retire-boss-tickets`, stacked on 9):
+`BossDeath.payout` has no ticket count and no boss or minigame awards tickets; `BossKills` pays the
+Champion's cape / Divine halo at 100 / 500 total boss kills. Team 2 approved every reward table
+as-is on the same day (`docs/pvm/cache-value-expectation.md`).
+
 ## Cross-team seams (do not edit; request)
 
 | Owner | Files | What we need from them |

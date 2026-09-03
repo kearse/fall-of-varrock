@@ -18,8 +18,6 @@ import org.alter.plugins.content.bosses.CollectionLog
 import org.alter.plugins.content.bosses.DropEntry
 import org.alter.plugins.content.bosses.DropTable
 import org.alter.plugins.content.companion.CompanionPolicy
-import org.alter.plugins.content.economy.PointKind
-import org.alter.plugins.content.economy.awardTickets
 import org.alter.plugins.content.raids.RaidInstance
 import org.alter.rscm.RSCM.getRSCM
 
@@ -34,7 +32,7 @@ import org.alter.rscm.RSCM.getRSCM
  *    death/logout (allocator attributes), and instanced deaths are already SAFE deaths.
  *  - **Poke to wake**: the boss spawns as the sleeping form (8059); "Poke" plays the
  *    Kronos wake sequence (player 827, wake 7950) and swaps in the fighting form (8061).
- *  - **Death**: drops + Boss Tickets + Collection Log + rare broadcast (the KBD pattern),
+ *  - **Death**: drops + Collection Log + rare broadcast (the KBD pattern),
  *    then a fresh sleeping Vorkath rises for chain kills in the same instance.
  */
 class VorkathPlugin(
@@ -126,7 +124,6 @@ class VorkathPlugin(
             val killer = boss.attr[KILLER_ATTR]?.get() as? Player
 
             if (killer != null) {
-                killer.awardTickets(PointKind.BOSS, BOSS_POINTS_PER_KILL)
                 // Vorkath rolls the main drop table TWICE (OSRS/donor); the head/visage rares
                 // still roll once each (mainRolls only multiplies the main tier).
                 table.roll(world, mainRolls = 2).forEach { drop ->
@@ -142,7 +139,7 @@ class VorkathPlugin(
                         killer.message("<col=ffae00>New Collection Log slot: $name!</col>")
                     }
                 }
-                killer.message("<col=ff0000>You have slain Vorkath.</col> (+$BOSS_POINTS_PER_KILL Boss Tickets)")
+                killer.message("<col=ff0000>You have slain Vorkath.</col>")
             }
 
             // Chain kills: after the death anim settles, the sleeping form returns at the
@@ -196,6 +193,5 @@ class VorkathPlugin(
         val VORKATH_SPAWN_TILE = AttributeKey<Tile>()
         val VORKATH_WAKING = AttributeKey<Boolean>()
 
-        const val BOSS_POINTS_PER_KILL = 20
     }
 }

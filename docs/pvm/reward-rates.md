@@ -17,6 +17,11 @@ thing their sink caps cannot touch; Zulrah's 17k/kill is the only coin-dominated
 Boss Tickets are being retired — `BossDeath.payout(tickets =)` is the single seam to no-op when they ping.
 The ⚠️ marks below are therefore historical; new or changed rates re-open review.
 
+**Boss Tickets retired 2026-09-03 (economy #336 + Team 4 follow-up):** every "Boss Tickets" row below is
+void — `BossDeath.payout` no longer takes a ticket count and no boss or minigame awards them. The two
+cosmetics that lost their shelf (Champion's cape 22114, Divine halo 12637) are now `BossKills`
+milestones at 100 and 500 total boss kills (no economy value).
+
 ## Barrows (PR 1, `content/minigames/barrows/`)
 
 | Reward | Rate | Source | Review |
