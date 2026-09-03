@@ -166,8 +166,7 @@ object SupplyDepot {
     fun credit(p: Player, we: Int) {
         if (we <= 0) return
         p.addPoints(PointKind.WAR_EFFORT, we)
-        org.alter.plugins.content.war.RealmSupply.contribute(p.world, we)
-        org.alter.plugins.content.war.events.ServiceRecords.recordSupplies(p, we)
+        org.alter.plugins.content.war.RealmSupply.contribute(p.world, we, contributor = p) // stockpile + service ledger
     }
 
     /**

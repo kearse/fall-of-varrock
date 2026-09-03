@@ -78,7 +78,7 @@ object CapturePayout {
         val pool = lootPool.coerceAtLeast(0)
         if (pool <= 0) {
             if (sponsor != null && sponsor.index >= 0) WarSpoils.deliverCommanderLoot(world, sponsor, op.displayName, sponsorSpoils, relic)
-            contrib.keys.forEach { it.message("<col=801700>${op.displayName} is taken — but its coffers were bare.</col>") }
+            contrib.keys.forEach { it.message("<col=801700>The field at ${op.displayName} is won — but its coffers were bare.</col>") }
             return
         }
 
@@ -95,7 +95,7 @@ object CapturePayout {
             bankCoins(world, player, coins)
             player.addPoints(PointKind.WAR_EFFORT, tier.prestige) // war effort for the rank-and-file
             val pct = (score * 100 / total).coerceAtLeast(1)
-            player.message("<col=4f9b4f>${op.displayName} is seized! Your $pct% share of the spoils: ${fmt(coins)} coins, banked.</col>")
+            player.message("<col=4f9b4f>The field at ${op.displayName} is won! Your $pct% share of the spoils: ${fmt(coins)} coins, banked.</col>")
 
             // Donor perk: +1% of the pool's VALUE, paid in donor points (minted, never from the pool).
             if (player.isDonor) {

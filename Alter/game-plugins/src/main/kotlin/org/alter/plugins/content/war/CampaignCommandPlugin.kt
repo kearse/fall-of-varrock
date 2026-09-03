@@ -15,6 +15,8 @@ import org.alter.game.model.priv.Privilege
 import org.alter.game.model.timer.TimerKey
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
+import org.alter.plugins.content.war.events.WarEvents
+import org.alter.plugins.content.war.events.WarHooks
 import org.alter.rscm.RSCM.getRSCM
 
 private val logger = KotlinLogging.logger {}
@@ -31,8 +33,11 @@ private val logger = KotlinLogging.logger {}
  *                               commander's tithe ([CapturePayout]).
  *  - `::campaign` (Minister+) — push the city's frontier; wins by breaking the garrison. Spends
  *                               Realm Supplies.
- *  - `::conquest` (King)      — a full army seizes the city and its spoils. Spends Realm Supplies.
+ *  - `::conquest` (King)      — a full army's deepest assault on the city; a temporary battlefield
+ *                               victory and its spoils, never ownership. Spends Realm Supplies.
  *
+ * The three player-commanded ops are thin callers of [WarAuthority] (the one check + launch path
+ * every other surface — quests, council NPCs, windows — shares); this plugin only narrates.
  * Participation is never rank-gated — only STARTING an op is (design authority §5). Several Lords
  * can field squads at once (a boss fight draws many), but each Lord may only have ONE squad out
  * at a time.
@@ -97,43 +102,46 @@ class CampaignCommandPlugin(
         // rallies with ::march), coin-funded (the fee is the Lord's contribution — not refunded),
         // supply-free. Runs as a MARCH-tier column with the Lord as sponsor.
         onCommand("operation", description = "Sponsor a small offensive on a march target (Lord+): ::operation <target>") {
-            if (!player.canCommand(CommandTier.RAID)) {
-                player.message("<col=801700>Only a Lord or higher may sponsor an operation. Any soldier may still join one with ::march.</col>")
-                return@onCommand
-            }
-            val targets = MarchTargets.pool.joinToString(", ") { it.key }
-            val key = player.getCommandArgs().getOrNull(0)
-            val t = key?.let { MarchTargets.byKey(it) }
-            if (t == null) {
-                player.message("<col=801700>Usage: ::operation <target>. Targets: $targets.</col>")
-                return@onCommand
-            }
-            if (CampaignRegistry.hasSquad(player)) {
-                player.message("<col=801700>You already have a squad in the field.</col>"); return@onCommand
-            }
-            if (CampaignRegistry.activeMarch() != null || CampaignRegistry.isAttacking(t.key) || CampaignRegistry.overlapsActive(t.op.battleArea)) {
-                player.message("<col=801700>A column is already in the field on that ground — wait for it to return.</col>"); return@onCommand
-            }
-            val have = player.inventory.getItemCount(coins)
-            if (have < OPERATION_COST) {
-                player.message("<col=801700>Sponsoring an operation costs ${fmt(OPERATION_COST)} coins; you carry only ${fmt(have)}.</col>")
-                return@onCommand
-            }
-            player.inventory.remove(coins, OPERATION_COST)
-            if (!CampaignRegistry.start(world, t.op, CampaignTier.MARCH, player)) {
-                player.inventory.add(coins, OPERATION_COST) // race lost — refund
-                player.message("<col=801700>The operation could not set out.</col>")
-                return@onCommand
-            }
-            val m = t.op.route.first()
-            player.message("<col=4f9b4f>Your operation on ${t.display} musters at (${m.x}, ${m.z}) — any soldier may rally to it with <col=0000ff>::march</col><col=4f9b4f>. Win it and the commander's tithe is yours (::claim).</col>")
+            command(player, WarType.LORD_OPERATION)
         }
 
         onCommand("campaign", description = "March a campaign on a hostile city (Minister+): ::campaign [city]") {
-            launch(player, CampaignTier.CAMPAIGN, CommandTier.CAMPAIGN)
+            command(player, WarType.CAMPAIGN)
         }
-        onCommand("conquest", description = "Send an army to conquer a hostile city (King): ::conquest [city]") {
-            launch(player, CampaignTier.CONQUEST, CommandTier.CONQUEST)
+        onCommand("conquest", description = "Send a full army against a hostile city (King): ::conquest [city]") {
+            command(player, WarType.CONQUEST)
+        }
+
+        // ::publicwar — admin: launch a PUBLIC, sponsor-less op of any tier (what a story event
+        // does through WarEvents) — free, supply-free, no commander. The test hook for the
+        // "first major assault as a generic public operation" path and the WarHooks result.
+        onCommand("publicwar", Privilege.ADMIN_POWER, description = "Launch a public sponsor-less war op (test): ::publicwar <march|grand|campaign|conquest> <target>") {
+            val a = player.getCommandArgs()
+            val type = when (a.getOrNull(0)?.lowercase()) {
+                "march" -> WarType.MARCH
+                "grand" -> WarType.GRAND_MARCH
+                "campaign" -> WarType.CAMPAIGN
+                "conquest" -> WarType.CONQUEST
+                else -> null
+            }
+            val target = a.getOrNull(1)
+            if (type == null || target == null) {
+                player.message("Usage: ::publicwar <march|grand|campaign|conquest> <target>. Targets: ${MarchTargets.pool.joinToString { it.key }}; cities: ${Campaigns.HOSTILE.joinToString { it.cityKey }}.")
+                return@onCommand
+            }
+            when (val r = WarEvents.startPublicOperation(world, type, target)) {
+                is WarEvents.StartResult.Started -> player.message("<col=4f9b4f>[test] Public ${type.display} launched on ${r.display} — ledger key ${r.opKey}; free, supply-free, no sponsor.</col>")
+                is WarEvents.StartResult.NoSuchTarget -> player.message("<col=801700>No such target '${r.key}'.</col>")
+                is WarEvents.StartResult.Busy -> player.message("<col=801700>Refused: ${r.reason}.</col>")
+                is WarEvents.StartResult.NotPublic -> player.message("<col=801700>A ${r.type.display} needs a sponsor.</col>")
+                WarEvents.StartResult.Failed -> player.message("<col=801700>The ${type.display} could not set out.</col>")
+            }
+        }
+
+        // Every war result reaches the log — the always-on witness for the WarHooks seam (quests,
+        // achievements and leaderboards subscribe the same way).
+        WarHooks.onOperationEnded(priority = Int.MAX_VALUE) { r ->
+            logger.info { "[WAR RESULT] ${r.type.display} on ${r.targetKey} ${if (r.won) "WON" else "LOST"} (op ${r.opKey}, sponsor=${r.sponsor ?: "-"}, pool=${r.lootPool}, shares=${r.shares})" }
         }
 
         // ::supply — anyone can check the Realm Supplies stockpile (filled by skilling the Mire +
@@ -207,48 +215,32 @@ class CampaignCommandPlugin(
         logger.info { "[CAMPAIGN] march corridors: force-loaded ${regions.size} region(s), opened $opened bridge tile(s)." }
     }
 
-    private fun launch(player: Player, tier: CampaignTier, gate: CommandTier) {
-        if (!player.canCommand(gate)) {
-            player.message("<col=801700>Only a ${gate.minTitle.display} or higher may command a ${tier.display}.</col>")
-            return
-        }
-        // Campaigns/conquests march on a HOSTILE city (e.g. Varrock) — never the home capital. An
-        // optional city arg picks the target by name; with one target it's the same as no arg.
+    /**
+     * The shared command body for every player-commanded op: [WarAuthority] decides and launches
+     * (rank → target → squad → ground → coins → supplies; charge, start, refund on a race, drain the
+     * stockpile, King quest); this only narrates. Campaigns/conquests march on a HOSTILE city (never
+     * the home capital) — an optional city arg picks the target; operations name a march target.
+     * The commander is NOT teleported — they rally to the army themselves.
+     */
+    private fun command(player: Player, type: WarType) {
         val key = player.getCommandArgs().getOrNull(0)
-        val op = if (key != null) Campaigns.hostileByKey(key) else Campaigns.hostileTarget()
-        if (op == null) {
-            val targets = Campaigns.HOSTILE.joinToString(", ") { it.cityKey }.ifEmpty { "none yet" }
-            player.message("<col=801700>No such war target. Cities open for war: $targets.</col>")
-            return
-        }
-        if (CampaignRegistry.hasSquad(player)) {
-            player.message("<col=801700>You already have a squad in the field.</col>")
-            return
-        }
-        val have = player.inventory.getItemCount(coins)
-        if (have < tier.cost) {
-            player.message("<col=801700>A ${tier.display} costs ${fmt(tier.cost)} coins; you carry only ${fmt(have)}.</col>")
-            return
-        }
-        // The realm must be supplied before it can march — the whole point of the Mire skilling loop.
-        if (!RealmSupply.canAfford(tier.supplyCost)) {
-            player.message("<col=801700>The ${RealmSupply.NAME} are too low to march a ${tier.display} — the people must supply the war first (${RealmSupply.meter()}/${tier.supplyCost} needed). Skill the Mire and hand supplies to a Quartermaster.</col>")
-            return
-        }
-        player.inventory.remove(coins, tier.cost)
-        if (!CampaignRegistry.start(world, op, tier, player)) {
-            player.inventory.add(coins, tier.cost) // race lost — refund
-            player.message("<col=801700>The ${tier.display} could not set out.</col>")
-            return
-        }
-        RealmSupply.consume(world, tier, player.username, op.displayName) // launching drains the realm stores
-        Conquest.onLaunched(player, tier) // advances the "King of Lumbridge" quest on a conquest launch
-        // The commander is NOT teleported — they stay where they are and rally to the army themselves.
-        if (op.route.isNotEmpty()) {
-            val m = op.route.first()
-            player.message("<col=4f9b4f>Your ${tier.display} musters at (${m.x}, ${m.z}) and marches on ${op.displayName}! Get to the field to earn your share — or use <col=0000ff>::troops follow</col><col=4f9b4f> to bring them to you.</col>")
-        } else {
-            player.message("<col=4f9b4f>You lead your ${tier.display} on ${op.displayName} — your men muster at the front.</col>")
+        when (val r = WarAuthority.launch(world, player, type, key)) {
+            is WarAuthority.LaunchResult.Refused ->
+                WarAuthority.describeAll(type, r.denials).forEach { player.message("<col=801700>$it</col>") }
+            WarAuthority.LaunchResult.Failed ->
+                player.message("<col=801700>The ${type.display} could not set out.</col>")
+            is WarAuthority.LaunchResult.Started -> {
+                val op = r.op
+                val m = r.muster
+                when {
+                    type == WarType.LORD_OPERATION && m != null ->
+                        player.message("<col=4f9b4f>Your operation on ${op.displayName} musters at (${m.x}, ${m.z}) — any soldier may rally to it with <col=0000ff>::march</col><col=4f9b4f>. Win it and the commander's tithe is yours (::claim).</col>")
+                    m != null ->
+                        player.message("<col=4f9b4f>Your ${type.display} musters at (${m.x}, ${m.z}) and marches on ${op.displayName}! Get to the field to earn your share — or use <col=0000ff>::troops follow</col><col=4f9b4f> to bring them to you.</col>")
+                    else ->
+                        player.message("<col=4f9b4f>You lead your ${type.display} on ${op.displayName} — your men muster at the front.</col>")
+                }
+            }
         }
     }
 
@@ -257,7 +249,7 @@ class CampaignCommandPlugin(
     private companion object {
         const val TICK = 2 // ~1.2s operation cadence (matches the frontier upkeep)
         const val SEND_TROOPS_COST = 1_000_000 // a Lord's standalone escort-squad deployment fee
-        const val OPERATION_COST = 500_000 // a Lord's sponsored public operation (not refunded). TUNE.
+        // A Lord's sponsored public operation is priced by WarType.LORD_OPERATION.coinCost.
         const val CORRIDOR_PAD = 16 // tiles of margin around a march route when force-loading its regions
     }
 }

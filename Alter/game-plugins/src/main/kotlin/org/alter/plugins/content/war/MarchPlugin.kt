@@ -12,6 +12,11 @@ import org.alter.game.model.timer.TimerKey
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
 import org.alter.plugins.content.announce.Announce
+import org.alter.plugins.content.bots.PkBot
+// MANDATORY alias: this class has a `companion object`, so a bare `is Companion` would resolve to
+// it and silently never match (see the warning at BotCombatPlugin.kt).
+import org.alter.plugins.content.companion.Companion as CompanionPawn
+import org.alter.plugins.content.companion.CompanionRegistry
 import org.alter.plugins.content.war.events.WarEvents
 import org.alter.plugins.content.war.forge.WarForge
 import org.alter.rscm.RSCM.getRSCM
@@ -262,16 +267,26 @@ class MarchPlugin(
         }
     }
 
-    /** Warden slain: embers for the fighters — guaranteed for the MVP, rolled for the rest. */
+    /** Warden slain: embers for the fighters — guaranteed for the MVP, rolled for the rest. A
+     *  companion's damage credits its OWNER (one human, one roll); PK bots never share. */
     private fun onWardenSlain(world: World, w: Npc) {
         val t = wardenTarget
         warden = null
         wardenTarget = null
-        val fighters = ArrayList<Player>()
+        val damageBy = LinkedHashMap<Player, Int>()
         world.players.forEach { p ->
-            if (p.index >= 0 && w.damageMap.getDamageFrom(p) > 0) fighters.add(p)
+            if (p.index < 0) return@forEach
+            val dmg = w.damageMap.getDamageFrom(p)
+            if (dmg <= 0) return@forEach
+            val credited = when (p) {
+                is CompanionPawn -> CompanionRegistry.ownerOf(world, p)
+                is PkBot -> null
+                else -> p
+            } ?: return@forEach
+            damageBy.merge(credited, dmg, Int::plus)
         }
-        val mvp = fighters.maxByOrNull { w.damageMap.getDamageFrom(it) }
+        val fighters = damageBy.keys.toList()
+        val mvp = damageBy.maxByOrNull { it.value }?.key
         fighters.forEach { p ->
             when {
                 p === mvp -> WarForge.awardEmbers(p, 1)

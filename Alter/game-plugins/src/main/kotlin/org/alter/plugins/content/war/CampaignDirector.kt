@@ -14,12 +14,19 @@ import org.alter.game.model.entity.Pawn
 import org.alter.game.model.entity.Player
 import org.alter.game.model.move.moveTo
 import org.alter.game.model.move.walkTo
+import org.alter.plugins.content.bots.PkBot
 import org.alter.plugins.content.combat.getCombatTarget
 import org.alter.plugins.content.combat.isAttacking
 import org.alter.plugins.content.combat.removeCombatTarget
+// MANDATORY alias: this class has a `companion object`, so a bare `is Companion` would resolve to
+// it and silently never match (see the warning at BotCombatPlugin.kt).
+import org.alter.plugins.content.companion.Companion as CompanionPawn
+import org.alter.plugins.content.companion.CompanionRegistry
 import org.alter.plugins.content.economy.PointKind
 import org.alter.plugins.content.economy.addPoints
 import org.alter.plugins.content.war.boss.BossScheduler
+import org.alter.plugins.content.war.events.ServiceRecords
+import org.alter.plugins.content.war.events.WarHooks
 import org.alter.rscm.RSCM.getRSCM
 import kotlin.math.abs
 import kotlin.math.max
@@ -439,12 +446,21 @@ class CampaignDirector(
         }
     }
 
-    /** Credit players who are in the battle area and actually fighting (caps AFK leeching). */
+    /**
+     * Credit players who are in the battle area and actually fighting (caps AFK leeching). A
+     * companion is a Player subclass: its fighting ticks credit its OWNER (one human share, one
+     * ledger entry, coins banked to a person — not to "Sir X"); every other fake player (PK bots)
+     * is dropped. Check `Companion` before `PkBot` — it is a PkBot subclass.
+     */
     private fun recordParticipation(world: World) {
         world.players.forEach { p ->
-            if (p.index >= 0 && !p.isDead() && op.battleArea.contains(p.tile) && p.isAttacking()) {
-                participation.merge(p, 1, Int::plus)
-            }
+            if (p.index < 0 || p.isDead() || !op.battleArea.contains(p.tile) || !p.isAttacking()) return@forEach
+            val credited = when (p) {
+                is CompanionPawn -> CompanionRegistry.ownerOf(world, p) // offline owner → nothing to credit
+                is PkBot -> null
+                else -> p
+            } ?: return@forEach
+            participation.merge(credited, 1, Int::plus)
         }
     }
 
@@ -462,15 +478,16 @@ class CampaignDirector(
         }
     }
 
+    /** True when no HUMAN is fighting in the battle area — a companion or PK bot alone never keeps an op alive. */
     private fun noPlayersFighting(world: World): Boolean =
-        world.players.none { it.index >= 0 && !it.isDead() && op.battleArea.contains(it.tile) && it.isAttacking() }
+        world.players.none { it !is PkBot && it.index >= 0 && !it.isDead() && op.battleArea.contains(it.tile) && it.isAttacking() }
 
     private fun finish(world: World, victory: Boolean) {
         phase = Phase.DONE
         Frontiers.zone(op.cityKey)?.suppressed = false // rings repopulate as normal
         troops.forEach { if (it.index >= 0 && world.npcs.contains(it)) world.remove(it) }
         troops.clear()
-        recordService(victory)
+        val shares = recordService(victory)
 
         if (victory) {
             if (tier == CampaignTier.RAID) {
@@ -478,7 +495,8 @@ class CampaignDirector(
                 broadcast(world, "<col=4f9b4f>The raid party's work in ${op.displayName} is done.</col>")
             } else {
                 val whose = sponsor?.let { "${it.username}'s" } ?: "The realm's"
-                broadcast(world, "<col=ffcc00>${op.displayName} is taken! $whose ${tier.display} seizes the spoils.</col>")
+                // A won war is a battlefield victory, never a capture — the ground stays the enemy's (design authority 03 §2).
+                broadcast(world, "<col=ffcc00>The field at ${op.displayName} is won! $whose ${tier.display} takes the spoils.</col>")
                 CapturePayout.award(world, op, tier, participation, sponsor, lootPool)
                 if (sponsor != null && sponsor.index >= 0) {
                     sponsor.addPoints(PointKind.PRESTIGE, tier.prestige)
@@ -489,6 +507,7 @@ class CampaignDirector(
             val whose = sponsor?.let { "${it.username}'s" } ?: "The realm's"
             broadcast(world, "<col=801700>$whose ${tier.display} was driven back from ${op.displayName}.</col>")
         }
+        publishResult(victory, shares) // WarHooks: quests / achievements react after ledger + payout
         runCatching { onResult?.invoke(victory) } // outcome hook (e.g. the march's Warden teardown)
         onFinished(this)
     }
@@ -497,23 +516,36 @@ class CampaignDirector(
      * File the op in every participant's persistent [org.alter.plugins.content.war.events.ServiceRecord]
      * — wins AND losses — before the payout discards the runtime participation map. The sponsor is
      * credited even with no fighting share (0%). RAID parties are boss support, not service.
+     * Returns the share table (username → %) the [WarHooks] result carries.
      */
-    private fun recordService(victory: Boolean) {
-        if (tier == CampaignTier.RAID) return
+    private fun recordService(victory: Boolean): Map<String, Int> {
+        if (tier == CampaignTier.RAID) return emptyMap()
+        val shares = LinkedHashMap<String, Int>()
         runCatching {
             val contrib = participation.filterKeys { it.index >= 0 }
             val total = contrib.values.sum().coerceAtLeast(1)
-            val credited = HashSet<String>()
             contrib.forEach { (p, score) ->
-                credited += p.username
-                org.alter.plugins.content.war.events.ServiceRecords.recordOp(
-                    p, tier, op, sponsored = sponsor != null, sharePct = score * 100 / total, won = victory,
-                )
+                val pct = score * 100 / total
+                shares[p.username] = pct
+                ServiceRecords.recordOp(p, tier, op, sponsored = sponsor != null, sharePct = pct, won = victory)
             }
-            sponsor?.takeIf { it.index >= 0 && it.username !in credited }?.let {
-                org.alter.plugins.content.war.events.ServiceRecords.recordOp(it, tier, op, sponsored = true, sharePct = 0, won = victory)
+            sponsor?.takeIf { it.index >= 0 && it.username !in shares }?.let {
+                shares[it.username] = 0
+                ServiceRecords.recordOp(it, tier, op, sponsored = true, sharePct = 0, won = victory)
             }
         }.onFailure { logger.error(it) { "Campaign '${op.cityKey}' ${tier.name}: service record write failed" } }
+        return shares
+    }
+
+    /** Publish the [WarHooks] result. RAID parties are boss support, not a war — nothing to publish. */
+    private fun publishResult(victory: Boolean, shares: Map<String, Int>) {
+        val type = WarType.of(tier, sponsored = sponsor != null) ?: return
+        WarHooks.fire(
+            WarHooks.WarResult(
+                type = type, tier = tier, targetKey = op.cityKey, displayName = op.displayName, opKey = opKey,
+                won = victory, sponsor = sponsor?.username, shares = shares, lootPool = lootPool,
+            ),
+        )
     }
 
     // Campaign rallies/captures are headlines → route through the announcement ticker.

@@ -288,13 +288,42 @@ object MarchTargets {
         )
     }
 
-    /** The rotation. Order is cosmetic; [weight] drives the pick. */
-    val pool: List<MarchTarget> = listOf(GOBLIN_CAMP, BANDIT_HIDEOUT, DRAYNOR_ROAD, VARROCK_OUTSKIRTS)
+    /** The built-in rotation. Order is cosmetic; [weight] drives the pick. */
+    private val builtIn: List<MarchTarget> = listOf(GOBLIN_CAMP, BANDIT_HIDEOUT, DRAYNOR_ROAD, VARROCK_OUTSKIRTS)
+    private val registered = ArrayList<MarchTarget>()
+    private val registerHooks = ArrayList<(MarchTarget) -> Unit>()
+
+    /** Every target in the rotation: the built-ins plus everything content has [register]ed. */
+    val pool: List<MarchTarget> get() = builtIn + registered
 
     /** Every target's garrison config, for [CityFrontierPlugin] to build alongside [CityFrontiers.all]. */
     val frontiers: List<FrontierConfig> get() = pool.map { it.frontier }
 
     fun byKey(key: String): MarchTarget? = pool.firstOrNull { it.key.equals(key, ignoreCase = true) }
+
+    /**
+     * **Add a target to the rotation from any plugin's `init`** — rogue camps, undead positions, a
+     * frontier another team owns — without editing this file. Order-free: [CityFrontierPlugin]
+     * builds the garrison of a target registered before OR after it constructs (via
+     * [whenRegistered]), and the corridor / region force-loads read [pool] at world init. Keys must
+     * be unique across march targets and hostile cities (a duplicate fails the registering plugin
+     * at boot, loudly). Register at boot: a target added after world init still gets a garrison
+     * but not the region force-load, and is logged as such.
+     */
+    fun register(target: MarchTarget): MarchTarget {
+        require(byKey(target.key) == null) { "MarchTarget '${target.key}' is already registered" }
+        require(Campaigns.hostileByKey(target.key) == null) { "MarchTarget '${target.key}' collides with a hostile city key" }
+        registered += target
+        logger.info { "[MARCH] registered march target '${target.key}' (${target.display}, ${target.kind.display}${if (target.grandEligible) ", grand-eligible" else ""})." }
+        registerHooks.toList().forEach { hook ->
+            runCatching { hook(target) }.onFailure { logger.error(it) { "[MARCH] register hook failed for '${target.key}'" } }
+        }
+        return target
+    }
+
+    /** Subscribe to future [register] calls (the frontier builder). Not replayed for targets already
+     *  in [pool] — read that first. */
+    fun whenRegistered(hook: (MarchTarget) -> Unit) { registerHooks += hook }
 
     /**
      * The next march's target: a weighted random pick over the targets that can actually be fought
