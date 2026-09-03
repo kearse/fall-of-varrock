@@ -100,7 +100,7 @@ final class LofTeleportsData
 			b("Recruit Trials", "Safe Zone", SAFE, 1277),       // bronze sword
 			s("Active Campaign", "Soon", SOON, 1201));          // rune kiteshield
 
-		// Mirrors TeleportRegistry BOSSES row-for-row (21 rows): the hand-built roster was purged;
+		// Mirrors TeleportRegistry BOSSES row-for-row (25 rows): the hand-built roster was purged;
 		// bosses come back one at a time as Kronos ports and flip to b(...) here as they land.
 		cat("Bosses",
 			b("Corp Beast (Event)", "Hostile", HOSTILE, 13734), // spirit shield
@@ -118,9 +118,13 @@ final class LofTeleportsData
 			b("K'ril Tsutsaroth", "Hostile", HOSTILE, 11806),   // zamorak godsword
 			b("Kree'arra", "Hostile", HOSTILE, 11826),          // armadyl helmet
 			b("Commander Zilyana", "Hostile", HOSTILE, 11808),  // saradomin godsword
-			s("Callisto", "Soon", SOON, 12603),                 // tyrannical ring
-			s("Vet'ion", "Soon", SOON, 12601),                  // ring of the gods
-			s("Venenatis", "Soon", SOON, 12605),                // treasonous ring
+			b("Callisto", "Wild Lvl 41", WILD, 12603),          // tyrannical ring (wilderness-boss package port)
+			b("Vet'ion", "Wild Lvl 34", WILD, 12601),           // ring of the gods
+			b("Venenatis", "Wild Lvl 28", WILD, 12605),         // treasonous ring
+			b("Scorpia", "Wild Lvl 54", WILD, 11930),           // odium shard 3
+			b("Chaos Elemental", "Wild Lvl 51", WILD, 11995),   // pet chaos elemental
+			b("Chaos Fanatic", "Wild Lvl 41", WILD, 11928),     // odium shard 1
+			b("Crazy Archaeologist", "Wild Lvl 23", WILD, 11990), // fedora
 			s("Theatre of Blood", "Soon", SOON, 22326),         // justiciar faceguard
 			s("Chambers of Xeric", "Soon", SOON, 20997),        // twisted bow
 			s("Revenant Caves", "Soon", SOON, 22557));          // amulet of avarice
