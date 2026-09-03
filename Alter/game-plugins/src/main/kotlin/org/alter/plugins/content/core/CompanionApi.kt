@@ -9,9 +9,11 @@ import org.alter.plugins.content.companion.CompanionRegistry
 import org.alter.plugins.content.war.Title
 
 /**
- * **Companions** (design authority 03 §5): persistent named soldiers a player recruits, trains
- * and equips. **Own several, deploy one** — [ACTIVE_MAX] is one for every rank and donor tier,
- * locked in the engine; rank (and, later, donor perks) only ever grow the ROSTER ([rosterCap]).
+ * **Companions** (design authority 03 §5, as amended by the operator 2026-09-02/03): persistent
+ * named soldiers a player recruits, trains and equips. **Own up to the roster, field them all** —
+ * [ACTIVE_MAX] equals the hard roster ceiling (three) for every rank and donor tier; rank (and,
+ * later, donor perks) only ever grow the ROSTER ([rosterCap]: Knight 1 / Lord 2 / Minister+ 3),
+ * and the steep muster price ladder (10M / 100M / 500M) is what pays for the extra soldiers.
  * Knight unlocks the system. No permadeath.
  *
  * `canDeployCompanion(player)` → [canDeploy]. Content that must keep companions out (a solo boss,
@@ -20,37 +22,42 @@ import org.alter.plugins.content.war.Title
  */
 object CompanionApi {
 
-    /** One in the world per owner. Locked — see `CompanionRegistry.ACTIVE_MAX`. */
+    /** How many may be in the world per owner — the whole roster. See `CompanionRegistry.ACTIVE_MAX`. */
     const val ACTIVE_MAX = CompanionRegistry.ACTIVE_MAX
 
     sealed class DeployCheck {
+        /** A benched companion may be summoned here and now. */
         object Ok : DeployCheck()
         /** Below the first rank that keeps a roster ([min]). */
         data class BelowRank(val min: Title) : DeployCheck()
         /** Ranked, but owns no companion yet (General Zo musters them). */
         object NoRoster : DeployCheck()
-        /** Someone already stands with them — a summon would be a swap, not a second soldier. */
-        data class AlreadyFielded(val name: String) : DeployCheck()
+        /** Every companion they own is already at their side — nothing left to summon. */
+        data class AllFielded(val count: Int) : DeployCheck()
+        /** The field is full ([active] of [max]) although someone is still benched. */
+        data class FieldFull(val active: Int, val max: Int) : DeployCheck()
         /** Where they stand denies companions (a solo instance, the Fight Cave …). */
         data class Denied(val reason: String) : DeployCheck()
     }
 
-    /** May [p] field a companion here and now? */
+    /** May [p] summon another companion to the field here and now? */
     fun canDeploy(p: Player): DeployCheck {
         if (rosterCap(p) <= 0) return DeployCheck.BelowRank(Title.values().first { it.roster > 0 })
         if (rosterSize(p) <= 0) return DeployCheck.NoRoster
         CompanionPolicy.verdict(p)?.let { return DeployCheck.Denied(it.reason) }
-        fielded(p)?.let { return DeployCheck.AlreadyFielded(it.username) }
+        val active = activeCount(p)
+        if (benched(p).isEmpty()) return DeployCheck.AllFielded(active)
+        if (active >= ACTIVE_MAX) return DeployCheck.FieldFull(active, ACTIVE_MAX)
         return DeployCheck.Ok
     }
 
     fun canDeployNow(p: Player): Boolean = canDeploy(p) is DeployCheck.Ok
 
-    /** Companions [p] has in the world right now (0 or 1). */
+    /** Companions [p] has in the world right now (0..[ACTIVE_MAX]). */
     fun activeCount(p: Player): Int = CompanionRegistry.count(p)
 
-    /** The companion at [p]'s side, if any. */
-    fun fielded(p: Player): CompanionPawn? = CompanionRegistry.ofOwner(p).firstOrNull()
+    /** The companions at [p]'s side, in formation order. */
+    fun fielded(p: Player): List<CompanionPawn> = CompanionRegistry.ofOwner(p)
 
     /** Everyone [p] owns, fielded or benched. */
     fun rosterSize(p: Player): Int = CompanionRegistry.rosterSize(p)

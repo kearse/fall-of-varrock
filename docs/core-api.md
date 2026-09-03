@@ -14,7 +14,7 @@
 | 2 | **Realm Supplies are the one shared consumable.** No per-player balance. Only Campaign and Conquest drain it; marches, Grand Marches, Lord operations and story-called public wars never do. Zero supplies never stops ordinary play. | `RealmSupply`, `WarType.supplyCost`, `WarAuthority.launch`. |
 | 3 | **Starting a war is rank-gated; joining never is.** Lord → operation, Minister → campaign, King → conquest. `::march` / `WarApi.join` are open to every citizen. | `WarAuthority.check` (start), nothing on join. |
 | 4 | **Every victory is temporary.** No territory capture, no liberation, no district control, no permanent Varrock. | No such state exists; copy says "the field is won". |
-| 5 | **One active companion per player, at every rank and donor tier.** Rank/donor only scale the roster. | `CompanionRegistry.ACTIVE_MAX = 1`, enforced every tick (`enforceActiveMax`). |
+| 5 | **A player fields their whole roster at once (up to three), at every rank and donor tier.** Rank/donor only scale the roster; the muster price ladder (10M / 100M / 500M) pays for the extra soldiers. Operator decision 2026-09-02, re-confirmed 2026-09-03 — it overrides docs 03 §5 / 06 §3's "one active". | `CompanionRegistry.ACTIVE_MAX = MAX` (3), `Title.roster`, `RecruitMenu.RECRUIT_COSTS`. |
 | 6 | **Quests accelerate ranks; they never gate or grant them.** A quest may pay War Effort; promotion always runs `RankEligibility`. | `RankApi.promote` == Duke Horacio. |
 | 7 | **Veteran of Varrock is awarded by the story only**, never auto-grants Minister, thresholds OPEN. | `Veteran.award` has no content caller; `RankEligibility` Minister slot unenforced. |
 | 8 | **Companions' fighting credits their owner** (one share, one ledger entry). PK bots never share. | `CampaignDirector.recordParticipation`, `BossLoot`, `MarchPlugin`. |
@@ -40,7 +40,7 @@
 | drive a framework quest | `QuestApi.begin` / `satisfy(p, key, stepId?)` / `complete` / `addCounter` | |
 | the followed quest (arrow) | `QuestApi.follow(p, key)` / `followed(p)` / `unfollow(p)` | Players: `::quests follow <key>`. Only the followed quest drives the server arrow. |
 | `hasVeteranOfVarrock(player)` | `VeteranApi.has(p)` | Award from the story: `VeteranApi.award(p, reason)`; test: `::veteran grant`. |
-| `canDeployCompanion(player)` | `CompanionApi.canDeploy(p): DeployCheck` (`Ok / BelowRank / NoRoster / AlreadyFielded / Denied`) | `CompanionApi.ACTIVE_MAX` is 1. Keep companions out of your content with `denyArea` / `denyInstanceOf` / `deny(rule)`. |
+| `canDeployCompanion(player)` | `CompanionApi.canDeploy(p): DeployCheck` (`Ok / BelowRank / NoRoster / AllFielded / FieldFull / Denied`) | `CompanionApi.ACTIVE_MAX` is the roster ceiling (3). Keep companions out of your content with `denyArea` / `denyInstanceOf` / `deny(rule)`. |
 | rank / authority | `RankApi.rank(p)`, `atLeast`, `canCommand(p, CommandTier)`, `eligibility(p, title)`, `promote(p, title)`, `onRankChanged(priority) { p, title -> }` | |
 | shared unlock / state | `StateApi.flag / setFlag / clearFlag`, `registerRoute`, `routeOpen`, `unlockRoute` | Prefix your keys (`story.`, `region.kandarin.`, `pvp.`). Reserved: `quest.<key>.done`, `route.<key>`, `veteran_of_varrock`. |
 | add a march target from your plugin | `WarApi.registerMarchTarget(MarchTarget(...))` | From your plugin `init`; order-free; keys unique; ids with zero rows in `npc_spawns.json`. |

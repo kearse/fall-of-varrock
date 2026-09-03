@@ -197,6 +197,8 @@ Players can recruit, train, equip, and develop persistent named soldiers, but ma
 | MONETIZATION GUARDRAIL | Donor benefits | Extra roster/recruit/cosmetic options are safer than allowing extra active companions, which would become direct combat power. |
 
 > **Amendment 2026-09-02 (operator decision, in code):** the active limit above is lifted - a player fields their whole roster at once (`CompanionRegistry.ACTIVE_MAX = MAX`, three). The guardrail is price instead of count: the first soldier costs 10M coins, the second 100M, the third 500M (`RecruitMenu.RECRUIT_COSTS`). Rank still sets the roster size (Knight 1 / Lord 2 / Minister+ 3).
+>
+> **Re-confirmed 2026-09-03.** The September docs *03 Ranks, War & Core Systems* §5 and *06 Development Authority* §3 restate "one active"; the operator was asked and chose the whole-roster rule again (a PR re-locking one-active, #314, was closed unmerged). **Do not flip this back without the operator.** The public check is `CompanionApi.canDeploy` (`docs/core-api.md`).
 
 ## 11. War-Forging and Gear Economy
 
