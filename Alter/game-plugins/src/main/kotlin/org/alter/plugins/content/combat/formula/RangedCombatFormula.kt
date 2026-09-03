@@ -9,6 +9,7 @@ import org.alter.game.model.entity.Pawn
 import org.alter.game.model.entity.Player
 import org.alter.plugins.content.combat.Combat
 import org.alter.plugins.content.combat.CombatConfigs
+import org.alter.plugins.content.combat.strategy.ranged.weapon.Bows
 import org.alter.plugins.content.mechanics.prayer.Prayer
 import org.alter.plugins.content.mechanics.prayer.Prayers
 import org.alter.plugins.content.skills.slayer.SlayerCombat
@@ -142,6 +143,13 @@ object RangedCombatFormula : CombatFormula {
         hit *= getEquipmentMultiplier(player, target)
         hit = Math.floor(hit)
 
+        // Crystal armour set effect with a crystal bow / bowfa: up to +15% damage.
+        val crystalDamage = crystalSetBonus(player, damage = true)
+        if (crystalDamage > 0.0) {
+            hit *= 1.0 + crystalDamage
+            hit = Math.floor(hit)
+        }
+
         if (specialAttackMultiplier == 1.0) {
             val multiplier =
                 when {
@@ -189,6 +197,13 @@ object RangedCombatFormula : CombatFormula {
         hit *= getEquipmentMultiplier(player, target)
         hit = Math.floor(hit)
 
+        // Crystal armour set effect with a crystal bow / bowfa: up to +30% accuracy.
+        val crystalAccuracy = crystalSetBonus(player, damage = false)
+        if (crystalAccuracy > 0.0) {
+            hit *= 1.0 + crystalAccuracy
+            hit = Math.floor(hit)
+        }
+
         if (specialAttackMultiplier == 1.0) {
             val multiplier =
                 when {
@@ -207,6 +222,23 @@ object RangedCombatFormula : CombatFormula {
         }
 
         return hit
+    }
+
+    /**
+     * Summed crystal-armour set bonus (damage or accuracy fraction) — 0.0 unless the wielded
+     * weapon is a crystal bow / Bow of Faerdhinen ([Bows.CRYSTAL_BOWS]). Player report
+     * 2026-09-02 asked whether the set does anything: it didn't.
+     */
+    private fun crystalSetBonus(player: Player, damage: Boolean): Double {
+        val weapon = player.getEquipment(EquipmentType.WEAPON)?.id ?: return 0.0
+        if (weapon !in Bows.CRYSTAL_BOWS) return 0.0
+        var bonus = 0.0
+        for ((piece, dmg, acc) in Bows.CRYSTAL_ARMOUR_BONUS) {
+            if (player.equipment.contains(piece)) {
+                bonus += if (damage) dmg else acc
+            }
+        }
+        return bonus
     }
 
     /** The twisted bow scales off the HIGHER of the target's Magic level and its magic

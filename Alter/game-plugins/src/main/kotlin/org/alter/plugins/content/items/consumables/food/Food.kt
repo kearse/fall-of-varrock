@@ -8,6 +8,8 @@ enum class Food(
     val replacement: Int = -1,
     val tickDelay: Int = 3,
     val comboFood: Boolean = false,
+    /** Blighted consumables can only be eaten inside the Wilderness. */
+    val wildernessOnly: Boolean = false,
 ) {
     /**
      * Sea food.
@@ -33,6 +35,15 @@ enum class Food(
     MANTA_RAY(item = "item.manta_ray", heal = 22),
     DARK_CRAB(item = "item.dark_crab", heal = 22),
     ANGLERFISH(item = "item.anglerfish", overheal = true),
+
+    /**
+     * Blighted food — Wilderness-only copies of the PvP staples (OSRS). Gated in
+     * [org.alter.plugins.content.items.consumables.food.Foods.canEat]. Player report
+     * 2026-09-02: these dropped from the zombie-pirate table but had no eat handler.
+     */
+    BLIGHTED_MANTA_RAY(item = "item.blighted_manta_ray", heal = 22, wildernessOnly = true),
+    BLIGHTED_ANGLERFISH(item = "item.blighted_anglerfish", overheal = true, wildernessOnly = true),
+    BLIGHTED_KARAMBWAN(item = "item.blighted_karambwan", heal = 18, comboFood = true, wildernessOnly = true),
 
     /**
      * Meat.

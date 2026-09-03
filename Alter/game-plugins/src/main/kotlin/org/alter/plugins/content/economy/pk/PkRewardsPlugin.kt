@@ -109,8 +109,8 @@ class PkRewardsPlugin(
         shopOf(SPEC_WEAPONS, specWares)
         shopOf(WILDY_SETS, wildySetWares)
         shopOf(REVENANT, revenantWares)
-        // Buy Blood Money for coins — sets the coin ceiling on the PvP gear this vendor sells.
-        currencyBuyShop(BUY_BM, "item.blood_money", GeCurrencyPrices.BLOOD_MONEY)
+        // (The "Buy Blood Money" coin tab was removed 2026-09-02 at the operator's request:
+        // blood money is earned from kills, not bought.)
 
         // GE hub desk ring, east column — one tile south of the Quartermaster, facing his east
         // desks. Shown as "PK Shop" (store-type name, like the shop hub's vendors) via
@@ -145,7 +145,6 @@ class PkRewardsPlugin(
         ShopTabs.Tab("Spec weapons", SPEC_WEAPONS, icon = "item.armadyl_godsword"),
         ShopTabs.Tab("Wildy sets", WILDY_SETS, icon = "item.vestas_longsword"),
         ShopTabs.Tab("Revenant", REVENANT, icon = "item.craws_bow"),
-        ShopTabs.Tab("Buy Blood Money", BUY_BM, icon = "item.blood_money"),
     )
 
     private fun shopOf(name: String, wares: List<Ware>) {
@@ -170,7 +169,6 @@ class PkRewardsPlugin(
         const val SPEC_WEAPONS = "PK Rewards - Spec Weapons"
         const val WILDY_SETS = "PK Rewards - Wilderness Sets"
         const val REVENANT = "PK Rewards - Revenant Weapons"
-        const val BUY_BM = "PK Rewards - Buy Blood Money"
         const val TRADER = "npc.emblem_trader"
         const val STOCK = 100
         const val BM_BASE = 25

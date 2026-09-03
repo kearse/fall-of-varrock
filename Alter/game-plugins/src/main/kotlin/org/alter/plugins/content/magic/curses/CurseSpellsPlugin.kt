@@ -62,8 +62,8 @@ class CurseSpellsPlugin(
 
     private fun registerCurse(name: String, playerSkill: Int, npcSkill: Int, pct: Int, xp: Double, gfx: Int) {
         CombatSpellEffects.register(name) { caster, target, spell ->
-            if (!MagicSpells.canCast(caster, spell.lvl, spell.items, requiredBook = spell.spellbook)) return@register
-            MagicSpells.removeRunes(caster, spell.items)
+            if (!MagicSpells.canCast(caster, spell.lvl, spell.items, requiredBook = spell.spellbook, spellName = spell.name)) return@register
+            MagicSpells.removeRunes(caster, spell.items, spellName = spell.name)
             caster.addXp(Skills.MAGIC, xp)
             caster.animate(CAST_ANIM)
             if (lands(caster, target)) {
@@ -81,8 +81,8 @@ class CurseSpellsPlugin(
                 caster.message("That target is already held by a spell.")
                 return@register
             }
-            if (!MagicSpells.canCast(caster, spell.lvl, spell.items, requiredBook = spell.spellbook)) return@register
-            MagicSpells.removeRunes(caster, spell.items)
+            if (!MagicSpells.canCast(caster, spell.lvl, spell.items, requiredBook = spell.spellbook, spellName = spell.name)) return@register
+            MagicSpells.removeRunes(caster, spell.items, spellName = spell.name)
             caster.addXp(Skills.MAGIC, xp)
             caster.animate(CAST_ANIM)
             if (lands(caster, target)) {

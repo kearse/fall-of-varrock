@@ -259,7 +259,15 @@ class CombatPlugin(
                         Combat.postAttack(pawn, target)
                         return true
                     }
-                    pawn.message("You don't have enough power left.")
+                    // Player report 2026-09-02: a weapon with NO registered special printed the
+                    // energy message, so "spec doesn't work" reports were indistinguishable
+                    // from an empty bar. Say which it is.
+                    val weaponId = pawn.getEquipment(EquipmentType.WEAPON)!!.id
+                    if (SpecialAttacks.attacks.containsKey(weaponId)) {
+                        pawn.message("You don't have enough power left.")
+                    } else {
+                        pawn.message("This weapon has no special attack.")
+                    }
                 }
                 strategy.attack(pawn, target)
                 Combat.postAttack(pawn, target)

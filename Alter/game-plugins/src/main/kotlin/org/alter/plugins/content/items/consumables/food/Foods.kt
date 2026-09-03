@@ -13,6 +13,7 @@ import org.alter.game.model.timer.ATTACK_DELAY
 import org.alter.game.model.timer.COMBO_FOOD_DELAY
 import org.alter.game.model.timer.FOOD_DELAY
 import org.alter.game.model.timer.POTION_DELAY
+import org.alter.plugins.content.combat.PvpZones
 import org.alter.plugins.content.items.food.Food
 
 /**
@@ -26,14 +27,19 @@ object Foods {
     fun canEat(
         p: Player,
         food: Food,
-    ): Boolean =
-        if (food.comboFood) {
+    ): Boolean {
+        if (food.wildernessOnly && !PvpZones.isWilderness(p.tile)) {
+            p.message("Blighted food can only be eaten in the Wilderness.")
+            return false
+        }
+        return if (food.comboFood) {
             !p.timers.has(COMBO_FOOD_DELAY)
         } else {
             // OSRS combo ordering: food→potion→karambwan is legal, but potion→food and
             // karambwan→food on the same tick are NOT — regular food is gated on all three.
             !p.timers.has(FOOD_DELAY) && !p.timers.has(POTION_DELAY) && !p.timers.has(COMBO_FOOD_DELAY)
         }
+    }
 
     fun eat(
         p: Player,
@@ -44,7 +50,7 @@ object Foods {
 
         val heal =
             when (food) {
-                Food.ANGLERFISH -> {
+                Food.ANGLERFISH, Food.BLIGHTED_ANGLERFISH -> {
                     val c =
                         when (p.getSkills().getBaseLevel(Skills.HITPOINTS)) {
                             in 25..49 -> 4
@@ -79,7 +85,7 @@ object Foods {
             p.timers[ATTACK_DELAY] = p.timers[ATTACK_DELAY] + if (food.comboFood) 2 else 3
         }
 
-        if (food == Food.KARAMBWAN) {
+        if (food == Food.KARAMBWAN || food == Food.BLIGHTED_KARAMBWAN) {
             // Eating Karambwans also blocks drinking potions.
             p.timers[POTION_DELAY] = 3
         }

@@ -49,7 +49,10 @@ object KeptOnDeath {
             return (if (price > 0) price else (item.getDef().cost ?: 0)).toLong()
         }
 
-        val sorted = held.sortedByDescending { value(it) }
+        // Untradeables are always kept for free (PvpDeathDropPlugin filters them out before the
+        // keep-N sort). Showing them here burned keep slots and listed them as "lost" — the
+        // interface disagreed with the actual death rule.
+        val sorted = held.filter { it.getDef().isTradeable }.sortedByDescending { value(it) }
         val kept = sorted.take(keepCount)
         val lost = sorted.drop(keepCount)
         val risk = lost.sumOf { value(it) * it.amount }

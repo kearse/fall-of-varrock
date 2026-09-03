@@ -10,6 +10,7 @@ import org.alter.api.*
 import org.alter.api.ext.*
 import org.alter.plugins.content.combat.Combat
 import org.alter.plugins.content.combat.CombatConfigs
+import org.alter.plugins.content.combat.SoulreaperAxe
 import org.alter.plugins.content.mechanics.prayer.Prayer
 import org.alter.plugins.content.mechanics.prayer.Prayers
 import org.alter.plugins.content.skills.slayer.SlayerCombat
@@ -171,6 +172,12 @@ object MeleeCombatFormula : CombatFormula {
 
     private fun getEffectiveStrengthLevel(player: Player): Double {
         var effectiveLevel = Math.floor(player.getSkills().getCurrentLevel(Skills.STRENGTH) * getPrayerStrengthMultiplier(player))
+
+        // Soulreaper axe soul stacks: +6% effective Strength level per stack (max +30%).
+        val soulStacks = SoulreaperAxe.strengthMultiplier(player)
+        if (soulStacks > 1.0) {
+            effectiveLevel = Math.floor(effectiveLevel * soulStacks)
+        }
 
         effectiveLevel += when (CombatConfigs.getAttackStyle(player)){
             AttackStyle.AGGRESSIVE -> 3.0

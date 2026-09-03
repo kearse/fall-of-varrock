@@ -7,6 +7,7 @@ import org.alter.api.WeaponType
 import org.alter.api.ext.*
 import org.alter.game.model.Tile
 import org.alter.game.model.combat.AttackStyle
+import org.alter.game.model.combat.CombatClass
 import org.alter.game.model.combat.PawnHit
 import org.alter.game.model.combat.XpMode
 import org.alter.game.model.entity.*
@@ -14,6 +15,7 @@ import org.alter.rscm.RSCM.getRSCM
 import org.alter.api.NpcSpecies
 import org.alter.plugins.content.combat.Combat
 import org.alter.plugins.content.combat.CombatConfigs
+import org.alter.plugins.content.combat.TonalzticsOfRalos
 import org.alter.plugins.content.combat.WeaponEffects
 import org.alter.plugins.content.combat.createProjectile
 import org.alter.plugins.content.combat.dealExactHit
@@ -55,6 +57,11 @@ object RangedCombatStrategy : CombatStrategy {
         if (pawn is Player) {
             val weapon = pawn.getEquipment(EquipmentType.WEAPON)
             val attackStyle = CombatConfigs.getAttackStyle(pawn)
+
+            if (TonalzticsOfRalos.isWielding(pawn)) {
+                val base = TonalzticsOfRalos.attackRange(pawn) + (if (attackStyle == AttackStyle.LONG_RANGE) 2 else 0)
+                return Math.min(MAX_ATTACK_RANGE, base)
+            }
 
             var range =
                 when (weapon?.id) {
@@ -143,6 +150,9 @@ object RangedCombatStrategy : CombatStrategy {
          * to the [target].
          */
         var ammoDropAction: ((PawnHit).() -> Unit) = {}
+        // The quiver ammo this shot fires, captured NOW: by the time the hit lands the quiver
+        // may be empty or swapped, and the poison roll must use what was actually shot.
+        var firedAmmoId: Int? = null
 
         if (pawn is Player) {
             /*
@@ -155,6 +165,9 @@ object RangedCombatStrategy : CombatStrategy {
                 }
 
             val ammo = pawn.getEquipment(ammoSlot)
+            if (ammoSlot == EquipmentType.AMMO) {
+                firedAmmoId = ammo?.id
+            }
 
             /*
              * Create a projectile based on ammo.
@@ -223,6 +236,11 @@ object RangedCombatStrategy : CombatStrategy {
         val formula = RangedCombatFormula
         val accuracy = formula.getAccuracy(pawn, target)
         var maxHit = formula.getMaxHit(pawn, target)
+        // Tonalztics of ralos: every throw rolls 0-75% of max (the charged one throws twice).
+        val tonalztics = pawn is Player && TonalzticsOfRalos.isWielding(pawn)
+        if (tonalztics) {
+            maxHit = TonalzticsOfRalos.scaleMaxHit(maxHit)
+        }
         var landHit = accuracy >= world.randomDouble()
         val hitDelay = getHitDelay(pawn.getCentreTile(), target.tile.transform(target.getSize() / 2, target.getSize() / 2))
 
@@ -272,7 +290,7 @@ object RangedCombatStrategy : CombatStrategy {
                     delay = hitDelay,
                     onHit = {
                         ammoDropAction(it)
-                        WeaponEffects.applyOnHit(pawn, target, it)
+                        WeaponEffects.applyOnHit(pawn, target, it, combatClass = CombatClass.RANGED, ammoId = firedAmmoId)
                     },
                 )
             } else {
@@ -283,10 +301,25 @@ object RangedCombatStrategy : CombatStrategy {
                     delay = hitDelay,
                     onHit = {
                         ammoDropAction(it)
-                        WeaponEffects.applyOnHit(pawn, target, it)
+                        WeaponEffects.applyOnHit(pawn, target, it, combatClass = CombatClass.RANGED, ammoId = firedAmmoId)
                     },
                 )
             }
+
+        // Charged tonalztics: a second, independently rolled throw lands on the same tick.
+        if (tonalztics && pawn is Player && TonalzticsOfRalos.hitsPerAttack(pawn) > 1) {
+            val secondLands = accuracy >= world.randomDouble()
+            val second =
+                pawn.dealHit(target = target, maxHit = maxHit, landHit = secondLands, delay = hitDelay) {
+                    WeaponEffects.applyOnHit(pawn, target, it, combatClass = CombatClass.RANGED, ammoId = firedAmmoId)
+                }
+            second.hit.addAction {
+                val damage = hitmarks.sumOf { it.damage }
+                if (damage > 0) {
+                    addCombatXp(pawn, target, damage)
+                }
+            }
+        }
 
         // Bolt effects that trigger on the landing tick.
         if (boltEffect != null && pawn is Player) {

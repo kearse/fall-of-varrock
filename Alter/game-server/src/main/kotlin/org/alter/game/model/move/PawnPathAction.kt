@@ -66,6 +66,8 @@ object PawnPathAction {
         val collisionStrategy = if (lineOfSightRange == null) CollisionStrategy.Normal else CollisionStrategy.LineOfSight
         val world = pawn.world
         pawn.facePawn(other)
+        // Where the target stood when we routed; compared after the walk (see below).
+        val targetStart = other.tile
 
         val route = pawn.world.smartRouteFinder.findRoute(
             level = pawn.tile.height,
@@ -82,10 +84,10 @@ object PawnPathAction {
             it.wait(1)
         }
         /*
-         * If the npc has moved from the time this queue was added to
-         * when it was actually invoked, we need to walk towards it again.
+         * If the target has moved from where it stood when we routed to it, walk towards it
+         * again. (This used to compare `other.tile` with itself, so it never re-pathed.)
          */
-        if (!other.tile.sameAs(other.tile)) {
+        if (!other.tile.sameAs(targetStart) && !pawn.tile.isWithinRadius(other.tile, lineOfSightRange ?: 1)) {
             walk(it, pawn, other, opt, lineOfSightRange)
             return
         }

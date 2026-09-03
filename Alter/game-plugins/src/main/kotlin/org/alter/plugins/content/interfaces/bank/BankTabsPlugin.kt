@@ -145,8 +145,9 @@ class BankTabsPlugin(
                     val srcStart = startPoint(player, srcTab)
                     for (item in 1..srcSize)
                         container.insert(srcStart, destination)
-                    var holder = player.getVarbit(4169 + dstTab)
-                    player.setVarbit(4169 + dstTab, srcSize)
+                    // The moved tab lands at index dstTab - 1 (everything between shifts left).
+                    var holder = player.getVarbit(BANK_TAB_ROOT_VARBIT + dstTab - 1)
+                    player.setVarbit(BANK_TAB_ROOT_VARBIT + dstTab - 1, srcSize)
                     for (tab in dstTab - 2 downTo srcTab) {
                         val temp = player.getVarbit(BANK_TAB_ROOT_VARBIT + tab)
                         player.setVarbit(BANK_TAB_ROOT_VARBIT + tab, holder)

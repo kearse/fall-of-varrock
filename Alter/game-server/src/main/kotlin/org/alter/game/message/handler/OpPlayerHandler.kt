@@ -38,6 +38,15 @@ class OpPlayerHandler : MessageHandler<OpPlayer> {
         client.interruptQueues()
         client.resetInteractions()
 
+        // "Attack" goes straight into the combat loop, exactly like OpNpcHandler does for
+        // npcs: the loop paths to the WEAPON's range (mage 10, bows 7-10, melee 1). Routing
+        // it through the generic walk first marched every mage and ranger into melee
+        // adjacency before combat even began (player report 2026-09-02).
+        if (client.options.getOrNull(optionIndex).equals("Attack", ignoreCase = true)) {
+            client.attack(other)
+            return
+        }
+
         client.attr[INTERACTING_PLAYER_ATTR] = WeakReference(other)
         client.attr[INTERACTING_OPT_ATTR] = option
         client.executePlugin(PawnPathAction.walkPlugin)

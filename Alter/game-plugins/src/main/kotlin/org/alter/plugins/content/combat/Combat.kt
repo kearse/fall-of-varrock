@@ -370,9 +370,16 @@ object Combat {
             // Single-way: an npc already fighting ANOTHER player can't be piled — the
             // mirror of the player-target rule further down. NPC targets had no check at
             // all, so single-combat zones only protected players, not their kills.
+            // Bots and companions are Players too, but they must never hold the single-way lock
+            // on a monster: a player's OWN companion attacks whatever its owner attacks, the boss
+            // retaliates onto it, and the owner was locked out of their own fight ("Someone else
+            // is fighting that" on every campaign boss — player report 2026-09-02).
             if (pawn is Player && PvpZones.isSingle(target.tile)) {
                 val npcTarget = target.getCombatTarget()
-                if (npcTarget is Player && npcTarget != pawn && npcTarget.index >= 0 && !npcTarget.isDead()) {
+                if (npcTarget is Player && npcTarget != pawn &&
+                    npcTarget !is org.alter.plugins.content.bots.PkBot &&
+                    npcTarget.index >= 0 && !npcTarget.isDead()
+                ) {
                     pawn.message("Someone else is fighting that.")
                     return false
                 }

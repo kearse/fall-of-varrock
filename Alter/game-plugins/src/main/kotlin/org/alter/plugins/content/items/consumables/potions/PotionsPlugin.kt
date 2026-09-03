@@ -15,6 +15,7 @@ import org.alter.game.model.timer.POISON_TIMER
 import org.alter.game.model.timer.POTION_DELAY
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
+import org.alter.plugins.content.combat.PvpZones
 import org.alter.plugins.content.mechanics.poison.Poison
 import org.alter.plugins.content.mechanics.run.RunEnergy
 import org.alter.rscm.RSCM.getRSCM
@@ -123,6 +124,16 @@ class PotionsPlugin(
         // ---- Restores ----------------------------------------------------------------------
         family("prayer_potion") { restoreSkill(it, Skills.PRAYER, 7, 0.25) }
         family("super_restore") { restoreAllButHitpoints(it, 8, 0.25) }
+        // Blighted (Wilderness-only) copies — same effects; the zone gate lives in drink().
+        // Player report 2026-09-02: they dropped from zombie pirates with no drink handler.
+        family("blighted_super_restore") { restoreAllButHitpoints(it, 8, 0.25) }
+        family("blighted_saradomin_brew") {
+            val hp = 2 + (it.getSkills().getBaseLevel(Skills.HITPOINTS) * 0.15).toInt()
+            it.heal(hp, hp)
+            boost(it, Skills.DEFENCE, 2, 0.20)
+            drainCurrent(it, Skills.ATTACK, 2, 0.10); drainCurrent(it, Skills.STRENGTH, 2, 0.10)
+            drainCurrent(it, Skills.MAGIC, 2, 0.10); drainCurrent(it, Skills.RANGED, 2, 0.10)
+        }
         family("sanfew_serum") { restoreAllButHitpoints(it, 4, 0.30); curePoison(it, IMMUNITY_SUPER) }
         family("restore_potion") { restoreCombatStats(it, 10, 0.30) }
 
@@ -225,6 +236,10 @@ class PotionsPlugin(
 
     private fun drink(player: Player, key: String) {
         val dose = doseByKey[key] ?: return
+        if (key.startsWith("item.blighted_") && !PvpZones.isWilderness(player.tile)) {
+            player.message("Blighted potions can only be drunk in the Wilderness.")
+            return
+        }
         if (player.timers.has(POTION_DELAY)) return
         val slot = player.getInteractingSlot()
         if (player.inventory.remove(item = getRSCM(key), beginSlot = slot).hasSucceeded()) {

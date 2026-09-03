@@ -365,8 +365,8 @@ class LumbridgeShopHubPlugin(
         coinShop(CONSTRUCTION, PurchasePolicy.BUY_STOCK, constructionStock)
         ticketShop(BOSS_REWARDS, "item.boss_ticket", "Boss Ticket", "Boss Tickets", bossRewardStock)
         ticketShop(VOTE_REWARDS, "item.vote_ticket", "Vote Ticket", "Vote Tickets", voteRewardStock)
-        // Buy Vote Tickets for coins — sets the coin ceiling on the vote-reward gear.
-        currencyBuyShop(BUY_VOTE, "item.vote_ticket", GeCurrencyPrices.VOTE_TICKET)
+        // (The "Buy Vote Tickets" coin tab was removed 2026-09-02 at the operator's request:
+        // vote tickets are earned by voting, not bought.)
 
         // One vendor row along the courtyard's north side (z=3228, all facing SOUTH at the
         // aisle), ordered combat first — Melee, Ranged, Magic — then Prayer and the skilling
@@ -406,8 +406,7 @@ class LumbridgeShopHubPlugin(
         // Valaine mans the GE hub's desk ring (east slot of the south face), not the shop rows.
         tabVendor("npc.valaine", 3222, 3209, Direction.SOUTH,                        // boss/vote tickets
             ShopTabs.Tab("Boss rewards", BOSS_REWARDS, icon = "item.boss_ticket"),
-            ShopTabs.Tab("Vote rewards", VOTE_REWARDS, icon = "item.vote_ticket"),
-            ShopTabs.Tab("Buy Vote Tickets", BUY_VOTE, icon = "item.vote_ticket"))
+            ShopTabs.Tab("Vote rewards", VOTE_REWARDS, icon = "item.vote_ticket"))
 
         // End-game / war cluster mans the GE hub's desk ring (Quartermaster @ 3223,3211,
         // Slayer Master @ 3222,3212, PK Shop @ 3223,3210, Royal Smith @ 3221,3209, plus
@@ -471,6 +470,5 @@ class LumbridgeShopHubPlugin(
         const val CONSTRUCTION = "Lumbridge Construction Supplies"
         const val BOSS_REWARDS = "Lumbridge Boss Rewards"
         const val VOTE_REWARDS = "Lumbridge Vote Rewards"
-        const val BUY_VOTE = "Lumbridge Buy Vote Tickets"
     }
 }

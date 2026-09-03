@@ -139,6 +139,22 @@ object LootKeys {
         finish(p, bundles, bundle, if (toBank) "banked" else "claimed")
     }
 
+    /**
+     * Dropping a key destroys it (OSRS): the OLDEST bundle sealed on [keyId] is wiped along with
+     * the handle. Player report 2026-09-02: dropped keys used to litter the floor as ordinary
+     * ground items — a dead handle that crumbled for whoever picked it up.
+     */
+    fun destroyKey(p: Player, keyId: Int) {
+        val bundles = load(p)
+        val bundle = bundles.firstOrNull { it.keyId == keyId }
+        if (bundle != null) {
+            bundles.remove(bundle)
+            save(p, bundles)
+        }
+        removeHandle(p, keyId)
+        p.message("<col=801700>You destroy the loot key</col> — its sealed loot is lost.")
+    }
+
     /** The chest's Destroy button (confirmation handled by the caller): wipe ALL sealed loot. */
     fun destroyAll(p: Player) {
         val bundles = load(p)
@@ -316,6 +332,15 @@ class LootKeyPlugin(
                 onItemOption(item = keyName, option = "check") { LootKeys.checkKey(player, keyId) }
             } catch (e: Exception) {
                 logger.info { "lootkeys: no 'check' option on $keyName (${e.message})" }
+            }
+            // Drop = destroy (with confirmation), never a ground item another player can grab.
+            canDropItem(keyName) {
+                player.queue {
+                    when (options(player, "Destroy the key — its sealed loot will be lost.", "Cancel.", title = "Destroy this loot key?")) {
+                        1 -> LootKeys.destroyKey(player, keyId)
+                    }
+                }
+                return@canDropItem false
             }
         }
 

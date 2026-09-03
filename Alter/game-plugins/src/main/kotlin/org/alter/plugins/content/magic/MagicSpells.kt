@@ -124,11 +124,44 @@ object MagicSpells {
 
     fun getMiscSpells(): Map<Int, SpellMetadata> = metadata.filter { it.value.spellType == MISC_SPELL_TYPE }
 
+    /**
+     * Blighted spell sacks (OSRS): inside the Wilderness, one sack replaces the whole rune
+     * cost of the spells it names. Keyed by the spell's cache name. Player report 2026-09-02:
+     * the sacks dropped and were handed out by the Mire dispenser but did nothing.
+     */
+    private val BLIGHTED_SACKS: Map<String, String> =
+        mapOf(
+            "Ice Rush" to "item.blighted_ancient_ice_sack",
+            "Ice Burst" to "item.blighted_ancient_ice_sack",
+            "Ice Blitz" to "item.blighted_ancient_ice_sack",
+            "Ice Barrage" to "item.blighted_ancient_ice_sack",
+            "Bind" to "item.blighted_entangle_sack",
+            "Snare" to "item.blighted_entangle_sack",
+            "Entangle" to "item.blighted_entangle_sack",
+            "Tele Block" to "item.blighted_teleport_spell_sack",
+            "Teleport Block" to "item.blighted_teleport_spell_sack",
+            "Vengeance" to "item.blighted_vengeance_sack",
+            "Wind Surge" to "item.blighted_surge_sack",
+            "Water Surge" to "item.blighted_surge_sack",
+            "Earth Surge" to "item.blighted_surge_sack",
+            "Fire Surge" to "item.blighted_surge_sack",
+        )
+
+    /** The sack item that would pay for [spellName] right now, or -1 (wrong zone / no sack). */
+    private fun sackFor(p: Player, spellName: String?): Int {
+        if (spellName == null) return -1
+        val key = BLIGHTED_SACKS[spellName] ?: return -1
+        if (!org.alter.plugins.content.combat.PvpZones.isWilderness(p.tile)) return -1
+        val id = runCatching { getRSCM(key) }.getOrNull() ?: return -1
+        return if (p.inventory.contains(id)) id else -1
+    }
+
     fun canCast(
         p: Player,
         lvl: Int,
         items: List<Item>,
         requiredBook: Int,
+        spellName: String? = null,
     ): Boolean {
         if (requiredBook != -1 && p.getSpellbook().id != requiredBook) {
             p.message("You can't cast this spell.")
@@ -137,6 +170,9 @@ object MagicSpells {
         if (p.getSkills().getBaseLevel(Skills.MAGIC) < lvl) {
             p.message("Your Magic level is not high enough for this spell.")
             return false
+        }
+        if (sackFor(p, spellName) != -1) {
+            return true // a blighted sack covers the runes
         }
         if (p.getVarbit(INF_RUNES_VARBIT) == 0) {
             for (item in items) {
@@ -155,7 +191,14 @@ object MagicSpells {
     fun removeRunes(
         p: Player,
         items: List<Item>,
+        spellName: String? = null,
     ) {
+        if (p.getVarbit(INF_RUNES_VARBIT) != 0) return
+        val sack = sackFor(p, spellName)
+        if (sack != -1) {
+            p.inventory.remove(item = sack, amount = 1)
+            return
+        }
         if (p.getVarbit(INF_RUNES_VARBIT) == 0) {
             for (item in items) {
                 /*

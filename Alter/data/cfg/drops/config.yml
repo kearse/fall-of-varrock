@@ -17,3 +17,29 @@ quantityMultiplier: 1.0
 # of any NPC that already has its own death/loot plugin (bosses). Add ids here if a
 # monster's real table is undesirable (e.g. an arena/minigame reskin).
 excludeIds: []
+
+# ITEM ids the generic handler must never drop, whatever table they sit in. The osrsbox
+# import carries content this server has no system for, and a handful of rows whose
+# rarity cell parsed as 1.0 (a guaranteed drop). Player reports 2026-09-02: "Ankou drops
+# elite caskets" (27 monsters dropped Reward casket (elite) EVERY kill), "scorpion keeps
+# dropping Book page 1", "clue scrolls don't work / casket does not open".
+excludeItemIds:
+  # Clue scrolls — no Treasure Trails system exists.
+  - 23182   # beginner
+  - 2677    # easy
+  - 2801    # medium
+  - 2722    # hard
+  - 12073   # elite
+  - 19835   # master
+  # Reward caskets — cannot be opened.
+  - 23245   # beginner
+  - 20546   # easy
+  - 20545   # medium
+  - 20544   # hard
+  - 20543   # elite (was a 100% row on 27 monsters)
+  - 19836   # master
+  # Book page 1 — a 100% row on the wilderness scorpions.
+  - 4569
+  # Warrior guild token — this server repurposes 8851 as the Vote Ticket, and the
+  # animated-armour tables hand it out at 100%.
+  - 8851

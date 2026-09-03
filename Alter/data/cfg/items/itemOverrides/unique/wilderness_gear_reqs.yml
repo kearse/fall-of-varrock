@@ -1,0 +1,138 @@
+# Ancient Warriors' equipment (Vesta / Statius / Morrigan / Zuriel) — classic OSRS equip
+# requirements. The rev-228 cache carries NO skill params on these ids (metaReqCheck 2026-09-02:
+# skillReqs=[NONE] for all seventeen), so a level-3 account could wield a Vesta's longsword.
+# Player report 2026-09-02 asked for the OSRS 78s. Armour additionally needs the Lord rank
+# (Title.LORD_TIER_ARMOUR) — that gate is separate and unchanged.
+#
+# Partial documents: `equipment.skillReqs` only — no equip_slot, so cache stats are untouched.
+
+# vestas_longsword
+id: 22613
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 78
+---
+# vestas_spear
+id: 22610
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 78
+---
+# statiuss_warhammer
+id: 22622
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 78
+---
+# zuriels_staff
+id: 22647
+equipment:
+  skillReqs:
+    - skill: "magic"
+      level: 78
+---
+# morrigans_javelin
+id: 22636
+equipment:
+  skillReqs:
+    - skill: "ranged"
+      level: 78
+---
+# morrigans_throwing_axe
+id: 22634
+equipment:
+  skillReqs:
+    - skill: "ranged"
+      level: 78
+---
+# vestas_chainbody
+id: 22616
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 78
+---
+# vestas_plateskirt
+id: 22619
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 78
+---
+# statiuss_full_helm
+id: 22625
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 78
+---
+# statiuss_platebody
+id: 22628
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 78
+---
+# statiuss_platelegs
+id: 22631
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 78
+---
+# morrigans_coif
+id: 22638
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 78
+    - skill: "ranged"
+      level: 78
+---
+# morrigans_leather_body
+id: 22641
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 78
+    - skill: "ranged"
+      level: 78
+---
+# morrigans_leather_chaps
+id: 22644
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 78
+    - skill: "ranged"
+      level: 78
+---
+# zuriels_hood
+id: 22650
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 78
+    - skill: "magic"
+      level: 78
+---
+# zuriels_robe_top
+id: 22653
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 78
+    - skill: "magic"
+      level: 78
+---
+# zuriels_robe_bottom
+id: 22656
+equipment:
+  skillReqs:
+    - skill: "defence"
+      level: 78
+    - skill: "magic"
+      level: 78

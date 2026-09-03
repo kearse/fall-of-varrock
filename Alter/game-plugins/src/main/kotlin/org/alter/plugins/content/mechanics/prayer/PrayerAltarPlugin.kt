@@ -42,8 +42,24 @@ class PrayerAltarPlugin(
         Bone("item.dragon_bones", 72.0),
     )
 
-    // Classic OSRS prayer altars. "altar_409" is the standard Pray-at altar.
-    private val altars = listOf("object.altar_409")
+    // Classic OSRS prayer altars. "altar_409" is the standard Pray-at altar. The wilderness
+    // Chaos altars (player report 2026-09-02: "Chaos Altars don't work + cannot use bones on it")
+    // are separate object ids and additionally keep the bone half the time (OSRS).
+    private val altars = listOf(
+        "object.altar_409",
+        "object.chaos_altar",
+        "object.chaos_altar_411",
+        "object.chaos_altar_412",
+        "object.chaos_altar_26258",
+    )
+
+    /** Altars with the OSRS Chaos-altar rite: a 50% chance each offered bone is not consumed. */
+    private val boneSavingAltars = setOf(
+        "object.chaos_altar",
+        "object.chaos_altar_411",
+        "object.chaos_altar_412",
+        "object.chaos_altar_26258",
+    )
 
     // Offering bones ON the altar (the church-altar rite) is far faster than burying — the gilded-altar
     // rate of 3.5x. This is what the War-Prep Magic quest sends recruits to the Lumbridge church altar
@@ -87,19 +103,26 @@ class PrayerAltarPlugin(
         // One use-on-altar offers the whole inventory: the queue keeps offering that bone
         // type until none remain, and breaks if the player walks off or does something else.
         altars.forEach { altar ->
+            val saveBones = altar in boneSavingAltars
             bones.forEach { b ->
                 try {
-                    onItemOnObj(obj = altar, item = b.key) { player.queue { offer(this, player, b) } }
+                    onItemOnObj(obj = altar, item = b.key) { player.queue { offer(this, player, b, saveBones) } }
                 } catch (e: Exception) { /* this altar/bone pairing isn't in the cache */ }
             }
         }
     }
 
-    private suspend fun offer(task: QueueTask, player: Player, bone: Bone) {
+    private suspend fun offer(task: QueueTask, player: Player, bone: Bone, saveBones: Boolean) {
         while (player.inventory.remove(item = getRSCM(bone.key), amount = 1).hasSucceeded()) {
             player.animate(3705) // kneel-and-offer at the altar
             player.addXp(Skills.PRAYER, bone.xp * altarMultiplier)
-            player.message("You offer the bones on the altar. The gods are pleased.")
+            if (saveBones && player.world.chance(1, 2)) {
+                // Chaos altar: the bone is offered for full xp but not consumed.
+                player.inventory.add(item = getRSCM(bone.key), amount = 1)
+                player.message("The gods accept your offering, and the bones remain.")
+            } else {
+                player.message("You offer the bones on the altar. The gods are pleased.")
+            }
             if (!player.inventory.contains(getRSCM(bone.key))) {
                 break
             }

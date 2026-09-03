@@ -120,7 +120,10 @@ buy_limit: null
 equipment:
   equip_slot: "hat"
 ---
-id: 21913
+# 22114 is the REAL wearable Mythical cape def (Wear + worn model). 21913 is a same-named
+# duplicate with no equip slot in the cache, so the shop cape could never be worn
+# (player report 2026-09-02 "Mythical cape broken"). item.rscm champions_cape now → 22114.
+id: 22114
 name: "Champion's Cape"
 examine: "Awarded for triumph over Lumbridge's mightiest foes."
 tradeable: false

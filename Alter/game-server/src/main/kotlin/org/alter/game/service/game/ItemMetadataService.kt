@@ -225,7 +225,9 @@ class ItemMetadataService : Service {
         val def = getItem(item.id)
 
         if (item.name.isNotBlank()) def.name = item.name
-        def.examine = item.examine ?: ""
+        // Only when declared: every override document that omitted `examine:` (all of barrows/**,
+        // classicTierReqs/**) was blanking the examine text objs.csv loaded a moment earlier.
+        item.examine?.let { def.examine = it }
         // Only apply when the document declares it. With the old non-null `= false` default,
         // every override file that omitted `tradeable:` (all of barrows/**) silently flagged
         // its items untradeable in the cache def — kept on death, refused by the GE.
