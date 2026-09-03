@@ -123,6 +123,9 @@ object TeleportRegistry {
         soon("theatre_of_blood", "Theatre of Blood", BOSSES),
         soon("chambers_of_xeric", "Chambers of Xeric", BOSSES),
         soon("revenant_caves", "Revenant Caves", BOSSES, WILD, wild = 17),
+        // Story bosses (Team 4 PR 8): both start at Arrav in the fallen palace's west hall.
+        built("zemouregal", "Zemouregal (Fallen Palace)", BOSSES, Tile(3212, 3478, 0), HOSTILE),
+        built("the_convergence", "The Convergence (Deep Senntisten)", BOSSES, Tile(3212, 3478, 0), HOSTILE),
 
         // ── ⚔️ Wilderness / PvP (the PK-bot corridor, south → north) ───────────
         built("outlaw_camp", "Outlaw Camp", WILDERNESS, Tile(3235, 3345, 0), WILD, wild = 5),

@@ -100,7 +100,7 @@ final class LofTeleportsData
 			b("Recruit Trials", "Safe Zone", SAFE, 1277),       // bronze sword
 			s("Active Campaign", "Soon", SOON, 1201));          // rune kiteshield
 
-		// Mirrors TeleportRegistry BOSSES row-for-row (30 rows): the hand-built roster was purged;
+		// Mirrors TeleportRegistry BOSSES row-for-row (32 rows): the hand-built roster was purged;
 		// bosses come back one at a time as Kronos ports and flip to b(...) here as they land.
 		cat("Bosses",
 			b("Corp Beast (Event)", "Hostile", HOSTILE, 13734), // spirit shield
@@ -132,7 +132,9 @@ final class LofTeleportsData
 			b("Demonic Gorillas", "Hostile", HOSTILE, 19529),   // zenyte shard
 			s("Theatre of Blood", "Soon", SOON, 22326),         // justiciar faceguard
 			s("Chambers of Xeric", "Soon", SOON, 20997),        // twisted bow
-			s("Revenant Caves", "Soon", SOON, 22557));          // amulet of avarice
+			s("Revenant Caves", "Soon", SOON, 22557),           // amulet of avarice
+			b("Zemouregal (Fallen Palace)", "Hostile", HOSTILE, 30320),      // arrav's axe (story boss, Arrav hub)
+			b("The Convergence (Deep Senntisten)", "Hostile", HOSTILE, 2373)); // relic of old Varrock (story boss, Arrav hub)
 
 		cat("Wilderness",
 			b("Outlaw Camp", "Wild Lvl 5", WILD, 1333),         // rune scimitar
