@@ -17,7 +17,7 @@ The **Quartermaster** - at the Lumbridge shop hub and in the Mire crypt - is the
 | Goes down when | **never** - it is your standing, not a purse | a Minister launches a campaign (1,500) or a King a conquest (2,800) |
 | Used for | rank eligibility, the daily bonus, contribution checks (`::service`) | letting the commanders launch the biggest operations |
 
-Scheduled marches, Grand Marches and Lord operations never touch Realm Supplies - the war keeps moving whatever the stockpile says.
+Scheduled marches, Grand Marches, Lord operations and story-called public wars never touch Realm Supplies - the war keeps moving whatever the stockpile says. If the stockpile hits zero, ordinary play carries on; only a Minister's campaign and the King's conquest wait for it to refill.
 
 ## The Supply Depot
 

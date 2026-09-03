@@ -44,6 +44,11 @@ object WarState {
     @Volatile
     private var dirty = false
 
+    /** True once [load] has run (file read, or confirmed absent) — the shutdown flush's guard. */
+    @Volatile
+    private var loaded = false
+    val isLoaded: Boolean get() = loaded
+
     // --- Realm Supplies meter (single realm-wide value; the Mire fills it, campaigns drain it) ---
     private var supplyMeter = 0
 
@@ -95,6 +100,7 @@ object WarState {
         try {
             if (!Files.exists(saveFile)) {
                 logger.info { "No war state file at $saveFile; starting fresh." }
+                loaded = true
                 return
             }
             val doc = Document.parse(saveFile.readText().trimStart('﻿'))
@@ -108,6 +114,7 @@ object WarState {
             patronQueue.clear()
             (doc.get("patronMarches") as? List<*>)?.forEach { (it as? String)?.let(patronQueue::add) }
             dirty = version != SCHEMA_VERSION || legacy.isNotEmpty() // rewrite an older shape on the next save tick
+            loaded = true
             logger.info { "Loaded war state (v$version): supplies $supplyMeter/$SUPPLY_METER_MAX, marches $marchCount, patron queue ${patronQueue.size}." }
         } catch (e: Exception) {
             logger.error(e) { "Failed to load war state from $saveFile; starting fresh." }

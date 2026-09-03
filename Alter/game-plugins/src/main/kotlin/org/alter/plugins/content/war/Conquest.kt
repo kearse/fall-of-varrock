@@ -11,7 +11,8 @@ import org.alter.plugins.content.economy.addPoints
  * **King of Lumbridge** — the endgame conquest quest (the top of the feudal ladder, Act III). It
  * answers "what now?" the moment a player buys the [King][Title.KING] rank from Duke Horacio: the
  * realm's other quests carried them up the ranks, and this one finally puts the crown to use by
- * marching a full army on **Fallen Varrock** and retaking it.
+ * marching a full army on **Fallen Varrock** and breaking its garrison — a temporary battlefield
+ * victory, never a capture: the city stays fallen (design authority 03 §2/§3).
  *
  * The quest is a thin guided wrapper over the war's existing conquest machinery ([CampaignCommandPlugin]'s
  * `::conquest`, the [RealmSupply] meter and [CampaignDirector]'s victory resolution) — it adds no new
@@ -49,8 +50,8 @@ object Conquest {
         NONE("(not started)"),
         SUPPLY("Stock the Realm Supplies to $SUPPLY_TARGET for the march on Fallen Varrock — skill the Mire and hand finished goods to a Quartermaster (::supply to check)."),
         LAUNCH("Muster your army and launch the conquest of Fallen Varrock — gather your war-chest, then command ::conquest varrock."),
-        WIN("Lead your army to victory — break Fallen Varrock's garrison and take the city."),
-        DONE("King of Lumbridge — Fallen Varrock is retaken. The realm marches at your word."),
+        WIN("Lead your army to victory — break Fallen Varrock's garrison. The field is yours for a day; the city stays fallen."),
+        DONE("King of Lumbridge — Fallen Varrock's garrison was broken under your banner. The realm marches at your word."),
     }
 
     /** The player's current step (NONE until they reach King and the chain begins). */
@@ -123,7 +124,7 @@ object Conquest {
 
     private fun grantCompletion(p: Player) {
         p.addPoints(PointKind.PRESTIGE, COMPLETION_PRESTIGE)
-        p.message("<col=ffcc00>King of Lumbridge complete!</col> Fallen Varrock is retaken in your name, ${p.address}.")
+        p.message("<col=ffcc00>King of Lumbridge complete!</col> Fallen Varrock's garrison broke before your army, ${p.address} — the city stays fallen, and the realm will march again.")
         p.message("The realm's armies march at your word — command more conquests with <col=0000ff>::conquest</col>, and claim your spoils with <col=0000ff>::claim</col>.")
     }
 
@@ -131,7 +132,7 @@ object Conquest {
     fun statusLine(p: Player): String = when (step(p)) {
         Step.NONE -> "King of Lumbridge: reach the rank of King (buy it from Duke Horacio) to begin."
         Step.SUPPLY -> "King of Lumbridge: stock the Realm Supplies — <col=4f9b4f>${RealmSupply.meter()}/$SUPPLY_TARGET</col> for a conquest."
-        Step.DONE -> "King of Lumbridge: <col=4f9b4f>complete</col> — Fallen Varrock is yours."
+        Step.DONE -> "King of Lumbridge: <col=4f9b4f>complete</col> — you broke Fallen Varrock's garrison."
         else -> "King of Lumbridge — current objective: ${step(p).objective}"
     }
 }

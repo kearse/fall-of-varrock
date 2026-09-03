@@ -84,7 +84,8 @@ enum class CommandTier(val minTitle: Title) {
     RAID(Title.LORD),
     /** Launch a city campaign that pushes allied troops through the frontier lines. */
     CAMPAIGN(Title.MINISTER),
-    /** Send a full army to conquer a city and seize its resources. */
+    /** Send a full army on the largest, deepest assault on a hostile city — a temporary battlefield
+     *  victory and its spoils, never ownership (the city stays fallen). */
     CONQUEST(Title.KING),
 }
 

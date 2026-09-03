@@ -35,18 +35,52 @@ class CityFrontierPlugin(
     server: Server,
 ) : KotlinPlugin(r, world, server) {
 
-    init {
-        // Ring staging is filtered to walkable land via [StaticTerrain] (the runtime collision
-        // map isn't populated this early); object/wall jitter is handled at spawn by HostileZone.
-        // Combat defs are registered once per enemy npc id (guarded - setCombatDef throws on a dup
-        // and onNpcDeath silently keeps only one handler). The knight id is NOT registered globally
-        // (it's shared with the war system); its stats ride on the pack's own combatDef.
-        val seen = HashSet<String>()
-        val zones = ArrayList<HostileZone>()
+    /** Enemy npc ids already bound — one combat def + death handler per id (a dup throws / is lost). */
+    private val seen = HashSet<String>()
+    private val zones = ArrayList<HostileZone>()
 
+    init {
         // The city frontiers plus every scheduled-march target's garrison ([MarchTargets]) — a march
-        // target is just a small campaign-gated frontier keyed by the target key.
-        for (cfg in CityFrontiers.all + MarchTargets.frontiers) {
+        // target is just a small campaign-gated frontier keyed by the target key. Targets that content
+        // registers AFTER this plugin constructed (plugin load order is unspecified) are built by the
+        // registration hook, so `MarchTargets.register` is order-free.
+        (CityFrontiers.all + MarchTargets.frontiers).forEach { buildFrontier(it) }
+        MarchTargets.whenRegistered { buildFrontier(it.frontier) }
+
+        // Far-flung frontiers (e.g. Varrock) have NO runtime collision until a player streams the
+        // region in — so their NPCs would spawn unable to path or fight. Force-load every frontier's
+        // battle regions at world-init (idempotent; near-spawn Lumbridge is effectively a no-op).
+        // Regions only get collision once a player is near; force-load so far-flung defenders path.
+        onWorldInit { forceLoadFrontierRegions(world) }
+
+        val timer = TimerKey()
+        onWorldInit { world.timers[timer] = TICK }
+        onTimer(timer) {
+            zones.forEach { it.tick(world) }
+            world.timers[timer] = TICK
+        }
+
+        // Single-combat (1v1) enforcement on its OWN every-game-tick timer — tighter than the
+        // zone tick, so a second goblin that aggros a new player is released before it can hit.
+        val sweepTimer = TimerKey()
+        onWorldInit { world.timers[sweepTimer] = 1 }
+        onTimer(sweepTimer) {
+            zones.forEach { it.enforceSingleCombatTick(world) }
+            world.timers[sweepTimer] = 1
+        }
+    }
+
+    /**
+     * Build one frontier's garrison: a combat def + loot handler per enemy line, muster points, the
+     * [HostileZone] and its [Frontiers] registration. Isolated — a bad config never sinks the rest.
+     *
+     * Ring staging is filtered to walkable land via [StaticTerrain] (the runtime collision map isn't
+     * populated this early); object/wall jitter is handled at spawn by HostileZone. Combat defs are
+     * registered once per enemy npc id ([seen] — setCombatDef throws on a dup and onNpcDeath silently
+     * keeps only one handler). The knight id is NOT registered globally (it's shared with the war
+     * system); its stats ride on the pack's own combatDef.
+     */
+    private fun buildFrontier(cfg: FrontierConfig) {
           try {
             val packs = ArrayList<MonsterPack>()
             var totalEnemies = 0
@@ -136,29 +170,6 @@ class CityFrontierPlugin(
           } catch (e: Throwable) {
             logger.error(e) { "Frontier '${cfg.cityKey}' failed to build; skipped (other frontiers unaffected)." }
           }
-        }
-
-        // Far-flung frontiers (e.g. Varrock) have NO runtime collision until a player streams the
-        // region in — so their NPCs would spawn unable to path or fight. Force-load every frontier's
-        // battle regions at world-init (idempotent; near-spawn Lumbridge is effectively a no-op).
-        // Regions only get collision once a player is near; force-load so far-flung defenders path.
-        onWorldInit { forceLoadFrontierRegions(world) }
-
-        val timer = TimerKey()
-        onWorldInit { world.timers[timer] = TICK }
-        onTimer(timer) {
-            zones.forEach { it.tick(world) }
-            world.timers[timer] = TICK
-        }
-
-        // Single-combat (1v1) enforcement on its OWN every-game-tick timer — tighter than the
-        // zone tick, so a second goblin that aggros a new player is released before it can hit.
-        val sweepTimer = TimerKey()
-        onWorldInit { world.timers[sweepTimer] = 1 }
-        onTimer(sweepTimer) {
-            zones.forEach { it.enforceSingleCombatTick(world) }
-            world.timers[sweepTimer] = 1
-        }
     }
 
     /**
