@@ -85,8 +85,11 @@ private fun initCache() = CacheManager.init(Cache.load(Path.of(CACHE_PATH), fals
 
 private fun describe(id: Int): String {
     val def = CacheManager.getNpcOrDefault(id)
+    // Multi-npcs (varbit/varp-transformed) carry no anims/options on the base def — the
+    // children do. Print them so a "no usable animations" base isn't mistaken for the real npc.
+    val transform = if (def.varbit != -1 || def.varp != -1) " varbit=${def.varbit} varp=${def.varp} -> ${def.transforms?.toList()}" else ""
     return "npc $id '${def.name}' cb=${def.combatLevel} size=${def.size} actions=${def.actions.toList()} " +
-        "models=${def.models?.toList()} standAnim=${def.standAnim} walkAnim=${def.walkAnim}"
+        "models=${def.models?.toList()} standAnim=${def.standAnim} walkAnim=${def.walkAnim}$transform"
 }
 
 private fun inspect(ids: List<Int>) {

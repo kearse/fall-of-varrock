@@ -35,6 +35,9 @@ enum class Food(
     MANTA_RAY(item = "item.manta_ray", heal = 22),
     DARK_CRAB(item = "item.dark_crab", heal = 22),
     ANGLERFISH(item = "item.anglerfish", overheal = true),
+    // Neypotzli (Moons of Peril) camp food — heal values per the OSRS wiki (TUNE if disputed).
+    COOKED_BREAM(item = "item.cooked_bream", heal = 12),
+    COOKED_MOONLIGHT_ANTELOPE(item = "item.cooked_moonlight_antelope", heal = 26),
 
     /**
      * Blighted food — Wilderness-only copies of the PvP staples (OSRS). Gated in

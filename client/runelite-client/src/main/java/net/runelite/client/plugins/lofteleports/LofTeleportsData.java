@@ -157,6 +157,7 @@ final class LofTeleportsData
 		cat("Mini-Games",
 			b("Wizard Tower", "Safe Zone", SAFE, 579),          // blue wizard hat
 			b("Fight Cave", "Safe Zone", SAFE, 6570),           // fire cape
+			b("Moons of Peril", "Hostile", HOSTILE, 29028),     // blood moon helm (Neypotzli)
 			s("The Inferno", "Soon", SOON, 21295),              // infernal cape
 			s("Castle Wars", "Soon", SOON, 4037),               // castle wars decor
 			s("Last Man Standing", "Soon", SOON, 11941),        // looting bag

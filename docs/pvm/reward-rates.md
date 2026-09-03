@@ -83,6 +83,19 @@ Cerberus 91 / Thermy 93 Slayer gates are engine-enforced. Skotizo costs a dark t
 | Demonic gorilla | Coins | 15–25k at 7/~150 (Kronos had 150–250k GUARANTEED — cut ×10 and moved off the always tier) | FoV | ⚠️ |
 | Boss Tickets | Kraken 20 · Cerberus 30 · Thermy 20 · Skotizo 30 · gorilla 5 | — | FoV | ⚠️ |
 
+## Moons of Peril (PR 5, `content/minigames/moons/`)
+
+OSRS-wiki rules; the Moons drop nothing themselves — the Lunar Chest pays.
+
+| Reward | Rate | Source | Review |
+|---|---|---|---|
+| Common rolls per claim | 1 / 3 / 6 for 1 / 2 / 3 Moons subdued | OSRS | — |
+| Unique per subdued Moon (one of that Moon's 4 pieces) | 1/56 (≈ 1/224 per piece) | OSRS | ⚠️ |
+| Common table (weights /30) | atlatl darts 72–120 (5), blessed bone shards 160–179 (2), wyrmling bones 42–54 (1), sun-kissed bones 6–12 (3), swamp tar 79–119 (4), water orbs 30–45 (2), supercompost 6–12 (3), soft clay 15–25 (3), harralander 12–18 (3), irit 12–18 (1), maple seed 1–2 (2), yew seed 1 (1) | OSRS | — |
+| Boss Tickets | 10 per subdued Moon | FoV | ⚠️ |
+| Camp supply crates | 8 cooked bream per 3-minute cooldown (v1 stand-in for the gathering loop) | FoV | ⚠️ |
+| Food heals | cooked bream 12, cooked moonlight antelope 26 (`Food.kt`) | OSRS (TUNE) | ⚠️ |
+
 ## Boss Ticket rates already live (for comparison)
 
 | Boss | Tickets/kill | Source |

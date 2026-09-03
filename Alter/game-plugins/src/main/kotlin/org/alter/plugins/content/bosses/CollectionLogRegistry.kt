@@ -143,6 +143,15 @@ object CollectionLogRegistry {
         Category("thermonuclear_smoke_devil", "Thermonuclear Smoke Devil", "npc.thermonuclear_smoke_devil", listOf("item.occult_necklace", "item.smoke_battlestaff", "item.dragon_chainbody", "item.pet_smoke_devil")),
         Category("skotizo", "Skotizo", "npc.skotizo", listOf("item.dark_claw", "item.uncut_onyx", "item.jar_of_darkness", "item.skotos")),
         Category("demonic_gorilla", "Demonic Gorillas", "npc.demonic_gorilla", listOf("item.zenyte_shard", "item.ballista_limbs", "item.ballista_spring", "item.heavy_frame", "item.monkey_tail")),
+        // Moons of Peril — the Lunar Chest's twelve uniques (Moons.Moon.pieces).
+        Category(
+            "moons_of_peril", "Moons of Peril", "npc.blood_moon",
+            listOf(
+                "item.blood_moon_helm", "item.blood_moon_chestplate", "item.blood_moon_tassets", "item.dual_macuahuitl",
+                "item.blue_moon_helm", "item.blue_moon_chestplate", "item.blue_moon_tassets", "item.blue_moon_spear",
+                "item.eclipse_moon_helm", "item.eclipse_moon_chestplate", "item.eclipse_moon_tassets", "item.eclipse_atlatl",
+            ),
+        ),
     )
 
     fun byKey(key: String): Category? = categories.firstOrNull { it.key.equals(key, ignoreCase = true) }
