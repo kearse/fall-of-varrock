@@ -1,5 +1,13 @@
 # Boss Roster — Master Plan
 
+> **2026-09-02 status note (Team 4).** The hand-built roster this file describes was purged on
+> 2026-08-28 (`content/npcs/kbd/`, `SimpleBossDeathPlugin`, `BossLairs` no longer exist) and is
+> being rebuilt as Kronos ports: the live reference implementation is now the three-file shape in
+> `content/bosses/vorkath/` (see `docs/kronos-port-guide.md`), and the current build queue +
+> status lives in `docs/pvm/README.md`. Barrows shipped as the full crypt run in
+> `content/minigames/barrows/` (2026-09-02). The spec tables below (lairs, HP, mechanics) are
+> still the target list for the ports.
+
 > Goal: every boss reachable from the teleport portal's **Bosses** tab spawns at its
 > **real OSRS lair**, and fights with **OSRS-exact combat** — the same attack styles,
 > rotations, max hits, projectiles, animations, special mechanics and protection
