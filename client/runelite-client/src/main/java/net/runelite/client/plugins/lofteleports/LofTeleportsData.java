@@ -158,6 +158,7 @@ final class LofTeleportsData
 			b("Wizard Tower", "Safe Zone", SAFE, 579),          // blue wizard hat
 			b("Fight Cave", "Safe Zone", SAFE, 6570),           // fire cape
 			b("Moons of Peril", "Hostile", HOSTILE, 29028),     // blood moon helm (Neypotzli)
+			b("Senntisten Expedition", "Hostile", HOSTILE, 2373), // relic of old Varrock (the Digsite winch)
 			s("The Inferno", "Soon", SOON, 21295),              // infernal cape
 			s("Castle Wars", "Soon", SOON, 4037),               // castle wars decor
 			s("Last Man Standing", "Soon", SOON, 11941),        // looting bag

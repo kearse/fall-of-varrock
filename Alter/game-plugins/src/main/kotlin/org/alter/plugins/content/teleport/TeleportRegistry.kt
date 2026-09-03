@@ -154,6 +154,9 @@ object TeleportRegistry {
         // Lands in Neypotzli's antechamber — the three Moon chambers and the Lunar Chest are a
         // short walk (Team 4 PR 5, wiki-spec build; instanced solo fights).
         built("moons_of_peril", "Moons of Peril", MINIGAMES, Tile(1440, 9570, 0), HOSTILE),
+        // Lands at the Digsite winches — Operate one to descend into a private Senntisten
+        // expedition (Team 4 PR 7, FoV-original).
+        built("senntisten_expedition", "Senntisten Expedition", MINIGAMES, Tile(3368, 3426, 0), HOSTILE),
         soon("inferno", "The Inferno", MINIGAMES),
         soon("castle_wars", "Castle Wars", MINIGAMES),
         soon("last_man_standing", "Last Man Standing", MINIGAMES),

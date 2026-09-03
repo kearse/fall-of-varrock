@@ -112,6 +112,15 @@ through `addPoints` / `WarForge.awardCommendations`.
 | Palace Warden (15-min respawn) | 1–2 relics + 12–20 salvage + 2 dragon bones always; supplies; 30 tickets, 40 WE, 5 Commendations; Warden's ember 1/8 | per kill | ⚠️ |
 | Arrav Intelligence | Purge 15 WE + 2 Comm + 5 salvage · Salvage 12 WE + 2 Comm + 1/6 relic · Bounty 25 WE + 4 Comm + relic · Warden 40 WE + 6 Comm + 2 relics | per assignment | ⚠️ |
 
+## Senntisten Expeditions (PR 7, `content/pvm/senntisten/`)
+
+FoV-original. One 12-minute solo run = 3 waves + the Custodian.
+
+| Source | Reward | Rate | Review |
+|---|---|---|---|
+| Wave cleared (×3) | Varrock salvage 2–4 | per wave | ⚠️ |
+| The Custodian | 2 relics + 10 salvage + 1 expedition log (untradeable, old journal 1493 renamed) always; runes/bars/bones/restores main; 25 tickets, 30 WE, 4 Commendations | per kill | ⚠️ |
+
 ## Boss Ticket rates already live (for comparison)
 
 | Boss | Tickets/kill | Source |
