@@ -172,6 +172,27 @@ Kronos donor + OSRS wiki. Points: light 25, fix 25, root 10, kindling 25, heal 3
 | Armoury prices | top/robe/mace 250, gloves 150, helms 200, elite top/robe 200 + plain piece | OSRS | ⚠️ |
 | Party minimum / departure | 1 player / 60 s | FoV (low pop) | ⚠️ |
 
+## Guardians of the Rift (PR 11, `content/minigames/gotr/`) — Team 2 approved 2026-09-03
+
+OSRS wiki rates exactly (never above). Pearls untradeable/stackable, Rewards-Guardian-only;
+Temple Supplies wares guarded (`SpecialShopGuard`).
+
+| Reward | Rate | Source | Review |
+|---|---|---|---|
+| Points | 1 per 100 energy of each type (+ fractional chance); XP = RC level × 45 at ≥300 energy | OSRS | ✅ |
+| Search (weights /140) | pearls 14–16 (18), pouches (15), elemental runes 400–500 (4 each), mind 250–400 (4), body 80–150 (4), chaos/cosmic/nature/law/death/blood (10 each, OSRS ranges), talismans (16), intricate pouch (5), abyssal ashes (1), needle (1) | OSRS | ✅ |
+| Rares per search | Atlax's diary 1/20 once, catalytic talisman 1/200, abyssal needle 1/300 once, lantern 1/700, dyes 1/1200 each, abyssal protector 1/4000 | OSRS | ✅ |
+| Temple Supplies (pearls) | raiments 400/350/350/250, lantern 1500, needle 750, catalytic talisman 100, elemental talisman 50 | OSRS | ✅ |
+
+## Blast Furnace (PR 12, `content/minigames/blastfurnace/`) — Team 2 approved 2026-09-03
+
+| Item | Value | Source | Review |
+|---|---|---|---|
+| Coffer | 72,000 coins/hour (1,200/min while ore is in the machine), 25,000 minimum deposit, everyone pays — a pure gp sink | OSRS official-world model (Team 2) | ✅ |
+| Coal per bar | steel 1 / mithril 2 / adamant 3 / rune 4 (half the regular furnace) | OSRS | ✅ |
+| Smithing XP per bar | bronze 6.2, iron 12.5, silver 13.7, steel 17.5, gold 22.5 (56.2 with goldsmith gauntlets), mithril 30, adamant 37.5, rune 50 | OSRS | ✅ |
+| Ordan ore shop | not built (Team 2: the Skilling Materials shop is the only NPC ore tap) | — | — |
+
 ## Boss Ticket rates already live (for comparison)
 
 | Boss | Tickets/kill | Source |
