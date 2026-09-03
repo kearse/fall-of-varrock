@@ -7,6 +7,16 @@ bosses keep classic loot), **Kronos** = the donor server's rate, **FoV** = our o
 
 Legend for Team 2: ✅ reviewed · ⚠️ needs review · — n/a.
 
+**Per-boss cache-value expectation** (expected qty × cache cost per kill, per hour, 0.7× realised, band
+vs Team 2's mid/endgame bands): `docs/pvm/cache-value-expectation.md`.
+
+**Team 2 review, 2026-09-03: every table below is approved as-is** (all rows at or below the mid band;
+FoV-original content being low in gp terms is the design — its value is War-Forging inputs + War Effort).
+Standing conditions from Team 2: **no new coin rows anywhere without their sign-off** (coins are the one
+thing their sink caps cannot touch; Zulrah's 17k/kill is the only coin-dominated row and stays), and
+Boss Tickets are being retired — `BossDeath.payout(tickets =)` is the single seam to no-op when they ping.
+The ⚠️ marks below are therefore historical; new or changed rates re-open review.
+
 ## Barrows (PR 1, `content/minigames/barrows/`)
 
 | Reward | Rate | Source | Review |
@@ -133,6 +143,29 @@ chase, not a market item (Team 2: flip via YAML if you want it traded).
 | Zemouregal | Warden's ember | 1/5 | ⚠️ |
 | Zemouregal | Arrav's axe (cosmetic) / Mahjarrat notes a–j / k–z (lore) | 1/150 / 1/40 / 1/40 | ⚠️ |
 | The Convergence (1500 HP) | 4 relics + 20 salvage + **1 Warden's ember** always; high runes (incl. wrath)/bars/bones/potions main; 60 tickets, 80 WE, 10 Commendations | per kill | ⚠️ |
+
+## Wintertodt (PR 9, `content/minigames/wintertodt/`)
+
+Kronos donor + OSRS wiki. Points: light 25, fix 25, root 10, kindling 25, heal 30; crate per 500
+(+ proportional chance of one more). XP per donor (feed root 3×FM + cur+5, kindling 3.8×FM, light
+6×FM, fix 4×Con, fletch 0.6×Fle, chop 0.3×WC, end 100×FM).
+
+| Reward | Rate | Source | Review |
+|---|---|---|---|
+| Crate supply rolls | 3 per crate; logs/ores/herbs/seeds/fish/gems/essence/bones weighted, FM-gated tiers; **no coins** | FoV (OSRS shape) | ⚠️ |
+| Burnt page | 1/45 per crate | OSRS-ish | ⚠️ |
+| Pyromancer garb / robe / hood / boots, warm gloves, bruma torch | 1/150 each per crate | OSRS | ⚠️ |
+| Tome of fire (empty) | 1/1000 per crate | OSRS | ⚠️ |
+| Phoenix | 1/5000 per crate | OSRS | ⚠️ |
+
+## Pest Control (PR 9, `content/minigames/pestcontrol/`)
+
+| Reward | Rate | Source | Review |
+|---|---|---|---|
+| Pest Control points per win (attr `pest_points`; never "commendations" — that word is the war team's currency) | novice 10 / intermediate 15 / veteran 20 (activity ≥ 50) | FoV (Kronos 14/24/30, OSRS 2/3/4) | ⚠️ |
+| Coins per win | none (Kronos paid 3–7k) | FoV rule | — |
+| Armoury prices | top/robe/mace 250, gloves 150, helms 200, elite top/robe 200 + plain piece | OSRS | ⚠️ |
+| Party minimum / departure | 1 player / 60 s | FoV (low pop) | ⚠️ |
 
 ## Boss Ticket rates already live (for comparison)
 
