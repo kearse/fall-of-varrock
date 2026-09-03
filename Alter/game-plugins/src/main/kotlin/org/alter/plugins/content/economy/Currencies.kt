@@ -60,9 +60,52 @@ fun Player.addPoints(kind: PointKind, amount: Int): Int {
     if (amount < 0 && !kind.spendable) return points(kind)
     val next = (points(kind) + amount).coerceAtLeast(0)
     attr[kind.attr] = next
-    // War Effort earned feeds the daily XP/drop bonus (master design brief §3A).
-    if (kind == PointKind.WAR_EFFORT && amount > 0) WarEffortBonus.recordEarned(this, amount)
+    if (kind == PointKind.WAR_EFFORT && amount > 0) {
+        // War Effort earned feeds the daily XP/drop bonus (master design brief §3A) …
+        WarEffortBonus.recordEarned(this, amount)
+        // … and every earn site, old or new, reaches the observers (achievements, quests, boards).
+        WarEffortEvents.fire(this, amount)
+    }
     return next
+}
+
+/**
+ * **Admin/test only** — overwrite a point counter outright, the one path that can LOWER a
+ * non-spendable record such as War Effort. Logged as a warning naming [by] so it never hides.
+ * `::setpoints` and `WarEffortApi.adminSet` route here; content never calls it.
+ */
+fun Player.adminSetPoints(kind: PointKind, amount: Int, by: String): Int {
+    val before = points(kind)
+    val next = amount.coerceAtLeast(0)
+    attr[kind.attr] = next
+    warEffortLogger.warn { "[ADMIN] $by set ${kind.display} of $username from $before to $next" }
+    return next
+}
+
+private val warEffortLogger = io.github.oshai.kotlinlogging.KotlinLogging.logger("WarEffortEvents")
+
+/**
+ * **War Effort earned** observers. Fired from [Player.addPoints] for every positive War Effort
+ * credit — the single choke point all nine earn sites already pass through — so a listener sees
+ * the depot, war payouts, contracts, bounties, quest rewards and `WarEffortApi.add` alike.
+ * Descending [priority], each isolated. Register from any plugin `init`.
+ */
+object WarEffortEvents {
+    private class Listener(val priority: Int, val fn: (Player, Int) -> Unit)
+
+    private val listeners = ArrayList<Listener>()
+
+    fun onEarned(priority: Int = 0, listener: (Player, Int) -> Unit) {
+        listeners += Listener(priority, listener)
+        listeners.sortByDescending { it.priority }
+    }
+
+    internal fun fire(p: Player, amount: Int) {
+        for (l in listeners.toList()) {
+            runCatching { l.fn(p, amount) }
+                .onFailure { warEffortLogger.error(it) { "War Effort listener failed for ${p.username} (+$amount)" } }
+        }
+    }
 }
 
 /** Spend [amount] of [kind] if affordable; returns true on success (balance debited). Always false

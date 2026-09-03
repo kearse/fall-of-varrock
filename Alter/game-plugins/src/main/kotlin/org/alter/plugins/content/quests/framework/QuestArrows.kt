@@ -9,9 +9,11 @@ import org.alter.rscm.RSCM.getRSCM
 /**
  * Guidance arrows for framework quests, through the shared [TargetMarker] (which already honours
  * both mutes — the Quest Journal guidance mute and `::huntarrow`). Claims at
- * [TargetMarker.PRIORITY_QUEST] (below the ladder/hunt marks): the deepest in-progress quest's
- * current step anchor — the nearest live npc for [QuestStep.anchorNpc] (re-scanned every few
- * sweeps, never every tick), else the [QuestStep.anchor] tile.
+ * [TargetMarker.PRIORITY_QUEST] (below the ladder/hunt marks): the **followed** quest's current
+ * step ([QuestFollow] — design authority 03 §7, "only the followed quest drives objective
+ * arrows"), else the deepest in-progress quest's; the anchor is the nearest live npc for
+ * [QuestStep.anchorNpc] (re-scanned every few sweeps, never every tick), else the
+ * [QuestStep.anchor] tile.
  */
 object QuestArrows {
 
@@ -27,7 +29,10 @@ object QuestArrows {
     }
 
     private fun mark(p: Player): TargetMarker.Mark? {
-        val live = QuestRegistry.frameworkQuests()
+        val followed = QuestFollow.followedDefinition(p)
+            ?.takeIf { it.serverArrow }
+            ?.let { q -> QuestEngine.step(p, q)?.let { q to it } }
+        val live = followed ?: QuestRegistry.frameworkQuests()
             .filter { it.serverArrow }
             .mapNotNull { q -> QuestEngine.step(p, q)?.let { q to it } }
             .maxByOrNull { it.first.chainIndex ?: -1 }

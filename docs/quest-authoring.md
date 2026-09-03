@@ -70,8 +70,18 @@ exactly as the Recruiting Sergeant was in PR-9).
 
 ## 1. The seams, one line each
 
+> **Prefer the facade**: `content/core/` (`WarApi`, `QuestApi`, `RankApi`, `WarEffortApi`,
+> `RealmSuppliesApi`, `VeteranApi`, `CompanionApi`, `StateApi`) wraps every row below with a stable
+> signature — see `docs/core-api.md`. The internals are listed so you can read them, not so you
+> import them.
+
 | Need | Call | Where it lives |
 |---|---|---|
+| Record a story beat / quest state by key (framework, or a raw beat before its quest exists) | `QuestApi.record(p, "story.arrav", "met")`, `QuestApi.state(p, key)` | `core/QuestApi.kt` |
+| Only the followed quest drives the arrow | `QuestApi.follow(p, key)` / `::quests follow <key>` | `framework/QuestFollow.kt` |
+| Start a **public** campaign/conquest on Varrock from a story event (free, no sponsor) | `WarApi.startPublicWar(world, WarType.CAMPAIGN, "varrock")` | `war/events/WarEvents.kt` |
+| React when any war ends (shares included) | `WarApi.onEnded { r -> … r.participated(name, 5) }` | `war/events/WarHooks.kt` |
+| Award / check Veteran of Varrock | `VeteranApi.award(p, reason)` / `VeteranApi.has(p)` | `war/Veteran.kt` |
 | "Has the player done X?" (any quest, legacy or new) | `QuestRegistry.isComplete(p, "warprep_magic")` | `framework/QuestRegistry.kt` |
 | Gate a quest on rank / service / milestone | `Prerequisite.RankAtLeast`, `WarEffortAtLeast`, `FlagSet(Flags.Known.VETERAN_OF_VARROCK)` | `framework/Objective.kt`, `mechanics/Flags.kt` |
 | "Is this player eligible for Lord yet?" | `RankEligibility.check(p, Title.LORD)` (empty list = yes) | `war/RankEligibility.kt` |

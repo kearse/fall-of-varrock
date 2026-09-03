@@ -35,7 +35,7 @@ This is also when the War first pays you: scheduled **[Marches](/wiki/marches-an
 
 ## Stage 3 - Early game: build your bankroll
 
-Straight out of the Wizard Tower, **War-Prep II** picks you up (Vannaka's bow lesson - the road to Lord), and the Recruiting Sergeant has an **optional** assignment for anyone who wants to learn to fight players: **[The Rogue Problem](/wiki/the-rogue-problem)** - thin the rogues' rank and file (a soldier's purse when the hunt clears), then climb the **[Rogue Knight ladder](/wiki/rogue-knights)**, the camp-by-camp PK schooling whose spoils fund your ranks. Say no and nothing on the main road waits on it; say yes and the Quest Journal guides the whole climb.
+Straight out of the Wizard Tower, **War-Prep II** picks you up (Vannaka's bow lesson - the road to Lord), and the Recruiting Sergeant has an **optional** assignment for anyone who wants to learn to fight players: **[The Rogue Problem](/wiki/the-rogue-problem)** - thin the rogues' rank and file (a soldier's purse when the hunt clears), then climb the **[Rogue Knight ladder](/wiki/rogue-knights)**, the camp-by-camp PK schooling whose spoils fund your ranks. Say no and nothing on the main road waits on it; say yes and the Quest Journal guides the whole climb. The journal's guidance arrow follows **one** quest at a time - with several on the go, `::quests follow <quest>` picks which (and `::quests follow` on its own lets it pick again).
 
 Beyond (and after) the quest, ranks are raised for coins plus a floor of lifetime War Effort (from Soldier up), so the early game is about finding the money-making loop you enjoy - and every one of them also builds your service record. All of these work from day one:
 

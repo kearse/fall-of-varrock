@@ -1,6 +1,8 @@
 package org.alter.plugins.content.quests
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import org.alter.api.ext.getCommandArgs
+import org.alter.api.ext.message
 import org.alter.api.ext.player
 import org.alter.game.Server
 import org.alter.game.model.World
@@ -8,6 +10,7 @@ import org.alter.game.model.attr.INTERACTING_SLOT_ATTR
 import org.alter.game.model.entity.Player
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
+import org.alter.plugins.content.quests.framework.QuestFollow
 import org.alter.plugins.content.quests.framework.QuestRegistry
 
 private val logger = KotlinLogging.logger {}
@@ -37,7 +40,24 @@ class QuestBookPlugin(
             QuestBook.open(player, idx)
         }
 
-        onCommand("quests", description = "Open the Quest Journal window") {
+        // ::quests               — open the journal on the active quest
+        // ::quests follow <key>  — the guidance arrow tracks THAT quest's objective (03 §7: only the
+        //                          followed quest drives arrows); ::quests follow (no key) clears it.
+        onCommand("quests", description = "Open the Quest Journal; ::quests follow <quest> points the arrow at that quest") {
+            val a = player.getCommandArgs()
+            if (a.getOrNull(0).equals("follow", ignoreCase = true)) {
+                val key = a.getOrNull(1)
+                if (key == null) {
+                    QuestFollow.clear(player)
+                    player.message("You follow no quest in particular — the arrow tracks your deepest quest in progress.")
+                } else if (QuestFollow.follow(player, key)) {
+                    val name = QuestRegistry.byKey(key.trim().lowercase())?.displayName ?: key
+                    player.message("<col=4f9b4f>Following $name — the guidance arrow tracks its objective.</col>")
+                } else {
+                    player.message("<col=801700>No quest called '$key'. Quests: ${QuestRegistry.all().filter { !it.hidden }.joinToString(", ") { it.key }}.</col>")
+                }
+                return@onCommand
+            }
             QuestBook.open(player, activeChainIndex(player))
         }
     }

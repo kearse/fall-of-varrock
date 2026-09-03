@@ -13,6 +13,7 @@ import org.alter.game.model.priv.Privilege
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
 import org.alter.plugins.content.economy.PointKind
+import org.alter.plugins.content.economy.adminSetPoints
 import org.alter.rscm.RSCM.getRSCM
 
 /**
@@ -87,6 +88,7 @@ class TitlePlugin(
         }
 
         // ::setpoints <kind> <n> — admin: set a point counter (e.g. War Effort) to test eligibility.
+        // The ONE path that can lower a lifetime record — routed through the logged admin override.
         onCommand("setpoints", Privilege.ADMIN_POWER, description = "Set a point counter (test): ::setpoints <kind> <n>") {
             val a = player.getCommandArgs()
             val kind = a.getOrNull(0)?.let { k -> PointKind.values().firstOrNull { it.name.equals(k, ignoreCase = true) } }
@@ -95,8 +97,8 @@ class TitlePlugin(
                 player.message("Usage: ::setpoints <${PointKind.values().joinToString("|") { it.name.lowercase() }}> <n>")
                 return@onCommand
             }
-            player.attr[kind.attr] = n
-            player.message("${kind.display} set to ${coins(n)}.")
+            player.adminSetPoints(kind, n, by = player.username)
+            player.message("${kind.display} set to ${coins(n)}${if (!kind.spendable) " (admin override of a lifetime record — logged)" else ""}.")
         }
 
         // ::givecoins [n] — admin: grant coins for testing the shop (default 100k).
