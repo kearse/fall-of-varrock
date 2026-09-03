@@ -28,12 +28,14 @@ class PrayerbookPlugin(
 ) : KotlinPlugin(r, world, server) {
         
     init {
-        onCommand("prayerbook") {
-            // player.setVarbit(14826) // 0 = For normal prayer book , 1 = for the new book
-            // ClientScript(id = 2158)
-            // ClientScript(id = 915, converted = [5], raw = [5], types = [i])
-            // IfCloseSub(topInterface = 164, topComponent = 16)
-            // IfSetEvents(interfaceId = 541, componentId = 41, startIndex = 0, endIndex = 4, events = ClickOp1)
+        // There is no second prayer book (Ruinous Powers) on this world. The command used to be
+        // an empty body — typing it did nothing at all (player report 2026-09-02 "prayer book
+        // swap doesn't work"). Say so instead. Spellbook swaps are ::spellbook / the Altar of
+        // the Occult. Wiring notes for a future Ruinous Powers port:
+        //   player.setVarbit(14826, 0/1); ClientScript(2158); ClientScript(915, 5);
+        //   IfCloseSub(164, 16); IfSetEvents(541, 41, 0..4, ClickOp1)
+        onCommand("prayerbook", description = "Prayer book info") {
+            player.message("There is only one prayer book on this world. To change SPELL book, use ::spellbook.")
         }
     }
 }

@@ -91,6 +91,8 @@ class ZulrahPlugin(
         onCommand("zulrah", description = "Sail to Zulrah's shrine") {
             if (player.tile.isWithinRadius(ZUL_ANDRA_DOCK, 15) || world.instanceAllocator.getMap(player.tile) == null) {
                 enter(player)
+            } else {
+                player.message("You're already inside an instance — leave it first.")
             }
         }
 

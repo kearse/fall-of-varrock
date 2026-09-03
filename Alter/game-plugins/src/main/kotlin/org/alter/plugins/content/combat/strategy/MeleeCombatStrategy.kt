@@ -4,6 +4,7 @@ import org.alter.api.Skills
 import org.alter.api.WeaponType
 import org.alter.api.ext.hasWeaponType
 import org.alter.api.ext.playSound
+import org.alter.game.model.combat.CombatClass
 import org.alter.game.model.combat.XpMode
 import org.alter.game.model.entity.AreaSound
 import org.alter.game.model.entity.Npc
@@ -70,8 +71,10 @@ object MeleeCombatStrategy : CombatStrategy {
         // dealt (hitmarks are clamped to remaining HP at application).
         val pawnHit =
             pawn.dealHit(target = target, maxHit = maxHit, landHit = landHit, delay = 0) {
-                WeaponEffects.applyOnHit(pawn, target, it)
+                WeaponEffects.applyOnHit(pawn, target, it, combatClass = CombatClass.MELEE)
             }
+        // Per-swing effects (Soulreaper soul stacks) fire whether or not the hit lands.
+        WeaponEffects.applyOnAttack(pawn, target)
         pawnHit.hit.addAction {
             val damage = hitmarks.sumOf { it.damage }
             if (damage > 0 && pawn.entityType.isPlayer) {

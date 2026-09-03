@@ -66,7 +66,6 @@ class WarlordsArmouryPlugin(
         const val CRYSTAL = "Warlord's Armoury - Crystal Gear"
         const val CHARGED = "Warlord's Armoury - Charged & Degradable"
         const val RELICS = "Warlord's Armoury - Relics"
-        const val BUY_TICKETS = "Warlord's Armoury - Buy Tickets"
 
         /** Relics shelf markup over the old career base: buy = base × 3, buy-back = base (× 1). */
         const val RELIC_BUY_MULT = 3
@@ -124,6 +123,8 @@ class WarlordsArmouryPlugin(
         Ware("item.crystal_body", 1_000),
         Ware("item.crystal_legs", 900),
         Ware("item.blade_of_saeldor", 1_500),
+        // Player report 2026-09-02: the Crystal wing had no Bow of Faerdhinen. Priced with the blade.
+        Ware("item.bow_of_faerdhinen", 1_500),
     )
 
     /** BIS accessories — moved off raw GP (R4). Ely/Arcane/Spectral stay Corp-only. */
@@ -247,8 +248,8 @@ class WarlordsArmouryPlugin(
         shopWith(RELICS, bossTickets(), relicStock, PurchasePolicy.BUY_STOCK) { (it / RELIC_BUY_MULT).coerceAtLeast(1) }
         // The mid-game coin sink.
         shopWith(BARROWS, CoinCurrency(), barrowsStock)
-        // Buy Boss Tickets for coins — sets the coin ceiling on everything this vendor sells.
-        currencyBuyShop(BUY_TICKETS, "item.boss_ticket", GeCurrencyPrices.BOSS_TICKET)
+        // (The "Buy Tickets" coin tab was removed 2026-09-02 at the operator's request: boss
+        // tickets are earned from boss kills, not bought.)
 
         // Every ticket-priced ware is barred from NPC gp conversion (alch / Trading Post):
         // tickets are coin-buyable, so any ware alching above its ticket cost in coins was an
@@ -287,7 +288,6 @@ class WarlordsArmouryPlugin(
         ShopTabs.Tab("Crystal", CRYSTAL, icon = "item.crystal_body"),
         ShopTabs.Tab("Charged", CHARGED, icon = "item.toxic_blowpipe"),
         ShopTabs.Tab("Relics", RELICS, icon = "item._3rd_age_platebody"),
-        ShopTabs.Tab("Buy Tickets", BUY_TICKETS, icon = "item.boss_ticket"),
     )
 
     // ----------------------------- §3B war-supply sink -----------------------------

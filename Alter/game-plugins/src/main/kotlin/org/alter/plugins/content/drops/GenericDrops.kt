@@ -6,6 +6,7 @@ import org.alter.game.model.World
 import org.alter.game.model.entity.GroundItem
 import org.alter.game.model.entity.Npc
 import org.alter.game.model.entity.Player
+import org.alter.rscm.RSCM.getRSCM
 
 /**
  * The generic real-OSRS drop roll, extracted so content that owns a per-id death handler (which
@@ -26,6 +27,10 @@ object GenericDrops {
         } ?: return
         val tile = npc.tile
         for (row in rows) {
+            // Data-tunable item veto (clue scrolls, caskets, bogus 100% rows) — config.yml.
+            if (row.itemId in NpcDropConfig.excludeItemIds) continue
+            // OSRS: a looting bag never drops for someone who already owns one.
+            if (row.itemId in LOOTING_BAGS && ownsLootingBag(killer)) continue
             repeat(row.rolls) {
                 if (world.randomDouble() >= row.rarity) return@repeat
                 if (runCatching { getItem(row.itemId) }.isFailure) return@repeat
@@ -36,6 +41,18 @@ object GenericDrops {
             }
         }
     }
+
+    /** Open + closed looting bag ids (11941 / 22586). */
+    private val LOOTING_BAGS: Set<Int> by lazy {
+        listOf("item.looting_bag", "item.looting_bag_22586")
+            .mapNotNull { runCatching { getRSCM(it) }.getOrNull() }.toSet()
+    }
+
+    /** One bag per player: inventory, bank or worn (player report 2026-09-02). */
+    fun ownsLootingBag(player: Player): Boolean =
+        LOOTING_BAGS.any { id ->
+            player.inventory.contains(id) || player.bank.contains(id) || player.equipment.contains(id)
+        }
 
     fun scaleAmount(itemId: Int, amount: Int): Int {
         val mult = if (itemId == COINS) NpcDropConfig.coinMultiplier else NpcDropConfig.quantityMultiplier

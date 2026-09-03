@@ -47,8 +47,8 @@ class TeleBlockPlugin(
                 caster.message("That player is already affected by Tele Block.")
                 return@register
             }
-            if (!MagicSpells.canCast(caster, spell.lvl, spell.items, requiredBook = spell.spellbook)) return@register
-            MagicSpells.removeRunes(caster, spell.items)
+            if (!MagicSpells.canCast(caster, spell.lvl, spell.items, requiredBook = spell.spellbook, spellName = spell.name)) return@register
+            MagicSpells.removeRunes(caster, spell.items, spellName = spell.name)
             caster.animate(CAST_ANIM)
             // OSRS: teleblock rolls magic accuracy; a miss splashes (no block, less xp).
             if (MagicCombatFormula.getAccuracy(caster, target) < caster.world.randomDouble()) {

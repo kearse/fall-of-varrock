@@ -52,8 +52,8 @@ class VengeancePlugin(
             player.message("You can only cast Vengeance once every 30 seconds.")
             return
         }
-        if (!MagicSpells.canCast(player, spell.lvl, spell.items, requiredBook = spell.spellbook)) return
-        MagicSpells.removeRunes(player, spell.items)
+        if (!MagicSpells.canCast(player, spell.lvl, spell.items, requiredBook = spell.spellbook, spellName = spell.name)) return
+        MagicSpells.removeRunes(player, spell.items, spellName = spell.name)
         Vengeance.activate(player)
         player.addXp(Skills.MAGIC, VENGEANCE_XP)
     }

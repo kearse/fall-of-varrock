@@ -30,7 +30,24 @@ object Bows {
             getRSCM("item.crystal_bow_810_i"),
             getRSCM("item.crystal_bow_910"),
             getRSCM("item.crystal_bow_910_i"),
+            // Modern (post-Song-of-the-Elves) crystal bow + Bow of Faerdhinen — the shop sells
+            // these ids, and they were missing from every crystal-bow rule (range, set bonus).
+            getRSCM("item.crystal_bow"),
+            getRSCM("item.bow_of_faerdhinen"),
+            getRSCM("item.bow_of_faerdhinen_c"),
         )
+
+    /**
+     * Crystal armour set effect (OSRS Wiki, Crystal armour): while wielding a crystal bow or
+     * the Bow of Faerdhinen, each piece adds ranged damage / accuracy — helm 2.5% / 5%,
+     * legs 5% / 10%, body 7.5% / 15% (full set 15% / 30%).
+     */
+    val CRYSTAL_ARMOUR_BONUS: List<Triple<Int, Double, Double>> =
+        listOf(
+            Triple("item.crystal_helm", 0.025, 0.05),
+            Triple("item.crystal_legs", 0.05, 0.10),
+            Triple("item.crystal_body", 0.075, 0.15),
+        ).mapNotNull { (key, dmg, acc) -> runCatching { getRSCM(key) }.getOrNull()?.let { Triple(it, dmg, acc) } }
 
     val LONG_BOWS =
         arrayOf(

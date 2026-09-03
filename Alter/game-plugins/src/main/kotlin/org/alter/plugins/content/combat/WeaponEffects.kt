@@ -3,6 +3,7 @@ package org.alter.plugins.content.combat
 import org.alter.api.EquipmentType
 import org.alter.api.ext.getEquipment
 import org.alter.game.model.World
+import org.alter.game.model.combat.CombatClass
 import org.alter.game.model.combat.PawnHit
 import org.alter.game.model.entity.Pawn
 import org.alter.game.model.entity.Player
@@ -37,7 +38,15 @@ object WeaponEffects {
         val landed: Boolean get() = pawnHit.landed
     }
 
+    /** Context handed to a registered on-attack effect (fires per swing, hit or miss). */
+    data class OnAttackContext(
+        val world: World,
+        val player: Player,
+        val target: Pawn,
+    )
+
     private val onHitEffects = mutableMapOf<Int, OnHitContext.() -> Unit>()
+    private val onAttackEffects = mutableMapOf<Int, OnAttackContext.() -> Unit>()
 
     fun registerOnHit(
         item: String,
@@ -47,14 +56,41 @@ object WeaponEffects {
     }
 
     /**
-     * Runs the equipped weapon's passive on-hit effect, if any. Only players
-     * carry weapon effects, so this is a cheap no-op for NPC attackers and for
-     * weapons without a registered effect.
+     * Registers an effect that fires every time the wielder ATTACKS with [item], whether or
+     * not the hit lands (Soulreaper axe soul stacks). Melee strategy only for now.
+     */
+    fun registerOnAttack(
+        item: String,
+        effect: OnAttackContext.() -> Unit,
+    ) {
+        onAttackEffects[getRSCM(item)] = effect
+    }
+
+    fun applyOnAttack(
+        pawn: Pawn,
+        target: Pawn,
+    ) {
+        if (pawn !is Player) return
+        val weapon = pawn.getEquipment(EquipmentType.WEAPON) ?: return
+        val effect = onAttackEffects[weapon.id] ?: return
+        effect(OnAttackContext(pawn.world, pawn, target))
+    }
+
+    /**
+     * Runs the equipped weapon's passive on-hit effect, if any, then the generic
+     * poison/venom layer ([WeaponPoisons]). Only players carry weapon effects, so
+     * this is a cheap no-op for NPC attackers.
+     *
+     * @param combatClass the class of the attack that produced this hit, captured by the
+     *   strategy at fire time. Falls back to the wielder's current class when omitted.
+     * @param ammoId the quiver ammo fired (bows/crossbows), for poisoned-ammo rolls.
      */
     fun applyOnHit(
         pawn: Pawn,
         target: Pawn,
         pawnHit: PawnHit,
+        combatClass: CombatClass? = null,
+        ammoId: Int? = null,
     ) {
         // Victim-side first: Vengeance and the ring of recoil react to the hit the TARGET
         // just took. Must run before the attacker-only early-returns below (the victim,
@@ -63,8 +99,11 @@ object WeaponEffects {
         RingOfRecoil.onDamaged(victim = target, attacker = pawn, pawnHit = pawnHit)
 
         if (pawn !is Player) return
-        val weapon = pawn.getEquipment(EquipmentType.WEAPON) ?: return
-        val effect = onHitEffects[weapon.id] ?: return
-        effect(OnHitContext(pawn.world, pawn, target, pawnHit))
+        val weapon = pawn.getEquipment(EquipmentType.WEAPON)
+        if (weapon != null) {
+            onHitEffects[weapon.id]?.invoke(OnHitContext(pawn.world, pawn, target, pawnHit))
+        }
+        val resolvedClass = combatClass ?: CombatConfigs.getCombatClass(pawn)
+        WeaponPoisons.onHit(pawn, target, pawnHit, resolvedClass, ammoId)
     }
 }

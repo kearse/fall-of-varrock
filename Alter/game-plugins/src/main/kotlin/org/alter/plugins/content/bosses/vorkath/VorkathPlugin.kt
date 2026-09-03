@@ -85,6 +85,16 @@ class VorkathPlugin(
             }
         }
 
+        // Command entry, like ::zulrah / ::hydra. Player report 2026-09-02 "Vork doesn't work":
+        // the icy spines were the ONLY way in, and nothing told players to click them.
+        onCommand("vorkath", description = "Climb over the icy spines into Vorkath's crater") {
+            if (world.instanceAllocator.getMap(player.tile) != null) {
+                player.message("You're already inside an instance — leave it first.")
+            } else {
+                enter(player)
+            }
+        }
+
         // ── Poke the sleeping form awake (Kronos wake sequence).
         // Driven from world.queue, NOT player.queue: the player stepping away would
         // interrupt a player queue mid-wake (VORKATH_WAKING already set), leaving the boss

@@ -156,6 +156,9 @@ object GrandExchange {
         if (price <= 0 || qty <= 0) { p.message("Set a price and quantity first."); return false }
         if (itemId == coinsId) { p.message("You can't trade coins on the Grand Exchange."); return false }
         if (itemId in EXCLUDED) { p.message("That item can't be traded on the Grand Exchange."); return false }
+        // `tradeable_on_ge: false` overrides were only checked by the UI pre-check (isListable);
+        // enforce them on the escrow path too, since the pick arrives from the client.
+        if (ItemMetadataService.isGeExcluded(itemId)) { p.message("That item can't be traded on the Grand Exchange."); return false }
         if (!runCatching { getItem(itemId).isTradeable }.getOrDefault(false)) {
             p.message("That item can't be traded on the Grand Exchange."); return false
         }

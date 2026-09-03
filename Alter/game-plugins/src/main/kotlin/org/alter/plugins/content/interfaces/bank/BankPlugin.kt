@@ -58,24 +58,37 @@ class BankPlugin(
              * listener, BEFORE the IfOpenSub packet is written — an out-of-bounds index here
              * wedges banking permanently and silently. Heal inflated counts instead.
              */
+            // Walk the tabs against the PRE-shift container geometry: nulls still occupy their
+            // slots until bank.shift() below, so each tab's window is [offset, offset + rawSize).
+            // The old loop called shiftTabs() from INSIDE the scan and then kept scanning with a
+            // stale offset — every later tab was checked against the wrong slot window.
             var slotOffset = 0
-            for (tab in 1..9) {
+            var tab = 1
+            var guard = 0
+            while (tab <= 9 && guard++ < 32) {
                 val rawSize = player.getVarbit(BANK_TAB_ROOT_VARBIT + tab)
                 val size = rawSize.coerceIn(0, player.bank.capacity)
                 if (size != rawSize) {
                     player.setVarbit(BANK_TAB_ROOT_VARBIT + tab, size)
                 }
                 val end = minOf(slotOffset + size, player.bank.capacity)
+                var nulls = 0
                 for (slot in slotOffset until end) {
-                    if (player.bank[slot] == null) {
-                        BankTabs.decrementTabSize(player, tab)
-                        // check for empty tab shift
-                        if (player.getVarbit(BANK_TAB_ROOT_VARBIT + tab) == 0 && tab <= numTabsUnlocked(player)) {
-                            shiftTabs(player, tab)
-                        }
-                    }
+                    if (player.bank[slot] == null) nulls++
+                }
+                val remaining = (size - nulls).coerceAtLeast(0)
+                if (remaining != size) {
+                    player.setVarbit(BANK_TAB_ROOT_VARBIT + tab, remaining)
                 }
                 slotOffset = end
+                // An emptied tab (or a gap left by one) collapses: every higher tab moves down
+                // one index and is re-scanned at THIS index against its unchanged slot window.
+                val higherTabsInUse = (tab + 1..9).any { player.getVarbit(BANK_TAB_ROOT_VARBIT + it) > 0 }
+                if (remaining == 0 && higherTabsInUse) {
+                    shiftTabs(player, tab)
+                    continue
+                }
+                tab++
             }
             player.bank.shift()
         }

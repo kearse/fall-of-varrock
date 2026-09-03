@@ -106,6 +106,10 @@ object NpcDropConfig {
     var excludeIds: Set<Int> = emptySet()
         private set
 
+    /** ITEM ids never dropped by the generic handler, whatever table lists them. */
+    var excludeItemIds: Set<Int> = emptySet()
+        private set
+
     fun load(path: String = "../data/cfg/drops/config.yml") {
         val file = File(path)
         if (!file.exists()) {
@@ -119,9 +123,12 @@ object NpcDropConfig {
         node.get("excludeIds")?.let { arr ->
             excludeIds = arr.mapNotNull { it.asInt() }.toSet()
         }
+        node.get("excludeItemIds")?.let { arr ->
+            excludeItemIds = arr.mapNotNull { it.asInt() }.toSet()
+        }
         logger.info {
             "Drop config: enabled=$enabled coinMultiplier=$coinMultiplier " +
-                "quantityMultiplier=$quantityMultiplier excludeIds=${excludeIds.size}"
+                "quantityMultiplier=$quantityMultiplier excludeIds=${excludeIds.size} excludeItemIds=${excludeItemIds.size}"
         }
     }
 }

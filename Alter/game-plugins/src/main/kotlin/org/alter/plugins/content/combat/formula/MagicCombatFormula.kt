@@ -10,6 +10,7 @@ import org.alter.game.model.entity.Player
 import org.alter.plugins.content.combat.Combat
 import org.alter.plugins.content.combat.CombatConfigs
 import org.alter.plugins.content.combat.strategy.magic.CombatSpell
+import org.alter.plugins.content.combat.strategy.magic.PoweredStaves
 import org.alter.plugins.content.mechanics.prayer.Prayer
 import org.alter.plugins.content.mechanics.prayer.Prayers
 import org.alter.plugins.content.skills.slayer.SlayerCombat
@@ -106,13 +107,21 @@ object MagicCombatFormula : CombatFormula {
                 hit = (Math.floor(magic / 3.0) - 2.0)
             } else if (pawn.hasEquipped(EquipmentType.WEAPON, "item.sanguinesti_staff", "item.holy_sanguinesti_staff")) {
                 hit = (Math.floor(magic / 3.0) - 1.0)
+            } else if (PoweredStaves.isWieldingShadow(pawn)) {
+                hit = Math.floor(magic / 3.0 + 1.0)
             }
 
             if (pawn.hasEquipped(EquipmentType.GLOVES, "item.chaos_gauntlets") && spell != null && spell in BOLT_SPELLS) {
                 hit += 3
             }
 
-            var multiplier = 1.0 + (pawn.getMagicDamageBonus() / 100.0)
+            // Tumeken's shadow triples the gear magic-damage bonus, capped at +100% total
+            // (OSRS Wiki, Tumeken's shadow). Applies to whatever it casts, built-in or not.
+            var damageBonus = pawn.getMagicDamageBonus().toDouble()
+            if (PoweredStaves.isWieldingShadow(pawn)) {
+                damageBonus = Math.min(100.0, damageBonus * SHADOW_BONUS_MULTIPLIER)
+            }
+            var multiplier = 1.0 + (damageBonus / 100.0)
 
             if (pawn.hasEquipped(
                     EquipmentType.AMULET,
@@ -193,7 +202,11 @@ object MagicCombatFormula : CombatFormula {
             } else {
                 0.0
             }
-        val b = getEquipmentAttackBonus(pawn)
+        var b = getEquipmentAttackBonus(pawn)
+        // Tumeken's shadow triples the gear magic ATTACK bonus too (OSRS Wiki).
+        if (pawn is Player && PoweredStaves.isWieldingShadow(pawn)) {
+            b *= SHADOW_BONUS_MULTIPLIER
+        }
 
         var maxRoll = a * (b + 64.0)
         if (pawn is Player) {
@@ -201,6 +214,9 @@ object MagicCombatFormula : CombatFormula {
         }
         return maxRoll.toInt()
     }
+
+    /** Tumeken's shadow: ×3 outside the Tombs of Amascut (×4 inside; no raid here). */
+    private const val SHADOW_BONUS_MULTIPLIER = 3.0
 
     private fun getDefenceRoll(target: Npc): Int {
         // OSRS: an NPC's magic evasion rolls off its MAGIC level (not Defence), +9 for the

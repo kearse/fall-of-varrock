@@ -507,6 +507,22 @@ enum class CombatSpell(
         impactGfx = Graphic(id = 1541, height = 90),
         autoCastId = -1,
     ),
+
+    /**
+     * Tumeken's shadow built-in spell. Base max hit floor(magic/3 + 1) (34 at 99), and the
+     * staff TRIPLES the wearer's magic attack + magic damage bonuses (OSRS Wiki; the ×4
+     * Tombs-of-Amascut variant has no raid here). Anim 9493 + spotanims 2125/2126/2127.
+     */
+    TUMEKENS_SHADOW(
+        id = -27275,
+        maxHit = 34,
+        castAnimation = 9493,
+        castSound = -1,
+        castGfx = Graphic(id = 2125, height = 92),
+        projectile = 2126,
+        impactGfx = Graphic(id = 2127, height = 90),
+        autoCastId = -1,
+    ),
     ;
 
     companion object {

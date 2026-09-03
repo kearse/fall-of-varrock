@@ -27,6 +27,7 @@ object PoweredStaves {
         CombatSpell.TRIDENT_OF_THE_SEAS,
         CombatSpell.TRIDENT_OF_THE_SWAMP,
         CombatSpell.SANGUINESTI_STAFF,
+        CombatSpell.TUMEKENS_SHADOW,
     )
 
     private val byItem: Map<Int, CombatSpell> by lazy {
@@ -41,8 +42,21 @@ object PoweredStaves {
         add("item.trident_of_the_swamp_e", CombatSpell.TRIDENT_OF_THE_SWAMP)
         add("item.sanguinesti_staff", CombatSpell.SANGUINESTI_STAFF)
         add("item.holy_sanguinesti_staff", CombatSpell.SANGUINESTI_STAFF)
+        // Player report 2026-09-02: the shadow had no built-in spell, so wielding it fell
+        // through to the MELEE combat class and every click was a staff bash.
+        add("item.tumekens_shadow", CombatSpell.TUMEKENS_SHADOW)
+        add("item.corrupted_tumekens_shadow", CombatSpell.TUMEKENS_SHADOW)
         map
     }
+
+    private val SHADOWS: Set<Int> by lazy {
+        listOf("item.tumekens_shadow", "item.corrupted_tumekens_shadow")
+            .mapNotNull { runCatching { getRSCM(it) }.getOrNull() }.toSet()
+    }
+
+    /** Wielding Tumeken's shadow (either variant): its ×3 magic bonus rule applies. */
+    fun isWieldingShadow(player: Player): Boolean =
+        player.getEquipment(EquipmentType.WEAPON)?.id in SHADOWS
 
     /** The built-in spell of the wielded weapon, or null if it isn't a powered staff. */
     fun spellFor(player: Player): CombatSpell? {

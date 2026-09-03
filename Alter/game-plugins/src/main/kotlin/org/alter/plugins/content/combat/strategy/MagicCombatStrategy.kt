@@ -11,6 +11,7 @@ import org.alter.api.ext.message
 import org.alter.api.ext.playSound
 import org.alter.game.model.Graphic
 import org.alter.game.model.Tile
+import org.alter.game.model.combat.CombatClass
 import org.alter.game.model.combat.XpMode
 import org.alter.game.model.entity.Npc
 import org.alter.game.model.entity.Pawn
@@ -48,7 +49,7 @@ object MagicCombatStrategy : CombatStrategy {
                 return false
             }
             val requirements = MagicSpells.getMetadata(spell.id)
-            if (requirements != null && !MagicSpells.canCast(pawn, requirements.lvl, requirements.items, requirements.spellbook)) {
+            if (requirements != null && !MagicSpells.canCast(pawn, requirements.lvl, requirements.items, requirements.spellbook, spellName = requirements.name)) {
                 return false
             }
         }
@@ -91,7 +92,7 @@ object MagicCombatStrategy : CombatStrategy {
             if (spell.castSound != -1) {
                 pawn.playSound(id = spell.castSound, volume = 1, delay = 0)
             }
-            MagicSpells.getMetadata(spell.id)?.let { requirement -> MagicSpells.removeRunes(pawn, requirement.items) }
+            MagicSpells.getMetadata(spell.id)?.let { requirement -> MagicSpells.removeRunes(pawn, requirement.items, spellName = requirement.name) }
         }
 
         val formula = MagicCombatFormula
@@ -102,7 +103,7 @@ object MagicCombatStrategy : CombatStrategy {
         val hitDelay = getHitDelay(pawn.getCentreTile(), target.getCentreTile())
         val pawnHit =
             pawn.dealHit(target = target, maxHit = maxHit, landHit = landHit, delay = hitDelay) {
-                WeaponEffects.applyOnHit(pawn, target, it)
+                WeaponEffects.applyOnHit(pawn, target, it, combatClass = CombatClass.MAGIC)
                 // Ancient ice spells root the target on a landed hit (freeze() self-guards
                 // re-freeze and the 5-tick post-thaw immunity). In PvP, Protect from Magic
                 // halves the freeze duration — read at hit application, as in OSRS.
@@ -123,10 +124,8 @@ object MagicCombatStrategy : CombatStrategy {
                     val current = target.currentCombatStat(Skills.ATTACK, NpcSkills.ATTACK)
                     target.drainCombatStat(Skills.ATTACK, NpcSkills.ATTACK, (current * pct).toInt())
                 }
-                // Trident of the swamp: 1-in-4 chance to envenom on a landed hit (Kronos data).
-                if (landHit && spell == CombatSpell.TRIDENT_OF_THE_SWAMP && pawn.world.chance(1, 4)) {
-                    Poison.venom(target)
-                }
+                // Trident of the swamp / toxic staff venom rolls live in WeaponPoisons (via
+                // WeaponEffects.applyOnHit above) so the toxic weapons share one rule set.
             }
         // Heal and XP happen when the hit LANDS (the projectile's arrival tick), from the
         // damage actually dealt. Splashes still award the base cast xp.

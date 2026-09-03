@@ -281,10 +281,15 @@ object BankTabs {
         player: Player,
         emptyTabIdx: Int,
     ) {
-        val numUnlocked = numTabsUnlocked(player)
-        for (tab in emptyTabIdx..numUnlocked)
+        if (emptyTabIdx !in 1..9) return
+        // Shift every higher tab down one slot, up to and including tab 9. The old loop ran to
+        // numTabsUnlocked() — a COUNT of non-empty tabs used as an INDEX — so with any gap it
+        // skipped live tabs and then zeroed one of them (and with nine tabs wrote varbit 4180,
+        // which is Accept Aid). Player report 2026-09-02: "bank tabs shift all over the place".
+        for (tab in emptyTabIdx until 9) {
             player.setVarbit(BANK_TAB_ROOT_VARBIT + tab, player.getVarbit(BANK_TAB_ROOT_VARBIT + tab + 1).coerceAtLeast(0))
-        player.setVarbit(BANK_TAB_ROOT_VARBIT + numUnlocked + 1, 0)
+        }
+        player.setVarbit(BANK_TAB_ROOT_VARBIT + 9, 0)
     }
 
     fun getTabsItems(p: Player, tab: Int) : List<Item?> {
