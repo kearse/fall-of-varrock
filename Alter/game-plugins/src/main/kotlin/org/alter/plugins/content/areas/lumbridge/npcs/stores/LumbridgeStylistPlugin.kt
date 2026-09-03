@@ -374,7 +374,15 @@ class LumbridgeStylistPlugin(
     // ------------------------------------ shop builder ------------------------------------
 
     private fun coinShop(name: String, wares: List<Ware>) {
-        val stock = wares.mapNotNull { w -> resolveOrNull(w.key)?.let { ShopItem(it, w.amount, w.sell) } }
+        val stock = wares.mapNotNull { w ->
+            resolveOrNull(w.key)?.let { id ->
+                // Never shelve below cache value: the General Store and Trading Post pay 70% of it,
+                // so a cheaper shelf is a buy-here-sell-there loop (2026-09 arbitrage audit: 20 lines,
+                // sleeping cap 300 -> 1,400). The explicit price stays when it is the higher number.
+                val floor = CacheManager.getItem(id).cost
+                ShopItem(id, w.amount, w.sell?.let { maxOf(it, floor) })
+            }
+        }
         createShop(name, CoinCurrency(), purchasePolicy = PurchasePolicy.BUY_STOCK, stockSize = maxOf(stock.size, 1)) {
             stock.forEachIndexed { i, item -> items[i] = item }
         }

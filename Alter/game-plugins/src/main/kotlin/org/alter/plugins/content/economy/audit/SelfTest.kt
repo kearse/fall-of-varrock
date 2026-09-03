@@ -86,12 +86,14 @@ object SelfTest {
                 "alchGuard=${alch?.guardedBy} acq=${v.acqOf(node(key)!!)} alch=${alch?.outputs?.single()?.qty} unguardedProfit=$unguardedProfit prevented=$inPrevented findings=${findingFor(key).size}")
         }
 
-        // 6. gilded_platebody (Vote Ticket ware): NOT guarded (the hub ticketShop never registers).
+        // 6. gilded_platebody (Vote Ticket ware): guarded since PR 2 (the hub ticketShop registers its
+        //    gear/cosmetic wares); a shark from the same shelf must stay vendorable (guarded = false).
         run {
             val key = "item.gilded_platebody"
             val alch = model.edges.firstOrNull { it.kind == EdgeKind.ALCH_HIGH && it.inputs.first().node == node(key) }
-            checks += Check("gilded_platebody: alch edge carries no guard (hub ticket shop unregistered)",
-                alch != null && alch.guardedBy == null,
+            val shark = model.edges.firstOrNull { it.kind == EdgeKind.ALCH_HIGH && it.inputs.first().node == node("item.shark") }
+            checks += Check("gilded_platebody: alch guarded by SpecialShopGuard; shark (same shelf, a supply) is not",
+                alch != null && alch.guardedBy == "SpecialShopGuard" && shark != null && shark.guardedBy == null,
                 "alchGuard=${alch?.guardedBy} alchValue=${alch?.outputs?.single()?.qty} acq=${v.acqOf(node(key)!!)} liq=${v.liqOf(node(key)!!)} findings=${findingFor(key).map { "${it.loopClass}/${it.severity}" }}")
         }
 
