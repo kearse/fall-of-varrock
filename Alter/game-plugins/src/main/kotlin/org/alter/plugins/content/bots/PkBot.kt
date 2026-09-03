@@ -142,4 +142,20 @@ open class PkBot(world: World, val loadout: BotLoadout) : Player(world) {
     /** Armed instant spec follow-up (e.g. the granite maul after AGS) — RSCM name, fired by
      *  [BotBrain] as soon as the leading spec has swung. */
     var comboFollowup: String? = null
+
+    // --- ::botduel test harness (see [BotDuel]) ---
+
+    /**
+     * DUEL lock: when set, this bot fights ONLY this other bot — [BotBrain.eligible] / `acquire`
+     * bypass the wilderness / human / leash rules for it, and [BotCombatPlugin] skips the kit drop
+     * and rogue credit when it dies. Null = a normal PKer.
+     */
+    var duelPartner: PkBot? = null
+
+    /** Fight counters the harness reports (session-only; incremented by [BotBrain]). */
+    var statFood: Int = 0
+    var statSpecs: Int = 0
+    var statPraySwaps: Int = 0
+    var statGearSwaps: Int = 0
+    var statBaits: Int = 0
 }

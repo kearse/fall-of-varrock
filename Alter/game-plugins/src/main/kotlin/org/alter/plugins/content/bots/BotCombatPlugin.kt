@@ -59,6 +59,11 @@ class BotCombatPlugin(
         onPlayerPreDeath {
             val bot = player as? PkBot ?: return@onPlayerPreDeath
             if (bot is CompanionPawn) return@onPlayerPreDeath // companions keep their gear (Step 6 adds PvP gear-risk)
+            // ::botduel test bots: no kit drop, no rogue credit — just tell the harness who fell.
+            if (bot.duelPartner != null) {
+                BotDuel.onDeath(bot)
+                return@onPlayerPreDeath
+            }
             // (The old SPAR/LMS/CW bot guards were removed: the PK arena, LMS and Castle Wars
             // engines were purged 2026-08-28, so nothing ever set those attrs.)
             val killer = bot.attr[KILLER_ATTR]?.get() as? Player

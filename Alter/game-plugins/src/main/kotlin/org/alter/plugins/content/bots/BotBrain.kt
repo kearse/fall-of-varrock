@@ -219,6 +219,12 @@ object BotBrain {
     // --- target acquisition ---
 
     private fun acquire(world: World, bot: PkBot): Player? {
+        // ::botduel: a duelling bot only ever fights its partner (see [PkBot.duelPartner]).
+        bot.duelPartner?.let { partner ->
+            if (!eligible(bot, partner)) return null
+            bot.attack(partner)
+            return partner
+        }
         var best: Player? = null
         var bestDist = Int.MAX_VALUE
         world.players.forEach { p ->
@@ -260,6 +266,11 @@ object BotBrain {
     }
 
     private fun eligible(bot: PkBot, p: Player): Boolean {
+        // ::botduel: the duel partner is the ONE bot this bot may fight, anywhere — every other
+        // rule (no bot targets, wilderness only, leash, provocation) is bypassed for it.
+        bot.duelPartner?.let { partner ->
+            return p === partner && partner.index >= 0 && !partner.isDead() && Combat.canEngage(bot, partner)
+        }
         if (p is PkBot || !p.isOnline || p.invisible) return false
         // A named-knight instance is bound to ONE hunter: it never aggros anyone else, so the
         // per-hunter duplicates at a busy camp each fight their own duel (see [PkBot.boundHunter]).
@@ -326,6 +337,7 @@ object BotBrain {
             if (!bot.timers.has(PRAYER_REACT)) { // reaction time elapsed — commit the overhead switch
                 bot.prayedAgainst = cls
                 bot.pendingPray = null
+                bot.statPraySwaps++
             }
         } else {
             bot.pendingPray = null // already protecting their style; nothing pending
@@ -389,6 +401,7 @@ object BotBrain {
         if ((0 until oneIn).random() != 0) return
         val flash = bot.fightLoadout.gear.keys.filter { it != bot.currentStyle }.randomOrNull() ?: return
         bot.baitedFrom = bot.currentStyle
+        bot.statBaits++
         BotManager.equipStyle(bot, flash)
     }
 
@@ -417,6 +430,7 @@ object BotBrain {
     }
 
     private fun applyStyle(bot: PkBot, style: BotStyle) {
+        bot.statGearSwaps++
         BotManager.equipStyle(bot, style)
         configureStyle(bot)
     }
@@ -451,7 +465,10 @@ object BotBrain {
         when (bot.currentStyle) {
             BotStyle.MAGIC -> return // staff has no spec
             BotStyle.RANGED -> {
-                if (AttackTab.getEnergy(bot) >= SPEC_THRESHOLD) bot.setVarp(AttackTab.SPECIAL_ATTACK_VARP, 1)
+                if (AttackTab.getEnergy(bot) >= SPEC_THRESHOLD && bot.getVarp(AttackTab.SPECIAL_ATTACK_VARP) != 1) {
+                    bot.setVarp(AttackTab.SPECIAL_ATTACK_VARP, 1)
+                    bot.statSpecs++
+                }
             }
             BotStyle.MELEE -> meleeSpecOrRestore(bot, target)
         }
@@ -484,6 +501,7 @@ object BotBrain {
             bot.equipment[EquipmentType.SHIELD.id] = null // AGS / maul are two-handed
             bot.calculateBonuses()
             bot.setVarp(AttackTab.SPECIAL_ATTACK_VARP, 1) // combat loop runs the weapon's special
+            bot.statSpecs++
             bot.nextMeleeSpec++
             // If the next rotation step is an instant spec weapon, arm the stack: it fires the
             // moment this spec has swung, without waiting out the swing timer.
@@ -517,6 +535,7 @@ object BotBrain {
         bot.equipment[EquipmentType.SHIELD.id] = null
         bot.calculateBonuses()
         bot.setVarp(AttackTab.SPECIAL_ATTACK_VARP, 1)
+        bot.statSpecs++
         if (bot.hasPid) bot.timers.remove(ATTACK_DELAY) else bot.timers[ATTACK_DELAY] = 1
         bot.nextMeleeSpec++
         return true
@@ -574,6 +593,7 @@ object BotBrain {
                 val heal = HEAL[name] ?: 0
                 if (heal > 0) bot.setCurrentHp(minOf(bot.getMaxHp(), bot.getCurrentHp() + heal))
                 bot.animate(EAT_ANIM)
+                bot.statFood++
                 return true
             }
         }

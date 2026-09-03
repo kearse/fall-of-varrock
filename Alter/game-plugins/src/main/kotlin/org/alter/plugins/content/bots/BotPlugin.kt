@@ -6,6 +6,7 @@ import org.alter.game.model.World
 import org.alter.game.model.entity.Player
 import org.alter.game.model.move.moveTo
 import org.alter.game.model.priv.Privilege
+import org.alter.game.model.timer.TimerKey
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
 import org.alter.game.Server
@@ -79,8 +80,39 @@ class BotPlugin(
 
         onCommand("clearbots", Privilege.DEV_POWER, description = "Despawn all PKer bots") {
             val n = BotManager.active.size
+            BotDuel.stop(world) // a duel run can't survive its bots being cleared
             BotManager.despawnAll(world)
             player.message("Despawned $n bot(s).")
+        }
+
+        // ::botduel — the bot-vs-bot combat regression harness (see BotDuel).
+        val duelTimer = TimerKey()
+        onWorldInit { world.timers[duelTimer] = 1 }
+        onTimer(duelTimer) {
+            BotDuel.tick(world)
+            world.timers[duelTimer] = 1
+        }
+        onCommand("botduel", Privilege.DEV_POWER, description = "Bot-vs-bot combat harness: ::botduel <a> <b> [rounds] | all [rounds] | status | stop") {
+            val args = player.getCommandArgs()
+            val usage = "Usage: ::botduel <loadoutA> <loadoutB> [rounds] | all [rounds] | status | stop. Loadouts: ${BotLoadouts.keys().joinToString(", ")}"
+            when (args.getOrNull(0)?.lowercase()) {
+                null -> player.message(usage)
+                "status" -> BotDuel.status().forEach { player.message(it) }
+                "stop" -> { BotDuel.stop(world); player.message("[botduel] stopped.") }
+                "all" -> {
+                    val rounds = args.getOrNull(1)?.toIntOrNull() ?: 1
+                    val n = BotDuel.startAll(world, player.tile, player.uid, rounds)
+                    player.message(if (n == 0) "[botduel] a run is already in progress (::botduel status / stop)." else "[botduel] round-robin: $n bout(s) queued, ${BotLoadouts.keys().size} loadouts — matrix lands in the server log when done.")
+                }
+                else -> {
+                    val a = args[0]
+                    val b = args.getOrNull(1) ?: run { player.message(usage); return@onCommand }
+                    if (BotLoadouts.get(a) == null || BotLoadouts.get(b) == null) { player.message(usage); return@onCommand }
+                    val rounds = args.getOrNull(2)?.toIntOrNull() ?: 1
+                    val ok = BotDuel.start(world, a, b, player.tile, rounds, player.uid)
+                    player.message(if (ok) "[botduel] $a vs $b, $rounds round(s) — fighting beside you." else "[botduel] a run is already in progress (::botduel status / stop).")
+                }
+            }
         }
     }
 }
