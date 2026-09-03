@@ -854,43 +854,6 @@
     "unitsPerHourFirstHour" : 1407.035175879397,
     "unitsPerHourSustained" : 1407.035175879397
   }, {
-    "acquireGp" : 300.0,
-    "acquireGpEvMin" : 300.0,
-    "acquirePath" : [ {
-      "edge" : "shop:Lumbridge Stylist - Accessories:sell:item.sleeping_cap",
-      "guardedBy" : null,
-      "kind" : "SHOP_SELL",
-      "soft" : false,
-      "text" : "buy 1 sleeping_cap @ Lumbridge Stylist - Accessories for 300 coins_995 (stock 100)"
-    } ],
-    "gpPerHourFirstHour" : 374000.0,
-    "gpPerHourSustained" : 264000.0,
-    "guardedBy" : [ ],
-    "id" : "shop_to_shop:item.sleeping_cap",
-    "item" : "item.sleeping_cap",
-    "levelNotes" : [ ],
-    "limitingFactor" : "shop stock 100 (+240/h restock) @ Lumbridge Stylist - Accessories",
-    "liquidateGp" : 1400.0,
-    "liquidateGpEvMin" : 1400.0,
-    "liquidatePath" : [ {
-      "edge" : "shop:Lumbridge General Store:buy:item.sleeping_cap",
-      "guardedBy" : null,
-      "kind" : "SHOP_BUYBACK",
-      "soft" : false,
-      "text" : "sell 1 sleeping_cap to Lumbridge General Store for 1400 coins_995"
-    } ],
-    "loopClass" : "SHOP_TO_SHOP",
-    "marginPct" : 366.6666666666667,
-    "name" : "sleeping_cap",
-    "related" : [ ],
-    "sameShop" : false,
-    "severity" : "S1",
-    "soft" : false,
-    "unbounded" : false,
-    "unitProfit" : 1100.0,
-    "unitsPerHourFirstHour" : 340.0,
-    "unitsPerHourSustained" : 240.0
-  }, {
     "acquireGp" : 200.0,
     "acquireGpEvMin" : 200.0,
     "acquirePath" : [ {
@@ -933,43 +896,6 @@
     "unitProfit" : 185.0,
     "unitsPerHourFirstHour" : 1407.035175879397,
     "unitsPerHourSustained" : 1407.035175879397
-  }, {
-    "acquireGp" : 400.0,
-    "acquireGpEvMin" : 400.0,
-    "acquirePath" : [ {
-      "edge" : "shop:Lumbridge Stylist - Legwear:sell:item.flared_trousers",
-      "guardedBy" : null,
-      "kind" : "SHOP_SELL",
-      "soft" : false,
-      "text" : "buy 1 flared_trousers @ Lumbridge Stylist - Legwear for 400 coins_995 (stock 100)"
-    } ],
-    "gpPerHourFirstHour" : 340000.0,
-    "gpPerHourSustained" : 240000.0,
-    "guardedBy" : [ ],
-    "id" : "shop_to_shop:item.flared_trousers",
-    "item" : "item.flared_trousers",
-    "levelNotes" : [ ],
-    "limitingFactor" : "shop stock 100 (+240/h restock) @ Lumbridge Stylist - Legwear",
-    "liquidateGp" : 1400.0,
-    "liquidateGpEvMin" : 1400.0,
-    "liquidatePath" : [ {
-      "edge" : "shop:Lumbridge General Store:buy:item.flared_trousers",
-      "guardedBy" : null,
-      "kind" : "SHOP_BUYBACK",
-      "soft" : false,
-      "text" : "sell 1 flared_trousers to Lumbridge General Store for 1400 coins_995"
-    } ],
-    "loopClass" : "SHOP_TO_SHOP",
-    "marginPct" : 250.0,
-    "name" : "flared_trousers",
-    "related" : [ ],
-    "sameShop" : false,
-    "severity" : "S1",
-    "soft" : false,
-    "unbounded" : false,
-    "unitProfit" : 1000.0,
-    "unitsPerHourFirstHour" : 340.0,
-    "unitsPerHourSustained" : 240.0
   }, {
     "acquireGp" : 600.0,
     "acquireGpEvMin" : 600.0,
@@ -1327,43 +1253,6 @@
     "unitsPerHourFirstHour" : 740.0,
     "unitsPerHourSustained" : 240.0
   }, {
-    "acquireGp" : 250.0,
-    "acquireGpEvMin" : 250.0,
-    "acquirePath" : [ {
-      "edge" : "shop:Lumbridge Stylist - Legwear:sell:item.trousers",
-      "guardedBy" : null,
-      "kind" : "SHOP_SELL",
-      "soft" : false,
-      "text" : "buy 1 trousers @ Lumbridge Stylist - Legwear for 250 coins_995 (stock 100)"
-    } ],
-    "gpPerHourFirstHour" : 45900.0,
-    "gpPerHourSustained" : 32400.0,
-    "guardedBy" : [ ],
-    "id" : "shop_to_shop:item.trousers",
-    "item" : "item.trousers",
-    "levelNotes" : [ ],
-    "limitingFactor" : "shop stock 100 (+240/h restock) @ Lumbridge Stylist - Legwear",
-    "liquidateGp" : 385.0,
-    "liquidateGpEvMin" : 385.0,
-    "liquidatePath" : [ {
-      "edge" : "shop:Lumbridge General Store:buy:item.trousers",
-      "guardedBy" : null,
-      "kind" : "SHOP_BUYBACK",
-      "soft" : false,
-      "text" : "sell 1 trousers to Lumbridge General Store for 385 coins_995"
-    } ],
-    "loopClass" : "SHOP_TO_SHOP",
-    "marginPct" : 54.0,
-    "name" : "trousers",
-    "related" : [ ],
-    "sameShop" : false,
-    "severity" : "S2",
-    "soft" : false,
-    "unbounded" : false,
-    "unitProfit" : 135.0,
-    "unitsPerHourFirstHour" : 340.0,
-    "unitsPerHourSustained" : 240.0
-  }, {
     "acquireGp" : 7.5,
     "acquireGpEvMin" : 7.5,
     "acquirePath" : [ {
@@ -1509,598 +1398,6 @@
     "unbounded" : false,
     "unitProfit" : 103.0,
     "unitsPerHourFirstHour" : 1105.2631578947369,
-    "unitsPerHourSustained" : 240.0
-  }, {
-    "acquireGp" : 250.0,
-    "acquireGpEvMin" : 250.0,
-    "acquirePath" : [ {
-      "edge" : "shop:Lumbridge Stylist - Accessories:sell:item.grey_boots",
-      "guardedBy" : null,
-      "kind" : "SHOP_SELL",
-      "soft" : false,
-      "text" : "buy 1 grey_boots @ Lumbridge Stylist - Accessories for 250 coins_995 (stock 100)"
-    } ],
-    "gpPerHourFirstHour" : 34000.0,
-    "gpPerHourSustained" : 24000.0,
-    "guardedBy" : [ ],
-    "id" : "shop_to_shop:item.grey_boots",
-    "item" : "item.grey_boots",
-    "levelNotes" : [ ],
-    "limitingFactor" : "shop stock 100 (+240/h restock) @ Lumbridge Stylist - Accessories",
-    "liquidateGp" : 350.0,
-    "liquidateGpEvMin" : 350.0,
-    "liquidatePath" : [ {
-      "edge" : "shop:Lumbridge General Store:buy:item.grey_boots",
-      "guardedBy" : null,
-      "kind" : "SHOP_BUYBACK",
-      "soft" : false,
-      "text" : "sell 1 grey_boots to Lumbridge General Store for 350 coins_995"
-    } ],
-    "loopClass" : "SHOP_TO_SHOP",
-    "marginPct" : 39.99999999999999,
-    "name" : "grey_boots",
-    "related" : [ ],
-    "sameShop" : false,
-    "severity" : "S2",
-    "soft" : false,
-    "unbounded" : false,
-    "unitProfit" : 100.0,
-    "unitsPerHourFirstHour" : 340.0,
-    "unitsPerHourSustained" : 240.0
-  }, {
-    "acquireGp" : 250.0,
-    "acquireGpEvMin" : 250.0,
-    "acquirePath" : [ {
-      "edge" : "shop:Lumbridge Stylist - Accessories:sell:item.grey_gloves",
-      "guardedBy" : null,
-      "kind" : "SHOP_SELL",
-      "soft" : false,
-      "text" : "buy 1 grey_gloves @ Lumbridge Stylist - Accessories for 250 coins_995 (stock 100)"
-    } ],
-    "gpPerHourFirstHour" : 34000.0,
-    "gpPerHourSustained" : 24000.0,
-    "guardedBy" : [ ],
-    "id" : "shop_to_shop:item.grey_gloves",
-    "item" : "item.grey_gloves",
-    "levelNotes" : [ ],
-    "limitingFactor" : "shop stock 100 (+240/h restock) @ Lumbridge Stylist - Accessories",
-    "liquidateGp" : 350.0,
-    "liquidateGpEvMin" : 350.0,
-    "liquidatePath" : [ {
-      "edge" : "shop:Lumbridge General Store:buy:item.grey_gloves",
-      "guardedBy" : null,
-      "kind" : "SHOP_BUYBACK",
-      "soft" : false,
-      "text" : "sell 1 grey_gloves to Lumbridge General Store for 350 coins_995"
-    } ],
-    "loopClass" : "SHOP_TO_SHOP",
-    "marginPct" : 39.99999999999999,
-    "name" : "grey_gloves",
-    "related" : [ ],
-    "sameShop" : false,
-    "severity" : "S2",
-    "soft" : false,
-    "unbounded" : false,
-    "unitProfit" : 100.0,
-    "unitsPerHourFirstHour" : 340.0,
-    "unitsPerHourSustained" : 240.0
-  }, {
-    "acquireGp" : 250.0,
-    "acquireGpEvMin" : 250.0,
-    "acquirePath" : [ {
-      "edge" : "shop:Lumbridge Stylist - Accessories:sell:item.grey_hat",
-      "guardedBy" : null,
-      "kind" : "SHOP_SELL",
-      "soft" : false,
-      "text" : "buy 1 grey_hat @ Lumbridge Stylist - Accessories for 250 coins_995 (stock 100)"
-    } ],
-    "gpPerHourFirstHour" : 34000.0,
-    "gpPerHourSustained" : 24000.0,
-    "guardedBy" : [ ],
-    "id" : "shop_to_shop:item.grey_hat",
-    "item" : "item.grey_hat",
-    "levelNotes" : [ ],
-    "limitingFactor" : "shop stock 100 (+240/h restock) @ Lumbridge Stylist - Accessories",
-    "liquidateGp" : 350.0,
-    "liquidateGpEvMin" : 350.0,
-    "liquidatePath" : [ {
-      "edge" : "shop:Lumbridge General Store:buy:item.grey_hat",
-      "guardedBy" : null,
-      "kind" : "SHOP_BUYBACK",
-      "soft" : false,
-      "text" : "sell 1 grey_hat to Lumbridge General Store for 350 coins_995"
-    } ],
-    "loopClass" : "SHOP_TO_SHOP",
-    "marginPct" : 39.99999999999999,
-    "name" : "grey_hat",
-    "related" : [ ],
-    "sameShop" : false,
-    "severity" : "S2",
-    "soft" : false,
-    "unbounded" : false,
-    "unitProfit" : 100.0,
-    "unitsPerHourFirstHour" : 340.0,
-    "unitsPerHourSustained" : 240.0
-  }, {
-    "acquireGp" : 250.0,
-    "acquireGpEvMin" : 250.0,
-    "acquirePath" : [ {
-      "edge" : "shop:Lumbridge Stylist - Accessories:sell:item.purple_boots",
-      "guardedBy" : null,
-      "kind" : "SHOP_SELL",
-      "soft" : false,
-      "text" : "buy 1 purple_boots @ Lumbridge Stylist - Accessories for 250 coins_995 (stock 100)"
-    } ],
-    "gpPerHourFirstHour" : 34000.0,
-    "gpPerHourSustained" : 24000.0,
-    "guardedBy" : [ ],
-    "id" : "shop_to_shop:item.purple_boots",
-    "item" : "item.purple_boots",
-    "levelNotes" : [ ],
-    "limitingFactor" : "shop stock 100 (+240/h restock) @ Lumbridge Stylist - Accessories",
-    "liquidateGp" : 350.0,
-    "liquidateGpEvMin" : 350.0,
-    "liquidatePath" : [ {
-      "edge" : "shop:Lumbridge General Store:buy:item.purple_boots",
-      "guardedBy" : null,
-      "kind" : "SHOP_BUYBACK",
-      "soft" : false,
-      "text" : "sell 1 purple_boots to Lumbridge General Store for 350 coins_995"
-    } ],
-    "loopClass" : "SHOP_TO_SHOP",
-    "marginPct" : 39.99999999999999,
-    "name" : "purple_boots",
-    "related" : [ ],
-    "sameShop" : false,
-    "severity" : "S2",
-    "soft" : false,
-    "unbounded" : false,
-    "unitProfit" : 100.0,
-    "unitsPerHourFirstHour" : 340.0,
-    "unitsPerHourSustained" : 240.0
-  }, {
-    "acquireGp" : 250.0,
-    "acquireGpEvMin" : 250.0,
-    "acquirePath" : [ {
-      "edge" : "shop:Lumbridge Stylist - Accessories:sell:item.purple_gloves",
-      "guardedBy" : null,
-      "kind" : "SHOP_SELL",
-      "soft" : false,
-      "text" : "buy 1 purple_gloves @ Lumbridge Stylist - Accessories for 250 coins_995 (stock 100)"
-    } ],
-    "gpPerHourFirstHour" : 34000.0,
-    "gpPerHourSustained" : 24000.0,
-    "guardedBy" : [ ],
-    "id" : "shop_to_shop:item.purple_gloves",
-    "item" : "item.purple_gloves",
-    "levelNotes" : [ ],
-    "limitingFactor" : "shop stock 100 (+240/h restock) @ Lumbridge Stylist - Accessories",
-    "liquidateGp" : 350.0,
-    "liquidateGpEvMin" : 350.0,
-    "liquidatePath" : [ {
-      "edge" : "shop:Lumbridge General Store:buy:item.purple_gloves",
-      "guardedBy" : null,
-      "kind" : "SHOP_BUYBACK",
-      "soft" : false,
-      "text" : "sell 1 purple_gloves to Lumbridge General Store for 350 coins_995"
-    } ],
-    "loopClass" : "SHOP_TO_SHOP",
-    "marginPct" : 39.99999999999999,
-    "name" : "purple_gloves",
-    "related" : [ ],
-    "sameShop" : false,
-    "severity" : "S2",
-    "soft" : false,
-    "unbounded" : false,
-    "unitProfit" : 100.0,
-    "unitsPerHourFirstHour" : 340.0,
-    "unitsPerHourSustained" : 240.0
-  }, {
-    "acquireGp" : 250.0,
-    "acquireGpEvMin" : 250.0,
-    "acquirePath" : [ {
-      "edge" : "shop:Lumbridge Stylist - Accessories:sell:item.purple_hat",
-      "guardedBy" : null,
-      "kind" : "SHOP_SELL",
-      "soft" : false,
-      "text" : "buy 1 purple_hat @ Lumbridge Stylist - Accessories for 250 coins_995 (stock 100)"
-    } ],
-    "gpPerHourFirstHour" : 34000.0,
-    "gpPerHourSustained" : 24000.0,
-    "guardedBy" : [ ],
-    "id" : "shop_to_shop:item.purple_hat",
-    "item" : "item.purple_hat",
-    "levelNotes" : [ ],
-    "limitingFactor" : "shop stock 100 (+240/h restock) @ Lumbridge Stylist - Accessories",
-    "liquidateGp" : 350.0,
-    "liquidateGpEvMin" : 350.0,
-    "liquidatePath" : [ {
-      "edge" : "shop:Lumbridge General Store:buy:item.purple_hat",
-      "guardedBy" : null,
-      "kind" : "SHOP_BUYBACK",
-      "soft" : false,
-      "text" : "sell 1 purple_hat to Lumbridge General Store for 350 coins_995"
-    } ],
-    "loopClass" : "SHOP_TO_SHOP",
-    "marginPct" : 39.99999999999999,
-    "name" : "purple_hat",
-    "related" : [ ],
-    "sameShop" : false,
-    "severity" : "S2",
-    "soft" : false,
-    "unbounded" : false,
-    "unitProfit" : 100.0,
-    "unitsPerHourFirstHour" : 340.0,
-    "unitsPerHourSustained" : 240.0
-  }, {
-    "acquireGp" : 250.0,
-    "acquireGpEvMin" : 250.0,
-    "acquirePath" : [ {
-      "edge" : "shop:Lumbridge Stylist - Accessories:sell:item.red_boots",
-      "guardedBy" : null,
-      "kind" : "SHOP_SELL",
-      "soft" : false,
-      "text" : "buy 1 red_boots @ Lumbridge Stylist - Accessories for 250 coins_995 (stock 100)"
-    } ],
-    "gpPerHourFirstHour" : 34000.0,
-    "gpPerHourSustained" : 24000.0,
-    "guardedBy" : [ ],
-    "id" : "shop_to_shop:item.red_boots",
-    "item" : "item.red_boots",
-    "levelNotes" : [ ],
-    "limitingFactor" : "shop stock 100 (+240/h restock) @ Lumbridge Stylist - Accessories",
-    "liquidateGp" : 350.0,
-    "liquidateGpEvMin" : 350.0,
-    "liquidatePath" : [ {
-      "edge" : "shop:Lumbridge General Store:buy:item.red_boots",
-      "guardedBy" : null,
-      "kind" : "SHOP_BUYBACK",
-      "soft" : false,
-      "text" : "sell 1 red_boots to Lumbridge General Store for 350 coins_995"
-    } ],
-    "loopClass" : "SHOP_TO_SHOP",
-    "marginPct" : 39.99999999999999,
-    "name" : "red_boots",
-    "related" : [ ],
-    "sameShop" : false,
-    "severity" : "S2",
-    "soft" : false,
-    "unbounded" : false,
-    "unitProfit" : 100.0,
-    "unitsPerHourFirstHour" : 340.0,
-    "unitsPerHourSustained" : 240.0
-  }, {
-    "acquireGp" : 250.0,
-    "acquireGpEvMin" : 250.0,
-    "acquirePath" : [ {
-      "edge" : "shop:Lumbridge Stylist - Accessories:sell:item.red_gloves",
-      "guardedBy" : null,
-      "kind" : "SHOP_SELL",
-      "soft" : false,
-      "text" : "buy 1 red_gloves @ Lumbridge Stylist - Accessories for 250 coins_995 (stock 100)"
-    } ],
-    "gpPerHourFirstHour" : 34000.0,
-    "gpPerHourSustained" : 24000.0,
-    "guardedBy" : [ ],
-    "id" : "shop_to_shop:item.red_gloves",
-    "item" : "item.red_gloves",
-    "levelNotes" : [ ],
-    "limitingFactor" : "shop stock 100 (+240/h restock) @ Lumbridge Stylist - Accessories",
-    "liquidateGp" : 350.0,
-    "liquidateGpEvMin" : 350.0,
-    "liquidatePath" : [ {
-      "edge" : "shop:Lumbridge General Store:buy:item.red_gloves",
-      "guardedBy" : null,
-      "kind" : "SHOP_BUYBACK",
-      "soft" : false,
-      "text" : "sell 1 red_gloves to Lumbridge General Store for 350 coins_995"
-    } ],
-    "loopClass" : "SHOP_TO_SHOP",
-    "marginPct" : 39.99999999999999,
-    "name" : "red_gloves",
-    "related" : [ ],
-    "sameShop" : false,
-    "severity" : "S2",
-    "soft" : false,
-    "unbounded" : false,
-    "unitProfit" : 100.0,
-    "unitsPerHourFirstHour" : 340.0,
-    "unitsPerHourSustained" : 240.0
-  }, {
-    "acquireGp" : 250.0,
-    "acquireGpEvMin" : 250.0,
-    "acquirePath" : [ {
-      "edge" : "shop:Lumbridge Stylist - Accessories:sell:item.red_hat",
-      "guardedBy" : null,
-      "kind" : "SHOP_SELL",
-      "soft" : false,
-      "text" : "buy 1 red_hat @ Lumbridge Stylist - Accessories for 250 coins_995 (stock 100)"
-    } ],
-    "gpPerHourFirstHour" : 34000.0,
-    "gpPerHourSustained" : 24000.0,
-    "guardedBy" : [ ],
-    "id" : "shop_to_shop:item.red_hat",
-    "item" : "item.red_hat",
-    "levelNotes" : [ ],
-    "limitingFactor" : "shop stock 100 (+240/h restock) @ Lumbridge Stylist - Accessories",
-    "liquidateGp" : 350.0,
-    "liquidateGpEvMin" : 350.0,
-    "liquidatePath" : [ {
-      "edge" : "shop:Lumbridge General Store:buy:item.red_hat",
-      "guardedBy" : null,
-      "kind" : "SHOP_BUYBACK",
-      "soft" : false,
-      "text" : "sell 1 red_hat to Lumbridge General Store for 350 coins_995"
-    } ],
-    "loopClass" : "SHOP_TO_SHOP",
-    "marginPct" : 39.99999999999999,
-    "name" : "red_hat",
-    "related" : [ ],
-    "sameShop" : false,
-    "severity" : "S2",
-    "soft" : false,
-    "unbounded" : false,
-    "unitProfit" : 100.0,
-    "unitsPerHourFirstHour" : 340.0,
-    "unitsPerHourSustained" : 240.0
-  }, {
-    "acquireGp" : 250.0,
-    "acquireGpEvMin" : 250.0,
-    "acquirePath" : [ {
-      "edge" : "shop:Lumbridge Stylist - Accessories:sell:item.teal_boots",
-      "guardedBy" : null,
-      "kind" : "SHOP_SELL",
-      "soft" : false,
-      "text" : "buy 1 teal_boots @ Lumbridge Stylist - Accessories for 250 coins_995 (stock 100)"
-    } ],
-    "gpPerHourFirstHour" : 34000.0,
-    "gpPerHourSustained" : 24000.0,
-    "guardedBy" : [ ],
-    "id" : "shop_to_shop:item.teal_boots",
-    "item" : "item.teal_boots",
-    "levelNotes" : [ ],
-    "limitingFactor" : "shop stock 100 (+240/h restock) @ Lumbridge Stylist - Accessories",
-    "liquidateGp" : 350.0,
-    "liquidateGpEvMin" : 350.0,
-    "liquidatePath" : [ {
-      "edge" : "shop:Lumbridge General Store:buy:item.teal_boots",
-      "guardedBy" : null,
-      "kind" : "SHOP_BUYBACK",
-      "soft" : false,
-      "text" : "sell 1 teal_boots to Lumbridge General Store for 350 coins_995"
-    } ],
-    "loopClass" : "SHOP_TO_SHOP",
-    "marginPct" : 39.99999999999999,
-    "name" : "teal_boots",
-    "related" : [ ],
-    "sameShop" : false,
-    "severity" : "S2",
-    "soft" : false,
-    "unbounded" : false,
-    "unitProfit" : 100.0,
-    "unitsPerHourFirstHour" : 340.0,
-    "unitsPerHourSustained" : 240.0
-  }, {
-    "acquireGp" : 250.0,
-    "acquireGpEvMin" : 250.0,
-    "acquirePath" : [ {
-      "edge" : "shop:Lumbridge Stylist - Accessories:sell:item.teal_gloves",
-      "guardedBy" : null,
-      "kind" : "SHOP_SELL",
-      "soft" : false,
-      "text" : "buy 1 teal_gloves @ Lumbridge Stylist - Accessories for 250 coins_995 (stock 100)"
-    } ],
-    "gpPerHourFirstHour" : 34000.0,
-    "gpPerHourSustained" : 24000.0,
-    "guardedBy" : [ ],
-    "id" : "shop_to_shop:item.teal_gloves",
-    "item" : "item.teal_gloves",
-    "levelNotes" : [ ],
-    "limitingFactor" : "shop stock 100 (+240/h restock) @ Lumbridge Stylist - Accessories",
-    "liquidateGp" : 350.0,
-    "liquidateGpEvMin" : 350.0,
-    "liquidatePath" : [ {
-      "edge" : "shop:Lumbridge General Store:buy:item.teal_gloves",
-      "guardedBy" : null,
-      "kind" : "SHOP_BUYBACK",
-      "soft" : false,
-      "text" : "sell 1 teal_gloves to Lumbridge General Store for 350 coins_995"
-    } ],
-    "loopClass" : "SHOP_TO_SHOP",
-    "marginPct" : 39.99999999999999,
-    "name" : "teal_gloves",
-    "related" : [ ],
-    "sameShop" : false,
-    "severity" : "S2",
-    "soft" : false,
-    "unbounded" : false,
-    "unitProfit" : 100.0,
-    "unitsPerHourFirstHour" : 340.0,
-    "unitsPerHourSustained" : 240.0
-  }, {
-    "acquireGp" : 250.0,
-    "acquireGpEvMin" : 250.0,
-    "acquirePath" : [ {
-      "edge" : "shop:Lumbridge Stylist - Accessories:sell:item.teal_hat",
-      "guardedBy" : null,
-      "kind" : "SHOP_SELL",
-      "soft" : false,
-      "text" : "buy 1 teal_hat @ Lumbridge Stylist - Accessories for 250 coins_995 (stock 100)"
-    } ],
-    "gpPerHourFirstHour" : 34000.0,
-    "gpPerHourSustained" : 24000.0,
-    "guardedBy" : [ ],
-    "id" : "shop_to_shop:item.teal_hat",
-    "item" : "item.teal_hat",
-    "levelNotes" : [ ],
-    "limitingFactor" : "shop stock 100 (+240/h restock) @ Lumbridge Stylist - Accessories",
-    "liquidateGp" : 350.0,
-    "liquidateGpEvMin" : 350.0,
-    "liquidatePath" : [ {
-      "edge" : "shop:Lumbridge General Store:buy:item.teal_hat",
-      "guardedBy" : null,
-      "kind" : "SHOP_BUYBACK",
-      "soft" : false,
-      "text" : "sell 1 teal_hat to Lumbridge General Store for 350 coins_995"
-    } ],
-    "loopClass" : "SHOP_TO_SHOP",
-    "marginPct" : 39.99999999999999,
-    "name" : "teal_hat",
-    "related" : [ ],
-    "sameShop" : false,
-    "severity" : "S2",
-    "soft" : false,
-    "unbounded" : false,
-    "unitProfit" : 100.0,
-    "unitsPerHourFirstHour" : 340.0,
-    "unitsPerHourSustained" : 240.0
-  }, {
-    "acquireGp" : 250.0,
-    "acquireGpEvMin" : 250.0,
-    "acquirePath" : [ {
-      "edge" : "shop:Lumbridge Stylist - Shirts & Robes:sell:item.woven_top",
-      "guardedBy" : null,
-      "kind" : "SHOP_SELL",
-      "soft" : false,
-      "text" : "buy 1 woven_top @ Lumbridge Stylist - Shirts & Robes for 250 coins_995 (stock 100)"
-    } ],
-    "gpPerHourFirstHour" : 34000.0,
-    "gpPerHourSustained" : 24000.0,
-    "guardedBy" : [ ],
-    "id" : "shop_to_shop:item.woven_top",
-    "item" : "item.woven_top",
-    "levelNotes" : [ ],
-    "limitingFactor" : "shop stock 100 (+240/h restock) @ Lumbridge Stylist - Shirts & Robes",
-    "liquidateGp" : 350.0,
-    "liquidateGpEvMin" : 350.0,
-    "liquidatePath" : [ {
-      "edge" : "shop:Lumbridge General Store:buy:item.woven_top",
-      "guardedBy" : null,
-      "kind" : "SHOP_BUYBACK",
-      "soft" : false,
-      "text" : "sell 1 woven_top to Lumbridge General Store for 350 coins_995"
-    } ],
-    "loopClass" : "SHOP_TO_SHOP",
-    "marginPct" : 39.99999999999999,
-    "name" : "woven_top",
-    "related" : [ ],
-    "sameShop" : false,
-    "severity" : "S2",
-    "soft" : false,
-    "unbounded" : false,
-    "unitProfit" : 100.0,
-    "unitsPerHourFirstHour" : 340.0,
-    "unitsPerHourSustained" : 240.0
-  }, {
-    "acquireGp" : 250.0,
-    "acquireGpEvMin" : 250.0,
-    "acquirePath" : [ {
-      "edge" : "shop:Lumbridge Stylist - Accessories:sell:item.yellow_boots",
-      "guardedBy" : null,
-      "kind" : "SHOP_SELL",
-      "soft" : false,
-      "text" : "buy 1 yellow_boots @ Lumbridge Stylist - Accessories for 250 coins_995 (stock 100)"
-    } ],
-    "gpPerHourFirstHour" : 34000.0,
-    "gpPerHourSustained" : 24000.0,
-    "guardedBy" : [ ],
-    "id" : "shop_to_shop:item.yellow_boots",
-    "item" : "item.yellow_boots",
-    "levelNotes" : [ ],
-    "limitingFactor" : "shop stock 100 (+240/h restock) @ Lumbridge Stylist - Accessories",
-    "liquidateGp" : 350.0,
-    "liquidateGpEvMin" : 350.0,
-    "liquidatePath" : [ {
-      "edge" : "shop:Lumbridge General Store:buy:item.yellow_boots",
-      "guardedBy" : null,
-      "kind" : "SHOP_BUYBACK",
-      "soft" : false,
-      "text" : "sell 1 yellow_boots to Lumbridge General Store for 350 coins_995"
-    } ],
-    "loopClass" : "SHOP_TO_SHOP",
-    "marginPct" : 39.99999999999999,
-    "name" : "yellow_boots",
-    "related" : [ ],
-    "sameShop" : false,
-    "severity" : "S2",
-    "soft" : false,
-    "unbounded" : false,
-    "unitProfit" : 100.0,
-    "unitsPerHourFirstHour" : 340.0,
-    "unitsPerHourSustained" : 240.0
-  }, {
-    "acquireGp" : 250.0,
-    "acquireGpEvMin" : 250.0,
-    "acquirePath" : [ {
-      "edge" : "shop:Lumbridge Stylist - Accessories:sell:item.yellow_gloves",
-      "guardedBy" : null,
-      "kind" : "SHOP_SELL",
-      "soft" : false,
-      "text" : "buy 1 yellow_gloves @ Lumbridge Stylist - Accessories for 250 coins_995 (stock 100)"
-    } ],
-    "gpPerHourFirstHour" : 34000.0,
-    "gpPerHourSustained" : 24000.0,
-    "guardedBy" : [ ],
-    "id" : "shop_to_shop:item.yellow_gloves",
-    "item" : "item.yellow_gloves",
-    "levelNotes" : [ ],
-    "limitingFactor" : "shop stock 100 (+240/h restock) @ Lumbridge Stylist - Accessories",
-    "liquidateGp" : 350.0,
-    "liquidateGpEvMin" : 350.0,
-    "liquidatePath" : [ {
-      "edge" : "shop:Lumbridge General Store:buy:item.yellow_gloves",
-      "guardedBy" : null,
-      "kind" : "SHOP_BUYBACK",
-      "soft" : false,
-      "text" : "sell 1 yellow_gloves to Lumbridge General Store for 350 coins_995"
-    } ],
-    "loopClass" : "SHOP_TO_SHOP",
-    "marginPct" : 39.99999999999999,
-    "name" : "yellow_gloves",
-    "related" : [ ],
-    "sameShop" : false,
-    "severity" : "S2",
-    "soft" : false,
-    "unbounded" : false,
-    "unitProfit" : 100.0,
-    "unitsPerHourFirstHour" : 340.0,
-    "unitsPerHourSustained" : 240.0
-  }, {
-    "acquireGp" : 250.0,
-    "acquireGpEvMin" : 250.0,
-    "acquirePath" : [ {
-      "edge" : "shop:Lumbridge Stylist - Accessories:sell:item.yellow_hat",
-      "guardedBy" : null,
-      "kind" : "SHOP_SELL",
-      "soft" : false,
-      "text" : "buy 1 yellow_hat @ Lumbridge Stylist - Accessories for 250 coins_995 (stock 100)"
-    } ],
-    "gpPerHourFirstHour" : 34000.0,
-    "gpPerHourSustained" : 24000.0,
-    "guardedBy" : [ ],
-    "id" : "shop_to_shop:item.yellow_hat",
-    "item" : "item.yellow_hat",
-    "levelNotes" : [ ],
-    "limitingFactor" : "shop stock 100 (+240/h restock) @ Lumbridge Stylist - Accessories",
-    "liquidateGp" : 350.0,
-    "liquidateGpEvMin" : 350.0,
-    "liquidatePath" : [ {
-      "edge" : "shop:Lumbridge General Store:buy:item.yellow_hat",
-      "guardedBy" : null,
-      "kind" : "SHOP_BUYBACK",
-      "soft" : false,
-      "text" : "sell 1 yellow_hat to Lumbridge General Store for 350 coins_995"
-    } ],
-    "loopClass" : "SHOP_TO_SHOP",
-    "marginPct" : 39.99999999999999,
-    "name" : "yellow_hat",
-    "related" : [ ],
-    "sameShop" : false,
-    "severity" : "S2",
-    "soft" : false,
-    "unbounded" : false,
-    "unitProfit" : 100.0,
-    "unitsPerHourFirstHour" : 340.0,
     "unitsPerHourSustained" : 240.0
   }, {
     "acquireGp" : 45.0,
@@ -2481,43 +1778,6 @@
     "unbounded" : false,
     "unitProfit" : 65.0,
     "unitsPerHourFirstHour" : 1105.2631578947369,
-    "unitsPerHourSustained" : 240.0
-  }, {
-    "acquireGp" : 250.0,
-    "acquireGpEvMin" : 250.0,
-    "acquirePath" : [ {
-      "edge" : "shop:Lumbridge Stylist - Shirts & Robes:sell:item.shirt",
-      "guardedBy" : null,
-      "kind" : "SHOP_SELL",
-      "soft" : false,
-      "text" : "buy 1 shirt @ Lumbridge Stylist - Shirts & Robes for 250 coins_995 (stock 100)"
-    } ],
-    "gpPerHourFirstHour" : 22100.0,
-    "gpPerHourSustained" : 15600.0,
-    "guardedBy" : [ ],
-    "id" : "shop_to_shop:item.shirt",
-    "item" : "item.shirt",
-    "levelNotes" : [ ],
-    "limitingFactor" : "shop stock 100 (+240/h restock) @ Lumbridge Stylist - Shirts & Robes",
-    "liquidateGp" : 315.0,
-    "liquidateGpEvMin" : 315.0,
-    "liquidatePath" : [ {
-      "edge" : "shop:Lumbridge General Store:buy:item.shirt",
-      "guardedBy" : null,
-      "kind" : "SHOP_BUYBACK",
-      "soft" : false,
-      "text" : "sell 1 shirt to Lumbridge General Store for 315 coins_995"
-    } ],
-    "loopClass" : "SHOP_TO_SHOP",
-    "marginPct" : 26.0,
-    "name" : "shirt",
-    "related" : [ ],
-    "sameShop" : false,
-    "severity" : "S2",
-    "soft" : false,
-    "unbounded" : false,
-    "unitProfit" : 65.0,
-    "unitsPerHourFirstHour" : 340.0,
     "unitsPerHourSustained" : 240.0
   }, {
     "acquireGp" : 75.0,
@@ -4106,8 +3366,8 @@
     "cachePath" : "C:\\Program Files (x86)\\Kearse RSPS\\Alter\\data\\cache",
     "edges" : 40882,
     "flags" : [ ],
-    "generatedAt" : "2026-09-03T10:02:45.3149631-06:00",
-    "gitSha" : "a0d4eb45",
+    "generatedAt" : "2026-09-03T10:24:44.8174012-06:00",
+    "gitSha" : "e4cc6dda",
     "items" : 15145,
     "pluginsConstructed" : 35,
     "pluginsFailed" : 0,
@@ -4152,42 +3412,6 @@
       "sellGp" : 500000.0,
       "shop" : "Warlord's Armoury - Accessories"
     }, {
-      "alch60" : 1200,
-      "buyback70" : 1400,
-      "cost" : 2000,
-      "currency" : "coins",
-      "item" : "item.flared_trousers",
-      "sell" : 400,
-      "sellGp" : 400.0,
-      "shop" : "Lumbridge Stylist - Legwear"
-    }, {
-      "alch60" : 300,
-      "buyback70" : 350,
-      "cost" : 500,
-      "currency" : "coins",
-      "item" : "item.grey_boots",
-      "sell" : 250,
-      "sellGp" : 250.0,
-      "shop" : "Lumbridge Stylist - Accessories"
-    }, {
-      "alch60" : 300,
-      "buyback70" : 350,
-      "cost" : 500,
-      "currency" : "coins",
-      "item" : "item.grey_gloves",
-      "sell" : 250,
-      "sellGp" : 250.0,
-      "shop" : "Lumbridge Stylist - Accessories"
-    }, {
-      "alch60" : 300,
-      "buyback70" : 350,
-      "cost" : 500,
-      "currency" : "coins",
-      "item" : "item.grey_hat",
-      "sell" : 250,
-      "sellGp" : 250.0,
-      "shop" : "Lumbridge Stylist - Accessories"
-    }, {
       "alch60" : 3600000,
       "buyback70" : 4200000,
       "cost" : 6000000,
@@ -4214,150 +3438,6 @@
       "sell" : 1100,
       "sellGp" : 1100000.0,
       "shop" : "Warlord's Armoury - Armour"
-    }, {
-      "alch60" : 300,
-      "buyback70" : 350,
-      "cost" : 500,
-      "currency" : "coins",
-      "item" : "item.purple_boots",
-      "sell" : 250,
-      "sellGp" : 250.0,
-      "shop" : "Lumbridge Stylist - Accessories"
-    }, {
-      "alch60" : 300,
-      "buyback70" : 350,
-      "cost" : 500,
-      "currency" : "coins",
-      "item" : "item.purple_gloves",
-      "sell" : 250,
-      "sellGp" : 250.0,
-      "shop" : "Lumbridge Stylist - Accessories"
-    }, {
-      "alch60" : 300,
-      "buyback70" : 350,
-      "cost" : 500,
-      "currency" : "coins",
-      "item" : "item.purple_hat",
-      "sell" : 250,
-      "sellGp" : 250.0,
-      "shop" : "Lumbridge Stylist - Accessories"
-    }, {
-      "alch60" : 300,
-      "buyback70" : 350,
-      "cost" : 500,
-      "currency" : "coins",
-      "item" : "item.red_boots",
-      "sell" : 250,
-      "sellGp" : 250.0,
-      "shop" : "Lumbridge Stylist - Accessories"
-    }, {
-      "alch60" : 300,
-      "buyback70" : 350,
-      "cost" : 500,
-      "currency" : "coins",
-      "item" : "item.red_gloves",
-      "sell" : 250,
-      "sellGp" : 250.0,
-      "shop" : "Lumbridge Stylist - Accessories"
-    }, {
-      "alch60" : 300,
-      "buyback70" : 350,
-      "cost" : 500,
-      "currency" : "coins",
-      "item" : "item.red_hat",
-      "sell" : 250,
-      "sellGp" : 250.0,
-      "shop" : "Lumbridge Stylist - Accessories"
-    }, {
-      "alch60" : 270,
-      "buyback70" : 315,
-      "cost" : 450,
-      "currency" : "coins",
-      "item" : "item.shirt",
-      "sell" : 250,
-      "sellGp" : 250.0,
-      "shop" : "Lumbridge Stylist - Shirts & Robes"
-    }, {
-      "alch60" : 1200,
-      "buyback70" : 1400,
-      "cost" : 2000,
-      "currency" : "coins",
-      "item" : "item.sleeping_cap",
-      "sell" : 300,
-      "sellGp" : 300.0,
-      "shop" : "Lumbridge Stylist - Accessories"
-    }, {
-      "alch60" : 300,
-      "buyback70" : 350,
-      "cost" : 500,
-      "currency" : "coins",
-      "item" : "item.teal_boots",
-      "sell" : 250,
-      "sellGp" : 250.0,
-      "shop" : "Lumbridge Stylist - Accessories"
-    }, {
-      "alch60" : 300,
-      "buyback70" : 350,
-      "cost" : 500,
-      "currency" : "coins",
-      "item" : "item.teal_gloves",
-      "sell" : 250,
-      "sellGp" : 250.0,
-      "shop" : "Lumbridge Stylist - Accessories"
-    }, {
-      "alch60" : 300,
-      "buyback70" : 350,
-      "cost" : 500,
-      "currency" : "coins",
-      "item" : "item.teal_hat",
-      "sell" : 250,
-      "sellGp" : 250.0,
-      "shop" : "Lumbridge Stylist - Accessories"
-    }, {
-      "alch60" : 330,
-      "buyback70" : 385,
-      "cost" : 550,
-      "currency" : "coins",
-      "item" : "item.trousers",
-      "sell" : 250,
-      "sellGp" : 250.0,
-      "shop" : "Lumbridge Stylist - Legwear"
-    }, {
-      "alch60" : 300,
-      "buyback70" : 350,
-      "cost" : 500,
-      "currency" : "coins",
-      "item" : "item.woven_top",
-      "sell" : 250,
-      "sellGp" : 250.0,
-      "shop" : "Lumbridge Stylist - Shirts & Robes"
-    }, {
-      "alch60" : 300,
-      "buyback70" : 350,
-      "cost" : 500,
-      "currency" : "coins",
-      "item" : "item.yellow_boots",
-      "sell" : 250,
-      "sellGp" : 250.0,
-      "shop" : "Lumbridge Stylist - Accessories"
-    }, {
-      "alch60" : 300,
-      "buyback70" : 350,
-      "cost" : 500,
-      "currency" : "coins",
-      "item" : "item.yellow_gloves",
-      "sell" : 250,
-      "sellGp" : 250.0,
-      "shop" : "Lumbridge Stylist - Accessories"
-    }, {
-      "alch60" : 300,
-      "buyback70" : 350,
-      "cost" : 500,
-      "currency" : "coins",
-      "item" : "item.yellow_hat",
-      "sell" : 250,
-      "sellGp" : 250.0,
-      "shop" : "Lumbridge Stylist - Accessories"
     } ],
     "inconsistentSell" : [ {
       "currency" : "coins_995",
@@ -4369,48 +3449,6 @@
       "prices" : [ "Lumbridge Ranged Gear=6", "Lumbridge Stylist - Accessories=200" ]
     } ],
     "nearMiss" : [ {
-      "acquire" : 350.0,
-      "acquireVia" : "shop:Lumbridge Stylist - Shirts & Robes:sell:item.grey_robe_top",
-      "item" : "item.grey_robe_top",
-      "liquidate" : 350.0,
-      "liquidateVia" : "shop:Lumbridge General Store:buy:item.grey_robe_top",
-      "ratio" : 1.0
-    }, {
-      "acquire" : 350.0,
-      "acquireVia" : "shop:Lumbridge Stylist - Shirts & Robes:sell:item.red_robe_top",
-      "item" : "item.red_robe_top",
-      "liquidate" : 350.0,
-      "liquidateVia" : "shop:Lumbridge General Store:buy:item.red_robe_top",
-      "ratio" : 1.0
-    }, {
-      "acquire" : 350.0,
-      "acquireVia" : "shop:Lumbridge Stylist - Shirts & Robes:sell:item.yellow_robe_top",
-      "item" : "item.yellow_robe_top",
-      "liquidate" : 350.0,
-      "liquidateVia" : "shop:Lumbridge General Store:buy:item.yellow_robe_top",
-      "ratio" : 1.0
-    }, {
-      "acquire" : 350.0,
-      "acquireVia" : "shop:Lumbridge Stylist - Shirts & Robes:sell:item.teal_robe_top",
-      "item" : "item.teal_robe_top",
-      "liquidate" : 350.0,
-      "liquidateVia" : "shop:Lumbridge General Store:buy:item.teal_robe_top",
-      "ratio" : 1.0
-    }, {
-      "acquire" : 350.0,
-      "acquireVia" : "shop:Lumbridge Stylist - Shirts & Robes:sell:item.purple_robe_top",
-      "item" : "item.purple_robe_top",
-      "liquidate" : 350.0,
-      "liquidateVia" : "shop:Lumbridge General Store:buy:item.purple_robe_top",
-      "ratio" : 1.0
-    }, {
-      "acquire" : 250.0,
-      "acquireVia" : "shop:Lumbridge Stylist - Legwear:sell:item.skirt",
-      "item" : "item.skirt",
-      "liquidate" : 244.0,
-      "liquidateVia" : "shop:Lumbridge General Store:buy:item.skirt",
-      "ratio" : 0.976
-    }, {
       "acquire" : 640.0,
       "acquireVia" : "recipe:smithing.smith.adamant_dagger",
       "item" : "item.adamant_dagger",
@@ -4425,127 +3463,7 @@
       "liquidateVia" : "shop:Lumbridge General Store:buy:item.steel_dagger",
       "ratio" : 0.87
     } ],
-    "sameShopLoop" : [ {
-      "buyback" : 1400,
-      "currency" : "coins",
-      "item" : "item.flared_trousers",
-      "sell" : 400,
-      "shop" : "Lumbridge Stylist - Legwear"
-    }, {
-      "buyback" : 350,
-      "currency" : "coins",
-      "item" : "item.grey_boots",
-      "sell" : 250,
-      "shop" : "Lumbridge Stylist - Accessories"
-    }, {
-      "buyback" : 350,
-      "currency" : "coins",
-      "item" : "item.grey_gloves",
-      "sell" : 250,
-      "shop" : "Lumbridge Stylist - Accessories"
-    }, {
-      "buyback" : 350,
-      "currency" : "coins",
-      "item" : "item.grey_hat",
-      "sell" : 250,
-      "shop" : "Lumbridge Stylist - Accessories"
-    }, {
-      "buyback" : 350,
-      "currency" : "coins",
-      "item" : "item.purple_boots",
-      "sell" : 250,
-      "shop" : "Lumbridge Stylist - Accessories"
-    }, {
-      "buyback" : 350,
-      "currency" : "coins",
-      "item" : "item.purple_gloves",
-      "sell" : 250,
-      "shop" : "Lumbridge Stylist - Accessories"
-    }, {
-      "buyback" : 350,
-      "currency" : "coins",
-      "item" : "item.purple_hat",
-      "sell" : 250,
-      "shop" : "Lumbridge Stylist - Accessories"
-    }, {
-      "buyback" : 350,
-      "currency" : "coins",
-      "item" : "item.red_boots",
-      "sell" : 250,
-      "shop" : "Lumbridge Stylist - Accessories"
-    }, {
-      "buyback" : 350,
-      "currency" : "coins",
-      "item" : "item.red_gloves",
-      "sell" : 250,
-      "shop" : "Lumbridge Stylist - Accessories"
-    }, {
-      "buyback" : 350,
-      "currency" : "coins",
-      "item" : "item.red_hat",
-      "sell" : 250,
-      "shop" : "Lumbridge Stylist - Accessories"
-    }, {
-      "buyback" : 315,
-      "currency" : "coins",
-      "item" : "item.shirt",
-      "sell" : 250,
-      "shop" : "Lumbridge Stylist - Shirts & Robes"
-    }, {
-      "buyback" : 1400,
-      "currency" : "coins",
-      "item" : "item.sleeping_cap",
-      "sell" : 300,
-      "shop" : "Lumbridge Stylist - Accessories"
-    }, {
-      "buyback" : 350,
-      "currency" : "coins",
-      "item" : "item.teal_boots",
-      "sell" : 250,
-      "shop" : "Lumbridge Stylist - Accessories"
-    }, {
-      "buyback" : 350,
-      "currency" : "coins",
-      "item" : "item.teal_gloves",
-      "sell" : 250,
-      "shop" : "Lumbridge Stylist - Accessories"
-    }, {
-      "buyback" : 350,
-      "currency" : "coins",
-      "item" : "item.teal_hat",
-      "sell" : 250,
-      "shop" : "Lumbridge Stylist - Accessories"
-    }, {
-      "buyback" : 385,
-      "currency" : "coins",
-      "item" : "item.trousers",
-      "sell" : 250,
-      "shop" : "Lumbridge Stylist - Legwear"
-    }, {
-      "buyback" : 350,
-      "currency" : "coins",
-      "item" : "item.woven_top",
-      "sell" : 250,
-      "shop" : "Lumbridge Stylist - Shirts & Robes"
-    }, {
-      "buyback" : 350,
-      "currency" : "coins",
-      "item" : "item.yellow_boots",
-      "sell" : 250,
-      "shop" : "Lumbridge Stylist - Accessories"
-    }, {
-      "buyback" : 350,
-      "currency" : "coins",
-      "item" : "item.yellow_gloves",
-      "sell" : 250,
-      "shop" : "Lumbridge Stylist - Accessories"
-    }, {
-      "buyback" : 350,
-      "currency" : "coins",
-      "item" : "item.yellow_hat",
-      "sell" : 250,
-      "shop" : "Lumbridge Stylist - Accessories"
-    } ],
+    "sameShopLoop" : [ ],
     "zeroCostWares" : [ ]
   },
   "preventedByGuards" : [ {
@@ -4566,7 +3484,7 @@
     } ],
     "gpPerHourFirstHour" : 1.02E9,
     "gpPerHourSustained" : 7.2E8,
-    "guardedBy" : [ "GeneralStore.cost>5000" ],
+    "guardedBy" : [ "SpecialShopGuard" ],
     "id" : "currency_to_item_to_gp:item.justiciar_chestguard",
     "item" : "item.justiciar_chestguard",
     "levelNotes" : [ ],
@@ -4575,7 +3493,7 @@
     "liquidateGpEvMin" : 0.0,
     "liquidatePath" : [ {
       "edge" : "shop:Lumbridge General Store:buy:item.justiciar_chestguard",
-      "guardedBy" : "GeneralStore.cost>5000",
+      "guardedBy" : "SpecialShopGuard",
       "kind" : "SHOP_BUYBACK",
       "soft" : false,
       "text" : "sell 1 justiciar_chestguard to Lumbridge General Store for 4200000 coins_995"
@@ -4609,7 +3527,7 @@
     } ],
     "gpPerHourFirstHour" : 6.97E8,
     "gpPerHourSustained" : 4.92E8,
-    "guardedBy" : [ "GeneralStore.cost>5000" ],
+    "guardedBy" : [ "SpecialShopGuard" ],
     "id" : "currency_to_item_to_gp:item.justiciar_legguards",
     "item" : "item.justiciar_legguards",
     "levelNotes" : [ ],
@@ -4618,7 +3536,7 @@
     "liquidateGpEvMin" : 0.0,
     "liquidatePath" : [ {
       "edge" : "shop:Lumbridge General Store:buy:item.justiciar_legguards",
-      "guardedBy" : "GeneralStore.cost>5000",
+      "guardedBy" : "SpecialShopGuard",
       "kind" : "SHOP_BUYBACK",
       "soft" : false,
       "text" : "sell 1 justiciar_legguards to Lumbridge General Store for 3150000 coins_995"
@@ -4781,7 +3699,7 @@
     } ],
     "gpPerHourFirstHour" : 1.7E8,
     "gpPerHourSustained" : 1.2E8,
-    "guardedBy" : [ "GeneralStore.cost>5000" ],
+    "guardedBy" : [ "SpecialShopGuard" ],
     "id" : "currency_to_item_to_gp:item.justiciar_faceguard",
     "item" : "item.justiciar_faceguard",
     "levelNotes" : [ ],
@@ -4790,7 +3708,7 @@
     "liquidateGpEvMin" : 0.0,
     "liquidatePath" : [ {
       "edge" : "shop:Lumbridge General Store:buy:item.justiciar_faceguard",
-      "guardedBy" : "GeneralStore.cost>5000",
+      "guardedBy" : "SpecialShopGuard",
       "kind" : "SHOP_BUYBACK",
       "soft" : false,
       "text" : "sell 1 justiciar_faceguard to Lumbridge General Store for 1400000 coins_995"
@@ -22073,10 +20991,10 @@
       "cost" : 1,
       "item" : 1038,
       "key" : "item.red_partyhat",
-      "liquidateVia" : "shop:Lumbridge General Store:buy:item.red_partyhat",
+      "liquidateVia" : null,
       "name" : "Red partyhat",
       "npcAcquireGp" : 3999600.0,
-      "npcLiquidateGp" : 1.0,
+      "npcLiquidateGp" : 0.0,
       "sellPrice" : 900,
       "sellPriceSource" : "explicit",
       "unlimited" : false
@@ -22090,10 +21008,10 @@
       "cost" : 1,
       "item" : 1042,
       "key" : "item.blue_partyhat",
-      "liquidateVia" : "shop:Lumbridge General Store:buy:item.blue_partyhat",
+      "liquidateVia" : null,
       "name" : "Blue partyhat",
       "npcAcquireGp" : 3999600.0,
-      "npcLiquidateGp" : 1.0,
+      "npcLiquidateGp" : 0.0,
       "sellPrice" : 900,
       "sellPriceSource" : "explicit",
       "unlimited" : false
@@ -22107,10 +21025,10 @@
       "cost" : 1,
       "item" : 1044,
       "key" : "item.green_partyhat",
-      "liquidateVia" : "shop:Lumbridge General Store:buy:item.green_partyhat",
+      "liquidateVia" : null,
       "name" : "Green partyhat",
       "npcAcquireGp" : 3999600.0,
-      "npcLiquidateGp" : 1.0,
+      "npcLiquidateGp" : 0.0,
       "sellPrice" : 900,
       "sellPriceSource" : "explicit",
       "unlimited" : false
@@ -22124,10 +21042,10 @@
       "cost" : 1,
       "item" : 1040,
       "key" : "item.yellow_partyhat",
-      "liquidateVia" : "shop:Lumbridge General Store:buy:item.yellow_partyhat",
+      "liquidateVia" : null,
       "name" : "Yellow partyhat",
       "npcAcquireGp" : 3999600.0,
-      "npcLiquidateGp" : 1.0,
+      "npcLiquidateGp" : 0.0,
       "sellPrice" : 900,
       "sellPriceSource" : "explicit",
       "unlimited" : false
@@ -22141,10 +21059,10 @@
       "cost" : 1,
       "item" : 1048,
       "key" : "item.white_partyhat",
-      "liquidateVia" : "shop:Lumbridge General Store:buy:item.white_partyhat",
+      "liquidateVia" : null,
       "name" : "White partyhat",
       "npcAcquireGp" : 5999400.0,
-      "npcLiquidateGp" : 1.0,
+      "npcLiquidateGp" : 0.0,
       "sellPrice" : 1350,
       "sellPriceSource" : "explicit",
       "unlimited" : false
@@ -22158,10 +21076,10 @@
       "cost" : 160,
       "item" : 1050,
       "key" : "item.santa_hat",
-      "liquidateVia" : "shop:Lumbridge General Store:buy:item.santa_hat",
+      "liquidateVia" : null,
       "name" : "Santa hat",
       "npcAcquireGp" : 5999400.0,
-      "npcLiquidateGp" : 112.0,
+      "npcLiquidateGp" : 0.0,
       "sellPrice" : 1350,
       "sellPriceSource" : "explicit",
       "unlimited" : false
@@ -22175,10 +21093,10 @@
       "cost" : 15,
       "item" : 1057,
       "key" : "item.red_halloween_mask",
-      "liquidateVia" : "shop:Lumbridge General Store:buy:item.red_halloween_mask",
+      "liquidateVia" : null,
       "name" : "Red halloween mask",
       "npcAcquireGp" : 3110800.0,
-      "npcLiquidateGp" : 10.0,
+      "npcLiquidateGp" : 0.0,
       "sellPrice" : 700,
       "sellPriceSource" : "explicit",
       "unlimited" : false
@@ -22192,10 +21110,10 @@
       "cost" : 15,
       "item" : 1055,
       "key" : "item.blue_halloween_mask",
-      "liquidateVia" : "shop:Lumbridge General Store:buy:item.blue_halloween_mask",
+      "liquidateVia" : null,
       "name" : "Blue halloween mask",
       "npcAcquireGp" : 3110800.0,
-      "npcLiquidateGp" : 10.0,
+      "npcLiquidateGp" : 0.0,
       "sellPrice" : 700,
       "sellPriceSource" : "explicit",
       "unlimited" : false
@@ -22209,10 +21127,10 @@
       "cost" : 15,
       "item" : 1053,
       "key" : "item.green_halloween_mask",
-      "liquidateVia" : "shop:Lumbridge General Store:buy:item.green_halloween_mask",
+      "liquidateVia" : null,
       "name" : "Green halloween mask",
       "npcAcquireGp" : 3110800.0,
-      "npcLiquidateGp" : 10.0,
+      "npcLiquidateGp" : 0.0,
       "sellPrice" : 700,
       "sellPriceSource" : "explicit",
       "unlimited" : false
@@ -22819,10 +21737,10 @@
       "cost" : 0,
       "item" : 8851,
       "key" : "item.vote_ticket",
-      "liquidateVia" : "shop:Lumbridge Vote Rewards:sell:item.gilded_kiteshield",
+      "liquidateVia" : "shop:Lumbridge Vote Rewards:sell:item.stamina_potion4",
       "name" : "Vote Ticket",
       "npcAcquireGp" : 2000.0,
-      "npcLiquidateGp" : 952.0,
+      "npcLiquidateGp" : 46.666666666666664,
       "sellPrice" : 2000,
       "sellPriceSource" : "explicit",
       "unlimited" : true
@@ -27369,9 +26287,9 @@
       "key" : "item.grey_hat",
       "liquidateVia" : "shop:Lumbridge General Store:buy:item.grey_hat",
       "name" : "Grey hat",
-      "npcAcquireGp" : 250.0,
+      "npcAcquireGp" : 500.0,
       "npcLiquidateGp" : 350.0,
-      "sellPrice" : 250,
+      "sellPrice" : 500,
       "sellPriceSource" : "explicit",
       "unlimited" : false
     }, {
@@ -27386,9 +26304,9 @@
       "key" : "item.red_hat",
       "liquidateVia" : "shop:Lumbridge General Store:buy:item.red_hat",
       "name" : "Red hat",
-      "npcAcquireGp" : 250.0,
+      "npcAcquireGp" : 500.0,
       "npcLiquidateGp" : 350.0,
-      "sellPrice" : 250,
+      "sellPrice" : 500,
       "sellPriceSource" : "explicit",
       "unlimited" : false
     }, {
@@ -27403,9 +26321,9 @@
       "key" : "item.yellow_hat",
       "liquidateVia" : "shop:Lumbridge General Store:buy:item.yellow_hat",
       "name" : "Yellow hat",
-      "npcAcquireGp" : 250.0,
+      "npcAcquireGp" : 500.0,
       "npcLiquidateGp" : 350.0,
-      "sellPrice" : 250,
+      "sellPrice" : 500,
       "sellPriceSource" : "explicit",
       "unlimited" : false
     }, {
@@ -27420,9 +26338,9 @@
       "key" : "item.teal_hat",
       "liquidateVia" : "shop:Lumbridge General Store:buy:item.teal_hat",
       "name" : "Teal hat",
-      "npcAcquireGp" : 250.0,
+      "npcAcquireGp" : 500.0,
       "npcLiquidateGp" : 350.0,
-      "sellPrice" : 250,
+      "sellPrice" : 500,
       "sellPriceSource" : "explicit",
       "unlimited" : false
     }, {
@@ -27437,9 +26355,9 @@
       "key" : "item.purple_hat",
       "liquidateVia" : "shop:Lumbridge General Store:buy:item.purple_hat",
       "name" : "Purple hat",
-      "npcAcquireGp" : 250.0,
+      "npcAcquireGp" : 500.0,
       "npcLiquidateGp" : 350.0,
-      "sellPrice" : 250,
+      "sellPrice" : 500,
       "sellPriceSource" : "explicit",
       "unlimited" : false
     }, {
@@ -27539,9 +26457,9 @@
       "key" : "item.sleeping_cap",
       "liquidateVia" : "shop:Lumbridge General Store:buy:item.sleeping_cap",
       "name" : "Sleeping cap",
-      "npcAcquireGp" : 300.0,
+      "npcAcquireGp" : 2000.0,
       "npcLiquidateGp" : 1400.0,
-      "sellPrice" : 300,
+      "sellPrice" : 2000,
       "sellPriceSource" : "explicit",
       "unlimited" : false
     }, {
@@ -27590,9 +26508,9 @@
       "key" : "item.grey_gloves",
       "liquidateVia" : "shop:Lumbridge General Store:buy:item.grey_gloves",
       "name" : "Grey gloves",
-      "npcAcquireGp" : 250.0,
+      "npcAcquireGp" : 500.0,
       "npcLiquidateGp" : 350.0,
-      "sellPrice" : 250,
+      "sellPrice" : 500,
       "sellPriceSource" : "explicit",
       "unlimited" : false
     }, {
@@ -27607,9 +26525,9 @@
       "key" : "item.red_gloves",
       "liquidateVia" : "shop:Lumbridge General Store:buy:item.red_gloves",
       "name" : "Red gloves",
-      "npcAcquireGp" : 250.0,
+      "npcAcquireGp" : 500.0,
       "npcLiquidateGp" : 350.0,
-      "sellPrice" : 250,
+      "sellPrice" : 500,
       "sellPriceSource" : "explicit",
       "unlimited" : false
     }, {
@@ -27624,9 +26542,9 @@
       "key" : "item.yellow_gloves",
       "liquidateVia" : "shop:Lumbridge General Store:buy:item.yellow_gloves",
       "name" : "Yellow gloves",
-      "npcAcquireGp" : 250.0,
+      "npcAcquireGp" : 500.0,
       "npcLiquidateGp" : 350.0,
-      "sellPrice" : 250,
+      "sellPrice" : 500,
       "sellPriceSource" : "explicit",
       "unlimited" : false
     }, {
@@ -27641,9 +26559,9 @@
       "key" : "item.teal_gloves",
       "liquidateVia" : "shop:Lumbridge General Store:buy:item.teal_gloves",
       "name" : "Teal gloves",
-      "npcAcquireGp" : 250.0,
+      "npcAcquireGp" : 500.0,
       "npcLiquidateGp" : 350.0,
-      "sellPrice" : 250,
+      "sellPrice" : 500,
       "sellPriceSource" : "explicit",
       "unlimited" : false
     }, {
@@ -27658,9 +26576,9 @@
       "key" : "item.purple_gloves",
       "liquidateVia" : "shop:Lumbridge General Store:buy:item.purple_gloves",
       "name" : "Purple gloves",
-      "npcAcquireGp" : 250.0,
+      "npcAcquireGp" : 500.0,
       "npcLiquidateGp" : 350.0,
-      "sellPrice" : 250,
+      "sellPrice" : 500,
       "sellPriceSource" : "explicit",
       "unlimited" : false
     }, {
@@ -27777,9 +26695,9 @@
       "key" : "item.grey_boots",
       "liquidateVia" : "shop:Lumbridge General Store:buy:item.grey_boots",
       "name" : "Grey boots",
-      "npcAcquireGp" : 250.0,
+      "npcAcquireGp" : 500.0,
       "npcLiquidateGp" : 350.0,
-      "sellPrice" : 250,
+      "sellPrice" : 500,
       "sellPriceSource" : "explicit",
       "unlimited" : false
     }, {
@@ -27794,9 +26712,9 @@
       "key" : "item.red_boots",
       "liquidateVia" : "shop:Lumbridge General Store:buy:item.red_boots",
       "name" : "Red boots",
-      "npcAcquireGp" : 250.0,
+      "npcAcquireGp" : 500.0,
       "npcLiquidateGp" : 350.0,
-      "sellPrice" : 250,
+      "sellPrice" : 500,
       "sellPriceSource" : "explicit",
       "unlimited" : false
     }, {
@@ -27811,9 +26729,9 @@
       "key" : "item.yellow_boots",
       "liquidateVia" : "shop:Lumbridge General Store:buy:item.yellow_boots",
       "name" : "Yellow boots",
-      "npcAcquireGp" : 250.0,
+      "npcAcquireGp" : 500.0,
       "npcLiquidateGp" : 350.0,
-      "sellPrice" : 250,
+      "sellPrice" : 500,
       "sellPriceSource" : "explicit",
       "unlimited" : false
     }, {
@@ -27828,9 +26746,9 @@
       "key" : "item.teal_boots",
       "liquidateVia" : "shop:Lumbridge General Store:buy:item.teal_boots",
       "name" : "Teal boots",
-      "npcAcquireGp" : 250.0,
+      "npcAcquireGp" : 500.0,
       "npcLiquidateGp" : 350.0,
-      "sellPrice" : 250,
+      "sellPrice" : 500,
       "sellPriceSource" : "explicit",
       "unlimited" : false
     }, {
@@ -27845,9 +26763,9 @@
       "key" : "item.purple_boots",
       "liquidateVia" : "shop:Lumbridge General Store:buy:item.purple_boots",
       "name" : "Purple boots",
-      "npcAcquireGp" : 250.0,
+      "npcAcquireGp" : 500.0,
       "npcLiquidateGp" : 350.0,
-      "sellPrice" : 250,
+      "sellPrice" : 500,
       "sellPriceSource" : "explicit",
       "unlimited" : false
     }, {
@@ -28082,9 +27000,9 @@
       "key" : "item.trousers",
       "liquidateVia" : "shop:Lumbridge General Store:buy:item.trousers",
       "name" : "Trousers",
-      "npcAcquireGp" : 250.0,
+      "npcAcquireGp" : 550.0,
       "npcLiquidateGp" : 385.0,
-      "sellPrice" : 250,
+      "sellPrice" : 550,
       "sellPriceSource" : "explicit",
       "unlimited" : false
     }, {
@@ -28099,9 +27017,9 @@
       "key" : "item.skirt",
       "liquidateVia" : "shop:Lumbridge General Store:buy:item.skirt",
       "name" : "Skirt",
-      "npcAcquireGp" : 250.0,
+      "npcAcquireGp" : 350.0,
       "npcLiquidateGp" : 244.0,
-      "sellPrice" : 250,
+      "sellPrice" : 350,
       "sellPriceSource" : "explicit",
       "unlimited" : false
     }, {
@@ -28116,9 +27034,9 @@
       "key" : "item.shorts",
       "liquidateVia" : "shop:Lumbridge General Store:buy:item.shorts",
       "name" : "Shorts",
-      "npcAcquireGp" : 250.0,
+      "npcAcquireGp" : 280.0,
       "npcLiquidateGp" : 196.0,
-      "sellPrice" : 250,
+      "sellPrice" : 280,
       "sellPriceSource" : "explicit",
       "unlimited" : false
     }, {
@@ -28133,9 +27051,9 @@
       "key" : "item.flared_trousers",
       "liquidateVia" : "shop:Lumbridge General Store:buy:item.flared_trousers",
       "name" : "Flared trousers",
-      "npcAcquireGp" : 400.0,
+      "npcAcquireGp" : 2000.0,
       "npcLiquidateGp" : 1400.0,
-      "sellPrice" : 400,
+      "sellPrice" : 2000,
       "sellPriceSource" : "explicit",
       "unlimited" : false
     }, {
@@ -28226,9 +27144,9 @@
       "key" : "item.shirt",
       "liquidateVia" : "shop:Lumbridge General Store:buy:item.shirt",
       "name" : "Shirt",
-      "npcAcquireGp" : 250.0,
+      "npcAcquireGp" : 450.0,
       "npcLiquidateGp" : 315.0,
-      "sellPrice" : 250,
+      "sellPrice" : 450,
       "sellPriceSource" : "explicit",
       "unlimited" : false
     }, {
@@ -28243,9 +27161,9 @@
       "key" : "item.woven_top",
       "liquidateVia" : "shop:Lumbridge General Store:buy:item.woven_top",
       "name" : "Woven top",
-      "npcAcquireGp" : 250.0,
+      "npcAcquireGp" : 500.0,
       "npcLiquidateGp" : 350.0,
-      "sellPrice" : 250,
+      "sellPrice" : 500,
       "sellPriceSource" : "explicit",
       "unlimited" : false
     }, {
@@ -28413,9 +27331,9 @@
       "key" : "item.grey_robe_top",
       "liquidateVia" : "shop:Lumbridge General Store:buy:item.grey_robe_top",
       "name" : "Grey robe top",
-      "npcAcquireGp" : 350.0,
+      "npcAcquireGp" : 500.0,
       "npcLiquidateGp" : 350.0,
-      "sellPrice" : 350,
+      "sellPrice" : 500,
       "sellPriceSource" : "explicit",
       "unlimited" : false
     }, {
@@ -28430,9 +27348,9 @@
       "key" : "item.red_robe_top",
       "liquidateVia" : "shop:Lumbridge General Store:buy:item.red_robe_top",
       "name" : "Red robe top",
-      "npcAcquireGp" : 350.0,
+      "npcAcquireGp" : 500.0,
       "npcLiquidateGp" : 350.0,
-      "sellPrice" : 350,
+      "sellPrice" : 500,
       "sellPriceSource" : "explicit",
       "unlimited" : false
     }, {
@@ -28447,9 +27365,9 @@
       "key" : "item.yellow_robe_top",
       "liquidateVia" : "shop:Lumbridge General Store:buy:item.yellow_robe_top",
       "name" : "Yellow robe top",
-      "npcAcquireGp" : 350.0,
+      "npcAcquireGp" : 500.0,
       "npcLiquidateGp" : 350.0,
-      "sellPrice" : 350,
+      "sellPrice" : 500,
       "sellPriceSource" : "explicit",
       "unlimited" : false
     }, {
@@ -28464,9 +27382,9 @@
       "key" : "item.teal_robe_top",
       "liquidateVia" : "shop:Lumbridge General Store:buy:item.teal_robe_top",
       "name" : "Teal robe top",
-      "npcAcquireGp" : 350.0,
+      "npcAcquireGp" : 500.0,
       "npcLiquidateGp" : 350.0,
-      "sellPrice" : 350,
+      "sellPrice" : 500,
       "sellPriceSource" : "explicit",
       "unlimited" : false
     }, {
@@ -28481,9 +27399,9 @@
       "key" : "item.purple_robe_top",
       "liquidateVia" : "shop:Lumbridge General Store:buy:item.purple_robe_top",
       "name" : "Purple robe top",
-      "npcAcquireGp" : 350.0,
+      "npcAcquireGp" : 500.0,
       "npcLiquidateGp" : 350.0,
-      "sellPrice" : 350,
+      "sellPrice" : 500,
       "sellPriceSource" : "explicit",
       "unlimited" : false
     } ]
@@ -29064,10 +27982,10 @@
       "cost" : 35200,
       "item" : 3486,
       "key" : "item.gilded_full_helm",
-      "liquidateVia" : "shop:Trading Post:buy:item.gilded_full_helm",
+      "liquidateVia" : null,
       "name" : "Gilded full helm",
       "npcAcquireGp" : 60000.0,
-      "npcLiquidateGp" : 24640.0,
+      "npcLiquidateGp" : 0.0,
       "sellPrice" : 30,
       "sellPriceSource" : "explicit",
       "unlimited" : false
@@ -29081,10 +27999,10 @@
       "cost" : 65000,
       "item" : 3481,
       "key" : "item.gilded_platebody",
-      "liquidateVia" : "shop:Trading Post:buy:item.gilded_platebody",
+      "liquidateVia" : null,
       "name" : "Gilded platebody",
       "npcAcquireGp" : 120000.0,
-      "npcLiquidateGp" : 45500.0,
+      "npcLiquidateGp" : 0.0,
       "sellPrice" : 60,
       "sellPriceSource" : "explicit",
       "unlimited" : false
@@ -29098,10 +28016,10 @@
       "cost" : 64000,
       "item" : 3483,
       "key" : "item.gilded_platelegs",
-      "liquidateVia" : "shop:Trading Post:buy:item.gilded_platelegs",
+      "liquidateVia" : null,
       "name" : "Gilded platelegs",
       "npcAcquireGp" : 100000.0,
-      "npcLiquidateGp" : 44800.0,
+      "npcLiquidateGp" : 0.0,
       "sellPrice" : 50,
       "sellPriceSource" : "explicit",
       "unlimited" : false
@@ -29115,10 +28033,10 @@
       "cost" : 54400,
       "item" : 3488,
       "key" : "item.gilded_kiteshield",
-      "liquidateVia" : "shop:Trading Post:buy:item.gilded_kiteshield",
+      "liquidateVia" : null,
       "name" : "Gilded kiteshield",
       "npcAcquireGp" : 80000.0,
-      "npcLiquidateGp" : 38080.0,
+      "npcLiquidateGp" : 0.0,
       "sellPrice" : 40,
       "sellPriceSource" : "explicit",
       "unlimited" : false
@@ -29132,10 +28050,10 @@
       "cost" : 25600,
       "item" : 12389,
       "key" : "item.gilded_scimitar",
-      "liquidateVia" : "shop:Trading Post:buy:item.gilded_scimitar",
+      "liquidateVia" : null,
       "name" : "Gilded scimitar",
       "npcAcquireGp" : 80000.0,
-      "npcLiquidateGp" : 17920.0,
+      "npcLiquidateGp" : 0.0,
       "sellPrice" : 40,
       "sellPriceSource" : "explicit",
       "unlimited" : false
@@ -29149,10 +28067,10 @@
       "cost" : 12500,
       "item" : 12391,
       "key" : "item.gilded_boots",
-      "liquidateVia" : "shop:Trading Post:buy:item.gilded_boots",
+      "liquidateVia" : null,
       "name" : "Gilded boots",
       "npcAcquireGp" : 50000.0,
-      "npcLiquidateGp" : 8750.0,
+      "npcLiquidateGp" : 0.0,
       "sellPrice" : 25,
       "sellPriceSource" : "explicit",
       "unlimited" : false
@@ -29284,10 +28202,10 @@
       "cost" : 1,
       "item" : 13307,
       "key" : "item.blood_money",
-      "liquidateVia" : "shop:PK Rewards - Spec Weapons:sell:item.armadyl_godsword",
+      "liquidateVia" : "shop:PK Rewards:sell:item.shark",
       "name" : "Blood money",
       "npcAcquireGp" : 800.0,
-      "npcLiquidateGp" : 58.333333333333336,
+      "npcLiquidateGp" : 23.6,
       "sellPrice" : 800,
       "sellPriceSource" : "explicit",
       "unlimited" : true
@@ -29419,10 +28337,10 @@
       "cost" : 2000000,
       "item" : 27690,
       "key" : "item.voidwaker",
-      "liquidateVia" : "shop:Trading Post:buy:item.voidwaker",
+      "liquidateVia" : null,
       "name" : "Voidwaker",
       "npcAcquireGp" : 2.4E7,
-      "npcLiquidateGp" : 1400000.0,
+      "npcLiquidateGp" : 0.0,
       "sellPrice" : 30000,
       "sellPriceSource" : "explicit",
       "unlimited" : false
@@ -29436,10 +28354,10 @@
       "cost" : 500010,
       "item" : 21003,
       "key" : "item.elder_maul",
-      "liquidateVia" : "shop:Trading Post:buy:item.elder_maul",
+      "liquidateVia" : null,
       "name" : "Elder maul",
       "npcAcquireGp" : 1.6E7,
-      "npcLiquidateGp" : 350007.0,
+      "npcLiquidateGp" : 0.0,
       "sellPrice" : 20000,
       "sellPriceSource" : "explicit",
       "unlimited" : false
@@ -29470,10 +28388,10 @@
       "cost" : 1250000,
       "item" : 26233,
       "key" : "item.ancient_godsword",
-      "liquidateVia" : "shop:Trading Post:buy:item.ancient_godsword",
+      "liquidateVia" : null,
       "name" : "Ancient godsword",
       "npcAcquireGp" : 1.6E7,
-      "npcLiquidateGp" : 875000.0,
+      "npcLiquidateGp" : 0.0,
       "sellPrice" : 20000,
       "sellPriceSource" : "explicit",
       "unlimited" : false
@@ -29487,10 +28405,10 @@
       "cost" : 1250000,
       "item" : 11802,
       "key" : "item.armadyl_godsword",
-      "liquidateVia" : "shop:Trading Post:buy:item.armadyl_godsword",
+      "liquidateVia" : null,
       "name" : "Armadyl godsword",
       "npcAcquireGp" : 1.2E7,
-      "npcLiquidateGp" : 875000.0,
+      "npcLiquidateGp" : 0.0,
       "sellPrice" : 15000,
       "sellPriceSource" : "explicit",
       "unlimited" : false
@@ -29521,10 +28439,10 @@
       "cost" : 800000,
       "item" : 29577,
       "key" : "item.burning_claws",
-      "liquidateVia" : "shop:Trading Post:buy:item.burning_claws",
+      "liquidateVia" : null,
       "name" : "Burning claws",
       "npcAcquireGp" : 1.12E7,
-      "npcLiquidateGp" : 560000.0,
+      "npcLiquidateGp" : 0.0,
       "sellPrice" : 14000,
       "sellPriceSource" : "explicit",
       "unlimited" : false
@@ -29538,10 +28456,10 @@
       "cost" : 205000,
       "item" : 13652,
       "key" : "item.dragon_claws",
-      "liquidateVia" : "shop:Trading Post:buy:item.dragon_claws",
+      "liquidateVia" : null,
       "name" : "Dragon claws",
       "npcAcquireGp" : 9600000.0,
-      "npcLiquidateGp" : 143500.0,
+      "npcLiquidateGp" : 0.0,
       "sellPrice" : 12000,
       "sellPriceSource" : "explicit",
       "unlimited" : false
@@ -29555,10 +28473,10 @@
       "cost" : 120000,
       "item" : 13576,
       "key" : "item.dragon_warhammer",
-      "liquidateVia" : "shop:Trading Post:buy:item.dragon_warhammer",
+      "liquidateVia" : null,
       "name" : "Dragon warhammer",
       "npcAcquireGp" : 8000000.0,
-      "npcLiquidateGp" : 84000.0,
+      "npcLiquidateGp" : 0.0,
       "sellPrice" : 10000,
       "sellPriceSource" : "explicit",
       "unlimited" : false
@@ -29572,10 +28490,10 @@
       "cost" : 120001,
       "item" : 4151,
       "key" : "item.abyssal_whip",
-      "liquidateVia" : "shop:Trading Post:buy:item.abyssal_whip",
+      "liquidateVia" : null,
       "name" : "Abyssal whip",
       "npcAcquireGp" : 2400000.0,
-      "npcLiquidateGp" : 84000.0,
+      "npcLiquidateGp" : 0.0,
       "sellPrice" : 3000,
       "sellPriceSource" : "explicit",
       "unlimited" : false
@@ -29589,10 +28507,10 @@
       "cost" : 50000,
       "item" : 4153,
       "key" : "item.granite_maul",
-      "liquidateVia" : "shop:Trading Post:buy:item.granite_maul",
+      "liquidateVia" : null,
       "name" : "Granite maul",
       "npcAcquireGp" : 1200000.0,
-      "npcLiquidateGp" : 35000.0,
+      "npcLiquidateGp" : 0.0,
       "sellPrice" : 1500,
       "sellPriceSource" : "explicit",
       "unlimited" : false
@@ -29614,10 +28532,10 @@
       "cost" : 300000,
       "item" : 22613,
       "key" : "item.vestas_longsword",
-      "liquidateVia" : "shop:Trading Post:buy:item.vestas_longsword",
+      "liquidateVia" : null,
       "name" : "Vesta's longsword",
       "npcAcquireGp" : 2.0E7,
-      "npcLiquidateGp" : 210000.0,
+      "npcLiquidateGp" : 0.0,
       "sellPrice" : 25000,
       "sellPriceSource" : "explicit",
       "unlimited" : false
@@ -29665,10 +28583,10 @@
       "cost" : 300000,
       "item" : 22622,
       "key" : "item.statiuss_warhammer",
-      "liquidateVia" : "shop:Trading Post:buy:item.statiuss_warhammer",
+      "liquidateVia" : null,
       "name" : "Statius's warhammer",
       "npcAcquireGp" : 1.6E7,
-      "npcLiquidateGp" : 210000.0,
+      "npcLiquidateGp" : 0.0,
       "sellPrice" : 20000,
       "sellPriceSource" : "explicit",
       "unlimited" : false
