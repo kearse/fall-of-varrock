@@ -2,6 +2,7 @@ package org.alter.plugins.content.economy.audit.engine
 
 import org.alter.plugins.content.economy.audit.model.Edge
 import org.alter.plugins.content.economy.audit.model.EdgeKind
+import org.alter.plugins.content.economy.audit.model.NodeId
 
 /**
  * A deliberately crude time model (game ticks per unit) so findings can be ranked by gp/hour.
@@ -37,24 +38,60 @@ object ActionTimeModel {
     data class Throughput(val unitsFirstHour: Double, val unitsSustained: Double, val limitingFactor: String)
 
     /**
-     * Units of the finding item per hour along [path] (acquire + liquidate edges), assuming one
-     * unit of every edge per unit of the item (a simplification: multi-quantity recipes are
-     * counted once). Finite shop stock caps the rate: first hour = stock + 240, sustained = 240.
+     * Units of the finding item per hour along the loop. [acquirePath] runs source → item and
+     * [liquidatePath] item → sink; every edge's time and stock cap is scaled by how many of its
+     * units one unit of the item needs (five bars per platebody, two coal per bar, two herbs per
+     * seed, ...), so a finite shop slot caps the loop in ITEM units: first hour = stock + 240,
+     * sustained = 240 per hour, both divided by the units consumed per item.
      */
-    fun throughput(path: List<Edge>): Throughput {
-        val ticks = path.sumOf { it.ticksPerUnit }.coerceAtLeast(0.01)
-        var first = TICKS_PER_HOUR / ticks
-        var sustained = first
-        var limit = "%.1f ticks/unit".format(ticks)
-        for (e in path) {
-            val stock = e.stock ?: continue
-            if (e.kind != EdgeKind.SHOP_SELL && e.kind != EdgeKind.SHOP_BUYBACK) continue
-            val f = (stock + RESTOCK_PER_HOUR).toDouble()
-            val s = RESTOCK_PER_HOUR.toDouble()
-            if (f < first) { first = f }
-            if (s < sustained) { sustained = s; limit = "shop stock $stock (+$RESTOCK_PER_HOUR/h restock) @ ${e.shopName}" }
+    fun throughput(item: NodeId, acquirePath: List<Edge>, liquidatePath: List<Edge>): Throughput {
+        var ticks = 0.0
+        var first = Double.POSITIVE_INFINITY
+        var sustained = Double.POSITIVE_INFINITY
+        var limit = ""
+        /** [execs] = executions of [e] per unit of the finding item (a shop edge moves one ware per execution). */
+        fun cap(e: Edge, execs: Double) {
+            ticks += e.ticksPerUnit * execs
+            val stock = e.stock ?: return
+            if (e.kind != EdgeKind.SHOP_SELL && e.kind != EdgeKind.SHOP_BUYBACK) return
+            val f = (stock + RESTOCK_PER_HOUR) / execs
+            val s = RESTOCK_PER_HOUR / execs
+            if (f < first) first = f
+            if (s < sustained) {
+                sustained = s
+                limit = "shop stock $stock (+$RESTOCK_PER_HOUR/h restock) @ ${e.shopName}" +
+                    if (execs != 1.0) " × %.2f per item".format(execs) else ""
+            }
         }
+        // Walk the acquire path backwards from the item. `needed` = units of `node` per item; an
+        // edge producing outQty of it (× EV) runs needed / (outQty × ev) times, and each run
+        // consumes inQty of the input the previous edge supplied.
+        var needed = 1.0
+        var node = item
+        for (i in acquirePath.indices.reversed()) {
+            val e = acquirePath[i]
+            val outQty = e.outputs.firstOrNull { it.node == node }?.qty ?: 1.0
+            val execs = needed / (outQty * e.evAtMaxLevel.coerceAtLeast(1e-9))
+            cap(e, execs)
+            val prev = acquirePath.getOrNull(i - 1) ?: break
+            val inp = e.inputs.firstOrNull { s -> prev.outputs.any { it.node == s.node } } ?: break
+            needed = execs * inp.qty
+            node = inp.node
+        }
+        // The liquidate path consumes one item per step (a unit sold, alched or converted on).
+        for (e in liquidatePath) cap(e, 1.0)
+        ticks = ticks.coerceAtLeast(0.01)
+        val byTicks = TICKS_PER_HOUR / ticks
+        if (byTicks < first) first = byTicks
+        if (byTicks < sustained) { sustained = byTicks; limit = "%.1f ticks/unit".format(ticks) }
         return Throughput(first, sustained, limit)
+    }
+
+    /** Convenience for tests: the last edge liquidates, the rest acquire the item they produce. */
+    fun throughput(path: List<Edge>): Throughput {
+        val acquire = path.dropLast(1)
+        val item = acquire.lastOrNull()?.outputs?.firstOrNull()?.node ?: path.last().inputs.first().node
+        return throughput(item, acquire, path.takeLast(1))
     }
 
     val rateTable: List<Pair<String, String>> = listOf(
