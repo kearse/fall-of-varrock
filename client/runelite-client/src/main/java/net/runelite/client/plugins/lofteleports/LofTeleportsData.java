@@ -100,15 +100,18 @@ final class LofTeleportsData
 			b("Recruit Trials", "Safe Zone", SAFE, 1277),       // bronze sword
 			s("Active Campaign", "Soon", SOON, 1201));          // rune kiteshield
 
-		// Mirrors TeleportRegistry BOSSES row-for-row (18 rows): the hand-built roster was purged;
+		// Mirrors TeleportRegistry BOSSES row-for-row (21 rows): the hand-built roster was purged;
 		// bosses come back one at a time as Kronos ports and flip to b(...) here as they land.
 		cat("Bosses",
 			b("Corp Beast (Event)", "Hostile", HOSTILE, 13734), // spirit shield
 			s("World Boss", "Soon", SOON, 11864),               // slayer helmet
-			s("King Black Dragon", "Soon", SOON, 1149),         // dragon med helm
+			b("King Black Dragon", "Hostile", HOSTILE, 1149),   // dragon med helm (lair-boss package port)
 			s("Corporeal Beast", "Soon", SOON, 13734),          // spirit shield
 			b("Zulrah", "Hostile", HOSTILE, 12934),             // zulrah's scales
 			b("Barrows", "Safe Zone", SAFE, 4716),              // dharok's helm (crypt run port)
+			b("Giant Mole", "Hostile", HOSTILE, 7416),          // mole claw (lair-boss package port)
+			b("Kalphite Queen", "Hostile", HOSTILE, 3140),      // dragon chainbody
+			b("Dagannoth Kings", "Hostile", HOSTILE, 6737),     // berserker ring
 			b("Vorkath", "Hostile", HOSTILE, 21634),            // vorkath's head
 			b("Alchemical Hydra", "Hostile", HOSTILE, 22988),   // hydra leather
 			b("General Graardor", "Hostile", HOSTILE, 11832),   // bandos chestplate (GWD package port)
