@@ -95,11 +95,33 @@ class RogueProblemPlugin(
         val s = runCatching { getRSCM(SERGEANT) }.getOrDefault(-1)
         if (RogueProblem.offerable(p)) {
             chatNpc(p, "There's harder work than reporting in, ${p.address} — an assignment, if you want it. The rogues who bleed our roads, and the deserters who lead them. It's optional, mind: the war marches with or without it, and Vannaka's lessons don't wait on it.", npc = s, title = "Recruiting Sergeant")
-            if (options(p, "Tell me about the rogues.", "Not today, sergeant.", title = "Recruiting Sergeant") == 1) {
-                RogueProblem.begin(p)
+            // A veteran who already challenged the knights directly must still reach the ladder
+            // chatter from here — this quest-priority branch claims every click while the offer
+            // stands, so the default branch's "My Rogue Knight hunt" never gets a turn.
+            val direct = RogueKnightLadder.unlocked(p)
+            val choice = if (direct) {
+                options(p, "Tell me about the rogues.", "My Rogue Knight hunt.", "Not today, sergeant.", title = "Recruiting Sergeant")
             } else {
-                chatNpc(p, "As you were, then. The offer stands whenever you want it.", npc = s, title = "Recruiting Sergeant")
-                return
+                options(p, "Tell me about the rogues.", "I'd rather fight the Rogue Knights directly.", "Not today, sergeant.", title = "Recruiting Sergeant")
+            }
+            when (choice) {
+                1 -> RogueProblem.begin(p)
+                2 -> {
+                    if (direct) {
+                        RogueKnightLadder.sergeantLines(p).forEach { chatNpc(p, it, npc = s, title = "Recruiting Sergeant") }
+                    } else {
+                        // Design authority §9: veteran PKers skip the lessons and challenge the
+                        // Rogues directly. No quest, no hunt — the ladder simply opens.
+                        chatNpc(p, "Straight to the deserters, is it? Fair enough — the ladder doesn't care how you found it. Fourteen of them, weakest to strongest, and every camp guards its own: thin the rogues before the knight will face you.", npc = s, title = "Recruiting Sergeant")
+                        RogueKnightLadder.optIn(p)
+                        chatNpc(p, "The offer of the assignment stands if you ever want the purse that goes with it. Now go earn your War Effort.", npc = s, title = "Recruiting Sergeant")
+                    }
+                    return
+                }
+                else -> {
+                    chatNpc(p, "As you were, then. The offer stands whenever you want it.", npc = s, title = "Recruiting Sergeant")
+                    return
+                }
             }
         }
         when (RogueProblem.step(p)) {

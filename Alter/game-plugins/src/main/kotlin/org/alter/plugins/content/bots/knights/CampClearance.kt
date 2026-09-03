@@ -71,8 +71,10 @@ object CampClearance {
         }
         val count = kills(p, camp) + 1
         p.attr[attr] = count
+        RogueRewards.onGateKill(p, camp) // War Effort per tier kill while the gate is open
         val goal = goal(camp)
         if (count >= goal) {
+            RogueRewards.onCampCleared(p, camp) // the one-time clearance payout (flagged, never twice)
             val boss = RogueKnightLadder.activeDef(p)?.takeIf { it.camp == camp }
             // A camp with no stationed knight has no boss to promise — the stand-down is the
             // whole prize there.

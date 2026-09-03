@@ -154,6 +154,12 @@ object RogueProblem {
             advanceTo(p, Step.DONE)
             return
         }
+        // A veteran who broke the whole ladder BEFORE taking the assignment can never fell "their
+        // assigned knight" on the KNIGHT beat — skip straight to the debrief.
+        if (step(p) == Step.KNIGHT && RogueKnightLadder.complete(p)) {
+            advanceTo(p, Step.REPORT)
+            return
+        }
         if (isTracked(step(p))) p.timers[TIMER] = POLL_TICKS
     }
 
@@ -168,7 +174,15 @@ object RogueProblem {
     fun advanceTo(p: Player, next: Step) {
         p.attr[ROGUE_PROBLEM_STEP_ATTR] = next.ordinal
         when (next) {
-            Step.KNIGHT -> grantHuntPurse(p) // Rogue Hunting I complete — the hunt bounty pays out
+            Step.KNIGHT -> {
+                grantHuntPurse(p) // Rogue Hunting I complete — the hunt bounty pays out
+                // Ladder already broken by a direct challenger: there is no assigned knight left
+                // to fell, so the KNIGHT beat is done the moment it opens.
+                if (RogueKnightLadder.complete(p)) {
+                    advanceTo(p, Step.REPORT)
+                    return
+                }
+            }
             Step.DONE -> grantCompletion(p)
             else -> {}
         }
