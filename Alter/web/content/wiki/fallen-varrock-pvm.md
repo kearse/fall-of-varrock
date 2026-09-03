@@ -34,7 +34,7 @@ will take.
 Every twenty minutes or so a **hollow knight** rises at one of the district centres and the
 whole world hears of it. He melees hard (max 30) and every sixth swing **wails**, sapping a fifth
 of the prayer of everyone near him. He lingers ten minutes. Felling him drops **two relics**,
-salvage and supplies, pays 15 Boss Tickets, 20 War Effort and 3 Commendations.
+salvage and supplies, and pays 20 War Effort and 3 Commendations.
 
 ## The Palace Warden
 
@@ -42,7 +42,7 @@ The palace is the deep, repeatable target. **The Palace Warden** (900 HP, multi-
 30 and hurls **necrotic bolts** (24, drains prayer). Every eighth attack he **raises three dead**
 beside you, and once below half health he calls a **Grave Chill** — a three-tick warning, then 20
 through prayer to anyone still within two tiles. He drops **1–2 relics**, 12–20 salvage, dragon
-bones and supplies, pays 30 Boss Tickets, 40 War Effort and 5 Commendations, and one kill in
+bones and supplies, pays 40 War Effort and 5 Commendations, and one kill in
 eight yields a **Warden's ember**. He returns fifteen minutes after a kill.
 
 ## Arrav Intelligence

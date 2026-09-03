@@ -23,7 +23,7 @@ It's tough - around 1,200 HP with very high offensive stats. **Protect from Magi
 
 Everyone who contributes gets an independent payout scaled by damage dealt:
 
-- **Every kill:** 25 **Boss Tickets** - the [Warlord's Armoury](/wiki/shops-directory)'s currency
+- **Every kill:** counts toward your boss kill count (`::kc`) - the beast pays in drops, not tickets
 - **Always:** blood runes, death runes, super restores, sharks, 20,000-45,000 coins base
 - **Main roll:** rune gear, dragon gear, resources, magic logs or battlestaves
 - **Rare rolls** (each contributor rolls independently): Dragon boots (1/25), Dragon 2h (1/45), Dragon full helm (1/70), Dragon pickaxe (1/90)

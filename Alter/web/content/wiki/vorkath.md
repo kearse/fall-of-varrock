@@ -55,7 +55,7 @@ enchanted bolts, noted resources). The chase drops, all **Collection Log** entri
 | Skeletal visage | 1/500 |
 | Vorki (pet) | 1/1000 |
 
-Kills also pay **20 Boss Tickets** each for the reward shops. After a kill, a fresh Vorkath
+Kills count toward `::kc`. After a kill, a fresh Vorkath
 rises in the same instance — chain kills without re-entering.
 
 ## See also

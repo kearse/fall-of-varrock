@@ -34,7 +34,7 @@ Each wave cleared pays **2–4 Varrock salvage**.
 ## Rewards
 
 The Custodian drops **2 Relics of old Varrock**, **10 salvage** and a **Senntisten expedition
-log** page every kill, plus runes, bars, bones and restores, and pays **25 Boss Tickets, 30 War
+log** page every kill, plus runes, bars, bones and restores, and pays **30 War
 Effort and 4 Commendations**. Relics and salvage are War-Forging materials; the log page is a
 Collection Log chase. `::kc` tracks the Custodian; your completed expedition count is kept.
 

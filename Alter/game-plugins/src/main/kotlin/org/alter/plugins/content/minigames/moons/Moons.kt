@@ -127,7 +127,6 @@ object Moons {
     // ───────────────────────────── Lunar Chest ─────────────────────────────
 
     const val UNIQUE_ONE_IN = 56
-    const val TICKETS_PER_MOON = 10
     fun commonRolls(subdued: Int) = when (subdued) { 0 -> 0; 1 -> 1; 2 -> 3; else -> 6 }
 
     /** The wiki's common table (weights out of 30). */

@@ -75,7 +75,7 @@ class SenntistenPlugin(
             run.done = true
             val p = run.owner
             val killer = dead.attr[KILLER_ATTR]?.get() as? Player ?: p
-            BossDeath.payout(world, killer, Tile(dead.tile.x, dead.tile.z, dead.tile.height), key = "custodian", name = Senntisten.CUSTODIAN_NAME, drops = Senntisten.CUSTODIAN_DROPS, tickets = Senntisten.CUSTODIAN_TICKETS)
+            BossDeath.payout(world, killer, Tile(dead.tile.x, dead.tile.z, dead.tile.height), key = "custodian", name = Senntisten.CUSTODIAN_NAME, drops = Senntisten.CUSTODIAN_DROPS)
             killer.addPoints(PointKind.WAR_EFFORT, Senntisten.CUSTODIAN_WAR_EFFORT)
             WarForge.awardCommendations(killer, Senntisten.CUSTODIAN_COMMENDATIONS)
             val runsDone = (p.attr[Senntisten.RUNS_ATTR] ?: 0) + 1

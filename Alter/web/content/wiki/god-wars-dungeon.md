@@ -44,7 +44,7 @@ entries:
 - **Zamorakian spear** (1/100), **Staff of the dead** (1/250), **Steam battlestaff** from K'ril.
 - **God pets** - each general drops his own at 1/1000.
 
-Kills pay **25 Boss Tickets** each. Bodyguards drop from the standard tables.
+Every kill rolls the general's drop table and counts toward `::kc`; bodyguards drop from the standard tables.
 
 ## See also
 

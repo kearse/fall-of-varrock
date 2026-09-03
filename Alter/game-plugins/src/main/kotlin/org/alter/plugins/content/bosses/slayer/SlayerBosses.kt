@@ -24,7 +24,6 @@ object SlayerBosses {
         val name: String,
         val lootKey: String,
         val drops: DropTable,
-        val tickets: Int,
         val pet: String?,
         val petOneIn: Int,
     )
@@ -67,7 +66,7 @@ object SlayerBosses {
                 rare("item.trident_of_the_seas_full", 512), rare("item.kraken_tentacle", 400), rare("item.jar_of_dirt", 1000),
             ),
         ),
-        tickets = 20, pet = "item.pet_kraken", petOneIn = 1000,
+        pet = "item.pet_kraken", petOneIn = 1000,
     )
 
     // ───────────────────────────── Cerberus ─────────────────────────────
@@ -103,7 +102,7 @@ object SlayerBosses {
                 rare("item.smouldering_stone", 512), rare("item.jar_of_souls", 1000),
             ),
         ),
-        tickets = 30, pet = "item.hellpuppy", petOneIn = 1000,
+        pet = "item.hellpuppy", petOneIn = 1000,
     )
 
     // ───────────────────────────── Thermonuclear Smoke Devil ─────────────────────────────
@@ -132,7 +131,7 @@ object SlayerBosses {
             ),
             rare = listOf(rare("item.occult_necklace", 350), rare("item.smoke_battlestaff", 512), rare("item.dragon_chainbody", 1000)),
         ),
-        tickets = 20, pet = "item.pet_smoke_devil", petOneIn = 1000,
+        pet = "item.pet_smoke_devil", petOneIn = 1000,
     )
 
     // ───────────────────────────── Skotizo ─────────────────────────────
@@ -169,7 +168,7 @@ object SlayerBosses {
             ),
             rare = listOf(rare("item.dark_claw", 25), rare("item.uncut_onyx", 128), rare("item.jar_of_darkness", 500)),
         ),
-        tickets = 30, pet = "item.skotos", petOneIn = 65,
+        pet = "item.skotos", petOneIn = 65,
     )
 
     // ───────────────────────────── Demonic Gorillas ─────────────────────────────
@@ -210,7 +209,7 @@ object SlayerBosses {
                 rare("item.heavy_frame", 500), rare("item.monkey_tail", 500),
             ),
         ),
-        tickets = 5, pet = null, petOneIn = 0,
+        pet = null, petOneIn = 0,
     )
 
     val all: List<SlayerBoss> = listOf(KRAKEN_BOSS, CERBERUS_BOSS, THERMY_BOSS, SKOTIZO_BOSS, GORILLA_BOSS)

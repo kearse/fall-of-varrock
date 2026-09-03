@@ -41,4 +41,4 @@ supplies, elite clues). Chase drops, all **Collection Log** entries:
 | Draconic visage | 1/1000 |
 | Prince black dragon (pet) | 1/1000 |
 
-Kills pay **20 Boss Tickets** and count toward `::kc`.
+Kills count toward `::kc`.

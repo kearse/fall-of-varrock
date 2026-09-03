@@ -31,8 +31,6 @@ import org.alter.plugins.content.combat.*
 import org.alter.plugins.content.combat.formula.MagicCombatFormula
 import org.alter.plugins.content.combat.formula.RangedCombatFormula
 import org.alter.plugins.content.companion.CompanionPolicy
-import org.alter.plugins.content.economy.PointKind
-import org.alter.plugins.content.economy.awardTickets
 import org.alter.plugins.content.raids.RaidInstance
 import org.alter.rscm.RSCM.getRSCM
 
@@ -58,7 +56,7 @@ private val logger = KotlinLogging.logger {}
  * Entry: **TzHaar-Mej-Jal** at the live cave entrance (the teleport portal lands beside him),
  * or `::arena`. `::jad` = practice mode (Jad only, no rewards). `::leave` bails out.
  *
- * First full clear = **Fire cape**; every clear = Boss tickets + a **TzRek-Jad** pet roll.
+ * First full clear = **Fire cape**; every clear = TokKul + a **TzRek-Jad** pet roll.
  */
 class FightCavePlugin(
     r: PluginRepository,
@@ -208,7 +206,7 @@ class FightCavePlugin(
         activeOwners += player.uid // bench the player's companions for the run (see [inCave])
         player.moveTo(instance.translate(ENTRY_TILE))
         if (practice) {
-            player.message("<col=ff0000>Practice mode:</col> wave $startWave only — no cape, no tickets, no tokkul.")
+            player.message("<col=ff0000>Practice mode:</col> wave $startWave only — no cape, no tokkul.")
         } else {
             player.message("<col=ff0000>Welcome to the Fight Cave.</col> Waves $START_WAVE-$FINAL_WAVE with your own supplies. Use ::leave to flee.")
         }
@@ -222,18 +220,16 @@ class FightCavePlugin(
         cleanup(s, teleport = true)
     }
 
-    /** Failed-run payout: partial runs still burn supplies, so they pay partial tickets plus
-     *  the donor's TokKul consolation. Victory pays [CLEAR_BOSS_POINTS] instead; practice pays nothing. */
+    /** Failed-run payout: partial runs still burn supplies, so they pay
+     *  the donor's TokKul consolation; victory pays the clear bonus; practice pays nothing. */
     private fun consolation(s: Session) {
         if (s.practice) return
         val cleared = s.wave - 1
         val clearedThisRun = cleared - (s.startWave - 1)
         if (clearedThisRun <= 0) return
-        val tickets = clearedThisRun * WAVE_CONSOLATION
-        s.owner.awardTickets(PointKind.BOSS, tickets)
         val tokkul = tokkulFor(cleared)
         if (tokkul > 0) grant(s.owner, tokkulItem, tokkul)
-        s.owner.message("<col=ffae00>$clearedThisRun wave${if (clearedThisRun == 1) "" else "s"} conquered: +$tickets Boss Tickets, +$tokkul TokKul.</col>")
+        s.owner.message("<col=ffae00>$clearedThisRun wave${if (clearedThisRun == 1) "" else "s"} conquered: +$tokkul TokKul.</col>")
     }
 
     /** The donor's TokKul curve (`FightCaves.stop`): 2 + (lastWave - 50) × (3 + lastWave). */
@@ -340,7 +336,6 @@ class FightCavePlugin(
             return
         }
         recordBest(s, FINAL_WAVE)
-        p.awardTickets(PointKind.BOSS, CLEAR_BOSS_POINTS)
         // The donor's TokKul payout for the full clear (FightCaves.stop, killedJad branch).
         val tokkul = tokkulFor(FINAL_WAVE - 1) + CLEAR_TOKKUL_BONUS
         grant(p, tokkulItem, tokkul)
@@ -360,7 +355,7 @@ class FightCavePlugin(
             world.players.forEach { it.message("<col=ff0000>News: ${p.username} just received <col=ffae00>TzRek-Jad</col> from the Fight Cave!</col>") }
             if (CollectionLog.record(p, pet)) p.message("<col=ffae00>New Collection Log slot: TzRek-Jad!</col>")
         }
-        p.message("<col=ffae00>You have conquered the Fight Cave!</col> +$CLEAR_BOSS_POINTS Boss Tickets.")
+        p.message("<col=ffae00>You have conquered the Fight Cave!</col>")
         logger.info { "FIGHTCAVE ${p.username} cleared waves ${s.startWave}-$FINAL_WAVE" }
         cleanup(s, teleport = true)
     }
@@ -551,7 +546,7 @@ class FightCavePlugin(
                 else p.message("There is no wave $wave, JalYt.")
             }
             4 -> {
-                chatNpc(p, "Survive to the end and the cape of fire is yours, JalYt — with TokKul and Boss tickets for the clear, and TokKul for every wave even if you fall. Impress the cave enough and a little TzRek-Jad may follow you home.", npc = id, title = "TzHaar-Mej-Jal")
+                chatNpc(p, "Survive to the end and the cape of fire is yours, JalYt — with TokKul for the clear, and TokKul for every wave even if you fall. Impress the cave enough and a little TzRek-Jad may follow you home.", npc = id, title = "TzHaar-Mej-Jal")
                 chatNpc(p, "Die and you lose nothing but your pride — the cave keeps no corpses. Your best wave is remembered.", npc = id, title = "TzHaar-Mej-Jal")
             }
             5 -> chatPlayer(p, "Maybe later.")
@@ -669,10 +664,8 @@ class FightCavePlugin(
         const val HEAL_INTERVAL = 2   // session ticks per heal pulse
         const val HEAL_PER_PULSE = 2  // hp per un-provoked healer per pulse
 
-        // A run burns ~90 tickets of shop supplies (15 sharks + 4 prayer pots at Boss-shop
+        // A run burns real supplies (15 sharks + 4 prayer pots at Boss-shop
         // prices), so the clear must beat that with margin; 150 ≈ boss-farming rates per hour.
-        const val CLEAR_BOSS_POINTS = 150
-        const val WAVE_CONSOLATION = 3 // per wave cleared on a failed run (max 30 dying at Jad)
         const val PET_ODDS = 1000 // TzRek-Jad per full clear — a genuine chase item
 
         // Best-known OSRS anim/gfx ids; a wrong id is a cosmetic miss, never a throw. TUNE in-game.

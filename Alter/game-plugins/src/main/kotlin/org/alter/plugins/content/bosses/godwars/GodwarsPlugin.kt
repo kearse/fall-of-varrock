@@ -15,8 +15,6 @@ import org.alter.game.plugin.PluginRepository
 import org.alter.plugins.content.bosses.CollectionLog
 import org.alter.plugins.content.bosses.DropEntry
 import org.alter.plugins.content.bosses.DropTable
-import org.alter.plugins.content.economy.PointKind
-import org.alter.plugins.content.economy.awardTickets
 import org.alter.rscm.RSCM.getRSCM
 
 private val logger = KotlinLogging.logger {}
@@ -29,7 +27,7 @@ private val logger = KotlinLogging.logger {}
  * This plugin owns the world side: region force-loads, the sixteen spawns (donor
  * coordinates from the fight-class comments, walk ranges included), and each
  * general's death economy — donor drop tables translated (godsword shards + hilts +
- * armour rares scaled to our odds convention), Boss Tickets, Collection Log pages,
+ * armour rares scaled to our odds convention), Collection Log pages,
  * rare broadcasts, and a 1/1000 god-pet roll. The fights live in
  * [GodwarsCombatPlugin].
  *
@@ -55,7 +53,6 @@ class GodwarsPlugin(
         val guards: List<Guard>,
         val drops: DropTable,
         val pet: String,
-        val bossPoints: Int,
     )
 
     // Spawn tiles + walk ranges are the donor's own spawn comments, verbatim.
@@ -93,7 +90,7 @@ class GodwarsPlugin(
                     DropEntry("item.godsword_shard_3", 1, 1, oneInN = 100, log = true),
                 ),
             ),
-            pet = "item.pet_general_graardor", bossPoints = 25,
+            pet = "item.pet_general_graardor",
         ),
         Room(
             key = "saradomin", name = "Commander Zilyana",
@@ -127,7 +124,7 @@ class GodwarsPlugin(
                     DropEntry("item.godsword_shard_3", 1, 1, oneInN = 100, log = true),
                 ),
             ),
-            pet = "item.pet_zilyana", bossPoints = 25,
+            pet = "item.pet_zilyana",
         ),
         Room(
             key = "zamorak", name = "K'ril Tsutsaroth",
@@ -161,7 +158,7 @@ class GodwarsPlugin(
                     DropEntry("item.godsword_shard_3", 1, 1, oneInN = 100, log = true),
                 ),
             ),
-            pet = "item.pet_kril_tsutsaroth", bossPoints = 25,
+            pet = "item.pet_kril_tsutsaroth",
         ),
         Room(
             key = "armadyl", name = "Kree'arra",
@@ -198,7 +195,7 @@ class GodwarsPlugin(
                     DropEntry("item.godsword_shard_3", 1, 1, oneInN = 100, log = true),
                 ),
             ),
-            pet = "item.pet_kreearra", bossPoints = 25,
+            pet = "item.pet_kreearra",
         ),
     )
 
@@ -221,7 +218,6 @@ class GodwarsPlugin(
             onNpcDeath(room.generalKey) {
                 val boss = npc
                 val killer = boss.attr[KILLER_ATTR]?.get() as? Player ?: return@onNpcDeath
-                killer.awardTickets(PointKind.BOSS, room.bossPoints)
                 room.drops.roll(world).forEach { drop ->
                     val id = getRSCM(drop.item)
                     world.spawn(GroundItem(id, drop.amount, boss.tile, killer))
@@ -246,7 +242,7 @@ class GodwarsPlugin(
                         killer.message("<col=ffae00>New Collection Log slot: ${getItem(pet).name}!</col>")
                     }
                 }
-                killer.message("<col=ff0000>You have slain ${room.name}.</col> (+${room.bossPoints} Boss Tickets)")
+                killer.message("<col=ff0000>You have slain ${room.name}.</col>")
             }
         }
     }

@@ -44,4 +44,4 @@ dark crabs, super restores, clue scrolls). The chase drops, all **Collection Log
 | Crazy Archaeologist | Fedora · Odium shard 2 · Malediction shard 2 | 1/128 · 1/256 · 1/256 |
 
 Combine the three Odium shards into the **Odium ward** and the three Malediction shards into
-the **Malediction ward**. Kills pay **15–25 Boss Tickets** and count toward `::kc`.
+the **Malediction ward**. Kills count toward `::kc`.

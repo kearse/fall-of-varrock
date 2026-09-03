@@ -4,7 +4,7 @@ category: Minigames & Bosses
 summary: The fire-cape gauntlet is back - the real cave's wave engine, waves 50-63 ending in TzTok-Jad, solo instanced with practice mode.
 order: 9
 updated: 2026-08-29
-infobox: Type = Wave minigame (solo instanced); Location = TzHaar cave (teleport portal, Minigames tab); Waves = 50 to 63; Reward = Fire cape + TokKul + Boss Tickets; Chase = TzRek-Jad pet
+infobox: Type = Wave minigame (solo instanced); Location = TzHaar cave (teleport portal, Minigames tab); Waves = 50 to 63; Reward = Fire cape + TokKul; Chase = TzRek-Jad pet
 ---
 
 The **Fight Cave** has returned, rebuilt on the real cave's wave engine. Fight escalating
@@ -51,7 +51,6 @@ him; tag each one to drag it off or he heals back to full.
 
 - **Fire cape** on every clear (tradeable — clears supply the market).
 - **TokKul** for every run: the classic per-wave payout, +4,000 bonus on a clear.
-- **Boss Tickets**: a big bundle for the clear, a per-wave consolation if you fall.
 - **TzRek-Jad** — 1/1000 per clear, Collection Log entry.
 - Your **best wave** is remembered.
 

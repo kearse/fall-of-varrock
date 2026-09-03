@@ -78,7 +78,7 @@ class StoryBossesPlugin(
             val killer = dead.attr[KILLER_ATTR]?.get() as? Player ?: p
             run.done = true
             dead.forceChat("This is not the end, child of the Adventurer...")
-            BossDeath.payout(world, killer, Tile(dead.tile.x, dead.tile.z, dead.tile.height), key = "zemouregal", name = StoryBosses.ZEMOUREGAL_NAME, drops = StoryBosses.ZEMOUREGAL_DROPS, tickets = StoryBosses.ZEMOUREGAL_TICKETS)
+            BossDeath.payout(world, killer, Tile(dead.tile.x, dead.tile.z, dead.tile.height), key = "zemouregal", name = StoryBosses.ZEMOUREGAL_NAME, drops = StoryBosses.ZEMOUREGAL_DROPS)
             killer.addPoints(PointKind.WAR_EFFORT, StoryBosses.ZEMOUREGAL_WAR_EFFORT)
             WarForge.awardCommendations(killer, StoryBosses.ZEMOUREGAL_COMMENDATIONS)
             if (world.chance(1, StoryBosses.ZEMOUREGAL_EMBER_ONE_IN)) {
@@ -96,7 +96,7 @@ class StoryBossesPlugin(
             val p = run.owner
             val killer = dead.attr[KILLER_ATTR]?.get() as? Player ?: p
             run.done = true
-            BossDeath.payout(world, killer, Tile(dead.tile.x, dead.tile.z, dead.tile.height), key = "convergence", name = StoryBosses.CONVERGENCE_NAME, drops = StoryBosses.CONVERGENCE_DROPS, tickets = StoryBosses.CONVERGENCE_TICKETS)
+            BossDeath.payout(world, killer, Tile(dead.tile.x, dead.tile.z, dead.tile.height), key = "convergence", name = StoryBosses.CONVERGENCE_NAME, drops = StoryBosses.CONVERGENCE_DROPS)
             killer.addPoints(PointKind.WAR_EFFORT, StoryBosses.CONVERGENCE_WAR_EFFORT)
             WarForge.awardCommendations(killer, StoryBosses.CONVERGENCE_COMMENDATIONS)
             WarForge.awardEmbers(killer, StoryBosses.CONVERGENCE_EMBERS)

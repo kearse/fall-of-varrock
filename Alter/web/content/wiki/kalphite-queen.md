@@ -40,5 +40,5 @@ resources, elite clues) with the chase uniques below, all **Collection Log** ent
 | Jar of sand | 1/128 |
 | Kalphite princess (pet) | 1/1000 |
 
-Kills pay **25 Boss Tickets** and count toward `::kc`. She rises again about 30 seconds after
+Kills count toward `::kc`. She rises again about 30 seconds after
 a kill.

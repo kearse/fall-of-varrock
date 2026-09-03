@@ -17,8 +17,6 @@ import org.alter.game.plugin.PluginRepository
 import org.alter.plugins.content.bosses.CollectionLog
 import org.alter.plugins.content.bosses.DropEntry
 import org.alter.plugins.content.bosses.DropTable
-import org.alter.plugins.content.economy.PointKind
-import org.alter.plugins.content.economy.awardTickets
 import org.alter.plugins.content.companion.CompanionPolicy
 import org.alter.plugins.content.raids.RaidInstance
 import org.alter.rscm.RSCM.getRSCM
@@ -34,7 +32,7 @@ private val logger = KotlinLogging.logger {}
  *  - **Entry**: climb the rocks (object 34548 at 1351,10251 in Karuulm's lab) for a solo
  *    [RaidInstance] of region 5536; the copied rocks climb back out. `::hydra` is the
  *    belt-and-braces route.
- *  - **Death**: drops + Boss Tickets + Collection Log + rare broadcast, then a fresh
+ *  - **Death**: drops + Collection Log + rare broadcast, then a fresh
  *    green hydra rises at the anchor for chain kills while the instance lives.
  */
 class HydraPlugin(
@@ -109,7 +107,6 @@ class HydraPlugin(
                 val killer = boss.attr[KILLER_ATTR]?.get() as? Player
 
                 if (killer != null) {
-                    killer.awardTickets(PointKind.BOSS, BOSS_POINTS_PER_KILL)
                     table.roll(world).forEach { drop ->
                         val id = getRSCM(drop.item)
                         world.spawn(GroundItem(id, drop.amount, boss.tile, killer))
@@ -123,7 +120,7 @@ class HydraPlugin(
                             killer.message("<col=ffae00>New Collection Log slot: $name!</col>")
                         }
                     }
-                    killer.message("<col=ff0000>You have slain the Alchemical Hydra.</col> (+$BOSS_POINTS_PER_KILL Boss Tickets)")
+                    killer.message("<col=ff0000>You have slain the Alchemical Hydra.</col>")
                 }
 
                 // Chain kills: a fresh green hydra rises while the instance lives.
@@ -167,6 +164,5 @@ class HydraPlugin(
         val ROCKS_SRC = Tile(1351, 10251, 0)
         val LAB_ENTRANCE = Tile(1351, 10249, 0)
 
-        const val BOSS_POINTS_PER_KILL = 25
     }
 }

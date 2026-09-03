@@ -14,7 +14,7 @@ The War's city world boss, fought at the **Lumbridge event arena** - and the bes
 
 - It spawns **on a rotation** (roughly every 5 minutes after the last kill), and **Lords and above can summon it on demand**: `::summonboss corporeal_beast` costs 3,000,000 gp and deploys an allied raid squad alongside.
 - Get there with `::worldboss`, or the teleport portal's **Bosses tab â†’ "Corp Beast (Event)"**.
-- Loot is **pooled and split by damage contribution** - everyone who fought it gets an independent payout, no loot scramble, and every kill pays **Boss Tickets** for the [Warlord's Armoury](/wiki/shops-directory).
+- Loot is **pooled and split by damage contribution** - everyone who fought it gets an independent payout, no loot scramble. Every boss kill anywhere counts toward `::kc`, and the grand total pays two cosmetics: the **Champion's cape** at 100 boss kills and the **Divine halo** at 500.
 - The mega-rares live here: **Arcane / Spectral / Elysian sigils**, the **blessed spirit shield** (sigil + shield craft into the server's best-in-slot shields), the **draconic visage**, and the **Corporeal Critter** pet.
 
 Full mechanics, drop rates and sponsor shares: [Corporeal Beast](/wiki/corporeal-beast).
