@@ -83,7 +83,20 @@ data class Edge(
     val category: RecipeCategory = RecipeCategory.NONE,
     /** Whether the shop slot is infinite (never decrements) — affects buyback acceptance. */
     val unlimited: Boolean = false,
-)
+) {
+    /**
+     * Is [node] the *subject* of this edge among its inputs — the thing being converted, whose
+     * liquidation value this edge represents? For an alch it is always the alched item (the first
+     * input), never the rune, whatever their relative cost; for every other edge it is the input
+     * with the largest acquisition cost ([acqOf] gives the per-unit cost of a node).
+     */
+    fun isSubjectInput(node: NodeId, coins: NodeId, acqOf: (NodeId) -> Double): Boolean {
+        if (kind == EdgeKind.ALCH_HIGH || kind == EdgeKind.ALCH_LOW) return inputs.firstOrNull()?.node == node
+        val mine = inputs.firstOrNull { it.node == node } ?: return true
+        val myCost = acqOf(node) * mine.qty
+        return inputs.none { it.node != node && it.node != coins && acqOf(it.node) * it.qty > myCost }
+    }
+}
 
 data class ItemInfo(
     val id: Int,
