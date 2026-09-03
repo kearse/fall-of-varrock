@@ -1,12 +1,14 @@
 package org.alter.plugins.content.bots.knights
 
 import org.alter.api.ext.message
+import org.alter.game.model.attr.AttributeKey
 import org.alter.game.model.attr.ROGUE_KNIGHT_RANK_ATTR
 import org.alter.game.model.attr.ROGUE_KNIGHT_TARGET_ATTR
 import org.alter.game.model.entity.Player
 import org.alter.plugins.content.announce.Announce
 import org.alter.plugins.content.hunt.TargetMarker
 import org.alter.plugins.content.quests.QuestJournal
+import org.alter.plugins.content.war.address
 import org.alter.plugins.content.war.roguehunt.RogueProblem
 import org.alter.rscm.RSCM.getRSCM
 
@@ -19,11 +21,18 @@ import org.alter.rscm.RSCM.getRSCM
  *    `LADDER[rank]`. Survives death — dying to a knight is the expected loop, never a reset.
  *  - **farm target** = an already-beaten knight the player has asked to hunt again (for its
  *    signature drops); cleared automatically whenever the rank advances.
- *  - The ladder unlocks at The Rogue Problem's KNIGHT step (the Sergeant's first assignment is
- *    the quest beat itself); breaking the WHOLE ladder is the quest's finish line
- *    ([RogueProblem.onLadderCleared]), and every beaten knight stays farmable after.
+ *  - The ladder opens two ways: The Rogue Problem's KNIGHT step (the Sergeant's first assignment
+ *    is the quest beat itself), or a DIRECT challenge ([optIn] — "veteran PKers skip the lessons
+ *    and challenge Rogues directly", design authority §9) with no quest at all. Breaking the
+ *    WHOLE ladder is the quest's finish line ([RogueProblem.onLadderCleared]) for those on it,
+ *    and every beaten knight stays farmable after.
+ *  - Every rung pays War Effort ([RogueRewards]): the first kill of each knight, and capped
+ *    repeat kills.
  */
 object RogueKnightLadder {
+
+    /** Direct ladder access without the quest (persisted; never cleared). */
+    val OPT_IN_ATTR = AttributeKey<Boolean>("rogue_ladder_opt_in")
 
     /** Named knights beaten so far (== the assigned knight's ladder index). */
     fun rank(p: Player): Int = (p.attr[ROGUE_KNIGHT_RANK_ATTR] ?: 0).coerceAtLeast(0)
@@ -31,9 +40,41 @@ object RogueKnightLadder {
     /** True once every knight on the ladder has been beaten at least once. */
     fun complete(p: Player): Boolean = rank(p) > RogueKnights.LADDER.lastIndex
 
-    /** True once the Sergeant has opened the ladder (The Rogue Problem reached its KNIGHT beat). */
+    /** True once the ladder is open to [p]: The Rogue Problem reached its KNIGHT beat, or they
+     *  challenged the knights directly ([optIn]). */
     fun unlocked(p: Player): Boolean =
-        RogueProblem.step(p).ordinal >= RogueProblem.Step.KNIGHT.ordinal
+        RogueProblem.step(p).ordinal >= RogueProblem.Step.KNIGHT.ordinal || p.attr[OPT_IN_ATTR] == true
+
+    /**
+     * Open the ladder for [p] WITHOUT the quest (the Sergeant's "challenge them directly" branch,
+     * `::knights challenge`). Idempotent; returns false when it was already open. The quest stays
+     * offerable — accepting it later simply picks the climb up where it stands.
+     */
+    fun optIn(p: Player): Boolean {
+        if (unlocked(p)) return false
+        p.attr[OPT_IN_ATTR] = true
+        p.message("<col=801700>The Rogue Knight ladder is open to you.</col> Fourteen named PKers, weakest to strongest — beat your mark and the next is named.")
+        sergeantLines(p).forEach { p.message(it) }
+        QuestJournal.sync(p)
+        return true
+    }
+
+    /**
+     * The Sergeant's ladder chatter for [p] — the current mark, where to find them, the camp gate
+     * — shared by the quest dialogue, the direct-challenge branch and [optIn]. Assumes [unlocked].
+     */
+    fun sergeantLines(p: Player): List<String> {
+        val target = activeDef(p)
+            ?: return listOf("You've cleared the whole ladder, ${p.address} — all ${RogueKnights.LADDER.size} of them. The realm's deadliest blade. Any of them can be hunted again for their gear: <col=0000ff>::knights</col>.")
+        if (target.rank < rank(p)) {
+            return listOf("You're back on <col=801700>${target.name}</col> for the spoils — good hunting. ${statusLine(p)} (<col=0000ff>::huntnext</col> returns you to the ladder.)")
+        }
+        val lines = ArrayList<String>()
+        lines += "Your mark: ${target.briefLine}"
+        lines += "Find them at <col=801700>${target.camp.display}</col> — ${target.camp.directions} The marker leads; <col=0000ff>::knights</col> lists the whole ladder, and any beaten knight can be farmed again."
+        if (!CampClearance.cleared(p, target.camp)) lines += "The camp guards its own: ${CampClearance.statusLine(p, target.camp)}"
+        return lines
+    }
 
     /**
      * The ladder index the player is actively hunting: their farm target if they've set one
@@ -82,11 +123,13 @@ object RogueKnightLadder {
     fun onKnightKilled(p: Player, def: RogueKnightDef) {
         if (def.rank != rank(p)) {
             p.message("<col=4f9b4f>${def.name} falls again.</col> Their gear and signature loot are yours to claim.")
+            RogueRewards.onKnightRepeatKill(p, def) // capped War Effort trickle for the farm loop
             return
         }
         p.attr[ROGUE_KNIGHT_RANK_ATTR] = def.rank + 1
         clearFarmTarget(p) // the hunt follows the new assignment
         payFirstKill(p, def)
+        RogueRewards.onKnightFirstKill(p, def) // War Effort for the rung (once — the rank advanced)
         RogueProblem.onAssignedKnightKill(p) // closes the quest's KNIGHT beat, if the player is on it
         val next = assignedDef(p)
         if (next != null) {
@@ -105,7 +148,7 @@ object RogueKnightLadder {
 
     /** One-line progress report (::knights header + the Sergeant's chatter). */
     fun statusLine(p: Player): String {
-        if (!unlocked(p)) return "The Rogue Knights: the Recruiting Sergeant will open the hunt when you're ready (finish Rogue Hunting I's street work)."
+        if (!unlocked(p)) return "The Rogue Knights: the ladder is closed to you — take the Recruiting Sergeant's Rogue Problem assignment, or challenge the knights directly (ask him, or <col=0000ff>::knights challenge</col>)."
         val active = activeDef(p)
         return when {
             active == null -> "The Rogue Knights: <col=4f9b4f>ladder cleared</col> — ${RogueKnights.LADDER.size}/${RogueKnights.LADDER.size} beaten. Set a farm target with ::knights."

@@ -3,7 +3,7 @@ title: The Rogue Problem
 category: Getting Started
 summary: The optional PK-schooling assignment - ask the Recruiting Sergeant after the Wizard Tower and he sets you on the rogues, then the whole Rogue Knight ladder. Nothing else waits on it.
 order: 4
-updated: 2026-09-02
+updated: 2026-09-03
 infobox: Type = Optional quest; Start = Ask the Recruiting Sergeant (Lumbridge gate) once War-Prep I is done; Giver = Recruiting Sergeant; Steps = Hunt, Knight, Report, Ladder; Guidance = Quest Journal (::rogueproblem); Reward = A soldier's purse + the ladder's coin and kits; Completes = When every camp on the ladder is broken; Required for = Nothing - it's the PK road, not the main road
 ---
 
@@ -15,6 +15,7 @@ infobox: Type = Optional quest; Start = Ask the Recruiting Sergeant (Lumbridge g
 
 - Finish the [War-Prep chain](/wiki/wizard-tower) (the Wizard Tower and the Squire rank-up).
 - Talk to the **Recruiting Sergeant** by the Lumbridge gate and say yes when he offers the assignment. Say no and he'll offer again next visit - there's no penalty either way.
+- **Already know how to PK?** You don't need the assignment at all: tell the Sergeant you'd rather fight the Rogue Knights directly (or type `::knights challenge`) and the [ladder](/wiki/rogue-knights) opens on the spot. Take the assignment later if you want its purse - it simply picks the climb up wherever it stands, and if you've already broken the whole ladder the Knight step completes the moment it opens.
 - The Quest Journal tracks your objective the whole way. Type `::rogueproblem` for a quick status check, or `::rogues` for your lifetime rogue tally.
 
 ## The quest
@@ -34,6 +35,7 @@ The quest and the **[Rogue Knight ladder](/wiki/rogue-knights)** are one journey
 
 - A **soldier's purse** (150,000) the moment the hunt clears.
 - The ladder's spoils: every knight drops coin and its full worn kit, the camp rogues drop theirs, and the Sergeant's rogue-hunting bounties keep coming - the fastest gear-and-coin road for a PKer.
+- **War Effort** at every step of the ladder - each camp you thin, each knight you beat, capped repeats of beaten knights (see the [ladder's War Effort table](/wiki/rogue-knights)).
 - The **wilderness / PK loop** itself: player kills pay **Blood Money** and drop [loot keys](/wiki/wilderness-loot-keys).
 
 ## What comes after

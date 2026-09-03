@@ -1,5 +1,6 @@
 package org.alter.plugins.content.areas.portsarim
 
+import dev.openrune.cache.CacheManager.getNpc
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.alter.api.NpcSkills
 import org.alter.api.ext.message
@@ -18,6 +19,8 @@ import org.alter.game.model.timer.TimerKey
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
 import org.alter.plugins.content.bots.PkBot
+import org.alter.plugins.content.bots.knights.CampClearance
+import org.alter.plugins.content.bots.knights.RogueKnights
 import org.alter.plugins.content.combat.getCombatTarget
 import org.alter.plugins.content.combat.isAttacking
 import org.alter.plugins.content.combat.isBeingAttacked
@@ -92,9 +95,30 @@ class PortSiegePlugin(
             val dead = npc
             if (raiders.any { it === dead }) {
                 val killer = dead.attr[KILLER_ATTR]?.get() as? Player
-                if (killer != null && killer !is PkBot && killer.index >= 0) contributors += killer.uid
+                if (killer != null && killer !is PkBot && killer.index >= 0) {
+                    contributors += killer.uid
+                    // Holding the docks thins the port's Rogue Knight camp gate too (the raiders
+                    // ARE the camp's rogues); the rogue tally / quest hunt credit rides the cache
+                    // name via RogueHuntPlugin / RogueProblemPlugin now that the id is rogue-family.
+                    CampClearance.creditKill(killer, RogueKnights.PORT_SARIM)
+                }
             }
         }
+    }
+
+    /**
+     * The raider npc: [RAIDER_NPC] when the cache agrees it is a fightable monster, else the old
+     * black knight. Decided at construction so a bad id is a loud boot-time ERROR, never a silent
+     * raider-less port.
+     */
+    private val raiderNpc: String = run {
+        val ok = runCatching {
+            val def = getNpc(getRSCM(RAIDER_NPC))
+            def.combatLevel > 0 && def.actions.any { it == "Attack" }
+        }.getOrDefault(false)
+        if (!ok) logger.error { "Port siege: '$RAIDER_NPC' is NOT player-attackable in the cache — falling back to '$RAIDER_NPC_FALLBACK'." }
+        else logger.info { "Port siege: raiders are '$RAIDER_NPC' (rogue-family, player-attackable)." }
+        if (ok) RAIDER_NPC else RAIDER_NPC_FALLBACK
     }
 
     private fun tick(world: World) {
@@ -267,8 +291,8 @@ class PortSiegePlugin(
     }
 
     private fun spawnRaider(world: World, tile: Tile): Npc? {
-        val npc = runCatching { Npc(getRSCM(RAIDER_NPC), tile, world) }.getOrNull() ?: run {
-            logger.error { "Port siege: raider npc '$RAIDER_NPC' unresolved — wave not spawned." }
+        val npc = runCatching { Npc(getRSCM(raiderNpc), tile, world) }.getOrNull() ?: run {
+            logger.error { "Port siege: raider npc '$raiderNpc' unresolved — wave not spawned." }
             return null
         }
         npc.walkRadius = 3
@@ -387,7 +411,13 @@ class PortSiegePlugin(
         const val DEFENDER_NPC = "npc.knight_of_saradomin" // renamed "Knight of Lumbridge"
         const val DEF_ATK = 60; const val DEF_STR = 55; const val DEF_DEF = 60; const val DEF_HP = 70
 
-        const val RAIDER_NPC = "npc.black_knight" // cache name ≠ rogue FAMILY → no rogue-tally credit
+        /** A rogue-FAMILY cache name ("Bandit") with ZERO ambient spawn rows, unused by any frontier
+         *  line / world-spawn pool — so raider kills credit the rogue tally, the Rogue Problem hunt
+         *  and the port camp gate, and nothing else claims the id. Stats are overridden below. */
+        const val RAIDER_NPC = "npc.bandit_737"
+        /** The pre-2026-09 raider (an armoured knight, not rogue-family) — used only if the cache
+         *  rejects [RAIDER_NPC]. */
+        const val RAIDER_NPC_FALLBACK = "npc.black_knight"
         const val RAIDER_NAME = "Rogue Raider"
         const val RAIDERS_PER_WAVE = 6
         const val RDR_ATK = 64; const val RDR_STR = 58; const val RDR_DEF = 60; const val RDR_HP = 75

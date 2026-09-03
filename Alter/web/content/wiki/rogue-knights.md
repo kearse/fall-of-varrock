@@ -3,8 +3,8 @@ title: The Rogue Knights - the PK ladder
 category: PvP & Wilderness
 summary: Fourteen named boss PKers across seven organized camps. The Sergeant assigns them weakest to strongest - each one you beat unlocks the gear for the next, all the way to AGS-class loot.
 order: 6
-updated: 2026-08-05
-infobox: Type = Boss ladder (repeatable, optional); Start = The Rogue Problem assignment (ask the Recruiting Sergeant after War-Prep I); Giver = Recruiting Sergeant (Lumbridge gate); Length = 14 knights, 7 camps; Tracking = Hint arrow (toggle with ::huntarrow) + ::knights; Reward = PK gear per knight, up to AGS / dragon claws / Ancient Warrior sets
+updated: 2026-09-03
+infobox: Type = Boss ladder (repeatable, optional); Start = Ask the Recruiting Sergeant to challenge the knights directly (or type ::knights challenge), or take his Rogue Problem assignment after War-Prep I; Giver = Recruiting Sergeant (Lumbridge gate); Length = 14 knights, 7 camps; Tracking = Hint arrow (toggle with ::huntarrow) + ::knights; Reward = PK gear per knight up to AGS / dragon claws / Ancient Warrior sets, plus War Effort for every camp and knight
 ---
 
 The deserters who lead Varrock's rogues style themselves **Rogue Knights** - a ladder of **fourteen named boss PKers**, weakest to strongest, camped from the Lumbridge road to the deepest wilderness. The **Recruiting Sergeant** assigns them **in order**: kill your mark, rank up, and he names the next. Every knight you beat hands you a **first-kill gear unlock** - deliberately the core of the kit that beats the *next* one - so the ladder is both your PK training and your gear progression in one track.
@@ -12,6 +12,15 @@ The deserters who lead Varrock's rogues style themselves **Rogue Knights** - a l
 **Expect to die.** The knights fight like real players - they eat, pot, pray-switch and spec - and the top of the ladder answers your switches within a tick or two. The window is small, but it is **always there**: every knight has flick lag you can punish, bait with a fake switch, or line a spec up inside - that's the skill the ladder teaches. Dying to a knight is the loop, not a failure: your rank never resets, the first four camps (the whole safe road west) sit on **reclaim-safe ground** (walk back for your gear), and the tracking arrow leads you straight back for the rematch. *Dying is training. Going back is winning.*
 
 They fight like humans in one more way: **fight momentum (PID)**. Just like the real game, the fight's tick priority reshuffles at random every minute or so - sometimes your switches bite a tick sooner, sometimes their combos stack a tick tighter, and the smartest knights hold their KO spec for the moment momentum flips their way. You never see it; you learn to feel it - and to respect the swap exactly as you would against a real NHer. The knights also throw real **prayer baits** (a gear-flash between swings to pull your overhead) and real **spec combos** (the AGS or dagger into an instant granite maul). Every trick they use is a trick humans use, and every counter that works on them works on people.
+
+## Opening the ladder
+
+The ladder is **optional** and there are two doors in, both at the **Recruiting Sergeant** by the Lumbridge gate:
+
+- **Challenge them directly.** Tell the Sergeant you'd rather fight the Rogue Knights than take his assignment (or type `::knights challenge` anywhere - handy if you haven't finished War-Prep I yet). No quest, no hunt: Sir Brack is your mark the moment you say it. Veterans, this is your door.
+- **Take [The Rogue Problem](/wiki/the-rogue-problem)** after War-Prep I: the guided road - a 30-rogue hunt, a soldier's purse, then the same ladder as a quest with a finish line.
+
+Walk into any camp with the ladder still closed and the rogues will tell you which knight holds it and how to open it.
 
 ## Finding your knight
 
@@ -42,6 +51,7 @@ Here's the thing: **the garrison is losing.** Every wave, six Rogue Raiders come
 
 - Kill **2-3 raiders** and the numbers flip - the knights win the melee and the wave breaks.
 - Everyone who downed a raider that wave is paid a **small contribution** (a few War Effort) when the port holds. It's a token, not a grind loop - the real prizes here are the four named knights leading the raids.
+- The raiders are rogues: every one you kill counts toward your **rogue tally**, the Rogue Problem's hunt, and **thins the Port Sarim camp gate** - hold the docks and the port's knights will face you.
 - The knights have your back too: any raider that strikes you gets piled on by the garrison.
 
 Raiders never attack travellers unprovoked - the port stays a safe hub - and dying to them (or to a named knight) here just leaves a reclaim pile. It's the ladder's second classroom: real switches, real specs, no gear bill.
@@ -67,6 +77,19 @@ Raiders never attack travellers unprovoked - the port stays a safe hub - and dyi
 
 Every knight also drops its **entire worn kit** on death (sealed into a [loot key](/wiki/wilderness-loot-keys) in the wilderness), and the first time you beat each one the Sergeant's **unlock** pays out on the spot - a mithril scimitar after Malrik, a berserker helm and rune defender after Edran, a full rune set after Caldus, a heavy ballista after Nyx, and so on up to a fat purse from Vexmar himself.
 
+## War Effort
+
+The ladder is a service to the realm, so it pays [War Effort](/wiki/supplying-the-war) - the lifetime record your ranks are measured by - at every step:
+
+| What | War Effort |
+| --- | --- |
+| Each camp rogue you kill while a camp's gate is still open | 1 |
+| Thinning a camp (once per camp) | 15 at a safe road camp, 30 at a wilderness camp |
+| Beating a knight for the first time | 10 + 5 per rung - Sir Brack pays 10, Lord Vexmar 75 |
+| Farming a beaten knight again | 2 + half its rung, up to 5 paying kills per knight per day and 60 War Effort a day in total |
+
+The whole ladder is worth roughly 800 War Effort on top of the gear - about the same as the 1,000-kill rogue-hunting bounty track. `::knights` shows how much of today's farming budget is left.
+
 ## Farming beaten knights
 
 Every knight you've beaten stays huntable for its signature drops:
@@ -79,7 +102,7 @@ The four **Ancient Warrior knights** (Halric, Nyx, Dathen, and Vexmar's Zuriel k
 
 ## Commands
 
-`::knights` - the ladder board · `::huntknight <n>` - farm a beaten knight · `::huntnext` - back to the climb · `::rogueproblem` - the intro quest's status · `::rogues` - lifetime rogue tally
+`::knights` - the ladder board · `::knights challenge` - open the ladder without the quest · `::huntknight <n>` - farm a beaten knight · `::huntnext` - back to the climb · `::rogueproblem` - the intro quest's status · `::rogues` - lifetime rogue tally
 
 ## Related
 

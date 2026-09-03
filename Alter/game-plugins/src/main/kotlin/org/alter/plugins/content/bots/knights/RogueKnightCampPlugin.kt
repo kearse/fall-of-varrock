@@ -101,9 +101,14 @@ class RogueKnightCampPlugin(
             if (killer.uid == bot.boundHunter) RogueKnightLadder.onKnightKilled(killer, def)
         }
 
-        onCommand("knights", description = "Show the Rogue Knight ladder and your hunt") {
+        onCommand("knights", description = "Show the Rogue Knight ladder and your hunt (::knights challenge opens it without the quest)") {
+            if (player.getCommandArgs().getOrNull(0).equals("challenge", ignoreCase = true)) {
+                if (!RogueKnightLadder.optIn(player)) player.message("The Rogue Knight ladder is already open to you — ::knights shows your hunt.")
+                return@onCommand
+            }
             player.message(RogueKnightLadder.statusLine(player))
             if (!RogueKnightLadder.unlocked(player)) return@onCommand
+            player.message("War Effort from farmed knights left today: <col=801700>${RogueRewards.repeatBudgetLeft(player)}</col> (first kills and camp clears always pay).")
             RogueKnightLadder.activeDef(player)?.let { active ->
                 player.message(CampClearance.statusLine(player, active.camp))
             }
@@ -158,11 +163,29 @@ class RogueKnightCampPlugin(
         }
 
         for ((uid, p) in online) {
-            val def = RogueKnightLadder.activeDef(p) ?: continue
+            val def = RogueKnightLadder.activeDef(p)
+            if (def == null) {
+                if (!RogueKnightLadder.unlocked(p)) nudgeLocked(uid, p)
+                continue
+            }
             maintainHunt(world, p, def, hunts.getOrPut(uid) { Hunt() })
             nudgeGate(uid, p, def)
         }
         nudgedCamp.keys.retainAll(online.keys)
+    }
+
+    /** One heads-up per camp visit for a player who walks into a camp with the ladder still closed
+     *  to them: the knights are optional, but they should know the door exists. */
+    private fun nudgeLocked(uid: PlayerUID, p: Player) {
+        val camp = RogueKnights.CAMPS.firstOrNull { p.tile.isWithinRadius(it.center, ACTIVATION_RADIUS) }
+        if (camp == null) {
+            nudgedCamp.remove(uid)
+            return
+        }
+        if (nudgedCamp[uid] == camp.key) return
+        nudgedCamp[uid] = camp.key
+        val knight = RogueKnights.LADDER.firstOrNull { it.camp == camp }?.name ?: "its knights"
+        p.message("<col=801700>${camp.display.replaceFirstChar { it.uppercase() }} answers to $knight.</col> Take the Recruiting Sergeant's assignment, or challenge the Rogue Knights directly (<col=0000ff>::knights challenge</col>) — thin the camp, then the knight will face you.")
     }
 
     /** One heads-up per camp visit for a hunter arriving at a camp whose gate they haven't cleared. */
