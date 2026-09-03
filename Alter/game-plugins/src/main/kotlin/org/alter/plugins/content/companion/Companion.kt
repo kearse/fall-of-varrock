@@ -45,6 +45,12 @@ class Companion(
     /** World cycle of the last honor-system chat message, so it isn't spammed each tick. */
     var lastHonorMsg: Int = 0
     /**
+     * World cycle until which this companion is standing back from combat because its owner is in
+     * a fight with a REAL player (companions are PvE-only in human PvP — see
+     * [CompanionBrain.holdForOwnersFight]). Session-only; 0 = not holding.
+     */
+    var sitOutUntil: Int = 0
+    /**
      * World cycle this companion entered the world. Only used by [CompanionRegistry]'s orphan sweep,
      * which needs a grace window so a companion spawned between two registry ticks (before its
      * roster entry is tracked) is never mistaken for an ownerless ghost and despawned.

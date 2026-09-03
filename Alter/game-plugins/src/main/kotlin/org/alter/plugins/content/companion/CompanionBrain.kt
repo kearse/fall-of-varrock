@@ -1,9 +1,11 @@
 package org.alter.plugins.content.companion
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.alter.api.ext.message
 import org.alter.game.model.Area
 import org.alter.game.model.Tile
 import org.alter.game.model.World
+import org.alter.game.model.attr.LAST_HIT_BY_ATTR
 import org.alter.game.model.collision.isClipped
 import org.alter.game.model.entity.Npc
 import org.alter.game.model.entity.Pawn
@@ -13,6 +15,7 @@ import org.alter.game.model.move.hasMoveDestination
 import org.alter.game.model.move.moveTo
 import org.alter.game.model.move.walkTo
 import org.alter.game.model.timer.ATTACK_DELAY
+import org.alter.plugins.content.bots.PkBot
 import org.alter.plugins.content.combat.Combat
 import org.alter.plugins.content.combat.getCombatTarget
 import org.alter.plugins.content.combat.isAttacking
@@ -32,6 +35,7 @@ import kotlin.math.max
  * targeting land in later steps.
  */
 object CompanionBrain {
+    private val logger = KotlinLogging.logger {}
     private val GOBLIN by lazy { runCatching { getRSCM("npc.goblin_2245") }.getOrDefault(-1) }
     private val HOBGOBLIN by lazy { runCatching { getRSCM("npc.hobgoblin_2241") }.getOrDefault(-1) }
 
@@ -56,6 +60,8 @@ object CompanionBrain {
     private const val CAMP_RANGE = 60 // TRAIN within this of the goblin camp = the classic camp loop; farther = hunt
     private const val LEASH = 16      // hunt/grind targets must be this close to the leash centre (owner for TRAIN's escort, the anchor for ATTACK)
     private const val HUNT_SNAP = LEASH + 8 // escort: this far behind its slot → teleport catch-up; grind: this far off the anchor → post lost, revert to FOLLOW
+    /** Cycles a companion keeps standing back after its owner's last exchange with a real player (= the PJ window). */
+    private const val SIT_OUT_GRACE = Combat.PJ_TICKS
 
     fun tick(world: World, comp: Companion) {
         if (comp.index < 0 || comp.isDead()) return
@@ -157,6 +163,7 @@ object CompanionBrain {
             comp.moveTo(walkableNear(world, slot, owner.tile))
             return
         }
+        if (holdForOwnersFight(world, comp, owner, slot)) return
         val cur = comp.getCombatTarget() as? Npc
         if (comp.isAttacking() && cur != null && isHuntMob(world, comp, owner, owner.tile, cur)) {
             if (dist(comp.tile, cur.tile) <= 1 || canPathTo(world, comp, cur)) return
@@ -175,10 +182,12 @@ object CompanionBrain {
     }
 
     /**
-     * FOLLOW = guard the owner: fight whatever attacks the owner's party — NPC, PK bot or player —
-     * else fight whatever the owner is fighting, else stick to within [FOLLOW_DIST]. A player
-     * jumping the owner PREEMPTS an in-progress NPC brawl (PvP defense first). RECALL stays the
-     * passive order — it never picks a fight, so it remains the safe way to pull companions out.
+     * FOLLOW = guard the owner: fight whatever attacks the owner's party — NPC or PK bot — else
+     * fight whatever the owner is fighting, else stick to within [FOLLOW_DIST]. A PK bot jumping
+     * the owner PREEMPTS an in-progress NPC brawl (defence first). A REAL player is the one foe a
+     * companion never fights: while the owner trades blows with a human the companion stands back
+     * ([holdForOwnersFight]). RECALL stays the passive order — it never picks a fight, so it
+     * remains the safe way to pull companions out.
      */
     private fun follow(world: World, comp: Companion) {
         val owner = CompanionRegistry.ownerOf(world, comp) ?: return
@@ -193,6 +202,7 @@ object CompanionBrain {
             comp.moveTo(walkableNear(world, target, owner.tile))
             return
         }
+        if (holdForOwnersFight(world, comp, owner, target)) return
         val playerThreat = playerThreatNear(world, comp, owner)
         val cur = comp.getCombatTarget()
         if (comp.isAttacking() && cur != null && isAlivePawn(world, cur)) {
@@ -223,6 +233,39 @@ object CompanionBrain {
             comp.walkTo(target, StepType.FORCED_RUN)
         }
     }
+
+    /**
+     * **Companions are PvE-only in human PvP** (operator decision, 2026-09-02). While the owner is
+     * exchanging blows with a REAL player — attacking one, or being hit by one — the companion
+     * breaks off whatever it was doing, holds its formation slot, and keeps holding for
+     * [SIT_OUT_GRACE] cycles after the last exchange (the PJ window). It never joins in
+     * (`Combat.canEngage` refuses companion-vs-human in both directions), so a human fight is
+     * never 2v1 and the companion is never a target. Returns true while holding. Announced to the
+     * owner once per fight; PK bots / companions / NPCs attacking the owner do NOT trigger this.
+     */
+    private fun holdForOwnersFight(world: World, comp: Companion, owner: Player, slot: Tile): Boolean {
+        val now = world.currentCycle
+        if (ownerInHumanFight(owner)) {
+            if (comp.sitOutUntil <= now) {
+                owner.message("<col=801700>Sir ${comp.username} stands back — this is your fight.</col>")
+                logger.info { "[COMPANION-PVP] ${comp.username} of ${owner.username} stands back (human fight) at ${owner.tile}" }
+            }
+            comp.sitOutUntil = now + SIT_OUT_GRACE
+        }
+        if (now >= comp.sitOutUntil) return false
+        if (comp.isAttacking()) { comp.removeCombatTarget(); comp.resetFacePawn() }
+        if (dist(comp.tile, slot) >= 1 && !comp.hasMoveDestination()) comp.walkTo(slot, StepType.FORCED_RUN)
+        return true
+    }
+
+    /** True while [owner] is in a live exchange with a REAL player: their combat target, or
+     *  whoever last hit them, is a human (not a PK bot / companion) and the PJ window is open. */
+    private fun ownerInHumanFight(owner: Player): Boolean {
+        if (!owner.timers.has(Combat.PJ_TIMER)) return false
+        return isHuman(owner.getCombatTarget()) || isHuman(owner.attr[LAST_HIT_BY_ATTR]?.get())
+    }
+
+    private fun isHuman(p: Pawn?): Boolean = p is Player && p !is PkBot && p.index >= 0 && !p.isDead()
 
     /**
      * RECALL (the [CompanionOrders.RETURN] order) = **disengage and stick to the owner**. Unlike
@@ -311,15 +354,17 @@ object CompanionBrain {
     }
 
     /**
-     * FOLLOW's PvP defense: the nearest player (real or PK bot) currently attacking the owner's
-     * party — the owner, this companion, or any other companion of the same owner. Party members
-     * themselves are never returned. The engine's own combat gates (safe zones, single-combat,
-     * can't-attack-own-companions) still apply on the actual attack.
+     * FOLLOW's defence: the nearest PK BOT currently attacking the owner's party — the owner, this
+     * companion, or any other companion of the same owner. Party members themselves are never
+     * returned, and REAL players never are (companions are PvE-only in human PvP — see
+     * [holdForOwnersFight]; `Combat.canEngage` refuses them anyway). The engine's own combat gates
+     * (safe zones, single-combat, can't-attack-own-companions) still apply on the actual attack.
      */
     private fun playerThreatNear(world: World, comp: Companion, owner: Player): Player? {
         var best: Player? = null
         var bestDist = ENGAGE + 1
         world.players.forEach { p ->
+            if (p !is PkBot) return@forEach // humans are never a companion's target
             if (p.tile.height != comp.tile.height) return@forEach
             if (!isLiveThreat(comp, owner, p)) return@forEach
             val d = dist(comp.tile, p.tile)

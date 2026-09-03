@@ -3,7 +3,7 @@ title: Companions
 category: Companions & Progression
 summary: Recruit, train, gear and command your own levelable AI fighters - up to three at your side, a roster that grows with your rank and a price that climbs with every soldier.
 order: 1
-updated: 2026-09-02
+updated: 2026-09-03
 ---
 
 **Companions** are player-owned AI fighters - real combatants with real skills that level from combat, wearing real gear you give them. Your [feudal rank](/wiki/titles-and-citizenship) sets how many you may keep on your banner, and **every one of them fights beside you at once** - up to three. They come in melee, ranged and mage archetypes, spawn when you log in, follow you across the world in formation, and fight beside you.
@@ -36,7 +36,7 @@ Some content is yours alone. Your companions **stand down automatically** - with
 
 Everything runs through `::companion` (and `::companions` to list your roster):
 
-- `::companion follow` / `attack` / `train` / `deploy` / `return` - orders for your companion (add a slot number to be explicit). *Attack* is the aggressive escort: your companion fights any attackable monster near you, wherever you are, and falls in behind you when nothing's left. *Train* runs the goblin-camp levelling loop when you're around Lumbridge, and behaves like *attack* everywhere else. *Deploy* sends him at the city boss autonomously. *Follow* is a bodyguard, not a bystander: if anything attacks you - monster, PK bot or player - your following companion immediately fights back, and a player jumping you takes priority over whatever he was hitting. *Return* recalls him and never picks a fight (your safe pull-out order). He'll never turn on friendly troops - allied knights and General Zo are off-limits, and he won't steal a monster another player is already fighting.
+- `::companion follow` / `attack` / `train` / `deploy` / `return` - orders for your companion (add a slot number to be explicit). *Attack* is the aggressive escort: your companion fights any attackable monster near you, wherever you are, and falls in behind you when nothing's left. *Train* runs the goblin-camp levelling loop when you're around Lumbridge, and behaves like *attack* everywhere else. *Deploy* sends him at the city boss autonomously. *Follow* is a bodyguard, not a bystander: if a monster or a PK bot attacks you, your following companion immediately fights back, and a Rogue Knight jumping you takes priority over whatever he was hitting. A **real player** is the one exception - see *Companions and PvP* below. *Return* recalls him and never picks a fight (your safe pull-out order). He'll never turn on friendly troops - allied knights and General Zo are off-limits, and he won't steal a monster another player is already fighting.
 - `::companion equip <slot> <itemId>` - give him gear straight from your bank (weapons honour level requirements, and his armour is capped by **your** feudal rank, same as your own). `unequip` returns it; `gear <slot> <equipSlot>` lists what in your bank fits.
 - `::companion style <slot> <0-3>` - set attack stance.
 - `::companion spell <slot> <name|auto>` - mages can lock a spell or auto-scale to their Magic level.
@@ -46,6 +46,16 @@ Everything runs through `::companion` (and `::companions` to list your roster):
 - `::companion archetype <slot> <melee|range|mage>` - **re-school** a companion to another combat style. His name, every skill he has trained and his gear all carry over, so one companion can master all three schools over his lifetime.
 
 **Donor perk:** `::companion loot` toggles auto-looting - your companion banks nearby drops for you. No command needed in the custom client: the Companions side panel has an **Auto-loot to bank** toggle.
+
+## Companions and PvP
+
+Player-versus-player is **human only**. Your companion follows you into the wilderness and fights the Rogue Knights, PK bots and monsters there like anywhere else, but:
+
+- He **never attacks a real player** - not even to defend you. The moment you trade blows with another player he breaks off, steps back into formation with *"Sir X stands back - this is your fight"*, and holds there until about 12 seconds after your last exchange.
+- **No one can attack him** either. Other players get *"You can't attack another player's companion"* - he is not a free punchbag and not a way to bait you.
+- He doesn't count for single-combat: a PKer can still attack you while your companion is fighting a monster beside you, exactly as if he weren't there.
+
+So a companion changes nothing about a PK fight - it's always you against them - while everything else in the wild (camps, rogue bosses, the undead of Fallen Varrock) stays open to him.
 
 ## Levelling & death
 
