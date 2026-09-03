@@ -93,6 +93,18 @@ object CollectionLogRegistry {
                 "item.godsword_shard_3", "item.pet_kreearra",
             ),
         ),
+        // Mirrors Barrows.PIECES (the 24 chest uniques, brother by brother).
+        Category(
+            "barrows", "Barrows Chests", "npc.dharok_the_wretched",
+            listOf(
+                "item.ahrims_hood", "item.ahrims_robetop", "item.ahrims_robeskirt", "item.ahrims_staff",
+                "item.dharoks_helm", "item.dharoks_platebody", "item.dharoks_platelegs", "item.dharoks_greataxe",
+                "item.guthans_helm", "item.guthans_platebody", "item.guthans_chainskirt", "item.guthans_warspear",
+                "item.karils_coif", "item.karils_leathertop", "item.karils_leatherskirt", "item.karils_crossbow",
+                "item.torags_helm", "item.torags_platebody", "item.torags_platelegs", "item.torags_hammers",
+                "item.veracs_helm", "item.veracs_brassard", "item.veracs_plateskirt", "item.veracs_flail",
+            ),
+        ),
     )
 
     fun byKey(key: String): Category? = categories.firstOrNull { it.key.equals(key, ignoreCase = true) }

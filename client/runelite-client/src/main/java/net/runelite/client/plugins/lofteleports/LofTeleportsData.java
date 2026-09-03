@@ -108,7 +108,7 @@ final class LofTeleportsData
 			s("King Black Dragon", "Soon", SOON, 1149),         // dragon med helm
 			s("Corporeal Beast", "Soon", SOON, 13734),          // spirit shield
 			b("Zulrah", "Hostile", HOSTILE, 12934),             // zulrah's scales
-			s("Barrows", "Soon", SOON, 4716),                   // dharok's helm
+			b("Barrows", "Safe Zone", SAFE, 4716),              // dharok's helm (crypt run port)
 			b("Vorkath", "Hostile", HOSTILE, 21634),            // vorkath's head
 			b("Alchemical Hydra", "Hostile", HOSTILE, 22988),   // hydra leather
 			b("General Graardor", "Hostile", HOSTILE, 11832),   // bandos chestplate (GWD package port)

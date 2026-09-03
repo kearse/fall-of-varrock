@@ -84,7 +84,9 @@ object TeleportRegistry {
         // Lands at the Zul-Andra dock — board the sacred-eel boat (or ::zulrah) for a
         // solo instanced shrine fight (Kronos port #2).
         built("zulrah", "Zulrah", BOSSES, Tile(2199, 3056, 0), HOSTILE),
-        soon("barrows", "Barrows", BOSSES),
+        // Lands just north of the mounds — dig into a mound with a spade to enter its crypt
+        // (Kronos port #6: the full crypt run, `content/minigames/barrows/`).
+        built("barrows", "Barrows", BOSSES, Tile(3565, 3306, 0), SAFE_ZONE),
         // Lands on Ungael outside the icy spines — climb over them to enter the solo
         // instanced arena and poke the sleeping beast (the Kronos-port pilot).
         built("vorkath", "Vorkath", BOSSES, Tile(2272, 4052, 0), HOSTILE),
