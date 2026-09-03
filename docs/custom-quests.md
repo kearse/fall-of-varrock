@@ -146,7 +146,9 @@ The six hand-written step-machine chains above are **LEGACY** (the pre-Block-2 o
 hallway). New quests are authored against `content/quests/framework/` and never touch the
 chains; the chains are presented through the same registry by thin adapters
 (`LegacyChains.kt`, which also carry the exact journal-varp packings — the client contract is
-unchanged).
+unchanged). Other teams reach all of this through `content/core/QuestApi` (`docs/core-api.md`):
+`record(p, key, state)` for framework quests AND raw story beats, `follow` for the arrow, and
+`QuestDefinition.category` (`JournalCategory`: Main / Regional / Strategic / Optional-service).
 
 | Piece | What it is |
 |-------|------------|

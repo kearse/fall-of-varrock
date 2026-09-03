@@ -15,6 +15,9 @@ import org.alter.game.model.entity.Player
  * - [adminOnly]: hidden from `::quests` focus and never auto-begun — only `::questdebug`/`::demoquest`.
  * - [optional]: a side road — `QuestRegistry.activeChainIndex` never points a player at it as
  *   "next up" while a main-road quest is unstarted.
+ * - [category]: where the journal files it (design authority 03 §7 — Main Campaign, Regional
+ *   Campaign, strategic problem, optional/service). Defaults to the Main Campaign, or to
+ *   optional/service when [optional].
  */
 abstract class QuestDefinition(
     val key: String,
@@ -23,6 +26,7 @@ abstract class QuestDefinition(
     val journalVarp: Int? = null,
     val adminOnly: Boolean = false,
     val optional: Boolean = false,
+    val category: JournalCategory = if (optional) JournalCategory.OPTIONAL_SERVICE else JournalCategory.MAIN_CAMPAIGN,
 ) {
     open val prerequisites: List<Prerequisite> = emptyList()
     abstract val steps: List<QuestStep>
