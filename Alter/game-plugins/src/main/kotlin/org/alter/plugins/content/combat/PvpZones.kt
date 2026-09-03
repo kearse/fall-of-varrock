@@ -80,25 +80,24 @@ object PvpZones {
     private val safeDynamic = mutableListOf<Area>()
 
     /**
-     * EXTRACTION ZONES ([org.alter.plugins.content.raidzones.RaidCities]) — hostile ground turned
-     * open-PvP loot grounds. Each is red at a FIXED wilderness level (its `raidWildLevel`)
-     * regardless of depth, and ground outside [mainWilderness] becomes red through this list.
-     * Their banks stay safe via [BankSafezonePlugin]'s dynamic carve-outs. Currently EMPTY (the
-     * framework is dormant until a replacement location is chosen).
+     * HOSTILE ZONES ([org.alter.plugins.content.hostilezones.HostileZones]) — hostile ground turned
+     * open-PvP loot grounds (the extraction loop). Each enabled zone is red; one with a fixed
+     * `wildLevel` keeps that level regardless of depth (a zone with none inherits the depth level),
+     * a `singleCombat` zone is 1v1, and ground outside [mainWilderness] becomes red through this
+     * list. Banks stay safe via [BankSafezonePlugin]'s dynamic carve-outs.
      *
-     * A `get()` (not an eager val) so classload order never matters: RaidCities never
-     * references this object back, but bots/plugins touch [mainWilderness] during their own
-     * class init and we must not force RaidCities' tables to build before the RSCM is up.
+     * `by lazy` so classload order never matters: HostileZones is pure data and never references
+     * this object back, but bots/plugins touch [mainWilderness] during their own class init and we
+     * must not force the catalog to build before the RSCM is up. The registry hands out ONE list
+     * instance refreshed in place, so caching it here is safe.
      */
-    // by lazy keeps the classload-order safety the getter provided while caching the list:
-    // every zone classification (per-player overlay ticks, every attack) consulted this,
-    // rebuilding the mapped list each call.
-    private val raidCities: List<Pair<Area, Int>> by lazy {
-        org.alter.plugins.content.raidzones.RaidCities.all.map { it.area to it.raidWildLevel }
+    private val hostile: List<org.alter.plugins.content.hostilezones.HostileZoneConfig> by lazy {
+        org.alter.plugins.content.hostilezones.HostileZones.all
     }
 
-    private fun inRed(t: Tile): Boolean = WILDERNESS.any { it.contains(t) } || raidCities.any { it.first.contains(t) }
+    private fun inRed(t: Tile): Boolean = WILDERNESS.any { it.contains(t) } || hostile.any { it.area.contains(t) }
     private fun inCarveout(t: Tile): Boolean = SAFE_INSIDE_RED.any { it.contains(t) } || safeDynamic.any { it.contains(t) }
+    private fun inSingle(t: Tile): Boolean = SINGLE.any { it.contains(t) } || hostile.any { it.singleCombat && it.area.contains(t) }
 
     /** True PvP-enabled wilderness tile (inside red, not a safe carve-out). */
     fun isWilderness(t: Tile): Boolean = inRed(t) && !inCarveout(t)
@@ -106,14 +105,14 @@ object PvpZones {
     /** Safe = anything that isn't live wilderness (outside red, or a carve-out inside it). */
     fun isSafe(t: Tile): Boolean = !isWilderness(t)
 
-    fun isSingle(t: Tile): Boolean = isWilderness(t) && SINGLE.any { it.contains(t) }
+    fun isSingle(t: Tile): Boolean = isWilderness(t) && inSingle(t)
 
-    fun isMulti(t: Tile): Boolean = isWilderness(t) && SINGLE.none { it.contains(t) }
+    fun isMulti(t: Tile): Boolean = isWilderness(t) && !inSingle(t)
 
     /** Wilderness level by depth pushed into the wild (0 if not in the wild). */
     fun wildernessLevel(t: Tile): Int {
         if (!isWilderness(t)) return 0
-        raidCities.firstOrNull { it.first.contains(t) }?.let { return it.second } // raid cities: fixed level
+        hostile.firstOrNull { it.area.contains(t) }?.wildLevel?.let { return it } // hostile zones: fixed level (null = depth)
         if (CONTESTED.any { it.contains(t) }) return FRONTIER_LEVEL // §4: the town frontier is capped, not open any-level
         val depth = t.z - WILD_SOUTH_EDGE_Z
         // Isolated PK pockets south of the main wild (e.g. the east-Lum arena) are open PvP — any level.

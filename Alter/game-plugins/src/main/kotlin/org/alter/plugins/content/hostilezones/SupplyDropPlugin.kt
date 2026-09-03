@@ -1,4 +1,4 @@
-package org.alter.plugins.content.raidzones
+package org.alter.plugins.content.hostilezones
 
 import dev.openrune.cache.CacheManager.getItem
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -22,17 +22,20 @@ import org.alter.rscm.RSCM.getRSCM
 private val logger = KotlinLogging.logger {}
 
 /**
- * The **warned supply drop** — the raid cities' battlefield-maker ([RaidCities]). Roughly every
- * hour a server-wide warning names a city and district ("a supply drop falls on Falador — the
- * Old Market — in 5 minutes"); at zero the crate's contents land on a random street tile there
- * as ONE public high-value item, and whoever walks out with it is broadcast to the realm. Five
- * minutes is enough for the whole playerbase to converge — which is the point.
+ * The **warned supply drop** — the hostile zones' battlefield-maker ([HostileZones]). Roughly
+ * every hour a server-wide warning names a zone and district ("a supply drop falls on the Wild
+ * Bandit Stronghold — the Tents — in 5 minutes"); at zero the crate's contents land on a random
+ * tile there as ONE public high-value item, and whoever walks out with it is broadcast to the
+ * realm. Five minutes is enough for the whole playerbase to converge — which is the point.
  *
  * Two-phase timer machine, same shape as [org.alter.plugins.content.war.MarchPlugin]:
  * IDLE —(cadence + jitter)→ warn broadcast —(WARN_TICKS)→ the drop lands → back to IDLE.
- * `::rarespawn` (admin) advances the current leg immediately for testing.
+ * `::rarespawn` (admin) / `::hostile drop` advance the current leg immediately for testing.
+ *
+ * The client's `lofsupplydrop` world-map marker rides the [MAP_PREFIX] machine lines — the
+ * prefix and grammar are frozen (no client deploy needed to add zones).
  */
-class RareDropPlugin(
+class SupplyDropPlugin(
     r: PluginRepository,
     world: World,
     server: Server,
@@ -41,8 +44,8 @@ class RareDropPlugin(
     private enum class State { IDLE, WARNED }
     private var state = State.IDLE
     /** The warned target, picked at the warning broadcast. */
-    private var targetCity: RaidCityConfig? = null
-    private var targetDistrict: RaidDistrict? = null
+    private var targetZone: HostileZoneConfig? = null
+    private var targetDistrict: LootDistrict? = null
     /** The live, unclaimed drop (cleared on claim or when it times out and respawns anew). */
     private var liveDrop: GroundItem? = null
     /** The machine map-marker lines ([MAP_PREFIX]) matching the current phase, replayed to
@@ -50,14 +53,18 @@ class RareDropPlugin(
     private var warnMapLine: String? = null
     private var dropMapLine: String? = null
 
+    /** Zones that take part in the rotation. */
+    private val zones: List<HostileZoneConfig> get() = HostileZones.all.filter { it.supplyDrop }
+
     init {
         val timer = TimerKey()
         onWorldInit {
-            // Dormant while no extraction zone is configured — nothing to warn about, no timer.
-            if (RaidCities.all.isEmpty()) {
-                logger.info { "[SUPPLY DROP] no extraction zones configured — supply drops disabled." }
+            // Dormant while no zone takes supply drops — nothing to warn about, no timer.
+            if (zones.isEmpty()) {
+                logger.info { "[SUPPLY DROP] no hostile zones with supply drops — disabled." }
             } else {
                 world.timers[timer] = cadence()
+                logger.info { "[SUPPLY DROP] cadence armed across ${zones.size} zone(s)." }
             }
         }
         onTimer(timer) {
@@ -92,13 +99,17 @@ class RareDropPlugin(
             line?.let { player.message(it, ChatMessageType.BROADCAST) }
         }
 
-        onCommand("rarespawn", Privilege.ADMIN_POWER, description = "Force the supply-drop cycle forward (test)") {
-            if (RaidCities.all.isEmpty()) {
-                player.message("<col=801700>[test] No extraction zones are configured — supply drops are dormant.</col>")
-                return@onCommand
+        HostileRuntime.supplyAdvance = {
+            if (zones.isEmpty()) {
+                "No hostile zones take supply drops — dormant."
+            } else {
+                world.timers[timer] = 1
+                "Supply-drop cycle advanced (${if (state == State.IDLE) "warning" else "landing"} next tick)."
             }
-            world.timers[timer] = 1
-            player.message("<col=4f9b4f>[test] Supply-drop cycle advanced (${if (state == State.IDLE) "warning" else "landing"} next tick).</col>")
+        }
+
+        onCommand("rarespawn", Privilege.ADMIN_POWER, description = "Force the supply-drop cycle forward (test)") {
+            player.message("<col=4f9b4f>[test] ${HostileRuntime.supplyAdvance?.invoke()}</col>")
         }
     }
 
@@ -106,37 +117,38 @@ class RareDropPlugin(
     private fun cadence(): Int = BASE_TICKS + world.random(-JITTER_TICKS..JITTER_TICKS)
 
     private fun warn() {
-        if (RaidCities.all.isEmpty()) return // dormant: nothing to land a drop on
-        val city = RaidCities.all[world.random(RaidCities.all.size - 1)]
-        val district = city.districts[world.random(city.districts.size - 1)]
-        targetCity = city
+        val pool = zones
+        if (pool.isEmpty()) return // dormant: nothing to land a drop on
+        val zone = pool[world.random(pool.size - 1)]
+        val district = zone.districts[world.random(zone.districts.size - 1)]
+        targetZone = zone
         targetDistrict = district
         state = State.WARNED
         val mins = WARN_TICKS * 6 / 600
         Announce.broadcast(
             world,
-            "<col=ffae00>A supply drop falls on ${city.display} — ${district.display} — in ~$mins minutes! " +
-                "The city is PvP ground: whoever takes it must carry it out.</col>",
+            "<col=ffae00>A supply drop falls on ${zone.display} — ${district.display} — in ~$mins minutes! " +
+                "It is PvP ground: whoever takes it must carry it out.</col>",
         )
         // Map marker (client `lofsupplydrop`): the WARN phase marks the district's centre —
         // the convergence point, not the exact tile (that isn't picked until it lands).
         val c = district.center
-        warnMapLine = "${MAP_PREFIX}WARN:${city.display}:${district.display}:${c.x}:${c.z}:${WARN_TICKS * 6 / 10}"
+        warnMapLine = "${MAP_PREFIX}WARN:${zone.display}:${district.display}:${c.x}:${c.z}:${WARN_TICKS * 6 / 10}"
         warnMapLine?.let { Announce.broadcast(world, it) }
     }
 
     private fun land() {
         state = State.IDLE
-        val city = targetCity ?: return
+        val zone = targetZone ?: return
         val district = targetDistrict ?: return
-        targetCity = null
+        targetZone = null
         targetDistrict = null
 
         val tile = pickDropTile(district) ?: run {
-            logger.warn { "[SUPPLY DROP] no landing tile found in ${city.key}/${district.key} — drop skipped." }
+            logger.warn { "[SUPPLY DROP] no landing tile found in ${zone.key}/${district.key} — drop skipped." }
             return
         }
-        val rolled = city.rareTable.roll(world).firstOrNull() ?: return
+        val rolled = zone.rareTable.roll(world).firstOrNull() ?: return
         val id = runCatching { getRSCM(rolled.item) }.getOrNull() ?: run {
             logger.warn { "[SUPPLY DROP] unresolvable item '${rolled.item}' — drop skipped." }
             return
@@ -146,26 +158,25 @@ class RareDropPlugin(
         liveDrop?.let { old -> if (world.isSpawned(old)) world.remove(old) }
 
         val item = GroundItem(id, rolled.amount, tile)
-        item.despawnDelayOverride = DROP_LIFETIME_TICKS // sits ~an hour, then the desert keeps it
+        item.despawnDelayOverride = DROP_LIFETIME_TICKS // sits ~an hour, then the wild keeps it
         world.spawn(item)
         liveDrop = item
         Announce.broadcast(
             world,
-            "<col=ffcc00>The supply drop is DOWN in ${district.display} of ${city.display}! First to reach it takes it.</col>",
+            "<col=ffcc00>The supply drop is DOWN in ${district.display} of ${zone.display}! First to reach it takes it.</col>",
         )
         // Map marker: the landing swaps the district-centre WARN marker for the exact tile.
         warnMapLine = null
-        dropMapLine = "${MAP_PREFIX}DROP:${city.display}:${district.display}:${tile.x}:${tile.z}"
+        dropMapLine = "${MAP_PREFIX}DROP:${zone.display}:${district.display}:${tile.x}:${tile.z}"
         dropMapLine?.let { Announce.broadcast(world, it) }
-        logger.info { "[SUPPLY DROP] ${rolled.item} x${rolled.amount} landed at (${tile.x},${tile.z}) in ${city.key}/${district.key}." }
+        logger.info { "[SUPPLY DROP] ${rolled.item} x${rolled.amount} landed at (${tile.x},${tile.z}) in ${zone.key}/${district.key}." }
     }
 
     /**
-     * A random walkable street tile inside the district: random picks snapped by [StaticTerrain],
-     * rejected if a safe pocket (bank radius) swallowed them — a crate inside a bank would be a
-     * risk-free claim.
+     * A random walkable tile inside the district: random picks snapped by [StaticTerrain],
+     * rejected if a safe pocket swallowed them — a crate inside a bank would be a risk-free claim.
      */
-    private fun pickDropTile(district: RaidDistrict): Tile? {
+    private fun pickDropTile(district: LootDistrict): Tile? {
         val area = district.area
         repeat(PICK_ATTEMPTS) {
             val x = area.bottomLeftX + world.random(area.topRightX - area.bottomLeftX)
@@ -196,8 +207,8 @@ class RareDropPlugin(
 
         /** Machine-line prefix for the client's `lofsupplydrop` world-map markers. Rides the
          *  BROADCAST channel like `FOV_INTRO:` (hidden from chat by the client's ticker filter).
-         *  Grammar: `WARN:<city>:<district>:<x>:<z>:<seconds>` (district centre),
-         *  `DROP:<city>:<district>:<x>:<z>` (exact tile), `CLEAR` (claimed). */
+         *  FROZEN — the client hard-codes it. Grammar: `WARN:<zone>:<district>:<x>:<z>:<seconds>`
+         *  (district centre), `DROP:<zone>:<district>:<x>:<z>` (exact tile), `CLEAR` (claimed). */
         const val MAP_PREFIX = "FOV_RAID:"
     }
 }

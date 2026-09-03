@@ -20,7 +20,7 @@ Converted from the owner's `.docx` handoff (the docx files are canonical; the ma
 |---|---|---|
 | `docs/rsps-master-design-brief.md` | LEGACY | The pre-authority "mastermind" brief. Falador/Al Kharid framing and the defensive command are gone; ranks are earned standing. Its onboarding / War-Contracts / supply-loop sections still describe live systems. |
 | `docs/war-system-design.md` | LEGACY | The defensive siege engine (AttackDirector, WarFront, Strategist …) was deleted in PR #296 — git tag `pre-block1-siege-engine` keeps it recoverable. The offensive war lives in `war/MarchPlugin`, `war/MarchTargets`, `war/CampaignCommandPlugin`, `war/CampaignDirector`. |
-| `docs/raid-cities.md` | DORMANT | Zero extraction zones configured (PR #298); Falador and Al Kharid are safe towns. The framework (`raidzones/`) stays for replacement hostile zones (OPEN). |
+| `docs/hostile-zones.md` | LIVE | The extraction loop rebuilt as the generic Hostile Zone framework (`content/hostilezones/`, Team 5 PR-D, 2026-09-03); first zone live at the Wild Bandit Stronghold. Falador and Al Kharid stay safe towns. |
 | `docs/story-and-grind-design.md` | PARTLY RETIRED | District pressure / liberation (§2, §5) are retired — Varrock stays fallen; districts are location identity only (`war/VarrockDistricts.kt`). The Rogue Problem (§4) is now optional. War-forging (§6) still stands. |
 | `docs/raids-framework.md` | CORRECTED | Only `RaidInstance` ever existed of the R0 core it described; `QuestInstances` is the per-player instance lifecycle now. |
 | `docs/custom-quests.md` §1–§5 | LIVE (journal contract) + §6 the framework | The six legacy step-machine chains it documents are the pre-Block-2 onboarding hallway, wrapped by `quests/framework/LegacyChains.kt`. |
@@ -30,7 +30,7 @@ Converted from the owner's `.docx` handoff (the docx files are canonical; the ma
 | Code | Status |
 |---|---|
 | `war/recruit/RecruitTrials`, `war/warprep/WarPrepChain`, `WarPrepRanged`, `WarPrepSurvival`, `war/roguehunt/RogueProblem`, `war/Conquest` | LEGACY quest chains — live onboarding until Block-2 quests replace them; presented through `QuestRegistry` by `LegacyChains`; rank hooks via `LegacyRankHooks`. |
-| `raidzones/` | DORMANT framework, zero configs. |
+| `hostilezones/` (was `raidzones/`) | LIVE framework; zones are data in `HostileZoneCatalog`, gated by `HostileZones.LIVE`. |
 | `war/VarrockDistricts.kt` | Location identity only (captain posts, flavour) — no pressure. |
 
 ## Where the new seams are

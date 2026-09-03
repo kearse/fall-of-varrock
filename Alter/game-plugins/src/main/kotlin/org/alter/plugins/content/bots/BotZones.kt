@@ -339,8 +339,26 @@ object BotZones {
                 activationPadding = 24,
             ),
         )
-        // (Extraction zones — `raidzones/RaidCities` — used to add a pinned "raiders" colony per zone
-        // here. The framework is dormant with zero locations; re-add the loop when one is chosen.)
+        // HOSTILE ZONES (`hostilezones/HostileZones`): a zone that declares a raider colony gets a
+        // pinned PK-bot warband over its box. Keys are `hz_`-prefixed so they can never collide with
+        // the Rogue Knight camp keys CampClearance maps onto BotZones. (HostileZones is pure data,
+        // so touching it from this object's init is classload-safe.)
+        for (zone in org.alter.plugins.content.hostilezones.HostileZones.all) {
+            val r = zone.raiders ?: continue
+            add(
+                BotZoneConfig(
+                    key = "hz_${zone.key}",
+                    displayName = "${zone.display} raiders",
+                    area = zone.area,
+                    tier = BotTier(r.loadouts),
+                    target = r.target,
+                    spacing = r.spacing,
+                    roamRadius = r.roamRadius,
+                    leashRadius = r.leashRadius,
+                    activationPadding = r.activationPadding,
+                ),
+            )
+        }
     }
 
     /** Even grid of candidate muster tiles across [area] at [spacing] (walkability filtered later). */
