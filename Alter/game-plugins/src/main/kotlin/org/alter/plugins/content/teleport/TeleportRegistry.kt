@@ -151,6 +151,9 @@ object TeleportRegistry {
         // Lands beside TzHaar-Mej-Jal at the live cave entrance — talk to him (or ::arena)
         // to start a run, ::jad to practice (Kronos port #4: the real 63-wave engine).
         built("fight_cave", "Fight Cave", MINIGAMES, Tile(2413, 5117, 0), SAFE_ZONE),
+        // Lands in Neypotzli's antechamber — the three Moon chambers and the Lunar Chest are a
+        // short walk (Team 4 PR 5, wiki-spec build; instanced solo fights).
+        built("moons_of_peril", "Moons of Peril", MINIGAMES, Tile(1440, 9570, 0), HOSTILE),
         soon("inferno", "The Inferno", MINIGAMES),
         soon("castle_wars", "Castle Wars", MINIGAMES),
         soon("last_man_standing", "Last Man Standing", MINIGAMES),
