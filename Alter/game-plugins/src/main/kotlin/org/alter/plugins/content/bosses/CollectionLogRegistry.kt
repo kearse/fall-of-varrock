@@ -152,6 +152,8 @@ object CollectionLogRegistry {
                 "item.eclipse_moon_helm", "item.eclipse_moon_chestplate", "item.eclipse_moon_tassets", "item.eclipse_atlatl",
             ),
         ),
+        // Fallen Varrock PvM layer — the War-Forging materials the ruins give up.
+        Category("fallen_varrock", "Fallen Varrock", "npc.zombies_champion", listOf("item.varrock_relic", "item.burnt_page")),
     )
 
     fun byKey(key: String): Category? = categories.firstOrNull { it.key.equals(key, ignoreCase = true) }

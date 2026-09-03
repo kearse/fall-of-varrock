@@ -619,7 +619,15 @@ class PluginRepository(
     }
 
     fun executeWorldInit(world: World) {
-        worldInitPlugins.forEach { logic -> world.executePlugin(world, logic) }
+        // Per-hook isolation (the onAnyNpcDeath lesson): one throwing world-init hook used to
+        // abort every hook registered after it, silently — no log, no spawns, no timers.
+        worldInitPlugins.forEachIndexed { i, logic ->
+            try {
+                world.executePlugin(world, logic)
+            } catch (t: Throwable) {
+                logger.error(t) { "World-init hook #$i threw; later hooks continue." }
+            }
+        }
     }
 
     fun bindCombat(plugin: Plugin.() -> Unit) {
