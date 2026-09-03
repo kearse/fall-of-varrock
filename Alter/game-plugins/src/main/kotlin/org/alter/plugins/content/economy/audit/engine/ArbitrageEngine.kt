@@ -100,19 +100,16 @@ class ArbitrageEngine(private val model: EconModel, private val config: EngineCo
                     if (s.node == coins) continue
                     var others = 0.0
                     var othersKnown = true
-                    var dominant = true
-                    val myCost = (acq[s.node] ?: Double.POSITIVE_INFINITY) * s.qty
                     for (t in e.inputs) {
                         if (t === s) continue
                         val a = acq[t.node]
                         if (a == null) { othersKnown = false; break }
                         others += a * t.qty
-                        if (t.node != coins && a * t.qty > myCost) dominant = false
                     }
                     if (!othersKnown) continue
                     // Liquidation value belongs to the input that IS the thing being converted: a
-                    // 4 gp nature rune does not "liquidate" for the platebody it alchs.
-                    if (config.dominantOnly && !dominant) continue
+                    // nature rune never "liquidates" for the item it alchs, whatever the rune costs.
+                    if (config.dominantOnly && !e.isSubjectInput(s.node, coins) { acq[it] ?: Double.POSITIVE_INFINITY }) continue
                     val cand = (outValue - others) / s.qty
                     val cur = liq[s.node] ?: 0.0
                     if (cand > cur + EPS) {

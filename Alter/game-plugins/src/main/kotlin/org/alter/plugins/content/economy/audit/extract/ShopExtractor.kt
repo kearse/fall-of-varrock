@@ -223,7 +223,7 @@ object ShopExtractor {
         }
         if (unlimited) return "shop.infiniteSlot" // amount = min(.., Int.MAX_VALUE - count) == 0
         return when (currency) {
-            is GeneralStoreCurrency -> if (!GeneralStoreCurrency.accepts(unnoted)) "GeneralStore.cost>${GeneralStoreCurrency.MAX_BUYBACK_COST}" else null
+            is GeneralStoreCurrency -> GeneralStoreCurrency.refusalReason(unnoted)
             is TradingPostCurrency -> TradingPostCurrency.refusalReason(unnoted)
             else -> null
         }

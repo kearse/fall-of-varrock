@@ -35,9 +35,17 @@ enum class PointKind(
     /** False = a lifetime record that can never be debited (see the class doc). */
     val spendable: Boolean = true,
 ) {
-    // BOSS/VOTE are now a tradeable, stackable ITEM currency (coins-like) — earned as ticket items,
-    // spent directly in the reward shop via ItemCurrency (DECISIONS.md §8). The [attr] counter is
-    // retained but vestigial for these two. PRESTIGE/DONOR stay pure counters.
+    // VOTE is a tradeable, stackable ITEM currency (coins-like) — earned as ticket items, spent
+    // directly in the reward shop via ItemCurrency (DECISIONS.md §8). The [attr] counter is
+    // retained but vestigial. PRESTIGE/DONOR stay pure counters.
+    /**
+     * RETIRED 2026-09 (design doc 04 §13: a universal PvM token bypasses recognisable boss
+     * progression; bosses already produce drops). No shop charges it and [awardTickets] pays
+     * nothing for it. The entry stays only so the boss plugins that still name it compile until
+     * their owners strip the calls (Team 4's `BossDeath.payout(tickets = …)` seam); delete it
+     * together with `BOSS_POINTS_ATTR` and the 4067 override once no reference remains.
+     */
+    @Deprecated("Boss Tickets were retired in 2026-09; awardTickets(BOSS, n) is a no-op.")
     BOSS("Boss Tickets", BOSS_POINTS_ATTR, "item.boss_ticket"),
     VOTE("Vote Tickets", VOTE_POINTS_ATTR, "item.vote_ticket"),
     /** Lifetime service record — earned by wars, skilling, contracts, rogue hunting; NEVER spent. */
@@ -81,8 +89,12 @@ fun Player.spendPoints(kind: PointKind, amount: Int): Boolean {
  * drops at the player's feet so a full pack never voids it (same policy as coin payouts). Kinds with
  * no ticket item (WAR_EFFORT/PRESTIGE/DONOR) are a no-op.
  */
+@Suppress("DEPRECATION")
 fun Player.awardTickets(kind: PointKind, amount: Int) {
     if (amount <= 0) return
+    // Boss Tickets are retired: the ticket buys nothing and is untradeable, so paying it would only
+    // litter inventories. Call sites are being stripped by their owners; until then this is a no-op.
+    if (kind == PointKind.BOSS) return
     val id = kind.ticketKey?.let { runCatching { getRSCM(it) }.getOrNull() } ?: return
     val added = inventory.add(item = id, amount = amount, assureFullInsertion = false)
     val leftover = amount - added.completed

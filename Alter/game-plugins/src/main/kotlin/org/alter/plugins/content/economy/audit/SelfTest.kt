@@ -73,25 +73,26 @@ object SelfTest {
                 "acq=$acq via=${v.acqVia[node(key)!!]?.id} findings=${findingFor(key).map { it.loopClass }} shark=${sharkRecipe?.let { "EV@min ${it.profitEvMin} / no-fail ${it.profitNoFail}" }}")
         }
 
-        // 5. justiciar_chestguard (Boss Ticket ware): guarded => in 'prevented', not in findings.
+        // 5. justiciar_chestguard (former Boss-Ticket ware, now chase gear): no NPC source any more,
+        //    and still guarded (ChaseGearGuardPlugin) so a boss drop can never be alched or vendored.
         run {
             val key = "item.justiciar_chestguard"
             val alch = model.edges.firstOrNull { it.kind == EdgeKind.ALCH_HIGH && it.inputs.first().node == node(key) }
-            // Any live guard may be the one that stops the best liquidation (today it is the general
-            // store's cost cap, since 70% there beats the guarded alch/Trading Post routes).
             val inPrevented = prevented.any { it.node == node(key) && it.guardedBy.isNotEmpty() }
             val unguardedProfit = audit.unguarded.liqOf(node(key)!!) - audit.unguarded.acqOf(node(key)!!)
-            checks += Check("justiciar_chestguard: alch guarded by SpecialShopGuard; not in findings; in prevented (some guard) iff unguarded profit > 0",
-                alch?.guardedBy == "SpecialShopGuard" && findingFor(key).isEmpty() && (inPrevented == (unguardedProfit > 0)),
+            checks += Check("justiciar_chestguard: no NPC acquisition (tickets retired); alch guarded by SpecialShopGuard; not in findings",
+                alch?.guardedBy == "SpecialShopGuard" && v.acqOf(node(key)!!).isInfinite() && findingFor(key).isEmpty() && (inPrevented == (unguardedProfit > 0)),
                 "alchGuard=${alch?.guardedBy} acq=${v.acqOf(node(key)!!)} alch=${alch?.outputs?.single()?.qty} unguardedProfit=$unguardedProfit prevented=$inPrevented findings=${findingFor(key).size}")
         }
 
-        // 6. gilded_platebody (Vote Ticket ware): NOT guarded (the hub ticketShop never registers).
+        // 6. gilded_platebody (Vote Ticket ware): guarded since PR 2 (the hub ticketShop registers its
+        //    gear/cosmetic wares); a shark from the same shelf must stay vendorable (guarded = false).
         run {
             val key = "item.gilded_platebody"
             val alch = model.edges.firstOrNull { it.kind == EdgeKind.ALCH_HIGH && it.inputs.first().node == node(key) }
-            checks += Check("gilded_platebody: alch edge carries no guard (hub ticket shop unregistered)",
-                alch != null && alch.guardedBy == null,
+            val shark = model.edges.firstOrNull { it.kind == EdgeKind.ALCH_HIGH && it.inputs.first().node == node("item.shark") }
+            checks += Check("gilded_platebody: alch guarded by SpecialShopGuard; shark (same shelf, a supply) is not",
+                alch != null && alch.guardedBy == "SpecialShopGuard" && shark != null && shark.guardedBy == null,
                 "alchGuard=${alch?.guardedBy} alchValue=${alch?.outputs?.single()?.qty} acq=${v.acqOf(node(key)!!)} liq=${v.liqOf(node(key)!!)} findings=${findingFor(key).map { "${it.loopClass}/${it.severity}" }}")
         }
 

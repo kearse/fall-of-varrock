@@ -45,6 +45,7 @@ object OfflineBoot {
         "org.alter.plugins.content.economy.cosmetics.CosmeticDyePlugin",
         "org.alter.plugins.content.economy.SupplyDepotPlugin",
         "org.alter.plugins.content.economy.tradingpost.TradingPostPlugin",
+        "org.alter.plugins.content.economy.ChaseGearGuardPlugin",
     )
 
     /** Recipe / converter plugins (read by reflection): a failure here is reported, not fatal. */

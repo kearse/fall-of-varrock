@@ -9,6 +9,7 @@ import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
 import org.alter.plugins.content.economy.PointKind
 import org.alter.plugins.content.economy.PointsCurrency
+import org.alter.plugins.content.economy.SpecialShopGuard
 import org.alter.rscm.RSCM.getRSCM
 
 /**
@@ -41,6 +42,8 @@ class PrestigeShopPlugin(
             purchasePolicy = PurchasePolicy.BUY_NONE, stockSize = maxOf(stock.size, 1)) {
             stock.forEachIndexed { i, item -> items[i] = item }
         }
+        // Point-shop wares never NPC-convert to gp (alch / Trading Post / General Store) — the audit's guard rule.
+        SpecialShopGuard.register(stock.map { it.item })
 
         onCommand("prestigeshop", description = "Open the Prestige Shop (commanders' regalia)") {
             player.openShop(SHOP_NAME)

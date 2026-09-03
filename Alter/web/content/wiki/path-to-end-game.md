@@ -4,7 +4,7 @@ category: Economy & Trading
 summary: The clear route to Torva, godswords, dragon claws, megarares and spirit shields - every source, every rate, every price.
 order: 5
 updated: 2026-08-28
-infobox: Type = Gear guide; Starts at = Rank armour & rune; Ends at = Torva, Masori, Ancestral & megarares; Currencies = Boss Tickets, Blood Money, Commendations, coins
+infobox: Type = Gear guide; Starts at = Rank armour & rune; Ends at = Torva, Masori, Ancestral & megarares; Currencies = Blood Money, Commendations, coins
 ---
 
 Fall of Varrock is **not a spawn server** - every rare in the economy was earned by somebody. Gear enters the game three ways: **boss drops**, **currency shops**, and the **Royal Smith's war-forge**. On top of those sit two shortcuts - [wilderness loot keys](/wiki/wilderness-loot-keys) off elite PK bots, and plain gold: almost everything below is **tradeable**, so the market is always a valid route.
@@ -17,7 +17,6 @@ One realm-wide note first: the old boss roster is **temporarily retired for a re
 
 | Currency | How you earn it | Where you spend it |
 | --- | --- | --- |
-| **Boss Tickets** (tradeable item) | Boss kills - today that's the [Corporeal Beast war event](/wiki/corporeal-beast) at 25 a kill; the Quartermaster also sells them at 1,000 gp | Warlord's Armoury, Valaine's boss shelf |
 | **Blood Money** (tradeable item) | Killing real players: 25 + 3 per combat level (bots pay nothing) | Emblem Trader (PK Rewards) |
 | **Commendations** (untradeable) | Won [marches, campaigns and conquests](/wiki/marches-and-the-reconquest), scaled by contribution | The Royal Smith's war-forge |
 | **Warden's embers** (tradeable) | The Grand March's prize | War-forge helm recipes |
@@ -29,8 +28,8 @@ Prices and shops in full: [Shops directory](/wiki/shops-directory).
 
 - **Early:** rank armour from the [Apprentice's Armoury](/wiki/shops-directory) as your [title](/wiki/titles-and-citizenship) climbs, weapons to adamant off the shelf, rune from smithing and drops.
 - **Mid:** dragon via [the Forge](/wiki/the-forge), then **Barrows gear** from the Quartermaster's coin wing (12m a piece, 20m a weapon) - the crypts themselves are retired for their rebuild, so the shop and the market are the current source.
-- **High:** fight the **[Corporeal Beast war event](/wiki/corporeal-beast)** for Boss Tickets and rares; PK for **Blood Money**; buy your GWD bases off the ticket shelf.
-- **End game:** hand Bandos, Armadyl and Ahrim's pieces to the **Royal Smith** with Commendations from the war - Torva, Masori, Ancestral. Save tickets for a megarare. Summon the Corporeal Beast for a sigil.
+- **High:** fight the bosses for their drops - the **[Corporeal Beast war event](/wiki/corporeal-beast)**, [God Wars](/wiki/god-wars-dungeon) for your Bandos and Armadyl bases, [Zulrah](/wiki/zulrah), [Vorkath](/wiki/vorkath), the [Hydra](/wiki/alchemical-hydra); PK for **Blood Money**. There is no ticket shelf any more (Boss Tickets were retired in September 2026): every chase item comes from the boss that drops it, or from another player.
+- **End game:** hand Bandos, Armadyl and Ahrim's pieces to the **Royal Smith** with Commendations from the war - Torva, Masori, Ancestral. Summon the Corporeal Beast for a sigil.
 
 ## Torva, Masori & Ancestral
 
@@ -38,10 +37,10 @@ The three war-forged sets are the best armour in the game, and the [Royal Smith]
 
 | Piece | Base item | Base comes from |
 | --- | --- | --- |
-| Torva platebody / platelegs | Bandos chestplate / tassets | Armoury, 600/800 tickets (Graardor's drop returns with his rebuild) |
+| Torva platebody / platelegs | Bandos chestplate / tassets | [General Graardor](/wiki/god-wars-dungeon), or the market |
 | Torva full helm | Neitiznot faceguard | The market |
-| Masori body / chaps / mask | Armadyl chestplate / chainskirt / helmet | Armoury, 600/800 tickets (Kree'arra's drop returns with her rebuild) |
-| Ancestral top / bottom / hat | Ahrim's robetop / robeskirt / hood | The Armoury's Barrows wing, 12m gp each |
+| Masori body / chaps / mask | Armadyl chestplate / chainskirt / helmet | [Kree'arra](/wiki/god-wars-dungeon), or the market |
+| Ancestral top / bottom / hat | Ahrim's robetop / robeskirt / hood | The Barrows crypts, the Armoury's Barrows wing (12m gp each), or the market |
 
 Nex used to drop finished Torva pieces and her own **Virtus** mage line directly - those drop paths return when her rebuilt fight ships. Finished war-forged pieces are fully tradeable - a fat purse skips the march.
 
@@ -64,16 +63,7 @@ Pick your grind - the captain hunt is the designed route, the shop is bad-luck p
 
 ## The megarares
 
-Raids aren't in the realm yet, so the raid weapons are sold at **career prices** in the Warlord's Armoury - think hundreds of boss kills' worth of tickets, not an afternoon:
-
-| Item | Boss Tickets |
-| --- | --- |
-| Twisted bow / Scythe of vitur / Tumeken's shadow | 12,000 each |
-| Soulreaper axe | 8,000 |
-| Sanguinesti staff | 6,000 |
-| Ghrazi rapier | 4,000 |
-
-The **zaryte crossbow** and **venator bow** regain their drop paths (Nex's nihil horn, the Phantom Muspah's venator shard) when those rebuilt bosses return - today the shelf is their source.
+Raids aren't in the realm yet, and the ticket shelf that used to sell the raid weapons at career prices is retired with the Boss Ticket - so the **twisted bow, scythe of vitur, Tumeken's shadow, soulreaper axe, sanguinesti staff and Ghrazi rapier** have no source until their content ships. Pieces already in the realm move only between players (none of them can be alched or sold to an NPC). The **zaryte crossbow** and **venator bow** regain their drop paths (Nex's nihil horn, the Phantom Muspah's venator shard) when those rebuilt bosses return.
 
 ## Spirit shields & sigils
 
@@ -87,11 +77,9 @@ The realm's rarest flex, and **no shop sells them**. The [Corporeal Beast](/wiki
 
 ## Boots, jewellery & the rest
 
-- **Primordial / pegasian / eternal boots** - 900 Boss Tickets each finished (Cerberus's crystal drops return with her rebuild).
-- **Occult necklace** - 800 tickets.
-- **Torture, anguish, tormented bracelet, blood fury, the DT2 rings, ferocious gloves, lightbearer** - Armoury tickets (see the [shops directory](/wiki/shops-directory)).
-- **Dragonfire shield** - 500 tickets, or craft it from a **draconic visage**: the [Corporeal Beast](/wiki/corporeal-beast) drops one at **1/200**.
-- **Dragon hunter lance** - 3,500 tickets.
+- **Primordial / pegasian / eternal boots** - Cerberus's crystal drops (returning with her rebuild); the market meanwhile.
+- **Occult necklace, torture, anguish, tormented bracelet, blood fury, the DT2 rings, ferocious gloves, lightbearer, dragon hunter lance** - the bosses that drop them as they ship, and the market. No shop sells them and no NPC buys them.
+- **Dragonfire shield** - craft it from a **draconic visage**: the [Corporeal Beast](/wiki/corporeal-beast) drops one at **1/200**.
 
 ## The capes
 
@@ -101,7 +89,7 @@ The **fire cape** and **infernal cape** are earned in the Fight Cave and the Inf
 
 The antique prestige line, and **the war is how you earn it**. During a live [campaign or conquest](/wiki/the-war-explained) on Varrock, every enemy you cut down on the battlefield has a small chance (**~1/5,000**) to drop a random 3rd age piece straight to you - so a piece you're wearing says you fought the war for it. On top of that, the **Minister or King who wins a war** has a **1/1,000** chance to earn a piece as a leadership reward, collected from their `::claim` war-spoils box. Both are announced realm-wide when they land.
 
-The Quartermaster's **Relics tab** still sells 3rd age for Boss Tickets, but only as a slow pity-path, now priced at **3× the old rates** - melee, range and mage pieces run **12,000-24,000 tickets**, the longsword, bow and wand are **30,000**, and the **druidic** robes are the apex at **36,000 each**. Buying a set is the single most conspicuous flex on the realm; the drop is how you're *meant* to get it. **Lords and above** can also sell pieces back to the Quartermaster at a third of shelf value - deliberately below what a duplicate fetches in player trade, so trading is always the better cash-out. Wearing 3rd age is Lord-tier on the [rank ladder](/wiki/titles-and-citizenship), same as the other end-game sets.
+The Quartermaster's old Relics tab is retired with the Boss Ticket: the war is the **only** source of 3rd age now, and a duplicate is sold to another player, never to an NPC. Wearing 3rd age is Lord-tier on the [rank ladder](/wiki/titles-and-citizenship), same as the other end-game sets.
 
 **Gilded armour** is the voter's flex: Valaine's **Vote rewards** shelf sells the gilded full helm, platebody, platelegs, kiteshield, scimitar and boots for **25-60 Vote Tickets** a piece. Tickets are tradeable, so non-voters buy them off voters - but a full set represents months of daily votes either way.
 

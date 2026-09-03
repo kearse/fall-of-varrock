@@ -12,6 +12,7 @@ import org.alter.game.model.shop.PurchasePolicy
 import org.alter.game.model.shop.ShopItem
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
+import org.alter.plugins.content.economy.SpecialShopGuard
 import org.alter.plugins.content.economy.grandexchange.GeCurrencyPrices
 import org.alter.plugins.content.economy.grandexchange.currencyBuyShop
 import org.alter.plugins.content.mechanics.shops.ItemCurrency
@@ -108,6 +109,10 @@ class PkRewardsPlugin(
         shopOf(SPEC_WEAPONS, specWares)
         shopOf(WILDY_SETS, wildySetWares)
         shopOf(REVENANT, revenantWares)
+        // PvP gear sold for Blood Money may never be NPC-converted to gp (alch / Trading Post / General
+        // Store): the shelf is the pity route, the player market is where it changes hands. Supplies
+        // stay vendorable. (2026-09 arbitrage audit: this vendor never registered with the guard.)
+        SpecialShopGuard.register((specWares + wildySetWares + revenantWares).mapNotNull { resolveOrNull(it.key) })
         // (The "Buy Blood Money" coin tab was removed 2026-09-02 at the operator's request:
         // blood money is earned from kills, not bought.)
 

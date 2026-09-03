@@ -6,6 +6,31 @@
 > `a0d4eb45` + this branch; the generated tables are in `economy-arbitrage-audit.md` / `.json`
 > next to this file. Re-run after every reprice — the JSON diff is the proof.
 
+## 0. Status (updated as the fix PRs land)
+
+| PR | Change | Loops (S0 / S1 / total) |
+|---|---|---|
+| #332 | auditor + this report (baseline) | 8 / 16 / **91** |
+| #333 | Stylist shelves ≥ cost; every currency shelf registered with the guard; General Store consults it; boot-time price sanity | 8 / 14 / **71** |
+| PR 3 | Trading Post buys commodities only; General Store cap 5,000 → 500; GE backstop split into floor-only raw materials vs two-sided necessities | **0** / 3 / **50** |
+| #335 | auditor counts recipe quantities in throughput (10 coal per steel platebody is 24 bodies/h, not 240) and attributes an alch to the alched item; explicit FoV prices for the shop-sold uncut gems | 0 / **0** / ~50 (all S2 and below, stock-capped) |
+| PR 5 | **Boss Tickets retired** (doc 04 §13): Armoury ticket wings + Valaine's boss shelf removed, `awardTickets(BOSS)` no-op, item 4067 untradeable; the former catalogue stays NPC-unsellable via `ChaseGearGuardPlugin` | unchanged |
+
+Open decisions from PR 5: (a) existing Boss-Ticket stacks on live accounts are inert — convert at the
+old 1,000 gp peg once via a claim, or leave worthless; (b) Champion's Cape / Divine Halo lost their
+shelf — a boss kill-count milestone (Team 4) is the natural new home; (c) the Barrows coin wing stays
+at 12M/20M as the mid-game sink now that the crypts are live (#315) — retire it if the operator wants
+Barrows fully content-driven.
+
+What is left after PR 4 is one family, and it is tolerated by policy: a skilling shop sells a raw
+material at its cache cost with finite stock (willow logs 40, ranarr unf 25, iron ore 17, irit seed
+5) and a crafter turns it into something the General Store (cost ≤ 500) buys for more. Each of
+those loops is capped by the shop slot's 240/hour restock and earns under 100,000 gp/hour — inside
+the skilling band — so it is skilling income, not an exploit. **The refined closing rule:** a loop
+fed by an *unlimited* NPC source must liquidate at ≤ 90% of its input cost; a loop fed by *finite*
+shop stock may earn up to 100,000 gp/hour sustained. The auditor's exit code enforces exactly that
+(S0/S1 fail the run; S2 and below are listed).
+
 ## 1. Headline
 
 The economy has **one structural hole**, and it is the whole skilling economy:

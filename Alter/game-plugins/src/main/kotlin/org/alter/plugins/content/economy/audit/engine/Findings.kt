@@ -107,11 +107,7 @@ class FindingsBuilder(
      * costs more to acquire. A nature rune liquidated "through" alching a platebody is not (the
      * platebody is), so its marginal value is the platebody loop's profit, not a loop of its own.
      */
-    private fun isDominantInput(v: Valuation, n: NodeId, e: Edge): Boolean {
-        val mine = e.inputs.firstOrNull { it.node == n } ?: return true
-        val myCost = v.acqOf(n) * mine.qty
-        return e.inputs.none { it.node != n && it.node != coins && v.acqOf(it.node) * it.qty > myCost }
-    }
+    private fun isDominantInput(v: Valuation, n: NodeId, e: Edge): Boolean = e.isSubjectInput(n, coins) { v.acqOf(it) }
 
     /** True when [n] is the dominant input at EVERY step of its liquidation chain (essence → nature
      *  rune → "alch a platebody" fails at the alch step: the platebody dominates there). */
@@ -140,7 +136,7 @@ class FindingsBuilder(
             val a = v.acqOf(n); val l = v.liqOf(n)
             val profit = l - a
             val margin = if (a > 0) (l / a - 1.0) * 100.0 else Double.POSITIVE_INFINITY
-            val thr = ActionTimeModel.throughput(path)
+            val thr = ActionTimeModel.throughput(n, acqPath, liqPath)
             val unbounded = n in v.unbounded
             val gphFirst = profit * thr.unitsFirstHour
             val gphSust = profit * thr.unitsSustained
