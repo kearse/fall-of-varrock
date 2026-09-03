@@ -30,7 +30,7 @@ class GeneralStoreCurrency : ItemCurrency(getRSCM("item.coins_995"), "coin", "co
                 return
             }
             REFUSE_COST -> {
-                p.message("The general store won't buy that — try the Trading Post (::market).")
+                p.message("The general store only buys odds and ends — sell that to other players on the Grand Exchange.")
                 return
             }
         }
@@ -38,8 +38,11 @@ class GeneralStoreCurrency : ItemCurrency(getRSCM("item.coins_995"), "coin", "co
     }
 
     companion object {
-        /** Above this cache cost an item is "valuable" — route it to the Trading Post, not here. */
-        const val MAX_BUYBACK_COST = 5000
+        /** Above this cache cost an item is "valuable" — it belongs on the player market (GE), not
+         *  here. Was 5,000; the 2026-09 arbitrage audit found that cap let the store buy back every
+         *  mid-tier crafted output (steel/mithril armour, yew bows, cut gems, finished potions) for
+         *  more than its NPC-sold inputs cost. 500 keeps the junk sink a junk sink. */
+        const val MAX_BUYBACK_COST = 500
         const val REFUSE_GUARDED = "SpecialShopGuard"
         val REFUSE_COST = "GeneralStore.cost>$MAX_BUYBACK_COST"
 
