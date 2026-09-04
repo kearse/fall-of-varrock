@@ -104,6 +104,8 @@ object WeaponEffects {
             onHitEffects[weapon.id]?.invoke(OnHitContext(pawn.world, pawn, target, pawnHit))
         }
         val resolvedClass = combatClass ?: CombatConfigs.getCombatClass(pawn)
+        // Non-weapon-slot attacker passives (the registry above is weapon-keyed).
+        BloodFury.onHit(pawn, pawnHit, resolvedClass)
         WeaponPoisons.onHit(pawn, target, pawnHit, resolvedClass, ammoId)
     }
 }

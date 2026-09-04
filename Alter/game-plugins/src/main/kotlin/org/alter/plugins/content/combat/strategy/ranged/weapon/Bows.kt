@@ -49,6 +49,29 @@ object Bows {
             Triple("item.crystal_body", 0.075, 0.15),
         ).mapNotNull { (key, dmg, acc) -> runCatching { getRSCM(key) }.getOrNull()?.let { Triple(it, dmg, acc) } }
 
+    /**
+     * Bows that generate their own ammunition (OSRS): every crystal bow / Bow of Faerdhinen and
+     * the two revenant bows. The ranged strategy must neither read nor consume the quiver for
+     * these — with arrows equipped they were being eaten every shot AND adding their ranged
+     * strength; with an empty quiver no projectile drew (player report 2026-09-03).
+     */
+    val AMMOLESS_BOWS: Set<Int> = (
+        CRYSTAL_BOWS.toList() +
+            listOf(
+                "item.crystal_bow_24123", "item.crystal_bow_basic", "item.crystal_bow_attuned", "item.crystal_bow_perfected",
+                "item.bow_of_faerdhinen_27187",
+                "item.craws_bow", "item.craws_bow_u",
+                "item.webweaver_bow", "item.webweaver_bow_u",
+            ).mapNotNull { runCatching { getRSCM(it) }.getOrNull() }
+        ).toSet()
+
+    /**
+     * The CHARGED revenant bows: +50% ranged accuracy and damage against NPCs in the Wilderness
+     * (OSRS Wiki — never against players). The bows hit "very light" without it.
+     */
+    val REVENANT_BOWS: Set<Int> = listOf("item.craws_bow", "item.webweaver_bow")
+        .mapNotNull { runCatching { getRSCM(it) }.getOrNull() }.toSet()
+
     val LONG_BOWS =
         arrayOf(
             getRSCM("item.longbow"),

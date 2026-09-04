@@ -43,13 +43,10 @@ object MagicCombatStrategy : CombatStrategy {
     ): Boolean {
         if (pawn is Player) {
             val spell = pawn.attr[Combat.CASTING_SPELL]!!
-            // Powered staves are PvM-only, as in OSRS ("This staff's spell cannot be used
-            // against other players"). They have no spellbook metadata (no runes/level row),
-            // so the requirements check below naturally skips them.
-            if (spell in PoweredStaves.SPELLS && target is Player) {
-                pawn.message("This staff's spell cannot be used against other players.")
-                return false
-            }
+            // Powered staves (tridents, sanguinesti, Tumeken's shadow) are usable against players
+            // and PK bots — operator decision 2026-09-04 (OSRS keeps the tridents PvM-only; this
+            // is a PK server). They have no spellbook metadata (no runes/level row), so the
+            // requirements check below naturally skips them.
             val requirements = MagicSpells.getMetadata(spell.id)
             if (requirements != null && !MagicSpells.canCast(pawn, requirements.lvl, requirements.items, requirements.spellbook, spellName = requirements.name)) {
                 return false
@@ -148,6 +145,7 @@ object MagicCombatStrategy : CombatStrategy {
                 val heal = damage / 2
                 if (heal > 0) {
                     pawn.setCurrentHp(minOf(pawn.getMaxHp(), pawn.getCurrentHp() + heal))
+                    pawn.graphic(SANG_HEAL_GFX) // visible feedback — "the sang doesn't heal" was a 1-in-6 nobody could see
                 }
             }
 
@@ -229,6 +227,9 @@ object MagicCombatStrategy : CombatStrategy {
 
     /** Coarse pre-filter for the AoE scan: max npc size (5) so any overlap with the 3x3 survives. */
     private const val AOE_SCAN_RADIUS = 5
+
+    /** The sanguinesti staff's heal spotanim. */
+    private const val SANG_HEAL_GFX = 1542
 
     /** Bursts + barrages hit a 3x3 in multi-combat. */
     private val AOE_SPELLS = setOf(

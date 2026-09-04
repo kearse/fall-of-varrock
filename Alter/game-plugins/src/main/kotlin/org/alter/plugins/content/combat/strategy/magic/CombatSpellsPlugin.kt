@@ -52,13 +52,13 @@ class CombatSpellsPlugin(
         pawn: Pawn,
         spellMetadata: SpellMetadata,
     ) {
-        // Powered staves (tridents/sang) fire only their own built-in attack — OSRS does not
-        // let you cast a spellbook spell while one is wielded. The combat loop arms the staff's
-        // spell each attack, so just refuse the spellbook cast here.
-        if (PoweredStaves.isWielding(player)) {
-            player.message("You can only use this weapon's own attack.")
-            return
-        }
+        // A wielded powered staff no longer refuses spellbook casts (player report 2026-09-03:
+        // "you cannot use any spell in your spellbook while having one equipped"). OSRS lets
+        // you cast — once, not autocast — and the plumbing already does exactly that:
+        // CombatConfigs.canAutocast excludes powered staves, so the autocast varbit below is never
+        // set, Combat.postAttack clears the manual spell after the swing, and the combat loop
+        // re-arms the staff's own spell on the next cycle. The old guard also sat ABOVE the
+        // CombatSpellEffects dispatch, so binds, curses and Tele Block were refused too.
         val combatSpell = CombatSpell.values.firstOrNull { spell -> spell.id == spellMetadata.paramItem }
         if (combatSpell != null) {
             player.attr[Combat.CASTING_SPELL] = combatSpell

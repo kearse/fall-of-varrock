@@ -28,22 +28,9 @@ import org.alter.rscm.RSCM.getRSCM
  */
 object CompanionPrayers {
 
-    /** OSRS prayer xp per bone — the same table as PrayerAltarPlugin's bury binding. */
-    private val BONES = listOf(
-        "item.bones" to 4.5,
-        "item.bat_bones" to 5.3,
-        "item.big_bones" to 15.0,
-        "item.babydragon_bones" to 30.0,
-        "item.wolf_bones" to 4.5,
-        "item.jogre_bones" to 15.0,
-        "item.dragon_bones" to 72.0,
-    )
-
-    private val boneIds: Map<Int, Double> by lazy {
-        BONES.mapNotNull { (key, xp) ->
-            runCatching { getRSCM(key) }.getOrNull()?.let { it to xp }
-        }.toMap()
-    }
+    /** OSRS prayer xp per bone — the SHARED table (mechanics/prayer/Bones.kt), never a second copy. */
+    private val boneIds: Map<Int, Double>
+        get() = org.alter.plugins.content.mechanics.prayer.Bones.byId
 
     private const val BURY_ANIM = 827
 

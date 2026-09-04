@@ -117,40 +117,7 @@ object MagicCombatFormula : CombatFormula {
                 hit += 3
             }
 
-            // Tumeken's shadow triples the gear magic-damage bonus, capped at +100% total
-            // (OSRS Wiki, Tumeken's shadow). Applies to whatever it casts, built-in or not.
-            var damageBonus = pawn.getMagicDamageBonus().toDouble()
-            if (PoweredStaves.isWieldingShadow(pawn)) {
-                damageBonus = Math.min(100.0, damageBonus * SHADOW_BONUS_MULTIPLIER)
-            }
-            var multiplier = 1.0 + (damageBonus / 100.0)
-
-            if (pawn.hasEquipped(
-                    EquipmentType.AMULET,
-                    "item.amulet_of_the_damned_full",
-                ) &&
-                pawn.hasEquipped(
-                    EquipmentType.WEAPON,
-                    "item.ahrims_staff",
-                    "item.ahrims_staff_25",
-                    "item.ahrims_staff_50",
-                    "item.ahrims_staff_75",
-                    "item.ahrims_staff_100",
-                ) &&
-                pawn.world.chance(1, 4)
-            ) {
-                multiplier += 0.3
-            }
-
-            if (pawn.hasEquipped(EquipmentType.WEAPON, "item.mystic_smoke_staff") && pawn.hasSpellbook(Spellbook.NORMAL)) {
-                multiplier += 0.1
-            }
-
-            if (pawn.hasEquipped(MAGE_ELITE_VOID)) {
-                multiplier += 0.025
-            }
-
-            hit *= multiplier
+            hit *= gearDamageMultiplier(pawn)
             hit = Math.floor(hit)
 
             if (pawn.hasEquipped(EquipmentType.SHIELD, "item.tome_of_fire") && spell in FIRE_SPELLS) {
@@ -190,6 +157,48 @@ object MagicCombatFormula : CombatFormula {
         // Overhead protection is NOT part of the max hit: it's applied to the rolled
         // damage at hit-application time (see dealHit), so mid-flight prayer switches work.
         return hit.toInt()
+    }
+
+    /**
+     * The player's gear magic-damage multiplier (1.0 = no bonus): the worn magic-damage % (×3,
+     * capped +100%, with Tumeken's shadow), the Ahrim's/amulet-of-the-damned proc, the mystic
+     * smoke staff on the standard book and elite void. Public so specials that have no armed
+     * spell (the nightmare staves) can build their max hit the same way [getMaxHit] does.
+     */
+    fun gearDamageMultiplier(pawn: Player): Double {
+        // Tumeken's shadow triples the gear magic-damage bonus, capped at +100% total
+        // (OSRS Wiki, Tumeken's shadow). Applies to whatever it casts, built-in or not.
+        var damageBonus = pawn.getMagicDamageBonus().toDouble()
+        if (PoweredStaves.isWieldingShadow(pawn)) {
+            damageBonus = Math.min(100.0, damageBonus * SHADOW_BONUS_MULTIPLIER)
+        }
+        var multiplier = 1.0 + (damageBonus / 100.0)
+
+        if (pawn.hasEquipped(
+                EquipmentType.AMULET,
+                "item.amulet_of_the_damned_full",
+            ) &&
+            pawn.hasEquipped(
+                EquipmentType.WEAPON,
+                "item.ahrims_staff",
+                "item.ahrims_staff_25",
+                "item.ahrims_staff_50",
+                "item.ahrims_staff_75",
+                "item.ahrims_staff_100",
+            ) &&
+            pawn.world.chance(1, 4)
+        ) {
+            multiplier += 0.3
+        }
+
+        if (pawn.hasEquipped(EquipmentType.WEAPON, "item.mystic_smoke_staff") && pawn.hasSpellbook(Spellbook.NORMAL)) {
+            multiplier += 0.1
+        }
+
+        if (pawn.hasEquipped(MAGE_ELITE_VOID)) {
+            multiplier += 0.025
+        }
+        return multiplier
     }
 
     private fun getAttackRoll(

@@ -12,6 +12,7 @@ import org.alter.game.model.entity.Pawn
 import org.alter.game.model.entity.Player
 import org.alter.plugins.content.combat.Combat
 import org.alter.plugins.content.combat.CombatConfigs
+import org.alter.plugins.content.combat.ScytheOfVitur
 import org.alter.plugins.content.combat.WeaponEffects
 import org.alter.plugins.content.combat.dealHit
 import org.alter.plugins.content.combat.formula.MeleeCombatFormula
@@ -73,6 +74,8 @@ object MeleeCombatStrategy : CombatStrategy {
             pawn.dealHit(target = target, maxHit = maxHit, landHit = landHit, delay = 0) {
                 WeaponEffects.applyOnHit(pawn, target, it, combatClass = CombatClass.MELEE)
             }
+        // Scythe of vitur: the 1x3 sweep / large-target follow-up hits (no-op for any other weapon).
+        ScytheOfVitur.extraHits(pawn, target, maxHit, world)
         // Per-swing effects (Soulreaper soul stacks) fire whether or not the hit lands.
         WeaponEffects.applyOnAttack(pawn, target)
         pawnHit.hit.addAction {
