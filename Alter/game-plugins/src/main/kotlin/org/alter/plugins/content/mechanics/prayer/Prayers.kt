@@ -39,10 +39,16 @@ object Prayers {
     const val AUGURY_UNLOCK_VARBIT = 5452
     const val PRESERVE_UNLOCK_VARBIT = 5453
 
+    /**
+     * Strip the active overhead prayer and refuse re-activation for [cycles] (dragon scimitar
+     * spec). It used to only arm the timer: the protect prayer STAYED on, and every toggle
+     * click in the window was refused and synced back on — the book visibly fought the player.
+     */
     fun disableOverheads(
         p: Player,
         cycles: Int,
     ) {
+        Prayer.values.filter { it.group == PrayerGroup.OVERHEAD }.forEach { deactivate(p, it) }
         p.timers[DISABLE_OVERHEADS] = cycles
     }
 
@@ -73,6 +79,11 @@ object Prayers {
             p.message("You cannot use overhead prayers right now.")
             return
         } else if (p.getSkills().getCurrentLevel(Skills.PRAYER) == 0) {
+            // The client toggles the varp-83 bit locally on the click; every refusal must sync
+            // it back or the book and the overhead icon disagree (player report 2026-09-03:
+            // "prayer doesn't show on but the overhead is on" — this was the one silent return).
+            p.syncVarp(ACTIVE_PRAYERS_VARP)
+            p.message("You have run out of prayer points, you can recharge at an altar.")
             return
         }
 

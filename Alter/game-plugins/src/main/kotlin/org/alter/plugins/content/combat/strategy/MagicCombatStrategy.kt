@@ -29,6 +29,7 @@ import org.alter.plugins.content.combat.strategy.magic.CombatSpell
 import org.alter.plugins.content.combat.strategy.magic.PoweredStaves
 import org.alter.plugins.content.magic.MagicSpells
 import org.alter.plugins.content.mechanics.poison.Poison
+import kotlin.math.abs
 
 /**
  * @author Tom <rspsmods@gmail.com>
@@ -162,22 +163,30 @@ object MagicCombatStrategy : CombatStrategy {
             org.alter.plugins.content.combat.PvpZones.isMultiCombat(target.tile, world)
         ) {
             val extras = ArrayList<Pawn>()
+            val t = target.tile
+            // The 3x3 splash box (SW corner + 3 wide/long). Size-aware overlap: a big npc that
+            // merely overlaps the box counts, not only one whose SW tile sits inside it (the old
+            // radius-1 test on the SW tile missed 2x2+ monsters standing beside the target).
+            val boxX = t.x - 1
+            val boxZ = t.z - 1
             world.npcs.forEach { npc ->
-                if (npc != null && npc != target && !npc.isDead() &&
-                    npc.isPlayerAttackable() && npc.combatDef.hitpoints != -1 &&
-                    npc.tile.isWithinRadius(target.tile, 1) &&
-                    Combat.canEngage(pawn, npc)
-                ) {
-                    extras.add(npc)
-                }
+                if (npc == null || npc === target || npc.index < 0) return@forEach
+                // Cheapest tests first — this is a world-wide scan per cast (the chunk npc index
+                // is never populated), so plane + a coarse box reject before any def lookup.
+                if (npc.tile.height != t.height) return@forEach
+                if (abs(npc.tile.x - t.x) > AOE_SCAN_RADIUS || abs(npc.tile.z - t.z) > AOE_SCAN_RADIUS) return@forEach
+                val size = npc.getSize()
+                if (!Combat.areOverlapping(boxX, boxZ, 3, 3, npc.tile.x, npc.tile.z, size, size)) return@forEach
+                if (npc.isDead() || !npc.isPlayerAttackable() || npc.combatDef.hitpoints == -1) return@forEach
+                // quiet: a refusal for a bystander must not print a chat line per cast.
+                if (!Combat.canEngage(pawn, npc, quiet = true)) return@forEach
+                extras.add(npc)
             }
             world.players.forEach { other ->
-                if (other != null && other != pawn && other != target && !other.isDead() &&
-                    other.tile.isWithinRadius(target.tile, 1) &&
-                    Combat.canEngage(pawn, other)
-                ) {
-                    extras.add(other)
-                }
+                if (other == null || other === pawn || other === target || other.isDead()) return@forEach
+                if (other.tile.height != t.height || !other.tile.isWithinRadius(t, 1)) return@forEach
+                if (!Combat.canEngage(pawn, other, quiet = true)) return@forEach
+                extras.add(other)
             }
             extras.forEach { victim -> castAoeHit(pawn, victim, spell, world) }
         }
@@ -217,6 +226,9 @@ object MagicCombatStrategy : CombatStrategy {
             addCombatXp(pawn, victim, damage, spell)
         }
     }
+
+    /** Coarse pre-filter for the AoE scan: max npc size (5) so any overlap with the 3x3 survives. */
+    private const val AOE_SCAN_RADIUS = 5
 
     /** Bursts + barrages hit a 3x3 in multi-combat. */
     private val AOE_SPELLS = setOf(
