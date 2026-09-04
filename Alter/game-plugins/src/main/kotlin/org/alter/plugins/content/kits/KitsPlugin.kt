@@ -11,6 +11,7 @@ import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
 import org.alter.plugins.content.combat.PvpZones
 import org.alter.plugins.content.interfaces.bank.Bank
+import org.alter.plugins.content.minigames.duel.DuelArena
 
 private val logger = KotlinLogging.logger {}
 
@@ -144,6 +145,7 @@ class KitsPlugin(
     private fun loadBlockedReason(p: Player): String? = when {
         PvpZones.isWilderness(p.tile) -> "You can't load a kit in the wilderness."
         world.instanceAllocator.getMap(p.tile) != null -> "You can't load a kit in here."
+        DuelArena.duelOf(p) != null -> "You can't load a kit during a duel."
         else -> null
     }
 

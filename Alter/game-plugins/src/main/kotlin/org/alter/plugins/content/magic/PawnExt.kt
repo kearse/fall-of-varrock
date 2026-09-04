@@ -24,6 +24,12 @@ fun Player.canTeleport(type: TeleportType): Boolean {
         return false
     }
 
+    // A staked duel is sealed: teleporting out of the arena would dodge the escrowed stake.
+    if (org.alter.plugins.content.minigames.duel.DuelArena.duelOf(this) != null) {
+        message("You can't teleport out of a duel.")
+        return false
+    }
+
     if (currWildLvl > wildLvlRestriction) {
         message("A mysterious force blocks your teleport spell!")
         message("You can't use this teleport after level $wildLvlRestriction wilderness.")

@@ -70,6 +70,12 @@ class PrayersPlugin(
          */
         Prayer.values.forEach { prayer ->
             onButton(interfaceId = 541, component = prayer.child) {
+                org.alter.plugins.content.combat.CombatRestrictions.of(player)?.let { r ->
+                    if (r.noPrayer) {
+                        player.message("Prayer is disabled in this ${r.context}.")
+                        return@onButton
+                    }
+                }
                 player.queue {
                     Prayers.toggle(player, this, prayer)
                 }
@@ -92,6 +98,12 @@ class PrayersPlugin(
          * Toggle quick-prayers.
          */
         onButton(interfaceId = 160, component = 19) {
+            org.alter.plugins.content.combat.CombatRestrictions.of(player)?.let { r ->
+                if (r.noPrayer) {
+                    player.message("Prayer is disabled in this ${r.context}.")
+                    return@onButton
+                }
+            }
             val opt = player.getInteractingOption()
             Prayers.toggleQuickPrayers(player, opt)
         }
