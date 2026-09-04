@@ -37,7 +37,7 @@ class DragonCrossbowPlugin(
             player.dealHit(target = target, maxHit = maxHit, landHit = accuracy >= world.randomDouble(), delay = delay)
 
             // Multi splash: independent rolls against every other attackable NPC in the 3x3.
-            if (PvpZones.isMulti(target.tile) || target.tile.isMulti(world)) {
+            if (PvpZones.isMultiCombat(target.tile, world)) {
                 world.npcs.forEach { npc ->
                     if (npc != null && npc != target && !npc.isDead() &&
                         npc.isPlayerAttackable() && npc.combatDef.hitpoints != -1 &&

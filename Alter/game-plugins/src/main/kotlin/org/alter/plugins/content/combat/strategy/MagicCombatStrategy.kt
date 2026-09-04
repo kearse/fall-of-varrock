@@ -159,8 +159,7 @@ object MagicCombatStrategy : CombatStrategy {
         // but only in multi-combat (OSRS). Each secondary gets an independent accuracy roll
         // and carries the same freeze/poison/drain/heal effects.
         if (pawn is Player && spell in AOE_SPELLS &&
-            (org.alter.plugins.content.combat.PvpZones.isMulti(target.tile) ||
-                target.tile.isMulti(world))
+            org.alter.plugins.content.combat.PvpZones.isMultiCombat(target.tile, world)
         ) {
             val extras = ArrayList<Pawn>()
             world.npcs.forEach { npc ->
