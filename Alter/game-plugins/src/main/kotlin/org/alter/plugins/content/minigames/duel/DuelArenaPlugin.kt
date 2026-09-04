@@ -892,7 +892,7 @@ class DuelArenaPlugin(
             p.sendRunEnergy(p.runEnergy.toInt())
             if ((p.attr[POISON_TICKS_LEFT_ATTR] ?: 0) > 0) {
                 p.attr[POISON_TICKS_LEFT_ATTR] = 0
-                Poison.setHpOrb(p, Poison.OrbState.NONE)
+                Poison.refreshHpOrb(p)
             }
             p.attr.remove(Vengeance.ACTIVE)
         }
