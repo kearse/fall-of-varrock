@@ -114,13 +114,21 @@ class AttackTabPlugin(
          * minimap spec orb silently did nothing while the combat-tab bar worked.
          */
         val onSpecialToggle: org.alter.game.plugin.Plugin.() -> Unit = {
-            val weaponId = player.equipment[EquipmentType.WEAPON.id]?.id ?: -1
-            if (SpecialAttacks.executeOnEnable(weaponId)) {
-                if (!SpecialAttacks.execute(player, null, world)) {
-                    player.message("You don't have enough power left.")
-                }
+            // The duel's No Special Attacks rule denies ARMING the spec bar (both the combat-tab
+            // bar and the minimap orb land here), which is the single gate every spec path goes
+            // through.
+            val specBan = org.alter.plugins.content.combat.CombatRestrictions.of(player)?.takeIf { it.noSpec }
+            if (specBan != null) {
+                player.message("Special attacks are disabled in this ${specBan.context}.")
             } else {
-                player.toggleVarp(SPECIAL_ATTACK_VARP)
+                val weaponId = player.equipment[EquipmentType.WEAPON.id]?.id ?: -1
+                if (SpecialAttacks.executeOnEnable(weaponId)) {
+                    if (!SpecialAttacks.execute(player, null, world)) {
+                        player.message("You don't have enough power left.")
+                    }
+                } else {
+                    player.toggleVarp(SPECIAL_ATTACK_VARP)
+                }
             }
         }
         onButton(interfaceId = 593, component = 38, logic = onSpecialToggle)

@@ -63,6 +63,7 @@ const MORE_FEATURES = [
   { icon: "📜", name: "Custom Quests", body: "Story quests that unlock the Ancient, Lunar and Arceuus spellbooks." },
   { icon: "📈", name: "Grand Exchange", body: "A player-driven market for everything worth trading." },
   { icon: "🌀", name: "Teleport Portal", body: "One-tap travel to every corner of the kingdom." },
+  { icon: "🎲", name: "Duel Arena", body: "Challenge anyone in a safe zone and stake it all in a classic one-versus-one." },
 ];
 
 const STEPS = [

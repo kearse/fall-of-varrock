@@ -69,6 +69,7 @@ object Combat {
         target: Pawn,
         combatClass: CombatClass,
     ): Boolean {
+        if (styleBanned(pawn, combatClass)) return false
         return canEngage(pawn, target) && getStrategy(combatClass).canAttack(pawn, target)
     }
 
@@ -76,7 +77,44 @@ object Combat {
         pawn: Pawn,
         target: Pawn,
         strategy: CombatStrategy,
-    ): Boolean = canEngage(pawn, target) && strategy.canAttack(pawn, target)
+    ): Boolean {
+        // The combat loop attacks through THIS overload, so the style ban must cover it too.
+        val combatClass = when (strategy) {
+            is MagicCombatStrategy -> CombatClass.MAGIC
+            is RangedCombatStrategy -> CombatClass.RANGED
+            else -> CombatClass.MELEE
+        }
+        if (styleBanned(pawn, combatClass)) return false
+        return canEngage(pawn, target) && strategy.canAttack(pawn, target)
+    }
+
+    /**
+     * Rule-bound bouts (a duel) can ban whole combat styles — the [CombatRestrictions] view — and
+     * the duel's Fun Weapons rule additionally demands a whitelisted joke weapon in hand (bare fists
+     * are NOT allowed, the classic rule; the equip point already reverts non-fun weapons, so in
+     * practice this catches punching). Messages the pawn and returns true when the swing is banned.
+     */
+    private fun styleBanned(pawn: Pawn, combatClass: CombatClass): Boolean {
+        if (pawn !is Player) return false
+        val restrictions = CombatRestrictions.of(pawn)
+        if (restrictions != null &&
+            ((combatClass == CombatClass.MELEE && restrictions.noMelee) ||
+                (combatClass == CombatClass.RANGED && restrictions.noRanged) ||
+                (combatClass == CombatClass.MAGIC && restrictions.noMagic))
+        ) {
+            pawn.message("That combat style isn't allowed in this ${restrictions.context}.")
+            return true
+        }
+        val duelRules = org.alter.plugins.content.minigames.duel.DuelArena.rulesOf(pawn)
+        if (duelRules?.funWeapons == true &&
+            pawn.equipment[EquipmentType.WEAPON.id]?.id !in
+            org.alter.plugins.content.minigames.duel.DuelRules.FUN_WEAPONS
+        ) {
+            pawn.message("You can only attack with fun weapons in this duel.")
+            return true
+        }
+        return false
+    }
 
     fun isAttackDelayReady(pawn: Pawn): Boolean = !pawn.timers.has(ATTACK_DELAY)
 
@@ -419,6 +457,19 @@ object Combat {
                 return false
             }
 
+            // Duel isolation: an active staked duel is a sealed bubble — outsiders can't hit the
+            // duelists (nor they outsiders), nobody swings during the countdown, and a companion
+            // never joins (every duel is a pure 1v1 — DuelArena.companionsOpen). This must run
+            // BEFORE the bot bypass below, or any PkBot (companions included) could pierce the duel.
+            // The refusal wording is per-case classic ("The duel hasn't started yet!" during the
+            // countdown, "That is not your opponent." for friendly fire, …).
+            if (pvp && pawn is Player) {
+                org.alter.plugins.content.minigames.duel.DuelArena.engagementBlock(pawn, target)?.let { refusal ->
+                    pawn.message(refusal)
+                    return false
+                }
+            }
+
             // Rogue Knight camp gate: a named knight refuses any real player who hasn't thinned
             // its camp's tier rogues yet ([CampClearance]). Must run BEFORE the bot bypass below,
             // which would otherwise wave the attack straight through. Because canEngage re-runs
@@ -444,7 +495,14 @@ object Combat {
                 (target is org.alter.plugins.content.bots.PkBot &&
                     target !is org.alter.plugins.content.companion.Companion)
 
-            if (pvp && !botCombat && !companionVsPlayer) {
+            // Two players in an active staked duel may hit each other anywhere (the fight is in a
+            // private, safe instance). Only that duel's two principals are unlocked — the isolation
+            // check above already rejected everything else. Deliberately NOT applied to the
+            // companionVsPlayer branch below: companions stay PvE-only, duel or no duel.
+            val duelCombat = pawn is Player &&
+                org.alter.plugins.content.minigames.duel.DuelArena.sanctionsEngagement(pawn, target)
+
+            if (pvp && !botCombat && !companionVsPlayer && !duelCombat) {
                 pawn as Player
 
                 // PvP is only allowed in the wilderness (the red zone); everywhere else is safe.
