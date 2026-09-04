@@ -3,6 +3,7 @@ package org.alter.plugins.content.bots
 import org.alter.api.EquipmentType
 import org.alter.api.PrayerIcon
 import org.alter.api.ext.getVarp
+import org.alter.api.ext.setVarbit
 import org.alter.api.ext.setVarp
 import org.alter.game.model.Tile
 import org.alter.game.model.attr.KNIGHT_KEY_ATTR
@@ -443,10 +444,16 @@ object BotBrain {
      */
     fun configureStyle(bot: PkBot) {
         if (bot.currentStyle == BotStyle.MAGIC) {
-            bot.attr[Combat.CASTING_SPELL] = resolveSpell(bot.fightLoadout.spell[BotStyle.MAGIC])
+            val spell = resolveSpell(bot.fightLoadout.spell[BotStyle.MAGIC])
+            bot.attr[Combat.CASTING_SPELL] = spell
+            // The AUTOCAST varbit is what makes the spell stick: without it Combat.postAttack treats
+            // the spell as a one-shot manual cast, strips it after the first swing, and the bot
+            // reads as MELEE (running in to poke with a wand) — "mage bots do not mage", 2026-09-03.
+            bot.setVarbit(Combat.SELECTED_AUTOCAST_VARBIT, spell.autoCastId)
             bot.setVarp(AttackTab.ATTACK_STYLE_VARP, 0)
         } else {
             bot.attr.remove(Combat.CASTING_SPELL)
+            bot.setVarbit(Combat.SELECTED_AUTOCAST_VARBIT, 0)
             bot.setVarp(AttackTab.ATTACK_STYLE_VARP, 1) // aggressive for max melee/ranged damage
         }
     }

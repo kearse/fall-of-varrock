@@ -55,6 +55,12 @@ object SpecialAttacks {
         val weaponItem = player.getEquipment(EquipmentType.WEAPON) ?: return false
         val special = attacks[weaponItem.id] ?: return false
 
+        // Energy first: a false from the target resolution below used to be reported as
+        // "You don't have enough power left" with a full bar.
+        if (AttackTab.getEnergy(player) < special.energyRequired) {
+            return false
+        }
+
         // Instant (spec-bar) activation arrives with no target: fire at the current or
         // very recent combat target if they're still adjacent and attackable — the OSRS
         // granite-maul style "click the orb, hit instantly" behaviour.
@@ -74,10 +80,6 @@ object SpecialAttacks {
                 }
                 recent
             }
-
-        if (AttackTab.getEnergy(player) < special.energyRequired) {
-            return false
-        }
 
         val combatContext = CombatContext(world, player)
         combatContext.target = resolvedTarget

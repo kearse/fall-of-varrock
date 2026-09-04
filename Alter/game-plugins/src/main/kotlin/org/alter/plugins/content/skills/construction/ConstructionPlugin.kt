@@ -63,6 +63,18 @@ class ConstructionPlugin(
             menus.keys.forEach { plank ->
                 onItemOnObj(obj = bench, item = plank) { player.queue { buildMenu(this, player, plank) } }
             }
+            // A bare click builds from the first plank type carried, or explains the loop
+            // ("Construction: not sure how to start", 2026-09-03). The cache bench's verbs vary —
+            // try the common ones; a miss just leaves use-plank-on-bench.
+            listOf("Build", "Use", "Craft", "Work-at").forEach { verb ->
+                runCatching {
+                    onObjOption(obj = bench, option = verb) {
+                        val plank = menus.keys.firstOrNull { player.inventory.contains(getRSCM(it)) }
+                        if (plank != null) player.queue { buildMenu(this, player, plank) }
+                        else player.message("Use <col=801700>planks</col> on the workbench to build furniture — the Sawmill Operator at the market sells them.")
+                    }
+                }
+            }
         } else {
             logger.warn { "construction: workbench '$bench' not in cache; construction disabled." }
         }

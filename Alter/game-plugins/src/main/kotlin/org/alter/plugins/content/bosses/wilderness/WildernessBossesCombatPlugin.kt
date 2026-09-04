@@ -148,7 +148,7 @@ class WildernessBossesCombatPlugin(
     }
 
     private fun Npc.disarm(p: Player, gfx: Int, anim: Int, maxHitIfNothing: Int) {
-        animate(anim)
+        if (anim != -1) animate(anim)
         val worn = DISARM_SLOTS.filter { p.equipment[it.id] != null }
         val slot = if (worn.isEmpty()) null else worn[world.random(worn.size - 1)]
         if (slot != null) {
@@ -211,20 +211,18 @@ class WildernessBossesCombatPlugin(
         while (canEngageCombat(target)) {
             facePawn(target)
             callHounds(target, reborn)
+            // No animate() calls: the rev-228 Vet'ion model has no frame archive (see the configs).
             if (moveToAttackRange(task, target, distance = 10, projectile = true) && isAttackDelayReady()) {
                 if (tile.isWithinRadius(target.tile, 1) && world.chance(17, 20)) {
-                    animate(5499)
                     bossMelee(target, maxHit = if (reborn) 46 else 45, style = if (reborn) CombatStyle.CRUSH else CombatStyle.STAB)
                 } else if ((attr[VETION_QUAKE_READY] ?: 0) <= world.currentCycle && world.chance(1, 5)) {
                     attr[VETION_QUAKE_READY] = world.currentCycle + 10
-                    animate(5507)
                     val centre = Tile(tile.x + 1, tile.z + 1, tile.height)
                     playersWithin(12, of = centre).forEach { p ->
                         p.hit(damage = world.random(45), delay = 0)
                         p.message("<col=ff0000>Vet'ion pummels the ground sending a shattering earthquake shockwave through you.</col>")
                     }
                 } else {
-                    animate(5499)
                     groundBarrage(target, projGfx = 280, impactGfx = 281, maxHit = 30)
                 }
                 postAttackLogic(target)
@@ -289,16 +287,10 @@ class WildernessBossesCombatPlugin(
         var target = getCombatTarget() ?: return
         while (canEngageCombat(target)) {
             facePawn(target)
-            // Donor: an every-tick 1-in-30 prayer sap while she has a target.
-            if (target is Player && world.chance(1, 30)) {
-                val cur = target.getSkills().getCurrentLevel(Skills.PRAYER)
-                target.graphic(172, 92)
-                world.spawn(target.createProjectile(this, gfx = 171, type = ProjectileType.MAGIC))
-                if (cur > 0) {
-                    target.getSkills().alterCurrentLevel(Skills.PRAYER, -(10 + (cur + 1) / 5))
-                    target.message("Your prayer was drained!")
-                }
-            }
+            // The donor sapped prayer on an every-TICK 1-in-30 roll outside the attack gate — no
+            // range, no roll, ~29 points at 99 Prayer, twice a minute while she was merely
+            // walking towards you ("drains prayer for no reason", 2026-09-03). OSRS: the drain
+            // rides her magic attack when it connects — see the magic branch below.
             if (moveToAttackRange(task, target, distance = 8, projectile = true) && isAttackDelayReady()) {
                 if (tile.isWithinRadius(target.tile, 2) && world.chance(1, 3)) {
                     animate(5319)
@@ -307,11 +299,15 @@ class WildernessBossesCombatPlugin(
                     graphic(164)
                     animate(5322)
                     val victims = playersWithin(8).let { if (target is Player && target !in it) it + target else it }
-                    victims.forEach { p -> bossProjectile(p, CombatClass.MAGIC, maxHit = 50, gfx = 165) }
+                    victims.forEach { p ->
+                        val landed = bossProjectile(p, CombatClass.MAGIC, maxHit = 50, gfx = 165)
+                        if (landed && world.chance(1, VENENATIS_SAP_ONE_IN)) sapPrayer(p)
+                    }
                     if (target !is Player) bossProjectile(target, CombatClass.MAGIC, maxHit = 50, gfx = 165)
                 }
                 if (world.chance(1, 14)) {
-                    animate(5322)
+                    // (No second animate(): it re-issued the swing sequence on the same tick and
+                    // visibly stuttered her.)
                     world.spawn(createProjectile(target, gfx = 1254, startHeight = 45, endHeight = 0, delay = 75, angle = 10, steepness = 16))
                     target.hit(damage = world.random(50), delay = 2)
                     target.stun(2) {}
@@ -325,6 +321,16 @@ class WildernessBossesCombatPlugin(
         }
         resetFacePawn()
         removeCombatTarget()
+    }
+
+    /** Venenatis' prayer sap: a flat 10-20 points off a landed magic hit (capped at what's left). */
+    private fun Npc.sapPrayer(p: Player) {
+        val cur = p.getSkills().getCurrentLevel(Skills.PRAYER)
+        if (cur <= 0) return
+        p.graphic(172, 92)
+        world.spawn(p.createProjectile(this, gfx = 171, type = ProjectileType.MAGIC))
+        p.getSkills().alterCurrentLevel(Skills.PRAYER, -minOf(cur, VENENATIS_SAP_MIN + world.random(VENENATIS_SAP_VAR)))
+        p.message("Venenatis drains your prayer!")
     }
 
     // ───────────────────────────── Scorpia ─────────────────────────────
@@ -434,13 +440,12 @@ class WildernessBossesCombatPlugin(
             facePawn(target)
             if (moveToAttackRange(task, target, distance = 8, projectile = true) && isAttackDelayReady()) {
                 forceChat(FANATIC_SHOUTS[world.random(FANATIC_SHOUTS.size - 1)])
+                // No animate(): 6619's archive has no attack sequence (see the configs).
                 if (world.chance(1, 8)) {
-                    animate(1979)
                     groundBarrage(target, projGfx = 551, impactGfx = 157, maxHit = 30, firstImpactGfx = 552)
                 } else if (target is Player && target.inventory.freeSlotCount > 0 && world.chance(1, 10)) {
-                    disarm(target, gfx = 554, anim = 1979, maxHitIfNothing = 31)
+                    disarm(target, gfx = 554, anim = -1, maxHitIfNothing = 31)
                 } else {
-                    animate(1979)
                     val landed = bossProjectile(target, CombatClass.MAGIC, maxHit = 31, gfx = 554)
                     if (landed) target.graphic(305, 0, tickDelayTo(target) * 30)
                 }
@@ -498,6 +503,11 @@ class WildernessBossesCombatPlugin(
     }
 
     companion object {
+        /** Venenatis: 1-in-N landed magic hits sap prayer, for 10..19 points. */
+        const val VENENATIS_SAP_ONE_IN = 3
+        const val VENENATIS_SAP_MIN = 10
+        const val VENENATIS_SAP_VAR = 9
+
         val VETION_HOUNDS_CALLED = AttributeKey<Boolean>()
         val VETION_QUAKE_READY = AttributeKey<Int>()
         val SCORPIA_GUARDIANS_CALLED = AttributeKey<Boolean>()

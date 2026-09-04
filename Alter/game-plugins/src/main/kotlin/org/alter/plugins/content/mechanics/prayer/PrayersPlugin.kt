@@ -7,6 +7,9 @@ import org.alter.game.model.*
 import org.alter.game.model.entity.Pawn
 import org.alter.game.plugin.*
 import org.alter.plugins.content.combat.Combat
+import io.github.oshai.kotlinlogging.KotlinLogging
+
+private val logger = KotlinLogging.logger {}
 
 class PrayersPlugin(
     r: PluginRepository,
@@ -83,14 +86,35 @@ class PrayersPlugin(
         }
 
         /**
-         * Prayer drain.
+         * Prayer drain. Prayers are OFF across a login (OSRS): varp 83 rides the autosave, so a
+         * crash/kill/force-disconnect relogged with a lit book, a draining orb and NO overhead
+         * icon or protection (the icon is not persisted). deactivateAll clears varp 83, the
+         * quick-prayer varbit, PROTECT_ITEM and the icon together. Varps are restored before
+         * login hooks run, so this wins.
          */
         onLogin {
+            Prayers.deactivateAll(player)
             player.timers[Prayers.PRAYER_DRAIN] = 1
             // No OSRS quest requirements on this server: light Chivalry/Piety in the client's prayer
             // tab (its clientscript greys them until King's Ransom reads complete). See Prayers.kt.
             if (player.getVarbit(Prayers.KINGS_RANSOM_VARBIT) != Prayers.KINGS_RANSOM_DONE) {
                 player.setVarbit(Prayers.KINGS_RANSOM_VARBIT, Prayers.KINGS_RANSOM_DONE)
+            }
+        }
+
+        // Quick-prayers copy varp 84's bitmask verbatim into varp 83, which is only right when
+        // every prayer's quickPrayerSlot equals its varbit's start bit within varp 83. Assert it
+        // at boot so a wrong slot lights the wrong prayer in the log, not in game.
+        val mismatches = Prayer.values.mapNotNull { prayer ->
+            val def = runCatching { dev.openrune.cache.CacheManager.getVarbit(prayer.varbit) }.getOrNull()
+                ?: return@mapNotNull null
+            if (def.startBit == prayer.quickPrayerSlot) null
+            else "${prayer.named}: quickPrayerSlot=${prayer.quickPrayerSlot} but varbit ${prayer.varbit} is bit ${def.startBit} of varp ${def.varp}"
+        }
+        if (mismatches.isNotEmpty()) {
+            logger.error {
+                "Quick-prayer slot/varp-83 bit mismatches (quick-prayers light the WRONG prayer):\n  " +
+                    mismatches.joinToString("\n  ")
             }
         }
 

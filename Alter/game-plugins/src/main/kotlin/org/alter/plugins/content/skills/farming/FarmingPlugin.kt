@@ -59,6 +59,22 @@ class FarmingPlugin(
             // Spawn in onWorldInit so the region/collision is loaded first (matches MiningPlugin).
             onWorldInit { patchTiles.forEach { world.spawn(DynamicObject(getRSCM(patch), OBJ_TYPE, 0, it)) } }
             crops.forEach { c -> onItemOnObj(obj = patch, item = c.seed) { player.queue { grow(this, player, c) } } }
+            // A bare click plants the best seed carried, or lists what grows here ("Farming: unsure
+            // what to do", 2026-09-03). The flowerbed's own verbs vary by cache — try the usual ones.
+            listOf("Inspect", "Rake", "Pick", "Search").forEach { verb ->
+                runCatching {
+                    onObjOption(obj = patch, option = verb) {
+                        val lvl = player.getSkills().getCurrentLevel(Skills.FARMING)
+                        val carried = crops.lastOrNull { lvl >= it.level && player.inventory.contains(getRSCM(it.seed)) }
+                        if (carried != null) {
+                            player.queue { grow(this, player, carried) }
+                        } else {
+                            val list = crops.joinToString(", ") { "${it.name} (${it.level})" }
+                            player.message("Use a seed on the bed to plant it. Grows here: $list. Seeds are sold at the market's seed stalls.")
+                        }
+                    }
+                }
+            }
         } else {
             logger.warn { "farming: patch '$patch' not in cache; farming disabled." }
         }

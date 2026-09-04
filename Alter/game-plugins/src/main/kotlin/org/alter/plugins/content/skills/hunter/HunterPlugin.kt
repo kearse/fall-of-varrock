@@ -27,7 +27,11 @@ class HunterPlugin(
     server: Server,
 ) : KotlinPlugin(r, world, server) {
 
-    private val thicket = "object.bush_patch"
+    // A 1x1 static Bush (id 2357, "Search"): visible, bordered foliage. The old thicket was the
+    // "Bush patch" farming loc (7573) — 2x2 FLAT tilled soil that blends into the swamp ground,
+    // the same invisibility Farming fixed by switching to the flowerbed — so players teleported
+    // to "nothing to catch" (2026-09-03). Verified via mapDump objinfo: static, always renders.
+    private val thicket = "object.bush_2357"
     // The Mire — collection grounds thickets (swamp, south of the graveyard working yard).
     // (The old Lumbridge home thickets near the church/graveyard were removed.)
     private val thicketTiles = listOf(
@@ -48,6 +52,12 @@ class HunterPlugin(
             onWorldInit { thicketTiles.forEach { world.spawn(DynamicObject(getRSCM(thicket), OBJ_TYPE, 0, it)) } }
             if (res("item.bird_snare")) onItemOnObj(obj = thicket, item = "item.bird_snare") { player.queue { snare(this, player) } }
             if (res("item.box_trap") && boxLadder.isNotEmpty()) onItemOnObj(obj = thicket, item = "item.box_trap") { player.queue { box(this, player) } }
+            // A bare click explains the loop (interaction is item-on-object only).
+            runCatching {
+                onObjOption(obj = thicket, option = "Search") {
+                    player.message("Something rustles in the thicket. Set a <col=801700>bird snare</col> or a <col=801700>box trap</col> on it — Wydin at the market sells both.")
+                }
+            }
         } else {
             logger.warn { "hunter: thicket '$thicket' not in cache; hunter disabled." }
         }

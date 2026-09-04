@@ -3,13 +3,14 @@ title: Slayer Bosses
 category: Minigames & Bosses
 summary: Kraken, Cerberus, the Thermonuclear Smoke Devil, Skotizo and the Demonic Gorillas - the Slayer-tier bosses and their classic uniques.
 order: 13
-updated: 2026-09-03
-infobox: Type = Slayer-tier bosses (Kraken/Cerberus/Thermy need 87/91/93 Slayer); Location = Their real lairs (teleport portal, Bosses tab); Skotizo = private instance for a dark totem; Notable drops = Trident of the seas, Kraken tentacle, Primordial/Pegasian/Eternal crystals, Smouldering stone, Occult necklace, Smoke battlestaff, Dark claw, Zenyte shard, Ballista parts, the pets
+updated: 2026-09-04
+infobox: Type = Slayer-tier bosses (Kraken/Cerberus/Thermy/Hydra need 87/91/93/95 Slayer); Location = Their real lairs (teleport portal, Bosses tab); Skotizo = private instance for a dark totem; Notable drops = Trident of the seas, Kraken tentacle, Primordial/Pegasian/Eternal crystals, Smouldering stone, Occult necklace, Smoke battlestaff, Dark claw, Zenyte shard, Ballista parts, the pets
 ---
 
 The **Slayer bosses** are the high-Slayer lairs every OSRS player grinds for their best-in-slot
-pieces, kept mechanically faithful. Three of them are gated by your **Slayer level**: the game
-refuses the attack until you have it.
+pieces, kept mechanically faithful. Four of them are gated by your **Slayer level** — Kraken 87,
+Cerberus 91, the Thermonuclear Smoke Devil 93 and the [Alchemical Hydra](/wiki/alchemical-hydra)
+95: the **portal refuses the teleport** and the game refuses the attack until you have it.
 
 ## Kraken (87 Slayer)
 
@@ -70,5 +71,12 @@ of your health — move when it raises its arms.
 
 **Uniques:** Zenyte shard (1/300), Ballista limbs, Ballista spring, Heavy frame and Monkey tail
 (1/500 each).
+
+## Karuulm Slayer Dungeon
+
+Portal → **Slayer → Karuulm Slayer Dungeon** lands you in the lift hall under Mount Karuulm.
+The whole dungeon is open: **sulphur lizards** (44 Slayer) by the entrance, **wyrms** (62) in
+the western halls, **drakes** (84) and **hydras** (95) further north — the OSRS Slayer levels
+apply to each, and every kill pays Slayer xp. No boots of stone are needed here.
 
 All uniques and pets are **Collection Log** entries; every boss counts toward `::kc`.

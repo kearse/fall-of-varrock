@@ -1,0 +1,37 @@
+# Ammo-less bows — explicit OSRS ranged bonuses (community bug batch 2026-09-03: "bows hit very
+# light: webweaver, crystal"). These bows generate their own arrows, so their entire ranged
+# strength must come from the weapon itself; the rev-228 cache's param-189 values for them are
+# unverified, so the OSRS Wiki numbers are pinned here.
+#
+# Partial documents (no equip_slot): only the named bonuses are patched, every other cache stat
+# (attack speed, weapon type, defence, requirements) is untouched.
+
+# crystal_bow (active)
+id: 23983
+equipment:
+  attack_ranged: 100
+  ranged_strength: 78
+---
+# bow_of_faerdhinen
+id: 25865
+equipment:
+  attack_ranged: 128
+  ranged_strength: 106
+---
+# bow_of_faerdhinen_c (corrupted)
+id: 25867
+equipment:
+  attack_ranged: 128
+  ranged_strength: 106
+---
+# craws_bow (charged)
+id: 22550
+equipment:
+  attack_ranged: 75
+  ranged_strength: 60
+---
+# webweaver_bow (charged)
+id: 27655
+equipment:
+  attack_ranged: 85
+  ranged_strength: 65

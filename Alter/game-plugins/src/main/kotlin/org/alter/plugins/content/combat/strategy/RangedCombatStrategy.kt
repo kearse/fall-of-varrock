@@ -66,7 +66,9 @@ object RangedCombatStrategy : CombatStrategy {
             var range =
                 when (weapon?.id) {
                     getRSCM("item.armadyl_crossbow") -> 8
-                    getRSCM("item.craws_bow"), getRSCM("item.craws_bow_u") -> 10
+                    // OSRS: both revenant bows attack from 9 tiles (webweaver was missing → 7).
+                    getRSCM("item.craws_bow"), getRSCM("item.craws_bow_u"),
+                    getRSCM("item.webweaver_bow"), getRSCM("item.webweaver_bow_u") -> 9
                     getRSCM("item.chinchompa_10033"), getRSCM("item.red_chinchompa_10034"), getRSCM("item.black_chinchompa") -> 9
                     getRSCM("item.toxic_blowpipe") -> 5 // OSRS: blowpipe attacks from 5 tiles
                     in SALAMANDERS -> 1 // salamanders are 1-tile weapons
@@ -164,7 +166,10 @@ object RangedCombatStrategy : CombatStrategy {
                     else -> EquipmentType.AMMO
                 }
 
-            val ammo = pawn.getEquipment(ammoSlot)
+            // Ammo-less bows (crystal / bowfa / revenant bows) generate their own arrow: the
+            // quiver is ignored entirely — nothing read, nothing consumed, no poison roll.
+            val ammoless = pawn.getEquipment(EquipmentType.WEAPON)?.id in Bows.AMMOLESS_BOWS
+            val ammo = if (ammoless) null else pawn.getEquipment(ammoSlot)
             if (ammoSlot == EquipmentType.AMMO) {
                 firedAmmoId = ammo?.id
             }
@@ -172,7 +177,12 @@ object RangedCombatStrategy : CombatStrategy {
             /*
              * Create a projectile based on ammo.
              */
-            val ammoProjectile = if (ammo != null) RangedProjectile.values.firstOrNull { ammo.id in it.items } else null
+            val ammoProjectile =
+                when {
+                    ammoless -> RangedProjectile.CRYSTAL_ARROW
+                    ammo != null -> RangedProjectile.values.firstOrNull { ammo.id in it.items }
+                    else -> null
+                }
             if (ammoProjectile != null) {
                 val projectile = pawn.createProjectile(target, ammoProjectile.gfx, ammoProjectile.type)
                 ammoProjectile.drawback?.let { drawback -> pawn.graphic(drawback) }

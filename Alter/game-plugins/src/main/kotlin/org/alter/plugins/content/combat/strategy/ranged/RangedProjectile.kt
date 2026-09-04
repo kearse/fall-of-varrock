@@ -37,6 +37,7 @@ import org.alter.plugins.content.combat.strategy.ranged.ammo.Knives.IRON_KNIVES
 import org.alter.plugins.content.combat.strategy.ranged.ammo.Knives.MITHRIL_KNIVES
 import org.alter.plugins.content.combat.strategy.ranged.ammo.Knives.RUNE_KNIVES
 import org.alter.plugins.content.combat.strategy.ranged.ammo.Knives.STEEL_KNIVES
+import org.alter.plugins.content.combat.strategy.ranged.weapon.Bows
 
 /**
  * @author Tom <rspsmods@gmail.com>
@@ -55,6 +56,9 @@ enum class RangedProjectile(
             Bolts.BRONZE_BOLTS + Bolts.IRON_BOLTS + Bolts.STEEL_BOLTS + Bolts.MITHRIL_BOLTS +
                 Bolts.ADAMANT_BOLTS + Bolts.RUNITE_BOLTS + Bolts.DRAGON_BOLTS + Bolts.BLURITE_BOLTS + Bolts.KEBBIT_BOLTS + Bolts.BONE_BOLTS,
     ),
+
+    /** The self-generated crystal arrow of every ammo-less bow — keyed by the BOW ids. */
+    CRYSTAL_ARROW(gfx = 249, drawback = Graphic(id = 250, height = 96), type = ProjectileType.ARROW, items = Bows.AMMOLESS_BOWS.toTypedArray()),
 
     BRONZE_ARROW(gfx = 10, drawback = Graphic(id = 19, height = 96), type = ProjectileType.ARROW, items = BRONZE_ARROWS),
     IRON_ARROW(gfx = 9, drawback = Graphic(id = 18, height = 96), type = ProjectileType.ARROW, items = IRON_ARROWS),

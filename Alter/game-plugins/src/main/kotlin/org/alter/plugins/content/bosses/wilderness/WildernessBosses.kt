@@ -20,13 +20,15 @@ import org.alter.plugins.content.bosses.lairs.LairBosses.Spawn
  */
 object WildernessBosses {
 
+    /**
+     * NB: the portal landing tile and wilderness level live ONLY in `TeleportRegistry` (they
+     * used to be duplicated here and read by nothing — two sources of truth that drifted).
+     */
     data class WildBoss(
         val key: String,
         val name: String,
         val lootKey: String,
         val spawns: List<Spawn>,
-        val landing: Tile,
-        val wildLevel: Int,
         val regions: IntArray,
         val drops: DropTable,
         val pet: String?,
@@ -70,7 +72,7 @@ object WildernessBosses {
     val CALLISTO = WildBoss(
         key = "callisto", name = "Callisto", lootKey = CALLISTO_KEY,
         spawns = listOf(Spawn(CALLISTO_KEY, CALLISTO_SPAWN, walkRadius = 6)),
-        landing = Tile(3287, 3840, 0), wildLevel = 41, regions = intArrayOf(13115, 13116, DEN_REGION),
+        regions = intArrayOf(13115, 13116, DEN_REGION),
         drops = DropTable(
             always = listOf(DropEntry("item.big_bones", 1, 1)),
             main = listOf(
@@ -100,7 +102,7 @@ object WildernessBosses {
     val VETION = WildBoss(
         key = "vetion", name = "Vet'ion", lootKey = VETION_REBORN_KEY,
         spawns = listOf(Spawn(VETION_KEY, Tile(3224, 3790, 0), walkRadius = 10, engineRespawn = false)),
-        landing = Tile(3218, 3782, 0), wildLevel = 34, regions = intArrayOf(12859),
+        regions = intArrayOf(12859),
         drops = DropTable(
             always = listOf(DropEntry("item.big_bones", 1, 1)),
             main = listOf(
@@ -122,12 +124,17 @@ object WildernessBosses {
 
     // ───────────────────────────── Venenatis ─────────────────────────────
 
-    const val VENENATIS_KEY = "npc.venenatis_6610"
+    /**
+     * The OLD-model Venenatis (6504): its archive 1390 carries the donor's 5317-5333 sequences.
+     * The 2022 id 6610 only has stand/walk on its skeleton, so the donor attack/death ids
+     * contorted it ("animation weird buggy", 2026-09-03).
+     */
+    const val VENENATIS_KEY = "npc.venenatis"
 
     val VENENATIS = WildBoss(
         key = "venenatis", name = "Venenatis", lootKey = VENENATIS_KEY,
         spawns = listOf(Spawn(VENENATIS_KEY, Tile(3339, 3741, 0), walkRadius = 9)),
-        landing = Tile(3332, 3734, 0), wildLevel = 28, regions = intArrayOf(13370),
+        regions = intArrayOf(13370),
         drops = DropTable(
             main = listOf(
                 one("item.rune_pickaxe", 14), e("item.diamond_bolts_e", 100, 100, 14), one("item.rune_2h_sword", 14), e("item.rune_knife", 60, 60, 14), one("item.dragon_2h_sword", 4),
@@ -150,10 +157,28 @@ object WildernessBosses {
     const val SCORPIA_KEY = "npc.scorpia"
     const val GUARDIAN_KEY = "npc.scorpias_guardian"
 
+    /** The 27 ambient offspring in her cave (world-spawn rows, id 6616) — statted here, never handler-owned. */
+    const val OFFSPRING_KEY = "npc.scorpias_offspring_6616"
+
+    /**
+     * Scorpia's cave doors — the cavern mouths on the surface (object 26762, `Enter`) paired with
+     * the crevices in the cave below (object 26763, `Use`), matched by the +6400 underground
+     * offset. Neither was bound: the portal was the only way in and there was no way out.
+     */
+    data class CaveDoor(val surface: Tile, val cave: Tile)
+
+    val CAVE_DOORS = listOf(
+        CaveDoor(surface = Tile(3231, 3936, 0), cave = Tile(3233, 10331, 0)),
+        CaveDoor(surface = Tile(3241, 3949, 0), cave = Tile(3243, 10352, 0)),
+        CaveDoor(surface = Tile(3231, 3951, 0), cave = Tile(3232, 10352, 0)),
+    )
+    const val CAVE_ENTRANCE_OBJ = "object.cavern"
+    const val CAVE_EXIT_OBJ = "object.crevice_26763"
+
     val SCORPIA = WildBoss(
         key = "scorpia", name = "Scorpia", lootKey = SCORPIA_KEY,
         spawns = listOf(Spawn(SCORPIA_KEY, Tile(3234, 10340, 0), walkRadius = 8)),
-        landing = Tile(3232, 10335, 0), wildLevel = 54, regions = intArrayOf(12961),
+        regions = intArrayOf(12961),
         drops = DropTable(
             main = listOf(
                 one("item.phoenix_necklace", 12), one("item.rune_chainbody", 12), one("item.rune_pickaxe", 12), one("item.rune_scimitar", 12),
@@ -175,7 +200,7 @@ object WildernessBosses {
     val CHAOS_ELEMENTAL = WildBoss(
         key = "chaos_elemental", name = "Chaos Elemental", lootKey = CHAOS_ELEMENTAL_KEY,
         spawns = listOf(Spawn(CHAOS_ELEMENTAL_KEY, Tile(3253, 3925, 0), walkRadius = 23)),
-        landing = Tile(3248, 3918, 0), wildLevel = 51, regions = intArrayOf(12861),
+        regions = intArrayOf(12861),
         drops = DropTable(
             main = listOf(
                 one("item.dragon_dagger", 8), one("item.dragon_2h_sword", 3),
@@ -202,7 +227,7 @@ object WildernessBosses {
     val CHAOS_FANATIC = WildBoss(
         key = "chaos_fanatic", name = "Chaos Fanatic", lootKey = CHAOS_FANATIC_KEY,
         spawns = listOf(Spawn(CHAOS_FANATIC_KEY, Tile(2980, 3847, 0), walkRadius = 8)),
-        landing = Tile(2976, 3840, 0), wildLevel = 41, regions = intArrayOf(11835, 11836),
+        regions = intArrayOf(11835, 11836),
         drops = DropTable(
             always = listOf(DropEntry("item.bones", 1, 1)),
             main = listOf(
@@ -227,7 +252,7 @@ object WildernessBosses {
     val CRAZY_ARCHAEOLOGIST = WildBoss(
         key = "crazy_archaeologist", name = "Crazy Archaeologist", lootKey = CRAZY_ARCHAEOLOGIST_KEY,
         spawns = listOf(Spawn(CRAZY_ARCHAEOLOGIST_KEY, Tile(2977, 3702, 0), walkRadius = 8)),
-        landing = Tile(2972, 3696, 0), wildLevel = 23, regions = intArrayOf(11833),
+        regions = intArrayOf(11833),
         drops = DropTable(
             always = listOf(DropEntry("item.bones", 1, 1)),
             main = listOf(

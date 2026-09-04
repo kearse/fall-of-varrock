@@ -63,8 +63,13 @@ object WorldSpawns {
     var skippedNameDrift = 0
         private set
 
-    /** Bankers etc. stand at their booths; other humans wander lightly, monsters more. */
-    private val STATIONARY = listOf("banker", "grand exchange clerk", "poll booth")
+    /**
+     * Bankers etc. stand at their booths; other humans wander lightly, monsters more. Fishing
+     * spots are npcs standing on WATER: with a walk radius they can only ever step onto the
+     * bank (canTraverse validates the destination, and no water tile is walkable), so the
+     * River Lum's rod spots drifted ashore one step at a time (player report 2026-09-03).
+     */
+    private val STATIONARY = listOf("banker", "grand exchange clerk", "poll booth", "fishing spot")
 
     fun load(
         spawnsPath: String = "../data/cfg/spawns/npc_spawns.json",
@@ -208,6 +213,15 @@ class WorldSpawnsPlugin(
             "npc.king_black_dragon_2642",
             "npc.king_black_dragon_6502",
             "npc.king_black_dragon_12440",
+            // Bespoke-owned VARIANT ids the wiki dump carries on the exact tiles our boss plugins
+            // spawn their own ids on. They survive the death-handler prune (different id) and the
+            // id-keyed dedupe, so the player sees a second, unattackable Cerberus standing inside
+            // the real one, and ambient Kraken whirlpools re-appear after a region idle sweep and
+            // re-arm the "protected by its tentacles" gate (player reports 2026-09-03).
+            "npc.cerberus_5863",
+            "npc.cerberus_5866",
+            "npc.whirlpool_496",
+            "npc.whirlpool_5534",
         ).mapNotNull { key -> runCatching { getRSCM(key) }.getOrNull() }.toSet()
         val it = WorldSpawns.byRegion.iterator()
         while (it.hasNext()) {

@@ -54,6 +54,13 @@ data class NpcCombatDef(
     val projectile: Int = -1,
     /** Impact gfx shown on the target for ranged/magic npcs (-1 = none). */
     val impactGfx: Int = -1,
+    /**
+     * Server-side attackability override for npcs whose cache def carries an `Attack`
+     * action but a combat level of 0 (Skotizo's awakened altars): `NpcType.isAttackable()`
+     * refuses them, so the plugin that owns their life cycle opts them in here. Only
+     * honoured while [hitpoints] > 0 — see `Npc.isPlayerAttackable()`.
+     */
+    val forceAttackable: Boolean = false,
 ) {
     companion object {
         private const val DEFAULT_HITPOINTS = 10

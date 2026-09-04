@@ -13,6 +13,7 @@ import org.alter.game.model.entity.AreaSound
 import org.alter.game.model.entity.Npc
 import org.alter.game.model.entity.Pawn
 import org.alter.game.model.entity.Player
+import org.alter.game.model.entity.isPlayerAttackable
 import org.alter.game.model.queue.QueueTask
 import org.alter.game.model.timer.ACTIVE_COMBAT_TIMER
 import org.alter.game.model.timer.ATTACK_DELAY
@@ -347,9 +348,15 @@ object Combat {
             }
         }
 
+    /**
+     * @param quiet suppress the refusal chat messages. AoE enumerations (bursts/barrages, the
+     *   d2h/dcb sweeps, the scythe arc) run this per bystander, which used to print a refusal
+     *   line for every npc/player in the splash that couldn't be hit.
+     */
     fun canEngage(
         pawn: Pawn,
         target: Pawn,
+        quiet: Boolean = false,
     ): Boolean {
         if (pawn.isDead() || target.isDead()) {
             return false
@@ -362,7 +369,7 @@ object Combat {
         if (pawn is Player && target is org.alter.plugins.content.companion.Companion &&
             org.alter.plugins.content.companion.CompanionRegistry.owns(pawn, target)
         ) {
-            pawn.message("That's your own companion.")
+            if (!quiet) pawn.message("That's your own companion.")
             return false
         }
 
@@ -375,7 +382,7 @@ object Combat {
         ) {
             val now = pawn.world.currentCycle
             val last = pawn.attr[COMPANION_VETO_MSG_CYCLE_ATTR] ?: -COMPANION_VETO_MSG_COOLDOWN
-            if (now - last >= COMPANION_VETO_MSG_COOLDOWN) {
+            if (!quiet && now - last >= COMPANION_VETO_MSG_COOLDOWN) {
                 pawn.attr[COMPANION_VETO_MSG_CYCLE_ATTR] = now
                 pawn.message("You can't attack another player's companion.")
             }
@@ -399,12 +406,12 @@ object Combat {
             }
 
             if (pawn.hasWeaponType(WeaponType.BULWARK) && pawn.getAttackStyle() == 3) {
-                pawn.message("Your bulwark is in its defensive state and can't be used to attack.")
+                if (!quiet) pawn.message("Your bulwark is in its defensive state and can't be used to attack.")
                 return false
             }
 
             if (pawn.invisible && pvp) {
-                pawn.message("You can't attack while invisible.")
+                if (!quiet) pawn.message("You can't attack while invisible.")
                 return false
             }
         } else if (pawn is Npc) {
@@ -417,12 +424,12 @@ object Combat {
             if (!target.isSpawned()) {
                 return false
             }
-            if (!target.def.isAttackable() || target.combatDef.hitpoints == -1) {
-                (pawn as? Player)?.message("You can't attack this npc.")
+            if (!target.isPlayerAttackable() || target.combatDef.hitpoints == -1) {
+                if (!quiet) (pawn as? Player)?.message("You can't attack this npc.")
                 return false
             }
             if (pawn is Player && target.combatDef.slayerReq > pawn.getSkills().getBaseLevel(Skills.SLAYER)) {
-                pawn.message("You need a higher Slayer level to know how to wound this monster.")
+                if (!quiet) pawn.message("You need a higher Slayer level to know how to wound this monster.")
                 return false
             }
             // Single-way: an npc already fighting ANOTHER player can't be piled — the
@@ -438,7 +445,7 @@ object Combat {
                     npcTarget !is org.alter.plugins.content.bots.PkBot &&
                     npcTarget.index >= 0 && !npcTarget.isDead()
                 ) {
-                    pawn.message("Someone else is fighting that.")
+                    if (!quiet) pawn.message("Someone else is fighting that.")
                     return false
                 }
             }
@@ -507,7 +514,7 @@ object Combat {
 
                 // PvP is only allowed in the wilderness (the red zone); everywhere else is safe.
                 if (!PvpZones.isWilderness(pawn.tile) || !PvpZones.isWilderness(target.tile)) {
-                    pawn.message("You can't attack players here.")
+                    if (!quiet) pawn.message("You can't attack players here.")
                     return false
                 }
 
@@ -516,7 +523,7 @@ object Combat {
                 val minLvl = Math.max(Skills.MIN_COMBAT_LVL, pawn.combatLevel - wildLvl)
                 val maxLvl = Math.min(Skills.MAX_COMBAT_LVL, pawn.combatLevel + wildLvl)
                 if (target.combatLevel !in minLvl..maxLvl) {
-                    pawn.message("Your level difference is too great to attack ${target.username} here.")
+                    if (!quiet) pawn.message("Your level difference is too great to attack ${target.username} here.")
                     return false
                 }
 
@@ -530,11 +537,11 @@ object Combat {
                     val theirTarget = target.getCombatTarget()
                         ?.takeIf { it is Player && it !is org.alter.plugins.content.bots.PkBot }
                     if (theirTarget != null && theirTarget != pawn) {
-                        pawn.message("${target.username} is already in combat.")
+                        if (!quiet) pawn.message("${target.username} is already in combat.")
                         return false
                     }
                     if (pjBlocked(pawn, target, playersOnly = true)) {
-                        pawn.message("${target.username} is already in combat.")
+                        if (!quiet) pawn.message("${target.username} is already in combat.")
                         return false
                     }
                 }

@@ -39,6 +39,14 @@ object StoryBosses {
 
     const val RUN_TICKS = 1500
 
+    /**
+     * Ticks a run stays open after the boss dies so the loot can be picked up (60 s). It used to
+     * be 10 — six seconds — and the loot lay on the instance floor, which the allocator wiped
+     * ~15 s later ("teleported out before I could loot", 2026-09-03). Loot now drops at the
+     * killer's feet.
+     */
+    const val LOOT_GRACE_TICKS = 100
+
     // ───────────────────────────── Zemouregal (fallen palace, region 12854) ─────────────────────────────
 
     const val ZEMOUREGAL_KEY = "npc.zemouregal"

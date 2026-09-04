@@ -78,7 +78,7 @@ class StoryBossesPlugin(
             val killer = dead.attr[KILLER_ATTR]?.get() as? Player ?: p
             run.done = true
             dead.forceChat("This is not the end, child of the Adventurer...")
-            BossDeath.payout(world, killer, Tile(dead.tile.x, dead.tile.z, dead.tile.height), key = "zemouregal", name = StoryBosses.ZEMOUREGAL_NAME, drops = StoryBosses.ZEMOUREGAL_DROPS)
+            BossDeath.payout(world, killer, Tile(killer.tile.x, killer.tile.z, killer.tile.height), key = "zemouregal", name = StoryBosses.ZEMOUREGAL_NAME, drops = StoryBosses.ZEMOUREGAL_DROPS)
             killer.addPoints(PointKind.WAR_EFFORT, StoryBosses.ZEMOUREGAL_WAR_EFFORT)
             WarForge.awardCommendations(killer, StoryBosses.ZEMOUREGAL_COMMENDATIONS)
             if (world.chance(1, StoryBosses.ZEMOUREGAL_EMBER_ONE_IN)) {
@@ -88,7 +88,10 @@ class StoryBossesPlugin(
             val kills = (p.attr[StoryBosses.ZEMOUREGAL_KILLS] ?: 0) + 1
             p.attr[StoryBosses.ZEMOUREGAL_KILLS] = kills
             p.message("<col=801700>Zemouregal withdraws.</col> Times driven from the palace: $kills." + if (run.allyLost) " Arrav did not stand to see it." else " Arrav stands.")
-            world.queue { wait(10); leave(p, "The wards fall quiet. You step back into the fallen palace.") }
+            world.queue {
+                wait(StoryBosses.LOOT_GRACE_TICKS)
+                if (runs[p] === run) leave(p, "The wards fall quiet. You step back into the fallen palace.")
+            }
         }
         onNpcDeath(StoryBosses.CONVERGENCE_KEY) {
             val dead = npc
@@ -96,14 +99,21 @@ class StoryBossesPlugin(
             val p = run.owner
             val killer = dead.attr[KILLER_ATTR]?.get() as? Player ?: p
             run.done = true
-            BossDeath.payout(world, killer, Tile(dead.tile.x, dead.tile.z, dead.tile.height), key = "convergence", name = StoryBosses.CONVERGENCE_NAME, drops = StoryBosses.CONVERGENCE_DROPS)
+            // Loot at the KILLER's feet, not the boss tile: the boss stands in the instance and the
+            // player is kicked out on a timer — anything left on that floor is wiped with the map.
+            BossDeath.payout(world, killer, Tile(killer.tile.x, killer.tile.z, killer.tile.height), key = "convergence", name = StoryBosses.CONVERGENCE_NAME, drops = StoryBosses.CONVERGENCE_DROPS)
             killer.addPoints(PointKind.WAR_EFFORT, StoryBosses.CONVERGENCE_WAR_EFFORT)
             WarForge.awardCommendations(killer, StoryBosses.CONVERGENCE_COMMENDATIONS)
             WarForge.awardEmbers(killer, StoryBosses.CONVERGENCE_EMBERS)
             val kills = (p.attr[StoryBosses.CONVERGENCE_KILLS] ?: 0) + 1
             p.attr[StoryBosses.CONVERGENCE_KILLS] = kills
             p.message("<col=801700>The Convergence collapses into the conduits.</col> Fractures sealed: $kills." + if (kills == 1) " The Realm will know you as a Fracture-Sealer." else "")
-            world.queue { wait(10); leave(p, "The dungeon exhales. You climb back to the Digsite.") }
+            p.message("You have a minute to gather the spoils before the dungeon closes.")
+            world.queue {
+                wait(StoryBosses.LOOT_GRACE_TICKS)
+                // Only this run: the player may have left and started another in the meantime.
+                if (runs[p] === run) leave(p, "The dungeon exhales. You climb back to the Digsite.")
+            }
         }
     }
 
@@ -250,7 +260,8 @@ class StoryBossesPlugin(
         }
         run.ally?.let { if (!it.isDead() && it.index >= 0) world.remove(it) }
         if (world.instanceAllocator.getMap(p.tile) != null) {
-            p.moveTo(if (run.kind == Kind.ZEMOUREGAL) StoryBosses.HUB_LANDING else StoryBosses.DUNGEON_EXIT)
+            val exit = if (run.kind == Kind.ZEMOUREGAL) StoryBosses.HUB_LANDING else StoryBosses.DUNGEON_EXIT
+            p.moveTo(world.snapToWalkable(exit, maxRadius = 3))
         }
         p.message(message)
     }

@@ -24,10 +24,11 @@ object TeleportRegistry {
     /** Landing tile for not-yet-built destinations (never used — guarded by isBuilt). */
     private val PLACEHOLDER = Tile(3222, 3218, 0)
 
+    /** @param route optional [TransportRoutes] key — the portal refuses the row while it is locked. */
     private fun built(
         key: String, name: String, cat: TeleportCategory, tile: Tile,
-        danger: DangerTag, wild: Int? = null,
-    ) = TeleportDestination(key, name, cat, tile, danger, wild)
+        danger: DangerTag, wild: Int? = null, route: String? = null,
+    ) = TeleportDestination(key, name, cat, tile, danger, wild, routeKey = route)
 
     private fun soon(
         key: String, name: String, cat: TeleportCategory,
@@ -60,11 +61,16 @@ object TeleportRegistry {
         built("skill_mining", "Mining", SKILLING, Tile(3214, 9617, 0), SAFE_ZONE),       // cellar mine room
         built("skill_smithing", "Smithing", SKILLING, Tile(3210, 9620, 0), SAFE_ZONE),   // cellar furnace + anvils
         built("skill_construction", "Construction", SKILLING, Tile(3244, 3202, 0), SAFE_ZONE), // beside the yard workbench (ConstructionPlugin.benchTile 3245,3202)
-        built("skill_hunter", "Hunter", SKILLING, Tile(3231, 3172, 0), SAFE_ZONE),       // the Croaking Thickets
+        built("skill_hunter", "Hunter", SKILLING, Tile(3231, 3170, 0), SAFE_ZONE),       // S of the Croaking Thickets (3231,3172 landed ON the agility dispenser's doorstep)
         built("skill_agility", "Agility", SKILLING, Tile(3227, 3174, 0), SAFE_ZONE),     // the Mire Run dispenser
         built("skill_herblore", "Herblore", SKILLING, Tile(3240, 3193, 0), SAFE_ZONE),   // Mire yard, W of the pad (r12849 dump: clear)
         built("skill_fletching", "Fletching", SKILLING, Tile(3246, 3193, 0), SAFE_ZONE), // Mire yard, E of the pad (r12849 dump: clear)
         built("skill_thieving", "Thieving", SKILLING, Tile(3242, 3189, 0), SAFE_ZONE),   // Mire yard stall row (SwampStallSpawnPlugin) — the supply-skilling hub
+        // Runecraft and Farming have DISTINCT destinations (the fire altar; the flowerbeds 18 tiles
+        // south of the pad) that the hub row never signposted ("no direction", 2026-09-03).
+        // Appended at the END of the category so older client mirrors keep their row indices.
+        built("skill_runecraft", "Runecraft", SKILLING, Tile(3237, 3199, 0), SAFE_ZONE), // in front of the fire altar (3238,3200)
+        built("skill_farming", "Farming", SKILLING, Tile(3238, 3176, 0), SAFE_ZONE),     // the flowerbed patches (FarmingPlugin)
 
         // ── 🗡️ The War ─────────────────────────────────────────────────────────
         built("varrock_raid", "Varrock Raid", WAR, Tile(3213, 3424, 0), HOSTILE),        // hostile target city (§3C)
@@ -97,7 +103,7 @@ object TeleportRegistry {
         built("vorkath", "Vorkath", BOSSES, Tile(2272, 4052, 0), HOSTILE),
         // Lands by the lab rocks — climb them (or ::hydra) for the solo instanced
         // chamber and its chemical vents (Kronos port #3).
-        built("alchemical_hydra", "Alchemical Hydra", BOSSES, Tile(1351, 10249, 0), HOSTILE),
+        built("alchemical_hydra", "Alchemical Hydra", BOSSES, Tile(1351, 10249, 0), HOSTILE, route = SlayerTeleportGatesPlugin.ROUTE_HYDRA),
         // God Wars throne rooms (Kronos port #5, the package port) — shared-world camps,
         // landing at each room's edge. TUNE stand-on tiles in-game.
         built("gwd_graardor", "General Graardor", BOSSES, Tile(2871, 5352, 2), HOSTILE),
@@ -105,19 +111,23 @@ object TeleportRegistry {
         built("gwd_kreearra", "Kree'arra", BOSSES, Tile(2838, 5295, 2), HOSTILE),
         built("gwd_zilyana", "Commander Zilyana", BOSSES, Tile(2907, 5263, 0), HOSTILE),
         // Wilderness-boss package (Kronos port #8): the donor's surface lairs, all multi-way.
-        // Landing tiles sit a few squares off each spawn — TUNE in-game.
+        // Landing tiles sit OUTSIDE each boss's aggro radius (+ its size): the old squares were
+        // 5-8 tiles from a size-5 boss with radius 8, so the boss had you on the tick you arrived
+        // ("upon tele in you get smacked backwards", 2026-09-03). Callisto now lives in his Den
+        // (PR #342): this row lands at the surface Cave Entrance (3291,3849) — safe, he's below.
         built("callisto", "Callisto", BOSSES, Tile(3287, 3840, 0), WILD, wild = 41),
-        built("vetion", "Vet'ion", BOSSES, Tile(3218, 3782, 0), WILD, wild = 34),
-        built("venenatis", "Venenatis", BOSSES, Tile(3332, 3734, 0), WILD, wild = 28),
+        built("vetion", "Vet'ion", BOSSES, Tile(3213, 3776, 0), WILD, wild = 34),
+        built("venenatis", "Venenatis", BOSSES, Tile(3326, 3728, 0), WILD, wild = 28),
         built("scorpia", "Scorpia", BOSSES, Tile(3232, 10335, 0), WILD, wild = 54),
-        built("chaos_elemental", "Chaos Elemental", BOSSES, Tile(3248, 3918, 0), WILD, wild = 51),
+        built("chaos_elemental", "Chaos Elemental", BOSSES, Tile(3240, 3910, 0), WILD, wild = 51),
         built("chaos_fanatic", "Chaos Fanatic", BOSSES, Tile(2976, 3840, 0), WILD, wild = 41),
         built("crazy_archaeologist", "Crazy Archaeologist", BOSSES, Tile(2972, 3696, 0), WILD, wild = 23),
-        // Slayer-boss package (Kronos port #9). Kraken/Cerberus/Thermy are Slayer-gated (87/91/93);
-        // Skotizo needs a dark totem at the catacombs altar. TUNE stand-on tiles in-game.
-        built("kraken", "Kraken", BOSSES, Tile(2276, 10030, 0), HOSTILE),
-        built("cerberus", "Cerberus", BOSSES, Tile(1240, 1240, 0), HOSTILE),
-        built("thermonuclear_smoke_devil", "Thermonuclear Smoke Devil", BOSSES, Tile(2360, 9445, 0), HOSTILE),
+        // Slayer-boss package (Kronos port #9). Kraken/Cerberus/Thermy are Slayer-gated (87/91/93)
+        // at the portal too (SlayerTeleportGatesPlugin routes); Skotizo needs a dark totem at the
+        // catacombs altar. TUNE stand-on tiles in-game.
+        built("kraken", "Kraken", BOSSES, Tile(2276, 10030, 0), HOSTILE, route = SlayerTeleportGatesPlugin.ROUTE_KRAKEN),
+        built("cerberus", "Cerberus", BOSSES, Tile(1240, 1240, 0), HOSTILE, route = SlayerTeleportGatesPlugin.ROUTE_CERBERUS),
+        built("thermonuclear_smoke_devil", "Thermonuclear Smoke Devil", BOSSES, Tile(2360, 9445, 0), HOSTILE, route = SlayerTeleportGatesPlugin.ROUTE_THERMY),
         built("skotizo", "Skotizo (Catacombs altar)", BOSSES, Tile(1665, 10046, 0), HOSTILE),
         built("demonic_gorillas", "Demonic Gorillas", BOSSES, Tile(2090, 5660, 0), HOSTILE),
         soon("theatre_of_blood", "Theatre of Blood", BOSSES),
@@ -144,7 +154,10 @@ object TeleportRegistry {
 
         // ── 🩸 Slayer ──────────────────────────────────────────────────────────
         built("slayer_master", "Slayer Master", SLAYER, Tile(3222, 3214, 0), SAFE_ZONE), // in front of Vannaka's GE-hub desk
-        soon("slayer_cave", "Slayer Cave", SLAYER),
+        // Karuulm Slayer Dungeon (operator decision 2026-09-04: the whole dungeon, OSRS Slayer levels):
+        // lands at the lift's arrival hall beside the cave exit (1311,10185); wyrms W, drakes/hydras N.
+        // Flipped from the "Slayer Cave" placeholder at the same index (client mirror synced).
+        built("karuulm_dungeon", "Karuulm Slayer Dungeon", SLAYER, Tile(1311, 10184, 0), HOSTILE),
         soon("resource_contracts", "Resource Contracts", SLAYER),
 
         // ── 🎮 Mini-Games ──────────────────────────────────────────────────────
@@ -154,9 +167,11 @@ object TeleportRegistry {
         // Lands beside TzHaar-Mej-Jal at the live cave entrance — talk to him (or ::arena)
         // to start a run, ::jad to practice (Kronos port #4: the real 63-wave engine).
         built("fight_cave", "Fight Cave", MINIGAMES, Tile(2413, 5117, 0), SAFE_ZONE),
-        // Lands in Neypotzli's antechamber — the three Moon chambers and the Lunar Chest are a
-        // short walk (Team 4 PR 5, wiki-spec build; instanced solo fights).
-        built("moons_of_peril", "Moons of Peril", MINIGAMES, Tile(1440, 9570, 0), HOSTILE),
+        // Lands in Neypotzli's antechamber corridor on PLANE 1 — the walkway level that runs north to
+        // the Moon monolith hub and the three chamber doors. Plane 0 at the same square is a sealed
+        // dead-end corridor ("teleport coords not correct, -1 height", 2026-09-03; map dump r5781).
+        // Mirror of Moons.ANTECHAMBER — keep both in step.
+        built("moons_of_peril", "Moons of Peril", MINIGAMES, Tile(1440, 9570, 1), HOSTILE),
         // Lands at the Digsite winches — Operate one to descend into a private Senntisten
         // expedition (Team 4 PR 7, FoV-original).
         built("senntisten_expedition", "Senntisten Expedition", MINIGAMES, Tile(3368, 3426, 0), HOSTILE),

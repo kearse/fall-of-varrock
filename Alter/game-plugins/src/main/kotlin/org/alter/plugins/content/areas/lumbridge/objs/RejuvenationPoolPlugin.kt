@@ -83,7 +83,7 @@ class RejuvenationPoolPlugin(
         // Cure active poison/venom, but leave a running immunity (negative counter) untouched.
         if ((player.attr[POISON_TICKS_LEFT_ATTR] ?: 0) > 0) {
             player.attr[POISON_TICKS_LEFT_ATTR] = 0
-            Poison.setHpOrb(player, Poison.OrbState.NONE)
+            Poison.refreshHpOrb(player)
         }
 
         player.animate(DRINK_ANIM)

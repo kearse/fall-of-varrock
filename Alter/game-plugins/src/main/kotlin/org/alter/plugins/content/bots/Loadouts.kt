@@ -130,7 +130,7 @@ object BotLoadouts {
                 EquipmentType.GLOVES to "item.barrows_gloves", // not Zaryte vambraces (Nex)
                 EquipmentType.BOOTS to "item.pegasian_boots",
                 EquipmentType.RING to "item.archers_ring_i",
-                EquipmentType.AMMO to "item.dragon_arrow",
+                EquipmentType.AMMO to "item.amethyst_arrow",
             ),
             BotStyle.MAGIC to gb(
                 EquipmentType.HEAD to "item.ancestral_hat",
@@ -339,7 +339,7 @@ object BotLoadouts {
                 EquipmentType.GLOVES to "item.barrows_gloves", // not Zaryte vambraces (Nex)
                 EquipmentType.BOOTS to "item.pegasian_boots",
                 EquipmentType.RING to "item.archers_ring_i",
-                EquipmentType.AMMO to "item.dragon_arrow",
+                EquipmentType.AMMO to "item.amethyst_arrow",
             ),
             // Melee switch — swapped in to finish a target that's overheading missiles.
             // Bandos + neitiznot faceguard (NOT Torva — reserved for Nex).
@@ -807,7 +807,7 @@ object BotLoadouts {
                 EquipmentType.GLOVES to "item.barrows_gloves",
                 EquipmentType.BOOTS to "item.pegasian_boots",
                 EquipmentType.RING to "item.archers_ring_i",
-                EquipmentType.AMMO to "item.dragon_arrow",
+                EquipmentType.AMMO to "item.amethyst_arrow",
             ),
         ),
         meleeSpecRotation = listOf("item.armadyl_godsword", "item.granite_maul"),
@@ -1136,7 +1136,7 @@ object BotLoadouts {
                 EquipmentType.GLOVES to "item.black_dhide_vambraces",
                 EquipmentType.BOOTS to "item.snakeskin_boots",
                 EquipmentType.RING to "item.archers_ring_i",
-                EquipmentType.AMMO to "item.dragon_arrow",
+                EquipmentType.AMMO to "item.amethyst_arrow",
             ),
         ),
         meleeSpecRotation = listOf("item.vestas_longsword", "item.granite_maul"),

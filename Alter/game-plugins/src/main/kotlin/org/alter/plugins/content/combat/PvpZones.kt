@@ -1,7 +1,9 @@
 package org.alter.plugins.content.combat
 
+import org.alter.api.ext.isMulti
 import org.alter.game.model.Area
 import org.alter.game.model.Tile
+import org.alter.game.model.World
 
 /**
  * The PvP zoning model (from the hand-drawn map):
@@ -51,6 +53,21 @@ object PvpZones {
         Area(3245, 3214, 3267, 3256),  // east bank of the Lum (Lumbridge ↔ Al Kharid) PK pocket
     ) + CONTESTED
 
+    /**
+     * UNDERGROUND wilderness — the boss caves under the deep wild. [Area] is x/z-only and every
+     * box above lives at surface latitudes, so a cave at z≈10300 read as SAFE ground (Scorpia's
+     * lair had no overlay, no PvP, no skull and no death drops — player report 2026-09-03).
+     * Each box is one map region at the OSRS fixed level; all are multi-way (none intersect
+     * [SINGLE]). MIRROR: `TileExt.getWildernessLevel` (game-api, drives `canTeleport`) carries
+     * the same four boxes — keep them in step.
+     */
+    private val WILD_DUNGEONS: List<Pair<Area, Int>> = listOf(
+        Area(3200, 10304, 3263, 10367) to 54, // r12961 Scorpia's cave
+        Area(3200, 10176, 3263, 10239) to 34, // r12959 Vet'ion's Rest
+        Area(3264, 10176, 3327, 10239) to 41, // r13215 Callisto's Den
+        Area(3328, 10240, 3391, 10367) to 28, // r13472/13473 Venenatis' dens
+    )
+
     /** YELLOW — single-combat areas. */
     private val SINGLE: List<Area> = listOf(
         Area(3100, 3350, 3320, 3550),  // shallow core of the main wild
@@ -74,6 +91,10 @@ object PvpZones {
         // (gap 1–17 from the city box) — where new players train. Carved out of the wilderness so the
         // immediate frontier is NEVER PvP; only the hobgoblin/knight band beyond it is. TUNABLE.
         Area(3182, 3172, 3290, 3280),
+        // The Digsite (operator decision 2026-09-04): the Senntisten expedition winches and the
+        // story-boss exits land here, and the red map put them at wilderness level 22 multi —
+        // players were dumped into PvP ground straight out of an instance. Safe pocket.
+        Area(3340, 3400, 3400, 3450),
     )
 
     /** Extra safe boxes registered at runtime (e.g. bank booths discovered in the world). */
@@ -95,7 +116,10 @@ object PvpZones {
         org.alter.plugins.content.hostilezones.HostileZones.all
     }
 
-    private fun inRed(t: Tile): Boolean = WILDERNESS.any { it.contains(t) } || hostile.any { it.area.contains(t) }
+    private fun inRed(t: Tile): Boolean =
+        WILDERNESS.any { it.contains(t) } ||
+            WILD_DUNGEONS.any { it.first.contains(t) } ||
+            hostile.any { it.area.contains(t) }
     private fun inCarveout(t: Tile): Boolean = SAFE_INSIDE_RED.any { it.contains(t) } || safeDynamic.any { it.contains(t) }
     private fun inSingle(t: Tile): Boolean = SINGLE.any { it.contains(t) } || hostile.any { it.singleCombat && it.area.contains(t) }
 
@@ -109,9 +133,20 @@ object PvpZones {
 
     fun isMulti(t: Tile): Boolean = isWilderness(t) && !inSingle(t)
 
+    /**
+     * Multi-combat ground for AoE purposes (bursts/barrages, chinchompas, the d2h/dcb sweeps):
+     * the multi wilderness OR a PvE region/chunk a content plugin flagged with
+     * `setMultiCombatRegion` (boss lairs, the GWD throne rooms) — the latter is also what lights
+     * the client's crossed-swords icon, so the two always agree.
+     */
+    fun isMultiCombat(t: Tile, world: World): Boolean = isMulti(t) || t.isMulti(world)
+
     /** Wilderness level by depth pushed into the wild (0 if not in the wild). */
     fun wildernessLevel(t: Tile): Int {
         if (!isWilderness(t)) return 0
+        // Underground lairs carry a FIXED level — checked before the depth math, which would
+        // otherwise clamp a z≈10300 tile to the maximum.
+        WILD_DUNGEONS.firstOrNull { it.first.contains(t) }?.let { return it.second }
         hostile.firstOrNull { it.area.contains(t) }?.wildLevel?.let { return it } // hostile zones: fixed level (null = depth)
         if (CONTESTED.any { it.contains(t) }) return FRONTIER_LEVEL // §4: the town frontier is capped, not open any-level
         val depth = t.z - WILD_SOUTH_EDGE_Z

@@ -129,7 +129,7 @@ object CollectionLogRegistry {
         // Wilderness-boss package (WildernessBosses): each table's log = true rares + pet.
         Category("callisto", "Callisto", "npc.callisto", listOf("item.dragon_pickaxe", "item.tyrannical_ring", "item.callisto_cub")),
         Category("vetion", "Vet'ion", "npc.vetion", listOf("item.dragon_pickaxe", "item.ring_of_the_gods", "item.vetion_jr")),
-        Category("venenatis", "Venenatis", "npc.venenatis_6610", listOf("item.dragon_pickaxe", "item.treasonous_ring", "item.venenatis_spiderling")),
+        Category("venenatis", "Venenatis", "npc.venenatis", listOf("item.dragon_pickaxe", "item.treasonous_ring", "item.venenatis_spiderling")),
         Category("scorpia", "Scorpia", "npc.scorpia", listOf("item.odium_shard_3", "item.malediction_shard_3", "item.scorpias_offspring")),
         Category("chaos_elemental", "Chaos Elemental", "npc.chaos_elemental_2054", listOf("item.dragon_pickaxe", "item.pet_chaos_elemental")),
         Category("chaos_fanatic", "Chaos Fanatic", "npc.chaos_fanatic", listOf("item.odium_shard_1", "item.malediction_shard_1")),

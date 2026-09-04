@@ -199,6 +199,12 @@ class GodwarsPlugin(
     )
 
     init {
+        // The throne rooms are multi-way (OSRS): bursts/barrages splash the minions and the
+        // client shows the crossed swords. Registered at plugin init — MultiwayCombatPlugin
+        // reads the registry from its own world-init hook. (Player report 2026-09-03:
+        // "barrage does not hit multi" — outside the wilderness only flagged regions do.)
+        intArrayOf(11346, 11347, 11602, 11603).forEach { setMultiCombatRegion(it) }
+
         onWorldInit {
             // The four throne-room regions (Armadyl/Bandos plane 2, Sara plane 0,
             // Zamorak plane 2) — force-loaded so collision exists before any player

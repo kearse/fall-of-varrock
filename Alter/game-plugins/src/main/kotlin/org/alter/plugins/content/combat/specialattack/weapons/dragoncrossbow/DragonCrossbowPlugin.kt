@@ -4,6 +4,7 @@ import org.alter.api.ext.isMulti
 import org.alter.game.Server
 import org.alter.game.model.World
 import org.alter.game.model.entity.Npc
+import org.alter.game.model.entity.isPlayerAttackable
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
 import org.alter.plugins.content.combat.Combat
@@ -36,10 +37,10 @@ class DragonCrossbowPlugin(
             player.dealHit(target = target, maxHit = maxHit, landHit = accuracy >= world.randomDouble(), delay = delay)
 
             // Multi splash: independent rolls against every other attackable NPC in the 3x3.
-            if (PvpZones.isMulti(target.tile) || target.tile.isMulti(world)) {
+            if (PvpZones.isMultiCombat(target.tile, world)) {
                 world.npcs.forEach { npc ->
                     if (npc != null && npc != target && !npc.isDead() &&
-                        npc.def.isAttackable() && npc.combatDef.hitpoints != -1 &&
+                        npc.isPlayerAttackable() && npc.combatDef.hitpoints != -1 &&
                         npc.tile.isWithinRadius(target.tile, 1) &&
                         Combat.canEngage(player, npc)
                     ) {

@@ -3,8 +3,8 @@ title: Alchemical Hydra
 category: Minigames & Bosses
 summary: The lab-grown hydra of Karuulm - four phases, chemical vents that strip its defences, and the claw-tier loot table.
 order: 8
-updated: 2026-08-29
-infobox: Type = Solo boss (instanced); Location = Karuulm lab (teleport portal, Bosses tab); Hitpoints = 1,100; Requirement = Ranged or magic + prayer switching; Notable drops = Hydra's claw, Hydra tail, Hydra leather, brimstone ring pieces, Ikkle hydra
+updated: 2026-09-04
+infobox: Type = Solo boss (instanced); Location = Karuulm lab (teleport portal, Bosses tab); Hitpoints = 1,100; Requirement = 95 Slayer, ranged or magic + prayer switching; Notable drops = Hydra's claw, Hydra tail, Hydra leather, brimstone ring pieces, Ikkle hydra
 ---
 
 The **Alchemical Hydra** is the third fight of the rebuilt roster — a four-phase chemical
@@ -16,7 +16,9 @@ quarter damage** until you lure it over the right chemical vent, and standing ov
 
 Teleport portal → **Bosses → Alchemical Hydra** lands you on the dungeon floor just south of
 the lab — walk north up the narrow passage and **climb the rocks** (or type `::hydra`).
-Climbing back out puts you on the same floor. Dying inside is a **safe death**.
+Climbing back out puts you on the same floor. You need **95 Slayer**: the portal refuses the
+trip and the hydra refuses the attack below it, as in OSRS. Dying inside is a **safe death**.
+The rest of the [Karuulm Slayer Dungeon](/wiki/slayer-bosses) is open too (portal → Slayer).
 
 ## The four phases
 

@@ -28,7 +28,6 @@ class RunecraftPlugin(
 ) : KotlinPlugin(r, world, server) {
 
     private val altar = "object.fire_altar"
-    private val altarTile = Tile(3235, 3204, 0)
     private val essences = listOf("item.rune_essence", "item.pure_essence").filter { res(it) }
 
     // multiStep = the level interval at which one EXTRA rune is produced per essence (OSRS
@@ -46,12 +45,28 @@ class RunecraftPlugin(
     ).filter { res(it.rune) }
 
     init {
-        // No home altar spawn — the Mire muster-yard fire altar @3152,3162 serves Runecraft now
+        // No home altar spawn — the Mire's fire altar at (3238,3200) (SwampHubPlugin) serves Runecraft
         // (binding is global by object id). The old Lumbridge home altar near the church was removed.
         if (res(altar) && ladder.isNotEmpty() && essences.isNotEmpty()) {
             essences.forEach { ess ->
                 onItemOnObj(obj = altar, item = ess) { player.queue { craft(this, player, ess) } }
             }
+            // A bare click crafts whatever essence is carried, or explains the loop ("no direction",
+            // 2026-09-03): the cache altar's own verbs are Light/hidden — "Craft-rune" is what OSRS
+            // altars offer, so try that and fall back to the first verb the cache actually has.
+            val bound = listOf("Craft-rune", "Light").any { verb ->
+                runCatching { onObjOption(obj = altar, option = verb) { craftOrHint(player) } }.isSuccess
+            }
+            if (!bound) logger.info { "runecraft: fire altar has no clickable verb in the cache; use-essence-on-altar only." }
+        }
+    }
+
+    private fun craftOrHint(player: Player) {
+        val carried = essences.firstOrNull { player.inventory.contains(getRSCM(it)) }
+        if (carried != null) {
+            player.queue { craft(this, player, carried) }
+        } else {
+            player.message("The altar hums. Bring <col=801700>rune essence</col> — mine it from the two essence rocks just south (3237,3190) — and use it on the altar.")
         }
     }
 

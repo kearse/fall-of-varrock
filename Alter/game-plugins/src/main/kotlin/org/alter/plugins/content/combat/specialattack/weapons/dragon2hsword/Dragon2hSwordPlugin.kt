@@ -4,6 +4,7 @@ import org.alter.api.ext.isMulti
 import org.alter.game.Server
 import org.alter.game.model.World
 import org.alter.game.model.entity.Pawn
+import org.alter.game.model.entity.isPlayerAttackable
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
 import org.alter.plugins.content.combat.Combat
@@ -37,10 +38,10 @@ class Dragon2hSwordPlugin(
             // The sweep only exists in multi-combat, and every extra victim must pass the
             // same engagement rules as a normal attack (PvP zoning, attackable flag) —
             // otherwise the spec is a way to damage bystanders anywhere in the world.
-            if (PvpZones.isMulti(player.tile) || player.tile.isMulti(world)) {
+            if (PvpZones.isMultiCombat(player.tile, world)) {
                 world.npcs.forEach { npc ->
                     if (npc != null && !npc.isDead() &&
-                        npc.def.isAttackable() && npc.combatDef.hitpoints != -1 &&
+                        npc.isPlayerAttackable() && npc.combatDef.hitpoints != -1 &&
                         max(abs(player.tile.x - npc.tile.x), abs(player.tile.z - npc.tile.z)) <= 1 &&
                         Combat.canEngage(player, npc)
                     ) {

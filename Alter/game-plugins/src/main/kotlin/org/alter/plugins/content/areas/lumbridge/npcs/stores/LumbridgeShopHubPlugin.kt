@@ -21,6 +21,9 @@ import org.alter.plugins.content.mechanics.shops.bindVendorOptions
 import org.alter.plugins.content.mechanics.shops.bindVendorTalkAndTrade
 import org.alter.plugins.content.economy.grandexchange.GeCurrencyPrices
 import org.alter.plugins.content.economy.grandexchange.currencyBuyShop
+import org.alter.plugins.content.magic.TeleportType
+import org.alter.plugins.content.magic.canTeleport
+import org.alter.plugins.content.magic.teleport
 import org.alter.plugins.content.war.ApprenticeArmoury
 import org.alter.plugins.content.war.WarNpcNames
 import org.alter.rscm.RSCM.getRSCM
@@ -127,8 +130,13 @@ class LumbridgeShopHubPlugin(
         when (options(player, "View runes & staves", "Teleport me to the rune altar", "Nevermind", title = "Magic Store")) {
             1 -> openOrClosed(player, MAGIC_STORE)
             2 -> {
-                chatNpc(player, "Mind the essence — craft any rune your Runecraft level allows.")
-                player.moveTo(RUNE_ALTAR)
+                // Explicit npc + title: the bare chatNpc fell back to the interacting-npc attr, which
+                // the option wait can clear — it then THREW, the coroutine died and the move never
+                // ran ("the mage shop guy is broken when he teleports you", 2026-09-03).
+                chatNpc(player, "Mind the essence — craft any rune your Runecraft level allows.", npc = getRSCM("npc.zaff"), title = "Magic Shop")
+                if (player.canTeleport(TeleportType.MODERN)) {
+                    player.teleport(world.snapToWalkable(RUNE_ALTAR, maxRadius = 3), TeleportType.MODERN)
+                }
             }
         }
     }

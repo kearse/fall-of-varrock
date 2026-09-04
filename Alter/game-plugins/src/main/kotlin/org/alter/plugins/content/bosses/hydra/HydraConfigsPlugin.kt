@@ -59,6 +59,9 @@ class HydraConfigsPlugin(
                 anims {
                     death = 8257 // the collapse the donor plays at death-start (corpse transform skipped)
                 }
+                // OSRS: 95 Slayer to wound it (Combat.canEngage enforces slayerReq; SlayerPlugin
+                // only pays slayer xp when the def carries one). Missing until 2026-09-03.
+                slayerData { levelRequirement = 95; xp = 1100.0 }
             }
         }
     }

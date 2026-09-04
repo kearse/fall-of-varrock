@@ -16,6 +16,7 @@ import org.alter.game.model.combat.XpMode
 import org.alter.game.model.entity.Npc
 import org.alter.game.model.entity.Pawn
 import org.alter.game.model.entity.Player
+import org.alter.game.model.entity.isPlayerAttackable
 import org.alter.plugins.content.combat.Combat
 import org.alter.plugins.content.combat.CombatConfigs
 import org.alter.plugins.content.combat.WeaponEffects
@@ -28,6 +29,7 @@ import org.alter.plugins.content.combat.strategy.magic.CombatSpell
 import org.alter.plugins.content.combat.strategy.magic.PoweredStaves
 import org.alter.plugins.content.magic.MagicSpells
 import org.alter.plugins.content.mechanics.poison.Poison
+import kotlin.math.abs
 
 /**
  * @author Tom <rspsmods@gmail.com>
@@ -41,13 +43,10 @@ object MagicCombatStrategy : CombatStrategy {
     ): Boolean {
         if (pawn is Player) {
             val spell = pawn.attr[Combat.CASTING_SPELL]!!
-            // Powered staves are PvM-only, as in OSRS ("This staff's spell cannot be used
-            // against other players"). They have no spellbook metadata (no runes/level row),
-            // so the requirements check below naturally skips them.
-            if (spell in PoweredStaves.SPELLS && target is Player) {
-                pawn.message("This staff's spell cannot be used against other players.")
-                return false
-            }
+            // Powered staves (tridents, sanguinesti, Tumeken's shadow) are usable against players
+            // and PK bots — operator decision 2026-09-04 (OSRS keeps the tridents PvM-only; this
+            // is a PK server). They have no spellbook metadata (no runes/level row), so the
+            // requirements check below naturally skips them.
             val requirements = MagicSpells.getMetadata(spell.id)
             if (requirements != null && !MagicSpells.canCast(pawn, requirements.lvl, requirements.items, requirements.spellbook, spellName = requirements.name)) {
                 return false
@@ -146,6 +145,7 @@ object MagicCombatStrategy : CombatStrategy {
                 val heal = damage / 2
                 if (heal > 0) {
                     pawn.setCurrentHp(minOf(pawn.getMaxHp(), pawn.getCurrentHp() + heal))
+                    pawn.graphic(SANG_HEAL_GFX) // visible feedback — "the sang doesn't heal" was a 1-in-6 nobody could see
                 }
             }
 
@@ -158,26 +158,33 @@ object MagicCombatStrategy : CombatStrategy {
         // but only in multi-combat (OSRS). Each secondary gets an independent accuracy roll
         // and carries the same freeze/poison/drain/heal effects.
         if (pawn is Player && spell in AOE_SPELLS &&
-            (org.alter.plugins.content.combat.PvpZones.isMulti(target.tile) ||
-                target.tile.isMulti(world))
+            org.alter.plugins.content.combat.PvpZones.isMultiCombat(target.tile, world)
         ) {
             val extras = ArrayList<Pawn>()
+            val t = target.tile
+            // The 3x3 splash box (SW corner + 3 wide/long). Size-aware overlap: a big npc that
+            // merely overlaps the box counts, not only one whose SW tile sits inside it (the old
+            // radius-1 test on the SW tile missed 2x2+ monsters standing beside the target).
+            val boxX = t.x - 1
+            val boxZ = t.z - 1
             world.npcs.forEach { npc ->
-                if (npc != null && npc != target && !npc.isDead() &&
-                    npc.def.isAttackable() && npc.combatDef.hitpoints != -1 &&
-                    npc.tile.isWithinRadius(target.tile, 1) &&
-                    Combat.canEngage(pawn, npc)
-                ) {
-                    extras.add(npc)
-                }
+                if (npc == null || npc === target || npc.index < 0) return@forEach
+                // Cheapest tests first — this is a world-wide scan per cast (the chunk npc index
+                // is never populated), so plane + a coarse box reject before any def lookup.
+                if (npc.tile.height != t.height) return@forEach
+                if (abs(npc.tile.x - t.x) > AOE_SCAN_RADIUS || abs(npc.tile.z - t.z) > AOE_SCAN_RADIUS) return@forEach
+                val size = npc.getSize()
+                if (!Combat.areOverlapping(boxX, boxZ, 3, 3, npc.tile.x, npc.tile.z, size, size)) return@forEach
+                if (npc.isDead() || !npc.isPlayerAttackable() || npc.combatDef.hitpoints == -1) return@forEach
+                // quiet: a refusal for a bystander must not print a chat line per cast.
+                if (!Combat.canEngage(pawn, npc, quiet = true)) return@forEach
+                extras.add(npc)
             }
             world.players.forEach { other ->
-                if (other != null && other != pawn && other != target && !other.isDead() &&
-                    other.tile.isWithinRadius(target.tile, 1) &&
-                    Combat.canEngage(pawn, other)
-                ) {
-                    extras.add(other)
-                }
+                if (other == null || other === pawn || other === target || other.isDead()) return@forEach
+                if (other.tile.height != t.height || !other.tile.isWithinRadius(t, 1)) return@forEach
+                if (!Combat.canEngage(pawn, other, quiet = true)) return@forEach
+                extras.add(other)
             }
             extras.forEach { victim -> castAoeHit(pawn, victim, spell, world) }
         }
@@ -217,6 +224,12 @@ object MagicCombatStrategy : CombatStrategy {
             addCombatXp(pawn, victim, damage, spell)
         }
     }
+
+    /** Coarse pre-filter for the AoE scan: max npc size (5) so any overlap with the 3x3 survives. */
+    private const val AOE_SCAN_RADIUS = 5
+
+    /** The sanguinesti staff's heal spotanim. */
+    private const val SANG_HEAL_GFX = 1542
 
     /** Bursts + barrages hit a 3x3 in multi-combat. */
     private val AOE_SPELLS = setOf(

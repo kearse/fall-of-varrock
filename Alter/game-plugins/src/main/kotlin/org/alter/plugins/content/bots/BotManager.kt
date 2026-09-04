@@ -4,8 +4,13 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import net.rsprot.protocol.common.client.OldSchoolClientType
 import org.alter.api.EquipmentType
 import org.alter.api.SkullIcon
+import org.alter.api.Spellbook
 import org.alter.api.cfg.Varbit
+import org.alter.api.ext.setSpellbook
 import org.alter.api.ext.setVarbit
+import org.alter.plugins.content.combat.strategy.ranged.weapon.BowType
+import org.alter.plugins.content.combat.strategy.ranged.weapon.CrossbowType
+import org.alter.plugins.content.magic.MagicSpells
 import org.alter.game.info.PlayerInfo
 import org.alter.game.model.PlayerUID
 import org.alter.game.model.Tile
@@ -91,6 +96,13 @@ object BotManager {
         applyStats(bot, loadout.stats)
         applyInventory(bot, loadout.inventory)
         AttackTab.setEnergy(bot, 100) // full special-attack energy to open with
+        // Spellcasting prerequisites MagicSpells.canCast checks on every cast: the right spellbook
+        // (every bot spell is an ancient) and no rune cost (companions already get the same varbit).
+        // Without these a mage bot's cast was refused before it ever fired.
+        if (loadout.spell.isNotEmpty()) {
+            bot.setSpellbook(Spellbook.ANCIENTS)
+            bot.setVarbit(MagicSpells.INF_RUNES_VARBIT, 1)
+        }
 
         // moveTo touches playerInfo.avatar, so it must run after the alloc above.
         bot.homeTile = tile
@@ -105,6 +117,7 @@ object BotManager {
         // every gear-swap re-sync re-applies it from this field, so the skull persists for the bot's life.
         bot.skullIcon = SkullIcon.WHITE.id
 
+        validateLoadout(loadout)
         // Dress it in its base style; this also syncs the appearance block so clients see the gear.
         equipStyle(bot, loadout.baseStyle)
         // Configure casting-spell / attack-style for the base style (so MAGIC-base bots autocast).
@@ -132,6 +145,34 @@ object BotManager {
         bot.npcInfo.updateCoord(-1, tile.height, tile.x, tile.z)
         bot.worldEntityInfo.updateCoord(-1, tile.height, tile.x, tile.z)
         return true
+    }
+
+    private val validatedLoadouts = HashSet<String>()
+
+    /**
+     * Once per loadout key: every RANGED gear block's bow/crossbow must accept the ammo it wears,
+     * or the ranged strategy refuses the attack forever and the bot just stands there — a chat
+     * message a clientless bot can never read ("some rangers do not range", 2026-09-03: four
+     * loadouts paired a magic shortbow (i) with dragon arrows).
+     */
+    private fun validateLoadout(loadout: BotLoadout) {
+        if (!validatedLoadouts.add(loadout.key)) return
+        loadout.gear.forEach { (style, gear) ->
+            val weaponKey = gear[EquipmentType.WEAPON] ?: return@forEach
+            val ammoKey = gear[EquipmentType.AMMO]
+            val weapon = runCatching { getRSCM(weaponKey) }.getOrNull() ?: return@forEach
+            val ammo = ammoKey?.let { runCatching { getRSCM(it) }.getOrNull() }
+            val bow = BowType.values.firstOrNull { it.item == weapon }
+            val crossbow = CrossbowType.values.firstOrNull { it.item == weapon }
+            val bad = when {
+                bow != null && bow.ammo.isNotEmpty() && ammo !in bow.ammo -> true
+                crossbow != null && ammo !in crossbow.ammo -> true
+                else -> false
+            }
+            if (bad) {
+                logger.error { "bot loadout '${loadout.key}' [$style]: $weaponKey cannot fire ${ammoKey ?: "an empty quiver"} — this bot will never attack in that style." }
+            }
+        }
     }
 
     /** Replace the bot's worn equipment with a different style's full set and re-render it. */

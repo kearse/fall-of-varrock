@@ -150,6 +150,13 @@ object RangedCombatFormula : CombatFormula {
             hit = Math.floor(hit)
         }
 
+        // Craw's / webweaver bow: +50% vs Wilderness npcs.
+        val revenant = revenantBowMultiplier(player, target)
+        if (revenant != 1.0) {
+            hit *= revenant
+            hit = Math.floor(hit)
+        }
+
         if (specialAttackMultiplier == 1.0) {
             val multiplier =
                 when {
@@ -201,6 +208,13 @@ object RangedCombatFormula : CombatFormula {
         val crystalAccuracy = crystalSetBonus(player, damage = false)
         if (crystalAccuracy > 0.0) {
             hit *= 1.0 + crystalAccuracy
+            hit = Math.floor(hit)
+        }
+
+        // Craw's / webweaver bow: +50% vs Wilderness npcs.
+        val revenant = revenantBowMultiplier(player, target)
+        if (revenant != 1.0) {
+            hit *= revenant
             hit = Math.floor(hit)
         }
 
@@ -268,10 +282,32 @@ object RangedCombatFormula : CombatFormula {
 
     private fun getEquipmentRangedBonus(pawn: Pawn): Double =
         when (pawn) {
-            is Player -> pawn.getRangedStrengthBonus().toDouble()
+            is Player -> {
+                var str = pawn.getRangedStrengthBonus()
+                // An ammo-less bow never fires the quiver, so the quiver's ranged strength must
+                // not count either (the summed bonuses include every worn slot).
+                if (pawn.getEquipment(EquipmentType.WEAPON)?.id in Bows.AMMOLESS_BOWS) {
+                    pawn.getEquipment(EquipmentType.AMMO)?.let { ammo ->
+                        str -= ammo.getDef().bonuses.getOrNull(RANGED_STRENGTH_BONUS_INDEX) ?: 0
+                    }
+                }
+                str.toDouble()
+            }
             is Npc -> pawn.getRangedStrengthBonus().toDouble()
             else -> throw IllegalArgumentException("Invalid pawn type. $pawn")
         }
+
+    /** Index of ranged strength in an item def's bonus array (matches `Player.getRangedStrengthBonus`). */
+    private const val RANGED_STRENGTH_BONUS_INDEX = 11
+
+    /** Revenant bows: +50% damage and accuracy vs NPCs in the Wilderness while charged (OSRS Wiki). */
+    private const val REVENANT_WILDERNESS_MULTIPLIER = 1.5
+
+    private fun revenantBowMultiplier(player: Player, target: Pawn): Double =
+        if (target is Npc &&
+            player.getEquipment(EquipmentType.WEAPON)?.id in Bows.REVENANT_BOWS &&
+            org.alter.plugins.content.combat.PvpZones.isWilderness(player.tile)
+        ) REVENANT_WILDERNESS_MULTIPLIER else 1.0
 
     private fun getEquipmentAttackBonus(pawn: Pawn): Double {
         return pawn.getBonus(BonusSlot.ATTACK_RANGED).toDouble()

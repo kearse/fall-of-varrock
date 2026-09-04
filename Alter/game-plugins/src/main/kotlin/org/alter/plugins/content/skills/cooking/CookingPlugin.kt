@@ -33,9 +33,6 @@ class CookingPlugin(
         val level: Int, val xp: Double, val noBurn: Int,
     )
 
-    private val range = "object.cooking_range"
-    private val rangeTile = Tile(3239, 3246, 0) // by the river fishing spots
-
     private val cookables: List<Cookable> = listOf(
         Cookable("item.raw_shrimps", "item.shrimps", "shrimps", 1, 30.0, 34),
         Cookable("item.raw_trout", "item.trout", "trout", 15, 70.0, 50),
@@ -46,17 +43,16 @@ class CookingPlugin(
         Cookable("item.raw_shark", "item.shark", "shark", 80, 210.0, 99),
     ).filter { resolves(it.raw) && resolves(it.cooked) }
 
-    // Range objects that should cook: the river/convenience range (spawned below) + the static Range
-    // inside the Mire's house (id 26181, aliased object.kitchen_range) so cooking works there.
-    // Firemaking fires (object.fire_3769) are also cookable — food could not be cooked on a fire
-    // at all before, since only ranges were bound.
+    // Range objects that should cook: any cooking range + the static Range inside the Mire's house
+    // (id 26181, aliased object.kitchen_range) so cooking works there. Firemaking fires
+    // (object.fire_3769) are also cookable — food could not be cooked on a fire at all before,
+    // since only ranges were bound.
+    // The old "river convenience range" spawned at (3239,3246) stood IN the River Lum (the map
+    // dump shows that column is water) — "there is a cooking range in the middle of the river",
+    // 2026-09-03. Removed: the Mire's house range and any fire cover cooking.
     private val ranges = listOf("object.cooking_range", "object.kitchen_range", "object.fire_3769")
 
     init {
-        // Spawn the river/convenience range; the house range is a static map object already in the world.
-        if (resolves(range)) {
-            onWorldInit { world.spawn(DynamicObject(id = getRSCM(range), type = OBJ_TYPE, rot = 0, tile = rangeTile)) }
-        }
         // Bind cooking on every range object that resolves.
         ranges.filter { resolves(it) }.forEach { rangeKey ->
             cookables.forEach { c ->
