@@ -3,7 +3,7 @@ title: Magic - what works and how
 category: Magic
 summary: Utility spells, curses and freezes, Vengeance, Tele Block, and where to get runes.
 order: 2
-updated: 2026-07-19
+updated: 2026-09-04
 ---
 
 Combat spells across all four books work - including sticky autocast - plus a wide set of utility magic. This page covers what's live and the details that matter.
@@ -52,7 +52,9 @@ Wielding an elemental staff is an **endless supply of its own rune** - it isn't 
 
 ## Powered staves
 
-The **Trident of the seas**, **Trident of the swamp** and **Sanguinesti staff** carry their own built-in spell: just attack and they cast it automatically - no runes, no autocast setup, at the staff's own faster 4-tick speed. Max hit scales with your Magic level (and magic damage bonus). The swamp trident has a 1-in-4 chance to **envenom** its target; the Sanguinesti has a 1-in-6 chance to **heal you for half the damage** it deals. Their spells are PvM-only - they refuse to fire at other players, as in OSRS.
+The **Trident of the seas**, **Trident of the swamp**, **Sanguinesti staff** and **Tumeken's shadow** carry their own built-in spell: just attack and they cast it automatically - no runes, no autocast setup, at the staff's own faster 4-tick speed. Max hit scales with your Magic level (and magic damage bonus). The swamp trident has a 1-in-4 chance to **envenom** its target; the Sanguinesti has a 1-in-6 chance to **heal you for half the damage** it deals (you'll see the heal flash). All four work **against other players and the wilderness bots** here. You can still cast any **spellbook spell** - a barrage, a bind, a curse, Tele Block - while wielding one: it casts once, then the staff's own attack resumes.
+
+The **Volatile** and **Eldritch nightmare staves** have their special attacks (55% each): **Immolate** is a single heavy magic hit scaled by your Magic level (up to 58 before magic damage bonuses) with +50% accuracy; **Invocate** hits for up to 44 and **restores prayer** by half the damage dealt, up to 120 points.
 
 **Defensive casting** trains Defence as a mage: your casts award Magic + Defence XP (1.33 Magic + 1 Defence per damage, instead of the usual 2 Magic). Turn it on either way:
 

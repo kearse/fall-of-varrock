@@ -3,7 +3,7 @@ title: The teleport portal
 category: Getting Started
 summary: The home portal's nine tabs cover everything - skilling, bosses, wilderness tiers, minigames - with danger tags.
 order: 4
-updated: 2026-08-28
+updated: 2026-09-04
 ---
 
 The **teleport portal** at Lumbridge home is the fastest way anywhere. It's organised into tabbed categories, every destination carries a **danger tag**, and it remembers where you've been.
@@ -20,12 +20,12 @@ The **teleport portal** at Lumbridge home is the fastest way anywhere. It's orga
 | Tab | What's in it |
 | --- | --- |
 | Basics | Home, market, prayer altar |
-| Skilling | The Mire hub + a stop for every skill |
+| Skilling | The Mire hub + a stop for every skill, including Runecraft (the fire altar) and Farming (the flowerbeds) |
 | War | Varrock raid, frontiers, Goblin Warren, Recruit Trials |
-| Bosses | **Corp Beast (Event)** - the [war world boss](/wiki/corporeal-beast). The retired [roster](/wiki/bosses-overview) shows greyed out as **coming soon**, lighting up as each rebuilt fight returns |
+| Bosses | **Corp Beast (Event)** - the [war world boss](/wiki/corporeal-beast) - and every rebuilt fight as it returns: the [lair](/wiki/bosses-overview), [wilderness](/wiki/wilderness-bosses), [slayer](/wiki/slayer-bosses), GWD and story bosses. Slayer bosses need the Slayer level (Kraken 87, Cerberus 91, Thermy 93, Hydra 95) before the portal will take you |
 | Wilderness | The [bot zones](/wiki/pk-bots-and-highwaymen) by depth, level 5 → 55 |
-| Slayer | Vannaka and slayer content |
-| Minigames | [Wizard Tower](/wiki/wizard-tower) - the rest of the tab is greyed-out **coming soon** entries |
+| Slayer | Vannaka and the **Karuulm Slayer Dungeon** (wyrms, drakes, hydras, sulphur lizards) |
+| Minigames | [Wizard Tower](/wiki/wizard-tower), Fight Cave, Moons of Peril, Senntisten, Pest Control, Wintertodt - the rest of the tab is greyed-out **coming soon** entries |
 | Events | Coming soon |
 | Donator | Coming soon |
 

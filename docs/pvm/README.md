@@ -108,3 +108,8 @@ as-is on the same day (`docs/pvm/cache-value-expectation.md`).
 Theatre of Blood, Chambers of Xeric, Nightmare, Nex, Muspah, Grotesque Guardians,
 Sarachnis (no donor, wiki builds later); Barrows tunnel-door maze (v2 of PR 1);
 Castle Wars / LMS / Duel Arena (Team 5 territory); PvP Training Arena.
+
+**Follow-ups from the September community bug batch** (`docs/community-feedback-2026-09.md`):
+move Callisto / Vet'ion / Venenatis into the 2022 dens (needs a cache repack for the new-model
+animations); Wilderness Agility Course lap + the other unbound wildy shortcuts; multi-combat flags
+for the catacombs and Karuulm; the client's stale `WildernessZones.java` boundary lines.

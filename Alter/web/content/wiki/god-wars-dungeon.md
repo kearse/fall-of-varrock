@@ -3,7 +3,7 @@ title: God Wars Dungeon
 category: Minigames & Bosses
 summary: All four throne rooms are back at once - the generals, their bodyguards, and the godsword grind.
 order: 10
-updated: 2026-09-01
+updated: 2026-09-04
 infobox: Type = Shared-world boss camps; Location = Four throne rooms (teleport portal, Bosses tab); Bosses = Graardor, Zilyana, K'ril, Kree'arra; Notable drops = Godsword hilts + shards, Bandos/Armadyl armour, Zamorakian spear, Staff of the dead, Armadyl crossbow, four god pets
 ---
 
@@ -29,6 +29,11 @@ These rooms are **hostile ground** - the whole camp wakes up when you walk in.
 
 Kill the bodyguards first or fight in a corner - every caster and ranger in the room
 will be on you from the moment you land.
+
+Each throne room has its god's **altar**: **Pray-at** restores your prayer points in full, once
+every **ten minutes** (the cooldown is shared by all four altars and survives logging out). The
+altars take no bone offerings. The rooms are **multi-combat**, so bursts and barrages splash the
+bodyguards.
 
 ## Loot - the godsword grind
 
