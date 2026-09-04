@@ -32,7 +32,8 @@ private val logger = KotlinLogging.logger {}
  *     crypt on plane 3. Digging starts a run if none is active; a run persists across relogs.
  *  2. **Search the sarcophagus** → the brother climbs out beside you and attacks
  *     ("You dare disturb my rest!"). Each run has one random **tunnel crypt** whose
- *     sarcophagus is the way down instead. Stairs climb back to the mound.
+ *     sarcophagus is the way down instead — but only once the other five brothers are
+ *     slain (operator rule; OSRS lets you descend early). Stairs climb back to the mound.
  *  3. **Tunnels** (plane 0, the chest chamber) hold the crypt vermin; their kills add to
  *     your reward potential like the brothers do.
  *  4. **Open the chest** → the un-slain sixth brother ambushes you; open it again to loot.
@@ -64,8 +65,16 @@ object Barrows {
     /** East of the chest — where the sixth brother rises. */
     val CHEST_AMBUSH = Tile(3553, 9695, 0)
 
-    /** Multi-loc base (varbit [CHEST_VARBIT]: 0 → closed chest 20723 [Open], 1 → open chest 20724 [Search, Close]). */
-    const val CHEST_KEY = "object.null_20973"
+    /**
+     * The reward chest is a multi-loc: the map places base 20973 (nameless, no actions) and varbit
+     * [CHEST_VARBIT] picks the child the client draws — 0 → closed chest 20723 [Open], 1 → open
+     * chest 20724 [Search, Close]. The engine resolves clicks through `GameObject.getTransform`
+     * BEFORE dispatch, so handlers must be bound on the CHILD ids: a binding on the base never
+     * fires ("Nothing interesting happens" on the chest, player report 2026-09-03).
+     */
+    const val CHEST_BASE_KEY = "object.null_20973"
+    const val CHEST_CLOSED_KEY = "object.chest_20723"
+    const val CHEST_OPEN_KEY = "object.chest_20724"
     const val CHEST_VARBIT = 1394
     const val DIG_RADIUS = 3 // Kronos Spade.registerDig(Bounds(x, y, 0, 3))
     const val DIG_ANIM = 830
@@ -238,6 +247,16 @@ object Barrows {
     fun search(p: Player, b: Brother) {
         val run = run(p) ?: startRun(p) // walked in some other way — a run starts here
         if (b == run.tunnelBrother) {
+            // House rule (operator, 2026-09-03): the tunnel only opens once every OTHER brother
+            // is down — the chest comes after the whole run, not after the first lucky dig.
+            // (OSRS lets you drop in at any time and scales the loot; we gate instead.) The
+            // tunnel brother himself still ambushes at the chest.
+            val resting = Brother.values().filter { it != b && !run.killed(it) }
+            if (resting.isNotEmpty()) {
+                p.message("<col=801700>You've found a hidden tunnel, but the crypt's wards hold it shut.</col>")
+                p.message("${resting.size} of the brothers still rest undisturbed — deal with them first.")
+                return
+            }
             p.message("<col=801700>You've found a hidden tunnel! You lower yourself into the darkness...</col>")
             despawnAll(p)
             p.moveTo(TUNNEL_ENTRY)

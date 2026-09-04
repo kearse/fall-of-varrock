@@ -17,6 +17,7 @@ import org.alter.game.plugin.PluginRepository
 import org.alter.plugins.content.bosses.CollectionLog
 import org.alter.plugins.content.bosses.DropEntry
 import org.alter.plugins.content.bosses.DropTable
+import org.alter.plugins.content.combat.getCombatTarget
 import org.alter.plugins.content.companion.CompanionPolicy
 import org.alter.plugins.content.raids.RaidInstance
 import org.alter.rscm.RSCM.getRSCM
@@ -75,15 +76,17 @@ class ZulrahPlugin(
         // instance rather than the fight being edited for them (CompanionPolicy, Block 1).
         CompanionPolicy.denyInstanceOf(SHRINE_SOURCE, "Zulrah's shrine is a solo fight")
 
-        // ── Entry: the sacred-eel boat. The rev-228 def is nameless (`null_10068`), so bind
-        // whatever click action the cache actually carries (the Barrows binding pattern).
-        val boatId = getRSCM("object.null_10068")
-        val boatOpt = runCatching { getObject(boatId).actions?.filterNotNull()?.firstOrNull { it.isNotBlank() } }.getOrNull()
-        if (boatOpt != null) {
-            onObjOption(obj = boatId, option = boatOpt.lowercase()) { enter(player) }
-            logger.info { "Zulrah: bound boat object $boatId via cache option '$boatOpt'." }
-        } else {
-            logger.warn { "Zulrah: boat object $boatId has no bindable cache option — ::zulrah is the only way in." }
+        // ── Entry: the sacrificial boat on the Zul-Andra dock (2214,3056). The map places the
+        // nameless multi-loc base 10068; varbit 4391 picks the child the client shows and the
+        // engine dispatches clicks on that CHILD id (GameObject.getTransform): states 0-2 →
+        // 46241 "Sacrificial boat" [Board], state 3 → 46242 [Board, Quick-Board]. Binding the
+        // base (as before) could never fire — player report 2026-09-03 "can't board the boat".
+        // `objCheck -PobjArgs="10068 46241 46242"` prints the transform table.
+        for (key in BOAT_KEYS) {
+            val id = getRSCM(key)
+            val opts = runCatching { getObject(id).actions?.filterNotNull()?.filter { it.isNotBlank() } }.getOrNull().orEmpty()
+            opts.forEach { opt -> onObjOption(obj = id, option = opt.lowercase()) { board(player) } }
+            if (opts.isEmpty()) logger.warn { "Zulrah: boat child $key has no bindable option." } else logger.info { "Zulrah: bound boat $key via $opts." }
         }
 
         onCommand("zulrah", description = "Sail to Zulrah's shrine") {
@@ -135,6 +138,15 @@ class ZulrahPlugin(
         }
     }
 
+    /** Boat click: same as [enter], with the priestess' line for anyone already fighting. */
+    private fun board(p: Player) {
+        if (p.getCombatTarget() != null) {
+            p.message("You can't board the boat while you're in combat.")
+            return
+        }
+        enter(p)
+    }
+
     private fun enter(p: Player) {
         if (world.instanceAllocator.getMap(p.tile) != null) {
             p.message("You're already somewhere you can't sail from.")
@@ -168,6 +180,9 @@ class ZulrahPlugin(
 
         /** Zul-Andra dock — entry boat, exit portal target, and instance exit tile. */
         val ZUL_ANDRA_DOCK = Tile(2199, 3056, 0)
+
+        /** The boat multi-loc's children (base `object.null_10068`, varbit 4391). */
+        val BOAT_KEYS = listOf("object.sacrificial_boat", "object.sacrificial_boat_46242")
 
     }
 }

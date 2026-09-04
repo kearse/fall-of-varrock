@@ -83,7 +83,9 @@ class HydraPlugin(
                 if (world.instanceAllocator.getMap(player.tile) != null) {
                     player.moveTo(LAB_ENTRANCE)
                     player.message("You climb back out of the hydra's chamber.")
-                } else if (player.tile.isWithinRadius(ROCKS_SRC, 3)) {
+                } else if (player.tile.isWithinRadius(ROCKS_SRC, ROCKS_CLICK_RADIUS)) {
+                    // The object click walks the player up to the rocks before this runs; the
+                    // radius only fences out copies of this object id elsewhere in the world.
                     enter(player)
                 }
             }
@@ -95,6 +97,11 @@ class HydraPlugin(
         onCommand("hydra", description = "Enter the Alchemical Hydra's chamber") {
             if (world.instanceAllocator.getMap(player.tile) == null) enter(player)
         }
+
+        // Inside the instance the landing tile is the copy of (1351,10253) — if the copied
+        // collision ever disagrees with the cache there, snap to the nearest open tile rather
+        // than leaving the player pinned (the 2026-09-03 "spawned somewhere I couldn't walk").
+        // (`enter` below uses this.)
 
         // ── Death: economy hooks on every fighting form's id.
         for (key in listOf(
@@ -146,7 +153,7 @@ class HydraPlugin(
             return
         }
         HydraCombatPlugin.beginEncounter(world, instance.translate(BOSS_ANCHOR_SRC))
-        p.moveTo(instance.translate(PLAYER_LANDING_SRC))
+        p.moveTo(world.snapToWalkable(instance.translate(PLAYER_LANDING_SRC), maxRadius = 4))
         p.message("<col=ff0000>You climb into the hydra's chamber. Chemical vents hiss around you...</col>")
     }
 
@@ -160,9 +167,21 @@ class HydraPlugin(
         /** Player lands just inside the rocks (Kronos jumps the player 2N of 1351,10251). */
         val PLAYER_LANDING_SRC = Tile(1351, 10253, 0)
 
-        /** The climb rocks in the source map, and where exits land. */
+        /** The climb rocks in the source map. */
         val ROCKS_SRC = Tile(1351, 10251, 0)
-        val LAB_ENTRANCE = Tile(1351, 10249, 0)
+
+        /**
+         * Where the portal lands and where climbing out puts you: the open dungeon floor south
+         * of the rocks. Used to be (1351,10249), inside the two-tile-wide passage right under
+         * the rocks — a player reported arriving there unable to walk and asked for the spot
+         * eight tiles further south (2026-09-03). Region 5536's dump shows the passage walkable
+         * in the cache, so whatever pinned them, the open floor sidesteps it; the rocks are a
+         * short walk north (the click path-finds there itself).
+         */
+        val LAB_ENTRANCE = Tile(1351, 10241, 0)
+
+        /** How far from [ROCKS_SRC] a click on the rocks still counts as an entry (see init). */
+        const val ROCKS_CLICK_RADIUS = 12
 
     }
 }

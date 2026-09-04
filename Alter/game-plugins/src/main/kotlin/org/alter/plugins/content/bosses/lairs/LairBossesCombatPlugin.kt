@@ -253,7 +253,9 @@ class LairBossesCombatPlugin(
         while (canEngageCombat(target)) {
             facePawn(target)
             if (moveToAttackRange(task, target, distance = 1, projectile = false) && isAttackDelayReady()) {
-                animate(2851)
+                // 2853 = Rex's bite on the kings' skeleton (archive 15); the donor's 2851 is not
+                // a sequence in this cache — see LairBossesConfigsPlugin.
+                animate(2853)
                 bossMelee(target, maxHit = 26, style = CombatStyle.CRUSH)
                 postAttackLogic(target)
             }

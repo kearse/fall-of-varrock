@@ -19,6 +19,8 @@ class WildernessBossesConfigsPlugin(
 
     init {
         // Callisto (470): hp 255, 350/370/440, 4 ticks, respawn 50; anims 4925/4927/4929; poison+venom immune.
+        // Keyed on npc 6503 (classic model, archive 1287 — the skeleton these anims belong to); see
+        // WildernessBosses.CALLISTO_KEY for why not the rework's 6609.
         setCombatDef(WildernessBosses.CALLISTO_KEY) {
             immunities { poison = true; venom = true }
             configs { attackSpeed = 4; respawnDelay = 50 }

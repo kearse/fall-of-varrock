@@ -95,13 +95,20 @@ class VorkathPlugin(
 
         // ── Poke the sleeping form awake (Kronos wake sequence).
         // Driven from world.queue, NOT player.queue: the player stepping away would
-        // interrupt a player queue mid-wake (VORKATH_WAKING already set), leaving the boss
+        // interrupt a player queue mid-wake (VORKATH_WAKING_AT already set), leaving the boss
         // permanently unwakeable in that instance. A world queue survives player movement
         // and the mid-sequence npc removal.
         onNpcOption(npc = "npc.vorkath_8059", option = "poke") {
             val sleeping = npc
-            if (sleeping.attr[VORKATH_WAKING] == true) return@onNpcOption
-            sleeping.attr[VORKATH_WAKING] = true
+            // A wake that never completed (whatever killed its world queue) must not leave the
+            // boss un-pokeable forever: honour the guard only while a wake is plausibly still in
+            // flight, then let the next poke try again.
+            val wakingSince = sleeping.attr[VORKATH_WAKING_AT]
+            if (wakingSince != null && world.currentCycle - wakingSince < WAKE_GUARD_TICKS) {
+                player.message("Vorkath stirs...")
+                return@onNpcOption
+            }
+            sleeping.attr[VORKATH_WAKING_AT] = world.currentCycle
             player.animate(827)
             sleeping.animate(7950)
             world.queue {
@@ -191,7 +198,10 @@ class VorkathPlugin(
         val EXIT_TILE = Tile(2272, 4052, 0)
 
         val VORKATH_SPAWN_TILE = AttributeKey<Tile>()
-        val VORKATH_WAKING = AttributeKey<Boolean>()
+        /** World cycle the current poke started its wake sequence (absent = asleep, untouched). */
+        val VORKATH_WAKING_AT = AttributeKey<Int>()
+        /** Longer than the 5-tick wake plus slack; after this a poke is allowed to retry. */
+        const val WAKE_GUARD_TICKS = 12
 
     }
 }

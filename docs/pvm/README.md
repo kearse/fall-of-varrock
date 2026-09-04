@@ -61,6 +61,34 @@
 Cross-cutting, shipped with PR 1: `BossKills` per-boss kill ledger (`::kc`), the
 reward-rate ledger, this tracker.
 
+**Boss encounter bug batch 2026-09-03** (`claude/boss-encounter-bugs-e52b59`, from the operator's
+first play-through of the merged stack):
+
+- **Multi-loc clicks dispatch on the CHILD id.** `ObjectPathAction` resolves
+  `obj.getTransform(player)` (the varbit child) before `executeObject`, so a binding on the
+  base loc never fires. Barrows chest 20973 → bind `chest_20723` [Open] / `chest_20724`
+  [Search, Close]; Zulrah's boat 10068 → `sacrificial_boat` 46241 [Board] / 46242 [Board,
+  Quick-Board]. `objCheck` prints the transform table; the old "bind the base by slot" note in
+  the PR-1 memory is wrong.
+- **Barrows tunnel gate (operator rule):** the tunnel crypt only opens once the other five
+  brothers are dead; the sixth still ambushes at the chest.
+- **Dagannoth Rex attack anim = 2853** (2851 is not in rev 228; `npcDef anims 2267`).
+- **Npc-option clicks close modals** (`OpNpcHandler`, like `OpLocHandler`) — a modal the server
+  still thinks is open parks every STANDARD queue task, so "Poke" looked dead while Attack (no
+  queue) worked. Vorkath's poke also retries after 12 ticks if a wake never completed.
+- **Hydra portal landing / exit → (1351,10241)** — the open floor south of the rocks (was the
+  passage under them); in-instance landing snaps to walkable.
+- **Callisto lives in Callisto's Den**: surface `Cave Entrance` 47140 (3291,3849) [Enter, Peek,
+  Check-Fee] → region 13215 **plane 1** (17×15 chamber, `Cave` 46925 [Exit] at 3294,10190); npc
+  id switched to 6503 (classic model — the skeleton the donor anims 4925/4927/4929 belong to; the
+  rework's 6609 has skeletal anims the server can't verify).
+- **GWD generals pay through `BossDeath.payout`** (kill ledger + `::kc`) and log every payout /
+  no-credit death, so the "no drops from Zilyana" report can be read from the log next time.
+  Prime suspect: companion auto-bank loot sweeps the owner's own drops when the owner is > 6
+  tiles away (her 2-tick melee pushes players back).
+- Tools: `npcDef seq <animId…>` (frames / delays / `cycleLength`), `objCheck` now prints
+  `solid/impen/obstr/clipType` (a shape-22 floor decoration only clips when `solid == 1`).
+
 **Boss Tickets retired 2026-09-03** (economy #336 + our `pvm/10-retire-boss-tickets`, stacked on 9):
 `BossDeath.payout` has no ticket count and no boss or minigame awards tickets; `BossKills` pays the
 Champion's cape / Divine halo at 100 / 500 total boss kills. Team 2 approved every reward table

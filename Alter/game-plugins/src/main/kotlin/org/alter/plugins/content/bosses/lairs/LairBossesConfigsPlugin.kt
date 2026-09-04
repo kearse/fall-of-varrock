@@ -68,13 +68,17 @@ class LairBossesConfigsPlugin(
         // 100, block 2852 / death 2856. Each king is near-immune to two styles and open to one:
         // Rex (melee) is weak to magic (magic def 10); Prime (magic) to ranged (ranged def 10);
         // Supreme (ranged) to melee (melee defs 10, ranged def 550).
+        // Rex's attack is 2853, NOT the donor's 2851: the kings' frame archive (15) holds
+        // 2849/2850/2852-2856 only — 2851 doesn't exist in rev 228, so Rex swung with no
+        // animation at all (player report 2026-09-03 "Rex's animation is broken").
+        // `npcDef -PnpcArgs="anims 2267"` lists the playable set.
         setCombatDef("npc.dagannoth_rex") {
             immunities { venom = true }
             configs { attackSpeed = 4; respawnDelay = 100 }
             aggro { radius = 6; searchDelay = 1 }
             stats { hitpoints = 255; attack = 255; strength = 255; defence = 255; magic = 1; ranged = 255 }
             bonuses { defenceStab = 255; defenceSlash = 255; defenceCrush = 255; defenceMagic = 10; defenceRanged = 255 }
-            anims { attack = 2851; block = 2852; death = 2856 }
+            anims { attack = 2853; block = 2852; death = 2856 }
         }
         setCombatDef("npc.dagannoth_prime") {
             immunities { venom = true }
