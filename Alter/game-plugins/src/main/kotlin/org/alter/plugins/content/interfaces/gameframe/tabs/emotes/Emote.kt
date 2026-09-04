@@ -35,8 +35,10 @@ enum class Emote(
     RASPBERRY(slot = 19, anim = 2110),
     CLAP(slot = 20, anim = 865),
     SALUTE(slot = 21, anim = 2112),
-    GOBLIN_BOW(slot = 22, anim = 2127, varbit = Varbit.GOBLIN_EMOTES_VARBIT, requiredVarbitValue = 7),
-    GOBLIN_SALUTE(slot = 23, anim = 2128, varbit = Varbit.GOBLIN_EMOTES_VARBIT, requiredVarbitValue = 7),
+    // In OSRS these unlock on completing The Lost Tribe (varbit 532 = 7). That quest doesn't exist on
+    // this server, so they're free like the base emotes.
+    GOBLIN_BOW(slot = 22, anim = 2127),
+    GOBLIN_SALUTE(slot = 23, anim = 2128),
     GLASS_BOX(slot = 24, anim = 1131, varbit = Varbit.GLASS_BOX_EMOTE_VARBIT),
     CLIMB_ROPE(slot = 25, anim = 1130, varbit = Varbit.CLIMB_ROPE_EMOTE_VARBIT),
     LEAN(slot = 26, anim = 1129, varbit = Varbit.LEAN_EMOTE_VARBIT),

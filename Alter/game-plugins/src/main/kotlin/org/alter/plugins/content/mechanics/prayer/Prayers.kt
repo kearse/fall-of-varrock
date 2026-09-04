@@ -27,7 +27,14 @@ object Prayers {
 
     // const val INF_PRAY_VARBIT = 5314
     private const val QUICK_PRAYERS_ACTIVE_VARBIT = 4103
-    private const val KING_RANSOMS_QUEST_VARBIT = 3909 // Used for chivalry/piety prayer.
+    /**
+     * King's Ransom progress varbit. OSRS gates Chivalry/Piety on it (>= 8). That quest was removed
+     * from this server, so the SERVER never checks it — but the stock prayer-tab clientscript still
+     * reads it to draw the two icons lit or greyed, so PrayersPlugin pins it to [KINGS_RANSOM_DONE]
+     * on login. Every prayer is level-gated only (Preserve/Rigour/Augury keep their scroll unlock).
+     */
+    const val KINGS_RANSOM_VARBIT = 3909
+    const val KINGS_RANSOM_DONE = 8
     const val RIGOUR_UNLOCK_VARBIT = 5451
     const val AUGURY_UNLOCK_VARBIT = 5452
     const val PRESERVE_UNLOCK_VARBIT = 5453
@@ -253,18 +260,6 @@ object Prayers {
         if (prayer == Prayer.PRESERVE && p.getVarbit(PRESERVE_UNLOCK_VARBIT) == 0) {
             p.syncVarp(ACTIVE_PRAYERS_VARP)
             it.messageBox(p, "You have not unlocked this prayer.")
-            return false
-        }
-
-        if (prayer == Prayer.CHIVALRY && p.getVarbit(KING_RANSOMS_QUEST_VARBIT) < 8) {
-            p.syncVarp(ACTIVE_PRAYERS_VARP)
-            it.messageBox(p,"You have not unlocked this prayer.")
-            return false
-        }
-
-        if (prayer == Prayer.PIETY && p.getVarbit(KING_RANSOMS_QUEST_VARBIT) < 8) {
-            p.syncVarp(ACTIVE_PRAYERS_VARP)
-            it.messageBox(p,"You have not unlocked this prayer.")
             return false
         }
 

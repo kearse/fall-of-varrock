@@ -52,7 +52,9 @@ class TeleportTabPlugin(
             "item.khazard_teleport" to Area(2637, 3166, 2637, 3166),
             "item.mind_altar_teleport" to Area(2979, 3509, 2979, 3509),
             // Items.LU
-            // @TODO Items.APE_ATOLL_TELEPORT , Need to have Monkey Madness and Receive 10th Squad Training from Daero
+            // Ape Atoll: OSRS gates the tablet behind Monkey Madness + Daero's training. Those quests
+            // don't exist here, so the tab is a plain teleport to the same spot as the spell.
+            "item.ape_atoll_teleport" to Area(2760, 2781, 2763, 2784),
         )
 
     init {

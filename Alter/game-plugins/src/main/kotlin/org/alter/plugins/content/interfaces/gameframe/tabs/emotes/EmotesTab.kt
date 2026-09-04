@@ -14,7 +14,7 @@ object EmotesTab {
     const val COMPONENT_ID = 216
 
     fun unlockAll(p: Player) {
-        p.setVarbit(Varbit.GOBLIN_EMOTES_VARBIT, 7)
+        // Goblin bow/salute need no varbit here (their OSRS quest unlock was removed — see Emote.kt).
         p.setVarbit(Varbit.GLASS_BOX_EMOTE_VARBIT, 1)
         p.setVarbit(Varbit.CLIMB_ROPE_EMOTE_VARBIT, 1)
         p.setVarbit(Varbit.LEAN_EMOTE_VARBIT, 1)
