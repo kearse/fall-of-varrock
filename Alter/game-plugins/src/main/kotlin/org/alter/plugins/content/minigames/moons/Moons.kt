@@ -40,7 +40,9 @@ object Moons {
     /**
      * A chamber: its cache region (the instance source), arena centre + radius, the doorway
      * trigger tiles on the shared map, where you appear inside, the doorway tiles inside the
-     * copy (walk out to leave) and the shared-map tile you step out to.
+     * copy (walk out to leave) and the shared-map tile you step out to. The `outside` tiles are
+     * on PLANE 1 — the hub's walkway level (see [ANTECHAMBER]); the triggers are x/z areas and
+     * fire on either plane.
      */
     data class Chamber(
         val moon: Moon,
@@ -58,19 +60,19 @@ object Moons {
         Chamber(
             Moon.BLOOD, Area(1344, 9600, 1407, 9663), Tile(1391, 9632, 0), 9,
             entryTrigger = Area(1406, 9628, 1410, 9636), insideEntry = Tile(1402, 9632, 0),
-            exitTrigger = Area(1404, 9628, 1407, 9636), outside = Tile(1412, 9632, 0),
+            exitTrigger = Area(1404, 9628, 1407, 9636), outside = Tile(1412, 9632, 1),
         ),
         // Eclipse Moon — region 6038, pit centred (1495, 9632), door west (braziers 1468,9629/9635).
         Chamber(
             Moon.ECLIPSE, Area(1472, 9600, 1535, 9663), Tile(1495, 9632, 0), 9,
             entryTrigger = Area(1469, 9628, 1473, 9636), insideEntry = Tile(1484, 9632, 0),
-            exitTrigger = Area(1472, 9628, 1475, 9636), outside = Tile(1467, 9632, 0),
+            exitTrigger = Area(1472, 9628, 1475, 9636), outside = Tile(1467, 9632, 1),
         ),
         // Blue Moon — region 5783, pit centred (1440, 9681), door south (braziers 1437/1443, 9660; stairs 9664).
         Chamber(
             Moon.BLUE, Area(1408, 9664, 1471, 9727), Tile(1440, 9681, 0), 9,
             entryTrigger = Area(1436, 9661, 1444, 9663), insideEntry = Tile(1440, 9669, 0),
-            exitTrigger = Area(1436, 9664, 1444, 9666), outside = Tile(1440, 9658, 0),
+            exitTrigger = Area(1436, 9664, 1444, 9666), outside = Tile(1440, 9658, 1),
         ),
     )
 
@@ -79,8 +81,13 @@ object Moons {
     /** Blue Moon's two Frost Storm braziers — the chamber's east and west ends (source coords). */
     val BLUE_BRAZIERS_SRC = listOf(Tile(1428, 9680, 0), Tile(1456, 9680, 0))
 
-    /** Antechamber landing (portal / `::moons`) and the Lunar Chest in the Ancient Shrine. */
-    val ANTECHAMBER = Tile(1440, 9570, 0)
+    /**
+     * Antechamber landing (portal / `::moons`) — PLANE 1, the walkway level (mirror of the
+     * `TeleportRegistry` row): the rev-228 map dump shows plane 0 here is a sealed corridor while
+     * plane 1 runs north into the monolith hub. The chamber pits stay plane 0 (instanced copies);
+     * the Lunar Chest is baked at plane 0 in the Ancient Shrine.
+     */
+    val ANTECHAMBER = Tile(1440, 9570, 1)
     val CHEST_TILE = Tile(1512, 9579, 0)
     const val CHEST_KEY = "object.lunar_chest"
     const val SUPPLY_CRATES_KEY = "object.supply_crates"

@@ -63,8 +63,13 @@ object WorldSpawns {
     var skippedNameDrift = 0
         private set
 
-    /** Bankers etc. stand at their booths; other humans wander lightly, monsters more. */
-    private val STATIONARY = listOf("banker", "grand exchange clerk", "poll booth")
+    /**
+     * Bankers etc. stand at their booths; other humans wander lightly, monsters more. Fishing
+     * spots are npcs standing on WATER: with a walk radius they can only ever step onto the
+     * bank (canTraverse validates the destination, and no water tile is walkable), so the
+     * River Lum's rod spots drifted ashore one step at a time (player report 2026-09-03).
+     */
+    private val STATIONARY = listOf("banker", "grand exchange clerk", "poll booth", "fishing spot")
 
     fun load(
         spawnsPath: String = "../data/cfg/spawns/npc_spawns.json",

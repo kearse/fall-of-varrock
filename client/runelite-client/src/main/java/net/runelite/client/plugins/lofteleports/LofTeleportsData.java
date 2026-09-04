@@ -96,7 +96,9 @@ final class LofTeleportsData
 			b("Agility", "Safe Zone", SAFE, 3105),              // climbing boots
 			b("Herblore", "Safe Zone", SAFE, 233),              // pestle and mortar
 			b("Fletching", "Safe Zone", SAFE, 946),             // knife
-			b("Thieving", "Safe Zone", SAFE, 1523));            // lockpick
+			b("Thieving", "Safe Zone", SAFE, 1523),             // lockpick
+			b("Runecraft", "Safe Zone", SAFE, 1436),            // rune essence (the fire altar)
+			b("Farming", "Safe Zone", SAFE, 5343));             // seed dibber (the flowerbeds)
 
 		cat("The War",
 			b("Varrock Raid", "Hostile", HOSTILE, 1333),        // rune scimitar
@@ -158,7 +160,7 @@ final class LofTeleportsData
 
 		cat("Slayer",
 			b("Slayer Master", "Safe Zone", SAFE, 4155),        // enchanted gem
-			s("Slayer Cave", "Soon", SOON, 8901),               // black mask
+			b("Karuulm Slayer Dungeon", "Hostile", HOSTILE, 8901), // black mask (wyrms/drakes/hydras/sulphur lizards)
 			s("Resource Contracts", "Soon", SOON, 995));
 
 		cat("Mini-Games",

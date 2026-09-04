@@ -61,6 +61,9 @@ class WildernessBossesPlugin(
                         spawn(WildernessBosses.VETION_KEY, at, walkRadius = 10, engineRespawn = false)
                     }
                 }
+                // Respawn countdown to everyone at the lair ("nice to have a respawn timer").
+                val respawnTicks = if (boss === WildernessBosses.VETION) WildernessBosses.VETION_RESPAWN_TICKS else dead.combatDef.respawnDelay
+                announceRespawn(boss.name, dead.attr[SPAWN_TILE] ?: boss.spawns.first().tile, respawnTicks)
                 if (boss === WildernessBosses.SCORPIA) {
                     dead.attr[WildernessBossesCombatPlugin.SCORPIA_GUARDIANS]?.forEach { g ->
                         if (!g.isDead() && g.index >= 0) world.remove(g)
@@ -131,6 +134,31 @@ class WildernessBossesPlugin(
         if (opts.isEmpty()) logger.warn { "wilderness-bosses: den exit $id has no bindable option." } else logger.info { "wilderness-bosses: bound den exit $id via $opts." }
     }
 
+    /**
+     * "<boss> respawns in N seconds" to every player near the lair, a 10-second warning, then the
+     * respawn itself. The engine respawn is untouched — this only narrates it.
+     */
+    private fun announceRespawn(name: String, at: Tile, ticks: Int) {
+        if (ticks <= 0) return
+        fun tell(msg: String) {
+            world.players.forEach { p ->
+                if (p.tile.height == at.height && p.tile.isWithinRadius(at, RESPAWN_NOTICE_RADIUS)) p.message("<col=801700>$msg</col>")
+            }
+        }
+        val seconds = (ticks * 6 + 5) / 10
+        tell("$name will respawn in $seconds seconds.")
+        world.queue {
+            if (ticks > RESPAWN_WARNING_TICKS + 1) {
+                wait(ticks - RESPAWN_WARNING_TICKS)
+                tell("$name respawns in 10 seconds.")
+                wait(RESPAWN_WARNING_TICKS + 1)
+            } else {
+                wait(ticks + 1)
+            }
+            tell("$name has respawned.")
+        }
+    }
+
     private fun spawn(key: String, tile: Tile, walkRadius: Int, engineRespawn: Boolean) {
         runCatching {
             val npc = Npc(getRSCM(key), tile, world)
@@ -144,5 +172,10 @@ class WildernessBossesPlugin(
 
     companion object {
         val SPAWN_TILE = AttributeKey<Tile>()
+
+        /** Tiles around the lair's spawn point that hear the respawn countdown. */
+        const val RESPAWN_NOTICE_RADIUS = 15
+        /** ~10 seconds before the respawn. */
+        const val RESPAWN_WARNING_TICKS = 17
     }
 }
