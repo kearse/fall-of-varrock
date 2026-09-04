@@ -2,6 +2,7 @@ package org.alter.game.plugin
 
 import gg.rsmod.util.ServerProperties
 import io.github.classgraph.ClassGraph
+import dev.openrune.cache.CacheManager.getNpc
 import io.github.oshai.kotlinlogging.KotlinLogging
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap
@@ -590,6 +591,7 @@ class PluginRepository(
      * sequence after all plugins are scanned.
      */
     fun reportFailures() {
+        reportShadowedNpcOptions()
         if (failedPlugins.isEmpty()) {
             logger.info { "All $pluginCount plugins loaded with no failures." }
             return
@@ -1671,6 +1673,27 @@ class PluginRepository(
         val logic = optMap[opt] ?: return false
         p.executePlugin(logic)
         return true
+    }
+
+    /** Whether any plugin bound option [opt] on npc [id] (OpNpcHandler's op-2 attack short-circuit). */
+    fun hasNpcOptionPlugin(id: Int, opt: Int): Boolean = npcPlugins[id]?.containsKey(opt) == true
+
+    /**
+     * Boot diagnostic: the client's second npc menu slot is the ATTACK pathway, so a plugin that
+     * binds option 2 on an npc the cache already marks attackable can never fire — the click is
+     * routed to combat first. Surface every such binding so the shadowing is visible.
+     */
+    fun reportShadowedNpcOptions() {
+        val shadowed = ArrayList<String>()
+        npcPlugins.keys.forEach { id ->
+            if (npcPlugins[id]?.containsKey(2) != true) return@forEach
+            val def = runCatching { getNpc(id) }.getOrNull() ?: return@forEach
+            if (def.isAttackable()) shadowed += "$id '${def.name}'"
+        }
+        if (shadowed.isEmpty()) return
+        logger.warn {
+            "Npc option-2 bindings shadowed by the attack pathway (attackable npcs never reach them): ${shadowed.joinToString()}"
+        }
     }
 
     fun bindItemOnNpc(

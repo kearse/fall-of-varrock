@@ -16,6 +16,7 @@ import org.alter.game.model.combat.XpMode
 import org.alter.game.model.entity.Npc
 import org.alter.game.model.entity.Pawn
 import org.alter.game.model.entity.Player
+import org.alter.game.model.entity.isPlayerAttackable
 import org.alter.plugins.content.combat.Combat
 import org.alter.plugins.content.combat.CombatConfigs
 import org.alter.plugins.content.combat.WeaponEffects
@@ -164,7 +165,7 @@ object MagicCombatStrategy : CombatStrategy {
             val extras = ArrayList<Pawn>()
             world.npcs.forEach { npc ->
                 if (npc != null && npc != target && !npc.isDead() &&
-                    npc.def.isAttackable() && npc.combatDef.hitpoints != -1 &&
+                    npc.isPlayerAttackable() && npc.combatDef.hitpoints != -1 &&
                     npc.tile.isWithinRadius(target.tile, 1) &&
                     Combat.canEngage(pawn, npc)
                 ) {

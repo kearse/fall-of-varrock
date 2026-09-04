@@ -13,6 +13,7 @@ import org.alter.game.model.entity.AreaSound
 import org.alter.game.model.entity.Npc
 import org.alter.game.model.entity.Pawn
 import org.alter.game.model.entity.Player
+import org.alter.game.model.entity.isPlayerAttackable
 import org.alter.game.model.queue.QueueTask
 import org.alter.game.model.timer.ACTIVE_COMBAT_TIMER
 import org.alter.game.model.timer.ATTACK_DELAY
@@ -417,7 +418,7 @@ object Combat {
             if (!target.isSpawned()) {
                 return false
             }
-            if (!target.def.isAttackable() || target.combatDef.hitpoints == -1) {
+            if (!target.isPlayerAttackable() || target.combatDef.hitpoints == -1) {
                 (pawn as? Player)?.message("You can't attack this npc.")
                 return false
             }

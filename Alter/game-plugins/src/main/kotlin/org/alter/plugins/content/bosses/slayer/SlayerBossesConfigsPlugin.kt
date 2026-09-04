@@ -99,9 +99,12 @@ class SlayerBossesConfigsPlugin(
                 stats { hitpoints = 1 }
                 anims { death = 1473 }
             }
+            // The awakened altars carry an `Attack` action at combat level 0 in the cache, which
+            // `NpcType.isAttackable()` refuses — opt them in server-side or the "kill the altars to
+            // weaken him" mechanic is dead and SKOTIZO_AWAKE only ever climbs.
             setCombatDef(a.awakenedKey) {
                 immunities { poison = true; venom = true }
-                configs { attackSpeed = 10; respawnDelay = 0 }
+                configs { attackSpeed = 10; respawnDelay = 0; forceAttackable = true }
                 stats { hitpoints = 100; attack = 1; strength = 1; defence = 1; magic = 1; ranged = 1 }
                 anims { death = 1473 }
             }

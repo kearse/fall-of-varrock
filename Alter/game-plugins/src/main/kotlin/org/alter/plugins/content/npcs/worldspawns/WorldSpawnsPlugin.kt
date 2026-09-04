@@ -208,6 +208,15 @@ class WorldSpawnsPlugin(
             "npc.king_black_dragon_2642",
             "npc.king_black_dragon_6502",
             "npc.king_black_dragon_12440",
+            // Bespoke-owned VARIANT ids the wiki dump carries on the exact tiles our boss plugins
+            // spawn their own ids on. They survive the death-handler prune (different id) and the
+            // id-keyed dedupe, so the player sees a second, unattackable Cerberus standing inside
+            // the real one, and ambient Kraken whirlpools re-appear after a region idle sweep and
+            // re-arm the "protected by its tentacles" gate (player reports 2026-09-03).
+            "npc.cerberus_5863",
+            "npc.cerberus_5866",
+            "npc.whirlpool_496",
+            "npc.whirlpool_5534",
         ).mapNotNull { key -> runCatching { getRSCM(key) }.getOrNull() }.toSet()
         val it = WorldSpawns.byRegion.iterator()
         while (it.hasNext()) {

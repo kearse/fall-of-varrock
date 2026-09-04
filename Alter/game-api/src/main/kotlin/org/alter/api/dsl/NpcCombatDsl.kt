@@ -44,6 +44,7 @@ object NpcCombatDsl {
             combatBuilder.setRespawnDelay(builder.respawnDelay)
             combatBuilder.setPoisonChance(builder.poisonChance)
             combatBuilder.setVenomChance(builder.venomChance)
+            combatBuilder.setForceAttackable(builder.forceAttackable)
         }
 
         /**
@@ -229,6 +230,12 @@ object NpcCombatDsl {
          * If npc should not respawn, this value should be set to 0.
          */
         var respawnDelay: Int = -1
+
+        /**
+         * Let players attack this npc even though its cache def has combat level 0
+         * (it must still carry an `Attack` action for the client to offer the option).
+         */
+        var forceAttackable = false
 
         /**
          * The chance of inflicting poison on damage. Value should vary from

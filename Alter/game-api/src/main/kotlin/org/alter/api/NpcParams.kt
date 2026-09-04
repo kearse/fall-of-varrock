@@ -178,10 +178,19 @@ class NpcCombatBuilder {
             combatClass = combatClass,
             projectile = projectile,
             impactGfx = projectileImpactGfx,
+            forceAttackable = forceAttackable,
         )
     }
 
     private var combatClass = org.alter.game.model.combat.CombatClass.MELEE
+
+    private var forceAttackable = false
+
+    /** See [NpcCombatDef.forceAttackable]. */
+    fun setForceAttackable(state: Boolean): NpcCombatBuilder {
+        forceAttackable = state
+        return this
+    }
 
     private var projectile = -1
 
