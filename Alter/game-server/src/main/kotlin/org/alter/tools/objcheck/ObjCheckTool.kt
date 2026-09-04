@@ -18,8 +18,8 @@ private const val REVISION = 228
 fun main(args: Array<String>) {
     CacheManager.init(Cache.load(Path.of(CACHE_PATH), false), REVISION)
     val ids = args.mapNotNull { it.toIntOrNull() }
-    println("id     | size  | name | actions | models | varbit/varp -> transforms")
-    println("-------+-------+------+---------+--------+--------------------------")
+    println("id     | size  | name | actions | models | shapes | clip | varbit/varp -> transforms")
+    println("-------+-------+------+---------+--------+--------+------+--------------------------")
     for (id in ids) {
         val d = runCatching { CacheManager.getObject(id) }.getOrNull()
         if (d == null) { println("%-6d | (no def)".format(id)); continue }
@@ -29,6 +29,11 @@ fun main(args: Array<String>) {
             val present = runCatching { dev.openrune.cache.CacheManager.cache.data(7, m) != null }.getOrDefault(false)
             "$m=${if (present) "OK" else "MISSING"}"
         }
-        println("%-6d | %dx%d | %s | %s | models=[%s] | shapes=%s | %s".format(id, d.sizeX, d.sizeY, d.name, d.actions.toString(), modelPresence, d.objectTypes?.toList() ?: "any", transform))
+        // The collision inputs CollisionFlagMapExtensions.toggleLoc reads: solid (blockWalk; a
+        // shape-22 ground decoration only clips when this is 1), impenetrable (blocks projectiles),
+        // obstructive (breaks route-finding), clipType. The map dump ignores shape-22 decorations, so
+        // this is the only way to see whether floor rubble is walkable.
+        val clip = "solid=${d.solid} impen=${d.impenetrable} obstr=${d.obstructive} clipType=${d.clipType}"
+        println("%-6d | %dx%d | %s | %s | models=[%s] | shapes=%s | %s | %s".format(id, d.sizeX, d.sizeY, d.name, d.actions.toString(), modelPresence, d.objectTypes?.toList() ?: "any", clip, transform))
     }
 }

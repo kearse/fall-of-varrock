@@ -14,9 +14,9 @@ reaches it), venom protection if you have it, and food you trust.
 
 ## Getting there
 
-Teleport portal → **Bosses → Zulrah** lands you at the Zul-Andra dock. Type **`::zulrah`**
-and the priestess rows you to the shrine. Dying inside is a **safe death** — you wake up
-at home with your gear.
+Teleport portal → **Bosses → Zulrah** lands you at the Zul-Andra dock. **Board** the
+**Sacrificial boat** at the end of the dock (or type **`::zulrah`**) and the priestess rows you
+to the shrine. Dying inside is a **safe death** — you wake up at home with your gear.
 
 ## The three forms
 

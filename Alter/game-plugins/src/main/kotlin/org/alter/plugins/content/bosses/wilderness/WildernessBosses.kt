@@ -1,5 +1,6 @@
 package org.alter.plugins.content.bosses.wilderness
 
+import org.alter.game.model.Area
 import org.alter.game.model.Tile
 import org.alter.plugins.content.bosses.DropEntry
 import org.alter.plugins.content.bosses.DropTable
@@ -38,12 +39,38 @@ object WildernessBosses {
 
     // ───────────────────────────── Callisto ─────────────────────────────
 
-    const val CALLISTO_KEY = "npc.callisto_6609"
+    /**
+     * Npc 6503, the classic Callisto model: its skeleton (frame archive 1287) owns the
+     * 4925/4927/4929 attack/block/death anims the donor configured. Rev 228's 6609 (the
+     * Kronos-era id) now wears the 2023 rework model with skeletal anims this server can
+     * neither list nor coerce, so the donor anims played on it deformed the bear.
+     * Both defs are "Callisto", level 470, size 5, Attack in slot 2.
+     */
+    const val CALLISTO_KEY = "npc.callisto"
+
+    /**
+     * **Callisto's Den** — the 2023 lair the rev-228 map puts under his old surface spot.
+     * Surface: `Cave Entrance` 47140 [Enter, Peek, Check-Fee] at (3291,3849), the very tile
+     * he used to stand on ("the cave says nothing interesting happens, Callisto is outside",
+     * 2026-09-03). Below: region 13215, floor on PLANE 1 — a 17×15 chamber x 3287-3303 /
+     * z 10195-10209 with the `Cave` 46925 exit at the south end of a three-wide passage
+     * (3294-3296 × 10191-10194). Geometry from `mapDump -PmapArgs="region 13215"`.
+     */
+    const val DEN_REGION = 13215
+    const val DEN_ENTRANCE_KEY = "object.cave_entrance_47140"
+    const val DEN_EXIT_KEY = "object.cave_46925"
+    /** Just inside the exit passage. */
+    val DEN_LANDING = Tile(3295, 10193, 1)
+    /** Back on the surface, at the mouth of the entrance (south side of its 5×4 footprint). */
+    val DEN_SURFACE_LANDING = Tile(3293, 3847, 0)
+    val DEN_BOUNDS = Area(3286, 10190, 3304, 10210)
+    /** Callisto's 5×5 spawn, centred in the chamber clear of the rock pillars. */
+    val CALLISTO_SPAWN = Tile(3295, 10203, 1)
 
     val CALLISTO = WildBoss(
         key = "callisto", name = "Callisto", lootKey = CALLISTO_KEY,
-        spawns = listOf(Spawn(CALLISTO_KEY, Tile(3291, 3847, 0), walkRadius = 8)),
-        landing = Tile(3287, 3840, 0), wildLevel = 41, regions = intArrayOf(13115, 13116),
+        spawns = listOf(Spawn(CALLISTO_KEY, CALLISTO_SPAWN, walkRadius = 6)),
+        landing = Tile(3287, 3840, 0), wildLevel = 41, regions = intArrayOf(13115, 13116, DEN_REGION),
         drops = DropTable(
             always = listOf(DropEntry("item.big_bones", 1, 1)),
             main = listOf(

@@ -66,6 +66,7 @@ fun main(args: Array<String>) {
     when (args.getOrNull(0)?.lowercase() ?: "inspect") {
         "inspect" -> inspect(args.drop(1).mapNotNull { it.toIntOrNull() })
         "anims" -> anims(args.drop(1).mapNotNull { it.toIntOrNull() })
+        "seq" -> seqs(args.drop(1).mapNotNull { it.toIntOrNull() })
         // NOTE: slot 2 (actions[1]) is left null on purpose — the engine hardwires the second
         // npc menu slot to the ATTACK pathway (players got "You can't attack this npc." when
         // "Solo game" sat there). Slots 3/4 route as normal string-matched options.
@@ -77,7 +78,30 @@ fun main(args: Array<String>) {
         // Grimjaw the bounty captain: add the "Attack" option + a combat level so he can be fought.
         "grimjaw" -> setActions(GRIMJAW, listOf(null, "Attack", null, null, null), combatLevel = GRIMJAW_LEVEL)
         "restore" -> restore(args.getOrNull(1)?.toIntOrNull() ?: run { println("restore <id>"); return })
-        else -> println("usage: inspect <id...> | anims <id...> | wizardknight | krilbodyguards | kreearra | grimjaw | restore <id>")
+        else -> println("usage: inspect <id...> | anims <id...> | seq <animId...> | wizardknight | krilbodyguards | kreearra | grimjaw | restore <id>")
+    }
+}
+
+/**
+ * Describe SEQUENCE (animation) ids directly: frame count, summed frame delays (client ticks) and
+ * the decoded `cycleLength` — the value `NpcDeathAction`/`PlayerDeathAction` pass to `wait()`, so
+ * this is how to see how many game ticks a death animation holds the corpse before loot appears.
+ *
+ *   gradlew :game-server:npcDef -PnpcArgs="seq 6968 836"
+ */
+private fun seqs(ids: List<Int>) {
+    initCache()
+    val seqs = CacheManager.getAnims()
+    ids.forEach { id ->
+        val s = seqs[id]
+        if (s == null) {
+            println("anim $id: MISSING")
+            return@forEach
+        }
+        val frames = s.frameIDs?.size ?: 0
+        val delays = s.frameDelays?.sum() ?: 0
+        val archive = s.frameIDs?.firstOrNull()?.ushr(16)
+        println("anim $id: frames=$frames delayTotal=$delays cycleLength=${s.cycleLength} loops=${s.maxLoops} archive=$archive")
     }
 }
 

@@ -9,10 +9,12 @@ import org.alter.game.model.attr.AttributeKey
 import org.alter.game.model.attr.KILLER_ATTR
 import org.alter.game.model.entity.Npc
 import org.alter.game.model.entity.Player
+import org.alter.game.model.move.moveTo
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
 import org.alter.plugins.content.bosses.BossDeath
 import org.alter.plugins.content.bosses.BossKills
+import org.alter.plugins.content.combat.getCombatTarget
 import org.alter.rscm.RSCM.getRSCM
 
 private val logger = KotlinLogging.logger {}
@@ -21,7 +23,8 @@ private val logger = KotlinLogging.logger {}
  * Wires [WildernessBosses] into the world: lair regions force-loaded + multi-way, direct spawns
  * at world init (engine-respawned by their defs), the shared payout on death, Vet'ion's reborn
  * life cycle (form 1 dies into the reborn form at full health; the reborn pays out and form 1
- * rises again 50 ticks later) and Scorpia's guardians dying with her.
+ * rises again 50 ticks later), Scorpia's guardians dying with her, and Callisto's Den (the
+ * surface cave entrance and the lair's exit).
  */
 class WildernessBossesPlugin(
     r: PluginRepository,
@@ -87,6 +90,45 @@ class WildernessBossesPlugin(
 
         // Guardians drop nothing (claiming the id also keeps the generic table off them).
         onNpcDeath(WildernessBosses.GUARDIAN_KEY) { }
+
+        // ── Callisto's Den: surface entrance ↔ plane-1 lair (WildernessBosses.DEN_*). The
+        // entrance is a plain object (no varbit children), so its cache options bind directly.
+        // No fee and no diary gate here — a PK server buys the fight, not the errand.
+        onObjOption(obj = WildernessBosses.DEN_ENTRANCE_KEY, option = "enter") {
+            if (player.getCombatTarget() != null) {
+                player.message("You can't squeeze into the den while you're fighting.")
+            } else {
+                player.moveTo(WildernessBosses.DEN_LANDING)
+                player.message("<col=ff0000>You crawl down into Callisto's Den. The air is thick with the stink of bear.</col>")
+            }
+        }
+        val bearId = getRSCM(WildernessBosses.CALLISTO_KEY)
+        onObjOption(obj = WildernessBosses.DEN_ENTRANCE_KEY, option = "peek") {
+            var bearUp = false
+            var inside = 0
+            world.npcs.forEach { n -> if (n.id == bearId && !n.isDead() && n.index >= 0) bearUp = true }
+            world.players.forEach { p -> if (WildernessBosses.DEN_BOUNDS.contains(p.tile) && p.tile.height == WildernessBosses.DEN_LANDING.height) inside++ }
+            val who = if (bearUp) "Callisto is prowling his den" else "Callisto's den lies quiet for now"
+            val crowd = when (inside) { 0 -> "nobody else is down there" ; 1 -> "one adventurer is down there" ; else -> "$inside adventurers are down there" }
+            player.message("You peek into the darkness: $who, and $crowd.")
+        }
+        onObjOption(obj = WildernessBosses.DEN_ENTRANCE_KEY, option = "check-fee") {
+            player.message("The den asks no fee of you. Enter when you're ready — it is multi-way and still the Wilderness.")
+        }
+        bindExit()
+    }
+
+    /** The den's `Cave` exit: whatever option the def carries climbs back to the surface. */
+    private fun bindExit() {
+        val id = getRSCM(WildernessBosses.DEN_EXIT_KEY)
+        val opts = runCatching { dev.openrune.cache.CacheManager.getObject(id).actions?.filterNotNull()?.filter { it.isNotBlank() } }.getOrNull().orEmpty()
+        opts.forEach { opt ->
+            onObjOption(obj = id, option = opt.lowercase()) {
+                player.moveTo(WildernessBosses.DEN_SURFACE_LANDING)
+                player.message("You climb back out into the Wilderness.")
+            }
+        }
+        if (opts.isEmpty()) logger.warn { "wilderness-bosses: den exit $id has no bindable option." } else logger.info { "wilderness-bosses: bound den exit $id via $opts." }
     }
 
     private fun spawn(key: String, tile: Tile, walkRadius: Int, engineRespawn: Boolean) {

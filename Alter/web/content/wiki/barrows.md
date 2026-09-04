@@ -23,7 +23,10 @@ underground**.
 2. **Search the sarcophagus.** The brother climbs out beside you and attacks. Kill him, then take
    the staircase back up and dig the next mound.
 3. **One crypt is the tunnel.** Every run picks a different one at random; searching its
-   sarcophagus lowers you into the tunnels instead of waking the brother. Down there the crypt
+   sarcophagus lowers you into the tunnels instead of waking the brother — **but only once the
+   other five brothers are dead**. Find it early and the crypt's wards hold it shut until you
+   have dealt with the rest (a Fall of Varrock rule; Old School lets you drop in at any time).
+   Down there the crypt
    vermin (rats, spiders, bloodworms, skeletons) count toward your reward too.
 4. **Open the chest.** The brother you didn't fight rises behind you. Kill him for full reward
    potential, then **search the chest again** to loot it — you are carried back to the surface.

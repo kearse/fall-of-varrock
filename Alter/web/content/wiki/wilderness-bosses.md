@@ -1,10 +1,10 @@
 ---
 title: Wilderness Bosses
 category: Minigames & Bosses
-summary: The seven classic Wilderness bosses - Callisto, Vet'ion, Venenatis, Scorpia, the Chaos Elemental, the Chaos Fanatic and the Crazy Archaeologist - at their old surface lairs.
+summary: The seven classic Wilderness bosses - Callisto, Vet'ion, Venenatis, Scorpia, the Chaos Elemental, the Chaos Fanatic and the Crazy Archaeologist - at their old lairs, with Callisto in his den.
 order: 12
 updated: 2026-09-03
-infobox: Type = Shared-world bosses (multi-way, Wilderness PvP); Location = Deep Wilderness surface lairs + Scorpia's cave (teleport portal, Bosses tab); Requirement = Bring only what you can afford to lose; Notable drops = Tyrannical / Ring of the gods / Treasonous rings, Dragon pickaxe, Odium and Malediction ward shards, Fedora, the boss pets
+infobox: Type = Shared-world bosses (multi-way, Wilderness PvP); Location = Deep Wilderness lairs, Callisto's Den and Scorpia's cave (teleport portal, Bosses tab); Requirement = Bring only what you can afford to lose; Notable drops = Tyrannical / Ring of the gods / Treasonous rings, Dragon pickaxe, Odium and Malediction ward shards, Fedora, the boss pets
 ---
 
 The **Wilderness bosses** are back at the lairs every RSPS veteran remembers — the old surface
@@ -15,6 +15,11 @@ drop your items on death like anywhere else in the Wild.
 
 Open the **teleport portal → Bosses** and pick the boss; you land a few tiles from its lair.
 The Wilderness level is shown on each row. Scorpia lives in her cave below level 54.
+
+**Callisto** lives in **Callisto's Den**: the portal drops you by the **Cave Entrance** just
+south of the Demonic Ruins (level 41). **Enter** it to climb down (no fee, no diary — **Peek**
+tells you whether the bear is up and how many players are already inside); the **Cave** at the
+south end of the den climbs back out. The den is multi-way and still the Wilderness.
 
 ## The bosses
 

@@ -1,18 +1,17 @@
 package org.alter.plugins.content.bosses.godwars
 
-import dev.openrune.cache.CacheManager.getItem
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.alter.api.ext.*
 import org.alter.game.Server
 import org.alter.game.model.Tile
 import org.alter.game.model.World
 import org.alter.game.model.attr.KILLER_ATTR
-import org.alter.game.model.entity.GroundItem
 import org.alter.game.model.entity.Npc
 import org.alter.game.model.entity.Player
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
-import org.alter.plugins.content.bosses.CollectionLog
+import org.alter.plugins.content.bosses.BossDeath
+import org.alter.plugins.content.bosses.BossKills
 import org.alter.plugins.content.bosses.DropEntry
 import org.alter.plugins.content.bosses.DropTable
 import org.alter.rscm.RSCM.getRSCM
@@ -27,9 +26,9 @@ private val logger = KotlinLogging.logger {}
  * This plugin owns the world side: region force-loads, the sixteen spawns (donor
  * coordinates from the fight-class comments, walk ranges included), and each
  * general's death economy — donor drop tables translated (godsword shards + hilts +
- * armour rares scaled to our odds convention), Collection Log pages,
- * rare broadcasts, and a 1/1000 god-pet roll. The fights live in
- * [GodwarsCombatPlugin].
+ * armour rares scaled to our odds convention) paid through the shared
+ * [BossDeath.payout] (kill ledger, Collection Log, rare broadcasts, 1/1000 god pet).
+ * The fights live in [GodwarsCombatPlugin].
  *
  * v1 scope (guide-documented): the throne rooms themselves. The surrounding dungeon
  * — killcount doors, aviansie/spiritual fodder, altars, the KC HUD — is the donor's
@@ -214,35 +213,29 @@ class GodwarsPlugin(
             logger.info { "godwars: spawned 4 generals + 12 bodyguards across the throne rooms." }
         }
 
+        rooms.forEach { room -> BossKills.register("gwd_${room.key}", room.name) }
+
         rooms.forEach { room ->
             onNpcDeath(room.generalKey) {
                 val boss = npc
-                val killer = boss.attr[KILLER_ATTR]?.get() as? Player ?: return@onNpcDeath
-                room.drops.roll(world).forEach { drop ->
-                    val id = getRSCM(drop.item)
-                    world.spawn(GroundItem(id, drop.amount, boss.tile, killer))
-                    val name = getItem(id).name
-                    if (drop.announce) {
-                        world.players.forEach {
-                            it.message("<col=ff0000>News: ${killer.username} just received <col=ffae00>$name</col> from ${room.name}!</col>")
-                        }
-                    }
-                    if (drop.log && CollectionLog.record(killer, id)) {
-                        killer.message("<col=ffae00>New Collection Log slot: $name!</col>")
-                    }
+                val credited = boss.attr[KILLER_ATTR]?.get()
+                val killer = credited as? Player
+                // A general's death with no player credit is exactly the "I killed Zilyana and got
+                // nothing" report (2026-09-03) — leave a trail either way so the next one can be
+                // read out of the server log instead of guessed at.
+                if (killer == null) {
+                    logger.warn { "godwars: ${room.name} died at ${boss.tile} with no player credit (most damage by: $credited)." }
+                    return@onNpcDeath
                 }
-                if (world.chance(1, PET_ODDS)) {
-                    val pet = getRSCM(room.pet)
-                    val add = killer.inventory.add(item = pet, amount = 1, assureFullInsertion = false)
-                    if (add.completed == 0) killer.bank.add(pet, 1)
-                    world.players.forEach {
-                        it.message("<col=ff0000>News: ${killer.username} just received a <col=ffae00>${getItem(pet).name}</col> from ${room.name}!</col>")
-                    }
-                    if (CollectionLog.record(killer, pet)) {
-                        killer.message("<col=ffae00>New Collection Log slot: ${getItem(pet).name}!</col>")
-                    }
-                }
-                killer.message("<col=ff0000>You have slain ${room.name}.</col>")
+                logger.info { "godwars: ${room.name} slain by ${killer.username} at ${boss.tile}; paying out." }
+                // The shared payout (lairs/wilderness/slayer use it too): kill ledger + `::kc`
+                // milestones, the table as owned ground items with broadcasts + Collection Log,
+                // and the 1/1000 god pet to inventory or bank.
+                BossDeath.payout(
+                    world, killer, Tile(boss.tile.x, boss.tile.z, boss.tile.height),
+                    key = "gwd_${room.key}", name = room.name, drops = room.drops,
+                    pet = room.pet, petOneIn = PET_ODDS,
+                )
             }
         }
     }

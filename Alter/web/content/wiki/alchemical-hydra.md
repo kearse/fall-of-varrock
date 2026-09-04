@@ -14,8 +14,9 @@ quarter damage** until you lure it over the right chemical vent, and standing ov
 
 ## Getting there
 
-Teleport portal → **Bosses → Alchemical Hydra** lands you by the lab rocks — **climb them**
-(or type `::hydra`). Dying inside is a **safe death**.
+Teleport portal → **Bosses → Alchemical Hydra** lands you on the dungeon floor just south of
+the lab — walk north up the narrow passage and **climb the rocks** (or type `::hydra`).
+Climbing back out puts you on the same floor. Dying inside is a **safe death**.
 
 ## The four phases
 

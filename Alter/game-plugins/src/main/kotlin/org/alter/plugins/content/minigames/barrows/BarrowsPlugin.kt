@@ -58,12 +58,13 @@ class BarrowsPlugin(
             }
         }
 
-        // The reward chest is a multi-loc: base 20973 (no actions of its own) shows child 20723
-        // "Chest" [Open] at varbit 1394 = 0 and child 20724 "Chest" [Search, Close] at 1. The
-        // client sends the BASE id with the child's option slot, so bind by slot: 1 = Open/Search
-        // (same handler — Barrows.chest decides by run state), 2 = Close.
-        onObjOption(obj = Barrows.CHEST_KEY, option = 1) { Barrows.chest(player) }
-        onObjOption(obj = Barrows.CHEST_KEY, option = 2) { Barrows.closeChest(player) }
+        // The reward chest is a multi-loc (base 20973, varbit 1394 → child 20723 [Open] / 20724
+        // [Search, Close]). ObjectPathAction dispatches on `obj.getTransform(player)` — the CHILD
+        // id for the clicker's varbit state — so the bindings live on the children. (Binding the
+        // base by option slot, as this used to, never matched: "Nothing interesting happens".)
+        onObjOption(obj = Barrows.CHEST_CLOSED_KEY, option = "open") { Barrows.chest(player) }
+        onObjOption(obj = Barrows.CHEST_OPEN_KEY, option = "search") { Barrows.chest(player) }
+        onObjOption(obj = Barrows.CHEST_OPEN_KEY, option = "close") { Barrows.closeChest(player) }
 
         // Tunnel vermin: their kills feed reward potential. Per-id handlers so the generic
         // osrsbox table stays off (they'd otherwise litter the chest chamber); they drop
