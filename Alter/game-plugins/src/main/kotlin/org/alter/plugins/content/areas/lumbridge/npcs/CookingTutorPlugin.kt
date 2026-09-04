@@ -62,9 +62,11 @@ class CookingTutorPlugin(
                     item = "item.null_5080",
                     amountOrZoom = 400
                 )
+                // Used to point at Cook's Assistant; that quest (and the castle Cook) are gone from
+                // this server, so send new cooks to the realm's actual food-for-the-war loop instead.
                 chatNpc(
                     player,
-                    "If you're interested in quests, I heard my friend the<br>cook in Lumbridge Castle is in need of a hand. Just<br>talk to him and he'll set you off.",
+                    "If you want your cooking to count for something, the<br>Quartermaster in The Mire takes cooked food for the<br>war effort. Every plate you hand in feeds the realm.",
                 )
                 menu(player)
             }

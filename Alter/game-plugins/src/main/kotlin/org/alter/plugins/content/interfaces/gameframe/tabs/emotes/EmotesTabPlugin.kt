@@ -33,6 +33,12 @@ class EmotesTabPlugin(
                 range = 0..51,
                 setting = arrayOf(InterfaceEvent.ClickOp1, InterfaceEvent.ClickOp2),
             )
+            // Goblin bow/salute are free here (their OSRS unlock, The Lost Tribe, doesn't exist on
+            // this server). The server no longer checks the varbit (Emote.kt), but the stock emote-tab
+            // clientscript still greys the two icons until it reads 7 — so pin it on login.
+            if (player.getVarbit(Varbit.GOBLIN_EMOTES_VARBIT) != 7) {
+                player.setVarbit(Varbit.GOBLIN_EMOTES_VARBIT, 7)
+            }
         }
 
         onButton(interfaceId = COMPONENT_ID, component = 2) p@{

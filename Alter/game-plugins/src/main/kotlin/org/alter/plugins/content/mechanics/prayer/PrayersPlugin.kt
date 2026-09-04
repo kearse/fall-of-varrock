@@ -87,6 +87,11 @@ class PrayersPlugin(
          */
         onLogin {
             player.timers[Prayers.PRAYER_DRAIN] = 1
+            // No OSRS quest requirements on this server: light Chivalry/Piety in the client's prayer
+            // tab (its clientscript greys them until King's Ransom reads complete). See Prayers.kt.
+            if (player.getVarbit(Prayers.KINGS_RANSOM_VARBIT) != Prayers.KINGS_RANSOM_DONE) {
+                player.setVarbit(Prayers.KINGS_RANSOM_VARBIT, Prayers.KINGS_RANSOM_DONE)
+            }
         }
 
         onTimer(Prayers.PRAYER_DRAIN) {
