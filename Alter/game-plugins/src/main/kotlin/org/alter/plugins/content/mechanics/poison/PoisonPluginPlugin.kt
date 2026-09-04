@@ -23,7 +23,7 @@ class PoisonPluginPlugin(
     world: World,
     server: Server
 ) : KotlinPlugin(r, world, server) {
-        
+
     init {
         // OSRS: poison and venom both proc every 30 game ticks (18 seconds).
         val POISON_TICK_DELAY = 30
@@ -31,7 +31,10 @@ class PoisonPluginPlugin(
         onPlayerDeath {
             player.timers.remove(POISON_TIMER)
             player.attr.remove(VENOM_DAMAGE_ATTR)
-            Poison.setHpOrb(player, Poison.OrbState.NONE)
+            // The tick counter is reset-on-death too, but that races this hook — clear it here
+            // so the orb refresh below can't re-read a stale poison value.
+            player.attr.remove(POISON_TICKS_LEFT_ATTR)
+            Poison.refreshHpOrb(player)
         }
 
         // The poison/venom ATTRS persist across sessions but POISON_TIMER does not — without
@@ -42,15 +45,10 @@ class PoisonPluginPlugin(
             val poisonTicks = player.attr[POISON_TICKS_LEFT_ATTR] ?: 0
             if (venom > 0 || poisonTicks != 0) {
                 player.timers[POISON_TIMER] = POISON_TICK_DELAY
-                Poison.setHpOrb(
-                    player,
-                    when {
-                        venom > 0 -> Poison.OrbState.VENOM
-                        poisonTicks > 0 -> Poison.OrbState.POISON
-                        else -> Poison.OrbState.NONE // negative = immunity window decaying
-                    },
-                )
             }
+            // Always: varp 102 is persisted with the save, so a player cured since their last
+            // save would otherwise log in with a stale green bar.
+            Poison.refreshHpOrb(player)
         }
 
         onTimer(POISON_TIMER) {
@@ -61,9 +59,7 @@ class PoisonPluginPlugin(
             if (venomDamage > 0) {
                 pawn.hit(damage = venomDamage, type = HitType.VENOM)
                 pawn.attr[VENOM_DAMAGE_ATTR] = Math.min(Poison.VENOM_DAMAGE_CAP, venomDamage + Poison.VENOM_DAMAGE_STEP)
-                if (pawn is Player) {
-                    Poison.setHpOrb(pawn, Poison.OrbState.VENOM)
-                }
+                Poison.refreshHpOrb(pawn)
                 pawn.timers[POISON_TIMER] = POISON_TICK_DELAY
                 return@onTimer
             }
@@ -71,9 +67,7 @@ class PoisonPluginPlugin(
             val ticksLeft = pawn.attr[POISON_TICKS_LEFT_ATTR] ?: 0
 
             if (ticksLeft == 0) {
-                if (pawn is Player) {
-                    Poison.setHpOrb(pawn, Poison.OrbState.NONE)
-                }
+                Poison.refreshHpOrb(pawn)
                 return@onTimer
             }
 
@@ -83,6 +77,8 @@ class PoisonPluginPlugin(
             } else if (ticksLeft < 0) {
                 pawn.attr[POISON_TICKS_LEFT_ATTR] = ticksLeft + 1
             }
+            // Keep the client's countdown (and the bar colour once it reaches 0) in step.
+            Poison.refreshHpOrb(pawn)
 
             pawn.timers[POISON_TIMER] = POISON_TICK_DELAY
         }

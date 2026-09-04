@@ -312,7 +312,7 @@ class PotionsPlugin(
         p.attr.remove(VENOM_DAMAGE_ATTR)
         p.attr[POISON_TICKS_LEFT_ATTR] = -immunityTicks
         p.timers[POISON_TIMER] = 1
-        Poison.setHpOrb(p, Poison.OrbState.NONE)
+        Poison.refreshHpOrb(p)
     }
 
     private fun antifire(p: Player, ticks: Int, fullImmunity: Boolean) {

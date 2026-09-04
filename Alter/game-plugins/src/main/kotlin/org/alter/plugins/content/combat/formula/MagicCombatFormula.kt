@@ -73,7 +73,9 @@ object MagicCombatFormula : CombatFormula {
         target: Pawn,
         specialAttackMultiplier: Double,
     ): Double {
-        val attack = getAttackRoll(pawn, target)
+        // The special-attack accuracy multiplier was accepted and silently dropped here, so a
+        // magic special's accuracy bonus (nightmare staves: +50%) never applied.
+        val attack = Math.floor(getAttackRoll(pawn, target) * specialAttackMultiplier).toInt()
         val defence =
             if (target is Player) {
                 getDefenceRoll(target)

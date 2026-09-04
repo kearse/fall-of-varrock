@@ -110,12 +110,18 @@ fun Pawn.dealHit(
     return dealHit(target, maxHit, landHit, delay, onHit = onHit)
 }
 
+/**
+ * @param combatClass the class the protection prayers judge this hit by. Defaults to the
+ *   attacker's CURRENT class, which is wrong for a magic special cast with no spell armed
+ *   (a nightmare staff reads as MELEE) — such callers pass the class explicitly.
+ */
 fun Pawn.dealHit(
     target: Pawn,
     maxHit: Int,
     landHit: Boolean,
     delay: Int,
     respectsProtection: Boolean = true,
+    combatClass: CombatClass? = null,
     onHit: (PawnHit) -> Unit = {},
 ): PawnHit {
     val hit =
@@ -137,9 +143,9 @@ fun Pawn.dealHit(
     // exactly as in OSRS (100% block vs NPC attackers, 40% reduction vs players).
     // Prayer-piercing boss attacks pass respectsProtection = false.
     if (respectsProtection) {
-        val combatClass = CombatConfigs.getCombatClass(this)
+        val hitClass = combatClass ?: CombatConfigs.getCombatClass(this)
         hit.addDamageTransform { damage ->
-            Math.floor(damage * Combat.protectionDamageMultiplier(this, target, combatClass)).toInt()
+            Math.floor(damage * Combat.protectionDamageMultiplier(this, target, hitClass)).toInt()
         }
     }
 
@@ -217,14 +223,15 @@ fun Pawn.dealExactHit(
     target: Pawn,
     damage: Int,
     delay: Int,
+    combatClass: CombatClass? = null,
     onHit: (PawnHit) -> Unit = {},
 ): PawnHit {
     val hit = target.hit(damage = damage, delay = delay, attackersIndex = this.index)
     val pawnHit = PawnHit(hit, landed = true)
 
-    val combatClass = CombatConfigs.getCombatClass(this)
+    val hitClass = combatClass ?: CombatConfigs.getCombatClass(this)
     hit.addDamageTransform { dmg ->
-        Math.floor(dmg * Combat.protectionDamageMultiplier(this, target, combatClass)).toInt()
+        Math.floor(dmg * Combat.protectionDamageMultiplier(this, target, hitClass)).toInt()
     }
 
     // No attacker-death cancel — see dealHit.
