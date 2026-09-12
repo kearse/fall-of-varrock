@@ -32,3 +32,5 @@ Type `::trials` for your current objective, or open the Quest Journal with `::qu
 ## What comes after
 
 Damien points you two ways. **General Zo** in the castle courtyard musters the **Marches** north against the enemy - answer the call. And **Vannaka** has your next drills: the **War-Prep chain**, starting with **Prayer 37** (Protect from Magic) at the Lumbridge church altar and the assault on the **Wizard Tower**, which permanently unlocks the Ancient, Lunar and Arceuus spellbooks. See [Wizard Tower](/wiki/wizard-tower) and [Unlocking the magic books](/wiki/unlocking-spellbooks).
+
+The main story continues on its own: the moment the debrief ends, **[The North](/wiki/the-north)** begins - General Zo wants you to see what the Fall of Varrock did to the rest of the kingdom.

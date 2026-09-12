@@ -72,8 +72,12 @@ object QuestJournal {
     const val CONQUEST_VARP = 4633      // King of Lumbridge (endgame); 4635-4637 are companion indices
     const val KNIGHTS_VARP = 4682       // Rogue Knight ladder (rank + active hunt index; was 4644)
 
-    /** First Reclamation (Main Story Quest 4, framework quest `quests/story/FirstReclamation`) —
-     *  the generic `QuestEngine.publish` packing, claimed from the 4686-4699 block (§8). */
+    // Framework quests (generic `QuestEngine.publish` packing: step index+1 bits 0-7 | progress
+    // bits 8-19 | state bits 20-21) take ids from the 4686-4699 block reserved in
+    // docs/overlay-design-system.md §8 — one per quest, recorded there individually.
+    /** The North (Main Story Quest 3, `quests/north/TheNorth`). */
+    const val NORTH_VARP = 4686
+    /** First Reclamation (Main Story Quest 4, `quests/story/FirstReclamation`). */
     const val FIRST_RECLAMATION_VARP = 4687
 
     // Reused OSRS quest progress varps that colour the relabelled native quest-tab rows. A value of
@@ -101,6 +105,10 @@ object QuestJournal {
     /** Witch's Potion varp — now the "King of Lumbridge" row. Completes at 3. */
     const val KING_QUEST_VARP = 67
     internal const val KING_QUEST_COMPLETE = 3
+    /** Ernest the Chicken varp — now the "The North" row (a framework quest: driven by
+     *  `QuestEngine.publish` from `TheNorth.nativeTabVarp`). Completes at 3. */
+    const val NORTH_QUEST_VARP = 32
+    internal const val NORTH_QUEST_COMPLETE = 3
     /** Romeo & Juliet varp — now the "First Reclamation" row (driven by `QuestDefinition.nativeTabVarp`
      *  through `QuestEngine.publish`). Completes at 100. */
     const val FIRST_RECLAMATION_QUEST_VARP = 144

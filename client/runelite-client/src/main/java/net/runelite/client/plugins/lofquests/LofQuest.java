@@ -183,6 +183,36 @@ enum LofQuest
 		)),
 
 	/**
+	 * Main Story Quest 3 — the first FRAMEWORK quest (server `quests/north/TheNorth`, generic
+	 * packing on LofQuestVarps.NORTH). Step ordinals are the 1-based server step index; the state
+	 * bits are authoritative (it auto-begins the moment The Last Free City is done).
+	 */
+	THE_NORTH(
+		"The North",
+		"You have seen Lumbridge attacked and stood with its Knights. General Zo wants you to see "
+			+ "what the Fall of Varrock did to the rest of the kingdom: go north to Edgeville, find "
+			+ "someone who remembers the day Varrock fell, stand at the Wilderness line — where the "
+			+ "Rogue Knights give way to other adventurers — and bring back the last dispatch Varrock "
+			+ "ever sent. No fight is required; the road north may test you anyway.",
+		LofQuestVarps.NORTH,
+		"Complete The Last Free City first.",
+		Arrays.asList(
+			new LofQuestStep(1, "Speak to General Zo about the north", "In the castle courtyard, beside Duke Horacio.", new WorldPoint(3220, 3210, 0)),
+			new LofQuestStep(2, "Travel to Edgeville", "Any road or teleport — an amulet of glory lands you there. Rogue Knights may cross your path; you need not fight them.", new WorldPoint(3087, 3496, 0)),
+			new LofQuestStep(3, "Find someone who remembers the Fall", "Oziach, in his hut at the north-west edge of Edgeville.", new WorldPoint(3069, 3517, 0)),
+			new LofQuestStep(4, "Inspect the Wilderness boundary", "Walk to the ditch at the top of town. You do not have to cross it.", new WorldPoint(3088, 3519, 0)),
+			new LofQuestStep(5, "Return to Oziach", "Tell him what you saw.", new WorldPoint(3069, 3517, 0)),
+			new LofQuestStep(6, "Read the Weathered Varrock Dispatch", "Read it from your pack, or with Oziach.", new WorldPoint(3069, 3517, 0)),
+			new LofQuestStep(7, "Take the dispatch to General Zo", "He wants to read the original — and Oziach wants it back.", new WorldPoint(3220, 3210, 0))
+		),
+		Arrays.asList(
+			"15 War Effort",
+			"The Weathered Varrock Dispatch — yours to keep and re-read from your pack",
+			"Edgeville and the Wilderness line: where the Rogue Knights end and real PvP begins",
+			"First Reclamation — the next main story quest"
+		)),
+
+	/**
 	 * Main Story Quest 4 — a framework quest (server `quests/story/FirstReclamation`, generic journal
 	 * varp 4687). Rows are the 1-based server step indices. The server's `retry` step (8) has no row
 	 * of its own: it renders as the battle row (7) with a "driven back" suffix, arrow on General Zo.

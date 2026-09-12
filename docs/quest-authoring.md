@@ -114,9 +114,15 @@ exactly as the Recruiting Sergeant was in PR-9).
    before/after any change near the legacy chains must be identical; boot must print
    `[quests] registry: 7 legacy chains, N framework quests` with N incremented.
 
-## 3. Legacy quest keys (prerequisites)
+## 3. Quest keys (prerequisites)
 
-`recruit_trials` (**The Last Free City**, Main Story Quest 1 — `docs/quests/the-last-free-city.md`)
+Framework: `the_north` (**The North**, Main Story Quest 3 — `docs/quests/the-north.md`; the first
+built framework quest, and the reference for the journal varp + native-tab row path:
+`journalVarp` from the 4686 block + `nativeTabVarp`/`nativeTabComplete` on the definition, both
+written by `QuestEngine.publish`). Its gate is `Prerequisite.Custom`: `first_march` once that key
+is registered, else `recruit_trials` — copy the pattern when the quest before yours is not built yet.
+
+Legacy: `recruit_trials` (**The Last Free City**, Main Story Quest 1 — `docs/quests/the-last-free-city.md`)
 · `warprep_magic` · `rogue_hunting_1` (optional) · `rogue_hunting_2` (optional) · `warprep_ranged` ·
 `warprep_survival` · `king_of_lumbridge`. Framework story quests: `the_north` (Main Story Quest 3),
 `first_reclamation` (Main Story Quest 4 — `docs/quests/first-reclamation.md`), `a_kingdom_alone`
@@ -130,8 +136,10 @@ Branching steps (a `ConditionalStep` — First Reclamation fakes its battle ⇄ 
 `QuestEngine.advanceTo`), party instances, the Veteran-of-Varrock award (the first major
 assault story event), the `NpcTalk` migration for Vannaka (still on his own `onNpcOption` bind).
 
-Built since: General Zo routes through `bindTalk` + an `NpcTalk` default branch (First
-Reclamation, 2026-09-12); the first locked route (`southern_watch`, unlocked by that quest);
-client journal entries for framework quests (the generic-varp `LofQuest` constructor, with
-`LofQuestVarps.FIRST_RECLAMATION` = 4687); the native quest-tab mirror (`nativeTabVarp`); and
-`QuestEngine.pollTick` auto-begins an `autoBegin` quest the moment its gate opens mid-session.
+Built since (The North + First Reclamation, 2026-09-12): General Zo routes through `bindTalk` + a
+default `NpcTalk` branch; framework quests publish to the client journal through the generic
+`LofQuest` entry (varp `& 0xFF` = 1-based step, bits 20-21 = state; `LofQuestVarps.NORTH` = 4686,
+`FIRST_RECLAMATION` = 4687) and to the native tab through `QuestDefinition.nativeTabVarp`; the
+first locked route (`southern_watch`, unlocked by First Reclamation); and `QuestEngine.pollTick`
+auto-begins an `autoBegin` quest the moment its gate opens mid-session, so the next quest starts
+without a relog.

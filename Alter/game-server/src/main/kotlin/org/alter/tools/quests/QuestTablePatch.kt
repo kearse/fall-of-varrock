@@ -57,11 +57,12 @@ private const val COL_DISPLAY_NAME = 2 // the name shown in the quest tab (DBTab
  * so our quests list in quest-line order; `displayName` is what players see. The `varp` is the
  * reused quest's progress varp the server drives (kept in lock-step with [QuestJournal]).
  *
- * All seven LIVE, server-driven quests are relabelled. Act II is TWO rows off one server chain:
+ * All LIVE, server-driven quests are relabelled. Act II is TWO rows off one server chain:
  * "Rogue Hunting I" (the hunt) reuses The Restless Ghost (varp 107) and "Rogue Hunting II" (the
  * Rogue Knight ladder) reuses The Knight's Sword (varp 122); "War-Prep II — Ranged" reuses Imp
- * Catcher (varp 160); "War-Prep III — Survival" reuses Sheep Shearer (varp 179). All are driven by
- * [QuestJournal.syncNativeTab]. Mappings for any future quests: docs/quest-tab-handoff.md.
+ * Catcher (varp 160); "War-Prep III — Survival" reuses Sheep Shearer (varp 179). The legacy chains
+ * are driven by [QuestJournal] (`LegacyChains`); framework quests by `QuestEngine.publish` from
+ * their `QuestDefinition.nativeTabVarp`. Mappings for any future quests: docs/quest-tab-handoff.md.
  */
 private data class Relabel(
     val dbrowId: Int,
@@ -94,11 +95,15 @@ private val PLAN = listOf(
     // Driven from WarPrepSurvival.step.
     Relabel(dbrowId = 131, questId = 5, sortName = "06 War-Prep III - Survival", displayName = "War-Prep III - Survival", varp = 179),
     // King of Lumbridge (endgame conquest) reuses Witch's Potion (varp 67, driven by QuestJournal from
-    // Conquest.step). Sort key 07 keeps it after the War-Prep chain.
+    // Conquest.step). Sort key 07 keeps it last of the legacy hallway.
     Relabel(dbrowId = 161, questId = 13, sortName = "07 King of Lumbridge", displayName = "King of Lumbridge", varp = 67),
+    // The North (Main Story Quest 3 — a framework quest, chain index 7) reuses Ernest the Chicken
+    // (dbrow 44, quest id 7, varp 32, complete 3). Driven by QuestEngine.publish from
+    // TheNorth.nativeTabVarp. Framework story quests append after the hallway in story order.
+    Relabel(dbrowId = 44, questId = 7, sortName = "08 The North", displayName = "The North", varp = 32),
     // First Reclamation (Main Story Quest 4, framework quest) reuses Romeo & Juliet (dbrow 121, quest
     // id 4, varp 144, complete 100) — driven by QuestDefinition.nativeTabVarp through QuestEngine.publish.
-    // Sort key 09: The North takes 08, A Kingdom Alone 10 and its strategic objectives 11-14.
+    // Sort key 09; A Kingdom Alone takes 10 and its strategic objectives 11-14.
     Relabel(dbrowId = 121, questId = 4, sortName = "09 First Reclamation", displayName = "First Reclamation", varp = 144),
 )
 

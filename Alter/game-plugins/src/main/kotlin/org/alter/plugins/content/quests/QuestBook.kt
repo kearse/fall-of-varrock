@@ -25,18 +25,20 @@ object QuestBook {
      *  whose chest slot was filled pulsed this open (::kits popped the quest journal). */
     const val OPEN_VARP = 4683
 
-    // Chain indices — must match client LofQuest.CHAIN order.
-    const val RECRUIT_TRIALS = 0
+    // Chain indices — must match client LofQuest.CHAIN order (= the enum's declaration order,
+    // FUTURE teasers excluded) AND the native quest tab's row order (QuestTablePatch.PLAN sort
+    // names). The legacy hallway keeps 0-6; framework main-story quests are APPENDED in story
+    // order (The North 7, then First Reclamation, A Kingdom Alone…) — each quest adds only its
+    // own constant and the last one to land bumps LAST_INDEX.
+    const val RECRUIT_TRIALS = 0   // The Last Free City (Main Story Quest 1)
     const val WARPREP_MAGIC = 1
     const val ROGUE_HUNTING_I = 2
     const val ROGUE_HUNTING_II = 3
     const val WARPREP_RANGED = 4
     const val WARPREP_SURVIVAL = 5
     const val KING = 6
-    // Main story quests 3+ (framework quests): 7 = The North, 8 = First Reclamation, 9 = A Kingdom
-    // Alone — the value is the quest's position in the client enum, so whichever quest PR merges
-    // last re-checks every constant here against `LofQuest`'s declaration order.
-    const val FIRST_RECLAMATION = 8
+    const val THE_NORTH = 7         // The North (Main Story Quest 3)
+    const val FIRST_RECLAMATION = 8 // First Reclamation (Main Story Quest 4)
 
     const val LAST_INDEX = FIRST_RECLAMATION
 

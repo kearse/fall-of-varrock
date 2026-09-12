@@ -1,0 +1,19 @@
+---
+# THE NORTH (Main Story Quest 3, docs/quests/the-north.md): Oziach's Weathered Varrock Dispatch.
+# LIGHT CUSTOM per the quest's development audit — reuses the stock "Old note" def (id 25829, "an
+# old note found in an old ruin"; it already has the Read + Drop pack verbs, and nothing else here
+# uses it). Untradeable, so it is ALWAYS kept on death (PvpDeathDropPlugin keeps untradeables) and
+# can never be traded, sold or alched; it stays with the player after the quest as a re-readable
+# lore item. The CLIENT renders the cache name and examine, so the operator runs Actions ->
+# "Item def cache edit" -> dispatch to rename it in the live cache (until then the pack shows the
+# stock "Old note"). data/cfg/objs.csv carries the server-side examine. File MUST start with '---'.
+id: 25829
+name: "Weathered Varrock dispatch"
+examine: "A military dispatch from the final hours before Varrock fell."
+tradeable: false
+weight: 0.0
+tradeable_on_ge: false
+cost: 0
+lowalch: 0
+highalch: 0
+buy_limit: null

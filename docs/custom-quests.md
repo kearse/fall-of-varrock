@@ -31,6 +31,7 @@ custom client reads (same transport as the war HUD — no custom packets):
 | **4624** | War-Prep II — Ranged, packed: bits 0-5 step ordinal, bits 6-11 enemies felled with a ranged weapon on FIELD |
 | **4681** | War-Prep III — Survival step ordinal, bits 0-5 (was 4643 — collided with the kit editor's 4640-4679 block) |
 | **4633** | King of Lumbridge (endgame conquest) step ordinal, bits 0-5 |
+| **4686** | The North (Main Story Quest 3 — the first framework quest), generic packing: bits 0-7 step index+1, bits 8-19 progress, bits 20-21 state (0 none, 1 in progress, 2 complete) — `QuestEngine.publish` |
 
 A 3-tick world poll re-derives these from the persistent attributes (which stay the source of
 truth) and only writes on change. **Custom-varp registry so far:** 4600 siege alert · 4601 war
@@ -39,8 +40,9 @@ progress · 4602-4605 PK stats · 4606 wilderness level · 4607 teleport menu ·
 **4633 quests (King of Lumbridge)** · 4640-4679 kit editor · 4680 companion sparring ·
 **4681 quests (War-Prep III)** · **4682 quests (Rogue Knight ladder)** · **4683 Quest Journal
 window open-pulse** (`QuestBook.OPEN_VARP`) — the quest trio moved off 4643-4645, which sat inside
-the kit editor's block and made `::kits` pop the quest journal. Claim the next one here when you
-add a system, and cross-check the master map in docs/overlay-design-system.md §8 FIRST.
+the kit editor's block and made `::kits` pop the quest journal · **4686 quests (The North)**, the
+first of the 4686-4699 framework-quest block. Claim the next one here when you add a system, and
+cross-check the master map in docs/overlay-design-system.md §8 FIRST.
 
 ### 2b. Free-play toggle (`::questguide`)
 
