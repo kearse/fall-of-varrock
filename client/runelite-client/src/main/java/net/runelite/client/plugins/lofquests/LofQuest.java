@@ -650,6 +650,25 @@ enum LofQuest
 		CHAIN = Collections.unmodifiableList(c);
 	}
 
+	/**
+	 * True if tracking this quest can ever draw anything — at least one step has a world target or
+	 * a target creature. The four standing strategic objectives (BREACH, SECURE, UNDERSTAND,
+	 * SUSTAIN) have neither: their "steps" are whole regions, led by the campaign quests under them,
+	 * so auto-track must never settle on one (it would sit "in progress" for the whole regional
+	 * phase drawing no arrow, and the player would get no guidance for the quest they're actually on).
+	 */
+	boolean hasGuidance()
+	{
+		for (LofQuestStep step : steps)
+		{
+			if (step.getTarget() != null || step.getNpcIds().length > 0)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
 	/** This quest's 0-based position in {@link #CHAIN}, or -1 if it's a FUTURE teaser. */
 	int chainIndex()
 	{

@@ -274,20 +274,28 @@ public class LofQuestsPlugin extends Plugin
 	/** Re-derive tracking and repaint the journal (safe to call from the client thread). */
 	private void refresh()
 	{
-		// Drop the tracker once its quest is finished/locked; then auto-track picks the next one up.
-		if (trackedQuest != null && !guidable(trackedQuest.state(client)))
+		// Drop the tracker once its quest is finished/locked (or can never draw anything — a
+		// standing strategic objective); then auto-track picks the next one up.
+		if (trackedQuest != null && (!guidable(trackedQuest.state(client)) || !trackedQuest.hasGuidance()))
 		{
 			trackedQuest = null;
 			playerUntracked = false;
 		}
 		// Auto-guide by default (the server no longer draws arrows): follow the active quest, or the
-		// next not-started one so a fresh recruit is guided from the very first objective.
+		// next not-started one so a fresh recruit is guided from the very first objective. Only
+		// quests that can actually be pointed at count — the four strategic objectives are "in
+		// progress" for the whole regional phase but have no targets, and sit before the campaign
+		// quests in the list; settling on one would leave the player with no arrow at all.
 		if (trackedQuest == null && !playerUntracked && config.autoTrack())
 		{
 			LofQuest inProgress = null;
 			LofQuest notStarted = null;
 			for (LofQuest quest : LofQuest.values())
 			{
+				if (!quest.hasGuidance())
+				{
+					continue;
+				}
 				LofQuestState state = quest.state(client);
 				if (state == LofQuestState.IN_PROGRESS && inProgress == null)
 				{
