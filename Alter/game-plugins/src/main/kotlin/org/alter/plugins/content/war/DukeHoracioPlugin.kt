@@ -5,6 +5,8 @@ import org.alter.game.Server
 import org.alter.game.model.World
 import org.alter.game.model.attr.DUKE_INTRO_DONE_ATTR
 import org.alter.game.model.entity.Player
+import org.alter.plugins.content.quests.framework.NpcTalk
+import org.alter.plugins.content.quests.framework.bindTalk
 import org.alter.plugins.content.war.recruit.RecruitTrials
 import org.alter.plugins.content.war.roguehunt.RogueProblem
 import org.alter.plugins.content.war.warprep.WarPrepChain
@@ -25,9 +27,10 @@ class DukeHoracioPlugin(
 ) : KotlinPlugin(r, world, server) {
 
     init {
-        onNpcOption("npc.duke_horacio", option = "talk-to") {
-            player.queue { duke(player) }
-        }
+        // Talk-to routes through NpcTalk so story quests can claim his conversation on their own
+        // steps (QuestDefinition.talk); the rank dialogue below is the default branch.
+        bindTalk("npc.duke_horacio")
+        NpcTalk.register("npc.duke_horacio", NpcTalk.PRIORITY_DEFAULT) { _ -> { p -> duke(p) } }
     }
 
     private suspend fun QueueTask.duke(player: Player) {

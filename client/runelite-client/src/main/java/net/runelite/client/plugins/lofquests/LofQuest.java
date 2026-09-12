@@ -180,6 +180,144 @@ enum LofQuest
 			"Command of the realm's armies (::conquest)",
 			"A commander's spoils (::claim) and Prestige",
 			"City-vs-city conquest"
+		)),
+
+	// ---- Main Story Quests 3-5 + the regional phase: framework quests (generic varp packing) ----
+	// Chain order here MUST match the server's QuestBook constants (THE_NORTH 7, FIRST_RECLAMATION 8,
+	// A_KINGDOM_ALONE 9, BREACH 10, SECURE 11, UNDERSTAND 12, SUSTAIN 13). Step ordinals are the
+	// server's 1-based step index (QuestEngine.publish). The two entries below A_KINGDOM_ALONE's
+	// predecessors are PLACEHOLDERS that hold the chain slots; their own quest PRs replace them.
+
+	/** Main Story Quest 3 — placeholder holding chain slot 7; The North's PR carries the real entry. */
+	THE_NORTH(
+		"The North",
+		"Push north to the Varrock frontier and learn the scale of what Misthalin lost when the "
+			+ "city fell.",
+		LofQuestVarps.NORTH,
+		"Complete The Last Free City first.",
+		Collections.emptyList(),
+		Arrays.asList("The road north", "First Reclamation")),
+
+	/** Main Story Quest 4 — placeholder holding chain slot 8; First Reclamation's PR carries the real entry. */
+	FIRST_RECLAMATION(
+		"First Reclamation",
+		"Prove that lost ground can be taken back: establish the Southern Watch beneath Fallen "
+			+ "Varrock and raise Lumbridge's standard there.",
+		LofQuestVarps.FIRST_RECLAMATION,
+		"Complete The North first.",
+		Collections.emptyList(),
+		Arrays.asList("The Southern Watch", "A Kingdom Alone")),
+
+	/**
+	 * Main Story Quest 5. Short and dialogue-only: Duke Horacio and General Zo lay out why Lumbridge
+	 * cannot retake Varrock alone, and the four strategic problems the surviving kingdoms must solve.
+	 * Completing it opens the four objective entries below at once.
+	 */
+	A_KINGDOM_ALONE(
+		"A Kingdom Alone",
+		"The standard flies at the Southern Watch — Lumbridge has taken ground back for the first "
+			+ "time in twelve years. Now comes the uncomfortable conclusion. General Zo has worked "
+			+ "through what an assault on Varrock would actually require, and Lumbridge cannot "
+			+ "retake the city alone. Report to Duke Horacio, hear Zo's assessment, and learn what "
+			+ "the surviving kingdoms of Gielinor must solve before anyone marches on Varrock.",
+		LofQuestVarps.A_KINGDOM_ALONE,
+		"Complete First Reclamation first.",
+		Arrays.asList(
+			new LofQuestStep(1, "Report to Duke Horacio", "He wants a report on the kingdom's position now the Southern Watch stands. Lumbridge command area, by the market.", new WorldPoint(3220, 3211, 0)),
+			new LofQuestStep(2, "Ask General Zo what retaking Varrock would require", "He stands beside the Duke. You won't enjoy his answer.", new WorldPoint(3220, 3210, 0)),
+			new LofQuestStep(3, "Report General Zo's assessment to Duke Horacio", new WorldPoint(3220, 3211, 0)),
+			new LofQuestStep(4, "Discuss the surviving kingdoms and the four problems", "Falador, the River Salve, the Wilderness, Kandarin — and why nobody is coming yet.", new WorldPoint(3220, 3211, 0))
+		),
+		Arrays.asList(
+			"The Regional Campaign Phase — work across Gielinor in any order",
+			"BREACH — Asgarnia: a way through Varrock's defences",
+			"SECURE — Morytania: the Salve Accord",
+			"UNDERSTAND — the Wilderness, then the Desert: what really happened during the Fall",
+			"SUSTAIN — Kandarin and the War Effort: supply for a sustained assault",
+			"2 Quest Points; the Council of Gielinor convenes once all four are solved"
+		)),
+
+	/** Regional objective — Asgarnia. Completed by the Asgarnia campaign's payoff. */
+	BREACH(
+		"BREACH — Asgarnia",
+		"How do we get an army into Fallen Varrock? The city won't fall because Lumbridge brings "
+			+ "more swords — someone has to get those swords through its defences. Falador has "
+			+ "soldiers, engineers and weapons Misthalin does not, but the White Knights are at war "
+			+ "with the Kinshra and cannot simply march east. Start at the White Wall.",
+		LofQuestVarps.BREACH,
+		"Complete A Kingdom Alone first.",
+		Arrays.asList(
+			new LofQuestStep(1, "Find a way for coalition forces to break through Varrock's defences", "Lead: Falador / Asgarnia. First quest: At the White Wall.", null)
+		),
+		Arrays.asList(
+			"White Knight support and Asgarnian manpower",
+			"Restored dwarven artillery and multicannon capability",
+			"Temple Knight intelligence"
+		)),
+
+	/** Regional objective — Morytania. Completed by the Salve Accord. */
+	SECURE(
+		"SECURE — Morytania",
+		"What protects Misthalin while its army is fighting at Varrock? If the army marches north, "
+			+ "something else notices — Morytania among others. The objective is narrow: the Salve "
+			+ "Accord. No crossing, mutual action against violators, and a stable eastern frontier. "
+			+ "An accord, not an alliance. Start at the River Salve.",
+		LofQuestVarps.SECURE,
+		"Complete A Kingdom Alone first.",
+		Arrays.asList(
+			new LofQuestStep(1, "Ensure Misthalin will remain secure while its army fights in the north", "Lead: River Salve / Morytania. First quest: Across the Salve.", null)
+		),
+		Arrays.asList(
+			"The Salve Accord — a secured eastern border",
+			"Misthalin free to commit its army north"
+		)),
+
+	/** Regional objective — the one with an internal order: Wilderness, then Desert, then Senntisten. */
+	UNDERSTAND(
+		"UNDERSTAND — Wilderness / Desert",
+		"What actually happened to Varrock? Everyone knows what people saw: Zemouregal attacked, "
+			+ "Arrav led the dead, the city fell. The planners will not send an army into Varrock "
+			+ "without knowing why the catastrophe was so abnormal — or whether the same danger "
+			+ "remains beneath the city. The investigation has an order: the Wilderness first, then "
+			+ "the Kharidian Desert, then whatever Senntisten still remembers.",
+		LofQuestVarps.UNDERSTAND,
+		"Complete A Kingdom Alone first.",
+		Arrays.asList(
+			new LofQuestStep(1, "Investigate the First Scar — the Wilderness as an older catastrophe", "Lead: the Wilderness. First quest: The First Scar. No PvP kill is ever required.", null),
+			new LofQuestStep(2, "Follow the evidence into the Kharidian Desert", "Azzanadra and Mahjarrat history lead toward Sliske and the Elder Horn.", null),
+			new LofQuestStep(3, "Uncover what Senntisten holds beneath Varrock", "The convergence that preceded the Fall.", null)
+		),
+		Arrays.asList(
+			"The truth beneath the accepted story of the Fall",
+			"Whether the same danger still waits beneath Varrock"
+		)),
+
+	/** Regional objective — Kandarin + the War Effort. Completed by restored logistics. */
+	SUSTAIN(
+		"SUSTAIN — Kandarin / War Effort",
+		"How do we keep an army alive once it reaches Varrock? One battle empties the stores; now "
+			+ "imagine feeding thousands — arrows, food, medicine, replacement armour, horses, "
+			+ "transport, for weeks. Kandarin still trades. Restore the transport and trade the Fall "
+			+ "broke, and combine it with the realm's own War Effort.",
+		LofQuestVarps.SUSTAIN,
+		"Complete A Kingdom Alone first.",
+		Arrays.asList(
+			new LofQuestStep(1, "Create the supply and transportation network required to maintain a major offensive", "Lead: Kandarin + the War Effort. Major quest: The Long Road East.", null)
+		),
+		Arrays.asList(
+			"Restored Spirit Tree, glider and Fairy Ring transport",
+			"An eastern convoy and the trade to feed a coalition army"
+		)),
+
+	/** FUTURE teaser: the strategic phase's payoff (excluded from the chain track until built). */
+	COUNCIL_OF_GIELINOR(
+		"Council of Gielinor",
+		"Once BREACH, SECURE, UNDERSTAND and SUSTAIN are all solved, a small council of the "
+			+ "surviving kingdoms' representatives reviews the strategic work and authorises "
+			+ "sustained assaults on Fallen Varrock. The first major assault on the city follows.",
+		Arrays.asList(
+			"The First Major Assault on Varrock",
+			"Veteran of Varrock"
 		));
 
 	/**
@@ -205,25 +343,66 @@ enum LofQuest
 	private final int doneOrdinal;
 	private final List<LofQuestStep> steps;
 	private final List<String> unlocks;
+	/** Framework quests: the server's generic journal varp (QuestDefinition.journalVarp); 0 = a
+	 *  legacy chain (own varp layout, switched on below) or a FUTURE teaser. */
+	private final int genericVarp;
+	/** Framework quests: the "Locked — …" line while the prerequisites are unmet (nullable). */
+	private final String lockReasonText;
 
 	LofQuest(String questName, String why, int doneOrdinal, List<LofQuestStep> steps, List<String> unlocks)
 	{
-		this.questName = questName;
-		this.why = why;
-		this.doneOrdinal = doneOrdinal;
-		this.steps = steps;
-		this.unlocks = unlocks;
+		this(questName, why, doneOrdinal, 0, null, steps, unlocks);
+	}
+
+	/**
+	 * Framework quest entry (server `QuestDefinition` with a `journalVarp`): generic packing —
+	 * bits 0-7 current step index + 1, bits 8-19 progress, bits 20-21 state (0 locked / not begun,
+	 * 1 in progress, 2 complete). Step ordinals are the server's 1-based step indices.
+	 */
+	LofQuest(String questName, String why, int genericVarp, String lockReason, List<LofQuestStep> steps, List<String> unlocks)
+	{
+		this(questName, why, Integer.MAX_VALUE, genericVarp, lockReason, steps, unlocks);
 	}
 
 	/** FUTURE teaser entry — no server chain behind it yet. */
 	LofQuest(String questName, String why, List<String> unlocks)
 	{
-		this(questName, why, -1, Collections.emptyList(), unlocks);
+		this(questName, why, -1, 0, null, Collections.emptyList(), unlocks);
+	}
+
+	LofQuest(String questName, String why, int doneOrdinal, int genericVarp, String lockReason, List<LofQuestStep> steps, List<String> unlocks)
+	{
+		this.questName = questName;
+		this.why = why;
+		this.doneOrdinal = doneOrdinal;
+		this.genericVarp = genericVarp;
+		this.lockReasonText = lockReason;
+		this.steps = steps;
+		this.unlocks = unlocks;
 	}
 
 	boolean isFuture()
 	{
 		return doneOrdinal < 0;
+	}
+
+	/** A framework (generic-varp) quest, as opposed to a legacy chain or a FUTURE teaser. */
+	boolean isGeneric()
+	{
+		return genericVarp > 0;
+	}
+
+	/** True if [varp] is any framework quest's journal varp — a change to it must refresh the journal. */
+	static boolean isJournalVarp(int varp)
+	{
+		for (LofQuest q : values())
+		{
+			if (q.genericVarp == varp)
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/** The main quest chain in order — the real, built quests (FUTURE teasers excluded). The index
@@ -257,6 +436,10 @@ enum LofQuest
 	/** The server chain's current step ordinal for this quest (0 for FUTURE entries). */
 	int stepOrdinal(Client client)
 	{
+		if (isGeneric())
+		{
+			return LofQuestVarps.genericStep(client, genericVarp);
+		}
 		switch (this)
 		{
 			case LAST_FREE_CITY:
@@ -283,6 +466,20 @@ enum LofQuest
 		if (isFuture())
 		{
 			return LofQuestState.FUTURE;
+		}
+		if (isGeneric())
+		{
+			// Framework quests begin on their own once the prerequisites are met (or from the
+			// quest before them), so "not begun" reads as locked.
+			switch (LofQuestVarps.genericState(client, genericVarp))
+			{
+				case 2:
+					return LofQuestState.FINISHED;
+				case 1:
+					return LofQuestState.IN_PROGRESS;
+				default:
+					return LofQuestState.LOCKED;
+			}
 		}
 		int ord = stepOrdinal(client);
 		switch (this)
@@ -344,6 +541,10 @@ enum LofQuest
 	/** Short lock explanation for LOCKED entries (null otherwise). */
 	String lockReason(Client client)
 	{
+		if (isGeneric())
+		{
+			return state(client) == LofQuestState.LOCKED ? lockReasonText : null;
+		}
 		if (this == WARPREP_MAGIC && state(client) == LofQuestState.LOCKED)
 		{
 			return "Complete The Last Free City first.";
@@ -374,6 +575,10 @@ enum LofQuest
 	/** How many checklist steps are already behind the player. */
 	int completedSteps(Client client)
 	{
+		if (state(client) == LofQuestState.FINISHED)
+		{
+			return steps.size(); // a finished framework quest publishes step 0 — every row is behind
+		}
 		int ord = stepOrdinal(client);
 		int done = 0;
 		for (LofQuestStep step : steps)
@@ -463,6 +668,16 @@ enum LofQuest
 	/** Live progress suffix for a step row, e.g. " (3/5)" goblins or " (23/37)" Prayer. */
 	String stepProgress(Client client, LofQuestStep step)
 	{
+		if (isGeneric())
+		{
+			// Counted steps of a framework quest: the generic progress bits against the step's goal.
+			if (step.getGoal() > 0 && stepOrdinal(client) == step.getOrdinal())
+			{
+				final int n = Math.min(LofQuestVarps.genericProgress(client, genericVarp), step.getGoal());
+				return " (" + n + "/" + step.getGoal() + ")";
+			}
+			return "";
+		}
 		if (this == LAST_FREE_CITY && step.getOrdinal() == 1 && stepOrdinal(client) == 1)
 		{
 			return " (" + LofQuestVarps.recruitGoblinKills(client) + "/5)";

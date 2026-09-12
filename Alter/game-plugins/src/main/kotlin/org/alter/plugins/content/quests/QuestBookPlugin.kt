@@ -44,7 +44,7 @@ class QuestBookPlugin(
 
     /** Map a clicked quest-tab slot to a chain index (row-position first, col0-id as fallback). */
     private fun chainIndexForSlot(slot: Int): Int? =
-        if (slot in 0..QuestBook.KING) slot else COL0_TO_CHAIN[slot]
+        if (slot in 0..QuestBook.LAST_INDEX) slot else COL0_TO_CHAIN[slot]
 
     private companion object {
         const val QUEST_TAB = 399
@@ -60,6 +60,11 @@ class QuestBookPlugin(
             9 to QuestBook.WARPREP_RANGED,      // Imp Catcher
             5 to QuestBook.WARPREP_SURVIVAL,    // Sheep Shearer
             13 to QuestBook.KING,               // Witch's Potion
+            53 to QuestBook.A_KINGDOM_ALONE,    // Rune Mysteries
+            12 to QuestBook.BREACH,             // Black Knights' Fortress
+            10 to QuestBook.SECURE,             // Prince Ali Rescue
+            8 to QuestBook.UNDERSTAND,          // Vampyre Slayer
+            16 to QuestBook.SUSTAIN,            // Pirate's Treasure
         )
     }
 

@@ -312,6 +312,9 @@ Reusable pieces — reach for these before inventing a new one. Metrics above.
     1 in progress, 2 complete)` — `QuestEngine.publish`). Block 1 claims none; a Block-2 quest that
     needs a journal row takes the next id from this block and records it here individually.
     (4601/4609/4616 all feed the `lofdials` dial row.)
+    **4688 quests: A Kingdom Alone** (Main Story Quest 5, `a_kingdom_alone`) · **4689-4692 quests:
+    BREACH / SECURE / UNDERSTAND / SUSTAIN** (the regional phase's four strategic objectives, keys
+    `breach`/`secure`/`understand`/`sustain`; all generic packing — `content/quests/story/`).
     Every id in this map is guaranteed writable server-side: the varp table is sized
     `maxOf(cache varp count, Player.CUSTOM_VARP_CEILING = 6000)` — the cache count alone sat BELOW
     this range and out-of-range `setVarp` throws (that silently broke lofspar + the kit editor

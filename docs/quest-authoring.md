@@ -111,17 +111,42 @@ exactly as the Recruiting Sergeant was in PR-9).
    before/after any change near the legacy chains must be identical; boot must print
    `[quests] registry: 7 legacy chains, N framework quests` with N incremented.
 
-## 3. Legacy quest keys (prerequisites)
+## 3. Quest keys (prerequisites)
 
-`recruit_trials` (**The Last Free City**, Main Story Quest 1 — `docs/quests/the-last-free-city.md`)
+Legacy: `recruit_trials` (**The Last Free City**, Main Story Quest 1 — `docs/quests/the-last-free-city.md`)
 · `warprep_magic` · `rogue_hunting_1` (optional) · `rogue_hunting_2` (optional) · `warprep_ranged` ·
 `warprep_survival` · `king_of_lumbridge`.
 
+Framework (story): `the_north` · `first_reclamation` · `a_kingdom_alone` (**A Kingdom Alone**,
+Main Story Quest 5 — `docs/quests/a-kingdom-alone.md`) · the regional phase's four strategic
+objectives `breach` · `secure` · `understand` · `sustain` (`content/quests/story/StrategicObjectives.kt`;
+begun by A Kingdom Alone, each SOLVED by its regional campaign's payoff via
+`StrategicObjectives.solve(p, Breach)` etc. — `StrategicObjectives.allSolved(p)` is the Council of
+Gielinor gate, nothing else). A regional campaign's first quest gates on
+`Prerequisite.QuestComplete("a_kingdom_alone")`.
+
 Every new quest spec starts from the integration-first template in `docs/quests/README.md`.
+
+## 3a. Journal rows for framework quests (built 2026-09-12)
+
+- **Client:** the 6-arg `LofQuest(name, why, genericVarp, lockReason, steps, unlocks)` constructor
+  reads the generic packing (`LofQuestVarps.genericStep/State/Progress`); step ordinals are the
+  server's 1-based step indices; a `LofQuestStep(…, goal)` draws " (n/goal)" from the progress bits.
+  Enum order = chain order = `QuestBook` constants; `LofQuest.isJournalVarp` refreshes on any of them.
+- **Native quest tab:** `override val nativeTabVarp` / `nativeTabComplete` on the definition (a
+  relabelled OSRS row from `QuestTablePatch.PLAN`, two-digit sort keys — docs/quest-tab-handoff.md);
+  `QuestEngine.publish` writes 0 / 1 / complete.
+- **Quest points:** `override val questPoints`; `QuestJournal.sync` derives `Varp.QUEST_POINTS` and
+  the summary-tab quest counts from the registry.
+- **Login reminder:** `override val loginReminder = false` for standing entries (the strategic
+  objectives announce themselves as one `::strategy` line instead).
+- **Mid-session auto-begin:** `QuestEngine.pollTick` begins any unstarted `autoBegin` quest whose
+  prerequisites just became true (no relog between chain quests).
+- **Shared NPCs:** Duke Horacio and General Zo are on `bindTalk` + an `NpcTalk` default branch —
+  attach quest lines with `talk(npcKey, stepId)`, never edit their dialogue bodies.
 
 ## 4. Not yet built (Block 2 adds as needed)
 
-Branching steps (a `ConditionalStep`), party instances, client journal entries for framework
-quests (the additive `LofQuest` constructor), the Veteran-of-Varrock award (the first major
-assault story event), any locked route (none registered), `NpcTalk` migrations for Vannaka and
-General Zo (still on their own `onNpcOption` binds).
+Branching steps (a `ConditionalStep`), party instances, the Veteran-of-Varrock award (the first
+major assault story event), any locked route (none registered), the `NpcTalk` migration for
+Vannaka (still on his own `onNpcOption` bind).

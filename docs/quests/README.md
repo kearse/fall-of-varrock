@@ -59,4 +59,4 @@ else — the opening chain, the regional campaigns, the Council — is written *
 | 2 | First March | proposed | — |
 | 3 | The North | proposed | — |
 | 4 | First Reclamation | proposed | — |
-| 5 | A Kingdom Alone | proposed | — |
+| 5 | A Kingdom Alone | **BUILT** (2026-09-12) | [a-kingdom-alone.md](a-kingdom-alone.md) — opens the regional phase (BREACH / SECURE / UNDERSTAND / SUSTAIN) |

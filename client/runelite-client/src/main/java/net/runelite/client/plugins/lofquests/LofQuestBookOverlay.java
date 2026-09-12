@@ -485,7 +485,7 @@ class LofQuestBookOverlay extends Overlay implements LofWindows.Window
 		for (LofQuestStep step : focus.getSteps())
 		{
 			y += 17;
-			final boolean done = curOrd > step.getOrdinal();
+			final boolean done = state == LofQuestState.FINISHED || curOrd > step.getOrdinal();
 			final boolean cur = curOrd == step.getOrdinal() && state == LofQuestState.IN_PROGRESS;
 			// Drawn marker (the RS pixel font has no ✓/➤/○ glyphs — same reason the ranks window
 			// draws its tick with lines): check = done, filled arrow = current, hollow dot = ahead.

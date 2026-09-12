@@ -33,8 +33,16 @@ object QuestBook {
     const val WARPREP_RANGED = 4
     const val WARPREP_SURVIVAL = 5
     const val KING = 6
+    // Main Story Quests 3-5 (framework quests; THE_NORTH 7 and FIRST_RECLAMATION 8 land with their
+    // own quests) and the regional phase's four strategic objectives.
+    const val A_KINGDOM_ALONE = 9
+    const val BREACH = 10
+    const val SECURE = 11
+    const val UNDERSTAND = 12
+    const val SUSTAIN = 13
 
-    private const val LAST_INDEX = KING
+    /** The highest chain index the client journal lists (`LofQuest.CHAIN.size() - 1`). */
+    const val LAST_INDEX = SUSTAIN
 
     /** Pulse the open signal, focused on [chainIndex]. */
     fun open(p: Player, chainIndex: Int) {

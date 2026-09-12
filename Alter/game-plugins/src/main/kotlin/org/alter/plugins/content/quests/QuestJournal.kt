@@ -1,13 +1,18 @@
 package org.alter.plugins.content.quests
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import org.alter.api.cfg.Varbit
+import org.alter.api.cfg.Varp
+import org.alter.api.ext.getVarbit
 import org.alter.api.ext.getVarp
 import org.alter.api.ext.message
+import org.alter.api.ext.setVarbit
 import org.alter.api.ext.setVarp
 import org.alter.game.model.attr.QUEST_GUIDE_MUTED_ATTR
 import org.alter.game.model.entity.Player
 import org.alter.plugins.content.bots.knights.RogueKnightLadder
 import org.alter.plugins.content.bots.knights.RogueKnights
+import org.alter.plugins.content.quests.framework.QuestEngine
 import org.alter.plugins.content.quests.framework.QuestRegistry
 
 private val logger = KotlinLogging.logger {}
@@ -71,6 +76,13 @@ object QuestJournal {
     const val CONQUEST_VARP = 4633      // King of Lumbridge (endgame); 4635-4637 are companion indices
     const val KNIGHTS_VARP = 4682       // Rogue Knight ladder (rank + active hunt index; was 4644)
 
+    // Framework quests (generic packing via QuestEngine.publish) — the reserved 4686-4699 block.
+    const val KINGDOM_ALONE_VARP = 4688 // A Kingdom Alone (Main Story Quest 5)
+    const val BREACH_VARP = 4689        // the regional phase's four strategic objectives …
+    const val SECURE_VARP = 4690
+    const val UNDERSTAND_VARP = 4691
+    const val SUSTAIN_VARP = 4692
+
     // Reused OSRS quest progress varps that colour the relabelled native quest-tab rows. A value of
     // 0 reads as "not started" (red), the complete value as "finished" (green), anything between as
     // "in progress" (yellow). Keep these in lock-step with the `questTable` tool's REUSE table.
@@ -96,6 +108,21 @@ object QuestJournal {
     /** Witch's Potion varp — now the "King of Lumbridge" row. Completes at 3. */
     const val KING_QUEST_VARP = 67
     internal const val KING_QUEST_COMPLETE = 3
+    /** Rune Mysteries varp — now the "A Kingdom Alone" row (Main Story Quest 5). Completes at 6. */
+    const val KINGDOM_ALONE_QUEST_VARP = 63
+    internal const val KINGDOM_ALONE_QUEST_COMPLETE = 6
+    /** Black Knights' Fortress varp — now the "BREACH - Asgarnia" objective row. Completes at 4. */
+    const val BREACH_QUEST_VARP = 130
+    internal const val BREACH_QUEST_COMPLETE = 4
+    /** Prince Ali Rescue varp — now the "SECURE - Morytania" objective row. Completes at 110. */
+    const val SECURE_QUEST_VARP = 273
+    internal const val SECURE_QUEST_COMPLETE = 110
+    /** Vampyre Slayer varp — now the "UNDERSTAND - Wilderness / Desert" objective row. Completes at 3. */
+    const val UNDERSTAND_QUEST_VARP = 178
+    internal const val UNDERSTAND_QUEST_COMPLETE = 3
+    /** Pirate's Treasure varp — now the "SUSTAIN - Kandarin / War Effort" objective row. Completes at 4. */
+    const val SUSTAIN_QUEST_VARP = 71
+    internal const val SUSTAIN_QUEST_COMPLETE = 4
 
     /** True while the player has quest guidance muted (free-play mode). */
     fun muted(p: Player): Boolean = p.attr[QUEST_GUIDE_MUTED_ATTR] == true
@@ -135,6 +162,19 @@ object QuestJournal {
         val campsTotal = knightCamps.size.coerceIn(0, 15)
         val knightsPacked = knightRank or (knightHunt shl 8) or (campsCleared shl 16) or (campsTotal shl 20)
         if (p.getVarp(KNIGHTS_VARP) != knightsPacked) p.setVarp(KNIGHTS_VARP, knightsPacked)
+
+        // Native summary tab: quest points + quest counts from the registry (framework quests carry
+        // `questPoints`; the legacy chains award none). Replaces the zero placeholders the character
+        // summary used to seed on login.
+        val listed = QuestRegistry.all().filter { it.chainIndex != null && !it.hidden }
+        val completed = listed.count { runCatching { it.complete(p) }.getOrDefault(false) }
+        val framework = QuestRegistry.frameworkQuests().filter { !it.adminOnly }
+        val questPoints = framework.filter { QuestEngine.isComplete(p, it) }.sumOf { it.questPoints }
+        val questPointsTotal = framework.sumOf { it.questPoints }
+        if (p.getVarp(Varp.QUEST_POINTS) != questPoints) p.setVarp(Varp.QUEST_POINTS, questPoints)
+        if (p.getVarbit(Varbit.TOTAL_QUEST_POINT_COUNT) != questPointsTotal) p.setVarbit(Varbit.TOTAL_QUEST_POINT_COUNT, questPointsTotal)
+        if (p.getVarbit(Varbit.TOTAL_QUEST_COUNT) != listed.size) p.setVarbit(Varbit.TOTAL_QUEST_COUNT, listed.size)
+        if (p.getVarbit(Varbit.COMPLETED_QUESTS_COUNT) != completed) p.setVarbit(Varbit.COMPLETED_QUESTS_COUNT, completed)
 
         val mutedFlag = if (muted(p)) 1 else 0
         if (p.getVarp(GUIDE_MUTED_VARP) != mutedFlag) p.setVarp(GUIDE_MUTED_VARP, mutedFlag)

@@ -39,6 +39,17 @@ findings that shape everything below:
   | War-Prep II — Ranged | Imp Catcher | 76 | 9 | 160 | 2 |
   | War-Prep III — Survival | Sheep Shearer | 131 | 5 | 179 | 21 |
   | King of Lumbridge | Witch's Potion | 161 | 13 | 67 | 3 |
+  | A Kingdom Alone (MSQ5, framework `a_kingdom_alone`) | Rune Mysteries | 125 | 53 | 63 | 6 |
+  | BREACH - Asgarnia (objective `breach`) | Black Knights' Fortress | 10 | 12 | 130 | 4 |
+  | SECURE - Morytania (objective `secure`) | Prince Ali Rescue | 112 | 10 | 273 | 110 |
+  | UNDERSTAND - Wilderness / Desert (objective `understand`) | Vampyre Slayer | 155 | 8 | 178 | 3 |
+  | SUSTAIN - Kandarin / War Effort (objective `sustain`) | Pirate's Treasure | 108 | 16 | 71 | 4 |
+
+  Framework quests drive their row through `QuestDefinition.nativeTabVarp` / `nativeTabComplete`
+  (`QuestEngine.publish` writes 0 / 1 / complete) — no per-quest `QuestJournal` code. **Sort keys
+  are two-digit strings** (`"01 …"` … `"14 …"`): the tab orders rows by string compare on col1, so
+  a single-digit scheme broke past nine quests. Not usable for rows: Goblin Diplomacy, Demon Slayer,
+  Misthalin Mystery, X Marks the Spot, The Corsair Curse (varbit-driven), Shield of Arrav (two varps).
 
   Rogue Hunting I & II are TWO rows off ONE server chain (`RogueProblem.Step`, varp 4617):
   `QuestJournal.syncNativeTab` completes row I the moment the hunt clears (KNIGHT step) and holds

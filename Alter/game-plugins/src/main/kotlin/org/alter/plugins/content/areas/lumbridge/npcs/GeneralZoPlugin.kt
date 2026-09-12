@@ -17,6 +17,8 @@ import org.alter.game.model.queue.QueueTask
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
 import org.alter.plugins.content.companion.RecruitMenu
+import org.alter.plugins.content.quests.framework.NpcTalk
+import org.alter.plugins.content.quests.framework.bindTalk
 import org.alter.plugins.content.war.CampaignRegistry
 import org.alter.plugins.content.war.WarNpcNames
 import org.alter.plugins.content.war.address
@@ -48,9 +50,10 @@ class GeneralZoPlugin(
     init {
         onWorldInit { spawnZo(world) }
 
-        onNpcOption(npc = ZO_NPC, option = "talk-to") {
-            player.queue { dialog(player) }
-        }
+        // Talk-to routes through NpcTalk so story quests can claim his conversation on their own
+        // steps (QuestDefinition.talk); his everyday dialogue below is the default branch.
+        bindTalk(ZO_NPC)
+        NpcTalk.register(ZO_NPC, NpcTalk.PRIORITY_DEFAULT) { _ -> { p -> dialog(p) } }
     }
 
     /** Post Zo at [ZO_TILE] with his tanky stats (players can't attack him — his cache NPC has no
