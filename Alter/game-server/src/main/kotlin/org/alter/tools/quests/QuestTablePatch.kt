@@ -105,6 +105,10 @@ private val PLAN = listOf(
     // id 4, varp 144, complete 100) — driven by QuestDefinition.nativeTabVarp through QuestEngine.publish.
     // Sort key 09; A Kingdom Alone takes 10 and its strategic objectives 11-14.
     Relabel(dbrowId = 121, questId = 4, sortName = "09 First Reclamation", displayName = "First Reclamation", varp = 144),
+    // A Matter of Trolls (Asgarnia — BREACH quest 2, framework quest, chain index 15) reuses Death
+    // Plateau (dbrow 23, quest id 58, varp 314, complete 80) — on-theme, and driven by
+    // QuestDefinition.nativeTabVarp through QuestEngine.publish. Sort key 16 (15 is At the White Wall).
+    Relabel(dbrowId = 23, questId = 58, sortName = "16 A Matter of Trolls", displayName = "A Matter of Trolls", varp = 314),
 )
 
 /** The only quest rows the tab should list after `hide` — exactly the ones we relabelled. */

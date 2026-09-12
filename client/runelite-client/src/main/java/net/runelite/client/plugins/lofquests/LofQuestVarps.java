@@ -58,6 +58,9 @@ final class LofQuestVarps
 	static final int UNDERSTAND = 4691;
 	static final int SUSTAIN = 4692;
 
+	/** Asgarnia — BREACH, quest 2: "A Matter of Trolls" (4693 is At the White Wall's, in its own PR). */
+	static final int A_MATTER_OF_TROLLS = 4694;
+
 	/** Generic-packing step ordinal: the current step index + 1, 0 when unstarted or finished. */
 	static int genericStep(Client client, int varp)
 	{

@@ -41,6 +41,7 @@ findings that shape everything below:
   | King of Lumbridge | Witch's Potion | 161 | 13 | 67 | 3 |
   | The North (Main Story Quest 3 — framework quest; driven by `QuestEngine.publish` from `TheNorth.nativeTabVarp`) | Ernest the Chicken | 44 | 7 | 32 | 3 |
   | First Reclamation (Main Story Quest 4, framework quest — `QuestDefinition.nativeTabVarp`) | Romeo & Juliet | 121 | 4 | 144 | 100 |
+  | A Matter of Trolls (Asgarnia — BREACH quest 2, framework quest — `QuestDefinition.nativeTabVarp`; sort key "16 …") | Death Plateau | 23 | 58 | 314 | 80 |
 
   Framework quests (`quests/framework/`) drive their reused varp through `QuestDefinition.nativeTabVarp`
   / `nativeTabComplete` (written by `QuestEngine.publish`, 0 / 1 / complete) — no per-quest

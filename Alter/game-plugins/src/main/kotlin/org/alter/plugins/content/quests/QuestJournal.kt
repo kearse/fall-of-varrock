@@ -79,6 +79,9 @@ object QuestJournal {
     const val NORTH_VARP = 4686
     /** First Reclamation (Main Story Quest 4, `quests/story/FirstReclamation`). */
     const val FIRST_RECLAMATION_VARP = 4687
+    // 4688-4692 A Kingdom Alone + the four strategic objectives, 4693 At the White Wall — their own PRs.
+    /** A Matter of Trolls (Asgarnia — BREACH quest 2, `quests/asgarnia/AMatterOfTrolls`). */
+    const val TROLLS_VARP = 4694
 
     // Reused OSRS quest progress varps that colour the relabelled native quest-tab rows. A value of
     // 0 reads as "not started" (red), the complete value as "finished" (green), anything between as
@@ -113,6 +116,10 @@ object QuestJournal {
      *  through `QuestEngine.publish`). Completes at 100. */
     const val FIRST_RECLAMATION_QUEST_VARP = 144
     internal const val FIRST_RECLAMATION_QUEST_COMPLETE = 100
+    /** Death Plateau varp — now the "A Matter of Trolls" row (Asgarnia — BREACH quest 2; driven by
+     *  `QuestDefinition.nativeTabVarp` through `QuestEngine.publish`). Completes at 80. */
+    const val TROLLS_QUEST_VARP = 314
+    internal const val TROLLS_QUEST_COMPLETE = 80
 
     /** True while the player has quest guidance muted (free-play mode). */
     fun muted(p: Player): Boolean = p.attr[QUEST_GUIDE_MUTED_ATTR] == true

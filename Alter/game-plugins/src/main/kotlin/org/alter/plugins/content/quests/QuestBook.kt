@@ -39,8 +39,10 @@ object QuestBook {
     const val KING = 6
     const val THE_NORTH = 7         // The North (Main Story Quest 3)
     const val FIRST_RECLAMATION = 8 // First Reclamation (Main Story Quest 4)
+    // 9 A Kingdom Alone, 10-13 BREACH / SECURE / UNDERSTAND / SUSTAIN, 14 At the White Wall — their own PRs.
+    const val A_MATTER_OF_TROLLS = 15 // Asgarnia — BREACH, quest 2 (the Northern Front)
 
-    const val LAST_INDEX = FIRST_RECLAMATION
+    const val LAST_INDEX = A_MATTER_OF_TROLLS
 
     /** Pulse the open signal, focused on [chainIndex]. */
     fun open(p: Player, chainIndex: Int) {

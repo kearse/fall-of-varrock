@@ -64,6 +64,7 @@ class QuestBookPlugin(
             13 to QuestBook.KING,               // Witch's Potion
             7 to QuestBook.THE_NORTH,           // Ernest the Chicken
             4 to QuestBook.FIRST_RECLAMATION,   // Romeo & Juliet
+            58 to QuestBook.A_MATTER_OF_TROLLS, // Death Plateau
         )
     }
 

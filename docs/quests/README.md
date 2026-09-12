@@ -60,3 +60,13 @@ else — the opening chain, the regional campaigns, the Council — is written *
 | 3 | The North | **BUILT** (2026-09-11) | [the-north.md](the-north.md) |
 | 4 | First Reclamation | **BUILT** (2026-09-12) | [first-reclamation.md](first-reclamation.md) |
 | 5 | A Kingdom Alone | proposed | — |
+
+### Regional campaign — Asgarnia (BREACH)
+
+| # | Quest | Status | Spec |
+|---|---|---|---|
+| A1 | At the White Wall | in progress (parallel session) | — |
+| A2 | A Matter of Trolls | **BUILT** (2026-09-12) | [a-matter-of-trolls.md](a-matter-of-trolls.md) — the Northern Front; parallel with A3 |
+| A3 | The Guns of Asgarnia | in progress (parallel session) | — |
+| A4 | Old Wounds | in progress (parallel session) | — |
+| A5 | The White Wall | proposed — needs A2 and A3 | — |

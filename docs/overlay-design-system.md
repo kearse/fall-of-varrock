@@ -316,6 +316,10 @@ Reusable pieces — reach for these before inventing a new one. Metrics above.
     `QuestEngine.publish` packing; client `lofquests.LofQuestVarps.NORTH`).
     **4687 First Reclamation journal** (Main Story Quest 4; `QuestJournal.FIRST_RECLAMATION_VARP`,
     the generic `QuestEngine.publish` packing; client `lofquests.LofQuestVarps.FIRST_RECLAMATION`).
+    **4694 A Matter of Trolls journal** (Asgarnia — BREACH quest 2; `QuestJournal.TROLLS_VARP`, the
+    generic `QuestEngine.publish` packing; client `lofquests.LofQuestVarps.A_MATTER_OF_TROLLS`).
+    4688-4692 A Kingdom Alone + the four strategic objectives and 4693 At the White Wall are claimed
+    by their own PRs; 4695-4697 are pencilled for The Guns of Asgarnia / Old Wounds / The White Wall.
     Every id in this map is guaranteed writable server-side: the varp table is sized
     `maxOf(cache varp count, Player.CUSTOM_VARP_CEILING = 6000)` — the cache count alone sat BELOW
     this range and out-of-range `setVarp` throws (that silently broke lofspar + the kit editor

@@ -128,6 +128,14 @@ Legacy: `recruit_trials` (**The Last Free City**, Main Story Quest 1 — `docs/q
 `first_reclamation` (Main Story Quest 4 — `docs/quests/first-reclamation.md`), `a_kingdom_alone`
 (Main Story Quest 5).
 
+Regional campaign — Asgarnia (BREACH): `at_the_white_wall` · `a_matter_of_trolls` (**A Matter of
+Trolls** — `docs/quests/a-matter-of-trolls.md`; also sets the flag `asgarnia.northern_front_secured`;
+the reference for a per-player temporary open-world spawn (`TempSpawns`), damage-share kill credit
+beside the framework hook, and an existing-map coalition battle over `QuestInstances`
+(`BattleOfThePass`)) · `guns_of_asgarnia` · `old_wounds` · `the_white_wall`. Their gate is the
+`Prerequisite.Custom` "first registered key in the list" pattern, so the campaign never dead-ends
+whichever PR merges first.
+
 Every new quest spec starts from the integration-first template in `docs/quests/README.md`.
 
 ## 4. Not yet built (Block 2 adds as needed)

@@ -245,6 +245,41 @@ enum LofQuest
 			"Varrock march staging on the doorstep of the fallen city",
 			"50 War Effort and the spoils of the won Grand March",
 			"A Kingdom Alone - the next main quest"
+		)),
+
+	/**
+	 * Asgarnia — BREACH, quest 2 (server `quests/asgarnia/AMatterOfTrolls`, generic journal varp
+	 * 4694). Rows are the 1-based server step indices. Chain slot 15: A Kingdom Alone (9), the four
+	 * strategic objectives (10-13) and At the White Wall (14) precede it — declaration order IS the
+	 * slot, so this entry stays after theirs once they land.
+	 */
+	A_MATTER_OF_TROLLS(
+		"A Matter of Trolls",
+		"Sir Amik cannot move the Imperial Guard south while Troll Country is unstable. Scout Death "
+			+ "Plateau for Commander Denulth and find the trolls are fighting each other; find My Arm "
+			+ "above the Stronghold and Snowflake in Weiss, and build a human-troll coalition against "
+			+ "the splinter warband and its War-chief; then hold the pass with the Imperial Guard in "
+			+ "the Battle of the Pass. Secure the northern frontier and Falador gains soldiers it can "
+			+ "finally move.",
+		LofQuestVarps.A_MATTER_OF_TROLLS,
+		"Finish At the White Wall first.",
+		Arrays.asList(
+			new LofQuestStep(1, "Speak with Commander Denulth in Burthorpe", "The Imperial Guard camp in the north-west of the town.", new WorldPoint(2896, 3528, 0)),
+			new LofQuestStep(2, "Scout the approaches to Death Plateau", "North-west of Burthorpe: past the Warriors' Guild, up the western path and around onto the plateau. Read the ground as you go.", new WorldPoint(2866, 3592, 0)),
+			new LofQuestStep(3, "Defeat the hostile troll patrol", "The warband trolls that came for you on the plateau. Every one you hit counts when it falls.", new WorldPoint(2866, 3592, 0), 4),
+			new LofQuestStep(4, "Find My Arm around Troll Stronghold", "He waits on the summit of Trollheim. The troll scout will walk you up; a Trollheim teleport lands there too.", new WorldPoint(2891, 3679, 0)),
+			new LofQuestStep(5, "Speak with Snowflake in Weiss", "My Arm's trolls will walk you there - ask him.", new WorldPoint(2873, 3934, 0)),
+			new LofQuestStep(6, "Arrange safe passage for the allied trolls with Denulth", "Snowflake's condition: the Imperial Guard must not fire on trolls entering the pass. Her trolls will see you down to Burthorpe.", new WorldPoint(2896, 3528, 0)),
+			new LofQuestStep(7, "Tell Denulth when you are ready for the Battle of the Pass", "Bring food and your best gear - the coalition does not win it for you.", new WorldPoint(2896, 3528, 0)),
+			new LofQuestStep(8, "Fight beside the Imperial Guard and allied trolls", "Hold the pass on Death Plateau: defeat 5 warband trolls while My Arm and Snowflake arrive.", null, 5),
+			new LofQuestStep(9, "Defeat the troll War-chief", "He shows himself once the warband is thinned. Break the splinter warband.", null),
+			new LofQuestStep(10, "Report the victory to Sir Amik", "Falador castle.", new WorldPoint(2960, 3336, 2))
+		),
+		Arrays.asList(
+			"Northern Frontier SECURED - the Imperial Guard can reinforce Falador",
+			"2 Quest Points and 50 War Effort",
+			"My Arm and Snowflake, and quest travel between Trollheim, Weiss and Burthorpe",
+			"The White Wall - Asgarnia's finale needs this and The Guns of Asgarnia"
 		));
 
 	/** First Reclamation's battle row / the server's retry step (see the entry's note). */
