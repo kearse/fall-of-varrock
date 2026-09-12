@@ -1,7 +1,6 @@
 package org.alter.plugins.content.magic
 
 import dev.openrune.cache.CacheManager.getAnim
-import org.alter.api.ext.getWildernessLevel
 import org.alter.api.ext.message
 import org.alter.game.model.LockState
 import org.alter.game.model.Tile
@@ -9,9 +8,11 @@ import org.alter.game.model.entity.Pawn
 import org.alter.game.model.entity.Player
 import org.alter.game.model.move.moveTo
 import org.alter.game.model.queue.TaskPriority
+import org.alter.plugins.content.combat.PvpZones
 
 fun Player.canTeleport(type: TeleportType): Boolean {
-    val currWildLvl = tile.getWildernessLevel()
+    // The SAME number Combat.canEngage brackets on — pockets, hostile zones and lairs included.
+    val currWildLvl = PvpZones.wildernessLevel(tile)
     val wildLvlRestriction = type.wildLvlRestriction
 
     if (!lock.canTeleport()) {

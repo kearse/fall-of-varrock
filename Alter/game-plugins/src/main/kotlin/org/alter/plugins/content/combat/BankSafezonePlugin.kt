@@ -13,15 +13,16 @@ import org.alter.game.plugin.PluginRepository
 private val logger = KotlinLogging.logger {}
 
 /**
- * Auto-protects every bank that falls inside the wilderness. Scans the cache loc data for
- * Bank booth / Bank chest / Bank deposit box objects across the wild region range and registers a
- * small safe radius around each via [PvpZones.safeAround] — so no bank is ever a PvP spot, however
- * far the wilderness border is dropped.
+ * Auto-protects every bank on the mainland and in the wilderness. Scans the cache loc data for
+ * Bank booth / Bank chest / Bank deposit box objects across the region range and registers a small
+ * safe radius around each via [PvpZones.safeAround]. Inside the red that radius is a PvP carve-out
+ * (no bank is ever a PvP spot); everywhere it is also the Rogue Knights' no-muster / no-ambush
+ * radius (`RogueTerritory` reads [PvpZones.isBankSafe]) — so keep the scan covering the whole
+ * mainland, not just the wild.
  *
  * Runs once at construction: [CacheManager] is ready by then, and this map-decrypted cache decodes
  * locs with empty XTEA keys (same approach as [org.alter.plugins.content.war.StaticTerrain] and the
- * `mapDump` tool). Banks OUTSIDE the wilderness are already safe by default, so we only scan the
- * region band that overlaps the wild.
+ * `mapDump` tool).
  */
 class BankSafezonePlugin(
     r: PluginRepository,
@@ -59,7 +60,7 @@ class BankSafezonePlugin(
                 }
             }
         }
-        logger.info { "Bank safe-zones: protected $banks bank object(s) inside the wilderness band." }
+        logger.info { "Bank safe-zones: protected $banks bank object(s) (PvP carve-outs in the wild, Rogue Knight sanctuaries everywhere)." }
     }
 
     private fun isBank(name: String): Boolean = when (name.lowercase()) {
@@ -69,7 +70,7 @@ class BankSafezonePlugin(
 
     private companion object {
         const val BANK_SAFE_RADIUS = 8           // tiles of safety around each bank object
-        val REGION_X = 46..53                    // x 2944..3519 — covers the wilderness width
-        val REGION_Y = 49..62                    // z 3136..4031 — covers z3258..3968 (+ Al Kharid's bank at z~3167, harmless outside the red)
+        val REGION_X = 46..53                    // x 2944..3519 — the mainland + wilderness width
+        val REGION_Y = 49..62                    // z 3136..4031 — Al Kharid/Port Sarim banks up through the deep wild
     }
 }
