@@ -160,6 +160,8 @@ object CollectionLogRegistry {
         Category("story_bosses", "Zemouregal & the Convergence", "npc.zemouregal", listOf("item.arravs_axe", "item.mahjarrat_notes_aj", "item.mahjarrat_notes_kz")),
         // Wintertodt — the supply crate's uniques (OSRS collection log page).
         Category("wintertodt", "Wintertodt", "npc.pyromancer", listOf("item.pyromancer_garb", "item.pyromancer_robe", "item.pyromancer_hood", "item.pyromancer_boots", "item.warm_gloves", "item.bruma_torch", "item.tome_of_fire_empty", "item.phoenix")),
+        // Guardians of the Rift — the Rewards Guardian's rares and the Temple Supplies outfit.
+        Category("gotr", "Guardians of the Rift", "npc.the_great_guardian", listOf("item.abyssal_protector", "item.abyssal_needle", "item.abyssal_lantern", "item.abyssal_red_dye", "item.abyssal_green_dye", "item.abyssal_blue_dye", "item.atlaxs_diary", "item.hat_of_the_eye", "item.robe_top_of_the_eye", "item.robe_bottoms_of_the_eye", "item.boots_of_the_eye")),
     )
 
     fun byKey(key: String): Category? = categories.firstOrNull { it.key.equals(key, ignoreCase = true) }

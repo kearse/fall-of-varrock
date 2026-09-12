@@ -180,6 +180,9 @@ object TeleportRegistry {
         // Lands at the Digsite winches — Operate one to descend into a private Senntisten
         // expedition (Team 4 PR 7, FoV-original).
         built("senntisten_expedition", "Senntisten Expedition", MINIGAMES, Tile(3368, 3426, 0), HOSTILE),
+        // Team 4 minigames B (wiki-spec): the Temple of the Eye lobby (restored to main 2026-09-12; the
+        // Blast Furnace row lands after Wintertodt with PR #355 — kept apart so both merge cleanly).
+        built("guardians_of_the_rift", "Guardians of the Rift", MINIGAMES, Tile(3613, 9478, 0), SAFE_ZONE), // mirror: LofTeleportsData
         // Classic minigames (Team 4 PR 9): the Void Knights' Outpost landers and the Doors of Dinh.
         built("pest_control", "Pest Control", MINIGAMES, Tile(2657, 2639, 0), SAFE_ZONE),
         built("wintertodt", "Wintertodt", MINIGAMES, Tile(1630, 3958, 0), SAFE_ZONE),

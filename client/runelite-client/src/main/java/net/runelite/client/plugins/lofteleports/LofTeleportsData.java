@@ -169,6 +169,7 @@ final class LofTeleportsData
 			b("Fight Cave", "Safe Zone", SAFE, 6570),           // fire cape
 			b("Moons of Peril", "Hostile", HOSTILE, 29028),     // blood moon helm (Neypotzli)
 			b("Senntisten Expedition", "Hostile", HOSTILE, 2373), // relic of old Varrock (the Digsite winch)
+			b("Guardians of the Rift", "Safe Zone", SAFE, 26792), // abyssal pearls (Temple of the Eye lobby)
 			b("Pest Control", "Safe Zone", SAFE, 8839),         // void knight top (the Outpost landers)
 			b("Wintertodt", "Safe Zone", SAFE, 20720),          // bruma torch (the Doors of Dinh)
 			b("Blast Furnace", "Safe Zone", SAFE, 2353),        // steel bar (Keldagrim's furnace room)

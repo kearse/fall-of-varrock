@@ -14,9 +14,11 @@ object CoverageExtractor {
 
     class Result(val unexplained: List<Unexplained>, val allowlisted: List<Unexplained>, val boundItemPairs: Int, val boundObjPairs: Int)
 
-    /** Non-economic binds: things that consume an item for xp/state but never produce an item. */
+    /** Non-economic binds: things that consume an item for xp/state but never produce an item.
+     *  `cell_tile` = Guardians of the Rift barrier cells (untradeable game items placed on the rift
+     *  tiles; the game's own state, never a tradeable output). */
     private val ALLOW_ITEM_KEYS = listOf("item.tinderbox")
-    private val ALLOW_OBJ_KEY_PARTS = listOf("altar", "workbench", "fountain", "sink", "well", "pump", "fire", "range", "tap", "water")
+    private val ALLOW_OBJ_KEY_PARTS = listOf("altar", "workbench", "fountain", "sink", "well", "pump", "fire", "range", "tap", "water", "cell_tile")
 
     fun extract(
         world: World,
