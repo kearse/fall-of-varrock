@@ -49,9 +49,10 @@ object QuestBook {
     const val SUSTAIN = 13
     // The regional campaign quests follow the objectives, campaign by campaign.
     const val AT_THE_WHITE_WALL = 14 // Asgarnia (BREACH) Quest 1
+    const val A_MATTER_OF_TROLLS = 15 // Asgarnia — BREACH, quest 2 (the Northern Front)
 
     /** The highest chain index the client journal lists (`LofQuest.CHAIN.size() - 1`). */
-    const val LAST_INDEX = AT_THE_WHITE_WALL
+    const val LAST_INDEX = A_MATTER_OF_TROLLS
 
     /** Pulse the open signal, focused on [chainIndex]. */
     fun open(p: Player, chainIndex: Int) {

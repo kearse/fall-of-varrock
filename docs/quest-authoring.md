@@ -133,6 +133,14 @@ begun by A Kingdom Alone, each SOLVED by its regional campaign's payoff via
 Gielinor gate, nothing else). A regional campaign's first quest gates on
 `Prerequisite.QuestComplete("a_kingdom_alone")`.
 
+Regional campaign — Asgarnia (BREACH): `at_the_white_wall` · `a_matter_of_trolls` (**A Matter of
+Trolls** — `docs/quests/a-matter-of-trolls.md`; also sets the flag `asgarnia.northern_front_secured`;
+the reference for a per-player temporary open-world spawn (`TempSpawns`), damage-share kill credit
+beside the framework hook, and an existing-map coalition battle over `QuestInstances`
+(`BattleOfThePass`)) · `guns_of_asgarnia` · `old_wounds` · `the_white_wall`. Their gate is the
+`Prerequisite.Custom` "first registered key in the list" pattern, so the campaign never dead-ends
+whichever PR merges first.
+
 Every new quest spec starts from the integration-first template in `docs/quests/README.md`.
 
 ## 3a. Journal rows for framework quests (built 2026-09-12)

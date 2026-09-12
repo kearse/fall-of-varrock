@@ -32,6 +32,7 @@ custom client reads (same transport as the war HUD — no custom packets):
 | **4681** | War-Prep III — Survival step ordinal, bits 0-5 (was 4643 — collided with the kit editor's 4640-4679 block) |
 | **4633** | King of Lumbridge (endgame conquest) step ordinal, bits 0-5 |
 | **4686** | The North (Main Story Quest 3 — the first framework quest), generic packing: bits 0-7 step index+1, bits 8-19 progress, bits 20-21 state (0 none, 1 in progress, 2 complete) — `QuestEngine.publish` |
+| **4694** | A Matter of Trolls (Asgarnia — BREACH, quest 2), the same generic framework packing — `QuestEngine.publish` |
 
 A 3-tick world poll re-derives these from the persistent attributes (which stay the source of
 truth) and only writes on change. **Custom-varp registry so far:** 4600 siege alert · 4601 war

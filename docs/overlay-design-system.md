@@ -322,8 +322,10 @@ Reusable pieces — reach for these before inventing a new one. Metrics above.
     `QuestJournal.BREACH_VARP`…`SUSTAIN_VARP`) ·
     **4693 At the White Wall journal** (Asgarnia — BREACH, Quest 1; `QuestJournal.WHITE_WALL_VARP`;
     client `LofQuestVarps.AT_THE_WHITE_WALL`) ·
-    **4694-4699 RESERVED for the remaining Asgarnia campaign quests** (A Matter of Trolls 4694,
-    The Guns of Asgarnia 4695, Old Wounds 4696, The White Wall 4697 — their own PRs).
+    **4694 A Matter of Trolls journal** (Asgarnia — BREACH, Quest 2; `QuestJournal.TROLLS_VARP`;
+    client `LofQuestVarps.A_MATTER_OF_TROLLS`) ·
+    **4695-4699 RESERVED for the remaining Asgarnia campaign quests** (The Guns of Asgarnia 4695,
+    Old Wounds 4696, The White Wall 4697 — their own PRs).
     (4601/4609/4616 all feed the `lofdials` dial row.)
     Every id in this map is guaranteed writable server-side: the varp table is sized
     `maxOf(cache varp count, Player.CUSTOM_VARP_CEILING = 6000)` — the cache count alone sat BELOW

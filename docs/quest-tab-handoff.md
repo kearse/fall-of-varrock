@@ -47,6 +47,7 @@ findings that shape everything below:
   | UNDERSTAND - Wilderness / Desert (objective `understand`) | Vampyre Slayer | 155 | 8 | 178 | 3 |
   | SUSTAIN - Kandarin / War Effort (objective `sustain`) | Pirate's Treasure | 108 | 16 | 71 | 4 |
   | At the White Wall (Asgarnia — BREACH, Quest 1; framework quest — `nativeTabVarp`) | Recruitment Drive (its stock start NPC is Sir Amik) | 118 | 86 | **657** | 2 |
+  | A Matter of Trolls (Asgarnia — BREACH quest 2, framework `a_matter_of_trolls`; sort key "16 …") | Death Plateau | 23 | 58 | 314 | 80 |
 
   Framework quests (`quests/framework/`) drive their reused varp through `QuestDefinition.nativeTabVarp`
   / `nativeTabComplete` (written by `QuestEngine.publish`, 0 / 1 / complete) — no per-quest

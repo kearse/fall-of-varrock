@@ -61,6 +61,9 @@ final class LofQuestVarps
 	/** Asgarnia (BREACH) Quest 1, "At the White Wall". */
 	static final int AT_THE_WHITE_WALL = 4693;
 
+	/** Asgarnia — BREACH, quest 2: "A Matter of Trolls". */
+	static final int A_MATTER_OF_TROLLS = 4694;
+
 	/** Generic-packing step ordinal: the current step index + 1, 0 when unstarted or finished. */
 	static int genericStep(Client client, int varp)
 	{

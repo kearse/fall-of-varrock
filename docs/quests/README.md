@@ -66,7 +66,7 @@ else — the opening chain, the regional campaigns, the Council — is written *
 | Campaign | # | Quest | Status | Spec |
 |---|---|---|---|---|
 | Asgarnia — BREACH | 1 | At the White Wall | **BUILT** (2026-09-12) | [at-the-white-wall.md](at-the-white-wall.md) |
-| Asgarnia — BREACH | 2 | A Matter of Trolls | proposed | — |
-| Asgarnia — BREACH | 3 | The Guns of Asgarnia | proposed | — |
-| Asgarnia — BREACH | 4 | Title TBD (Dark Warrior intelligence) | proposed | — |
-| Asgarnia — BREACH | 5 | The White Wall | proposed | — |
+| Asgarnia — BREACH | 2 | A Matter of Trolls | **BUILT** (2026-09-12) | [a-matter-of-trolls.md](a-matter-of-trolls.md) — the Northern Front |
+| Asgarnia — BREACH | 3 | The Guns of Asgarnia | in progress (PR #355) | — |
+| Asgarnia — BREACH | 4 | Old Wounds | in progress (PR #354) | — |
+| Asgarnia — BREACH | 5 | The White Wall | proposed — needs 2, 3 and 4 | — |

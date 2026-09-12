@@ -94,6 +94,8 @@ object QuestJournal {
     /** At the White Wall (Asgarnia — BREACH, Quest 1, `quests/asgarnia/AtTheWhiteWall`). Its native
      *  quest-tab row is the relabelled Recruitment Drive (varp 657, complete 2) — see `AtTheWhiteWall.nativeTabVarp`. */
     const val WHITE_WALL_VARP = 4693
+    /** A Matter of Trolls (Asgarnia — BREACH quest 2, `quests/asgarnia/AMatterOfTrolls`). */
+    const val TROLLS_VARP = 4694
 
     // Reused OSRS quest progress varps that colour the relabelled native quest-tab rows. A value of
     // 0 reads as "not started" (red), the complete value as "finished" (green), anything between as
@@ -143,6 +145,10 @@ object QuestJournal {
     /** Pirate's Treasure varp — now the "SUSTAIN - Kandarin / War Effort" objective row. Completes at 4. */
     const val SUSTAIN_QUEST_VARP = 71
     internal const val SUSTAIN_QUEST_COMPLETE = 4
+    /** Death Plateau varp — now the "A Matter of Trolls" row (Asgarnia — BREACH quest 2; driven by
+     *  `QuestDefinition.nativeTabVarp` through `QuestEngine.publish`). Completes at 80. */
+    const val TROLLS_QUEST_VARP = 314
+    internal const val TROLLS_QUEST_COMPLETE = 80
 
     /** True while the player has quest guidance muted (free-play mode). */
     fun muted(p: Player): Boolean = p.attr[QUEST_GUIDE_MUTED_ATTR] == true
