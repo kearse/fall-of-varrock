@@ -1,10 +1,10 @@
 ---
 title: Loot keys
 category: PvP & Wilderness
-summary: Every player kill mints a loot key - claim it at the Lumbridge Loot Chest before someone takes it off your corpse.
+summary: Every real-player kill mints a loot key - claim it at the Lumbridge Loot Chest before someone takes it off your corpse.
 order: 1
-updated: 2026-08-05
-infobox: Type = PvP reward; Minted by = Killing any player, anywhere; Held = As many as your inventory holds; Cash in = the Loot Chest, east of the Lumbridge market; Command = `::lootkeys`; Risk = Keys always lost on death
+updated: 2026-09-12
+infobox: Type = PvP reward; Minted by = Killing any player, anywhere (a PK bot only when it rolls a rare); Held = As many as your inventory holds; Cash in = the Loot Chest, east of the Lumbridge market; Command = `::lootkeys`; Risk = Keys always lost on death
 ---
 
 Kill a player - anywhere - and their lost items don't hit the ground: they're sealed into a **loot key** placed in your inventory. Bring it home to cash in.
@@ -35,5 +35,5 @@ That's the whole tension of the system: every key you carry deep in the wild is 
 
 ## What counts
 
-- **Every player kill mints a key** - real players and killable PK bots alike, in the wilderness or in safe zones (the safe Bandit Hideout camp's warband, for instance). Its kit seals into a key for you, same as a deep-wild PK.
+- **Every real-player kill mints a key** - in the wilderness or in a safe zone. **PK bots** never drop the kit they wear (they pay [Blood Money](/wiki/pk-bots-and-highwaymen) instead), so a bot kill mints a key only when its rare table lands something - wilderness or safe camp alike.
 - If no key can be minted (your inventory is full), the loot drops on the ground the normal way instead.

@@ -62,7 +62,7 @@ and the boss gates.
 | Slayer: boss-task tier after the quest, wilderness boss tasks, a Slayer reward store | Team 4 backlog |
 | GWD: teleport to the middle, kill-count gate, KC scaled by title | Team 4 backlog (the KC gate is OSRS-faithful) |
 | Wilderness warning signs at safe/unsafe boundaries | Feature backlog (the Digsite carve-out answers the sharpest case) |
-| PK bots drop blood money by level + a "supply key" | Team 5 (`PkLootPools.kt`) |
+| PK bots drop blood money by level + a "supply key" | **Blood Money by level SHIPPED 2026-09-12** (`bots/RogueBounty.kt`: half the player formula, named knights ×2, no cap; the worn kit no longer drops at all — only `PkLootPools` rares). The "supply key" half is still open |
 | Skill-cape / max-cape shop | Feature backlog |
 | Skilling: 1×1 stool stalls, fire pit/range in the skilling area, wildy 1.5–2× xp, a hunter area with quarry, talisman shop + rune altars, construction/farming onboarding, AFK area | Feature backlog. The concrete bugs in this group (river range, invisible thickets, hunter landing, Zaff, no Runecraft/Farming rows, click hints on the altar/workbench/flowerbed) shipped |
 

@@ -25,8 +25,8 @@ Boundary that matters most: **Team 2 owns what Blood Money buys; Team 5 owns how
 | Engagement | `combat/Combat.kt` `canEngage` | Wilderness both sides, level bracket `cb ± level`, single-combat + 20-tick PJ timer (PK bots / companions never shield you), Rogue camp gate, bots attackable anywhere, companions PvE-only (§4). |
 | Skull | `Combat.applySkull` | White skull 2000 ticks on an unprovoked attack on a human in the wild; retaliation window 100 ticks; varbit 13131 opt-out; bots never skull. |
 | Death | `combat/PvpDeathDropPlugin` + `combat/DeathRisk` | Keep-N everywhere (3 / 4 with Protect Item / 0 skulled / 1), untradeables kept free, loot keys (`economy/pk/LootKeyPlugin`) for any real-player kill, safe-zone reclaim piles, `SafeDeaths` for arenas. `DeathRisk.plan` is the ONE keep-N computation. |
-| Blood Money + Elo | `economy/pk/PkRewardsPlugin` (25 + 3×cb, `BM_BASE` / `BM_PER_LEVEL`), `PkStatsPlugin` (Elo K=32, varps 4602-4605, hiscores) | Both gated by `PkKillGuard` (§3). Bots never mint or pay. |
-| PK bots | `bots/` — `BotZones` (grid over the wild + pinned camps), `BotColony`, `BotBrain` (NH brain: eat, pray-react, switch off the overhead, spec combos, baits, PID model — `docs/pk-bot-fight-styles.md`), `Loadouts` (29), `PkLootPools` | Real `Player`s, wilderness-only aggro, named "Rogue Knight", full kit into the killer's loot key. |
+| Blood Money + Elo | `economy/pk/PkRewardsPlugin` (25 + 3×cb, `BM_BASE` / `BM_PER_LEVEL`, `bloodMoneyFor`), `PkStatsPlugin` (Elo K=32, varps 4602-4605, hiscores) | Both gated by `PkKillGuard` (§3) for human kills. A slain BOT is paid separately by `bots/RogueBounty` (half the formula, named knights ×2, no cap, no guard — operator 2026-09-12); bots never earn. |
+| PK bots | `bots/` — `BotZones` (grid over the wild + pinned camps), `BotColony`, `BotBrain` (NH brain: eat, pray-react, switch off the overhead, spec combos, baits, PID model — `docs/pk-bot-fight-styles.md`), `Loadouts` (29), `PkLootPools`, `RogueBounty` | Real `Player`s, wilderness-only aggro, named "Rogue Knight". Death = Blood Money bounty to the killer's inventory + rare-pool rolls into the killer's loot key; the worn kit NEVER drops (2026-09-12). |
 | Rogue Knights | `bots/knights/` (RogueKnights, RogueKnightLadder, CampClearance, RogueKnightCampPlugin, RogueRewards), `war/roguehunt/` | 7 camps, 14 named bosses, per-hunter instances, camp clearance gate; OPTIONAL — quest path or direct challenge (`::knights challenge`); War Effort per gate kill / camp clear / first kill / capped repeats. |
 | Hostile Zones | `hostilezones/` — `docs/hostile-zones.md` | The extraction loop as data: zoning, loot spots, supply drop, occupier garrison, raider colony, channelled trapdoor extraction. First zone live: the Wild Bandit Stronghold. |
 | Port Sarim siege | `areas/portsarim/PortSiegePlugin` | Rogue raiders (`npc.bandit_737`) vs dock knights; raider kills count for the rogue tally, the quest hunt and the port camp gate. |
@@ -52,8 +52,11 @@ A denial only zeroes the payout — the fight, the skull, the death drop and the
 untouched. Every human-vs-human death writes a `pk-audit` log line; `::pkaudit <name>` (admin)
 shows a player's ledger, `::pkguard` toggles rules at runtime, `::pktest <name>` dry-runs.
 
-Other no-mint rules: PK bots never mint or pay; killing a companion pays nothing; Rogue Knight
-War Effort is capped per knight per day and in total; extraction mints nothing.
+Other rules: PK bots never EARN Blood Money (a bot's kill of a human pays nothing), but a human's
+kill of a bot IS paid — outside this guard, by `bots/RogueBounty`: half the player formula, named
+ladder knights double, uncapped (operator decision 2026-09-12; the worn kit no longer drops at
+all). That includes a hostile zone's `hz_` raider bots. Killing a companion pays nothing; Rogue
+Knight War Effort is capped per knight per day and in total; extraction itself mints nothing.
 
 ## 4. Companions in PvP (operator decision 2026-09-02)
 

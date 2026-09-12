@@ -103,7 +103,7 @@ mid-late tier. (The minigame stays the smart path, R3.)
 | Currency | Faucet health | Sink verdict |
 |---|---|---|
 | **Coins** | over-sourced (13+ faucets; `GENEROSITY_MULT=2` still hot) | ✅ strong top sinks; ➕ Barrows mid sink (§3d); 🔧 step GENEROSITY to 1 as economy matures |
-| **Blood Money** | healthy (real kills only; bots pay none) | 🔧 gains the PvP gear wing — finally a chase |
+| **Blood Money** | healthy (real kills only; bots pay none — *superseded 2026-09-12: bot kills pay a half-rate bounty via `bots/RogueBounty`, and the bot kit no longer drops at all*) | 🔧 gains the PvP gear wing — finally a chase |
 | **Boss Tickets** | healthy & wide (every boss/minigame) | 🔧 becomes THE PvM gear currency; fix the counter/item bug everywhere |
 | **War Effort** | healthy | ✅ supplies shop + daily bonus; leave |
 | **Commendations/embers** | war ops only (by design) | ✅ forge-exclusive BIS — restored to meaning by §3c |
@@ -123,6 +123,11 @@ mid-late tier. (The minigame stays the smart path, R3.)
 3. **Bot double-dip** — bots already pay zero BM (verified `PkRewardsPlugin`); their
    loot-key gear drops are the intended "practice + loot" design. Watch elite-bot kit
    frequency if AGS/claws prices sag on the player market.
+   *Superseded 2026-09-12:* the kit drop WAS the sag (operator: "too easy to farm the gear"),
+   so the design flipped — the bot kit never drops, a bot kill pays a half-rate Blood Money
+   bounty (`bots/RogueBounty`, named knights ×2, uncapped) and only `PkLootPools` rares drop.
+   The double-dip guard holds: `PkKillGuard.BOT_VICTIM` still stops `PkRewardsPlugin` from
+   paying the same kill.
 4. **Skilling undercuts** — the coin hub's spot-repricing discipline (adamant arrows,
    death runes, cooked swordfish priced above player-made cost) is the model; apply the
    same check to anything added later. Trading Post already excludes runite bars/dragon
@@ -139,7 +144,9 @@ mid-late tier. (The minigame stays the smart path, R3.)
 
 1. ✅ **Boss-currency bug fixed**: every Armoury wing now charges `ItemCurrency(item.boss_ticket)`
    (the old wings charged the vestigial counter — unbuyable). Bonus fix: **bot kills no longer
-   mint Blood Money** (code paid for bot victims; the wiki always said they don't).
+   mint Blood Money** (code paid for bot victims; the wiki always said they don't). *(Reversed
+   by design 2026-09-12: bot kills now pay a deliberate half-rate bounty via `bots/RogueBounty`
+   in place of the kit drop — see `docs/pvp-systems.md` §3.)*
 2. ✅ **Armoury split** per §3: PK Rewards gains Spec Weapons / Wilderness Sets / Revenant
    shelves (BM); the Armoury is the all-ticket PvM catalogue; Torva/Masori/Ancestral/Virtus,
    fire/infernal capes and sigil shields removed; Barrows repriced 120M→12–20M.

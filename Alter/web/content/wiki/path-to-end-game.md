@@ -3,11 +3,11 @@ title: Path to end game - where every rare comes from
 category: Economy & Trading
 summary: The clear route to Torva, godswords, dragon claws, megarares and spirit shields - every source, every rate, every price.
 order: 5
-updated: 2026-08-28
+updated: 2026-09-12
 infobox: Type = Gear guide; Starts at = Rank armour & rune; Ends at = Torva, Masori, Ancestral & megarares; Currencies = Blood Money, Commendations, coins
 ---
 
-Fall of Varrock is **not a spawn server** - every rare in the economy was earned by somebody. Gear enters the game three ways: **boss drops**, **currency shops**, and the **Royal Smith's war-forge**. On top of those sit two shortcuts - [wilderness loot keys](/wiki/wilderness-loot-keys) off elite PK bots, and plain gold: almost everything below is **tradeable**, so the market is always a valid route.
+Fall of Varrock is **not a spawn server** - every rare in the economy was earned by somebody. Gear enters the game three ways: **boss drops**, **currency shops**, and the **Royal Smith's war-forge**. On top of those sit two shortcuts - the [PK bots](/wiki/pk-bots-and-highwaymen)' Blood Money bounties and rare rolls, and plain gold: almost everything below is **tradeable**, so the market is always a valid route.
 
 This page is the map. Find the item you want, and it tells you exactly where to go.
 
@@ -17,7 +17,7 @@ One realm-wide note first: the old boss roster is **temporarily retired for a re
 
 | Currency | How you earn it | Where you spend it |
 | --- | --- | --- |
-| **Blood Money** (tradeable item) | Killing real players: 25 + 3 per combat level (bots pay nothing) | Emblem Trader (PK Rewards) |
+| **Blood Money** (tradeable item) | Killing real players: 25 + 3 per combat level; [Rogue Knight bots](/wiki/pk-bots-and-highwaymen) pay half that, the named knights double | Emblem Trader (PK Rewards) |
 | **Commendations** (untradeable) | Won [marches, campaigns and conquests](/wiki/marches-and-the-reconquest), scaled by contribution | The Royal Smith's war-forge |
 | **Warden's embers** (tradeable) | The Grand March's prize | War-forge helm recipes |
 | **Coins** | Everything | Barrows wing, forge fees, the market |
@@ -46,7 +46,7 @@ Nex used to drop finished Torva pieces and her own **Virtus** mage line directly
 
 ## Godswords
 
-Two are live today: the **Armadyl godsword** - **15,000 Blood Money** at the Emblem Trader, dropped by **Lord Vexmar** atop the [Rogue Knight ladder](/wiki/rogue-knights), and carried by elite PK bots (it can land in a [loot key](/wiki/wilderness-loot-keys)) - and the **Ancient godsword** at 20,000 BM. Both are tradeable, so the market works too.
+Two are live today: the **Armadyl godsword** - **15,000 Blood Money** at the Emblem Trader, dropped by **Lord Vexmar** atop the [Rogue Knight ladder](/wiki/rogue-knights), and a rare roll (1/100) off elite PK bots - and the **Ancient godsword** at 20,000 BM. Both are tradeable, so the market works too.
 
 The hilt-and-shards route (each God Wars general dropping its hilt, all four dropping the shards) returns with the God Wars rebuild - until then the Bandos, Zamorak and Saradomin godswords move only between players.
 
@@ -58,7 +58,7 @@ Pick your grind - the captain hunt is the designed route, the shop is bad-luck p
 | --- | --- |
 | **Karn the Red**, the [wanted captain](/wiki/marches-and-the-reconquest) of Fallen Varrock's Slums | **1/15** per kill (hourly respawn), broadcast realm-wide |
 | Emblem Trader | 12,000 BM (ornament 16,000; burning claws 14,000) |
-| Elite PK bot loot keys | bots carry them |
+| Elite [PK bots](/wiki/pk-bots-and-highwaymen) | rare roll - 1/150 at the maxer band, 1/120 in the deep wild |
 | **Dame Nyx** and **Sir Dathen** on the [Rogue Knight ladder](/wiki/rogue-knights) | signature drops |
 
 ## The megarares
@@ -95,6 +95,6 @@ The Quartermaster's old Relics tab is retired with the Boss Ticket: the war is t
 
 ## The wilderness shortcut
 
-Elite [PK bots](/wiki/pk-bots-and-highwaymen) roam the deep wilderness wearing and carrying real gear - Bandos, Ancestral pieces, fortified Masori, godswords, claws, BIS boots and jewellery. Kill one and its gear drops as a [loot key](/wiki/wilderness-loot-keys) you cash at the Lumbridge Loot Chest. It's the highest-risk, zero-cost route to end-game gear - and other players can kill *you* for your keys.
+Elite [PK bots](/wiki/pk-bots-and-highwaymen) roam the deep wilderness in real gear - Bandos, Ancestral pieces, fortified Masori, godswords, claws, BIS boots and jewellery - but what they wear is **not** loot. Every kill pays **Blood Money** (half a player kill; the named knights double) and rolls that band's rare table: Bandos and claws at the maxer band, ancestral, Masori, Kodai, avernic and the godswords at the elite band, all at long odds. A rare seals into a [loot key](/wiki/wilderness-loot-keys) you cash at the Lumbridge Loot Chest. It's the highest-risk, zero-cost route to end-game gear - and other players can kill *you* for your keys.
 
 Everything on this page has a real, current source - and as each rebuilt boss returns, its drop paths reopen and this page will say so.

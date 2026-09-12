@@ -3,7 +3,7 @@ title: Fallen Varrock - the loot hub
 category: PvP & Wilderness
 summary: Varrock fell twelve years ago and stays fallen. No guards, no townsfolk - the dead walk the streets beside rogues and PKers, and the loot flows to whoever walks out alive.
 order: 5
-updated: 2026-09-02
+updated: 2026-09-12
 ---
 
 Varrock **fell** twelve years before you arrived - to an undead host out of the north and something worse beneath the city that nobody has yet explained. The guard was slaughtered, the townsfolk fled, and every cutthroat, grave-robber and renegade in Misthalin moved into the ruins beside the dead. The city is **not coming back**: it is the realm's permanent endgame - the most dangerous and most rewarding streets in the game, the ground the war's biggest operations are fought on, and the place the story keeps returning to.
@@ -14,7 +14,7 @@ Varrock **fell** twelve years before you arrived - to an undead host out of the 
 - **The districts** - the Slums, the Old Market, the East Quarter and the Museum Quarter - are how the realm names the ruins. Each is run by a named **captain** with a bounty on his head (`::bounties`; see [Marches](/wiki/marches-and-the-reconquest)).
 - **The war comes here.** Public marches strike the **Varrock outskirts** - the southern road below the walls, where marauders and Black Knights camp and the dead spill out of the gate; Ministers and Kings launch campaigns and conquests into the city itself. Every operation is a temporary victory: the host returns, and so does the loot.
 - **The whole city is PvP.** Varrock sits deep inside the wilderness zone (roughly levels 15-33 across the city - deeper toward the palace). Other players can attack you anywhere on its streets. Watch `::zone` if you're unsure where you stand.
-- **PKer bots stalk the streets.** The rogues' favourite hunting ground - expect mithril-to-rune-tier PKers prowling the city on top of the usual wilderness wanderers. Kill one and its whole kit seals into a [loot key](/wiki/wilderness-loot-keys).
+- **PKer bots stalk the streets.** The rogues' favourite hunting ground - expect mithril-to-rune-tier PKers prowling the city on top of the usual wilderness wanderers. Kill one and it pays [Blood Money](/wiki/pk-bots-and-highwaymen) on the spot, and may roll a mid-tier rare into a [loot key](/wiki/wilderness-loot-keys) - the kit it wears never drops.
 - **Wilderness rules apply.** Unprovoked attacks skull you, death drops your unprotected loot, and kills pay out through loot keys. Read [death & item protection](/wiki/death-and-item-protection) before you go.
 
 ## The safe pockets

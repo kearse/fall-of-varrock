@@ -37,7 +37,8 @@
 | Thieving | gp + items | pickpocket/stall/chest |
 | Slayer | **Slayer points** + Slayer xp | `SlayerPlugin` (points are a counter, mild faucet) |
 | King Black Dragon | gp + runite bars + uniques/pet + **Boss points** | `bosses/KbdBossPlugin` (`DropTable`); rare uniques broadcast + Collection Log |
-| PK kills (players / bots) | **Blood Money** (scaled by victim combat level) | `economy/pk/PkRewardsPlugin`; only human killers earn |
+| PK kills (players) | **Blood Money** (25 + 3 × victim combat level) | `economy/pk/PkRewardsPlugin`, gated by `PkKillGuard` (caps, same-IP, risk floor); only human killers earn |
+| PK kills (Rogue Knight bots) | **Blood Money** (half the player formula; named ladder knights ×2) | `bots/RogueBounty` (2026-09-12) — uncapped; the bot's worn kit NEVER drops, the only items are `PkLootPools` rare rolls |
 | Gambling wins | gp (paid by the house on a winning roll) | `economy/gambling` — net negative EV (the rake), so a sink overall |
 | Daily reward | gp + Vote points (streak-scaled) | `economy/daily` (`::daily`) — time-gated, modest |
 | Vote claim | Vote points (streak-scaled) | `economy/daily` (`::claimvote`) — local stub |
@@ -58,7 +59,7 @@
 | General Store junk sink | gp | **live** — buys any tradeable with cache cost ≤ 500 (was 5,000) at 70%, refuses guarded wares |
 | Grand Exchange commodity margin | gp | **live (engine)** — NPC floor at 70% of value for every commodity (`grandexchange/GrandExchangeCommodities`); NPC ceiling at 100% ONLY for the two-sided necessities (runes, arrows, cooked food, planks). Raw materials (bars, ores, logs, gems, essence, herbs, raw fish) are floor-only: the NPC never sells them (the 2026-09 audit's S0 tap) |
 | ~~Buy-currency-for-coins tabs~~ | — | **removed 2026-09-02** (PR #313): currencies are earned, never bought from an NPC |
-| PK Rewards shop (emblem trader) | Blood Money | **live** (`economy/pk`) — PK supplies (food/potions), no tradeable gear |
+| PK Rewards shop (emblem trader) | Blood Money | **live** (`economy/pk`) — PK supplies plus the sell-only spec-weapon / wilderness-set / revenant-weapon shelves (NPC-unsellable via `SpecialShopGuard`) |
 | Gambling rake | gp | **live** (`economy/gambling`) — 5% house edge on dice |
 | Degradable gear charges | gp | planned (Phase 2) |
 | Consumables burned in combat | food/potions/runes/ammo | partial (combat consumes; needs supply skills) |

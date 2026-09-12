@@ -579,7 +579,8 @@ object BotLoadouts {
     // Simple low-level metal-armour fighters for the wilderness edge, where brand-new (cb 1–20)
     // players are. Each tier wears a full metal set + that metal's scimitar, with stats matched to the
     // gear's real OSRS equip requirement. They are NOT NHers — no protect prayers, melee only — so a
-    // newbie can actually win. They still drop their (cheap) kit on death like any bot.
+    // newbie can actually win. Like any bot they pay a (small) Blood Money bounty on death and roll
+    // the STARTER pool — the kit itself never drops (RogueBounty / PkLootPools).
 
     /** Build a metal-armour fighter: full helm + platebody + platelegs + kiteshield + scimitar of
      *  [metal] (all follow the `item.<metal>_<piece>` naming; verified for bronze→dragon). */

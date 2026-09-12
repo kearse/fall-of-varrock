@@ -3,10 +3,10 @@ title: PK rewards, Blood Money & Elo
 category: PvP & Wilderness
 summary: What killing players pays, where to spend Blood Money, and how your Elo and rank percentile work.
 order: 3
-updated: 2026-09-03
+updated: 2026-09-12
 ---
 
-Killing **real players** pays in three ways: their risked loot (as a [loot key](/wiki/wilderness-loot-keys) in the wilderness), **Blood Money**, and your climb up the Elo ladder.
+Killing **real players** pays in three ways: their risked loot (as a [loot key](/wiki/wilderness-loot-keys) in the wilderness), **Blood Money**, and your climb up the Elo ladder. Killing the [Rogue Knight bots](/wiki/pk-bots-and-highwaymen) pays Blood Money too, at half rate.
 
 ## Blood Money
 
@@ -14,13 +14,13 @@ Every real-player kill drops Blood Money into your inventory:
 
 - **25 base + 3 per combat level of the victim** - a level-126 kill pays 403.
 - It's a real inventory item, so it's riskable and lootable like anything else.
-- Bot kills pay **nothing** - Blood Money only comes from humans.
+- **Bot kills pay half.** A slain [Rogue Knight](/wiki/pk-bots-and-highwaymen) pays the same formula halved (a level-126 elite: 201), and the [named ladder knights](/wiki/rogue-knights) pay double that (Lord Vexmar: 403). No daily cap and none of the fair-play gates below - bots are the reliable grind, humans the real payout. Bots never drop the gear they wear, and they never earn Blood Money *from* you.
 
 ### Fair-play rules
 
 Blood Money is a real, tradeable currency, so a kill only pays when it was a real fight. The loot key is **always** yours - only the Blood Money and the Elo are gated:
 
-- Only **wilderness** kills of **real players** pay. Bots, companions and safe-zone deaths never mint.
+- Only **wilderness** kills of **real players** go through these rules. Companions and safe-zone player deaths never mint; Rogue Knight bots pay their own flat bounty, safe camps included.
 - **Shared connection** - two accounts logged in from the same address don't pay each other.
 - **Repeat victims** - the same victim pays once per 30 minutes, and a pair of players can only pay each other **3 times a day** (in either direction - trading kills counts as one pair).
 - **Caps** - a victim can only fund **10** payouts a day, and a killer earns from at most **20** kills a day.

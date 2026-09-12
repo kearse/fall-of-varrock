@@ -1,9 +1,9 @@
 ---
 title: PK bots of the wilderness
 category: PvP & Wilderness
-summary: Fake-player fighters roam the wilderness and hold organized camps - weak metal fodder at the edge, escalating to elite NH meta the deeper you go, every kill rolling PK-set loot.
+summary: Fake-player fighters roam the wilderness and hold organized camps - weak metal fodder at the edge, escalating to elite NH meta the deeper you go, every kill paying Blood Money and rolling PK-set loot.
 order: 4
-updated: 2026-07-31
+updated: 2026-09-12
 ---
 
 Even at low population you'll always find a fight. **PK bots** are fake players - real gear, real stats, real combat brains (they eat, pot, switch and spec) - that roam the wilderness. They live **only in PvP zones**: step across the wilderness line and you're hunted; stay in a safe town and they can't touch you. The exception: the safe **Bandit Hideout camp** below, where a warband deliberately fights on reclaim-safe ground so new players can learn PvP cheaply.
@@ -36,10 +36,11 @@ The **goblin camp east of Lumbridge** - where a handful of **Knights of Lumbridg
 
 ## What they're worth
 
-- Kill a bot and it drops its **entire equipped kit**. In the wilderness that seals into a [loot key](/wiki/wilderness-loot-keys) for you, same as a player kill.
-- **PK-set loot pools:** every kill also rolls that band's rare table, built around real PK builds so farming a band assembles a recognisable set - starter metal upgrades → **pure/zerker kits** (fighter torso, berserker helm, rune defender) → the **hybrid kit** (abyssal whip, helm of neitiznot, barrows pieces, staff of the dead) → the **maxer kit** (Bandos, dragon claws, DWH, elder maul) → the **elite NH kit** (ancestral, Masori, Kodai, avernic, **Armadyl godsword**, even a Voidwaker at long odds) - plus a **revenant-weapon trickle** from the deep wild. Rolled loot joins the kit in your loot key.
+- **Blood Money on every kill.** A slain bot pays **half the player-kill rate** straight into your pack: 25 + 3 per combat level, halved - a bronze bandit at the edge pays 21, a level-126 elite NHer 201. The [named Rogue Knights](/wiki/rogue-knights) pay **double** that (Lord Vexmar: 403, a full max-level player kill). No daily cap. Spend it at the [PK Rewards vendor](/wiki/pk-rewards-and-stats) - spec weapons, wilderness sets, revenant weapons.
+- **They never drop their kit.** What a bot wears is not loot - farming worn gear off respawning bots was flooding the economy, so as of September 2026 the gear chase is the Blood Money shelf plus the rare pools below.
+- **PK-set loot pools:** every kill rolls that band's rare table, built around real PK builds so farming a band assembles a recognisable set - starter metal upgrades → **pure/zerker kits** (fighter torso, berserker helm, rune defender) → the **hybrid kit** (abyssal whip, helm of neitiznot, barrows pieces, staff of the dead) → the **maxer kit** (Bandos, dragon claws, DWH, elder maul) → the **elite NH kit** (ancestral, Masori, Kodai, avernic, **Armadyl godsword**, even a Voidwaker at long odds) - plus a **revenant-weapon trickle** from the deep wild. A rare seals into a [loot key](/wiki/wilderness-loot-keys) for you, in the wilderness or at a safe camp - so most kills mint no key at all, and a key means something landed.
 - The [named Rogue Knights](/wiki/rogue-knights) drop their own signature tables at far better rates - they're the efficient chase; the roamers are the ambient one.
-- Bots **don't** pay Blood Money and don't count toward your PK stats or Elo - they're loot and practice, not ladder points.
+- Bots **don't** count toward your PK stats or Elo, and they never earn Blood Money off *you* - they're practice with a bounty on their heads, not ladder points.
 - They fight back properly, chase hard, and killing you **destroys your loot keys** like any other death.
 
 Safe zones are absolute for the wilderness bots: they never muster, roam or chase onto a safe tile - banks inside the wilderness (including the Varrock bank pockets) are protected ground, and so are the surviving cities - Falador is a safe hub, not the wild. The deliberate exceptions are the lone Lumbridge goblin-camp ambusher above and the safe [Bandit Hideout camp](/wiki/rogue-knights), where the warband fights on reclaim-safe ground by design.

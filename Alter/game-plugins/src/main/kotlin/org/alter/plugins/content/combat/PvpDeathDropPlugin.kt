@@ -37,7 +37,8 @@ import org.alter.plugins.service.marketvalue.ItemMarketValueService
  *
  * Runs on `onPlayerPreDeath` — before the death sequence restores/respawns the player, while
  * `KILLER_ATTR`, the containers, and `PROTECT_ITEM_ATTR` are all still intact. Bots (and their
- * `Companion` subclass) are skipped (their kit-drop is handled in `BotCombatPlugin`), as are
+ * `Companion` subclass) are skipped — a slain bot never drops its kit; `BotCombatPlugin` pays the
+ * killer a Blood Money bounty + rare-pool roll instead, and companions keep their gear — as are
  * designed-safe deaths ([SafeDeaths]: minigames, boss arenas, instances).
  */
 class PvpDeathDropPlugin(
@@ -51,7 +52,7 @@ class PvpDeathDropPlugin(
     init {
         onPlayerPreDeath {
             val victim = player
-            if (victim is PkBot) return@onPlayerPreDeath          // bots + companions drop their kit elsewhere
+            if (victim is PkBot) return@onPlayerPreDeath          // bots never drop kit (BotCombatPlugin pays a bounty); companions keep theirs
             if (SafeDeaths.isSafeDeath(victim)) return@onPlayerPreDeath
             // Price the risk BEFORE the containers are stripped — the PK kill guard (Blood Money /
             // Elo legitimacy) reads it whichever pre-death hook runs first.

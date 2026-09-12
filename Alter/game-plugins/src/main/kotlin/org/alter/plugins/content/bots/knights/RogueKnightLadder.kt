@@ -122,7 +122,7 @@ object RogueKnightLadder {
      */
     fun onKnightKilled(p: Player, def: RogueKnightDef) {
         if (def.rank != rank(p)) {
-            p.message("<col=4f9b4f>${def.name} falls again.</col> Their gear and signature loot are yours to claim.")
+            p.message("<col=4f9b4f>${def.name} falls again.</col> Their bounty and signature loot are yours.")
             RogueRewards.onKnightRepeatKill(p, def) // capped War Effort trickle for the farm loop
             return
         }

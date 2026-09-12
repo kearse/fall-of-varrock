@@ -23,7 +23,7 @@ import org.alter.rscm.RSCM.getRSCM
  * Lumbridge (the jail hideout, Draynor, south of Port Sarim — see `BotZones`) or, denser but
  * lawless, in **Fallen Varrock** (the wilderness; only its bank pockets are safe) — then climb the
  * **Rogue Knight ladder** (`bots/knights/`) from the first assigned named knight. Clearing the hunt
- * pays a **soldier's purse** ([HUNT_PURSE]); the ladder pays coin, kit drops and bounties. The
+ * pays a **soldier's purse** ([HUNT_PURSE]); the ladder pays coin, Blood Money, signature drops and bounties. The
  * quest's finish line is the LADDER step: **every camp broken, every named knight beaten**, ending
  * with the Rogue Commander — the quest IS the realm's PK curriculum. Beaten knights stay farmable.
  *
@@ -48,8 +48,8 @@ object RogueProblem {
     /**
      * The HUNT bounty — paid the moment the 30-kill hunt clears, sized to exactly cover the
      * [Title.SOLDIER] rank so the ladder is walked as a Soldier, no rung skipped. Knighthood is
-     * EARNED, never gifted: the ladder pays it — first-kill coin, the knights' worn-kit drops,
-     * camp rogues' kits, and the Sergeant's milestone bounties — the multi-session climb the
+     * EARNED, never gifted: the ladder pays it — first-kill coin, the knights' and camp rogues'
+     * Blood Money bounties and pool drops, and the Sergeant's milestone bounties — the multi-session climb the
      * roadmap calls for. (The old single 650k Soldier+Knight purse skipped Soldier entirely.)
      */
     val HUNT_PURSE = Title.SOLDIER.cost

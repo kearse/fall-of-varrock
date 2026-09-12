@@ -1,13 +1,12 @@
 package org.alter.plugins.content.bots
 
-import org.alter.api.EquipmentType
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.alter.api.ext.*
 import org.alter.game.Server
 import org.alter.game.model.World
 import org.alter.game.model.attr.KILLER_ATTR
 import org.alter.game.model.entity.GroundItem
 import org.alter.game.model.entity.Player
-import org.alter.game.model.item.Item
 import org.alter.game.model.timer.TimerKey
 import org.alter.plugins.content.bots.knights.CampClearance
 import org.alter.plugins.content.economy.pk.LootKeys
@@ -21,12 +20,15 @@ import org.alter.game.plugin.PluginRepository
 // despawned + stripped every companion on death). The alias is unambiguous.
 import org.alter.plugins.content.companion.Companion as CompanionPawn
 
+private val logger = KotlinLogging.logger {}
+
 /**
  * Combat wiring for [PkBot] fake-players:
  *  - makes bots attackable ANYWHERE (the "Attack" right-click option is enabled on every client,
  *    and `Combat.canEngage` bypasses the wilderness/level gate when a bot is involved),
  *  - runs the per-tick [BotBrain] for every live bot (aggro acquisition + NH decisions),
- *  - on death, the bot **drops its entire kit** (worn gear + inventory) to the killer and despawns.
+ *  - on death, a real-player killer is paid a **Blood Money bounty** ([RogueBounty]) and rolls the
+ *    bot's **PK-set rare pool** ([PkLootPools]); the worn kit never drops and the bot despawns.
  */
 class BotCombatPlugin(
     r: PluginRepository,
@@ -55,19 +57,21 @@ class BotCombatPlugin(
             world.timers[botAggroTimer] = AGGRO_SCAN_TICKS
         }
 
-        // Drop the bot's full kit BEFORE the death sequence respawns/strips it.
+        // Pay + roll for the killer BEFORE the death sequence respawns the bot (KILLER_ATTR is fresh).
         onPlayerPreDeath {
             val bot = player as? PkBot ?: return@onPlayerPreDeath
             if (bot is CompanionPawn) return@onPlayerPreDeath // companions keep their gear (Step 6 adds PvP gear-risk)
-            // ::botduel test bots: no kit drop, no rogue credit — just tell the harness who fell.
+            // ::botduel test bots: no bounty, no rares, no rogue credit — just tell the harness who fell.
             if (bot.duelPartner != null) {
                 BotDuel.onDeath(bot)
                 return@onPlayerPreDeath
             }
             // (The old SPAR/LMS/CW bot guards were removed: the PK arena, LMS and Castle Wars
             // engines were purged 2026-08-28, so nothing ever set those attrs.)
-            val killer = bot.attr[KILLER_ATTR]?.get() as? Player
-            dropAllGear(world, bot, killer)
+            // Only a LIVE real player is a killer: never another bot, never a stale KILLER_ATTR
+            // pointing at a player object that has already logged out (index -1).
+            val killer = (bot.attr[KILLER_ATTR]?.get() as? Player)?.takeIf { it !is PkBot && it.index >= 0 }
+            rewardKiller(world, bot, killer)
             creditRogueKill(bot, killer)
         }
 
@@ -82,37 +86,28 @@ class BotCombatPlugin(
     }
 
     /**
-     * The bot's entire kit (worn gear + inventory) goes to the killer: sealed in a loot key for
-     * ANY real-player kill — wilderness or safe zone alike (same as killing a real player) —
-     * otherwise as ground loot on the death tile (public for a bot/no killer).
+     * A real-player kill pays the killer a Blood Money bounty straight to the inventory
+     * ([RogueBounty]: half the player-kill rate, named ladder knights double) and rolls the bot's
+     * PK-set rare pool ([PkLootPools]). Rolled rares seal into a loot key for ANY real-player kill
+     * — wilderness or safe camp alike, same as a player kill — and ground-drop killer-owned on the
+     * death tile only when no key can be minted (full inventory). Most kills roll nothing, so most
+     * kills mint no key.
      *
-     * On top of the kit, a real killer also rolls the bot's **PK-set loot pool** ([PkLootPools]) —
-     * the tier's rare gear chase (escalating to claws / AGS / voidwaker-class uniques), or a named
-     * rogue knight's signature table. Rolled rares join the kit BEFORE the key is sealed, so they
-     * ride the same loot-key / killer-owned-drop flow as the gear.
+     * The worn kit and inventory NEVER drop (2026-09-12: full-kit drops flooded the gear economy)
+     * — nothing is stripped here; the bot despawns with them in `onPlayerDeath`. Bot-on-bot and
+     * no-killer deaths pay and roll nothing.
+     *
+     * The bounty is fenced with `runCatching`: a throwing pre-death hook aborts every LATER hook
+     * (`PlayerDeathAction`), and `RogueKnightCampPlugin`'s rank credit runs after this one.
      */
-    private fun dropAllGear(world: World, bot: PkBot, killer: Player?) {
-        val tile = bot.tile
-        val kit = ArrayList<Item>()
-        val ammoSlot = EquipmentType.AMMO.id
-        for (i in 0 until bot.equipment.capacity) {
-            // The worn quiver is dressing — bots are geared via Item(id) so it holds a single arrow
-            // (they don't consume ammo). Dropping it reads as a bugged "1 arrow" drop; skip it.
-            bot.equipment[i]?.let { if (i != ammoSlot || it.amount > 1) kit += it }
-            bot.equipment[i] = null
-        }
-        for (i in 0 until bot.inventory.capacity) {
-            bot.inventory[i]?.let { kit += it }
-            bot.inventory[i] = null
-        }
-        val realKiller = killer?.takeIf { it !is PkBot }
-        kit += PkLootPools.bonusDrops(world, bot, realKiller)
-        val overflow = if (realKiller != null) {
-            LootKeys.tryAward(realKiller, bot.username, kit) // null = no key → everything drops
-        } else {
-            null
-        }
-        (overflow ?: kit).forEach { world.spawn(GroundItem(it.id, it.amount, tile, realKiller)) }
+    private fun rewardKiller(world: World, bot: PkBot, killer: Player?) {
+        if (killer == null) return
+        runCatching { RogueBounty.pay(world, bot, killer) }
+            .onFailure { logger.error(it) { "rogue bounty failed: ${killer.username} <- ${bot.username} (${bot.loadout.key})" } }
+        val rares = PkLootPools.bonusDrops(world, bot, killer)
+        if (rares.isEmpty()) return
+        val overflow = LootKeys.tryAward(killer, bot.username, rares) // null = no key → everything drops
+        (overflow ?: rares).forEach { world.spawn(GroundItem(it.id, it.amount, bot.tile, killer)) }
     }
 
     /**
