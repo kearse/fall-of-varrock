@@ -48,7 +48,8 @@ private val logger = KotlinLogging.logger {}
  * kit publishes complete; renumbered out). Quests own 4610-4612, 4617, 4624, 4633, and 4681-4683
  * ([WARPREP_SURVIVAL_VARP], [KNIGHTS_VARP], and [QuestBook.OPEN_VARP] — the "open the Quest Journal
  * window, focused on quest N" pulse; not published here, pulsed on demand). Framework quests that
- * need a journal varp claim one in docs/overlay-design-system.md §8 (`QuestDefinition.journalVarp`).
+ * need a journal varp claim one in docs/overlay-design-system.md §8 (`QuestDefinition.journalVarp`)
+ * — [FIRST_RECLAMATION_VARP] is the first such claim.
  * Non-zero varps persist ([VarpSerialisation]), but the attributes stay the source of truth —
  * everything here is re-derived and re-published on login and on the world poll.
  *
@@ -70,6 +71,10 @@ object QuestJournal {
     const val WARPREP_SURVIVAL_VARP = 4681 // War-Prep III — Survival (was 4643: kit editor's block)
     const val CONQUEST_VARP = 4633      // King of Lumbridge (endgame); 4635-4637 are companion indices
     const val KNIGHTS_VARP = 4682       // Rogue Knight ladder (rank + active hunt index; was 4644)
+
+    /** First Reclamation (Main Story Quest 4, framework quest `quests/story/FirstReclamation`) —
+     *  the generic `QuestEngine.publish` packing, claimed from the 4686-4699 block (§8). */
+    const val FIRST_RECLAMATION_VARP = 4687
 
     // Reused OSRS quest progress varps that colour the relabelled native quest-tab rows. A value of
     // 0 reads as "not started" (red), the complete value as "finished" (green), anything between as
@@ -96,6 +101,10 @@ object QuestJournal {
     /** Witch's Potion varp — now the "King of Lumbridge" row. Completes at 3. */
     const val KING_QUEST_VARP = 67
     internal const val KING_QUEST_COMPLETE = 3
+    /** Romeo & Juliet varp — now the "First Reclamation" row (driven by `QuestDefinition.nativeTabVarp`
+     *  through `QuestEngine.publish`). Completes at 100. */
+    const val FIRST_RECLAMATION_QUEST_VARP = 144
+    internal const val FIRST_RECLAMATION_QUEST_COMPLETE = 100
 
     /** True while the player has quest guidance muted (free-play mode). */
     fun muted(p: Player): Boolean = p.attr[QUEST_GUIDE_MUTED_ATTR] == true

@@ -36,6 +36,15 @@ abstract class QuestDefinition(
 
     open val completionMessage: String? = null
 
+    /**
+     * Native quest-tab mirror: the progress varp of the relabelled OSRS quest row this quest reuses
+     * (`QuestTablePatch.PLAN`, docs/quest-tab-handoff.md §0). [QuestEngine.publish] writes it
+     * 0 / 1 / [nativeTabComplete] as the quest is unstarted / live / complete, so the stock tab
+     * colours the row red / yellow / green exactly like the legacy chains. Null = no native row.
+     */
+    open val nativeTabVarp: Int? = null
+    open val nativeTabComplete: Int = 1
+
     open fun onComplete(p: Player) {}
 
     fun step(id: String): QuestStep? = steps.firstOrNull { it.id == id }

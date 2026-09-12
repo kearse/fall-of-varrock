@@ -5,6 +5,7 @@ import org.alter.game.model.Area
 import org.alter.game.model.Tile
 import org.alter.game.model.World
 import org.alter.game.model.combat.NpcCombatDef
+import org.alter.plugins.content.combat.PvpZones
 
 private val logger = KotlinLogging.logger {}
 
@@ -239,7 +240,11 @@ object MarchTargets {
 
     // The southern road into Fallen Varrock — the deepest a public march goes. The Varrock route
     // truncated at the stone circle; the garrison holds the road between the circle and the city
-    // gate (south of the city's own street staging, which starts at z3384). Wilderness ground.
+    // gate (south of the city's own street staging, which starts at z3384). Whether this is PvP
+    // ground is read LIVE from [PvpZones] wherever it matters (the muster call, `::marches`, the
+    // `::march` rally confirm) — never assumed from the target kind, so the wilderness boundary can
+    // move without touching the march code. The stone circle here is also the realm's forward post,
+    // the Southern Watch (`war/outposts/SouthernWatch`), which the enemy lines stage straight through.
     val VARROCK_OUTSKIRTS: MarchTarget = run {
         val key = "varrock_outskirts"
         val rally = Tile(3213, 3376, 0)
@@ -351,20 +356,24 @@ object MarchTargets {
         return eligible.last()
     }
 
+    /** True if a rally to [t] lands on live PvP ground right now (the real [PvpZones] answer). */
+    fun isPvpGround(t: MarchTarget): Boolean = PvpZones.isWilderness(t.op.objectiveTile)
+
     /** The `::marches` board. */
     fun statusLines(nextMusterMins: Int, mustering: MarchTarget?, live: MarchTarget?, grandNext: Boolean): List<String> {
         val lines = ArrayList<String>()
         lines += "<col=801700>The realm's marches — hostile ground the Knight-Captain strikes:</col>"
         for (t in pool) {
             val state = when {
-                live?.key == t.key -> "<col=ff4f4f>UNDER ATTACK NOW</col>"
+                // The scheduled column, or an event-started op on the same key (a quest's public war).
+                live?.key == t.key || CampaignRegistry.isAttacking(t.key) -> "<col=ff4f4f>UNDER ATTACK NOW</col>"
                 mustering?.key == t.key -> "<col=ffae00>mustering</col>"
                 Frontiers.zone(t.key) == null -> "<col=801700>no garrison (misconfigured)</col>"
                 CampaignRegistry.overlapsActive(t.op.battleArea) -> "contested by another operation"
                 else -> "quiet"
             }
             val grand = if (t.grandEligible) " · Grand March target" else ""
-            val wild = if (t.kind == MarchTargetKind.VARROCK_OUTSKIRTS) " · <col=ff4f4f>wilderness</col>" else ""
+            val wild = if (isPvpGround(t)) " · <col=ff4f4f>wilderness</col>" else ""
             lines += "  ${t.display} (${t.kind.display}$grand$wild): $state"
         }
         lines += when {
