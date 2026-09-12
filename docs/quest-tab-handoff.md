@@ -9,6 +9,12 @@
 >
 > Companion doc: `docs/custom-quests.md` (what the Quest Journal already does).
 > **Recon is DONE (dump analysed). Phase 1 (relabel proof) is tooled and ready — start at §0.**
+>
+> **Current state (2026-09-12): run `sync`.** The cache half is `relabel` (our names on the reused
+> rows); HIDING the other OSRS rows moved to the custom client (`lofquests` / `LofQuestTab`) — see
+> Phase 2 below. The live tab was last seen listing two rows ("The Last Free City", "Demon Slayer")
+> after the legacy cache-side `hide`; `sync` (= `unhide` + `relabel` + `free`) plus the client
+> build in the same PR puts all 18 quests in the tab.
 
 ---
 
@@ -65,7 +71,7 @@ findings that shape everything below:
   Rogue Hunting I & II are TWO rows off ONE server chain (`RogueProblem.Step`, varp 4617):
   `QuestJournal.syncNativeTab` completes row I the moment the hunt clears (KNIGHT step) and holds
   row II at not-started until then, completing it at DONE (the whole ladder broken). After changing
-  `PLAN`, re-run `relabel` then `hide` (the workflow) so the tab picks up the new/renamed rows.
+  `PLAN`, re-run `sync` (the workflow) so the tab picks up the new/renamed rows.
 
 > **Note (2026-07):** The Rogue Problem took The Restless Ghost (varp 107) — the slot originally
 > penciled in for War-Prep II — Ranged — so Ranged was re-mapped to a fresh spare quest, **Imp
@@ -78,7 +84,7 @@ not-started/in-progress/complete from real quest state). So the proof is just th
 > **All six FoV quests are ✅ wired** (server + `PLAN`). `RogueProblem`, `WarPrepRanged` and
 > `WarPrepSurvival` each drive their reused varp (107 / 160 / 179) via `QuestJournal.syncNativeTab`
 > (not-started when `NONE`, complete at `DONE`, in-progress otherwise), and each has a `Relabel` row
-> in `PLAN` — so `KEPT` already lists DBROWs 17, 30, 120, 76, 131, 161. Run `relabel` + `hide` on the
+> in `PLAN` — so `KEPT` already lists DBROWs 17, 30, 120, 76, 131, 161. Run `sync` on the
 > cache to surface them.
 
 ```powershell
@@ -106,38 +112,57 @@ and progress it should go **yellow**, and **green** on completion. If it colours
 col0→varp→colour chain is confirmed and Phase 2 is safe to build. If it doesn't, the status
 resolution differs from the assumption above and needs a clientscript/enum dump — stop and report.
 
-## Phase 2 — list ONLY FoV quests ✅ (tooled: the `hide` action)
+## Phase 2 — list ONLY FoV quests ✅ (the client filters; the cache keeps every row)
 
-Confirmed on the live server (2026-07): relabelled rows show with the right names and colours. Phase
-2 is the **`hide`** action — run it after `relabel`:
+Confirmed on the live server (2026-07): relabelled rows show with the right names and colours.
+
+**What changed (2026-09-12).** The first Phase 2 was the cache-side **`hide`** action — prune the
+quest table's master row index (js5 index 21, archive 0, file 0) down to our rows, on the theory that
+the list enumerates that index. It didn't hold up: the live tab ended up listing exactly two rows
+("The Last Free City" and the never-touched "Demon Slayer"), i.e. the rev-228 list script does not
+simply walk the pruned master. Rather than reverse-engineer the cs2, hiding moved to the layer that
+*is* deterministic — the custom client:
+
+- RuneLite's list builder calls its own **`QuestFilter` script (3238)** once per quest row, which
+  raises the `questFilter` callback with the row's DBROW id on the int stack (this is what the stock
+  Quest List search box uses). **`lofquests` / `LofQuestTab`** answers "hide" for every row that is
+  not in its `ROWS` map — the same 18 DBROW ids as `PLAN`. Our rows are left to the stock filters, so
+  the "hide completed/unstarted" toggles and the search box keep working. Config toggle: *Lof Quest
+  Journal → Only our quests in the quest tab* (default on).
+- **Row clicks** are handled client-side too: the stock op sends the server only the row's list
+  position, which is meaningless once rows are filtered client-side, so the click is consumed and the
+  Quest Journal window opens directly on the quest (resolved from the row's cache name, recorded
+  during the filter pass). The server's `onButton(399, 7)` in `QuestBookPlugin` stays as the fallback
+  for a client with the window switched off.
+- `unhide` regenerates the full master row list from the rows themselves (the pristine master is
+  exactly "every table-0 row, ascending" — verified against the dump), so it needs no backup file
+  and also repairs a partial prune. `hide` is kept in the tool as LEGACY (prints a warning) and is
+  no longer in the workflow.
+- `free` clears the BOOLEAN members flag (**column 5**, indexed — DBTABLEINDEX file 6) on the four
+  reused rows that were members' quests (Recruitment Drive, Death Plateau, Dwarf Cannon, Wanted!)
+  and moves them from key 1 to key 0 in that index, so all 18 list under one **Free Quests** header.
+  Rows are backed up like `relabel`'s; `restore` puts the index back too.
+
+**Run it:**
 
 ```
-Actions -> Quest cache relabel -> Run workflow -> hide
+Actions -> Quest cache relabel -> Run workflow -> sync     (= unhide + relabel + free, one restart)
 ```
 
-**How it works (simpler than a full rebuild).** The rev-228 quest list enumerates rows via the quest
-table's **master index** (js5 index 21, archive 0, file 0) — one key mapping to every row id. `hide`
-rewrites just that row list down to our kept rows (17, 30, 120, 76, 131, 161 — Recruit Trials,
-War-Prep I, The Rogue Problem, War-Prep II, War-Prep III, King of Lumbridge; `KEPT` is derived from
-`PLAN`). The other ~192 rows' *data is left
-intact* (not deleted), so the per-column indexes stay valid and it's fully reversible — they're just
-no longer reachable from the list. `QuestTablePatch.decodeIndex`/`encodeIndex` handle the index byte
-format (§2); it backs the master index up and verifies by re-decode. Rollback is the `restore` action
-(swaps the whole pristine `runtime/cache.prerelabel` back).
+then ship the client build from the same PR (`LofQuestTab` must know the 18 rows). Verify in-game:
+the tab lists exactly the 18 quests, red/yellow/green from a fresh account onward, one "Free Quests"
+header; clicking a row opens the Quest Journal on that quest. If the client log warns
+`quest tab: the list was built without a single questFilter callback`, RuneLite's script-3238
+override isn't applying to this cache (hash mismatch) — the OSRS rows will show; report it.
 
 **Still open (polish, not blockers):**
-- The summary-tab counts in `CharacterSummaryPlugin.kt` (`@TODO` ~line 28-31) still show placeholder
-  totals — set them to our quest count for a tidy "quests completed" line.
+- `restore` in the workflow swaps back the *whole* `runtime/cache.prerelabel` (2026-07) — every cache
+  edit made since by the other workflows (item/npc/loc/terrain) goes with it. Use the tool's row-level
+  `restore` (the `dbrow_*.bin` backups) instead when only the quest rows need rolling back.
 
-**Done:** the `onButton(399, 7)` row-click handler now ships (`QuestBookPlugin`). It maps the
-clicked row to a quest and pulses `QuestBook.OPEN_VARP` (4683; was 4645), which opens the client-drawn
-**Quest Journal window** (`lofquests` / `LofQuestBookOverlay`) focused on that quest. NOTE: the
-slot→quest mapping assumes the click delivers the row's list position (0–6, in `PLAN`/`hide`
-order = chain order); a temporary `logger.info` echoes the raw slot so this can be confirmed
-in-game (with a col0-id fallback) — remove the log once verified.
-- To add more quests to the tab later: add rows to `PLAN` in `QuestTablePatch.kt` (each reusing an
-  OSRS quest's varp — the §0 table has three more mapped), mirror their varps in `QuestJournal`, then
-  re-run `relabel` + `hide`.
+**Adding a quest to the tab later:** add a `Relabel` row to `PLAN` in `QuestTablePatch.kt` (reusing
+an OSRS quest's varp — §0), mirror its varp in `QuestJournal`/`nativeTabVarp`, add the same DBROW id
+to `LofQuestTab.ROWS` in the client, then run `sync` and ship the client.
 
 ---
 

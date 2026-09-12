@@ -79,12 +79,16 @@ A first-party sidebar plugin (book icon) modelled on the RuneLite **Quest Helper
 (server), then add a `LofQuest` entry with the same step ordinals, targets, why-text and unlock
 list. The panel and overlays pick it up automatically.
 
-## 3. Replacing the OSRS quest tab contents 🔶 (recon tooled — see the handoff)
+## 3. Replacing the OSRS quest tab contents ✅ (cache relabel + client filter)
 
 > **Execution runbook:** [`quest-tab-handoff.md`](quest-tab-handoff.md) — self-contained for a
-> session/dev with cache access. Recon is done (dump analysed); the **Phase 1 relabel proof** is
-> tooled: `gradlew :game-server:questTable -PquestArgs="relabel"` renames the reused OSRS quest
-> rows to FoV quests, and the server already drives their colour varps. Read the handoff §0.
+> session/dev with cache access. The cache half is `gradlew :game-server:questTable
+> -PquestArgs="sync"` (on the VPS: the *Quest cache relabel* workflow → `sync`): it renames 18 reused
+> OSRS quest rows to FoV quests and flags them all free; the server drives their colour varps.
+> **Hiding the other ~180 OSRS rows is the custom client's job** (`lofquests` / `LofQuestTab`,
+> answering RuneLite's per-row `questFilter` callback) — the earlier cache-side master-index prune
+> (`hide`) left the live tab showing two rows and is retired. Row clicks open the Quest Journal
+> window client-side. Read the handoff §0 and Phase 2.
 
 **Can we?** Yes. The quest tab (interface 399, mounted in quest root 629 — see
 `CharacterSummaryPlugin.kt`) is rendered **client-side from a cache DBTable**, not sent by the
@@ -106,6 +110,8 @@ the quest's progress varp/varbit.
    and a sidebar toolbar button.
 4. The stock quest-list *filter* varbits (13774/13776/13777/13889) can hide categories today as
    a stopgap, but can't rename or add entries — the DBTable edit is the real fix.
+5. Hiding the leftover OSRS rows: done in the client (`LofQuestTab`, the `questFilter` script
+   callback), not the cache. Keep its `ROWS` map in step with `QuestTablePatch.PLAN`.
 
 **Blockers / cautions:** the cache isn't in this repo (owner-held, Jagex-derived); do the edit
 against a copy and keep a backup — a bad config archive CRC bricks login. Test on one quest row

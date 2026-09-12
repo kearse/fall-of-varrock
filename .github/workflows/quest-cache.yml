@@ -6,11 +6,19 @@ name: Quest cache relabel
 # against the live cache at /opt/kol/runtime/cache.
 #
 #   inspect  — read-only: print the target rows + what they'll become (safe, do first)
+#   sync     — THE one-click path: unhide + relabel + free in one run, one restart
+#              (~90s disconnect). Hiding the leftover OSRS rows is the custom client's
+#              job (lofquests / LofQuestTab), so the cache keeps its full row list.
 #   relabel  — back up the cache (once, to runtime/cache.prerelabel), rename the rows,
-#              restart the game container (~90s disconnect)
-#   hide     — list ONLY the Fall of Varrock quests (prune the other ~196 from the tab),
-#              restart the game container. Run after relabel.
-#   restore  — swap the pristine backup back and restart the game container
+#              restart the game container
+#   unhide   — put the FULL quest row list back in the master index (undoes the legacy
+#              `hide`, which left the live tab listing two rows), restart
+#   free     — clear the members flag on our four reused members' rows so every quest
+#              sits under the one "Free Quests" header, restart
+#   restore  — swap the pristine backup back and restart the game container.
+#              !! runtime/cache.prerelabel is the WHOLE cache as it was before the first
+#              relabel (2026-07) — every cache edit made since by the other workflows
+#              (item/npc/loc/terrain) is lost too. Last resort only.
 #
 # Actions -> Quest cache relabel -> Run workflow -> pick an action.
 
@@ -22,7 +30,7 @@ on:
         type: choice
         required: true
         default: inspect
-        options: [inspect, relabel, hide, restore]
+        options: [inspect, sync, relabel, unhide, free, restore]
 
 concurrency:
   group: quest-cache
@@ -71,14 +79,14 @@ jobs:
               $COMPOSE restart game
               echo "game container restarted — relog to see the change"
               ;;
-            hide)
+            sync|unhide|free)
               if [ ! -d runtime/cache.prerelabel ]; then
                 cp -r runtime/cache runtime/cache.prerelabel
                 echo "backed up pristine cache -> runtime/cache.prerelabel"
               fi
-              run_tool hide
+              run_tool "$ACTION"
               $COMPOSE restart game
-              echo "game container restarted — quest tab now lists only FoV quests"
+              echo "game container restarted — relog to see the change"
               ;;
             restore)
               if [ ! -d runtime/cache.prerelabel ]; then
