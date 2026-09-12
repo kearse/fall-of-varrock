@@ -80,6 +80,9 @@ object OfflineBoot {
         "org.alter.plugins.content.interfaces.itemsets.ItemsetsPlugin",
         "org.alter.plugins.content.items.mystery_box.MysteryBoxPlugin",
         "org.alter.plugins.content.magic.alchemy.AlchemyPlugin",
+        // Minigames with an economic surface (pearl shop guard, ore -> bar converter).
+        "org.alter.plugins.content.minigames.gotr.GotrPlugin",
+        "org.alter.plugins.content.minigames.blastfurnace.BlastFurnacePlugin",
     )
 
     class Booted(
