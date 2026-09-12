@@ -60,3 +60,13 @@ else — the opening chain, the regional campaigns, the Council — is written *
 | 3 | The North | **BUILT** (2026-09-11) | [the-north.md](the-north.md) |
 | 4 | First Reclamation | **BUILT** (2026-09-12) | [first-reclamation.md](first-reclamation.md) |
 | 5 | A Kingdom Alone | **BUILT** (2026-09-12) | [a-kingdom-alone.md](a-kingdom-alone.md) — opens the regional phase (BREACH / SECURE / UNDERSTAND / SUSTAIN) |
+
+### Asgarnia — BREACH (regional campaign)
+
+| # | Quest | Status | Spec |
+|---|---|---|---|
+| A1 | At the White Wall | in its own PR | — |
+| A2 | A Matter of Trolls | in its own PR | — |
+| A3 | The Guns of Asgarnia | **BUILT** (2026-09-12) | [the-guns-of-asgarnia.md](the-guns-of-asgarnia.md) — restores the Blast Furnace to `main` and adds the reusable war-artillery emplacement |
+| A4 | Old Wounds | in its own PR | — |
+| A5 | The White Wall | proposed | — |

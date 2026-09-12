@@ -113,6 +113,11 @@ private val PLAN = listOf(
     Relabel(dbrowId = 112, questId = 10, sortName = "12 SECURE - Morytania", displayName = "SECURE - Morytania", varp = 273),      // Prince Ali Rescue, complete 110
     Relabel(dbrowId = 155, questId = 8, sortName = "13 UNDERSTAND - Wilderness", displayName = "UNDERSTAND - Wilderness / Desert", varp = 178), // Vampyre Slayer, complete 3
     Relabel(dbrowId = 108, questId = 16, sortName = "14 SUSTAIN - Kandarin", displayName = "SUSTAIN - Kandarin / War Effort", varp = 71),      // Pirate's Treasure, complete 4
+    // Asgarnia campaign (BREACH). Sort keys are chain slot + 1: "15 At the White Wall" and
+    // "16 A Matter of Trolls" are their own PRs; The Guns of Asgarnia (framework quest
+    // `guns_of_asgarnia`, chain 16) reuses Dwarf Cannon (dbrow 35, quest id 47, varp 0, complete 11)
+    // — Nulodion's own row. Driven by QuestEngine.publish (nativeTabVarp).
+    Relabel(dbrowId = 35, questId = 47, sortName = "17 The Guns of Asgarnia", displayName = "The Guns of Asgarnia", varp = 0),
 )
 
 /** The only quest rows the tab should list after `hide` — exactly the ones we relabelled. */

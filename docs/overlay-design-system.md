@@ -319,6 +319,9 @@ Reusable pieces — reach for these before inventing a new one. Metrics above.
     **4688 quests: A Kingdom Alone** (Main Story Quest 5, `a_kingdom_alone`) · **4689-4692 quests:
     BREACH / SECURE / UNDERSTAND / SUSTAIN** (the regional phase's four strategic objectives, keys
     `breach`/`secure`/`understand`/`sustain`; all generic packing — `content/quests/story/`).
+    **4695 quests: The Guns of Asgarnia** (Asgarnia campaign quest 3, `guns_of_asgarnia`;
+    `QuestJournal.GUNS_OF_ASGARNIA_VARP`, generic packing; client `LofQuestVarps.GUNS_OF_ASGARNIA`.
+    4693/4694 are At the White Wall / A Matter of Trolls, recorded by their own PRs).
     Every id in this map is guaranteed writable server-side: the varp table is sized
     `maxOf(cache varp count, Player.CUSTOM_VARP_CEILING = 6000)` — the cache count alone sat BELOW
     this range and out-of-range `setVarp` throws (that silently broke lofspar + the kit editor

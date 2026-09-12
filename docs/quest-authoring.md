@@ -133,6 +133,12 @@ begun by A Kingdom Alone, each SOLVED by its regional campaign's payoff via
 Gielinor gate, nothing else). A regional campaign's first quest gates on
 `Prerequisite.QuestComplete("a_kingdom_alone")`.
 
+Asgarnia campaign (BREACH, `content/quests/asgarnia/`): `at_the_white_wall` · `a_matter_of_trolls` ·
+`guns_of_asgarnia` (**The Guns of Asgarnia**, quest 3 — `docs/quests/the-guns-of-asgarnia.md`; sets
+`asgarnia.artillery_restored`) · `old_wounds`. A campaign quest whose predecessor may not be built yet
+gates on the first REGISTERED key of a fallback list (`at_the_white_wall` → `a_kingdom_alone` →
+`first_reclamation` → `the_north` → `recruit_trials`), so no PR dead-ends on merge order.
+
 Every new quest spec starts from the integration-first template in `docs/quests/README.md`.
 
 ## 3a. Journal rows for framework quests (built 2026-09-12)

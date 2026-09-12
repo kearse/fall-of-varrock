@@ -46,6 +46,7 @@ findings that shape everything below:
   | SECURE - Morytania (objective `secure`) | Prince Ali Rescue | 112 | 10 | 273 | 110 |
   | UNDERSTAND - Wilderness / Desert (objective `understand`) | Vampyre Slayer | 155 | 8 | 178 | 3 |
   | SUSTAIN - Kandarin / War Effort (objective `sustain`) | Pirate's Treasure | 108 | 16 | 71 | 4 |
+  | The Guns of Asgarnia (Asgarnia quest 3, framework `guns_of_asgarnia`; sort "17 …") | Dwarf Cannon | 35 | 47 | 0 | 11 |
 
   Framework quests (`quests/framework/`) drive their reused varp through `QuestDefinition.nativeTabVarp`
   / `nativeTabComplete` (written by `QuestEngine.publish`, 0 / 1 / complete) — no per-quest

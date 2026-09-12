@@ -69,6 +69,7 @@ class QuestBookPlugin(
             10 to QuestBook.SECURE,             // Prince Ali Rescue
             8 to QuestBook.UNDERSTAND,          // Vampyre Slayer
             16 to QuestBook.SUSTAIN,            // Pirate's Treasure
+            47 to QuestBook.GUNS_OF_ASGARNIA,   // Dwarf Cannon
         )
     }
 

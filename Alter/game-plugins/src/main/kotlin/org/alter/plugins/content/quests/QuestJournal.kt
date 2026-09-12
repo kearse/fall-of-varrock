@@ -91,6 +91,8 @@ object QuestJournal {
     const val SECURE_VARP = 4690
     const val UNDERSTAND_VARP = 4691
     const val SUSTAIN_VARP = 4692
+    // Asgarnia campaign (4693 At the White Wall, 4694 A Matter of Trolls — their own PRs).
+    const val GUNS_OF_ASGARNIA_VARP = 4695 // The Guns of Asgarnia (Asgarnia quest 3)
 
     // Reused OSRS quest progress varps that colour the relabelled native quest-tab rows. A value of
     // 0 reads as "not started" (red), the complete value as "finished" (green), anything between as
@@ -140,6 +142,9 @@ object QuestJournal {
     /** Pirate's Treasure varp — now the "SUSTAIN - Kandarin / War Effort" objective row. Completes at 4. */
     const val SUSTAIN_QUEST_VARP = 71
     internal const val SUSTAIN_QUEST_COMPLETE = 4
+    /** Dwarf Cannon varp — now the "The Guns of Asgarnia" row (Asgarnia quest 3). Completes at 11. */
+    const val GUNS_OF_ASGARNIA_QUEST_VARP = 0
+    internal const val GUNS_OF_ASGARNIA_QUEST_COMPLETE = 11
 
     /** True while the player has quest guidance muted (free-play mode). */
     fun muted(p: Player): Boolean = p.attr[QUEST_GUIDE_MUTED_ATTR] == true
