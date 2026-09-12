@@ -134,7 +134,11 @@ object AtTheWhiteWall : QuestDefinition(
         ),
         QuestStep(
             S_CHECKPOINT, Objective.TalkTo(J_CHECKPOINT, WHITE_KNIGHT),
-            anchor = GATE,
+            // The stock White Knight id is shared with Falador's castle knights: the arrow locks
+            // onto a knight AT the checkpoint only (the client journal highlights the same four).
+            anchor = GATE, anchorNpc = WHITE_KNIGHT,
+            anchorNpcFilter = { n -> n.tile.isWithinRadius(GATE, TALK_RADIUS) },
+            nudge = "The checkpoint is the four White Knights on posts across the road just OUTSIDE the north gate — speak to any of them. The knights inside the castle are not the ones you want.",
         ),
         QuestStep(
             S_DEFEND,
@@ -462,6 +466,19 @@ object AtTheWhiteWall : QuestDefinition(
     /** A White Knight with no quest beat to run: the checkpoint's own lines, or the castle's. */
     suspend fun QueueTask.knightIdle(p: Player) {
         if (!WhiteWallCheckpoint.isNear(p, TALK_RADIUS)) {
+            // A castle knight while the quest wants the checkpoint: send the player to the gate
+            // rather than leave them wondering which White Knight the journal means.
+            when (QuestEngine.stepId(p, this@AtTheWhiteWall)) {
+                S_TRAVEL, S_CHECKPOINT -> {
+                    knight(p, "Looking for the checkpoint? Not here, citizen. Out through the NORTH gate — the garrison holds the road just beyond it.")
+                    knight(p, "Speak to any of the knights on the posts there. They will want to know your business.")
+                    return
+                }
+                S_DEFEND -> {
+                    knight(p, "The Kinshra are at the north gate! Get back to the checkpoint and help the garrison hold it!")
+                    return
+                }
+            }
             knight(p, "Falador holds, citizen. The Kinshra keep us busy at the north gate and the trolls keep the Imperial Guard busy at Burthorpe.")
             knight(p, "It has been twelve years. We are still standing.")
             return

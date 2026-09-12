@@ -37,18 +37,18 @@ enum LofQuest
 			+ "the war lies north.",
 		12, // DONE (wire ordinal)
 		Arrays.asList(
-			new LofQuestStep(0, "Answer Sergeant Damien's alarm", "Lumbridge is under attack. He's by the castle gate.", new WorldPoint(3217, 3220, 0)),
+			new LofQuestStep(0, "Answer Sergeant Damien's alarm", "Lumbridge is under attack. He's by the castle gate.", new WorldPoint(3217, 3220, 0)).npcs(Npcs.SERGEANT_DAMIEN),
 			new LofQuestStep(1, "Help the Knights of Lumbridge hold the east camp", "Defeat 5 goblins at the goblin camp east of the castle, across the river.", new WorldPoint(3254, 3234, 0)),
-			new LofQuestStep(2, "Report to Sergeant Damien", "The attack has been pushed back.", new WorldPoint(3217, 3220, 0)),
-			new LofQuestStep(3, "Claim your first rank from Duke Horacio", "You stood for Lumbridge. He's in the market, by the Slayer Master.", new WorldPoint(3220, 3211, 0)),
-			new LofQuestStep(4, "Complete Vannaka's cleanup contract", "Take the contract, then hunt the goblins that scattered into the fields east of the castle.", new WorldPoint(3222, 3212, 0)),
-			new LofQuestStep(5, "Report back to Vannaka", "The stragglers are dealt with.", new WorldPoint(3222, 3212, 0)),
+			new LofQuestStep(2, "Report to Sergeant Damien", "The attack has been pushed back.", new WorldPoint(3217, 3220, 0)).npcs(Npcs.SERGEANT_DAMIEN),
+			new LofQuestStep(3, "Claim your first rank from Duke Horacio", "You stood for Lumbridge. He's in the market, by the Slayer Master.", new WorldPoint(3220, 3211, 0)).npcs(Npcs.DUKE_HORACIO),
+			new LofQuestStep(4, "Complete Vannaka's cleanup contract", "Take the contract, then hunt the goblins that scattered into the fields east of the castle.", new WorldPoint(3222, 3212, 0)).npcs(Npcs.VANNAKA),
+			new LofQuestStep(5, "Report back to Vannaka", "The stragglers are dealt with.", new WorldPoint(3222, 3212, 0)).npcs(Npcs.VANNAKA),
 			new LofQuestStep(6, "Mine copper and tin in The Mire", "Replace what the defence consumed — the skilling grounds south-east of the castle.", new WorldPoint(3237, 3189, 0)),
 			new LofQuestStep(7, "Smelt a bronze bar", "At The Mire's furnace.", new WorldPoint(3237, 3192, 0)),
 			new LofQuestStep(8, "Smith a bronze dagger", "At The Mire's anvil.", new WorldPoint(3238, 3196, 0)),
-			new LofQuestStep(9, "Deliver the dagger to the Quartermaster", "For the War Effort — the Supply Officer by the crypt in The Mire.", new WorldPoint(3248, 3193, 0)),
-			new LofQuestStep(10, "Report back to Vannaka", new WorldPoint(3222, 3212, 0)),
-			new LofQuestStep(11, "Report to Sergeant Damien", "The immediate danger has passed.", new WorldPoint(3217, 3220, 0))
+			new LofQuestStep(9, "Deliver the dagger to the Quartermaster", "For the War Effort — the Supply Officer by the crypt in The Mire.", new WorldPoint(3248, 3193, 0)).npcs(Npcs.QUARTERMASTER).nearTarget(15),
+			new LofQuestStep(10, "Report back to Vannaka", new WorldPoint(3222, 3212, 0)).npcs(Npcs.VANNAKA),
+			new LofQuestStep(11, "Report to Sergeant Damien", "The immediate danger has passed.", new WorldPoint(3217, 3220, 0)).npcs(Npcs.SERGEANT_DAMIEN)
 		),
 		Arrays.asList(
 			"Your first feudal rank — Peasant to Commoner",
@@ -66,10 +66,10 @@ enum LofQuest
 		6, // DONE ordinal (RANK was inserted at 5 — see WarPrepChain.Step)
 		Arrays.asList(
 			new LofQuestStep(1, "Train Prayer to 37", "Use the dragon bones on the Lumbridge church altar.", new WorldPoint(3242, 3207, 0)),
-			new LofQuestStep(2, "Return to Vannaka to be armed", "He kits you out for the tower.", new WorldPoint(3222, 3212, 0)),
-			new LofQuestStep(3, "Clear the Wizard Tower", "Speak to the Void Knight at the bridge; take the grimoire from the Archmage.", new WorldPoint(3113, 3208, 0)),
-			new LofQuestStep(4, "Return to Vannaka with word of the grimoire", new WorldPoint(3222, 3212, 0)),
-			new LofQuestStep(5, "Buy your next rank from Duke Horacio", "Vannaka's purse covers it — heavier armour awaits.", new WorldPoint(3220, 3211, 0))
+			new LofQuestStep(2, "Return to Vannaka to be armed", "He kits you out for the tower.", new WorldPoint(3222, 3212, 0)).npcs(Npcs.VANNAKA),
+			new LofQuestStep(3, "Clear the Wizard Tower", "Speak to the Void Knight at the bridge; take the grimoire from the Archmage.", new WorldPoint(3113, 3208, 0)).npcs(Npcs.VOID_KNIGHT),
+			new LofQuestStep(4, "Return to Vannaka with word of the grimoire", new WorldPoint(3222, 3212, 0)).npcs(Npcs.VANNAKA),
+			new LofQuestStep(5, "Buy your next rank from Duke Horacio", "Vannaka's purse covers it — heavier armour awaits.", new WorldPoint(3220, 3211, 0)).npcs(Npcs.DUKE_HORACIO)
 		),
 		Arrays.asList(
 			"Protect from Magic (Prayer 37)",
@@ -89,7 +89,7 @@ enum LofQuest
 			+ "the Rogue Knight ladder, the realm's PK schooling. Nothing else waits on it.",
 		3, // complete once the hunt clears (RogueProblem.Step.KNIGHT ordinal)
 		Arrays.asList(
-			new LofQuestStep(1, "Ask Sergeant Damien for the assignment", "Optional — by the Lumbridge gate, once War-Prep I is done.", new WorldPoint(3217, 3220, 0)),
+			new LofQuestStep(1, "Ask Sergeant Damien for the assignment", "Optional — by the Lumbridge gate, once War-Prep I is done.", new WorldPoint(3217, 3220, 0)).npcs(Npcs.SERGEANT_DAMIEN),
 			// No fixed anchor: the server's hint arrow leads this step — to the nearest safe road
 			// camp from afar, locking onto live rogues once they're in reach (like the knight hunt).
 			new LofQuestStep(2, "Thin out the rogue rank and file", "Cut down 30 of the rogue family — kills count anywhere; the arrow leads to the nearest safe road camp and locks onto rogues in reach. Fallen Varrock is denser but it is the wilderness — only the bank pockets are safe.", null)
@@ -110,7 +110,7 @@ enum LofQuest
 		6, // DONE ordinal (RogueProblem.Step)
 		Arrays.asList(
 			new LofQuestStep(3, "Kill your first assigned Rogue Knight", "Buy Soldier with your hunt purse first. The Sergeant's marker leads to the camp; ::knights tracks the ladder.", null),
-			new LofQuestStep(4, "Return to Sergeant Damien", "Report the knight's fall.", new WorldPoint(3217, 3220, 0)),
+			new LofQuestStep(4, "Return to Sergeant Damien", "Report the knight's fall.", new WorldPoint(3217, 3220, 0)).npcs(Npcs.SERGEANT_DAMIEN),
 			// No fixed anchor: the ladder's own marker leads the climb, camp to camp.
 			new LofQuestStep(5, "Break every camp on the ladder", "All 14 knights, weakest to strongest — the Commander last. Buy Soldier and Knight from Duke Horacio as the spoils come in; ::knights tracks the climb.", null)
 		),
@@ -131,10 +131,10 @@ enum LofQuest
 		6, // DONE ordinal (WarPrepRanged.Step)
 		// World anchors are best-effort — TUNE against the live map.
 		Arrays.asList(
-			new LofQuestStep(2, "Return to Vannaka for the marksman's kit", new WorldPoint(3222, 3212, 0)),
+			new LofQuestStep(2, "Return to Vannaka for the marksman's kit", new WorldPoint(3222, 3212, 0)).npcs(Npcs.VANNAKA),
 			new LofQuestStep(3, "Fell 20 enemies with a ranged weapon", "Bow, crossbow or thrown — Fallen Varrock's rogues will do.", new WorldPoint(3212, 3428, 0)),
-			new LofQuestStep(4, "Report back to Vannaka", new WorldPoint(3222, 3212, 0)),
-			new LofQuestStep(5, "Earn your Lordship at Duke Horacio", "The realm's loops pay the 2,000,000 and the War Effort — fight the marches, farm the Rogue Knights for kits, hunt the wild for loot keys.", new WorldPoint(3220, 3211, 0))
+			new LofQuestStep(4, "Report back to Vannaka", new WorldPoint(3222, 3212, 0)).npcs(Npcs.VANNAKA),
+			new LofQuestStep(5, "Earn your Lordship at Duke Horacio", "The realm's loops pay the 2,000,000 and the War Effort — fight the marches, farm the Rogue Knights for kits, hunt the wild for loot keys.", new WorldPoint(3220, 3211, 0)).npcs(Npcs.DUKE_HORACIO)
 		),
 		Arrays.asList(
 			"The rank of Lord — dragon armour",
@@ -152,10 +152,10 @@ enum LofQuest
 		6, // DONE ordinal (WarPrepSurvival.Step)
 		Arrays.asList(
 			new LofQuestStep(1, "Raise your Hitpoints to 60", "Hitpoints climbs as you fight — toughen up.", new WorldPoint(3220, 3210, 0)),
-			new LofQuestStep(2, "Return to General Zo for a survival kit", new WorldPoint(3220, 3210, 0)),
+			new LofQuestStep(2, "Return to General Zo for a survival kit", new WorldPoint(3220, 3210, 0)).npcs(Npcs.GENERAL_ZO),
 			new LofQuestStep(3, "Endure the Fight Cave to wave 6", "Enter with ::arena — manage your health and outlast it.", null),
-			new LofQuestStep(4, "Report back to General Zo", new WorldPoint(3220, 3210, 0)),
-			new LofQuestStep(5, "Earn your Ministry at Duke Horacio", "Command pays the 10,000,000 — lead marches and raids, farm the ladder's elite for their rares, hunt the deep wild.", new WorldPoint(3220, 3211, 0))
+			new LofQuestStep(4, "Report back to General Zo", new WorldPoint(3220, 3210, 0)).npcs(Npcs.GENERAL_ZO),
+			new LofQuestStep(5, "Earn your Ministry at Duke Horacio", "Command pays the 10,000,000 — lead marches and raids, farm the ladder's elite for their rares, hunt the deep wild.", new WorldPoint(3220, 3211, 0)).npcs(Npcs.DUKE_HORACIO)
 		),
 		Arrays.asList(
 			"The rank of Minister — within reach of the crown",
@@ -171,7 +171,7 @@ enum LofQuest
 			+ "the old capital. Win the conquest and the realm's armies march at your word.",
 		4, // DONE ordinal (Conquest.Step)
 		Arrays.asList(
-			new LofQuestStep(1, "Stock the realm's war-stores", "Skill the Mire and hand supplies to a Quartermaster (::supply to check).", new WorldPoint(3248, 3193, 0)),
+			new LofQuestStep(1, "Stock the realm's war-stores", "Skill the Mire and hand supplies to a Quartermaster (::supply to check).", new WorldPoint(3248, 3193, 0)).npcs(Npcs.QUARTERMASTER),
 			new LofQuestStep(2, "Launch the conquest of Fallen Varrock", "Gather your war-chest, then command ::conquest varrock.", new WorldPoint(3231, 3219, 0)),
 			new LofQuestStep(3, "Win the conquest", "Break Fallen Varrock's garrison — lead your army to victory.", new WorldPoint(3213, 3424, 0))
 		),
@@ -197,13 +197,13 @@ enum LofQuest
 		LofQuestVarps.NORTH,
 		"Complete The Last Free City first.",
 		Arrays.asList(
-			new LofQuestStep(1, "Speak to General Zo about the north", "In the castle courtyard, beside Duke Horacio.", new WorldPoint(3220, 3210, 0)),
+			new LofQuestStep(1, "Speak to General Zo about the north", "In the castle courtyard, beside Duke Horacio.", new WorldPoint(3220, 3210, 0)).npcs(Npcs.GENERAL_ZO),
 			new LofQuestStep(2, "Travel to Edgeville", "Any road or teleport — an amulet of glory lands you there. Rogue Knights may cross your path; you need not fight them.", new WorldPoint(3087, 3496, 0)),
-			new LofQuestStep(3, "Find someone who remembers the Fall", "Oziach, in his hut at the north-west edge of Edgeville.", new WorldPoint(3069, 3517, 0)),
+			new LofQuestStep(3, "Find someone who remembers the Fall", "Oziach, in his hut at the north-west edge of Edgeville.", new WorldPoint(3069, 3517, 0)).npcs(Npcs.OZIACH),
 			new LofQuestStep(4, "Inspect the Wilderness boundary", "Walk to the ditch at the top of town. You do not have to cross it.", new WorldPoint(3088, 3519, 0)),
-			new LofQuestStep(5, "Return to Oziach", "Tell him what you saw.", new WorldPoint(3069, 3517, 0)),
-			new LofQuestStep(6, "Read the Weathered Varrock Dispatch", "Read it from your pack, or with Oziach.", new WorldPoint(3069, 3517, 0)),
-			new LofQuestStep(7, "Take the dispatch to General Zo", "He wants to read the original — and Oziach wants it back.", new WorldPoint(3220, 3210, 0))
+			new LofQuestStep(5, "Return to Oziach", "Tell him what you saw.", new WorldPoint(3069, 3517, 0)).npcs(Npcs.OZIACH),
+			new LofQuestStep(6, "Read the Weathered Varrock Dispatch", "Read it from your pack, or with Oziach.", new WorldPoint(3069, 3517, 0)).npcs(Npcs.OZIACH),
+			new LofQuestStep(7, "Take the dispatch to General Zo", "He wants to read the original — and Oziach wants it back.", new WorldPoint(3220, 3210, 0)).npcs(Npcs.GENERAL_ZO)
 		),
 		Arrays.asList(
 			"15 War Effort",
@@ -229,15 +229,15 @@ enum LofQuest
 		LofQuestVarps.FIRST_RECLAMATION,
 		"Finish The North first.",
 		Arrays.asList(
-			new LofQuestStep(1, "Report to General Zo", "He believes Lumbridge is ready to reclaim its first northern position.", new WorldPoint(3220, 3210, 0)),
+			new LofQuestStep(1, "Report to General Zo", "He believes Lumbridge is ready to reclaim its first northern position.", new WorldPoint(3220, 3210, 0)).npcs(Npcs.GENERAL_ZO),
 			new LofQuestStep(2, "Survey the southern road", "Walk north toward Varrock - the reconnaissance is yours. The road reaches the lower end of the outskirts battlefield.", new WorldPoint(3228, 3344, 0)),
 			new LofQuestStep(3, "Inspect the stone circle", "Step inside the ring east of the road.", new WorldPoint(3225, 3371, 0)),
 			new LofQuestStep(4, "Look north toward Fallen Varrock", "The road beyond the circle, in front of the south gate.", new WorldPoint(3212, 3381, 0)),
-			new LofQuestStep(5, "Report your findings to General Zo", new WorldPoint(3220, 3210, 0)),
-			new LofQuestStep(6, "Give General Zo the word", "He launches the Reclamation Column - a public Grand March on the Varrock outskirts.", new WorldPoint(3220, 3210, 0)),
+			new LofQuestStep(5, "Report your findings to General Zo", new WorldPoint(3220, 3210, 0)).npcs(Npcs.GENERAL_ZO),
+			new LofQuestStep(6, "Give General Zo the word", "He launches the Reclamation Column - a public Grand March on the Varrock outskirts.", new WorldPoint(3220, 3210, 0)).npcs(Npcs.GENERAL_ZO),
 			new LofQuestStep(7, "Fight beside the Reclamation Column", "::march rallies you to it. The column must WIN and you need a real share of the fighting. Driven back? General Zo sends it again.", new WorldPoint(3213, 3376, 0)),
 			new LofQuestStep(9, "Raise the standard at the stone circle", "Capture the standard at the ring's heart to establish the Southern Watch.", new WorldPoint(3227, 3372, 0)),
-			new LofQuestStep(10, "Report to General Zo", "The Southern Watch is holding.", new WorldPoint(3220, 3210, 0))
+			new LofQuestStep(10, "Report to General Zo", "The Southern Watch is holding.", new WorldPoint(3220, 3210, 0)).npcs(Npcs.GENERAL_ZO)
 		),
 		Arrays.asList(
 			"The Southern Watch - fast travel to the forward post (portal, General Zo, ::southernwatch)",
@@ -262,10 +262,10 @@ enum LofQuest
 		LofQuestVarps.A_KINGDOM_ALONE,
 		"Complete First Reclamation first.",
 		Arrays.asList(
-			new LofQuestStep(1, "Report to Duke Horacio", "He wants a report on the kingdom's position now the Southern Watch stands. Lumbridge command area, by the market.", new WorldPoint(3220, 3211, 0)),
-			new LofQuestStep(2, "Ask General Zo what retaking Varrock would require", "He stands beside the Duke. You won't enjoy his answer.", new WorldPoint(3220, 3210, 0)),
-			new LofQuestStep(3, "Report General Zo's assessment to Duke Horacio", new WorldPoint(3220, 3211, 0)),
-			new LofQuestStep(4, "Discuss the surviving kingdoms and the four problems", "Falador, the River Salve, the Wilderness, Kandarin — and why nobody is coming yet.", new WorldPoint(3220, 3211, 0))
+			new LofQuestStep(1, "Report to Duke Horacio", "He wants a report on the kingdom's position now the Southern Watch stands. Lumbridge command area, by the market.", new WorldPoint(3220, 3211, 0)).npcs(Npcs.DUKE_HORACIO),
+			new LofQuestStep(2, "Ask General Zo what retaking Varrock would require", "He stands beside the Duke. You won't enjoy his answer.", new WorldPoint(3220, 3210, 0)).npcs(Npcs.GENERAL_ZO),
+			new LofQuestStep(3, "Report General Zo's assessment to Duke Horacio", new WorldPoint(3220, 3211, 0)).npcs(Npcs.DUKE_HORACIO),
+			new LofQuestStep(4, "Discuss the surviving kingdoms and the four problems", "Falador, the River Salve, the Wilderness, Kandarin — and why nobody is coming yet.", new WorldPoint(3220, 3211, 0)).npcs(Npcs.DUKE_HORACIO)
 		),
 		Arrays.asList(
 			"The Regional Campaign Phase — work across Gielinor in any order",
@@ -370,12 +370,14 @@ enum LofQuest
 		"Complete A Kingdom Alone first.",
 		Arrays.asList(
 			new LofQuestStep(1, "Travel to Asgarnia", "Falador's NORTH gate — the one facing the Kinshra. Any road or teleport into Falador, then out to the north gate.", new WorldPoint(2965, 3398, 0)),
-			new LofQuestStep(2, "Speak with the White Knights at the checkpoint", "The garrison holds the road just outside the north gate.", new WorldPoint(2965, 3398, 0)),
-			new LofQuestStep(3, "Help the White Knights repel the Kinshra attack", "Defeat 5 Kinshra raiders at the checkpoint. Any raider you draw blood on counts, even if a knight finishes it.", new WorldPoint(2965, 3400, 0), 5),
-			new LofQuestStep(4, "Speak with Sir Amik Varze", "Top floor of the White Knights' Castle, in the middle of Falador.", new WorldPoint(2960, 3336, 2)),
-			new LofQuestStep(5, "Find Sir Tiffy Cashien", "His bench in Falador Park, east of the castle.", new WorldPoint(2997, 3373, 0)),
+			// The checkpoint knights share their id with Falador's castle knights: only the ones at
+			// the gate are the quest's — the castle knights just send you there.
+			new LofQuestStep(2, "Speak with the White Knights at the checkpoint", "The four knights on posts across the road just OUTSIDE the north gate — any of them. The castle's knights are not the ones you want.", new WorldPoint(2965, 3398, 0)).npcs(Npcs.WHITE_KNIGHT).nearTarget(Npcs.WHITE_WALL_CHECKPOINT_RADIUS),
+			new LofQuestStep(3, "Help the White Knights repel the Kinshra attack", "Defeat 5 Kinshra raiders at the checkpoint. Any raider you draw blood on counts, even if a knight finishes it.", new WorldPoint(2965, 3400, 0), 5).npcs(Npcs.BLACK_KNIGHT_516, Npcs.BLACK_KNIGHT_517),
+			new LofQuestStep(4, "Speak with Sir Amik Varze", "Top floor of the White Knights' Castle, in the middle of Falador.", new WorldPoint(2960, 3336, 2)).npcs(Npcs.SIR_AMIK_VARZE),
+			new LofQuestStep(5, "Find Sir Tiffy Cashien", "His bench in Falador Park, east of the castle.", new WorldPoint(2997, 3373, 0)).npcs(Npcs.SIR_TIFFY_CASHIEN),
 			new LofQuestStep(6, "Inspect the front", "Three places, any order: the White Knight line at the checkpoint, the supply road just inside the north gate, and the ground north of the fence beyond the checkpoint.", new WorldPoint(2965, 3398, 0)),
-			new LofQuestStep(7, "Report to Sir Amik Varze", "Top floor of the White Knights' Castle.", new WorldPoint(2960, 3336, 2))
+			new LofQuestStep(7, "Report to Sir Amik Varze", "Top floor of the White Knights' Castle.", new WorldPoint(2960, 3336, 2)).npcs(Npcs.SIR_AMIK_VARZE)
 		),
 		Arrays.asList(
 			"1 Quest Point and 25 War Effort",
@@ -400,16 +402,16 @@ enum LofQuest
 		LofQuestVarps.A_MATTER_OF_TROLLS,
 		"Finish At the White Wall first.",
 		Arrays.asList(
-			new LofQuestStep(1, "Speak with Commander Denulth in Burthorpe", "The Imperial Guard camp in the north-west of the town.", new WorldPoint(2896, 3528, 0)),
+			new LofQuestStep(1, "Speak with Commander Denulth in Burthorpe", "The Imperial Guard camp in the north-west of the town.", new WorldPoint(2896, 3528, 0)).npcs(Npcs.DENULTH),
 			new LofQuestStep(2, "Scout the approaches to Death Plateau", "North-west of Burthorpe: past the Warriors' Guild, up the western path and around onto the plateau. Read the ground as you go.", new WorldPoint(2866, 3592, 0)),
 			new LofQuestStep(3, "Defeat the hostile troll patrol", "The warband trolls that came for you on the plateau. Every one you hit counts when it falls.", new WorldPoint(2866, 3592, 0), 4),
-			new LofQuestStep(4, "Find My Arm around Troll Stronghold", "He waits on the summit of Trollheim. The troll scout will walk you up; a Trollheim teleport lands there too.", new WorldPoint(2891, 3679, 0)),
-			new LofQuestStep(5, "Speak with Snowflake in Weiss", "My Arm's trolls will walk you there - ask him.", new WorldPoint(2873, 3934, 0)),
-			new LofQuestStep(6, "Arrange safe passage for the allied trolls with Denulth", "Snowflake's condition: the Imperial Guard must not fire on trolls entering the pass. Her trolls will see you down to Burthorpe.", new WorldPoint(2896, 3528, 0)),
-			new LofQuestStep(7, "Tell Denulth when you are ready for the Battle of the Pass", "Bring food and your best gear - the coalition does not win it for you.", new WorldPoint(2896, 3528, 0)),
+			new LofQuestStep(4, "Find My Arm around Troll Stronghold", "He waits on the summit of Trollheim. The troll scout will walk you up; a Trollheim teleport lands there too.", new WorldPoint(2891, 3679, 0)).npcs(Npcs.MY_ARM),
+			new LofQuestStep(5, "Speak with Snowflake in Weiss", "My Arm's trolls will walk you there - ask him.", new WorldPoint(2873, 3934, 0)).npcs(Npcs.SNOWFLAKE),
+			new LofQuestStep(6, "Arrange safe passage for the allied trolls with Denulth", "Snowflake's condition: the Imperial Guard must not fire on trolls entering the pass. Her trolls will see you down to Burthorpe.", new WorldPoint(2896, 3528, 0)).npcs(Npcs.DENULTH),
+			new LofQuestStep(7, "Tell Denulth when you are ready for the Battle of the Pass", "Bring food and your best gear - the coalition does not win it for you.", new WorldPoint(2896, 3528, 0)).npcs(Npcs.DENULTH),
 			new LofQuestStep(8, "Fight beside the Imperial Guard and allied trolls", "Hold the pass on Death Plateau: defeat 5 warband trolls while My Arm and Snowflake arrive.", null, 5),
 			new LofQuestStep(9, "Defeat the troll War-chief", "He shows himself once the warband is thinned. Break the splinter warband.", null),
-			new LofQuestStep(10, "Report the victory to Sir Amik", "Falador castle.", new WorldPoint(2960, 3336, 2))
+			new LofQuestStep(10, "Report the victory to Sir Amik", "Falador castle.", new WorldPoint(2960, 3336, 2)).npcs(Npcs.SIR_AMIK_VARZE)
 		),
 		Arrays.asList(
 			"Northern Frontier SECURED - the Imperial Guard can reinforce Falador",
@@ -435,17 +437,17 @@ enum LofQuest
 		LofQuestVarps.GUNS_OF_ASGARNIA,
 		"Finish At the White Wall first.",
 		Arrays.asList(
-			new LofQuestStep(1, "Speak with Sir Amik Varze about Falador's guns", "Top floor of the White Knights' Castle, in the middle of Falador.", new WorldPoint(2960, 3336, 2)),
-			new LofQuestStep(2, "Ask Nulodion why Asgarnia cannot replace its multicannons", "His hut at the Dwarven Mine's Ice Mountain entrance, north of Falador.", new WorldPoint(3011, 3453, 0)),
-			new LofQuestStep(3, "Travel to Keldagrim and speak with the Blast Furnace Foreman", "The portal's Mini-Games tab lists the Blast Furnace - Keldagrim's furnace room.", new WorldPoint(1942, 4958, 0)),
-			new LofQuestStep(4, "Clear the Kinshra raiding cell on the steel route", "Camped in the trees just west of Nulodion's yard - five raiders and a captain. Anyone's kill counts.", new WorldPoint(3002, 3451, 0), 6),
-			new LofQuestStep(5, "Return to the Blast Furnace Foreman", "He authorises a trial order and hands over its materials.", new WorldPoint(1942, 4958, 0)),
+			new LofQuestStep(1, "Speak with Sir Amik Varze about Falador's guns", "Top floor of the White Knights' Castle, in the middle of Falador.", new WorldPoint(2960, 3336, 2)).npcs(Npcs.SIR_AMIK_VARZE),
+			new LofQuestStep(2, "Ask Nulodion why Asgarnia cannot replace its multicannons", "His hut at the Dwarven Mine's Ice Mountain entrance, north of Falador.", new WorldPoint(3011, 3453, 0)).npcs(Npcs.NULODION),
+			new LofQuestStep(3, "Travel to Keldagrim and speak with the Blast Furnace Foreman", "The portal's Mini-Games tab lists the Blast Furnace - Keldagrim's furnace room.", new WorldPoint(1942, 4958, 0)).npcs(Npcs.BLAST_FURNACE_FOREMAN),
+			new LofQuestStep(4, "Clear the Kinshra raiding cell on the steel route", "Camped in the trees just west of Nulodion's yard - five raiders and a captain. Anyone's kill counts.", new WorldPoint(3002, 3451, 0), 6).npcs(Npcs.BLACK_KNIGHT_516, Npcs.BLACK_KNIGHT_517),
+			new LofQuestStep(5, "Return to the Blast Furnace Foreman", "He authorises a trial order and hands over its materials.", new WorldPoint(1942, 4958, 0)).npcs(Npcs.BLAST_FURNACE_FOREMAN),
 			new LofQuestStep(6, "Produce 10 steel bars at the Blast Furnace", "Ore on the conveyor belt, bars from the dispenser (bucket of water or ice gloves). Steel needs 30 Smithing. Keldagrim pays the coffer for this order.", new WorldPoint(1943, 4967, 0), 10),
-			new LofQuestStep(7, "Take the first steel shipment to Nulodion", "All ten bars, in your pack.", new WorldPoint(3011, 3453, 0)),
-			new LofQuestStep(8, "Help Nulodion complete the first replacement multicannon", "He has the fittings. Let him work.", new WorldPoint(3011, 3453, 0)),
-			new LofQuestStep(9, "Defend the workshop and field-test the cannon", "Load the new gun with Nulodion's cannonballs (Fire) and hold the yard against the Kinshra saboteurs. Driven off? Nulodion sends them again.", new WorldPoint(3014, 3446, 0), 6),
-			new LofQuestStep(10, "Speak with Nulodion about the first cannon", new WorldPoint(3011, 3453, 0)),
-			new LofQuestStep(11, "Report the restored artillery supply to Sir Amik Varze", "Top floor of the White Knights' Castle.", new WorldPoint(2960, 3336, 2))
+			new LofQuestStep(7, "Take the first steel shipment to Nulodion", "All ten bars, in your pack.", new WorldPoint(3011, 3453, 0)).npcs(Npcs.NULODION),
+			new LofQuestStep(8, "Help Nulodion complete the first replacement multicannon", "He has the fittings. Let him work.", new WorldPoint(3011, 3453, 0)).npcs(Npcs.NULODION),
+			new LofQuestStep(9, "Defend the workshop and field-test the cannon", "Load the new gun with Nulodion's cannonballs (Fire) and hold the yard against the Kinshra saboteurs. Driven off? Nulodion sends them again.", new WorldPoint(3014, 3446, 0), 6).npcs(Npcs.BLACK_KNIGHT_516, Npcs.BLACK_KNIGHT_517),
+			new LofQuestStep(10, "Speak with Nulodion about the first cannon", new WorldPoint(3011, 3453, 0)).npcs(Npcs.NULODION),
+			new LofQuestStep(11, "Report the restored artillery supply to Sir Amik Varze", "Top floor of the White Knights' Castle.", new WorldPoint(2960, 3336, 2)).npcs(Npcs.SIR_AMIK_VARZE)
 		),
 		Arrays.asList(
 			"Artillery Production RESTORED - Asgarnia can produce replacement multicannons again",
@@ -473,16 +475,16 @@ enum LofQuest
 		LofQuestVarps.OLD_WOUNDS,
 		"Finish A Matter of Trolls and The Guns of Asgarnia first.",
 		Arrays.asList(
-			new LofQuestStep(1, "Speak with Sir Tiffy Cashien", "His bench in Falador Park, east of the castle. He believes the Kinshra are preparing something unusual.", new WorldPoint(2997, 3373, 0)),
+			new LofQuestStep(1, "Speak with Sir Tiffy Cashien", "His bench in Falador Park, east of the castle. He believes the Kinshra are preparing something unusual.", new WorldPoint(2997, 3373, 0)).npcs(Npcs.SIR_TIFFY_CASHIEN),
 			new LofQuestStep(2, "Search the Dark Warriors' Fortress", "In the Wilderness north-west of Edgeville, about level 14. Real PvP - take only what you're prepared to lose. The Dark Warriors are ordinary enemies; the intelligence is what matters.", new WorldPoint(3029, 3628, 0)),
 			new LofQuestStep(3, "Recover the Kinshra Field Orders", "Search the crate in the fortress hall.", new WorldPoint(3026, 3628, 0)),
-			new LofQuestStep(4, "Take the stolen orders to Sir Tiffy", "Falador Park.", new WorldPoint(2997, 3373, 0)),
+			new LofQuestStep(4, "Take the stolen orders to Sir Tiffy", "Falador Park.", new WorldPoint(2997, 3373, 0)).npcs(Npcs.SIR_TIFFY_CASHIEN),
 			new LofQuestStep(5, "Investigate the First Scar", "Survey Site Seven: the ring of ruined pillars south-east of the Dark Warriors' Fortress, Wilderness level 9. Before the Kinshra.", new WorldPoint(3060, 3593, 0)),
 			new LofQuestStep(6, "Inspect the discoloured stone", "The standing stones on the ring's south side.", new WorldPoint(3060, 3586, 0)),
 			new LofQuestStep(7, "Inspect the warped rock", "The mass of rock at the ring's centre.", new WorldPoint(3060, 3593, 0)),
 			new LofQuestStep(8, "Search the old rubble", "The rubble on the ring's north-west side hides an old Temple Knight field cache.", new WorldPoint(3057, 3593, 0)),
 			new LofQuestStep(9, "Read the damaged Temple Knight report", "From your pack.", new WorldPoint(3060, 3593, 0)),
-			new LofQuestStep(10, "Take the report back to Sir Tiffy", "Falador Park.", new WorldPoint(2997, 3373, 0))
+			new LofQuestStep(10, "Take the report back to Sir Tiffy", "Falador Park.", new WorldPoint(2997, 3373, 0)).npcs(Npcs.SIR_TIFFY_CASHIEN)
 		),
 		Arrays.asList(
 			"2 Quest Points and 75 War Effort",
@@ -511,11 +513,41 @@ enum LofQuest
 	private static final WorldPoint GENERAL_ZO = new WorldPoint(3220, 3210, 0);
 
 	/**
-	 * The Kinshra raiders of At the White Wall — stock Black Knights (the checkpoint raid spawns
-	 * 516; 517 is the fortress twin). Highlighted during the checkpoint fight so the player can pick
-	 * the raiders out of the melee with the White Knights.
+	 * The Kinshra of the Asgarnia campaign — stock Black Knights (the checkpoint raid and the steel
+	 * route cell spawn 516; 517 is the fortress twin). Highlighted during those fights so the player
+	 * can pick the raiders out of the melee with the White Knights.
 	 */
-	private static final int[] BLACK_KNIGHTS = {516, 517};
+	/**
+	 * The creatures the quests send you to — cache npc ids of the server's spawns (the `npc.*` keys
+	 * in the quest definitions; see `Alter/data/cfg/rscm/npc.rscm`). A talk step lists its npc so
+	 * the journal highlights WHO to speak to, not just where to stand. Nested so the enum constants
+	 * above can reference them (an enum's own static fields are illegal forward references there).
+	 */
+	private static final class Npcs
+	{
+		static final int BLACK_KNIGHT_516 = 516;
+		static final int BLACK_KNIGHT_517 = 517;
+
+		/** At the White Wall's checkpoint knights share the stock White Knight id with Falador's castle
+		 *  knights: only the ones within this many tiles of the checkpoint are highlighted. */
+		static final int WHITE_WALL_CHECKPOINT_RADIUS = 12;
+
+		static final int SERGEANT_DAMIEN = 337;       // npc.sergeant_damien — the Lumbridge gate
+		static final int VANNAKA = 403;               // npc.vannaka — the Slayer Master in the market
+		static final int DUKE_HORACIO = 815;          // npc.duke_horacio — the command area by the market
+		static final int GENERAL_ZO = 3216;           // npc.melee_combat_tutor — General Zo, beside the Duke
+		static final int QUARTERMASTER = 3438;        // npc.quartermaster — the Supply Officer / Field Quartermaster posts
+		static final int VOID_KNIGHT = 1755;          // npc.void_knight — the Wizard Tower bridge
+		static final int OZIACH = 822;                // npc.oziach — Edgeville
+		static final int WHITE_KNIGHT = 1798;         // npc.white_knight — the checkpoint garrison (and the castle)
+		static final int SIR_AMIK_VARZE = 4771;       // npc.sir_amik_varze_4771 — castle top floor
+		static final int SIR_TIFFY_CASHIEN = 4687;    // npc.sir_tiffy_cashien — the park bench
+		static final int DENULTH = 4083;              // npc.denulth — the Imperial Guard camp, Burthorpe
+		static final int MY_ARM = 8411;               // npc.my_arm_8411 — Trollheim summit
+		static final int SNOWFLAKE = 8431;            // npc.snowflake — Weiss
+		static final int NULODION = 1400;             // npc.nulodion — the Dwarven Mine hut
+		static final int BLAST_FURNACE_FOREMAN = 2923; // npc.blast_furnace_foreman — Keldagrim
+	}
 
 	/**
 	 * The goblins of the Lumbridge fields — every plain "Goblin" npc id the camp and the surrounding
@@ -832,8 +864,11 @@ enum LofQuest
 	}
 
 	/**
-	 * NPC ids to highlight in the scene (tile marker) and dot on the minimap for the active step
-	 * — the targets a fixed-tile arrow can't pin down. Empty for steps with no such target.
+	 * NPC ids to highlight in the scene (tile marker) and dot on the minimap for the active step —
+	 * the person to talk to, or the targets a fixed-tile arrow can't pin down. Usually the step's
+	 * own list ({@link LofQuestStep#getNpcIds}); a step can redirect mid-flight, like the arrow.
+	 * Empty for steps with no such target. Use {@link #highlightsNpc} for the per-creature answer
+	 * (it also applies a step's radius around its target).
 	 */
 	int[] currentHighlightNpcIds(Client client)
 	{
@@ -855,30 +890,52 @@ enum LofQuest
 				return GOBLINS;
 			}
 		}
-		if (this == AT_THE_WHITE_WALL && step.getOrdinal() == 3)
+		if (this == FIRST_RECLAMATION && LofQuestVarps.genericStep(client, genericVarp) == FIRST_RECLAMATION_RETRY)
 		{
-			// The checkpoint raid: pick the Kinshra raiders out of the melee with the White Knights.
-			return BLACK_KNIGHTS;
+			return GENERAL_ZO_NPC; // driven back — regroup with General Zo before the next push
 		}
-		return NO_NPCS;
+		return step.getNpcIds();
+	}
+
+	private static final int[] GENERAL_ZO_NPC = {Npcs.GENERAL_ZO};
+
+	/**
+	 * Whether the active step wants the creature [npcId] standing at [where] highlighted right now.
+	 * The mid-flight redirects above win; otherwise the step decides, including its radius around
+	 * the target for a stock id the quest shares with the rest of the world (the checkpoint's White
+	 * Knights, not Falador castle's).
+	 */
+	boolean highlightsNpc(Client client, int npcId, WorldPoint where)
+	{
+		LofQuestStep step = currentStep(client);
+		if (step == null)
+		{
+			return false;
+		}
+		int[] ids = currentHighlightNpcIds(client);
+		if (ids != step.getNpcIds())
+		{
+			return LofQuestStep.contains(ids, npcId); // a redirect — no radius applies
+		}
+		return step.highlights(npcId, where);
 	}
 
 	/** True if any quest can ever flag this npc id as an objective target — the stable membership gate
 	 *  for the NPC-overlay highlighter (the live show/hide is the render predicate's job). */
 	static boolean isObjectiveNpc(int npcId)
 	{
-		for (int id : GOBLINS)
+		if (LofQuestStep.contains(GOBLINS, npcId) || LofQuestStep.contains(GENERAL_ZO_NPC, npcId))
 		{
-			if (id == npcId)
-			{
-				return true;
-			}
+			return true;
 		}
-		for (int id : BLACK_KNIGHTS)
+		for (LofQuest q : values())
 		{
-			if (id == npcId)
+			for (LofQuestStep step : q.steps)
 			{
-				return true;
+				if (LofQuestStep.contains(step.getNpcIds(), npcId))
+				{
+					return true;
+				}
 			}
 		}
 		return false;
