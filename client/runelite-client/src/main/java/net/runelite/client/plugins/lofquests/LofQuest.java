@@ -372,8 +372,8 @@ enum LofQuest
 			new LofQuestStep(1, "Travel to Asgarnia", "Falador's NORTH gate — the one facing the Kinshra. Any road or teleport into Falador, then out to the north gate.", new WorldPoint(2965, 3398, 0)),
 			// The checkpoint knights share their id with Falador's castle knights: only the ones at
 			// the gate are the quest's — the castle knights just send you there.
-			new LofQuestStep(2, "Speak with the White Knights at the checkpoint", "The four knights on posts across the road just OUTSIDE the north gate — any of them. The castle's knights are not the ones you want.", new WorldPoint(2965, 3398, 0)).npcs(Npcs.WHITE_KNIGHT).nearTarget(WHITE_WALL_CHECKPOINT_RADIUS),
-			new LofQuestStep(3, "Help the White Knights repel the Kinshra attack", "Defeat 5 Kinshra raiders at the checkpoint. Any raider you draw blood on counts, even if a knight finishes it.", new WorldPoint(2965, 3400, 0), 5).npcs(BLACK_KNIGHT_516, BLACK_KNIGHT_517),
+			new LofQuestStep(2, "Speak with the White Knights at the checkpoint", "The four knights on posts across the road just OUTSIDE the north gate — any of them. The castle's knights are not the ones you want.", new WorldPoint(2965, 3398, 0)).npcs(Npcs.WHITE_KNIGHT).nearTarget(Npcs.WHITE_WALL_CHECKPOINT_RADIUS),
+			new LofQuestStep(3, "Help the White Knights repel the Kinshra attack", "Defeat 5 Kinshra raiders at the checkpoint. Any raider you draw blood on counts, even if a knight finishes it.", new WorldPoint(2965, 3400, 0), 5).npcs(Npcs.BLACK_KNIGHT_516, Npcs.BLACK_KNIGHT_517),
 			new LofQuestStep(4, "Speak with Sir Amik Varze", "Top floor of the White Knights' Castle, in the middle of Falador.", new WorldPoint(2960, 3336, 2)).npcs(Npcs.SIR_AMIK_VARZE),
 			new LofQuestStep(5, "Find Sir Tiffy Cashien", "His bench in Falador Park, east of the castle.", new WorldPoint(2997, 3373, 0)).npcs(Npcs.SIR_TIFFY_CASHIEN),
 			new LofQuestStep(6, "Inspect the front", "Three places, any order: the White Knight line at the checkpoint, the supply road just inside the north gate, and the ground north of the fence beyond the checkpoint.", new WorldPoint(2965, 3398, 0)),
@@ -440,12 +440,12 @@ enum LofQuest
 			new LofQuestStep(1, "Speak with Sir Amik Varze about Falador's guns", "Top floor of the White Knights' Castle, in the middle of Falador.", new WorldPoint(2960, 3336, 2)).npcs(Npcs.SIR_AMIK_VARZE),
 			new LofQuestStep(2, "Ask Nulodion why Asgarnia cannot replace its multicannons", "His hut at the Dwarven Mine's Ice Mountain entrance, north of Falador.", new WorldPoint(3011, 3453, 0)).npcs(Npcs.NULODION),
 			new LofQuestStep(3, "Travel to Keldagrim and speak with the Blast Furnace Foreman", "The portal's Mini-Games tab lists the Blast Furnace - Keldagrim's furnace room.", new WorldPoint(1942, 4958, 0)).npcs(Npcs.BLAST_FURNACE_FOREMAN),
-			new LofQuestStep(4, "Clear the Kinshra raiding cell on the steel route", "Camped in the trees just west of Nulodion's yard - five raiders and a captain. Anyone's kill counts.", new WorldPoint(3002, 3451, 0), 6).npcs(BLACK_KNIGHT_516, BLACK_KNIGHT_517),
+			new LofQuestStep(4, "Clear the Kinshra raiding cell on the steel route", "Camped in the trees just west of Nulodion's yard - five raiders and a captain. Anyone's kill counts.", new WorldPoint(3002, 3451, 0), 6).npcs(Npcs.BLACK_KNIGHT_516, Npcs.BLACK_KNIGHT_517),
 			new LofQuestStep(5, "Return to the Blast Furnace Foreman", "He authorises a trial order and hands over its materials.", new WorldPoint(1942, 4958, 0)).npcs(Npcs.BLAST_FURNACE_FOREMAN),
 			new LofQuestStep(6, "Produce 10 steel bars at the Blast Furnace", "Ore on the conveyor belt, bars from the dispenser (bucket of water or ice gloves). Steel needs 30 Smithing. Keldagrim pays the coffer for this order.", new WorldPoint(1943, 4967, 0), 10),
 			new LofQuestStep(7, "Take the first steel shipment to Nulodion", "All ten bars, in your pack.", new WorldPoint(3011, 3453, 0)).npcs(Npcs.NULODION),
 			new LofQuestStep(8, "Help Nulodion complete the first replacement multicannon", "He has the fittings. Let him work.", new WorldPoint(3011, 3453, 0)).npcs(Npcs.NULODION),
-			new LofQuestStep(9, "Defend the workshop and field-test the cannon", "Load the new gun with Nulodion's cannonballs (Fire) and hold the yard against the Kinshra saboteurs. Driven off? Nulodion sends them again.", new WorldPoint(3014, 3446, 0), 6).npcs(BLACK_KNIGHT_516, BLACK_KNIGHT_517),
+			new LofQuestStep(9, "Defend the workshop and field-test the cannon", "Load the new gun with Nulodion's cannonballs (Fire) and hold the yard against the Kinshra saboteurs. Driven off? Nulodion sends them again.", new WorldPoint(3014, 3446, 0), 6).npcs(Npcs.BLACK_KNIGHT_516, Npcs.BLACK_KNIGHT_517),
 			new LofQuestStep(10, "Speak with Nulodion about the first cannon", new WorldPoint(3011, 3453, 0)).npcs(Npcs.NULODION),
 			new LofQuestStep(11, "Report the restored artillery supply to Sir Amik Varze", "Top floor of the White Knights' Castle.", new WorldPoint(2960, 3336, 2)).npcs(Npcs.SIR_AMIK_VARZE)
 		),
@@ -517,21 +517,21 @@ enum LofQuest
 	 * route cell spawn 516; 517 is the fortress twin). Highlighted during those fights so the player
 	 * can pick the raiders out of the melee with the White Knights.
 	 */
-	private static final int BLACK_KNIGHT_516 = 516;
-	private static final int BLACK_KNIGHT_517 = 517;
-
-	/** At the White Wall's checkpoint knights share the stock White Knight id with Falador's castle
-	 *  knights: only the ones within this many tiles of the checkpoint are highlighted. */
-	private static final int WHITE_WALL_CHECKPOINT_RADIUS = 12;
-
 	/**
-	 * The people the quests send you to talk to — cache npc ids of the server's spawns (the
-	 * `npc.*` keys in the quest definitions; see `Alter/data/cfg/rscm/npc.rscm`). A talk step lists
-	 * its npc so the journal highlights WHO to speak to, not just where to stand. Nested so the enum
-	 * constants above can reference them (an enum's own static fields can't be used there).
+	 * The creatures the quests send you to — cache npc ids of the server's spawns (the `npc.*` keys
+	 * in the quest definitions; see `Alter/data/cfg/rscm/npc.rscm`). A talk step lists its npc so
+	 * the journal highlights WHO to speak to, not just where to stand. Nested so the enum constants
+	 * above can reference them (an enum's own static fields are illegal forward references there).
 	 */
 	private static final class Npcs
 	{
+		static final int BLACK_KNIGHT_516 = 516;
+		static final int BLACK_KNIGHT_517 = 517;
+
+		/** At the White Wall's checkpoint knights share the stock White Knight id with Falador's castle
+		 *  knights: only the ones within this many tiles of the checkpoint are highlighted. */
+		static final int WHITE_WALL_CHECKPOINT_RADIUS = 12;
+
 		static final int SERGEANT_DAMIEN = 337;       // npc.sergeant_damien — the Lumbridge gate
 		static final int VANNAKA = 403;               // npc.vannaka — the Slayer Master in the market
 		static final int DUKE_HORACIO = 815;          // npc.duke_horacio — the command area by the market
