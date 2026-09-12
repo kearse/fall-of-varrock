@@ -245,6 +245,118 @@ enum LofQuest
 			"Varrock march staging on the doorstep of the fallen city",
 			"50 War Effort and the spoils of the won Grand March",
 			"A Kingdom Alone - the next main quest"
+		)),
+
+	/**
+	 * Main Story Quest 5. Short and dialogue-only: Duke Horacio and General Zo lay out why Lumbridge
+	 * cannot retake Varrock alone, and the four strategic problems the surviving kingdoms must solve.
+	 * Completing it opens the four objective entries below at once.
+	 */
+	A_KINGDOM_ALONE(
+		"A Kingdom Alone",
+		"The standard flies at the Southern Watch — Lumbridge has taken ground back for the first "
+			+ "time in twelve years. Now comes the uncomfortable conclusion. General Zo has worked "
+			+ "through what an assault on Varrock would actually require, and Lumbridge cannot "
+			+ "retake the city alone. Report to Duke Horacio, hear Zo's assessment, and learn what "
+			+ "the surviving kingdoms of Gielinor must solve before anyone marches on Varrock.",
+		LofQuestVarps.A_KINGDOM_ALONE,
+		"Complete First Reclamation first.",
+		Arrays.asList(
+			new LofQuestStep(1, "Report to Duke Horacio", "He wants a report on the kingdom's position now the Southern Watch stands. Lumbridge command area, by the market.", new WorldPoint(3220, 3211, 0)),
+			new LofQuestStep(2, "Ask General Zo what retaking Varrock would require", "He stands beside the Duke. You won't enjoy his answer.", new WorldPoint(3220, 3210, 0)),
+			new LofQuestStep(3, "Report General Zo's assessment to Duke Horacio", new WorldPoint(3220, 3211, 0)),
+			new LofQuestStep(4, "Discuss the surviving kingdoms and the four problems", "Falador, the River Salve, the Wilderness, Kandarin — and why nobody is coming yet.", new WorldPoint(3220, 3211, 0))
+		),
+		Arrays.asList(
+			"The Regional Campaign Phase — work across Gielinor in any order",
+			"BREACH — Asgarnia: a way through Varrock's defences",
+			"SECURE — Morytania: the Salve Accord",
+			"UNDERSTAND — the Wilderness, then the Desert: what really happened during the Fall",
+			"SUSTAIN — Kandarin and the War Effort: supply for a sustained assault",
+			"2 Quest Points; the Council of Gielinor convenes once all four are solved"
+		)),
+
+	/** Regional objective — Asgarnia. Completed by the Asgarnia campaign's payoff. */
+	BREACH(
+		"BREACH — Asgarnia",
+		"How do we get an army into Fallen Varrock? The city won't fall because Lumbridge brings "
+			+ "more swords — someone has to get those swords through its defences. Falador has "
+			+ "soldiers, engineers and weapons Misthalin does not, but the White Knights are at war "
+			+ "with the Kinshra and cannot simply march east. Start at the White Wall.",
+		LofQuestVarps.BREACH,
+		"Complete A Kingdom Alone first.",
+		Arrays.asList(
+			new LofQuestStep(1, "Find a way for coalition forces to break through Varrock's defences", "Lead: Falador / Asgarnia. First quest: At the White Wall.", null)
+		),
+		Arrays.asList(
+			"White Knight support and Asgarnian manpower",
+			"Restored dwarven artillery and multicannon capability",
+			"Temple Knight intelligence"
+		)),
+
+	/** Regional objective — Morytania. Completed by the Salve Accord. */
+	SECURE(
+		"SECURE — Morytania",
+		"What protects Misthalin while its army is fighting at Varrock? If the army marches north, "
+			+ "something else notices — Morytania among others. The objective is narrow: the Salve "
+			+ "Accord. No crossing, mutual action against violators, and a stable eastern frontier. "
+			+ "An accord, not an alliance. Start at the River Salve.",
+		LofQuestVarps.SECURE,
+		"Complete A Kingdom Alone first.",
+		Arrays.asList(
+			new LofQuestStep(1, "Ensure Misthalin will remain secure while its army fights in the north", "Lead: River Salve / Morytania. First quest: Across the Salve.", null)
+		),
+		Arrays.asList(
+			"The Salve Accord — a secured eastern border",
+			"Misthalin free to commit its army north"
+		)),
+
+	/** Regional objective — the one with an internal order: Wilderness, then Desert, then Senntisten. */
+	UNDERSTAND(
+		"UNDERSTAND — Wilderness / Desert",
+		"What actually happened to Varrock? Everyone knows what people saw: Zemouregal attacked, "
+			+ "Arrav led the dead, the city fell. The planners will not send an army into Varrock "
+			+ "without knowing why the catastrophe was so abnormal — or whether the same danger "
+			+ "remains beneath the city. The investigation has an order: the Wilderness first, then "
+			+ "the Kharidian Desert, then whatever Senntisten still remembers.",
+		LofQuestVarps.UNDERSTAND,
+		"Complete A Kingdom Alone first.",
+		Arrays.asList(
+			new LofQuestStep(1, "Investigate the First Scar — the Wilderness as an older catastrophe", "Lead: the Wilderness. First quest: The First Scar. No PvP kill is ever required.", null),
+			new LofQuestStep(2, "Follow the evidence into the Kharidian Desert", "Azzanadra and Mahjarrat history lead toward Sliske and the Elder Horn.", null),
+			new LofQuestStep(3, "Uncover what Senntisten holds beneath Varrock", "The convergence that preceded the Fall.", null)
+		),
+		Arrays.asList(
+			"The truth beneath the accepted story of the Fall",
+			"Whether the same danger still waits beneath Varrock"
+		)),
+
+	/** Regional objective — Kandarin + the War Effort. Completed by restored logistics. */
+	SUSTAIN(
+		"SUSTAIN — Kandarin / War Effort",
+		"How do we keep an army alive once it reaches Varrock? One battle empties the stores; now "
+			+ "imagine feeding thousands — arrows, food, medicine, replacement armour, horses, "
+			+ "transport, for weeks. Kandarin still trades. Restore the transport and trade the Fall "
+			+ "broke, and combine it with the realm's own War Effort.",
+		LofQuestVarps.SUSTAIN,
+		"Complete A Kingdom Alone first.",
+		Arrays.asList(
+			new LofQuestStep(1, "Create the supply and transportation network required to maintain a major offensive", "Lead: Kandarin + the War Effort. Major quest: The Long Road East.", null)
+		),
+		Arrays.asList(
+			"Restored Spirit Tree, glider and Fairy Ring transport",
+			"An eastern convoy and the trade to feed a coalition army"
+		)),
+
+	/** FUTURE teaser: the strategic phase's payoff (excluded from the chain track until built). */
+	COUNCIL_OF_GIELINOR(
+		"Council of Gielinor",
+		"Once BREACH, SECURE, UNDERSTAND and SUSTAIN are all solved, a small council of the "
+			+ "surviving kingdoms' representatives reviews the strategic work and authorises "
+			+ "sustained assaults on Fallen Varrock. The first major assault on the city follows.",
+		Arrays.asList(
+			"The First Major Assault on Varrock",
+			"Veteran of Varrock"
 		));
 
 	/** First Reclamation's battle row / the server's retry step (see the entry's note). */

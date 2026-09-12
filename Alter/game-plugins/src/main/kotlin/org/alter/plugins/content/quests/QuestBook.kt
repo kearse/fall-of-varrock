@@ -39,8 +39,15 @@ object QuestBook {
     const val KING = 6
     const val THE_NORTH = 7         // The North (Main Story Quest 3)
     const val FIRST_RECLAMATION = 8 // First Reclamation (Main Story Quest 4)
+    const val A_KINGDOM_ALONE = 9   // A Kingdom Alone (Main Story Quest 5)
+    // The regional phase's four strategic objectives (opened by A Kingdom Alone).
+    const val BREACH = 10
+    const val SECURE = 11
+    const val UNDERSTAND = 12
+    const val SUSTAIN = 13
 
-    const val LAST_INDEX = FIRST_RECLAMATION
+    /** The highest chain index the client journal lists (`LofQuest.CHAIN.size() - 1`). */
+    const val LAST_INDEX = SUSTAIN
 
     /** Pulse the open signal, focused on [chainIndex]. */
     fun open(p: Player, chainIndex: Int) {
