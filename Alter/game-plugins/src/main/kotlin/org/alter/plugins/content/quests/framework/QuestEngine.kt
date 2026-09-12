@@ -7,6 +7,7 @@ import org.alter.api.ext.setVarp
 import org.alter.game.model.entity.Npc
 import org.alter.game.model.entity.Player
 import org.alter.plugins.content.mechanics.Flags
+import org.alter.plugins.content.quests.QuestJournal
 
 private val logger = KotlinLogging.logger {}
 
@@ -168,9 +169,14 @@ object QuestEngine {
         }
     }
 
-    /** The poll: areas, items, predicates. */
+    /** The poll: areas, items, predicates — and auto-begin, so a gate that opens mid-session
+     *  (the quest before it completing) starts the next quest without waiting for a relog. */
     fun pollTick(p: Player) {
         for (q in QuestRegistry.frameworkQuests()) {
+            if (q.autoBegin && !started(p, q)) {
+                beginIfEligible(p, q)
+                continue
+            }
             val cur = step(p, q) ?: continue
             val done = when (val o = cur.objective) {
                 is Objective.ReachArea -> o.area.contains(p.tile)
@@ -206,16 +212,24 @@ object QuestEngine {
      * 0 none, 1 in progress, 2 complete)`. Only writes on change; never out of range.
      */
     fun publish(p: Player, q: QuestDefinition) {
-        val varp = q.journalVarp ?: return
-        if (varp >= p.varps.maxVarps) return
-        val cur = step(p, q)
-        val stepIdx = cur?.let { q.indexOf(it.id) + 1 } ?: 0
-        val progress = counter(p, q).coerceIn(0, 0xFFF)
         val state = when {
             isComplete(p, q) -> 2
             started(p, q) -> 1
             else -> 0
         }
+        // Native quest tab first: the reused OSRS row's varp reads 0 red / 1 yellow / complete green.
+        q.nativeTabVarp?.let { varp ->
+            val value = when (state) {
+                2 -> q.nativeTabComplete
+                1 -> 1
+                else -> 0
+            }
+            QuestJournal.setVarpSafely(p, varp, value)
+        }
+        val varp = q.journalVarp ?: return
+        if (varp >= p.varps.maxVarps) return
+        val stepIdx = step(p, q)?.let { q.indexOf(it.id) + 1 } ?: 0
+        val progress = counter(p, q).coerceIn(0, 0xFFF)
         val packed = (stepIdx and 0xFF) or (progress shl 8) or (state shl 20)
         if (p.getVarp(varp) != packed) p.setVarp(varp, packed)
     }

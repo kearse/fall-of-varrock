@@ -189,7 +189,7 @@ public class LofQuestsPlugin extends Plugin
 
 		if (varp == LofQuestVarps.RECRUIT || varp == LofQuestVarps.WARPREP || varp == LofQuestVarps.GUIDE_MUTED
 			|| varp == LofQuestVarps.ROGUE_PROBLEM || varp == LofQuestVarps.KNIGHTS || varp == LofQuestVarps.RANGED
-			|| varp == LofQuestVarps.SURVIVAL || varp == LofQuestVarps.CONQUEST)
+			|| varp == LofQuestVarps.SURVIVAL || varp == LofQuestVarps.CONQUEST || LofQuest.isJournalVarp(varp))
 		{
 			refresh();
 		}

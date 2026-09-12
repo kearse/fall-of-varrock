@@ -39,6 +39,13 @@ findings that shape everything below:
   | War-Prep II — Ranged | Imp Catcher | 76 | 9 | 160 | 2 |
   | War-Prep III — Survival | Sheep Shearer | 131 | 5 | 179 | 21 |
   | King of Lumbridge | Witch's Potion | 161 | 13 | 67 | 3 |
+  | First Reclamation (Main Story Quest 4, framework quest — `QuestDefinition.nativeTabVarp`) | Romeo & Juliet | 121 | 4 | 144 | 100 |
+
+  Framework quests (`quests/framework/`) drive their reused varp through `QuestDefinition.nativeTabVarp`
+  / `nativeTabComplete` (written by `QuestEngine.publish`, 0 / 1 / complete) — no per-quest
+  `QuestJournal` code. **Sort-string gotcha:** the tab orders rows by the col1 sort STRING, so a
+  "10 …" prefix sorts before "2 …" — quests past sort digit 9 need a scheme that compares correctly
+  (e.g. "9a", "9b") unless every row is renumbered zero-padded.
 
   Rogue Hunting I & II are TWO rows off ONE server chain (`RogueProblem.Step`, varp 4617):
   `QuestJournal.syncNativeTab` completes row I the moment the hunt clears (KNIGHT step) and holds

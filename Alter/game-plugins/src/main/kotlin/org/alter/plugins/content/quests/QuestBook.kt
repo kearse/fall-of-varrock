@@ -33,8 +33,12 @@ object QuestBook {
     const val WARPREP_RANGED = 4
     const val WARPREP_SURVIVAL = 5
     const val KING = 6
+    // Main story quests 3+ (framework quests): 7 = The North, 8 = First Reclamation, 9 = A Kingdom
+    // Alone — the value is the quest's position in the client enum, so whichever quest PR merges
+    // last re-checks every constant here against `LofQuest`'s declaration order.
+    const val FIRST_RECLAMATION = 8
 
-    private const val LAST_INDEX = KING
+    const val LAST_INDEX = FIRST_RECLAMATION
 
     /** Pulse the open signal, focused on [chainIndex]. */
     fun open(p: Player, chainIndex: Int) {

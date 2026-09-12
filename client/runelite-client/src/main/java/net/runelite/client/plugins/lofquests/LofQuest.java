@@ -180,7 +180,48 @@ enum LofQuest
 			"Command of the realm's armies (::conquest)",
 			"A commander's spoils (::claim) and Prestige",
 			"City-vs-city conquest"
+		)),
+
+	/**
+	 * Main Story Quest 4 — a framework quest (server `quests/story/FirstReclamation`, generic journal
+	 * varp 4687). Rows are the 1-based server step indices. The server's `retry` step (8) has no row
+	 * of its own: it renders as the battle row (7) with a "driven back" suffix, arrow on General Zo.
+	 * Chain slot: after The North (7), before A Kingdom Alone (9) — declaration order IS the slot.
+	 */
+	FIRST_RECLAMATION(
+		"First Reclamation",
+		"General Zo says surviving is no longer enough. Every march before this one hit the enemy and "
+			+ "went home; this time the realm clears the southern approach to Fallen Varrock and HOLDS it. "
+			+ "Scout the old stone circle on foot, fight beside the Reclamation Column's Grand March until "
+			+ "the line breaks, then raise Lumbridge's standard and establish the Southern Watch - the "
+			+ "first forward post in the shadow of the city walls. And hear the limit: Misthalin cannot "
+			+ "take Varrock alone.",
+		LofQuestVarps.FIRST_RECLAMATION,
+		"Finish The North first.",
+		Arrays.asList(
+			new LofQuestStep(1, "Report to General Zo", "He believes Lumbridge is ready to reclaim its first northern position.", new WorldPoint(3220, 3210, 0)),
+			new LofQuestStep(2, "Survey the southern road", "Walk north toward Varrock - the reconnaissance is yours. The road reaches the lower end of the outskirts battlefield.", new WorldPoint(3228, 3344, 0)),
+			new LofQuestStep(3, "Inspect the stone circle", "Step inside the ring east of the road.", new WorldPoint(3225, 3371, 0)),
+			new LofQuestStep(4, "Look north toward Fallen Varrock", "The road beyond the circle, in front of the south gate.", new WorldPoint(3212, 3381, 0)),
+			new LofQuestStep(5, "Report your findings to General Zo", new WorldPoint(3220, 3210, 0)),
+			new LofQuestStep(6, "Give General Zo the word", "He launches the Reclamation Column - a public Grand March on the Varrock outskirts.", new WorldPoint(3220, 3210, 0)),
+			new LofQuestStep(7, "Fight beside the Reclamation Column", "::march rallies you to it. The column must WIN and you need a real share of the fighting. Driven back? General Zo sends it again.", new WorldPoint(3213, 3376, 0)),
+			new LofQuestStep(9, "Raise the standard at the stone circle", "Capture the standard at the ring's heart to establish the Southern Watch.", new WorldPoint(3227, 3372, 0)),
+			new LofQuestStep(10, "Report to General Zo", "The Southern Watch is holding.", new WorldPoint(3220, 3210, 0))
+		),
+		Arrays.asList(
+			"The Southern Watch - fast travel to the forward post (portal, General Zo, ::southernwatch)",
+			"A Field Quartermaster and a garrison of Knights of Lumbridge at the circle",
+			"Varrock march staging on the doorstep of the fallen city",
+			"50 War Effort and the spoils of the won Grand March",
+			"A Kingdom Alone - the next main quest"
 		));
+
+	/** First Reclamation's battle row / the server's retry step (see the entry's note). */
+	private static final int FIRST_RECLAMATION_BATTLE = 7;
+	private static final int FIRST_RECLAMATION_RETRY = 8;
+	/** General Zo's post in the castle hub. */
+	private static final WorldPoint GENERAL_ZO = new WorldPoint(3220, 3210, 0);
 
 	/**
 	 * The goblins of the Lumbridge fields — every plain "Goblin" npc id the camp and the surrounding
@@ -205,25 +246,66 @@ enum LofQuest
 	private final int doneOrdinal;
 	private final List<LofQuestStep> steps;
 	private final List<String> unlocks;
+	/** Framework quests: the server's generic journal varp (QuestDefinition.journalVarp); 0 = a
+	 *  legacy chain (own varp layout, switched on below) or a FUTURE teaser. */
+	private final int genericVarp;
+	/** Framework quests: the "Locked — …" line while the prerequisites are unmet (nullable). */
+	private final String lockReasonText;
 
 	LofQuest(String questName, String why, int doneOrdinal, List<LofQuestStep> steps, List<String> unlocks)
 	{
-		this.questName = questName;
-		this.why = why;
-		this.doneOrdinal = doneOrdinal;
-		this.steps = steps;
-		this.unlocks = unlocks;
+		this(questName, why, doneOrdinal, 0, null, steps, unlocks);
+	}
+
+	/**
+	 * Framework quest entry (server `QuestDefinition` with a `journalVarp`): generic packing —
+	 * bits 0-7 current step index + 1, bits 8-19 progress, bits 20-21 state (0 locked / not begun,
+	 * 1 in progress, 2 complete). Step ordinals are the server's 1-based step indices.
+	 */
+	LofQuest(String questName, String why, int genericVarp, String lockReason, List<LofQuestStep> steps, List<String> unlocks)
+	{
+		this(questName, why, Integer.MAX_VALUE, genericVarp, lockReason, steps, unlocks);
 	}
 
 	/** FUTURE teaser entry — no server chain behind it yet. */
 	LofQuest(String questName, String why, List<String> unlocks)
 	{
-		this(questName, why, -1, Collections.emptyList(), unlocks);
+		this(questName, why, -1, 0, null, Collections.emptyList(), unlocks);
+	}
+
+	LofQuest(String questName, String why, int doneOrdinal, int genericVarp, String lockReason, List<LofQuestStep> steps, List<String> unlocks)
+	{
+		this.questName = questName;
+		this.why = why;
+		this.doneOrdinal = doneOrdinal;
+		this.genericVarp = genericVarp;
+		this.lockReasonText = lockReason;
+		this.steps = steps;
+		this.unlocks = unlocks;
 	}
 
 	boolean isFuture()
 	{
 		return doneOrdinal < 0;
+	}
+
+	/** A framework (generic-varp) quest, as opposed to a legacy chain or a FUTURE teaser. */
+	boolean isGeneric()
+	{
+		return genericVarp > 0;
+	}
+
+	/** True if [varp] is any framework quest's journal varp — a change to it must refresh the journal. */
+	static boolean isJournalVarp(int varp)
+	{
+		for (LofQuest q : values())
+		{
+			if (q.genericVarp == varp)
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/** The main quest chain in order — the real, built quests (FUTURE teasers excluded). The index
@@ -257,6 +339,16 @@ enum LofQuest
 	/** The server chain's current step ordinal for this quest (0 for FUTURE entries). */
 	int stepOrdinal(Client client)
 	{
+		if (isGeneric())
+		{
+			if (this == FIRST_RECLAMATION)
+			{
+				// The server's retry step (8) is the battle row (7) again — driven back, see General Zo.
+				final int raw = LofQuestVarps.genericStep(client, genericVarp);
+				return raw == FIRST_RECLAMATION_RETRY ? FIRST_RECLAMATION_BATTLE : raw;
+			}
+			return LofQuestVarps.genericStep(client, genericVarp);
+		}
 		switch (this)
 		{
 			case LAST_FREE_CITY:
@@ -283,6 +375,20 @@ enum LofQuest
 		if (isFuture())
 		{
 			return LofQuestState.FUTURE;
+		}
+		if (isGeneric())
+		{
+			// Framework quests begin on their own once the prerequisites are met (or from the
+			// quest before them), so "not begun" reads as locked.
+			switch (LofQuestVarps.genericState(client, genericVarp))
+			{
+				case 2:
+					return LofQuestState.FINISHED;
+				case 1:
+					return LofQuestState.IN_PROGRESS;
+				default:
+					return LofQuestState.LOCKED;
+			}
 		}
 		int ord = stepOrdinal(client);
 		switch (this)
@@ -344,6 +450,10 @@ enum LofQuest
 	/** Short lock explanation for LOCKED entries (null otherwise). */
 	String lockReason(Client client)
 	{
+		if (isGeneric())
+		{
+			return state(client) == LofQuestState.LOCKED ? lockReasonText : null;
+		}
 		if (this == WARPREP_MAGIC && state(client) == LofQuestState.LOCKED)
 		{
 			return "Complete The Last Free City first.";
@@ -374,6 +484,10 @@ enum LofQuest
 	/** How many checklist steps are already behind the player. */
 	int completedSteps(Client client)
 	{
+		if (state(client) == LofQuestState.FINISHED)
+		{
+			return steps.size(); // a finished framework quest publishes step 0 — every row is behind
+		}
 		int ord = stepOrdinal(client);
 		int done = 0;
 		for (LofQuestStep step : steps)
@@ -411,6 +525,10 @@ enum LofQuest
 		if (step == null)
 		{
 			return null;
+		}
+		if (this == FIRST_RECLAMATION && LofQuestVarps.genericStep(client, genericVarp) == FIRST_RECLAMATION_RETRY)
+		{
+			return GENERAL_ZO; // driven back — regroup with General Zo before the next push
 		}
 		if (this == LAST_FREE_CITY && step.getOrdinal() == 4 && LofQuestVarps.recruitContractTaken(client))
 		{
@@ -463,6 +581,21 @@ enum LofQuest
 	/** Live progress suffix for a step row, e.g. " (3/5)" goblins or " (23/37)" Prayer. */
 	String stepProgress(Client client, LofQuestStep step)
 	{
+		if (isGeneric())
+		{
+			if (this == FIRST_RECLAMATION && step.getOrdinal() == FIRST_RECLAMATION_BATTLE
+				&& LofQuestVarps.genericStep(client, genericVarp) == FIRST_RECLAMATION_RETRY)
+			{
+				return " (driven back - see General Zo)";
+			}
+			// Counted steps of a framework quest: the generic progress bits against the step's goal.
+			if (step.getGoal() > 0 && stepOrdinal(client) == step.getOrdinal())
+			{
+				final int n = Math.min(LofQuestVarps.genericProgress(client, genericVarp), step.getGoal());
+				return " (" + n + "/" + step.getGoal() + ")";
+			}
+			return "";
+		}
 		if (this == LAST_FREE_CITY && step.getOrdinal() == 1 && stepOrdinal(client) == 1)
 		{
 			return " (" + LofQuestVarps.recruitGoblinKills(client) + "/5)";
