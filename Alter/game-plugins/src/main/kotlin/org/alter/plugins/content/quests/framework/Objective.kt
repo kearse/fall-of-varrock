@@ -166,15 +166,18 @@ sealed class Reward {
 
 /**
  * One step of a quest. [id] is the persisted key (stable, human-readable); [anchor]/[anchorNpc]
- * feed the guidance arrow ([QuestArrows]); [onEnter]/[onLeave] are the side-effect hooks (open an
- * instance, spawn an npc, start a war); [rewards] pay when the step clears; [nudge] is an extra
- * hint line printed on step entry and with the login reminder.
+ * feed the guidance arrow ([QuestArrows]) — [anchorNpcFilter] narrows which live npc of that id
+ * counts, for a stock id the quest shares with the rest of the world (the checkpoint's White
+ * Knights, not Falador castle's); [onEnter]/[onLeave] are the side-effect hooks (open an instance,
+ * spawn an npc, start a war); [rewards] pay when the step clears; [nudge] is an extra hint line
+ * printed on step entry and with the login reminder.
  */
 class QuestStep(
     val id: String,
     val objective: Objective,
     val anchor: Tile? = null,
     val anchorNpc: String? = null,
+    val anchorNpcFilter: ((Npc) -> Boolean)? = null,
     val onEnter: ((Player) -> Unit)? = null,
     val onLeave: ((Player) -> Unit)? = null,
     val rewards: List<Reward> = emptyList(),

@@ -336,9 +336,10 @@ public class LofQuestsPlugin extends Plugin
 			return null;
 		}
 		// The arrow only leads you TO the objective. Once a highlighted target creature is in sight
-		// the tile highlight/minimap dot is guidance enough, so the arrow (and its tile marker) get out of the
-		// way — mirroring RuneLite Quest Helper, which drops the arrow once the NPC is on screen. Only
-		// applies while the creature highlight is actually on to hand off to.
+		// (the person to talk to, the enemies to fight) the tile highlight/minimap dot is guidance
+		// enough, so the arrow (and its tile marker) get out of the way — mirroring RuneLite Quest
+		// Helper, which drops the arrow once the NPC is on screen. Only applies while the creature
+		// highlight is actually on to hand off to.
 		if (config.highlightObjectiveNpcs() && objectiveNpcInSight())
 		{
 			return null;
@@ -379,24 +380,13 @@ public class LofQuestsPlugin extends Plugin
 		}
 		for (NPC npc : client.getNpcs())
 		{
-			if (npc == null || !contains(ids, npc.getId()))
+			if (npc == null || !LofQuestStep.contains(ids, npc.getId()))
 			{
 				continue;
 			}
 			WorldPoint npcLoc = npc.getWorldLocation();
-			if (npcLoc != null && npcLoc.distanceTo(playerLoc) <= IN_SIGHT_RADIUS)
-			{
-				return true;
-			}
-		}
-		return false;
-	}
-
-	private static boolean contains(int[] ids, int id)
-	{
-		for (int candidate : ids)
-		{
-			if (candidate == id)
+			if (npcLoc != null && npcLoc.distanceTo(playerLoc) <= IN_SIGHT_RADIUS
+				&& quest.highlightsNpc(client, npc.getId(), npcLoc))
 			{
 				return true;
 			}
@@ -420,15 +410,17 @@ public class LofQuestsPlugin extends Plugin
 			.npc(npc)
 			.highlightColor(config.arrowColor())
 			.tile(true)
-			.render(n -> highlightsNpc(n.getId()))
+			.render(this::highlightsNpc)
 			.build();
 	}
 
 	/**
-	 * Whether the tracked quest wants [npcId] highlighted right now. Same gating as the guidance
-	 * arrow (logged in, a quest is tracked, not muted for free play) plus the feature's own toggle.
+	 * Whether the tracked quest wants [npc] highlighted right now — the person its active step says
+	 * to talk to, or the creatures it says to fight (within the step's radius of its target, when it
+	 * has one). Same gating as the guidance arrow (logged in, a quest is tracked, not muted for free
+	 * play) plus the feature's own toggle.
 	 */
-	private boolean highlightsNpc(int npcId)
+	private boolean highlightsNpc(NPC npc)
 	{
 		if (!config.highlightObjectiveNpcs()
 			|| client.getGameState() != GameState.LOGGED_IN
@@ -441,6 +433,6 @@ public class LofQuestsPlugin extends Plugin
 		{
 			return false;
 		}
-		return contains(quest.currentHighlightNpcIds(client), npcId);
+		return quest.highlightsNpc(client, npc.getId(), npc.getWorldLocation());
 	}
 }

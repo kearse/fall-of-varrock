@@ -10,8 +10,9 @@ import org.alter.rscm.RSCM.getRSCM
  * Guidance arrows for framework quests, through the shared [TargetMarker] (which already honours
  * both mutes — the Quest Journal guidance mute and `::huntarrow`). Claims at
  * [TargetMarker.PRIORITY_QUEST] (below the ladder/hunt marks): the deepest in-progress quest's
- * current step anchor — the nearest live npc for [QuestStep.anchorNpc] (re-scanned every few
- * sweeps, never every tick), else the [QuestStep.anchor] tile.
+ * current step anchor — the nearest live npc for [QuestStep.anchorNpc] that passes the step's
+ * [QuestStep.anchorNpcFilter] (re-scanned every few sweeps, never every tick), else the
+ * [QuestStep.anchor] tile.
  */
 object QuestArrows {
 
@@ -33,12 +34,12 @@ object QuestArrows {
             .maxByOrNull { it.first.chainIndex ?: -1 }
         if (live == null) { cache.remove(p.uid); return null }
         val (q, step) = live
-        val npc = step.anchorNpc?.let { nearestNpc(p, q.key, step.id, it) }
+        val npc = step.anchorNpc?.let { nearestNpc(p, q.key, step.id, it, step.anchorNpcFilter) }
         if (npc == null && step.anchor == null) return null
         return TargetMarker.Mark(entity = npc, fallback = step.anchor)
     }
 
-    private fun nearestNpc(p: Player, questKey: String, stepId: String, npcKey: String): Npc? {
+    private fun nearestNpc(p: Player, questKey: String, stepId: String, npcKey: String, filter: ((Npc) -> Boolean)?): Npc? {
         val c = cache[p.uid]
         if (c != null && c.questKey == questKey && c.stepId == stepId) {
             val alive = c.npc?.let { it.index >= 0 && !it.isDead() } == true
@@ -50,6 +51,7 @@ object QuestArrows {
         if (id != null) {
             p.world.npcs.forEach { n ->
                 if (n.id != id || n.index < 0 || n.isDead() || n.tile.height != p.tile.height) return@forEach
+                if (filter != null && !filter(n)) return@forEach
                 val d = n.tile.getDistance(p.tile)
                 if (d <= NPC_RADIUS && d < bestDist) { bestDist = d; best = n }
             }

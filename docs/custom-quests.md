@@ -125,7 +125,11 @@ OSRS map — custom regions would need regenerated data).
 
 Upgrade steps for our Journal, in rough order of value:
 1. **Hand-authored walking paths** per step (port `WorldLines` — scene + minimap polylines).
-2. **NPC/object highlighting** (outline the Sergeant/Vannaka/altar via `ModelOutlineRenderer`).
+2. **NPC/object highlighting** — NPC half ✅ (2026-09-12): every step that means a person or a
+   creature lists its npc ids (`LofQuestStep.npcs`, optionally `nearTarget(radius)` for a stock id
+   shared with the rest of the world); the tracked step tile-highlights them and dots the minimap
+   through the shared `NpcOverlayService`, and the arrow hands off once one is in sight. Objects
+   (the altar, the anvil) still only get the tile arrow.
 3. **Item requirements** per step with inventory ticks (port `ItemRequirement` essentials).
 4. **Branching steps** (port `ConditionalStep`) once quests get non-linear.
 5. **Shortest Path integration** for real click-to-walk routing (needs its map data regenerated
