@@ -6,7 +6,6 @@ import org.alter.api.ext.*
 import org.alter.game.Server
 import org.alter.game.model.Direction
 import org.alter.game.model.World
-import org.alter.game.model.attr.KILLER_ATTR
 import org.alter.game.model.attr.NEW_ACCOUNT_ATTR
 import org.alter.game.model.entity.Player
 import org.alter.game.model.queue.QueueTask
@@ -25,18 +24,21 @@ import org.alter.rscm.RSCM.getRSCM
 private val logger = KotlinLogging.logger {}
 
 /**
- * **Recruit Trials** wiring (master design brief §1) — the First 10 Minutes onboarding.
+ * **The Last Free City** wiring (Main Story Quest 1 — `docs/quests/the-last-free-city.md`), on the
+ * Recruit Trials chain in [RecruitTrials].
  *
- * Spawns the Recruiting Sergeant by the Lumbridge gate, frames the war on a new account's
- * first login, and drives the four-pillar chain in [RecruitTrials]:
- *  - FIGHT  — counted on the additive `onAnyNpcDeath` list (never clashes with the keyed
- *             goblin-death hook elsewhere).
+ * Spawns Sergeant Damien by the Lumbridge gate, sounds the alarm on a new account's first login
+ * (the east goblin camp is being probed), hands out the muster kit, and drives the chain:
+ *  - FIGHT  — counted on the additive `onAnyNpcDeath` list. Every recruit who drew blood on the
+ *             goblin is credited (not just the top-damage killer), so fighting BESIDE the Knights
+ *             of Lumbridge can never strand a new player on their first objective.
  *  - RANK   — advanced by a one-line notify in `DukeHoracioPlugin`.
- *  - SLAY   — polled from the player's active Slayer task by [RecruitTrials.TRIAL_TIMER].
- *  - SUPPLY — polled from a supply-skill xp gain by the same timer.
+ *  - SLAY   — Vannaka's scripted goblin cleanup contract (`SlayerPlugin`).
+ *  - SUPPLY — the Mire loop, polled from the pack by [RecruitTrials.TRIAL_TIMER].
+ *  - DEBRIEF — Damien's finale: Varrock fell, the war lies north.
  *
- * Completing the chain grants the recruit's first War Effort, so they leave onboarding
- * already on the feudal ladder.
+ * Completing the chain grants the recruit's first War Effort, so they leave onboarding already on
+ * the feudal ladder.
  */
 class RecruitTrialsPlugin(
     r: PluginRepository,
@@ -48,7 +50,7 @@ class RecruitTrialsPlugin(
     private val sergeantTile = Triple(3217, 3220, 0) // just inside the Lumbridge gate, near the frontier road
     private val sergeantId = runCatching { getRSCM(sergeant) }.getOrDefault(-1)
 
-    /** Goblin ids that count for the FIGHT trial. The frontier front line is `goblin_2245`
+    /** Goblin ids that count for the FIGHT step. The frontier front line is `goblin_2245`
      *  (CityFrontiers level 1); plain `goblin` is included too. A cache-name fallback in
      *  [isGoblin] catches any other goblin variant regardless of id. */
     private val goblinIds = listOf("npc.goblin", "npc.goblin_2245")
@@ -59,12 +61,12 @@ class RecruitTrialsPlugin(
         bindSergeant()
         spawnTutorialGoblins()
 
-        // Let FirstLoginFlow run the Sergeant's welcome once onboarding (video → character style)
+        // Let FirstLoginFlow run the Sergeant's alarm once onboarding (video → character style)
         // finishes — the dialogue is private/suspend/QueueTask-scoped, so we expose it as a callback.
         RecruitTrials.greet = { p -> p.queue { sergeantDialog(p) } }
 
         onLogin {
-            // Brand-new account: start the chain. The Sergeant's welcome is deferred to the END of
+            // Brand-new account: start the chain. The Sergeant's alarm is deferred to the END of
             // the first-login flow (FirstLoginFlow calls RecruitTrials.greet after the player confirms
             // their character), so it never runs behind the intro video or before customization.
             // If the player is NOT onboarding (older account predating the flow, still NEW_ACCOUNT)
@@ -79,19 +81,24 @@ class RecruitTrialsPlugin(
             RecruitTrials.resumeOnLogin(player)
         }
 
-        // FIGHT: additive death hook. Cheap — bails immediately for non-goblin kills or recruits
-        // who aren't on the FIGHT step.
+        // FIGHT: additive death hook. Cheap — bails immediately for non-goblin kills. Credits every
+        // recruit on the FIGHT step who damaged the goblin: at the east camp the Knights of
+        // Lumbridge (and other players) routinely out-damage a fresh account, and kill credit
+        // (KILLER_ATTR) goes to the top damage dealer — "help the knights put them down" must count
+        // the help, or the opening objective stalls for exactly the player it exists for.
         onAnyNpcDeath {
-            val killer = npc.attr[KILLER_ATTR]?.get() as? Player ?: return@onAnyNpcDeath
-            if (RecruitTrials.step(killer) == RecruitTrials.Step.FIGHT && isGoblin(npc.id)) {
-                RecruitTrials.onGoblinKill(killer)
+            if (!isGoblin(npc.id)) return@onAnyNpcDeath
+            npc.damageMap.playerDamage().keys.forEach { p ->
+                if (p.isOnline && RecruitTrials.step(p) == RecruitTrials.Step.FIGHT) {
+                    RecruitTrials.onGoblinKill(p)
+                }
             }
         }
 
         // SLAY/SUPPLY state poll.
         onTimer(RecruitTrials.TRIAL_TIMER) { RecruitTrials.pollTick(player) }
 
-        onCommand("trials", description = "Show your Recruit Trials objective") { reportTrials(player) }
+        onCommand("trials", description = "Show your objective in The Last Free City") { reportTrials(player) }
     }
 
     private fun isGoblin(deadId: Int): Boolean {
@@ -100,36 +107,36 @@ class RecruitTrialsPlugin(
     }
 
     /**
-     * Always-on tutorial goblin pack at the FIGHT objective (the back woods, ~3193,3221 — matches
-     * [RecruitTrials.FIGHT_TILE], where the marker points). The goblins there normally come from the
-     * presence-gated CityFrontier ring, which despawns when nobody is around — so a SOLO new player's
-     * very first objective could dead-end with nothing to kill. This small respawning pack is
-     * decoupled from the war system and always present, so "kill $GOBLIN_GOAL goblins" is never
-     * un-completable. Plainly spawned (passive — a safe first fight); they count via [isGoblin].
+     * Always-on tutorial goblin pack at the FIGHT objective — the east Lumbridge goblin camp
+     * ([RecruitTrials.CAMP_CENTRE]), where the Knights of Lumbridge (`GoblinCampPlugin`) hold the
+     * line against the ambient camp goblins. Those ambient goblins are presence-gated (they despawn
+     * when nobody is around), so a SOLO new player's very first objective could dead-end with
+     * nothing to kill. This small respawning pack is decoupled from the presence gate and always
+     * present, spread around the camp's outer ring ([RecruitTrials.TUTORIAL_GOBLIN_TILES]) so it
+     * mixes with the garrison without swarming a fresh account. The knights leave this pack alone
+     * ([RecruitTrials.isTutorialGoblin]) so there is always something for the recruits to fight.
      */
     private fun spawnTutorialGoblins() {
         val key = listOf("npc.goblin", "npc.goblin_2245").firstOrNull { runCatching { getRSCM(it) }.isSuccess } ?: run {
-            logger.warn { "RecruitTrials: no goblin npc resolved; tutorial FIGHT pack not spawned." }
+            logger.warn { "The Last Free City: no goblin npc resolved; tutorial FIGHT pack not spawned." }
             return
         }
-        val cx = 3193; val cz = 3221 // matches RecruitTrials.FIGHT_TILE (the FIGHT marker target)
-        val offsets = listOf(-1 to 0, 1 to 0, 0 to -1, 0 to 1, -2 to 1, 2 to -1)
-        offsets.forEach { (dx, dz) ->
-            spawnNpc(key, x = cx + dx, z = cz + dz, height = 0, walkRadius = 1, direction = Direction.SOUTH)
+        RecruitTrials.TUTORIAL_GOBLIN_TILES.forEach { tile ->
+            spawnNpc(key, tile, walkRadius = 2, direction = Direction.WEST)
         }
-        logger.info { "RecruitTrials: spawned ${offsets.size} tutorial goblins ('$key') at the FIGHT objective ($cx,$cz)." }
+        logger.info { "The Last Free City: spawned ${RecruitTrials.TUTORIAL_GOBLIN_TILES.size} tutorial goblins ('$key') around the east camp (${RecruitTrials.CAMP_CENTRE.x},${RecruitTrials.CAMP_CENTRE.z})." }
     }
 
     private fun reportTrials(p: Player) {
         val step = RecruitTrials.step(p)
         if (step == RecruitTrials.Step.DONE) {
-            p.message("<col=801700>Recruit Trials:</col> complete. You are a citizen-soldier of Lumbridge.")
+            p.message("<col=801700>${RecruitTrials.QUEST_NAME}:</col> complete. ${step.objective}")
             return
         }
-        p.message("<col=801700>Recruit Trials — current objective:</col> ${step.objective}")
+        p.message("<col=801700>${RecruitTrials.QUEST_NAME} — current objective:</col> ${step.objective}")
         if (step == RecruitTrials.Step.FIGHT) {
             val kills = p.attr[org.alter.game.model.attr.RECRUIT_GOBLIN_KILLS_ATTR] ?: 0
-            p.message("Goblins killed: <col=801700>$kills/${RecruitTrials.GOBLIN_GOAL}</col>.")
+            p.message("Goblins defeated: <col=801700>$kills/${RecruitTrials.GOBLIN_GOAL}</col>.")
         }
     }
 
@@ -144,99 +151,149 @@ class RecruitTrialsPlugin(
      */
     private fun bindSergeant() {
         if (!bindTalk(sergeant)) {
-            logger.warn { "Recruiting Sergeant '$sergeant' could not be bound; trials cannot be started by talking." }
+            logger.warn { "Sergeant Damien '$sergeant' could not be bound; The Last Free City cannot be started by talking." }
             return
         }
         NpcTalk.register(sergeant, NpcTalk.PRIORITY_DEFAULT) { _ -> { p -> sergeantDialog(p) } }
     }
 
+    private suspend fun QueueTask.damien(p: Player, text: String) =
+        chatNpc(p, text, npc = sergeantId, title = "Sergeant Damien")
+
     private suspend fun QueueTask.sergeantDialog(p: Player) {
-        val s = sergeantId
         when (RecruitTrials.step(p)) {
-            RecruitTrials.Step.TALK -> {
-                chatNpc(p, "At ease, recruit. Lumbridge is at war, and we need every able body. I'll make a soldier of you yet.", npc = s, title = "Recruiting Sergeant")
-                chatNpc(p, "Goblins have slipped through our back defences into the woods behind the city. With the army at the front, you're the LAST line of defence between them and our people.", npc = s, title = "Recruiting Sergeant")
-                chatPlayer(p, "What do you need me to do?")
-                chatNpc(p, "Get into the back woods and kill ${RecruitTrials.GOBLIN_GOAL} of them — follow the marker. Hold that line and the city stands. Then report straight back to me.", npc = s, title = "Recruiting Sergeant")
-                chatNpc(p, "You've got the look of a soldier now — you're on the muster roll. Get to the front, recruit.", npc = s, title = "Recruiting Sergeant")
-                // Character customization already happened before this dialogue (the first-login flow
-                // opens the Character Style window when the intro video ends, then hands control here),
-                // so the Sergeant just musters the recruit straight into the Trials (advances to FIGHT).
-                RecruitTrials.advanceTo(p, RecruitTrials.Step.FIGHT)
-            }
+            RecruitTrials.Step.TALK -> alarm(p)
             RecruitTrials.Step.FIGHT -> {
                 val kills = p.attr[org.alter.game.model.attr.RECRUIT_GOBLIN_KILLS_ATTR] ?: 0
-                chatNpc(p, "The back woods are that way, soldier — follow the marker. Kill ${RecruitTrials.GOBLIN_GOAL} goblins; you're at $kills. The city's counting on you.", npc = s, title = "Recruiting Sergeant")
+                damien(p, "The camp's east of here, across the river — follow the marker. Help the knights put down ${RecruitTrials.GOBLIN_GOAL} goblins; you're at $kills. Move!")
             }
-            RecruitTrials.Step.REPORT -> {
-                chatNpc(p, "You held them! The back woods are clear and the city's safe — for now. You're a credit to the realm, soldier.", npc = s, title = "Recruiting Sergeant")
-                chatPlayer(p, "What now, sergeant?")
-                chatNpc(p, "You've earned a soldier's pay. Take it to Duke Horacio in the market and buy your first rank — stop being a peasant.", npc = s, title = "Recruiting Sergeant")
-                RecruitTrials.grantReportReward(p)
-            }
-            RecruitTrials.Step.RANK -> chatNpc(p, "Take that coin to Duke Horacio in the market — he stands by the Slayer Master. Buy your first rank from him.", npc = s, title = "Recruiting Sergeant")
-            RecruitTrials.Step.SLAY -> chatNpc(p, "A ranked soldier takes war-contracts. Follow the marker to Vannaka and take one.", npc = s, title = "Recruiting Sergeant")
-            RecruitTrials.Step.MINE_BRIEF -> chatNpc(p, "Rats down? Report back to Vannaka — he'll have a supply contract for you next.", npc = s, title = "Recruiting Sergeant")
-            RecruitTrials.Step.SUPPLY -> chatNpc(p, "An army marches on its supplies. Vannaka's set you to work in The Mire, our skilling grounds — follow the marker and mine some copper and tin to start.", npc = s, title = "Recruiting Sergeant")
-            RecruitTrials.Step.SMELT -> chatNpc(p, "Got your ore? Smelt it into a bronze bar at the furnace in The Mire — follow the marker.", npc = s, title = "Recruiting Sergeant")
-            RecruitTrials.Step.SMITH -> chatNpc(p, "A bar's no use to the front on its own. Hammer it into a bronze dagger at the anvil — follow the marker.", npc = s, title = "Recruiting Sergeant")
-            RecruitTrials.Step.DELIVER -> chatNpc(p, "Now take that dagger to the Quartermaster in The Mire and hand it in for the war — follow the marker.", npc = s, title = "Recruiting Sergeant")
-            RecruitTrials.Step.RETURN -> chatNpc(p, "Supplies handed in? Report back to Vannaka — he'll square you up.", npc = s, title = "Recruiting Sergeant")
-            RecruitTrials.Step.DONE -> {
-                // The Rogue Problem's beats (the optional assignment's offer, brief, hunt, knight,
-                // report and ladder talk) live in RogueProblemPlugin as a quest-priority NpcTalk
-                // branch — it claims the conversation while that quest is offerable or live, so
-                // this default branch only ever sees a Sergeant with no quest to run.
+            RecruitTrials.Step.REPORT -> report(p)
+            RecruitTrials.Step.RANK -> damien(p, "Duke Horacio's in the market, by the Slayer Master. You stood for Lumbridge today — he'll recognise it. Take him your coin and claim your rank.")
+            RecruitTrials.Step.SLAY -> damien(p, "Vannaka signs the war-contracts — follow the marker. Some of the goblins scattered when the knights broke them; he'll have you hunt them down before they regroup.")
+            RecruitTrials.Step.MINE_BRIEF -> damien(p, "Stragglers dealt with? Report back to Vannaka — the army's stores need refilling next.")
+            RecruitTrials.Step.SUPPLY -> damien(p, "Every battle empties the stores. Vannaka's set you to The Mire, our skilling grounds south-east of the castle — follow the marker and mine some copper and tin to start.")
+            RecruitTrials.Step.SMELT -> damien(p, "Got your ore? Smelt it into a bronze bar at the furnace in The Mire — follow the marker.")
+            RecruitTrials.Step.SMITH -> damien(p, "A bar's no use to the front on its own. Hammer it into a bronze dagger at the anvil — follow the marker.")
+            RecruitTrials.Step.DELIVER -> damien(p, "Now take that dagger to the Quartermaster in The Mire and hand it in for the war — follow the marker.")
+            RecruitTrials.Step.RETURN -> damien(p, "Supplies handed in? Report back to Vannaka — he'll square you up. Then come and find me.")
+            RecruitTrials.Step.DEBRIEF -> debrief(p)
+            RecruitTrials.Step.DONE -> idle(p)
+        }
+    }
 
-                // The Rogue Knight ladder outlives the quest — the Sergeant stays its quartermaster.
-                if (RogueKnightLadder.unlocked(p)) {
-                    when (options(p, "My Rogue Knight hunt", "Just reporting in", title = "Recruiting Sergeant")) {
-                        1 -> {
-                            val target = RogueKnightLadder.activeDef(p)
-                            if (target == null) {
-                                chatNpc(p, "You've cleared the whole ladder, ${p.address} — all ${org.alter.plugins.content.bots.knights.RogueKnights.LADDER.size} of them. The realm's deadliest blade. Any of them can be hunted again for their gear: <col=0000ff>::knights</col>.", npc = s, title = "Recruiting Sergeant")
-                            } else {
-                                val farming = target.rank < RogueKnightLadder.rank(p)
-                                if (farming) {
-                                    chatNpc(p, "You're back on <col=801700>${target.name}</col> for the spoils — good hunting. ${RogueKnightLadder.statusLine(p)} (<col=0000ff>::huntnext</col> returns you to the ladder.)", npc = s, title = "Recruiting Sergeant")
-                                } else {
-                                    chatNpc(p, "Your mark: ${target.briefLine}", npc = s, title = "Recruiting Sergeant")
-                                    chatNpc(p, "Find them at <col=801700>${target.camp.display}</col> — ${target.camp.directions} The marker leads; <col=0000ff>::knights</col> lists the whole ladder, and any beaten knight can be farmed again.", npc = s, title = "Recruiting Sergeant")
-                                    if (!CampClearance.cleared(p, target.camp)) {
-                                        chatNpc(p, "The camp guards its own: ${CampClearance.statusLine(p, target.camp)}", npc = s, title = "Recruiting Sergeant")
-                                    }
-                                }
+    /** TALK: the alarm. Damien musters the recruit straight into the east-camp fight (advances to FIGHT). */
+    private suspend fun QueueTask.alarm(p: Player) {
+        damien(p, "YOU! Over here!")
+        damien(p, "The eastern post is being overrun. Goblins pushed through near the old camp. Our knights are holding them, but they need every pair of hands we've got.")
+        chatPlayer(p, "I just got here!")
+        damien(p, "Then you picked a bad day.")
+        // Handout + step advance back-to-back, with NO suspending line between them: every chat line
+        // is a point where the player can close the dialogue, and a kit given before the advance
+        // would be re-claimable by talking again. Character customization already happened (the
+        // first-login flow opens the Character Style window when the intro ends, then hands control
+        // here), so the Sergeant musters the recruit straight into the fight.
+        RecruitTrials.grantMusterKit(p)
+        RecruitTrials.advanceTo(p, RecruitTrials.Step.FIGHT)
+        damien(p, "Here. You'll need these.")
+        damien(p, "Head east, across the river. You'll see the camp. Five goblins have pushed into the position — help the knights put them down.")
+        chatPlayer(p, "You want me to fight them?")
+        damien(p, "I want you to decide.")
+        damien(p, "You can stay here and hope somebody else keeps Lumbridge standing... or you can stand with us.")
+    }
+
+    /** REPORT: it was a probe. The lineage breadcrumb, the muster roll, the Sergeant's pay. */
+    private suspend fun QueueTask.report(p: Player) {
+        damien(p, "You're alive.")
+        damien(p, "Better than that. You held.")
+        chatPlayer(p, "Was that the attack?")
+        damien(p, "No. That was a probe.")
+        damien(p, "They pushed fighters against the eastern post to see how quickly we'd respond. How many guards we'd move. Where the weak points were.")
+        chatPlayer(p, "So they're coming back?")
+        damien(p, "They always come back.")
+        damien(p, "...You know, for a second out there you reminded me of someone.")
+        chatPlayer(p, "Who?")
+        damien(p, "Doesn't matter. We've got work to do.")
+        damien(p, "Standing your ground once doesn't make you a soldier. But it earns you the chance to become one.")
+        damien(p, "The army lost weapons and supplies today. If you want to keep helping, I'm putting you on the muster roll.")
+        chatPlayer(p, "What do I need to do?")
+        damien(p, "First, take your pay.")
+        RecruitTrials.grantReportReward(p) // coin + bronze kit; REPORT → RANK (before the last line — mutate, then narrate)
+        damien(p, "Then go and see Duke Horacio in the market. You stood for Lumbridge today. He'll recognise the service.")
+    }
+
+    /** DEBRIEF: the finale — Varrock fell twelve years ago; the war lies north. Completes the quest. */
+    private suspend fun QueueTask.debrief(p: Player) {
+        damien(p, "Look at you. This morning you were a Peasant.")
+        damien(p, "Then the horns sounded.")
+        damien(p, "You fought when you could've run. You hunted down what got through. You replaced what the army lost.")
+        chatPlayer(p, "Is Lumbridge safe now?")
+        damien(p, "No.")
+        damien(p, "But it's still ours. Varrock couldn't say the same.")
+        chatPlayer(p, "What happened there?")
+        damien(p, "Twelve years ago, Varrock fell.")
+        damien(p, "What remains of Misthalin has been fighting ever since to make sure the same thing doesn't happen here.")
+        damien(p, "Today's attack wasn't meant to take Lumbridge. They were testing us. Someone wanted to know how quickly we'd bleed.")
+        chatPlayer(p, "Then maybe we shouldn't wait for the next attack.")
+        RecruitTrials.onDebriefed(p) // DEBRIEF → DONE: the quest completes here (mutate, then narrate)
+        damien(p, "Maybe you're learning.")
+        damien(p, "General Zo musters the columns that march north against the enemy — you'll find him in the castle courtyard. When you hear the call for the next March... answer it.")
+        damien(p, "Until the horns sound again, Vannaka has drills for you. The front's mages will melt a soldier who can't pray — go and see him.")
+    }
+
+    /** DONE: the everyday Sergeant — Rogue Knight ladder quartermaster, bounty paymaster, signposts. */
+    private suspend fun QueueTask.idle(p: Player) {
+        // The Rogue Problem's beats (the optional assignment's offer, brief, hunt, knight,
+        // report and ladder talk) live in RogueProblemPlugin as a quest-priority NpcTalk
+        // branch — it claims the conversation while that quest is offerable or live, so
+        // this default branch only ever sees a Sergeant with no quest to run.
+
+        // The Rogue Knight ladder outlives the quest — the Sergeant stays its quartermaster.
+        if (RogueKnightLadder.unlocked(p)) {
+            when (options(p, "My Rogue Knight hunt", "Just reporting in", title = "Sergeant Damien")) {
+                1 -> {
+                    val target = RogueKnightLadder.activeDef(p)
+                    if (target == null) {
+                        damien(p, "You've cleared the whole ladder, ${p.address} — all ${org.alter.plugins.content.bots.knights.RogueKnights.LADDER.size} of them. The realm's deadliest blade. Any of them can be hunted again for their gear: <col=0000ff>::knights</col>.")
+                    } else {
+                        val farming = target.rank < RogueKnightLadder.rank(p)
+                        if (farming) {
+                            damien(p, "You're back on <col=801700>${target.name}</col> for the spoils — good hunting. ${RogueKnightLadder.statusLine(p)} (<col=0000ff>::huntnext</col> returns you to the ladder.)")
+                        } else {
+                            damien(p, "Your mark: ${target.briefLine}")
+                            damien(p, "Find them at <col=801700>${target.camp.display}</col> — ${target.camp.directions} The marker leads; <col=0000ff>::knights</col> lists the whole ladder, and any beaten knight can be farmed again.")
+                            if (!CampClearance.cleared(p, target.camp)) {
+                                damien(p, "The camp guards its own: ${CampClearance.statusLine(p, target.camp)}")
                             }
-                            return
                         }
-                        else -> {} // fall through to the milestone/idle chatter
                     }
-                }
-                // Rogue-hunting bounties (story-and-grind-design §4): the Sergeant is the milestone
-                // paymaster, so every bounty moment routes the hunter back to him.
-                val bounties = RogueHunt.payout(p)
-                if (bounties.isNotEmpty()) {
-                    chatNpc(p, "Word travels, ${p.address} — ${RogueHunt.kills(p)} cutthroats of the fallen cities put down by your hand. The realm pays its hunters. Here's your bounty.", npc = s, title = "Recruiting Sergeant")
-                    chatNpc(p, "Keep at it. ${RogueHunt.statusLine(p)}", npc = s, title = "Recruiting Sergeant")
                     return
                 }
-                chatNpc(p, "At ease, ${p.address}. You've fought, ranked, slain and supplied — a true citizen-soldier of Lumbridge. Make us proud.", npc = s, title = "Recruiting Sergeant")
-                // UX: the teleport portal was undiscoverable — nothing in the game ever mentioned it.
-                chatNpc(p, "One more thing every soldier should know: the <col=801700>glowing portal over the courtyard fountain</col> carries you to every front, skilling ground and arena the realm holds. Use it.", npc = s, title = "Recruiting Sergeant")
-                // The Rogue Problem is offered by the quest-priority branch (RogueProblemPlugin) once
-                // War-Prep I is done; until then say WHAT is coming and WHY it isn't offered yet, so a
-                // soldier who came for "rogue hunting" doesn't leave thinking the Sergeant has nothing.
-                if (RogueProblem.step(p) == RogueProblem.Step.NONE) {
-                    chatNpc(p, "There's harder work waiting for you — the rogues bleeding our roads — but not before Vannaka's magic drills, <col=801700>War-Prep I</col>, are behind you. Finish those and ask me again.", npc = s, title = "Recruiting Sergeant")
-                }
-                if (RogueHunt.kills(p) == 0) {
-                    chatNpc(p, "If you're hunting work: the rogue family crawls over the road camps west of Lumbridge and the ruins of <col=801700>Fallen Varrock</col> alike. The realm pays a bounty at every milestone of cutthroats you put down — report your tally to me. <col=0000ff>::rogues</col> tracks it.", npc = s, title = "Recruiting Sergeant")
-                    chatNpc(p, "Fair warning: Varrock's streets are the wilderness — the road camps are safe. Take nothing into the ruins you can't afford to lose; the tally, at least, is yours forever.", npc = s, title = "Recruiting Sergeant")
-                } else {
-                    chatNpc(p, RogueHunt.statusLine(p), npc = s, title = "Recruiting Sergeant")
-                }
-                chatPlayer(p, "I won't let the realm down, sergeant.")
+                else -> {} // fall through to the milestone/idle chatter
             }
         }
+        // Rogue-hunting bounties (story-and-grind-design §4): the Sergeant is the milestone
+        // paymaster, so every bounty moment routes the hunter back to him.
+        val bounties = RogueHunt.payout(p)
+        if (bounties.isNotEmpty()) {
+            damien(p, "Word travels, ${p.address} — ${RogueHunt.kills(p)} cutthroats of the fallen cities put down by your hand. The realm pays its hunters. Here's your bounty.")
+            damien(p, "Keep at it. ${RogueHunt.statusLine(p)}")
+            return
+        }
+        damien(p, "At ease, ${p.address}. You stood for Lumbridge when it counted — fought, ranked, slain and supplied. A true citizen-soldier. Make us proud.")
+        // UX: the teleport portal was undiscoverable — nothing in the game ever mentioned it.
+        damien(p, "One more thing every soldier should know: the <col=801700>glowing portal over the courtyard fountain</col> carries you to every front, skilling ground and arena the realm holds. Use it.")
+        // The Rogue Problem is offered by the quest-priority branch (RogueProblemPlugin) once
+        // War-Prep I is done; until then say WHAT is coming and WHY it isn't offered yet, so a
+        // soldier who came for "rogue hunting" doesn't leave thinking the Sergeant has nothing.
+        if (RogueProblem.step(p) == RogueProblem.Step.NONE) {
+            damien(p, "There's harder work waiting for you — the rogues bleeding our roads — but not before Vannaka's magic drills, <col=801700>War-Prep I</col>, are behind you. Finish those and ask me again.")
+        }
+        if (RogueHunt.kills(p) == 0) {
+            damien(p, "If you're hunting work: the rogue family crawls over the road camps west of Lumbridge and the ruins of <col=801700>Fallen Varrock</col> alike. The realm pays a bounty at every milestone of cutthroats you put down — report your tally to me. <col=0000ff>::rogues</col> tracks it.")
+            damien(p, "Fair warning: Varrock's streets are the wilderness — the road camps are safe. Take nothing into the ruins you can't afford to lose; the tally, at least, is yours forever.")
+        } else {
+            damien(p, RogueHunt.statusLine(p))
+        }
+        chatPlayer(p, "I won't let the realm down, sergeant.")
     }
 }

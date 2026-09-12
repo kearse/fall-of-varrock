@@ -25,9 +25,10 @@ private val logger = KotlinLogging.logger {}
  * feeds (the Rogue Knight ladder dial and the mute flag).
  *
  * Varp layout:
- *  - [RECRUIT_VARP] packed: bits 0-5 = `RecruitTrials.Step` ordinal, bits 6-9 = goblins killed on
- *    the FIGHT trial (0-15 clamp), bit 10 = slayer war-contract taken (splits the SLAY arrow's
- *    "see Vannaka" vs "kill the rats" phases).
+ *  - [RECRUIT_VARP] (The Last Free City) packed: bits 0-5 = `RecruitTrials.Step` in STORY order
+ *    (`RecruitTrials.clientOrdinal` — DEBRIEF 11, DONE 12), bits 6-9 = goblins defeated on the FIGHT
+ *    step (0-15 clamp), bit 10 = slayer war-contract taken (splits the SLAY arrow's "see Vannaka"
+ *    vs "hunt the goblins" phases).
  *  - [WARPREP_VARP] = `WarPrepChain.Step` ordinal.
  *  - [ROGUE_PROBLEM_VARP] packed: bits 0-5 = `RogueProblem.Step` ordinal, bits 6-11 = rogues felled
  *    on the HUNT step (0-63 clamp) so the client can render the "(x/30)" progress.
@@ -73,7 +74,7 @@ object QuestJournal {
     // Reused OSRS quest progress varps that colour the relabelled native quest-tab rows. A value of
     // 0 reads as "not started" (red), the complete value as "finished" (green), anything between as
     // "in progress" (yellow). Keep these in lock-step with the `questTable` tool's REUSE table.
-    /** Cook's Assistant varp — now the "Recruit Trials" row. Completes at 2. */
+    /** Cook's Assistant varp — now the "The Last Free City" row (the Recruit Trials chain). Completes at 2. */
     const val RECRUIT_QUEST_VARP = 29
     internal const val RECRUIT_QUEST_COMPLETE = 2
     /** Doric's Quest varp — now the "War-Prep I — Magic" row. Completes at 100. */

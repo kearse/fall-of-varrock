@@ -12,32 +12,31 @@ import org.alter.game.model.move.walkTo
 import org.alter.game.model.timer.TimerKey
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.game.plugin.PluginRepository
-import org.alter.plugins.content.bots.BotLoadouts
-import org.alter.plugins.content.bots.BotManager
 import org.alter.plugins.content.bots.PkBot
 import org.alter.plugins.content.combat.getCombatTarget
 import org.alter.plugins.content.combat.isAttacking
 import org.alter.plugins.content.combat.removeCombatTarget
 import org.alter.plugins.content.war.WarNpcNames
+import org.alter.plugins.content.war.recruit.RecruitTrials
 import org.alter.rscm.RSCM.getRSCM
 
 private val logger = KotlinLogging.logger {}
 
 /**
  * The Lumbridge goblin camp east of the castle (~3254,3234, where [SpawnPlugin]'s goblins already
- * roam) gets a small garrison of **Knights of Lumbridge** holding the line, plus a lone **low-level
- * PKer** (an aggressive ambusher) prowling the edge — a hint of the war/PvP flavour reaching the
- * newbie fields.
+ * roam) gets a small garrison of **Knights of Lumbridge** holding the line against the camp's
+ * goblins — an iconic early-RuneScape spot turned into a permanent, visibly contested PvE
+ * battlefield. It is also the opening battle of **The Last Free City** (the story's probe attack
+ * on Lumbridge — `RecruitTrialsPlugin` spawns the guaranteed tutorial goblin pack around this same
+ * camp), so it must read as dangerous but accessible for a brand-new account: no PvP here.
  *
- * This plugin OWNS the full lifecycle of both, rather than leaning on the `spawnNpc` DSL, because:
- *  - the knights need the "Knight of Lumbridge" display-name override ([WarNpcNames]) and custom
- *    combat stats ([KNIGHT_DEF]) re-applied every (re)spawn — engine respawn resets both;
- *  - the PKer is a clientless [PkBot] (a fake-player, not an Npc) that must be re-spawned on death.
+ * This plugin OWNS the knights' full lifecycle, rather than leaning on the `spawnNpc` DSL, because
+ * they need the "Knight of Lumbridge" display-name override ([WarNpcNames]) and custom combat stats
+ * ([KNIGHT_DEF]) re-applied every (re)spawn — engine respawn resets both.
  *
  * Everything is **presence-gated** (mirrors [org.alter.plugins.content.npcs.worldspawns.WorldSpawnsPlugin]):
  * nothing is maintained unless a real player is near the camp, and it stands down when the area
- * empties — so a lone bot never idles at an empty newbie field burning CPU. The PKer's brain uses the
- * per-bot [PkBot.ambushEverywhere] flag so it will aggro here even though this is not the wilderness.
+ * empties — so the garrison never idles at an empty newbie field burning CPU.
  */
 class GoblinCampPlugin(
     r: PluginRepository,
@@ -65,10 +64,6 @@ class GoblinCampPlugin(
     }
 
     private val knights = KNIGHT_POSTS.map { (t, d) -> KnightSlot(t, d) }
-    private var pker: PkBot? = null
-
-    /** World cycle before which the PKer won't respawn — set when it's killed (60s cooldown). */
-    private var pkerRespawnAt = 0
 
     init {
         // The plain `npc.goblin` (the camp's own DSL spawns + every other ambient goblin) gets a mild
@@ -95,7 +90,6 @@ class GoblinCampPlugin(
         }
         maintainKnights(world)
         skirmishKnights(world)
-        maintainPker(world)
     }
 
     /**
@@ -105,6 +99,10 @@ class GoblinCampPlugin(
      * it). Goblins auto-retaliate, so both sides actually fight. Runs INSIDE the guarded tick — we
      * never touch the engine aggro path (an [Npc.aggroCheck] there throwing would kill the game loop),
      * only the safe explicit [org.alter.game.model.entity.Pawn.attack].
+     *
+     * The Last Free City's guaranteed tutorial pack ([RecruitTrials.isTutorialGoblin]) is left to
+     * the recruits: the knights would otherwise cut it down before a fresh account got a swing in,
+     * and the story's "help the knights put them down" needs goblins standing when they arrive.
      */
     private fun skirmishKnights(world: World) {
         // Living goblins loose around the camp (ids vary — match by def name, not a hardcoded set).
@@ -112,7 +110,8 @@ class GoblinCampPlugin(
         world.npcs.forEach { n ->
             if (n != null && n.index >= 0 && !n.isDead() &&
                 n.tile.isWithinRadius(CAMP_CENTRE, GOBLIN_SCAN_RADIUS) &&
-                n.def.name.contains("goblin", ignoreCase = true)
+                n.def.name.contains("goblin", ignoreCase = true) &&
+                !RecruitTrials.isTutorialGoblin(n)
             ) {
                 goblins += n
             }
@@ -192,31 +191,7 @@ class GoblinCampPlugin(
         return npc
     }
 
-    private fun maintainPker(world: World) {
-        val b = pker
-        if (b != null) {
-            if (b.index >= 0 && !b.isDead()) return // still alive
-            // It was just killed — start the respawn cooldown before it comes back.
-            pker = null
-            pkerRespawnAt = world.currentCycle + PKER_RESPAWN_CYCLES
-            return
-        }
-        if (world.currentCycle < pkerRespawnAt) return // still on the post-death cooldown
-        val loadout = BotLoadouts.get(PKER_LOADOUT) ?: run {
-            logger.error { "Goblin-camp PKer: unknown loadout '$PKER_LOADOUT' — not spawning." }
-            return
-        }
-        val tile = world.findRandomTileAround(CAMP_CENTRE, radius = 4) ?: CAMP_CENTRE
-        val bot = BotManager.spawn(world, loadout, tile) ?: return // world/player limit reached
-        bot.homeTile = CAMP_CENTRE
-        bot.roamRadius = PKER_ROAM
-        bot.leashRadius = PKER_LEASH
-        bot.zoneKey = ZONE_KEY
-        bot.ambushEverywhere = true // aggro players here even though it isn't the wilderness
-        pker = bot
-    }
-
-    /** Despawn the garrison + PKer when nobody's around (keeps npc slots / CPU free). */
+    /** Despawn the garrison when nobody's around (keeps npc slots / CPU free). */
     private fun standDown(world: World) {
         for (slot in knights) {
             val n = slot.npc ?: continue
@@ -224,8 +199,6 @@ class GoblinCampPlugin(
             slot.npc = null
             slot.respawnIn = 0
         }
-        pker?.let { if (it.index >= 0) BotManager.despawn(world, it) }
-        pker = null
     }
 
     private companion object {
@@ -236,6 +209,7 @@ class GoblinCampPlugin(
         const val KNIGHT_NPC = "npc.knight_of_saradomin"
         const val KNIGHT_WALK = 5
 
+        /** Matches [RecruitTrials.CAMP_CENTRE] — the story's opening battlefield is this camp. */
         val CAMP_CENTRE = Tile(3254, 3234)
         const val ACTIVATION_RADIUS = 24
 
@@ -250,11 +224,5 @@ class GoblinCampPlugin(
             Tile(3251, 3237) to Direction.SOUTH,
             Tile(3257, 3231) to Direction.WEST,
         )
-
-        const val PKER_LOADOUT = "bronze_pker" // lowest bracket — "Bandit", combat 52
-        const val PKER_ROAM = 6
-        const val PKER_LEASH = 14
-        const val PKER_RESPAWN_CYCLES = 100 // 60s cooldown after a kill (world cycle = 600ms)
-        const val ZONE_KEY = "lumbridge_goblin_camp"
     }
 }

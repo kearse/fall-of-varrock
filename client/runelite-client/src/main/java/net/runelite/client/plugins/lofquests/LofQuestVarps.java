@@ -10,7 +10,9 @@ import net.runelite.api.Client;
 
 final class LofQuestVarps
 {
-	/** Packed Recruit Trials state: bits 0-5 step ordinal, bits 6-9 goblin kills, bit 10 contract taken. */
+	/** Packed "The Last Free City" (the Recruit Trials chain) state: bits 0-5 step ordinal in STORY
+	 *  order (0 alarm … 10 return, 11 debrief, 12 done — the server remaps its enum for the wire),
+	 *  bits 6-9 goblins defeated, bit 10 contract taken. */
 	static final int RECRUIT = 4610;
 
 	/** War-Prep chain step ordinal (0 = not started … 6 = done). */

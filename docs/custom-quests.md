@@ -24,7 +24,7 @@ custom client reads (same transport as the war HUD — no custom packets):
 
 | Varp | Contents |
 |------|----------|
-| **4610** | Recruit Trials, packed: bits 0-5 step ordinal, bits 6-9 goblin kills, bit 10 contract taken |
+| **4610** | The Last Free City (the Recruit Trials chain), packed: bits 0-5 step ordinal in story order (11 debrief, 12 done — `RecruitTrials.clientOrdinal`), bits 6-9 goblins defeated, bit 10 contract taken |
 | **4611** | War-Prep chain step ordinal |
 | **4612** | 1 while quest guidance is muted (free play), else 0 |
 | **4617** | Rogue Hunting I + II (one shared chain), packed: bits 0-5 step ordinal, bits 6-11 rogues felled on HUNT |
@@ -60,7 +60,7 @@ A first-party sidebar plugin (book icon) modelled on the RuneLite **Quest Helper
 (BSD-2, ported arrow rendering credits in `LofArrow.java`):
 
 - **Quest list** coloured like the OSRS quest tab (red / yellow / green, grey for locked), with
-  per-quest progress (`6/11`). All seven chain quests (Recruit Trials, War-Prep I — Magic, Rogue
+  per-quest progress (`6/12`). All seven chain quests (The Last Free City, War-Prep I — Magic, Rogue
   Hunting I, Rogue Hunting II, War-Prep II — Ranged, War-Prep III — Survival, King of Lumbridge)
   are fully wired — the two Rogue Hunting quests window one server chain (varp 4617); the
   FUTURE-teaser render path (dimmed "coming soon" rows) stays available for the next unbuilt quest.

@@ -71,7 +71,7 @@ public interface LofQuestsConfig extends Config
 		keyName = "highlightObjectiveNpcs",
 		name = "Highlight objective creatures",
 		description = "Highlight the tile under the tracked objective's target creatures in the scene and dot them on "
-			+ "the minimap (e.g. the castle rats) so small, wandering targets are easy to find",
+			+ "the minimap (e.g. the goblins at the east camp) so wandering targets are easy to pick out",
 		position = 6
 	)
 	default boolean highlightObjectiveNpcs()

@@ -12,7 +12,7 @@ New here and wondering what the "point" of the server is? This page is the map. 
 
 | Stage | Rank | Rough cost | What it feels like |
 | --- | --- | --- | --- |
-| 1. First hour | Peasant | free | Recruit Trials - guided tour, ends in full steel |
+| 1. First hour | Peasant | free | The Last Free City - Lumbridge is probed; hold the east camp, ends in full steel |
 | 2. First unlocks | Peasant → Commoner | 10k | War-Prep chain, spellbooks unlocked, first Marches |
 | 3. Early game | Squire → Soldier | 50k-150k | Money-making loops, mithril/adamant, finding your playstyle |
 | 4. Mid game | Knight | 500k | Rune armour, first companion, world-boss shares, real PKing |
@@ -21,9 +21,9 @@ New here and wondering what the "point" of the server is? This page is the map. 
 
 Check where you are anytime with `::title` - it shows your rank, your armour ceiling, and the price of the next rung.
 
-## Stage 1 - Your first hour (Recruit Trials)
+## Stage 1 - Your first hour (The Last Free City)
 
-Every new account auto-starts the **[Recruit Trials](/wiki/recruit-trials)**: kill goblins, claim your first rank from Duke Horacio, clear a war-contract for Vannaka, and run one skilling supply loop in The Mire. Hint arrows guide you the whole way, and by the end you're wearing **full steel** and have touched all three pillars of the server - combat, rank, and supply.
+Every new account auto-starts **[The Last Free City](/wiki/recruit-trials)**, Main Story Quest 1: Lumbridge is being probed, so you hold the east goblin camp beside the Knights of Lumbridge, claim your first rank from Duke Horacio for it, hunt the stragglers for Vannaka, and replace what the defence consumed with one skilling supply loop in The Mire. The Quest Journal guides you the whole way, and by the end you're wearing **full steel**, have touched all three pillars of the server - combat, rank, and supply - and know why the war lies north.
 
 While you're at it, walk the **castle courtyard market** (every shop in one place) and open the **[teleport portal](/wiki/teleport-portal)** to see the whole world map of content.
 

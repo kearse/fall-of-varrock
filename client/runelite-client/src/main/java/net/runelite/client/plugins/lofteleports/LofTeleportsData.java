@@ -104,7 +104,7 @@ final class LofTeleportsData
 			b("Varrock Raid", "Hostile", HOSTILE, 1333),        // rune scimitar
 			b("North Frontier", "Wild Lvl 5", WILD, 1325),      // iron scimitar
 			b("Goblin Warren", "Hostile", HOSTILE, 288),        // goblin mail
-			b("Recruit Trials", "Safe Zone", SAFE, 1277),       // bronze sword
+			b("The Last Free City", "Safe Zone", SAFE, 1277),   // bronze sword — Sergeant Damien at the gate
 			s("Active Campaign", "Soon", SOON, 1201));          // rune kiteshield
 
 		// Mirrors TeleportRegistry BOSSES row-for-row (32 rows): the hand-built roster was purged;

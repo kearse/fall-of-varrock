@@ -36,15 +36,16 @@ class DukeHoracioPlugin(
         ensureIntro(player) // full first-meeting introduction, once
         val next = player.nextTitle
 
-        // Intro-quest path (master design brief §1): flow straight from the introduction into
-        // claiming the first rank with the coin the Sergeant paid out — no second greeting.
+        // The Last Free City, RANK step: the first rank is recognition for standing at the east camp
+        // when the line broke — flow straight from the introduction into claiming it with the coin
+        // the Sergeant paid out. No second greeting.
         if (inTutorial && next != null) {
-            chatNpc(player, "And you've coin enough from the Sergeant to claim your first rank this very moment. Shall I raise you to ${next.display}? It costs ${fmt(next.cost)} coins.")
+            chatNpc(player, "You stood at the eastern camp when the line broke. That is service, and service is what rank is FOR. Shall I raise you to ${next.display}? It costs ${fmt(next.cost)} coins — the Sergeant's pay covers it.")
             when (options(player, "Yes — make me a ${next.display}.", "Not just yet.")) {
                 1 -> {
                     buy(player, next)
                     if (player.title == next) {
-                        chatNpc(player, "Well met, ${next.display}. The war needs slayers now — seek out Vannaka, south of the market, and take a contract.")
+                        chatNpc(player, "Well met, ${next.display}. Now — the goblins that scattered from the camp are still loose in the countryside. Vannaka, south of the market, holds the contract for them. Take it.")
                     }
                 }
                 2 -> chatPlayer(player, "Not just yet.")
@@ -102,13 +103,21 @@ class DukeHoracioPlugin(
         RankMenu.open(player)
     }
 
-    /** First-meeting introduction: who the Duke is and how the feudal rank ladder works. Runs once. */
+    /** First-meeting introduction: who the Duke is and how the feudal rank ladder works. Runs once.
+     *  A recruit arriving on The Last Free City's RANK step is greeted as the defender Damien sent
+     *  word about; anyone else (an older account meeting him late) gets the plain introduction. */
     private suspend fun QueueTask.ensureIntro(player: Player) {
         if (player.attr[DUKE_INTRO_DONE_ATTR] == true) return
         player.attr[DUKE_INTRO_DONE_ATTR] = true
-        chatNpc(player, "Ah — a fresh recruit, sent up by the Sergeant. I am Duke Horacio, lord of Lumbridge. Welcome to the realm's service.")
-        chatPlayer(player, "How do I earn rank, my lord?")
-        chatNpc(player, "Every citizen begins a Peasant. By serving the war — fighting at the frontier, slaying Vannaka's contracts, supplying the army — you earn coin and standing.")
+        if (RecruitTrials.step(player) == RecruitTrials.Step.RANK) {
+            chatNpc(player, "Damien sent word ahead. He says you stood with the defenders at the eastern camp.")
+            chatPlayer(player, "I did what I could.")
+            chatNpc(player, "And Lumbridge survives because enough people still do. I am Duke Horacio, lord of Lumbridge.")
+        } else {
+            chatNpc(player, "Ah — a citizen come to see about their standing. I am Duke Horacio, lord of Lumbridge. Welcome to the realm's service.")
+            chatPlayer(player, "How do I earn rank, my lord?")
+        }
+        chatNpc(player, "Every citizen begins a Peasant. Service to the realm earns something greater: fighting at the frontier, slaying Vannaka's contracts, supplying the army — that earns coin and standing.")
         chatNpc(player, "Bring that coin — and a record of real service — to me and I shall raise you through the feudal ranks: Commoner, Squire, Soldier, Knight, Lord... and, for the truly great, beyond.")
         chatNpc(player, "Each rank lets you bear heavier armour and grants greater authority in the war: any citizen may fight in a march, but only the ranked may START one. Rise high enough and the rabble at the frontier won't even dare raise a blade to you.")
         chatNpc(player, "Mark this well: rank is <col=801700>earned</col>. No mere donation buys a title here — coin won AND deeds done, your War Effort. Now, let us see to your standing.")
