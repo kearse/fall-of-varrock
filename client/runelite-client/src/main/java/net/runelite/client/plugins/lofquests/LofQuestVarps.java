@@ -58,6 +58,9 @@ final class LofQuestVarps
 	static final int UNDERSTAND = 4691;
 	static final int SUSTAIN = 4692;
 
+	/** Asgarnia (BREACH) Quest 1, "At the White Wall". */
+	static final int AT_THE_WHITE_WALL = 4693;
+
 	/** Generic-packing step ordinal: the current step index + 1, 0 when unstarted or finished. */
 	static int genericStep(Client client, int varp)
 	{

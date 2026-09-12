@@ -53,6 +53,36 @@ class LadderPlugin(
             }
         }
 
+        /** Falador castle's white-stone staircases (the Asgarnia campaign's Sir Amik stands on the
+         *  west tower's top floor, 2960,3336,2): 24072/24075 [Climb-up] (2x2 spirals), 24074/24068
+         *  [Climb-down], 24067 [Climb-up] (verified with objCheck). Nothing bound them before
+         *  2026-09-12, so the upper floors were unreachable. These stairwells are cut out of the
+         *  floor above (the same x,z is clipped up there), so unlike the 16671 family the climb
+         *  lands on the nearest walkable tile of the target plane around where the player stands.
+         *  Guarded per option; a second bind of the same id would throw, so this is the ONE home
+         *  for them (The Guns of Asgarnia and A Matter of Trolls carry this identical block). */
+        val whiteStairs =
+            arrayOf(
+                "object.staircase_24067",
+                "object.staircase_24068",
+                "object.staircase_24072",
+                "object.staircase_24074",
+                "object.staircase_24075",
+            )
+
+        whiteStairs.forEach { stairs ->
+            if (objHasOption(obj = stairs, option = "climb-up")) {
+                onObjOption(obj = stairs, option = "climb-up") {
+                    climbWhiteStairs(player, +1)
+                }
+            }
+            if (objHasOption(obj = stairs, option = "climb-down")) {
+                onObjOption(obj = stairs, option = "climb-down") {
+                    climbWhiteStairs(player, -1)
+                }
+            }
+        }
+
         /** Wizard's Tower spiral staircases (ground/1st/2nd floor). These object ids
          *  aren't in the RSCM name table, so bind them by raw id. Options vary per
          *  floor, so guard each bind — onObjOption(Int) throws (and drops the plugin)
@@ -159,6 +189,19 @@ class LadderPlugin(
 
     fun climbdownstairs(player: Player) {
         player.moveTo(player.tile.x, player.tile.z, player.tile.height - 1)
+    }
+
+    /**
+     * Climb a white-stone (Falador castle) staircase one plane in [delta]'s direction: the target
+     * plane's tile at the player's own x,z if it is walkable, else the nearest walkable tile within
+     * three squares (the stairwell hole above a 2x2 spiral is clipped; the landing beside it is not).
+     * Planes are clamped to 0..3.
+     */
+    fun climbWhiteStairs(player: Player, delta: Int) {
+        val height = (player.tile.height + delta).coerceIn(0, 3)
+        if (height == player.tile.height) return
+        val dest = world.snapToWalkable(Tile(player.tile.x, player.tile.z, height), maxRadius = 3)
+        player.moveTo(dest)
     }
 
     fun climbstairs(player: Player) {

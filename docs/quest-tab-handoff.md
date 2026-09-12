@@ -46,6 +46,7 @@ findings that shape everything below:
   | SECURE - Morytania (objective `secure`) | Prince Ali Rescue | 112 | 10 | 273 | 110 |
   | UNDERSTAND - Wilderness / Desert (objective `understand`) | Vampyre Slayer | 155 | 8 | 178 | 3 |
   | SUSTAIN - Kandarin / War Effort (objective `sustain`) | Pirate's Treasure | 108 | 16 | 71 | 4 |
+  | At the White Wall (Asgarnia — BREACH, Quest 1; framework quest — `nativeTabVarp`) | Recruitment Drive (its stock start NPC is Sir Amik) | 118 | 86 | **657** | 2 |
 
   Framework quests (`quests/framework/`) drive their reused varp through `QuestDefinition.nativeTabVarp`
   / `nativeTabComplete` (written by `QuestEngine.publish`, 0 / 1 / complete) — no per-quest
@@ -53,8 +54,10 @@ findings that shape everything below:
   "10 …" prefix sorts before "2 …" — quests past sort digit 9 need a scheme that compares correctly
   (e.g. "9a", "9b") unless every row is renumbered zero-padded — which is what `PLAN` now does
   ("01" … "07" legacy hallway, "08" The North, "09" First Reclamation, "10" A Kingdom Alone,
-  "11"-"14" the four strategic objectives). Not usable for rows: Goblin Diplomacy, Demon Slayer,
-  Misthalin Mystery, X Marks the Spot, The Corsair Curse (varbit-driven), Shield of Arrav (two varps).
+  "11"-"14" the four strategic objectives, "15" At the White Wall and the regional campaign quests
+  after it — Trolls "16", Guns "17", Old Wounds "18"). Not usable for rows: Goblin Diplomacy, Demon
+  Slayer, Misthalin Mystery, X Marks the Spot, The Corsair Curse (varbit-driven), Shield of Arrav
+  (two varps).
 
   Rogue Hunting I & II are TWO rows off ONE server chain (`RogueProblem.Step`, varp 4617):
   `QuestJournal.syncNativeTab` completes row I the moment the hunt clears (KNIGHT step) and holds

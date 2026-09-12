@@ -348,6 +348,41 @@ enum LofQuest
 			"An eastern convoy and the trade to feed a coalition army"
 		)),
 
+	// ---- Regional campaigns: framework quests (generic varp packing) ----
+	// Chain order here MUST match the server's QuestBook constants: the regional campaign quests
+	// follow the four objectives (AT_THE_WHITE_WALL = 14, directly after SUSTAIN = 13), campaign
+	// by campaign. Step ordinals are the server's 1-based step indices.
+
+	/**
+	 * Asgarnia — BREACH, Quest 1. The regional opener: why Falador does not simply send its army to
+	 * Varrock. A checkpoint fight at Falador's north gate, Sir Amik Varze's "I have an army. I do not
+	 * have an army to spare.", Sir Tiffy Cashien's first questions, and a walk along the front.
+	 */
+	AT_THE_WHITE_WALL(
+		"At the White Wall",
+		"Falador survived the Fall — and became a fortified military state locked in a war with the "
+			+ "Kinshra. It has exactly the army Misthalin needs for Varrock, and none of it to spare: "
+			+ "the Kinshra do not need to take the city, only to keep its knights busy, while the "
+			+ "trolls pin the Imperial Guard at Burthorpe and the guns wear out faster than the dwarves "
+			+ "can replace them. Reach the north gate, hold it with the White Knights, hear Sir Amik "
+			+ "out, meet Sir Tiffy, and read the ground yourself.",
+		LofQuestVarps.AT_THE_WHITE_WALL,
+		"Complete A Kingdom Alone first.",
+		Arrays.asList(
+			new LofQuestStep(1, "Travel to Asgarnia", "Falador's NORTH gate — the one facing the Kinshra. Any road or teleport into Falador, then out to the north gate.", new WorldPoint(2965, 3398, 0)),
+			new LofQuestStep(2, "Speak with the White Knights at the checkpoint", "The garrison holds the road just outside the north gate.", new WorldPoint(2965, 3398, 0)),
+			new LofQuestStep(3, "Help the White Knights repel the Kinshra attack", "Defeat 5 Kinshra raiders at the checkpoint. Any raider you draw blood on counts, even if a knight finishes it.", new WorldPoint(2965, 3400, 0), 5),
+			new LofQuestStep(4, "Speak with Sir Amik Varze", "Top floor of the White Knights' Castle, in the middle of Falador.", new WorldPoint(2960, 3336, 2)),
+			new LofQuestStep(5, "Find Sir Tiffy Cashien", "His bench in Falador Park, east of the castle.", new WorldPoint(2997, 3373, 0)),
+			new LofQuestStep(6, "Inspect the front", "Three places, any order: the White Knight line at the checkpoint, the supply road just inside the north gate, and the ground north of the fence beyond the checkpoint.", new WorldPoint(2965, 3398, 0)),
+			new LofQuestStep(7, "Report to Sir Amik Varze", "Top floor of the White Knights' Castle.", new WorldPoint(2960, 3336, 2))
+		),
+		Arrays.asList(
+			"1 Quest Point and 25 War Effort",
+			"The Asgarnia campaign (BREACH) formally begun — A Matter of Trolls unlocked",
+			"The Asgarnian Front: the White Knight checkpoint at Falador's north gate"
+		)),
+
 	/** FUTURE teaser: the strategic phase's payoff (excluded from the chain track until built). */
 	COUNCIL_OF_GIELINOR(
 		"Council of Gielinor",
@@ -364,6 +399,13 @@ enum LofQuest
 	private static final int FIRST_RECLAMATION_RETRY = 8;
 	/** General Zo's post in the castle hub. */
 	private static final WorldPoint GENERAL_ZO = new WorldPoint(3220, 3210, 0);
+
+	/**
+	 * The Kinshra raiders of At the White Wall — stock Black Knights (the checkpoint raid spawns
+	 * 516; 517 is the fortress twin). Highlighted during the checkpoint fight so the player can pick
+	 * the raiders out of the melee with the White Knights.
+	 */
+	private static final int[] BLACK_KNIGHTS = {516, 517};
 
 	/**
 	 * The goblins of the Lumbridge fields — every plain "Goblin" npc id the camp and the surrounding
@@ -703,6 +745,11 @@ enum LofQuest
 				return GOBLINS;
 			}
 		}
+		if (this == AT_THE_WHITE_WALL && step.getOrdinal() == 3)
+		{
+			// The checkpoint raid: pick the Kinshra raiders out of the melee with the White Knights.
+			return BLACK_KNIGHTS;
+		}
 		return NO_NPCS;
 	}
 
@@ -711,6 +758,13 @@ enum LofQuest
 	static boolean isObjectiveNpc(int npcId)
 	{
 		for (int id : GOBLINS)
+		{
+			if (id == npcId)
+			{
+				return true;
+			}
+		}
+		for (int id : BLACK_KNIGHTS)
 		{
 			if (id == npcId)
 			{
