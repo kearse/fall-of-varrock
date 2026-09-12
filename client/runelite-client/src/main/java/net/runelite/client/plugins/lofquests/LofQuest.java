@@ -348,10 +348,46 @@ enum LofQuest
 			"An eastern convoy and the trade to feed a coalition army"
 		)),
 
+	// ---- Regional campaigns: framework quests (generic varp packing) ----
+	// Chain order here MUST match the server's QuestBook constants: the regional campaign quests
+	// follow the four objectives (AT_THE_WHITE_WALL = 14, directly after SUSTAIN = 13), campaign
+	// by campaign. Step ordinals are the server's 1-based step indices.
+
+	/**
+	 * Asgarnia — BREACH, Quest 1. The regional opener: why Falador does not simply send its army to
+	 * Varrock. A checkpoint fight at Falador's north gate, Sir Amik Varze's "I have an army. I do not
+	 * have an army to spare.", Sir Tiffy Cashien's first questions, and a walk along the front.
+	 */
+	AT_THE_WHITE_WALL(
+		"At the White Wall",
+		"Falador survived the Fall — and became a fortified military state locked in a war with the "
+			+ "Kinshra. It has exactly the army Misthalin needs for Varrock, and none of it to spare: "
+			+ "the Kinshra do not need to take the city, only to keep its knights busy, while the "
+			+ "trolls pin the Imperial Guard at Burthorpe and the guns wear out faster than the dwarves "
+			+ "can replace them. Reach the north gate, hold it with the White Knights, hear Sir Amik "
+			+ "out, meet Sir Tiffy, and read the ground yourself.",
+		LofQuestVarps.AT_THE_WHITE_WALL,
+		"Complete A Kingdom Alone first.",
+		Arrays.asList(
+			new LofQuestStep(1, "Travel to Asgarnia", "Falador's NORTH gate — the one facing the Kinshra. Any road or teleport into Falador, then out to the north gate.", new WorldPoint(2965, 3398, 0)),
+			new LofQuestStep(2, "Speak with the White Knights at the checkpoint", "The garrison holds the road just outside the north gate.", new WorldPoint(2965, 3398, 0)),
+			new LofQuestStep(3, "Help the White Knights repel the Kinshra attack", "Defeat 5 Kinshra raiders at the checkpoint. Any raider you draw blood on counts, even if a knight finishes it.", new WorldPoint(2965, 3400, 0), 5),
+			new LofQuestStep(4, "Speak with Sir Amik Varze", "Top floor of the White Knights' Castle, in the middle of Falador.", new WorldPoint(2960, 3336, 2)),
+			new LofQuestStep(5, "Find Sir Tiffy Cashien", "His bench in Falador Park, east of the castle.", new WorldPoint(2997, 3373, 0)),
+			new LofQuestStep(6, "Inspect the front", "Three places, any order: the White Knight line at the checkpoint, the supply road just inside the north gate, and the ground north of the fence beyond the checkpoint.", new WorldPoint(2965, 3398, 0)),
+			new LofQuestStep(7, "Report to Sir Amik Varze", "Top floor of the White Knights' Castle.", new WorldPoint(2960, 3336, 2))
+		),
+		Arrays.asList(
+			"1 Quest Point and 25 War Effort",
+			"The Asgarnia campaign (BREACH) formally begun — A Matter of Trolls unlocked",
+			"The Asgarnian Front: the White Knight checkpoint at Falador's north gate"
+		)),
+
 	/**
 	 * Asgarnia — BREACH, quest 2 (server `quests/asgarnia/AMatterOfTrolls`, generic journal varp
-	 * 4694). Rows are the 1-based server step indices. Chain slot 15: At the White Wall (14) precedes
-	 * it — declaration order IS the slot, so that entry goes ABOVE this one when it lands.
+	 * 4694). Rows are the 1-based server step indices. Chain slot 15, directly after At the White
+	 * Wall (14) — declaration order IS the slot. (The AT_THE_WHITE_WALL entry above is carried
+	 * verbatim from its own PR so either merge order is clean.)
 	 */
 	A_MATTER_OF_TROLLS(
 		"A Matter of Trolls",
