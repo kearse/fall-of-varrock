@@ -17,13 +17,15 @@ import org.alter.plugins.content.war.StaticTerrain
  *
  * Three questions, three seams:
  *  - [canMuster] — the colony spawn filter. Grid knights never muster inside a [CITY_CORES] box
- *    (they spawn on the roads and fields OUTSIDE town and chase you in), never on a bank radius,
- *    never in a [SANCTUARIES] box. Pinned camps (`tier != null`) are placed by hand and may sit
- *    anywhere — the organized rogue camps on the Draynor/Sarim road are inside town limits on purpose.
+ *    (they spawn on the roads and fields OUTSIDE town and chase you in), never on a PvP carve-out
+ *    (bank radii, the GE / Varrock bank pockets, Ferox — [PvpZones.isCarveout]), never in a
+ *    [SANCTUARIES] box. Pinned camps (`tier != null`) are placed by hand and ignore the city cores —
+ *    the organized rogue camps on the Draynor/Sarim road are inside town limits on purpose.
  *  - [canHunt] — the aggro gate. Never a player who can't fight back ([sanctuary]: onboarding,
  *    cutscene-locked, inside an instance, on a sanctuary tile), never across floors; an
- *    UNPROVOKED knight also respects the post-death / post-login truce and the bank radii. A
- *    player who swings first gets the fight wherever they stand (the `provokedBy` latch).
+ *    UNPROVOKED knight also respects the post-death / post-login truce and the carve-outs (no
+ *    ambush on a bank doorstep). A player who swings first gets the fight wherever they stand
+ *    (the `provokedBy` latch).
  *  - [dangerLevel] — the tiering input. Inside live wilderness it IS the wilderness level (OSRS
  *    depth, so the deep wild stays elite); on the mainland it scales with distance from the nearest
  *    safe city ([CITY_ANCHORS]): metal fodder at the walls, budget sets on the roads, mid mains
@@ -76,11 +78,11 @@ object RogueTerritory {
 
     private fun inSanctuary(t: Tile): Boolean = SANCTUARIES.any { it.contains(t) }
 
-    /** Colony muster filter: walkable, not a sanctuary, not a bank radius, and (grid zones only) not a city core. */
+    /** Colony muster filter: walkable, not a sanctuary, not a PvP carve-out, and (grid zones only) not a city core. */
     fun canMuster(cfg: BotZoneConfig, t: Tile): Boolean =
         StaticTerrain.isWalkable(t.x, t.z) &&
             !inSanctuary(t) &&
-            !PvpZones.isBankSafe(t) &&
+            !PvpZones.isCarveout(t) &&
             (cfg.tier != null || !inCityCore(t))
 
     /** Idle-roam destination filter: a grid knight never strolls into a city core on its own. */
@@ -102,7 +104,7 @@ object RogueTerritory {
         if (sanctuary(p)) return false
         if (p.tile.height != bot.tile.height) return false
         if (provoked) return true
-        return !onTruce(p) && !PvpZones.isBankSafe(p.tile)
+        return !onTruce(p) && !PvpZones.isCarveout(p.tile)
     }
 
     fun onTruce(p: Player): Boolean = (p.attr[ROGUE_TRUCE_UNTIL_ATTR] ?: 0) > p.world.currentCycle

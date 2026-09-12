@@ -54,7 +54,7 @@ class BotPlugin(
         onCommand("zone", Privilege.DEV_POWER, description = "Show the PvP zone classification at your tile") {
             val t = player.tile
             player.message("Zone @ ${t.x},${t.z}: wild=${PvpZones.isWilderness(t)} safe=${PvpZones.isSafe(t)} single=${PvpZones.isSingle(t)} multi=${PvpZones.isMulti(t)} wildLvl=${PvpZones.wildernessLevel(t)}")
-            player.message("Rogues: danger=${RogueTerritory.dangerLevel(t)} core=${RogueTerritory.inCityCore(t)} bank=${PvpZones.isBankSafe(t)} truce=${RogueTerritory.onTruce(player)}")
+            player.message("Rogues: danger=${RogueTerritory.dangerLevel(t)} core=${RogueTerritory.inCityCore(t)} carveout=${PvpZones.isCarveout(t)} truce=${RogueTerritory.onTruce(player)}")
         }
 
         onCommand("botzones", Privilege.DEV_POWER, description = "List bot zones + their centre tiles") {

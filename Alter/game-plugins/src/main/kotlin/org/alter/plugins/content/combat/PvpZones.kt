@@ -155,9 +155,12 @@ object PvpZones {
         return if (depth > 0) depth else Wilderness.MAX_LEVEL
     }
 
-    /** Inside a runtime-registered bank safe radius (see [BankSafezonePlugin]). Rogue Knights use
-     *  this as a no-muster / no-ambush radius on the mainland too. */
-    fun isBankSafe(t: Tile): Boolean = safeDynamic.any { it.contains(t) }
+    /**
+     * A safe carve-out: the GE / Varrock bank pockets / Ferox, or any bank radius registered at
+     * runtime ([BankSafezonePlugin]). No human PvP even inside the red — and the Rogue Knights'
+     * no-muster / no-unprovoked-ambush ground everywhere ("the banks survived behind barricades").
+     */
+    fun isCarveout(t: Tile): Boolean = inCarveout(t)
 
     /** Register a safe box (used to auto-protect bank booths). */
     fun addSafeArea(area: Area) {

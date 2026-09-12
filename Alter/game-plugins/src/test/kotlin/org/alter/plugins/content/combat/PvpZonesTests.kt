@@ -73,12 +73,16 @@ class PvpZonesTests {
     }
 
     @Test
-    fun `a registered bank radius is a carve-out and a bank sanctuary`() {
+    fun `carve-outs are the GE, the Varrock banks and any registered bank radius`() {
+        assertTrue(PvpZones.isCarveout(Tile(3165, 3490)), "Grand Exchange")
+        assertTrue(PvpZones.isCarveout(Tile(3185, 3440)), "Varrock west bank")
+        assertFalse(PvpZones.isCarveout(Tile(3211, 3424)), "Varrock square")
+        assertFalse(PvpZones.isCarveout(Tile(3222, 3218)), "Lumbridge courtyard (safe, but not a carve-out)")
         val booth = Tile(3300, 3700) // deep-wild tile nobody else registers
         assertTrue(PvpZones.isWilderness(booth))
-        assertFalse(PvpZones.isBankSafe(booth))
+        assertFalse(PvpZones.isCarveout(booth))
         PvpZones.safeAround(booth, 8)
-        assertTrue(PvpZones.isBankSafe(Tile(3305, 3705)))
+        assertTrue(PvpZones.isCarveout(Tile(3305, 3705)))
         assertFalse(PvpZones.isWilderness(Tile(3305, 3705)), "inside the radius")
         assertTrue(PvpZones.isWilderness(Tile(3310, 3700)), "outside the radius")
     }
