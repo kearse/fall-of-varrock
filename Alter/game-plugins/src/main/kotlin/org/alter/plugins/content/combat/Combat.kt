@@ -488,6 +488,20 @@ object Combat {
                 return false
             }
 
+            // Rogue Knights hunt the whole mainland, but never a player who can't fight back —
+            // onboarding / cutscene-locked, inside an instance, on a sanctuary tile
+            // ([org.alter.plugins.content.bots.RogueTerritory.sanctuary]). Because canEngage re-runs
+            // every combat cycle this also ENDS an in-flight knight fight the tick its target becomes
+            // protected. Companions are excluded (they never swing at real players anyway — see
+            // companionVsPlayer below). Must run BEFORE the bot bypass.
+            if (pawn is org.alter.plugins.content.bots.PkBot &&
+                pawn !is org.alter.plugins.content.companion.Companion &&
+                target !is org.alter.plugins.content.bots.PkBot &&
+                org.alter.plugins.content.bots.RogueTerritory.sanctuary(target)
+            ) {
+                return false
+            }
+
             // PKer bots are attackable anywhere (no wilderness gate, no level range), and they
             // may attack players anywhere. Real player-vs-player keeps the normal rules.
             //
