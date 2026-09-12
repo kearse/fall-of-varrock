@@ -19,9 +19,11 @@ import org.alter.game.plugin.PluginRepository
 import org.alter.plugins.content.companion.RecruitMenu
 import org.alter.plugins.content.quests.framework.NpcTalk
 import org.alter.plugins.content.quests.framework.bindTalk
+import org.alter.plugins.content.teleport.TeleportService
 import org.alter.plugins.content.war.CampaignRegistry
 import org.alter.plugins.content.war.WarNpcNames
 import org.alter.plugins.content.war.address
+import org.alter.plugins.content.war.outposts.SouthernWatch
 import org.alter.plugins.content.war.warprep.WarPrepSurvival
 import org.alter.rscm.RSCM.getRSCM
 
@@ -38,6 +40,10 @@ private val logger = KotlinLogging.logger {}
  * NB: this repurposes the old **Melee combat tutor** (npc id 3216). The "General Zo"
  * display name is applied at spawn via [WarNpcNames] (extended-info, no cache edit); the
  * rscm key stays `npc.melee_combat_tutor`. This plugin owns his spawn.
+ *
+ * His Talk-to is routed through [NpcTalk] (`bindTalk`): the menu below is the DEFAULT branch, and
+ * the story quests (The North, First Reclamation, A Kingdom Alone …) claim the conversation on
+ * their own steps via `QuestDefinition.talk` without editing this file.
  */
 class GeneralZoPlugin(
     r: PluginRepository,
@@ -92,21 +98,26 @@ class GeneralZoPlugin(
             else -> {}
         }
         chatNpc(player, "Well met, ${player.address}. I am General Zo, commander of<br>the Lumbridge garrison. The realm's war is fought out<br>there — on the roads and in the ruins.", title = ZO)
-        when (options(
-            player,
-            "How goes the war, General?",
-            "How do I take command?",
-            "I'd like to recruit soldiers under my banner.",
-            "Nothing for now.",
-            title = ZO,
-        )) {
-            1 -> reportStatus(player)
-            2 -> commandLadder(player)
+        // The menu is built by name so an unlock can add a row without shifting the others' indices.
+        val choices = arrayListOf(OPT_STATUS, OPT_COMMAND, OPT_RECRUIT)
+        if (SouthernWatch.isUnlocked(player)) choices += OPT_WATCH // First Reclamation: the forward post
+        choices += OPT_NOTHING
+        when (choices.getOrNull(options(player, *choices.toTypedArray(), title = ZO) - 1)) {
+            OPT_STATUS -> reportStatus(player)
+            OPT_COMMAND -> commandLadder(player)
             // Recruiting is the client-drawn Muster Companions window (lofrecruit): discipline
             // cards + banner strip, with the rank gate / full-banner states drawn, not spoken.
-            3 -> RecruitMenu.open(player)
-            4 -> chatPlayer(player, "Nothing for now.")
+            OPT_RECRUIT -> RecruitMenu.open(player)
+            OPT_WATCH -> sendToSouthernWatch(player)
+            else -> chatPlayer(player, "Nothing for now.")
         }
+    }
+
+    /** Post-First-Reclamation: Zo sends the player to the Southern Watch (the route the quest unlocked). */
+    private suspend fun QueueTask.sendToSouthernWatch(player: Player) {
+        chatPlayer(player, "Send me to the Southern Watch.")
+        chatNpc(player, "The circle's ours, ${player.address} — the roads around it are<br>not. Keep your eyes open up there.", title = ZO)
+        TeleportService.teleport(player, SouthernWatch.ROUTE)
     }
 
     /** The live offensive war: the realm's march in the field, or the commanders' campaign. */
@@ -183,6 +194,12 @@ class GeneralZoPlugin(
     companion object {
         const val ZO = "General Zo"
         const val ZO_NPC = "npc.melee_combat_tutor"
+
+        private const val OPT_STATUS = "How goes the war, General?"
+        private const val OPT_COMMAND = "How do I take command?"
+        private const val OPT_RECRUIT = "I'd like to recruit soldiers under my banner."
+        private const val OPT_WATCH = "Send me to the Southern Watch."
+        private const val OPT_NOTHING = "Nothing for now."
 
         /** His post: inside the hub's desk ring, west column — one tile south of Duke Horacio
          *  (3220,3211), against the 2x2 pillar (3221-3222 x 3210-3211). TUNE in-game. */

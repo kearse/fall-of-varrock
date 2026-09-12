@@ -48,7 +48,8 @@ private val logger = KotlinLogging.logger {}
  * kit publishes complete; renumbered out). Quests own 4610-4612, 4617, 4624, 4633, and 4681-4683
  * ([WARPREP_SURVIVAL_VARP], [KNIGHTS_VARP], and [QuestBook.OPEN_VARP] — the "open the Quest Journal
  * window, focused on quest N" pulse; not published here, pulsed on demand). Framework quests that
- * need a journal varp claim one in docs/overlay-design-system.md §8 (`QuestDefinition.journalVarp`).
+ * need a journal varp claim one in docs/overlay-design-system.md §8 (`QuestDefinition.journalVarp`)
+ * — [FIRST_RECLAMATION_VARP] is the first such claim.
  * Non-zero varps persist ([VarpSerialisation]), but the attributes stay the source of truth —
  * everything here is re-derived and re-published on login and on the world poll.
  *
@@ -76,6 +77,8 @@ object QuestJournal {
     // docs/overlay-design-system.md §8 — one per quest, recorded there individually.
     /** The North (Main Story Quest 3, `quests/north/TheNorth`). */
     const val NORTH_VARP = 4686
+    /** First Reclamation (Main Story Quest 4, `quests/story/FirstReclamation`). */
+    const val FIRST_RECLAMATION_VARP = 4687
 
     // Reused OSRS quest progress varps that colour the relabelled native quest-tab rows. A value of
     // 0 reads as "not started" (red), the complete value as "finished" (green), anything between as
@@ -106,6 +109,10 @@ object QuestJournal {
      *  `QuestEngine.publish` from `TheNorth.nativeTabVarp`). Completes at 3. */
     const val NORTH_QUEST_VARP = 32
     internal const val NORTH_QUEST_COMPLETE = 3
+    /** Romeo & Juliet varp — now the "First Reclamation" row (driven by `QuestDefinition.nativeTabVarp`
+     *  through `QuestEngine.publish`). Completes at 100. */
+    const val FIRST_RECLAMATION_QUEST_VARP = 144
+    internal const val FIRST_RECLAMATION_QUEST_COMPLETE = 100
 
     /** True while the player has quest guidance muted (free-play mode). */
     fun muted(p: Player): Boolean = p.attr[QUEST_GUIDE_MUTED_ATTR] == true

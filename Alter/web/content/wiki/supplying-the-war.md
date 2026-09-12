@@ -3,10 +3,10 @@ title: Supplying the war - the Quartermaster
 category: Skilling
 summary: What the Quartermaster pays for supplies, how the sell-only Supply Depot works, how Supply Drives double your War Effort, and the difference between War Effort and Realm Supplies.
 order: 2
-updated: 2026-09-02
+updated: 2026-09-12
 ---
 
-The **Quartermaster** - at the Lumbridge shop hub and in the Mire crypt - is the end of every production chain: hand him supplies and he consumes the items and credits two things at once - your personal **War Effort** (your lifetime service record) and the kingdom's shared **Realm Supplies** stockpile (`::supply` to check it).
+The **Quartermaster** - at the Lumbridge shop hub, in the Mire crypt, and (as the **Field Quartermaster**) at the [Southern Watch](/wiki/first-reclamation) south of Varrock - is the end of every production chain: hand him supplies and he consumes the items and credits two things at once - your personal **War Effort** (your lifetime service record) and the kingdom's shared **Realm Supplies** stockpile (`::supply` to check it).
 
 ## War Effort vs Realm Supplies
 

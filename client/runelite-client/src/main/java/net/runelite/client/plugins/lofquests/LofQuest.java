@@ -210,7 +210,48 @@ enum LofQuest
 			"The Weathered Varrock Dispatch — yours to keep and re-read from your pack",
 			"Edgeville and the Wilderness line: where the Rogue Knights end and real PvP begins",
 			"First Reclamation — the next main story quest"
+		)),
+
+	/**
+	 * Main Story Quest 4 — a framework quest (server `quests/story/FirstReclamation`, generic journal
+	 * varp 4687). Rows are the 1-based server step indices. The server's `retry` step (8) has no row
+	 * of its own: it renders as the battle row (7) with a "driven back" suffix, arrow on General Zo.
+	 * Chain slot: after The North (7), before A Kingdom Alone (9) — declaration order IS the slot.
+	 */
+	FIRST_RECLAMATION(
+		"First Reclamation",
+		"General Zo says surviving is no longer enough. Every march before this one hit the enemy and "
+			+ "went home; this time the realm clears the southern approach to Fallen Varrock and HOLDS it. "
+			+ "Scout the old stone circle on foot, fight beside the Reclamation Column's Grand March until "
+			+ "the line breaks, then raise Lumbridge's standard and establish the Southern Watch - the "
+			+ "first forward post in the shadow of the city walls. And hear the limit: Misthalin cannot "
+			+ "take Varrock alone.",
+		LofQuestVarps.FIRST_RECLAMATION,
+		"Finish The North first.",
+		Arrays.asList(
+			new LofQuestStep(1, "Report to General Zo", "He believes Lumbridge is ready to reclaim its first northern position.", new WorldPoint(3220, 3210, 0)),
+			new LofQuestStep(2, "Survey the southern road", "Walk north toward Varrock - the reconnaissance is yours. The road reaches the lower end of the outskirts battlefield.", new WorldPoint(3228, 3344, 0)),
+			new LofQuestStep(3, "Inspect the stone circle", "Step inside the ring east of the road.", new WorldPoint(3225, 3371, 0)),
+			new LofQuestStep(4, "Look north toward Fallen Varrock", "The road beyond the circle, in front of the south gate.", new WorldPoint(3212, 3381, 0)),
+			new LofQuestStep(5, "Report your findings to General Zo", new WorldPoint(3220, 3210, 0)),
+			new LofQuestStep(6, "Give General Zo the word", "He launches the Reclamation Column - a public Grand March on the Varrock outskirts.", new WorldPoint(3220, 3210, 0)),
+			new LofQuestStep(7, "Fight beside the Reclamation Column", "::march rallies you to it. The column must WIN and you need a real share of the fighting. Driven back? General Zo sends it again.", new WorldPoint(3213, 3376, 0)),
+			new LofQuestStep(9, "Raise the standard at the stone circle", "Capture the standard at the ring's heart to establish the Southern Watch.", new WorldPoint(3227, 3372, 0)),
+			new LofQuestStep(10, "Report to General Zo", "The Southern Watch is holding.", new WorldPoint(3220, 3210, 0))
+		),
+		Arrays.asList(
+			"The Southern Watch - fast travel to the forward post (portal, General Zo, ::southernwatch)",
+			"A Field Quartermaster and a garrison of Knights of Lumbridge at the circle",
+			"Varrock march staging on the doorstep of the fallen city",
+			"50 War Effort and the spoils of the won Grand March",
+			"A Kingdom Alone - the next main quest"
 		));
+
+	/** First Reclamation's battle row / the server's retry step (see the entry's note). */
+	private static final int FIRST_RECLAMATION_BATTLE = 7;
+	private static final int FIRST_RECLAMATION_RETRY = 8;
+	/** General Zo's post in the castle hub. */
+	private static final WorldPoint GENERAL_ZO = new WorldPoint(3220, 3210, 0);
 
 	/**
 	 * The goblins of the Lumbridge fields — every plain "Goblin" npc id the camp and the surrounding
@@ -330,6 +371,12 @@ enum LofQuest
 	{
 		if (isGeneric())
 		{
+			if (this == FIRST_RECLAMATION)
+			{
+				// The server's retry step (8) is the battle row (7) again — driven back, see General Zo.
+				final int raw = LofQuestVarps.genericStep(client, genericVarp);
+				return raw == FIRST_RECLAMATION_RETRY ? FIRST_RECLAMATION_BATTLE : raw;
+			}
 			return LofQuestVarps.genericStep(client, genericVarp);
 		}
 		switch (this)
@@ -509,6 +556,10 @@ enum LofQuest
 		{
 			return null;
 		}
+		if (this == FIRST_RECLAMATION && LofQuestVarps.genericStep(client, genericVarp) == FIRST_RECLAMATION_RETRY)
+		{
+			return GENERAL_ZO; // driven back — regroup with General Zo before the next push
+		}
 		if (this == LAST_FREE_CITY && step.getOrdinal() == 4 && LofQuestVarps.recruitContractTaken(client))
 		{
 			return GOBLIN_FIELD; // contract taken — hunt the goblins loose east of the castle
@@ -562,6 +613,11 @@ enum LofQuest
 	{
 		if (isGeneric())
 		{
+			if (this == FIRST_RECLAMATION && step.getOrdinal() == FIRST_RECLAMATION_BATTLE
+				&& LofQuestVarps.genericStep(client, genericVarp) == FIRST_RECLAMATION_RETRY)
+			{
+				return " (driven back - see General Zo)";
+			}
 			// Counted steps of a framework quest: the generic progress bits against the step's goal.
 			if (step.getGoal() > 0 && stepOrdinal(client) == step.getOrdinal())
 			{

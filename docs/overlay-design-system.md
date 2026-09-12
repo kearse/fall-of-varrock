@@ -314,6 +314,8 @@ Reusable pieces — reach for these before inventing a new one. Metrics above.
     (4601/4609/4616 all feed the `lofdials` dial row.)
     **4686 The North journal** (Main Story Quest 3; `QuestJournal.NORTH_VARP`, the generic
     `QuestEngine.publish` packing; client `lofquests.LofQuestVarps.NORTH`).
+    **4687 First Reclamation journal** (Main Story Quest 4; `QuestJournal.FIRST_RECLAMATION_VARP`,
+    the generic `QuestEngine.publish` packing; client `lofquests.LofQuestVarps.FIRST_RECLAMATION`).
     Every id in this map is guaranteed writable server-side: the varp table is sized
     `maxOf(cache varp count, Player.CUSTOM_VARP_CEILING = 6000)` — the cache count alone sat BELOW
     this range and out-of-range `setVarp` throws (that silently broke lofspar + the kit editor

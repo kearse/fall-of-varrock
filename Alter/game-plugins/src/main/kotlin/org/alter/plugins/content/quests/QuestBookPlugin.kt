@@ -63,6 +63,7 @@ class QuestBookPlugin(
             5 to QuestBook.WARPREP_SURVIVAL,    // Sheep Shearer
             13 to QuestBook.KING,               // Witch's Potion
             7 to QuestBook.THE_NORTH,           // Ernest the Chicken
+            4 to QuestBook.FIRST_RECLAMATION,   // Romeo & Juliet
         )
     }
 

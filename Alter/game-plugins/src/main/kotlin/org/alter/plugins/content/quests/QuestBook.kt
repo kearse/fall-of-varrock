@@ -37,9 +37,10 @@ object QuestBook {
     const val WARPREP_RANGED = 4
     const val WARPREP_SURVIVAL = 5
     const val KING = 6
-    const val THE_NORTH = 7        // The North (Main Story Quest 3)
+    const val THE_NORTH = 7         // The North (Main Story Quest 3)
+    const val FIRST_RECLAMATION = 8 // First Reclamation (Main Story Quest 4)
 
-    const val LAST_INDEX = THE_NORTH
+    const val LAST_INDEX = FIRST_RECLAMATION
 
     /** Pulse the open signal, focused on [chainIndex]. */
     fun open(p: Player, chainIndex: Int) {

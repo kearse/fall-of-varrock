@@ -76,11 +76,13 @@ private val PLAN = listOf(
     // The Last Free City (Main Story Quest 1 — the Recruit Trials chain under its story name) reuses
     // Cook's Assistant (dbrow 17, quest id 1, varp 29, complete 2). Renamed 2026-09-11: re-run
     // `relabel` (the workflow) so the live tab picks up the new name.
+    // Sort keys are TWO-digit strings: the tab orders rows by this STRING, so "10 …" would sort before
+    // "2 …" — every row is zero-padded and the relabel rewrites them all anyway.
     Relabel(dbrowId = 17, questId = 1, sortName = "01 The Last Free City", displayName = "The Last Free City", varp = 29),
     Relabel(dbrowId = 30, questId = 11, sortName = "02 War-Prep I - Magic", displayName = "War-Prep I - Magic", varp = 31),
     // Rogue Hunting I (Act II's 30-rogue hunt; formerly listed as "The Rogue Problem") reuses The
     // Restless Ghost (dbrow 120, quest id 3, varp 107, driven by QuestJournal from RogueProblem.step —
-    // complete the moment the hunt clears). Sort digit 3 places it after War-Prep I.
+    // complete the moment the hunt clears). Sort key 03 places it after War-Prep I.
     Relabel(dbrowId = 120, questId = 3, sortName = "03 Rogue Hunting I", displayName = "Rogue Hunting I", varp = 107),
     // Rogue Hunting II (the Rogue Knight ladder — complete when every camp is broken) reuses The
     // Knight's Sword (dbrow 83, quest id 14, varp 122, complete 7). Same server chain, windowed:
@@ -98,9 +100,11 @@ private val PLAN = listOf(
     // The North (Main Story Quest 3 — a framework quest, chain index 7) reuses Ernest the Chicken
     // (dbrow 44, quest id 7, varp 32, complete 3). Driven by QuestEngine.publish from
     // TheNorth.nativeTabVarp. Framework story quests append after the hallway in story order.
-    // Sort keys are TWO-digit strings on every row: the tab orders by this STRING, so a
-    // single-digit scheme would put "10 …" before "2 …".
     Relabel(dbrowId = 44, questId = 7, sortName = "08 The North", displayName = "The North", varp = 32),
+    // First Reclamation (Main Story Quest 4, framework quest) reuses Romeo & Juliet (dbrow 121, quest
+    // id 4, varp 144, complete 100) — driven by QuestDefinition.nativeTabVarp through QuestEngine.publish.
+    // Sort key 09; A Kingdom Alone takes 10 and its strategic objectives 11-14.
+    Relabel(dbrowId = 121, questId = 4, sortName = "09 First Reclamation", displayName = "First Reclamation", varp = 144),
 )
 
 /** The only quest rows the tab should list after `hide` — exactly the ones we relabelled. */
