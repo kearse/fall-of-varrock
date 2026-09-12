@@ -45,9 +45,12 @@ object QuestBook {
     const val SECURE = 11
     const val UNDERSTAND = 12
     const val SUSTAIN = 13
+    // The Asgarnia campaign (BREACH) quests follow the objectives: At the White Wall 14, A Matter of
+    // Trolls 15, The Guns of Asgarnia 16 (each its own PR), Old Wounds 17, The White Wall 18.
+    const val OLD_WOUNDS = 17       // Old Wounds (Asgarnia — BREACH, Quest 4)
 
     /** The highest chain index the client journal lists (`LofQuest.CHAIN.size() - 1`). */
-    const val LAST_INDEX = SUSTAIN
+    const val LAST_INDEX = OLD_WOUNDS
 
     /** Pulse the open signal, focused on [chainIndex]. */
     fun open(p: Player, chainIndex: Int) {

@@ -58,6 +58,9 @@ final class LofQuestVarps
 	static final int UNDERSTAND = 4691;
 	static final int SUSTAIN = 4692;
 
+	/** Asgarnia (BREACH) Quest 4, "Old Wounds" (4693-4695 are Asgarnia Quests 1-3, their own PRs). */
+	static final int OLD_WOUNDS = 4696;
+
 	/** Generic-packing step ordinal: the current step index + 1, 0 when unstarted or finished. */
 	static int genericStep(Client client, int varp)
 	{

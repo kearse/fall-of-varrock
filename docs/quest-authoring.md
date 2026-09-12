@@ -133,6 +133,17 @@ begun by A Kingdom Alone, each SOLVED by its regional campaign's payoff via
 Gielinor gate, nothing else). A regional campaign's first quest gates on
 `Prerequisite.QuestComplete("a_kingdom_alone")`.
 
+Asgarnia — BREACH (`content/quests/asgarnia/`): `at_the_white_wall` (Quest 1) · `a_matter_of_trolls`
+(Quest 2) · `guns_of_asgarnia` (Quest 3) · `old_wounds` (**Old Wounds**, Quest 4 —
+`docs/quests/old-wounds.md`; gates on Trolls AND Guns through a `Prerequisite.Custom` that requires
+whichever of the two keys is registered and falls back down the chain when neither is, so no PR
+merge order dead-ends the campaign) · The White Wall (Quest 5, unbuilt — the one that calls
+`StrategicObjectives.solve(p, Breach)`). Two seams Old Wounds added for reuse: **owner-bound scene
+npcs** (`quests/asgarnia/LordDaquarius.appear / leave / sweep` — an `Npc(owner, id, tile, world)` is
+visible to its owner alone and swept on their logout; a recurring rival can appear for one player's
+scene without ever being fightable) and **quest-owned crates** (`objects/crates/CrateSearch.register`
+— `SearchCratesPlugin` owns the *Search* bind on the stock crate ids; a hook claims one tile of it).
+
 Every new quest spec starts from the integration-first template in `docs/quests/README.md`.
 
 ## 3a. Journal rows for framework quests (built 2026-09-12)

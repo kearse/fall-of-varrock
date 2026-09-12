@@ -113,6 +113,11 @@ private val PLAN = listOf(
     Relabel(dbrowId = 112, questId = 10, sortName = "12 SECURE - Morytania", displayName = "SECURE - Morytania", varp = 273),      // Prince Ali Rescue, complete 110
     Relabel(dbrowId = 155, questId = 8, sortName = "13 UNDERSTAND - Wilderness", displayName = "UNDERSTAND - Wilderness / Desert", varp = 178), // Vampyre Slayer, complete 3
     Relabel(dbrowId = 108, questId = 16, sortName = "14 SUSTAIN - Kandarin", displayName = "SUSTAIN - Kandarin / War Effort", varp = 71),      // Pirate's Treasure, complete 4
+    // Old Wounds (Asgarnia — BREACH, Quest 4; framework quest `old_wounds`, chain index 17) reuses
+    // Wanted! (dbrow 156, quest id 92, varp 1051, complete 11 — that quest's own start NPC is Sir
+    // Tiffy Cashien). Driven by QuestEngine.publish from OldWounds.nativeTabVarp. Sort keys are
+    // slot+1: At the White Wall 15, A Matter of Trolls 16, The Guns of Asgarnia 17 (their PRs).
+    Relabel(dbrowId = 156, questId = 92, sortName = "18 Old Wounds", displayName = "Old Wounds", varp = 1051),
 )
 
 /** The only quest rows the tab should list after `hide` — exactly the ones we relabelled. */

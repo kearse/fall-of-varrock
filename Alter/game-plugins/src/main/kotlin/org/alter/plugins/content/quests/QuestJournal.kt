@@ -91,6 +91,8 @@ object QuestJournal {
     const val SECURE_VARP = 4690
     const val UNDERSTAND_VARP = 4691
     const val SUSTAIN_VARP = 4692
+    /** Old Wounds (Asgarnia — BREACH, Quest 4, `quests/asgarnia/OldWounds`; 4693-4695 = Asgarnia Quests 1-3). */
+    const val OLD_WOUNDS_VARP = 4696
 
     // Reused OSRS quest progress varps that colour the relabelled native quest-tab rows. A value of
     // 0 reads as "not started" (red), the complete value as "finished" (green), anything between as
@@ -140,6 +142,10 @@ object QuestJournal {
     /** Pirate's Treasure varp — now the "SUSTAIN - Kandarin / War Effort" objective row. Completes at 4. */
     const val SUSTAIN_QUEST_VARP = 71
     internal const val SUSTAIN_QUEST_COMPLETE = 4
+    /** Wanted! varp — now the "Old Wounds" row (Asgarnia — BREACH, Quest 4; Wanted!'s own start NPC is
+     *  Sir Tiffy). Driven by `QuestEngine.publish` from `OldWounds.nativeTabVarp`. Completes at 11. */
+    const val OLD_WOUNDS_QUEST_VARP = 1051
+    internal const val OLD_WOUNDS_QUEST_COMPLETE = 11
 
     /** True while the player has quest guidance muted (free-play mode). */
     fun muted(p: Player): Boolean = p.attr[QUEST_GUIDE_MUTED_ATTR] == true

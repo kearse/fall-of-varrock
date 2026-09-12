@@ -319,6 +319,9 @@ Reusable pieces — reach for these before inventing a new one. Metrics above.
     **4688 quests: A Kingdom Alone** (Main Story Quest 5, `a_kingdom_alone`) · **4689-4692 quests:
     BREACH / SECURE / UNDERSTAND / SUSTAIN** (the regional phase's four strategic objectives, keys
     `breach`/`secure`/`understand`/`sustain`; all generic packing — `content/quests/story/`).
+    **4696 Old Wounds journal** (Asgarnia — BREACH, Quest 4, `old_wounds`; `QuestJournal.OLD_WOUNDS_VARP`,
+    generic packing; client `LofQuestVarps.OLD_WOUNDS`. 4693-4695 are Asgarnia Quests 1-3, recorded by
+    their own PRs; 4697 is The White Wall's).
     Every id in this map is guaranteed writable server-side: the varp table is sized
     `maxOf(cache varp count, Player.CUSTOM_VARP_CEILING = 6000)` — the cache count alone sat BELOW
     this range and out-of-range `setVarp` throws (that silently broke lofspar + the kit editor

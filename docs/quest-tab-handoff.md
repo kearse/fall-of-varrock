@@ -46,6 +46,7 @@ findings that shape everything below:
   | SECURE - Morytania (objective `secure`) | Prince Ali Rescue | 112 | 10 | 273 | 110 |
   | UNDERSTAND - Wilderness / Desert (objective `understand`) | Vampyre Slayer | 155 | 8 | 178 | 3 |
   | SUSTAIN - Kandarin / War Effort (objective `sustain`) | Pirate's Treasure | 108 | 16 | 71 | 4 |
+  | Old Wounds (Asgarnia — BREACH, Quest 4, framework `old_wounds`; sort "18 Old Wounds") | Wanted! (its start NPC is Sir Tiffy) | 156 | 92 | 1051 | 11 |
 
   Framework quests (`quests/framework/`) drive their reused varp through `QuestDefinition.nativeTabVarp`
   / `nativeTabComplete` (written by `QuestEngine.publish`, 0 / 1 / complete) — no per-quest

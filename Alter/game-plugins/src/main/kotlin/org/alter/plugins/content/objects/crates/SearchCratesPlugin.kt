@@ -38,6 +38,9 @@ class SearchCratesPlugin(
 
         CRATES.forEach { crate ->
             onObjOption(obj = crate, option = "search") {
+                // A quest may have put something in THIS crate (CrateSearch hooks check the tile).
+                val obj = runCatching { player.getInteractingGameObj() }.getOrNull()
+                if (CrateSearch.handle(player, obj)) return@onObjOption
                 player.message("You search the crate but find nothing.")
             }
         }
