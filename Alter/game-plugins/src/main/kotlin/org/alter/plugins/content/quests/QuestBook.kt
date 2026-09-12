@@ -25,16 +25,23 @@ object QuestBook {
      *  whose chest slot was filled pulsed this open (::kits popped the quest journal). */
     const val OPEN_VARP = 4683
 
-    // Chain indices — must match client LofQuest.CHAIN order.
-    const val RECRUIT_TRIALS = 0
+    // Chain indices — must match client LofQuest.CHAIN order (= the enum's declaration order,
+    // FUTURE teasers excluded) AND the native quest tab's row order (QuestTablePatch.PLAN sort
+    // names). The legacy hallway keeps 0-6; framework main-story quests are APPENDED in story
+    // order — each quest adds only its own constant and the last one to land bumps LAST_INDEX.
+    // Slots 7-13 are claimed by the Main Story Quests 3-5 + the four regional objectives (The
+    // North, First Reclamation, A Kingdom Alone, BREACH, SECURE, UNDERSTAND, SUSTAIN — their own
+    // PRs); the regional campaign quests follow from 14.
+    const val RECRUIT_TRIALS = 0   // The Last Free City (Main Story Quest 1)
     const val WARPREP_MAGIC = 1
     const val ROGUE_HUNTING_I = 2
     const val ROGUE_HUNTING_II = 3
     const val WARPREP_RANGED = 4
     const val WARPREP_SURVIVAL = 5
     const val KING = 6
+    const val AT_THE_WHITE_WALL = 14 // Asgarnia (BREACH) Quest 1
 
-    private const val LAST_INDEX = KING
+    const val LAST_INDEX = AT_THE_WHITE_WALL
 
     /** Pulse the open signal, focused on [chainIndex]. */
     fun open(p: Player, chainIndex: Int) {

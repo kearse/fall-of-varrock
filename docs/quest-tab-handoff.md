@@ -39,6 +39,11 @@ findings that shape everything below:
   | War-Prep II — Ranged | Imp Catcher | 76 | 9 | 160 | 2 |
   | War-Prep III — Survival | Sheep Shearer | 131 | 5 | 179 | 21 |
   | King of Lumbridge | Witch's Potion | 161 | 13 | 67 | 3 |
+  | At the White Wall (Asgarnia — BREACH, Quest 1; framework quest, driven by `QuestEngine.publish` from `nativeTabVarp`) | Recruitment Drive (its stock start NPC is Sir Amik) | 118 | 86 | **657** | 2 |
+
+  `PLAN` sort keys are two-digit strings (`"01 The Last Free City"` … `"15 At the White Wall"`) so
+  the tab's lexicographic sort keeps quest-line order past nine rows; 08-14 belong to Main Story
+  Quests 3-5 and the four regional objectives (their own PRs).
 
   Rogue Hunting I & II are TWO rows off ONE server chain (`RogueProblem.Step`, varp 4617):
   `QuestJournal.syncNativeTab` completes row I the moment the hunt clears (KNIGHT step) and holds

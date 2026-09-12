@@ -180,7 +180,51 @@ enum LofQuest
 			"Command of the realm's armies (::conquest)",
 			"A commander's spoils (::claim) and Prestige",
 			"City-vs-city conquest"
+		)),
+
+	// ---- Regional campaigns: framework quests (generic varp packing) ----
+	// Chain order here MUST match the server's QuestBook constants. Slots 7-13 are Main Story
+	// Quests 3-5 and the four regional objectives (THE_NORTH, FIRST_RECLAMATION, A_KINGDOM_ALONE,
+	// BREACH, SECURE, UNDERSTAND, SUSTAIN — their own PRs); the regional campaign quests follow.
+	// MERGE NOTE: this entry is QuestBook.AT_THE_WHITE_WALL = 14 — it must sit directly AFTER
+	// SUSTAIN once those entries land. Step ordinals are the server's 1-based step indices.
+
+	/**
+	 * Asgarnia — BREACH, Quest 1. The regional opener: why Falador does not simply send its army to
+	 * Varrock. A checkpoint fight at Falador's north gate, Sir Amik Varze's "I have an army. I do not
+	 * have an army to spare.", Sir Tiffy Cashien's first questions, and a walk along the front.
+	 */
+	AT_THE_WHITE_WALL(
+		"At the White Wall",
+		"Falador survived the Fall — and became a fortified military state locked in a war with the "
+			+ "Kinshra. It has exactly the army Misthalin needs for Varrock, and none of it to spare: "
+			+ "the Kinshra do not need to take the city, only to keep its knights busy, while the "
+			+ "trolls pin the Imperial Guard at Burthorpe and the guns wear out faster than the dwarves "
+			+ "can replace them. Reach the north gate, hold it with the White Knights, hear Sir Amik "
+			+ "out, meet Sir Tiffy, and read the ground yourself.",
+		LofQuestVarps.AT_THE_WHITE_WALL,
+		"Complete A Kingdom Alone first.",
+		Arrays.asList(
+			new LofQuestStep(1, "Travel to Asgarnia", "Falador's NORTH gate — the one facing the Kinshra. Any road or teleport into Falador, then out to the north gate.", new WorldPoint(2965, 3398, 0)),
+			new LofQuestStep(2, "Speak with the White Knights at the checkpoint", "The garrison holds the road just outside the north gate.", new WorldPoint(2965, 3398, 0)),
+			new LofQuestStep(3, "Help the White Knights repel the Kinshra attack", "Defeat 5 Kinshra raiders at the checkpoint. Any raider you draw blood on counts, even if a knight finishes it.", new WorldPoint(2965, 3400, 0), 5),
+			new LofQuestStep(4, "Speak with Sir Amik Varze", "Top floor of the White Knights' Castle, in the middle of Falador.", new WorldPoint(2960, 3336, 2)),
+			new LofQuestStep(5, "Find Sir Tiffy Cashien", "His bench in Falador Park, east of the castle.", new WorldPoint(2997, 3373, 0)),
+			new LofQuestStep(6, "Inspect the front", "Three places, any order: the White Knight line at the checkpoint, the supply road just inside the north gate, and the ground north of the fence beyond the checkpoint.", new WorldPoint(2965, 3398, 0)),
+			new LofQuestStep(7, "Report to Sir Amik Varze", "Top floor of the White Knights' Castle.", new WorldPoint(2960, 3336, 2))
+		),
+		Arrays.asList(
+			"1 Quest Point and 25 War Effort",
+			"The Asgarnia campaign (BREACH) formally begun — A Matter of Trolls unlocked",
+			"The Asgarnian Front: the White Knight checkpoint at Falador's north gate"
 		));
+
+	/**
+	 * The Kinshra raiders of At the White Wall — stock Black Knights (the checkpoint raid spawns
+	 * 516; 517 is the fortress twin). Highlighted during the checkpoint fight so the player can pick
+	 * the raiders out of the melee with the White Knights.
+	 */
+	private static final int[] BLACK_KNIGHTS = {516, 517};
 
 	/**
 	 * The goblins of the Lumbridge fields — every plain "Goblin" npc id the camp and the surrounding
@@ -205,25 +249,66 @@ enum LofQuest
 	private final int doneOrdinal;
 	private final List<LofQuestStep> steps;
 	private final List<String> unlocks;
+	/** Framework quests: the server's generic journal varp (QuestDefinition.journalVarp); 0 = a
+	 *  legacy chain (own varp layout, switched on below) or a FUTURE teaser. */
+	private final int genericVarp;
+	/** Framework quests: the "Locked — …" line while the prerequisites are unmet (nullable). */
+	private final String lockReasonText;
 
 	LofQuest(String questName, String why, int doneOrdinal, List<LofQuestStep> steps, List<String> unlocks)
 	{
-		this.questName = questName;
-		this.why = why;
-		this.doneOrdinal = doneOrdinal;
-		this.steps = steps;
-		this.unlocks = unlocks;
+		this(questName, why, doneOrdinal, 0, null, steps, unlocks);
+	}
+
+	/**
+	 * Framework quest entry (server `QuestDefinition` with a `journalVarp`): generic packing —
+	 * bits 0-7 current step index + 1, bits 8-19 progress, bits 20-21 state (0 locked / not begun,
+	 * 1 in progress, 2 complete). Step ordinals are the server's 1-based step indices.
+	 */
+	LofQuest(String questName, String why, int genericVarp, String lockReason, List<LofQuestStep> steps, List<String> unlocks)
+	{
+		this(questName, why, Integer.MAX_VALUE, genericVarp, lockReason, steps, unlocks);
 	}
 
 	/** FUTURE teaser entry — no server chain behind it yet. */
 	LofQuest(String questName, String why, List<String> unlocks)
 	{
-		this(questName, why, -1, Collections.emptyList(), unlocks);
+		this(questName, why, -1, 0, null, Collections.emptyList(), unlocks);
+	}
+
+	LofQuest(String questName, String why, int doneOrdinal, int genericVarp, String lockReason, List<LofQuestStep> steps, List<String> unlocks)
+	{
+		this.questName = questName;
+		this.why = why;
+		this.doneOrdinal = doneOrdinal;
+		this.genericVarp = genericVarp;
+		this.lockReasonText = lockReason;
+		this.steps = steps;
+		this.unlocks = unlocks;
 	}
 
 	boolean isFuture()
 	{
 		return doneOrdinal < 0;
+	}
+
+	/** A framework (generic-varp) quest, as opposed to a legacy chain or a FUTURE teaser. */
+	boolean isGeneric()
+	{
+		return genericVarp > 0;
+	}
+
+	/** True if [varp] is any framework quest's journal varp — a change to it must refresh the journal. */
+	static boolean isJournalVarp(int varp)
+	{
+		for (LofQuest q : values())
+		{
+			if (q.genericVarp == varp)
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/** The main quest chain in order — the real, built quests (FUTURE teasers excluded). The index
@@ -257,6 +342,10 @@ enum LofQuest
 	/** The server chain's current step ordinal for this quest (0 for FUTURE entries). */
 	int stepOrdinal(Client client)
 	{
+		if (isGeneric())
+		{
+			return LofQuestVarps.genericStep(client, genericVarp);
+		}
 		switch (this)
 		{
 			case LAST_FREE_CITY:
@@ -283,6 +372,20 @@ enum LofQuest
 		if (isFuture())
 		{
 			return LofQuestState.FUTURE;
+		}
+		if (isGeneric())
+		{
+			// Framework quests begin on their own once the prerequisites are met (or from the
+			// quest before them), so "not begun" reads as locked.
+			switch (LofQuestVarps.genericState(client, genericVarp))
+			{
+				case 2:
+					return LofQuestState.FINISHED;
+				case 1:
+					return LofQuestState.IN_PROGRESS;
+				default:
+					return LofQuestState.LOCKED;
+			}
 		}
 		int ord = stepOrdinal(client);
 		switch (this)
@@ -344,6 +447,10 @@ enum LofQuest
 	/** Short lock explanation for LOCKED entries (null otherwise). */
 	String lockReason(Client client)
 	{
+		if (isGeneric())
+		{
+			return state(client) == LofQuestState.LOCKED ? lockReasonText : null;
+		}
 		if (this == WARPREP_MAGIC && state(client) == LofQuestState.LOCKED)
 		{
 			return "Complete The Last Free City first.";
@@ -374,6 +481,10 @@ enum LofQuest
 	/** How many checklist steps are already behind the player. */
 	int completedSteps(Client client)
 	{
+		if (state(client) == LofQuestState.FINISHED)
+		{
+			return steps.size(); // a finished framework quest publishes step 0 — every row is behind
+		}
 		int ord = stepOrdinal(client);
 		int done = 0;
 		for (LofQuestStep step : steps)
@@ -443,6 +554,11 @@ enum LofQuest
 				return GOBLINS;
 			}
 		}
+		if (this == AT_THE_WHITE_WALL && step.getOrdinal() == 3)
+		{
+			// The checkpoint raid: pick the Kinshra raiders out of the melee with the White Knights.
+			return BLACK_KNIGHTS;
+		}
 		return NO_NPCS;
 	}
 
@@ -457,12 +573,29 @@ enum LofQuest
 				return true;
 			}
 		}
+		for (int id : BLACK_KNIGHTS)
+		{
+			if (id == npcId)
+			{
+				return true;
+			}
+		}
 		return false;
 	}
 
 	/** Live progress suffix for a step row, e.g. " (3/5)" goblins or " (23/37)" Prayer. */
 	String stepProgress(Client client, LofQuestStep step)
 	{
+		if (isGeneric())
+		{
+			// Counted steps of a framework quest: the generic progress bits against the step's goal.
+			if (step.getGoal() > 0 && stepOrdinal(client) == step.getOrdinal())
+			{
+				final int n = Math.min(LofQuestVarps.genericProgress(client, genericVarp), step.getGoal());
+				return " (" + n + "/" + step.getGoal() + ")";
+			}
+			return "";
+		}
 		if (this == LAST_FREE_CITY && step.getOrdinal() == 1 && stepOrdinal(client) == 1)
 		{
 			return " (" + LofQuestVarps.recruitGoblinKills(client) + "/5)";

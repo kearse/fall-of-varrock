@@ -71,6 +71,13 @@ object QuestJournal {
     const val CONQUEST_VARP = 4633      // King of Lumbridge (endgame); 4635-4637 are companion indices
     const val KNIGHTS_VARP = 4682       // Rogue Knight ladder (rank + active hunt index; was 4644)
 
+    // Framework quests (generic `QuestEngine.publish` packing: step index+1 bits 0-7 | progress
+    // bits 8-19 | state bits 20-21) take ids from the 4686-4699 block reserved in
+    // docs/overlay-design-system.md §8 — one per quest, recorded there individually.
+    /** At the White Wall (Asgarnia — BREACH, Quest 1, `quests/asgarnia/AtTheWhiteWall`). Its native
+     *  quest-tab row is the relabelled Recruitment Drive (varp 657, complete 2) — see `AtTheWhiteWall.nativeTabVarp`. */
+    const val WHITE_WALL_VARP = 4693
+
     // Reused OSRS quest progress varps that colour the relabelled native quest-tab rows. A value of
     // 0 reads as "not started" (red), the complete value as "finished" (green), anything between as
     // "in progress" (yellow). Keep these in lock-step with the `questTable` tool's REUSE table.

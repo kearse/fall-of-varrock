@@ -60,3 +60,13 @@ else — the opening chain, the regional campaigns, the Council — is written *
 | 3 | The North | proposed | — |
 | 4 | First Reclamation | proposed | — |
 | 5 | A Kingdom Alone | proposed | — |
+
+### Regional campaigns (open after A Kingdom Alone)
+
+| Campaign | # | Quest | Status | Spec |
+|---|---|---|---|---|
+| Asgarnia — BREACH | 1 | At the White Wall | **BUILT** (2026-09-12) | [at-the-white-wall.md](at-the-white-wall.md) |
+| Asgarnia — BREACH | 2 | A Matter of Trolls | proposed | — |
+| Asgarnia — BREACH | 3 | The Guns of Asgarnia | proposed | — |
+| Asgarnia — BREACH | 4 | Title TBD (Dark Warrior intelligence) | proposed | — |
+| Asgarnia — BREACH | 5 | The White Wall | proposed | — |

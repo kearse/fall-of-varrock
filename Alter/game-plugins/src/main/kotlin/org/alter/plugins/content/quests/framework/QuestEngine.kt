@@ -168,9 +168,14 @@ object QuestEngine {
         }
     }
 
-    /** The poll: areas, items, predicates. */
+    /** The poll: areas, items, predicates — and auto-begin, so a gate that opens mid-session
+     *  (the quest before it completing) starts the next quest without waiting for a relog. */
     fun pollTick(p: Player) {
         for (q in QuestRegistry.frameworkQuests()) {
+            if (q.autoBegin && !started(p, q)) {
+                beginIfEligible(p, q)
+                continue
+            }
             val cur = step(p, q) ?: continue
             val done = when (val o = cur.objective) {
                 is Objective.ReachArea -> o.area.contains(p.tile)
@@ -203,20 +208,33 @@ object QuestEngine {
     /**
      * Generic journal publish for quests that claimed a [QuestDefinition.journalVarp]:
      * `stepIndex+1 (bits 0-7) | progress (bits 8-19, the kills counter) | state (bits 20-21:
-     * 0 none, 1 in progress, 2 complete)`. Only writes on change; never out of range.
+     * 0 none, 1 in progress, 2 complete)`, plus the native quest-tab mirror for quests with a
+     * [QuestDefinition.nativeTabVarp] (0 / 1 / complete value). Only writes on change; never out
+     * of range.
      */
     fun publish(p: Player, q: QuestDefinition) {
-        val varp = q.journalVarp ?: return
-        if (varp >= p.varps.maxVarps) return
-        val cur = step(p, q)
-        val stepIdx = cur?.let { q.indexOf(it.id) + 1 } ?: 0
-        val progress = counter(p, q).coerceIn(0, 0xFFF)
         val state = when {
             isComplete(p, q) -> 2
             started(p, q) -> 1
             else -> 0
         }
-        val packed = (stepIdx and 0xFF) or (progress shl 8) or (state shl 20)
-        if (p.getVarp(varp) != packed) p.setVarp(varp, packed)
+        q.journalVarp?.let { varp ->
+            if (varp < p.varps.maxVarps) {
+                val stepIdx = step(p, q)?.let { q.indexOf(it.id) + 1 } ?: 0
+                val progress = counter(p, q).coerceIn(0, 0xFFF)
+                val packed = (stepIdx and 0xFF) or (progress shl 8) or (state shl 20)
+                if (p.getVarp(varp) != packed) p.setVarp(varp, packed)
+            }
+        }
+        q.nativeTabVarp?.let { varp ->
+            if (varp < p.varps.maxVarps) {
+                val value = when (state) {
+                    2 -> q.nativeTabComplete
+                    1 -> 1
+                    else -> 0
+                }
+                if (p.getVarp(varp) != value) p.setVarp(varp, value)
+            }
+        }
     }
 }

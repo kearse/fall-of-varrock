@@ -83,6 +83,11 @@ object PvpZones {
         // Falador — a fortified surviving power and a safe hub (design authority, Sept 2026); the
         // whole walled city is carved out of the wild it sits in. Same box the old raid config used.
         Area(2942, 3300, 3066, 3400),
+        // At the White Wall (Asgarnia — BREACH, Quest 1): the White Knight checkpoint outside
+        // Falador's NORTH gate and the strip of contested ground the quest inspects, up to the
+        // second fence line. The city box ends at z3400, one tile past the gate — the story's
+        // PvE skirmish and its "safe observation point" must not sit in level-18 wilderness.
+        Area(2950, 3401, 2982, 3414),
         Area(3140, 3470, 3185, 3515), // Grand Exchange
         Area(3178, 3432, 3196, 3453), // Varrock west bank
         Area(3250, 3416, 3257, 3424), // Varrock east bank
