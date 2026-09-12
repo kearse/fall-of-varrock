@@ -97,6 +97,8 @@ object QuestJournal {
     /** A Matter of Trolls (Asgarnia — BREACH quest 2, `quests/asgarnia/AMatterOfTrolls`). */
     const val TROLLS_VARP = 4694
     const val GUNS_OF_ASGARNIA_VARP = 4695 // The Guns of Asgarnia (Asgarnia quest 3)
+    /** Old Wounds (Asgarnia — BREACH, Quest 4, `quests/asgarnia/OldWounds`). */
+    const val OLD_WOUNDS_VARP = 4696
 
     // Reused OSRS quest progress varps that colour the relabelled native quest-tab rows. A value of
     // 0 reads as "not started" (red), the complete value as "finished" (green), anything between as
@@ -153,6 +155,10 @@ object QuestJournal {
     /** Dwarf Cannon varp — now the "The Guns of Asgarnia" row (Asgarnia quest 3). Completes at 11. */
     const val GUNS_OF_ASGARNIA_QUEST_VARP = 0
     internal const val GUNS_OF_ASGARNIA_QUEST_COMPLETE = 11
+    /** Wanted! varp — now the "Old Wounds" row (Asgarnia — BREACH, Quest 4; Wanted!'s own start NPC is
+     *  Sir Tiffy). Driven by `QuestEngine.publish` from `OldWounds.nativeTabVarp`. Completes at 11. */
+    const val OLD_WOUNDS_QUEST_VARP = 1051
+    internal const val OLD_WOUNDS_QUEST_COMPLETE = 11
 
     /** True while the player has quest guidance muted (free-play mode). */
     fun muted(p: Player): Boolean = p.attr[QUEST_GUIDE_MUTED_ATTR] == true

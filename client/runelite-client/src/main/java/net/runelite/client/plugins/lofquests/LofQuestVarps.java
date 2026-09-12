@@ -67,6 +67,9 @@ final class LofQuestVarps
 	/** Asgarnia — BREACH, quest 3: "The Guns of Asgarnia". */
 	static final int GUNS_OF_ASGARNIA = 4695;
 
+	/** Asgarnia (BREACH) Quest 4, "Old Wounds". */
+	static final int OLD_WOUNDS = 4696;
+
 	/** Generic-packing step ordinal: the current step index + 1, 0 when unstarted or finished. */
 	static int genericStep(Client client, int varp)
 	{

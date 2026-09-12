@@ -49,6 +49,7 @@ findings that shape everything below:
   | At the White Wall (Asgarnia — BREACH, Quest 1; framework quest — `nativeTabVarp`) | Recruitment Drive (its stock start NPC is Sir Amik) | 118 | 86 | **657** | 2 |
   | A Matter of Trolls (Asgarnia — BREACH quest 2, framework `a_matter_of_trolls`; sort key "16 …") | Death Plateau | 23 | 58 | 314 | 80 |
   | The Guns of Asgarnia (Asgarnia quest 3, framework `guns_of_asgarnia`; sort "17 …") | Dwarf Cannon | 35 | 47 | 0 | 11 |
+  | Old Wounds (Asgarnia — BREACH, Quest 4, framework `old_wounds`; sort "18 Old Wounds") | Wanted! (its start NPC is Sir Tiffy) | 156 | 92 | 1051 | 11 |
 
   Framework quests (`quests/framework/`) drive their reused varp through `QuestDefinition.nativeTabVarp`
   / `nativeTabComplete` (written by `QuestEngine.publish`, 0 / 1 / complete) — no per-quest

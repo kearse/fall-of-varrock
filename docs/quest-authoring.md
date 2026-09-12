@@ -138,10 +138,17 @@ Regional campaign — Asgarnia (BREACH, `content/quests/asgarnia/`): `at_the_whi
 `asgarnia.northern_front_secured`; the reference for a per-player temporary open-world spawn
 (`TempSpawns`), damage-share kill credit beside the framework hook, and an existing-map coalition
 battle over `QuestInstances` (`BattleOfThePass`)) · `guns_of_asgarnia` (**The Guns of Asgarnia**,
-quest 3 — `docs/quests/the-guns-of-asgarnia.md`; sets `asgarnia.artillery_restored`) · `old_wounds` ·
-`the_white_wall`. Their gate is the `Prerequisite.Custom` "first REGISTERED key in the list" pattern
-(`at_the_white_wall` → `a_kingdom_alone` → `first_reclamation` → `the_north` → `recruit_trials`), so
-the campaign never dead-ends whichever PR merges first.
+quest 3 — `docs/quests/the-guns-of-asgarnia.md`; sets `asgarnia.artillery_restored`) · `old_wounds`
+(**Old Wounds**, Quest 4 — `docs/quests/old-wounds.md`; gates on Trolls AND Guns — whichever of the
+two keys is registered — and sets `asgarnia.intelligence_secured` + `first_scar.discovered`; its two
+reusable seams are **owner-bound scene npcs** (`quests/asgarnia/LordDaquarius.appear / leave / sweep`
+— an `Npc(owner, id, tile, world)` is visible to its owner alone and swept on their logout, so a
+recurring rival can appear for one player's scene without ever being fightable) and **quest-owned
+crates** (`objects/crates/CrateSearch.register` — `SearchCratesPlugin` owns the *Search* bind on the
+stock crate ids; a hook claims one tile of it)) · `the_white_wall` (Quest 5, unbuilt — the one that
+calls `StrategicObjectives.solve(p, Breach)`). Their gate is the `Prerequisite.Custom` "first
+REGISTERED key in the list" pattern (`at_the_white_wall` → `a_kingdom_alone` → `first_reclamation` →
+`the_north` → `recruit_trials`), so the campaign never dead-ends whichever PR merges first.
 
 Every new quest spec starts from the integration-first template in `docs/quests/README.md`.
 

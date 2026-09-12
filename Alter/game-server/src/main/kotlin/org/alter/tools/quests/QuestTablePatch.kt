@@ -128,6 +128,10 @@ private val PLAN = listOf(
     // reuses Dwarf Cannon (dbrow 35, quest id 47, varp 0, complete 11) — Nulodion's own row. Driven
     // by QuestEngine.publish (nativeTabVarp).
     Relabel(dbrowId = 35, questId = 47, sortName = "17 The Guns of Asgarnia", displayName = "The Guns of Asgarnia", varp = 0),
+    // Old Wounds (Asgarnia — BREACH, Quest 4; framework quest `old_wounds`, chain index 17) reuses
+    // Wanted! (dbrow 156, quest id 92, varp 1051, complete 11 — that quest's own start NPC is Sir
+    // Tiffy Cashien). Driven by QuestEngine.publish from OldWounds.nativeTabVarp.
+    Relabel(dbrowId = 156, questId = 92, sortName = "18 Old Wounds", displayName = "Old Wounds", varp = 1051),
 )
 
 /** The only quest rows the tab should list after `hide` — exactly the ones we relabelled. */

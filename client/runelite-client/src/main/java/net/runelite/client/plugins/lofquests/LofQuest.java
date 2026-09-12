@@ -455,6 +455,44 @@ enum LofQuest
 			"The White Wall - Asgarnia's finale needs this and A Matter of Trolls"
 		)),
 
+	/**
+	 * Asgarnia — BREACH, Quest 4 (server `quests/asgarnia/OldWounds`, generic journal varp 4696,
+	 * QuestBook.OLD_WOUNDS = 17 — declaration order IS the slot: directly after The Guns of Asgarnia
+	 * (16); The White Wall, the campaign's finale, takes 18 when it lands). The intelligence quest and the first deliberate Wilderness mission:
+	 * real PvP the whole way, never instanced, never protected. Rows are the 1-based server step
+	 * indices (the three "examine the remains" server steps have their own rows here).
+	 */
+	OLD_WOUNDS(
+		"Old Wounds",
+		"The trolls are contained and the guns are rolling again - so why has the Kinshra front gone "
+			+ "quiet? Sir Tiffy Cashien has watched officers and couriers go north into the Wilderness "
+			+ "and not come back. Find out what they are doing at the Dark Warriors' Fortress, steal "
+			+ "their orders, and follow an old Temple Knight reference to a place the records call the "
+			+ "First Scar. What you bring back gives Asgarnia the intelligence it needs to break the "
+			+ "Kinshra line - and the first hint that whatever happened at Varrock did not begin there.",
+		LofQuestVarps.OLD_WOUNDS,
+		"Finish A Matter of Trolls and The Guns of Asgarnia first.",
+		Arrays.asList(
+			new LofQuestStep(1, "Speak with Sir Tiffy Cashien", "His bench in Falador Park, east of the castle. He believes the Kinshra are preparing something unusual.", new WorldPoint(2997, 3373, 0)),
+			new LofQuestStep(2, "Search the Dark Warriors' Fortress", "In the Wilderness north-west of Edgeville, about level 14. Real PvP - take only what you're prepared to lose. The Dark Warriors are ordinary enemies; the intelligence is what matters.", new WorldPoint(3029, 3628, 0)),
+			new LofQuestStep(3, "Recover the Kinshra Field Orders", "Search the crate in the fortress hall.", new WorldPoint(3026, 3628, 0)),
+			new LofQuestStep(4, "Take the stolen orders to Sir Tiffy", "Falador Park.", new WorldPoint(2997, 3373, 0)),
+			new LofQuestStep(5, "Investigate the First Scar", "Survey Site Seven: the ring of ruined pillars south-east of the Dark Warriors' Fortress, Wilderness level 9. Before the Kinshra.", new WorldPoint(3060, 3593, 0)),
+			new LofQuestStep(6, "Inspect the discoloured stone", "The standing stones on the ring's south side.", new WorldPoint(3060, 3586, 0)),
+			new LofQuestStep(7, "Inspect the warped rock", "The mass of rock at the ring's centre.", new WorldPoint(3060, 3593, 0)),
+			new LofQuestStep(8, "Search the old rubble", "The rubble on the ring's north-west side hides an old Temple Knight field cache.", new WorldPoint(3057, 3593, 0)),
+			new LofQuestStep(9, "Read the damaged Temple Knight report", "From your pack.", new WorldPoint(3060, 3593, 0)),
+			new LofQuestStep(10, "Take the report back to Sir Tiffy", "Falador Park.", new WorldPoint(2997, 3373, 0))
+		),
+		Arrays.asList(
+			"2 Quest Points and 75 War Effort",
+			"Kinshra Intelligence SECURED - Sir Tiffy knows where the Kinshra line is weak",
+			"The First Scar discovered - the first evidence that the Fall did not begin at Varrock",
+			"Lord Daquarius - the Kinshra commander, met face to face (twice)",
+			"The Damaged Temple Knight Report - the second entry in your lore journal",
+			"The White Wall - Asgarnia's finale (speak with Sir Amik Varze)"
+		)),
+
 	/** FUTURE teaser: the strategic phase's payoff (excluded from the chain track until built). */
 	COUNCIL_OF_GIELINOR(
 		"Council of Gielinor",
