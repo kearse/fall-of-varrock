@@ -94,12 +94,25 @@ object RecruitTrials {
     val CAMP_CENTRE = Tile(3254, 3234, 0)
 
     /**
+     * The npc the guaranteed tutorial pack is made of: the camp's own level-2 goblin (the same
+     * `goblin_3028` variant `SpawnPlugin` hand-places at the camp — "An ugly green creature."). It runs
+     * on `GoblinCampPlugin`'s camp-goblin def: 5 hp, level-1 stats, retaliates but NEVER aggros.
+     *
+     * It used to be the plain `npc.goblin` (the cache's level-5 goblin) on the camp's aggressive
+     * 25/25/18 def. Eight of those within a 6-tile aggro radius of each other stacked on a fresh
+     * account the moment it walked in — dead before the first kill, no time to eat. The opening
+     * objective must be winnable in a wooden shield with bronze knives.
+     */
+    const val TUTORIAL_GOBLIN_NPC = "npc.goblin_3028"
+
+    /**
      * Spawn tiles of the guaranteed tutorial goblin pack: the outer ring of the camp, spread wide so
      * a fresh account never pulls more than a goblin or two at once, mixed in among the knights'
      * posts. The ambient camp goblins are presence-gated (they despawn when nobody is around), so
      * without this pack a solo new player's very first objective could dead-end with nothing to
-     * kill. [RecruitTrialsPlugin] spawns them; [isTutorialGoblin] recognises them by spawn tile so the
-     * Knights of Lumbridge leave them for the recruits (see `GoblinCampPlugin.skirmishKnights`).
+     * kill. [RecruitTrialsPlugin] spawns them ([TUTORIAL_GOBLIN_NPC]); [isTutorialGoblin] recognises
+     * them by spawn tile so the Knights of Lumbridge leave them for the recruits (see
+     * `GoblinCampPlugin.skirmishKnights`).
      */
     val TUTORIAL_GOBLIN_TILES: List<Tile> = listOf(
         -5 to 3, 5 to -3, -3 to -5, 3 to 5, -6 to -1, 6 to 2, 1 to -6, -2 to 6,

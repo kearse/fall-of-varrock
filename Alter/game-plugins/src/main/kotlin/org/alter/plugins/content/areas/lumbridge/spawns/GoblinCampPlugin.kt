@@ -28,7 +28,8 @@ private val logger = KotlinLogging.logger {}
  * goblins — an iconic early-RuneScape spot turned into a permanent, visibly contested PvE
  * battlefield. It is also the opening battle of **The Last Free City** (the story's probe attack
  * on Lumbridge — `RecruitTrialsPlugin` spawns the guaranteed tutorial goblin pack around this same
- * camp), so it must read as dangerous but accessible for a brand-new account: no PvP here.
+ * camp), so it must read as dangerous but accessible for a brand-new account: no PvP here, and the
+ * goblins a recruit meets are the camp's normal level-2 ones ([campGoblinDef]) — they never aggro.
  *
  * This plugin OWNS the knights' full lifecycle, rather than leaning on the `spawnNpc` DSL, because
  * they need the "Knight of Lumbridge" display-name override ([WarNpcNames]) and custom combat stats
@@ -44,11 +45,24 @@ class GoblinCampPlugin(
     server: Server,
 ) : KotlinPlugin(r, world, server) {
 
-    /** Mild default for the plain goblin so natural (non-war) goblins still fight back. */
+    /** Mild default for the plain (level-5) goblin so natural (non-war) goblins still fight back. */
     private val goblinDef = NpcCombatDef.DEFAULT.copy(
         attack = 25, strength = 25, defence = 18, hitpoints = 18,
         attackAnimation = 6184, blockAnimation = 6183, deathAnimation = listOf(6182),
         aggressiveRadius = 6, aggroTargetDelay = 8, aggressiveTimer = 200,
+    )
+
+    /**
+     * The camp's own level-2 goblins ([SpawnPlugin]'s `goblin_3028` / `_3039` / `_3054` and The Last
+     * Free City's tutorial pack, [RecruitTrials.TUTORIAL_GOBLIN_NPC]): the classic 5-hp newbie goblin
+     * with its own animations. Retaliates when hit, but NEVER aggros (radius 0) — a brand-new account
+     * in a wooden shield picks its fights here one at a time and can walk off to eat. Stats mirror the
+     * OSRS level-2 goblin row in `npc_combat.json` (WorldSpawnsPlugin would register the same numbers
+     * for these ids at world-init; registering here first makes the camp deterministic).
+     */
+    private val campGoblinDef = NpcCombatDef.DEFAULT.copy(
+        attack = 1, strength = 1, defence = 1, hitpoints = 5,
+        attackSpeed = 4, attackAnimation = 6184, blockAnimation = 6183, deathAnimation = listOf(6182),
     )
 
     /** Knights of Lumbridge — a notch below the war knights, tuned to skirmish with camp goblins. */
@@ -66,10 +80,12 @@ class GoblinCampPlugin(
     private val knights = KNIGHT_POSTS.map { (t, d) -> KnightSlot(t, d) }
 
     init {
-        // The plain `npc.goblin` (the camp's own DSL spawns + every other ambient goblin) gets a mild
-        // default combat def so it actually fights. Lived in the retired siege plugin; moved here
-        // because the camp is the one place that depends on goblins swinging back.
+        // The plain `npc.goblin` (every other ambient level-5 goblin) gets a mild default combat def
+        // so it actually fights. Lived in the retired siege plugin; moved here because the camp is
+        // the one place that depends on goblins swinging back. It is NOT spawned at the camp any more
+        // (its aggro stacked the tutorial pack on new players) — the camp runs on the level-2 def.
         setCombatDef(GOBLIN_NPC, goblinDef)
+        setCombatDef(RecruitTrials.TUTORIAL_GOBLIN_NPC, *CAMP_GOBLIN_VARIANTS, def = campGoblinDef)
 
         val timer = TimerKey()
         onWorldInit { world.timers[timer] = TICK }
@@ -206,6 +222,9 @@ class GoblinCampPlugin(
         const val RESPAWN_TICKS = 6 // ~18s from a knight's death to its respawn
 
         const val GOBLIN_NPC = "npc.goblin"
+        /** The camp's other hand-placed level-2 goblin variants ([SpawnPlugin]); the tutorial pack's
+         *  [RecruitTrials.TUTORIAL_GOBLIN_NPC] (`goblin_3028`) is the third and is listed there. */
+        val CAMP_GOBLIN_VARIANTS = arrayOf("npc.goblin_3039", "npc.goblin_3054")
         const val KNIGHT_NPC = "npc.knight_of_saradomin"
         const val KNIGHT_WALK = 5
 

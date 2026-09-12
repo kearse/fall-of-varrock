@@ -45,9 +45,15 @@ class SpawnPlugin(
         spawnNpc(npc = "npc.giant_spider_3017", x = 3253, z = 3243, walkRadius = 7, direction = Direction.WEST)
         spawnNpc(npc = "npc.giant_spider_3017", x = 3245, z = 3235, walkRadius = 7, direction = Direction.NORTH)
         spawnNpc(npc = "npc.giant_spider_3017", x = 3253, z = 3234, walkRadius = 7, direction = Direction.WEST)
+        // The east goblin camp is a NEW-PLAYER battlefield (The Last Free City's opening fight, see
+        // GoblinCampPlugin): every goblin here is a level-2 variant on the camp's non-aggressive def.
+        // goblin_2246 / goblin_2248 used to stand at the two tiles below — the world-spawn dataset
+        // stats those as aggressive level-5 Goblin Village goblins (15-16 hp, def 13-19), and with
+        // walk radius 8 they roamed into the camp and piled onto fresh accounts. Swapped for the
+        // camp's own level-2 variants; goblin_2484 is a non-aggressive level-2 and stays.
         spawnNpc(npc = "npc.goblin_3028", x = 3264, z = 3232, walkRadius = 8, direction = Direction.WEST)
-        spawnNpc(npc = "npc.goblin_2246", x = 3247, z = 3244, walkRadius = 8, direction = Direction.NORTH)
-        spawnNpc(npc = "npc.goblin_2248", x = 3244, z = 3244, walkRadius = 8, direction = Direction.NORTH)
+        spawnNpc(npc = "npc.goblin_3039", x = 3247, z = 3244, walkRadius = 8, direction = Direction.NORTH)
+        spawnNpc(npc = "npc.goblin_3054", x = 3244, z = 3244, walkRadius = 8, direction = Direction.NORTH)
         spawnNpc(npc = "npc.goblin_2484", x = 3241, z = 3242, walkRadius = 8, direction = Direction.SOUTH)
         spawnNpc(npc = "npc.goblin_3028", x = 3253, z = 3245, walkRadius = 8, direction = Direction.WEST)
         spawnNpc(npc = "npc.goblin_3039", x = 3255, z = 3236, walkRadius = 8, direction = Direction.WEST)
