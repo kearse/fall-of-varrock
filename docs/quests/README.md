@@ -61,12 +61,12 @@ else — the opening chain, the regional campaigns, the Council — is written *
 | 4 | First Reclamation | **BUILT** (2026-09-12) | [first-reclamation.md](first-reclamation.md) |
 | 5 | A Kingdom Alone | **BUILT** (2026-09-12) | [a-kingdom-alone.md](a-kingdom-alone.md) — opens the regional phase (BREACH / SECURE / UNDERSTAND / SUSTAIN) |
 
-### Regional campaign — Asgarnia (BREACH)
+### Regional campaigns (open after A Kingdom Alone)
 
-| # | Quest | Status | Spec |
-|---|---|---|---|
-| A1 | At the White Wall | in progress (parallel session) | — |
-| A2 | A Matter of Trolls | **BUILT** (2026-09-12) | [a-matter-of-trolls.md](a-matter-of-trolls.md) — the Northern Front; parallel with A3 |
-| A3 | The Guns of Asgarnia | in progress (parallel session) | — |
-| A4 | Old Wounds | in progress (parallel session) | — |
-| A5 | The White Wall | proposed — needs A2 and A3 | — |
+| Campaign | # | Quest | Status | Spec |
+|---|---|---|---|---|
+| Asgarnia — BREACH | 1 | At the White Wall | **BUILT** (2026-09-12) | [at-the-white-wall.md](at-the-white-wall.md) |
+| Asgarnia — BREACH | 2 | A Matter of Trolls | **BUILT** (2026-09-12) | [a-matter-of-trolls.md](a-matter-of-trolls.md) — the Northern Front |
+| Asgarnia — BREACH | 3 | The Guns of Asgarnia | in progress (PR #355) | — |
+| Asgarnia — BREACH | 4 | Old Wounds | in progress (PR #354) | — |
+| Asgarnia — BREACH | 5 | The White Wall | proposed — needs 2, 3 and 4 | — |

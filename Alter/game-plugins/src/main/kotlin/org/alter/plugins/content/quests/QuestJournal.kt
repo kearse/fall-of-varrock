@@ -91,7 +91,9 @@ object QuestJournal {
     const val SECURE_VARP = 4690
     const val UNDERSTAND_VARP = 4691
     const val SUSTAIN_VARP = 4692
-    // 4693 At the White Wall — its own PR.
+    /** At the White Wall (Asgarnia — BREACH, Quest 1, `quests/asgarnia/AtTheWhiteWall`). Its native
+     *  quest-tab row is the relabelled Recruitment Drive (varp 657, complete 2) — see `AtTheWhiteWall.nativeTabVarp`. */
+    const val WHITE_WALL_VARP = 4693
     /** A Matter of Trolls (Asgarnia — BREACH quest 2, `quests/asgarnia/AMatterOfTrolls`). */
     const val TROLLS_VARP = 4694
 

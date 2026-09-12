@@ -69,6 +69,7 @@ class QuestBookPlugin(
             10 to QuestBook.SECURE,             // Prince Ali Rescue
             8 to QuestBook.UNDERSTAND,          // Vampyre Slayer
             16 to QuestBook.SUSTAIN,            // Pirate's Treasure
+            86 to QuestBook.AT_THE_WHITE_WALL,  // Recruitment Drive
             58 to QuestBook.A_MATTER_OF_TROLLS, // Death Plateau
         )
     }
