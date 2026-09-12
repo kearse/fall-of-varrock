@@ -28,8 +28,10 @@ private val logger = KotlinLogging.logger {}
  *
  * Killing another REAL player awards Blood Money scaled by the victim's combat level; it's an
  * inventory item (`item.blood_money`) so it can itself be risked/dropped on death. [PkBot]
- * fake-players pay NO Blood Money in either direction (they're loot + practice, per the wiki) —
- * their worth is the kit in their loot keys, never minted currency.
+ * fake-players are paid on a SEPARATE path: `bots/RogueBounty` pays the killer half of
+ * [bloodMoneyFor] (named ladder knights double) from `BotCombatPlugin`'s death hook, outside
+ * [PkKillGuard]. This hook's `BOT_VICTIM` denial is what keeps a bot kill from paying twice; bots
+ * never EARN Blood Money as killers.
  *
  * Spent at the **PK Rewards** vendor (the emblem trader), now a full PvP catalogue:
  *  - **Supplies** — food/potions (the consumption loop).
@@ -130,8 +132,9 @@ class PkRewardsPlugin(
             val victim = player
             // One legitimacy verdict per death ([PkKillGuard]): self/bot kills, safe-zone deaths,
             // same-address alts, repeat victims, daily caps, no-risk and fresh-account victims all
-            // pay nothing. Bots don't PAY either (wiki: "loot and practice, not ladder points") —
-            // minting currency from farmable bots would flood the Blood-Money gear economy.
+            // pay nothing HERE. A slain bot is paid by `bots/RogueBounty` instead (half rate, no
+            // guard, no cap — operator decision 2026-09-12); the BOT_VICTIM denial below is what
+            // stops that kill from paying a second time through this hook.
             val verdict = PkKillGuard.verdictFor(world, victim) ?: return@onPlayerPreDeath
             val killer = victim.attr[KILLER_ATTR]?.get() as? Player ?: return@onPlayerPreDeath
             if (!verdict.ok) {
@@ -139,7 +142,7 @@ class PkRewardsPlugin(
                 return@onPlayerPreDeath
             }
 
-            val reward = BM_BASE + victim.combatLevel * BM_PER_LEVEL
+            val reward = bloodMoneyFor(victim.combatLevel)
             val added = killer.inventory.add(item = bm, amount = reward, assureFullInsertion = false)
             val leftover = reward - added.completed
             if (leftover > 0) world.spawn(GroundItem(bm, leftover, killer.tile, killer))
@@ -180,14 +183,19 @@ class PkRewardsPlugin(
         else -> true
     }
 
-    private companion object {
-        const val SUPPLIES = "PK Rewards"
-        const val SPEC_WEAPONS = "PK Rewards - Spec Weapons"
-        const val WILDY_SETS = "PK Rewards - Wilderness Sets"
-        const val REVENANT = "PK Rewards - Revenant Weapons"
-        const val TRADER = "npc.emblem_trader"
-        const val STOCK = 100
+    companion object {
+        /** Blood Money for a real-player kill: [BM_BASE] + [BM_PER_LEVEL] × the victim's combat
+         *  level (a level-126 kill pays 403). THE one formula — `bots/RogueBounty` scales it for
+         *  slain Rogue Knights, so the two can never drift. TUNE. */
         const val BM_BASE = 25
         const val BM_PER_LEVEL = 3
+        fun bloodMoneyFor(combatLevel: Int): Int = BM_BASE + BM_PER_LEVEL * combatLevel
+
+        private const val SUPPLIES = "PK Rewards"
+        private const val SPEC_WEAPONS = "PK Rewards - Spec Weapons"
+        private const val WILDY_SETS = "PK Rewards - Wilderness Sets"
+        private const val REVENANT = "PK Rewards - Revenant Weapons"
+        private const val TRADER = "npc.emblem_trader"
+        private const val STOCK = 100
     }
 }

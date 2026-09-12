@@ -13,8 +13,9 @@ import org.alter.plugins.content.bots.BotItem
  *   - advances your rank ([RogueKnightLadder]),
  *   - pays that knight's **first-kill unlock** — deliberately the CORE of the next build up the
  *     ladder, so beating a knight literally gears you for the next one,
- *   - and every kill (first or farmed) rolls the knight's **signature rare table** on top of its
- *     full worn-kit drop.
+ *   - and every kill (first or farmed) pays the DOUBLED Rogue Knight Blood Money bounty
+ *     ([org.alter.plugins.content.bots.RogueBounty]) and rolls the knight's **signature rare
+ *     table**. The worn kit never drops (2026-09-12: full-kit drops flooded the gear economy).
  *
  * Camps escalate along the safe road first — the Bandit Hideout → Draynor → the Sarim road
  * (reclaimable deaths — learn cheaply) → the SAFE Siege of
@@ -85,9 +86,10 @@ object RogueKnights {
     // ---- the camps (tiles TUNE — centers must be open ground; verify with ::zone) ----
 
     // Clearance-gate tune ([KnightCamp.clearGoal]): the four SAFE road camps ask 10 tier kills —
-    // reps are free on reclaim ground, the tier rogues' worn-kit drops ARE the gear-up, and hunt-
-    // step kills pre-credit the gates — while the wilderness camps keep the default 5, since every
-    // attempt there risks the hunter's kit.
+    // reps are free on reclaim ground, the tier rogues' Blood Money bounties + STARTER-pool rolls
+    // + the knights' first-kill unlocks ARE the gear-up, and hunt-step kills pre-credit the gates
+    // — while the wilderness camps keep the default 5, since every attempt there risks the
+    // hunter's kit.
     val BANDIT_HIDEOUT = KnightCamp(
         key = "bandit_hideout",
         display = "the Bandit Hideout",

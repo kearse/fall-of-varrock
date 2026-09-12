@@ -3,7 +3,7 @@ title: Gameplay roadmap - the player journey
 category: Getting Started
 summary: The whole journey on one page - from your first hour in steel to commanding armies as King.
 order: 3
-updated: 2026-08-28
+updated: 2026-09-12
 ---
 
 New here and wondering what the "point" of the server is? This page is the map. Everything below is one connected journey: you arrive as a Peasant recruit, earn coin and standing, climb the **feudal rank ladder**, and end up commanding armies against Fallen Varrock. Every activity on the server - bossing, PKing, skilling, minigames - feeds that climb somewhere.
@@ -56,9 +56,9 @@ Knight is the first big power spike:
 - **Rune, granite and void** armour (with mystic and blessed d'hide for the other styles).
 - Your **first [companion](/wiki/companions)** - a levelable bot ally who fights beside you.
 - The **[Corporeal Beast war event](/wiki/corporeal-beast)** opens up in practice - join a kill, earn a damage share and tradeable **Boss tickets** for the reward shops. (The wider [boss roster](/wiki/bosses-overview) is retired for a rebuild and returns one fight at a time.)
-- The **[Rogue Knight ladder](/wiki/rogue-knights)** keeps climbing with you - mid-ladder knights teach real switches, freezes and spec combos, and drop the gear to match.
+- The **[Rogue Knight ladder](/wiki/rogue-knights)** keeps climbing with you - mid-ladder knights teach real switches, freezes and spec combos, and pay the Blood Money and unlocks to gear up for the next.
 
-This is also when the **wilderness** starts making sense. The ladder's safe road camps are your PK schooling; then hunt for real: player kills pay **[Blood Money](/wiki/pk-rewards-and-stats)** and drop their risk as a [loot key](/wiki/wilderness-loot-keys), and [PK bots](/wiki/pk-bots-and-highwaymen) guarantee you fights at every depth. [Death here is OSRS-standard](/wiki/death-and-item-protection) - keep 3, risk the rest.
+This is also when the **wilderness** starts making sense. The ladder's safe road camps are your PK schooling; then hunt for real: player kills pay **[Blood Money](/wiki/pk-rewards-and-stats)** and drop their risk as a [loot key](/wiki/wilderness-loot-keys), and [PK bots](/wiki/pk-bots-and-highwaymen) guarantee you fights at every depth - and pay half-rate Blood Money themselves. [Death here is OSRS-standard](/wiki/death-and-item-protection) - keep 3, risk the rest.
 
 ## Stage 5 - Late game: Lord (2m)
 

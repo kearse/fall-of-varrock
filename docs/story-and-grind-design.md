@@ -182,14 +182,17 @@ the chase doubles as PK training + gear progression.
 - **Tracking** (the quest-helper ask): a native **hint arrow** follows the hunt — tile arrow toward
   the camp from anywhere, flipping to a player arrow locked on the live knight in scene; respects
   the guidance mute; varp **4682** (was 4644) publishes rank+target for a future client panel.
-- **PK-set loot pools** (`PkLootPools`): every bot death still drops its full worn kit, PLUS a
-  rare-tier roll from its band's pool — pools are built around real PK builds so grinding a camp
-  assembles a recognisable set: starter metal → **pure/zerker kits** → **hybrid kit** (whip,
-  neitiznot, barrows pieces) → **maxer kit** (bandos, claws 1/150, DWH) → **NH tribrid kit**
-  (ancestral/masori/kodai, AGS 1/100, voidwaker 1/500) + a **revenant-weapon trickle**. Named
-  knights roll their signature table instead at far better odds (e.g. the four Ancient-Warrior
-  knights drop their Statius/Morrigan/Vesta/Zuriel sets at ~1/15-1/18). Rates anchored to the BM
-  shop so drops complement the sink; wilderness rolls seal into the killer's **loot key**. All TUNE.
+- **Bot death = Blood Money bounty + PK-set loot pools** (`RogueBounty` + `PkLootPools`; the
+  worn kit NEVER drops since 2026-09-12 — full-kit drops flooded the gear economy): every bot
+  death pays the killer half the player-kill Blood Money formula (named knights double, no cap)
+  PLUS a rare-tier roll from its band's pool — pools are built around real PK builds so grinding
+  a camp assembles a recognisable set: starter metal → **pure/zerker kits** → **hybrid kit**
+  (whip, neitiznot, barrows pieces) → **maxer kit** (bandos, claws 1/150, DWH) → **NH tribrid
+  kit** (ancestral/masori/kodai, AGS 1/100, voidwaker 1/500) + a **revenant-weapon trickle**.
+  Named knights roll their signature table instead at far better odds (e.g. the four
+  Ancient-Warrior knights drop their Statius/Morrigan/Vesta/Zuriel sets at ~1/15-1/18). Rates
+  anchored to the BM shop so drops complement the sink; rolls seal into the killer's **loot key**
+  (any zone). All TUNE.
 - **Scaling:** knight #15+ is one `RogueKnights.LADDER` entry — spawning, arrows, dialogue and
   drops are all data-driven off the registry. The named captains (`war/captains`) remain standalone
   bounty content.

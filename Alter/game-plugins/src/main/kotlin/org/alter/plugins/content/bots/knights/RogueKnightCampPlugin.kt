@@ -91,7 +91,8 @@ class RogueKnightCampPlugin(
         }
 
         // Rank credit for the BOUND hunter — runs before the death sequence, while KILLER_ATTR is
-        // intact. The kit + signature-rare drop is handled centrally by BotCombatPlugin/PkLootPools.
+        // intact. The Blood Money bounty + signature-rare roll are handled centrally by
+        // BotCombatPlugin (RogueBounty / PkLootPools); the knight's worn kit never drops.
         onPlayerPreDeath {
             val bot = player as? PkBot ?: return@onPlayerPreDeath
             val key = bot.attr[KNIGHT_KEY_ATTR] ?: return@onPlayerPreDeath

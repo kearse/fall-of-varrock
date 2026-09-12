@@ -20,7 +20,7 @@ private val logger = KotlinLogging.logger {}
  * Mechanics: each bot's [PkBot.duelPartner] locks its brain to the other (bypassing the
  * wilderness / no-bot-target / leash rules — bot-vs-bot is already allowed anywhere by
  * `Combat.canEngage`), so duels run on safe ground where no ambient colony musters. A dying duelist
- * drops nothing and credits nothing ([BotCombatPlugin] short-circuits on `duelPartner`); the
+ * pays no bounty, rolls no rares and credits nothing ([BotCombatPlugin] short-circuits on `duelPartner`); the
  * standard death sequence respawns it at the arena tile ([RESPAWN_TILE_ATTR]) for the tick before
  * `BotCombatPlugin.onPlayerDeath` despawns it, the survivor is despawned here. A bout that runs past
  * [DUEL_MAX_TICKS] is a draw. `::botduel all` runs [LANES] bouts at once, spaced [LANE_SPACING]

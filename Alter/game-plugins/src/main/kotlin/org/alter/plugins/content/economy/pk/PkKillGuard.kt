@@ -146,7 +146,7 @@ object PkKillGuard {
             fun active(rule: Rule) = enabled && rule !in disabledRules
 
             if (killer === victim) return deny(Rule.SELF, "self-kill")
-            if (victim is PkBot) return deny(Rule.BOT_VICTIM, "bot victim")
+            if (victim is PkBot) return deny(Rule.BOT_VICTIM, "bot victim") // bots are paid by bots/RogueBounty, outside this guard
             if (!killer.entityType.isHumanControlled || !victim.entityType.isHumanControlled) {
                 return deny(Rule.NOT_HUMAN, "not a human-vs-human kill")
             }

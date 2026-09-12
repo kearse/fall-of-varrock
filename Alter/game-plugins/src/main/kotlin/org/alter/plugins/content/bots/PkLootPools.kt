@@ -13,7 +13,9 @@ import org.alter.plugins.content.bots.knights.RogueKnights
 import org.alter.rscm.RSCM.getRSCM
 
 /**
- * **PK-set loot pools** — the "rate drops" layer on top of every Rogue Knight's worn-kit drop.
+ * **PK-set loot pools** — the ONLY items a slain Rogue Knight yields. The bot's worn kit never
+ * drops (2026-09-12: full-kit drops flooded the gear economy); a kill pays a Blood Money bounty
+ * ([RogueBounty]) and rolls these pools, nothing else.
  *
  * Each pool is built around a real PK build archetype (pure kit → zerker kit → hybrid → maxer →
  * NH tribrid → the Ancient Warrior wilderness sets → revenant weapons), so grinding a camp
@@ -22,14 +24,15 @@ import org.alter.rscm.RSCM.getRSCM
  * NAMED rogue knights (bots/knights/) roll their own def's table at much better odds instead.
  *
  * Every entry lives in the [DropTable] RARE tier (independent 1-in-N rolls) — never the main
- * tier, which would guarantee an extra item per kill on top of the full kit the bot already
- * drops. Rolled drops are appended to the bot's kit in [BotCombatPlugin.dropAllGear], so in the
- * wilderness they seal into the killer's loot key and in the safe camps they ground-drop
- * killer-owned — the same flow as the gear.
+ * tier, which would guarantee an item every kill and turn the pools back into a gear farm; most
+ * kills pay only the bounty. Rolled drops go back to [BotCombatPlugin] (`rewardKiller`), which
+ * seals them into the killer's loot key for ANY real-player kill — wilderness or safe camp — and
+ * ground-drops them killer-owned only when no key can be minted.
  *
  * RATES ARE LAUNCH VALUES — TUNE. Anchored against the Blood Money shop (AGS 15k / claws 12k /
  * VLS 25k BM) so drops complement the BM sink rather than undercut it, and kept modest so the
- * named knights stay the efficient chase over ambient farming.
+ * named knights stay the efficient chase over ambient farming. (They were tuned as a bonus on top
+ * of the old kit drop and are now the whole item side of the reward — revisit with kill data.)
  */
 object PkLootPools {
 
@@ -182,9 +185,9 @@ object PkLootPools {
     )
 
     /**
-     * Roll the bonus PK-set drops for a slain bot. Returns resolved [Item]s to fold into the kit
-     * (loot key / ground drop — the caller owns delivery). Empty when there's no real killer —
-     * bot-on-bot and environmental deaths never mint loot.
+     * Roll the PK-set drops for a slain bot. Returns resolved [Item]s for the caller to deliver
+     * (`BotCombatPlugin.rewardKiller`: loot key, else killer-owned ground drop). Empty when there's
+     * no real killer — bot-on-bot and environmental deaths never mint loot.
      *
      * A NAMED rogue knight ([KNIGHT_KEY_ATTR]) rolls its ladder def's table (signature rares at
      * far better odds); ambient bots roll their loadout tier's pool(s). Announce/collection-log

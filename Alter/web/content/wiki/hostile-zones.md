@@ -3,7 +3,7 @@ title: Hostile zones - extract or die
 category: PvP & Wilderness
 summary: Hostile ground turned loot grounds - gather from the loot spots and the supply drop, survive the garrison and the PKers, and slip out through a smugglers' trapdoor with your haul. First zone - the Wild Bandit Stronghold.
 order: 7
-updated: 2026-09-03
+updated: 2026-09-12
 infobox: Type = Extraction PvP (open world, optional); First zone = The Wild Bandit Stronghold (deep wilderness, north-west); Ground = Wilderness, single combat; Exit = Two smugglers' trapdoors to Edgeville; Reward = Whatever you carry out - supplies, runes, rune / d'hide / mystic gear, a rare dragon dagger, the hourly supply drop; Required for = Nothing
 ---
 
@@ -28,7 +28,7 @@ Sixteen spots across the two districts each keep **one item on the ground**, rol
 
 ## The garrison
 
-Eight **bandits** hold the stronghold whenever anyone is near, fighting one-on-one (it's a gauntlet, not a swarm) and respawning after a short while. Each one you kill drops chaos runes, lobsters or adamant arrows, rarely a rune scimitar. The named knights and the ambient PK bots are on top of that - see the [Rogue Knights](/wiki/rogue-knights) page for the camp gate.
+Eight **bandits** hold the stronghold whenever anyone is near, fighting one-on-one (it's a gauntlet, not a swarm) and respawning after a short while. Each one you kill drops chaos runes, lobsters or adamant arrows, rarely a rune scimitar. The named knights and the ambient PK bots are on top of that - every raider you kill pays the standard Rogue Knight [Blood Money](/wiki/pk-bots-and-highwaymen) bounty - see the [Rogue Knights](/wiki/rogue-knights) page for the camp gate.
 
 ## The supply drop
 

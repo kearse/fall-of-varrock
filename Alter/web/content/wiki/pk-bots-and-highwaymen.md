@@ -1,7 +1,7 @@
 ---
 title: Rogue Knights - the PK bots
 category: PvP & Wilderness
-summary: Fake-player fighters hunt every road outside the city walls and the whole wilderness - weak metal fodder near town, escalating to elite NH meta deep in the wild, every kill rolling PK-set loot. Practise on them, then cross the ditch.
+summary: Fake-player fighters hunt every road outside the city walls and the whole wilderness - weak metal fodder near town, escalating to elite NH meta deep in the wild, every kill paying Blood Money and rolling PK-set loot. Practise on them, then cross the ditch.
 order: 4
 updated: 2026-09-12
 ---
@@ -55,8 +55,9 @@ The **goblin camp east of Lumbridge** - where a handful of **Knights of Lumbridg
 
 ## What they're worth
 
-- Kill a knight and it drops its **entire equipped kit**. Anywhere - road or wilderness - that seals into a [loot key](/wiki/wilderness-loot-keys) for you, same as a player kill.
-- **PK-set loot pools:** every kill also rolls that band's rare table, built around real PK builds so farming a band assembles a recognisable set - starter metal upgrades → **pure/zerker kits** (fighter torso, berserker helm, rune defender) → the **hybrid kit** (abyssal whip, helm of neitiznot, barrows pieces, staff of the dead) → the **maxer kit** (Bandos, dragon claws, DWH, elder maul) → the **elite NH kit** (ancestral, Masori, Kodai, avernic, **Armadyl godsword**, even a Voidwaker at long odds) - plus a **revenant-weapon trickle** from the deep wild. Rolled loot joins the kit in your loot key.
+- **Blood Money on every kill.** A slain knight pays **half the player-kill rate** straight into your pack: 25 + 3 per combat level, halved - a bronze bandit outside the walls pays 21, a level-126 elite NHer 201. The [named Rogue Knights](/wiki/rogue-knights) pay **double** that (Lord Vexmar: 403, a full max-level player kill). No daily cap, road or wilderness alike. Spend it at the [PK Rewards vendor](/wiki/pk-rewards-and-stats) - spec weapons, wilderness sets, revenant weapons.
+- **They never drop their kit.** What a knight wears is not loot - farming worn gear off respawning knights was flooding the economy, so as of September 2026 the gear chase is the Blood Money shelf plus the rare pools below.
+- **PK-set loot pools:** every kill rolls that band's rare table, built around real PK builds so farming a band assembles a recognisable set - starter metal upgrades → **pure/zerker kits** (fighter torso, berserker helm, rune defender) → the **hybrid kit** (abyssal whip, helm of neitiznot, barrows pieces, staff of the dead) → the **maxer kit** (Bandos, dragon claws, DWH, elder maul) → the **elite NH kit** (ancestral, Masori, Kodai, avernic, **Armadyl godsword**, even a Voidwaker at long odds) - plus a **revenant-weapon trickle** from the deep wild. A rare seals into a [loot key](/wiki/wilderness-loot-keys) for you anywhere - road, camp or wilderness - so most kills mint no key at all, and a key means something landed.
 - The [named Rogue Knights](/wiki/rogue-knights) drop their own signature tables at far better rates - they're the efficient chase; the roamers are the ambient one.
-- Knights **don't** pay Blood Money and don't count toward your PK stats or Elo - they're loot and practice, not ladder points. Blood Money comes from real players in the real wilderness.
+- Knights **don't** count toward your PK stats or Elo, and they never earn Blood Money off *you* - they're practice with a bounty on their heads, not ladder points. Full-rate Blood Money and Elo come from real players in the real wilderness.
 - They fight back properly, chase hard, and killing you **destroys your loot keys** like any other death.

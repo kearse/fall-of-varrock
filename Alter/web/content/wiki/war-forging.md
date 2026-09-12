@@ -3,7 +3,7 @@ title: War-forging - the Royal Smith
 category: Economy & Trading
 summary: The endgame gear chase - Torva, Masori and Ancestral, forged from war service, skilling and the market.
 order: 4
-updated: 2026-07-13
+updated: 2026-09-12
 infobox: Type = Endgame gear sink; Location = Lumbridge castle courtyard; Requires = Rank Knight+; Makes = Torva, Masori, Ancestral
 ---
 
@@ -34,7 +34,7 @@ Forging requires the rank of **Knight** (the finished pieces are Lord-tier to we
 
 ## Where the ingredients come from
 
-- **Base items** - boss drops and deep-wilderness [PK-bot loot keys](/wiki/pk-bots-and-highwaymen). Tradeable: buy them if you'd rather.
+- **Base items** - boss drops and the rare rolls off deep-wilderness [PK bots](/wiki/pk-bots-and-highwaymen) (Bandos and Ahrim's pieces at long odds - bots never drop the kit they wear). Tradeable: buy them if you'd rather.
 - **Commendations** - paid on every WON [march, campaign or conquest](/wiki/marches-and-the-reconquest), scaled by your contribution. **Untradeable** - the one part of max gear no coin can buy.
 - **Warden's embers** - the [Grand March's](/wiki/marches-and-the-reconquest) prize: guaranteed for the Warden's top damage dealer, rolled for every other fighter. Tradeable.
 - **Runite bars** - smelt them, or buy them off the skillers filling [supply contracts](/wiki/slayer-and-contracts).

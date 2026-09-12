@@ -11,8 +11,10 @@
 **The loop:** enter dangerous ground → gather loot (authored loot spots + the warned supply drop)
 → survive the garrison, the PK bots and everyone else raiding → extract (a channelled trapdoor to
 a safe exit, or walk out). Death follows wilderness rules: the killer takes your loot key. Rewards
-are tempting, tradeable, and never BIS or story-gated; nothing is minted (no coins, no Blood
-Money) — the reward is the loot already in your pack.
+are tempting, tradeable, and never BIS or story-gated; the zone's own loot mints nothing (no coins,
+no Blood Money) — the reward is the loot already in your pack. (The one minting source in a zone
+is its raider PK bots: since 2026-09-12 every Rogue Knight kill pays the standard `bots/RogueBounty`
+Blood Money bounty, `hz_` raiders included.)
 
 ## Zone kinds
 

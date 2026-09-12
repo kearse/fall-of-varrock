@@ -40,6 +40,9 @@
   THEIR key; safe-zone deaths put them on the victim's reclaim pile. No keep slot, no Protect Item.
 - Bots killed OUTSIDE the wilderness (road highwaymen) also mint keys since 2026-08-05 (no key
   possible → kit drops on the ground as before).
+- **2026-09-12:** bots no longer drop their kit AT ALL. A bot kill pays a Blood Money bounty
+  (`bots/RogueBounty`, inventory-direct) and only `PkLootPools` rare rolls reach the key — so most
+  bot kills mint no key.
 - New audit tool: `gradlew :game-server:objCheck -PobjArgs="<ids>"` prints loc name/size/actions.
 **Origin:** Spun off from the road-ambusher ("highwayman") work. That change added roaming PKer
 bots that hunt players on the overworld roads and hit **anyone** (rank no longer protects — see

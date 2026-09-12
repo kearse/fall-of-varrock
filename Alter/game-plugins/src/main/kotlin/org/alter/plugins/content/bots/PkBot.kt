@@ -146,8 +146,8 @@ open class PkBot(world: World, val loadout: BotLoadout) : Player(world) {
 
     /**
      * DUEL lock: when set, this bot fights ONLY this other bot — [BotBrain.eligible] / `acquire`
-     * bypass the wilderness / human / leash rules for it, and [BotCombatPlugin] skips the kit drop
-     * and rogue credit when it dies. Null = a normal PKer.
+     * bypass the wilderness / human / leash rules for it, and [BotCombatPlugin] skips the Blood
+     * Money bounty, the rare roll and the rogue credit when it dies. Null = a normal PKer.
      */
     var duelPartner: PkBot? = null
 
