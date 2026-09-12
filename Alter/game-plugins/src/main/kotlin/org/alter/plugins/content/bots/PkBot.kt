@@ -46,13 +46,12 @@ open class PkBot(world: World, val loadout: BotLoadout) : Player(world) {
     var zoneKey: String? = null
 
     /**
-     * Relaxes the [BotBrain]'s wilderness-only guards for THIS bot: when set, it will aggro/chase and
-     * roam even on safe (non-wilderness) tiles. Off by default so the standard wilderness PKers keep
-     * their PvP-wild-only behaviour; opted into only by dedicated ambusher spawns (e.g. the lone PKer
-     * at the Lumbridge goblin camp). Real player-vs-player is still gated normally — only bot aggro
-     * is unlocked, via [org.alter.plugins.content.combat.Combat.canEngage]'s bot bypass.
+     * A dynamic-grid knight (spawned by a depth/distance-tiered [BotZones] cell): it never idle-roams
+     * INTO a city core on its own ([RogueTerritory.canRoamTo]) — it hunts the roads and fields and
+     * chases you into town. Hand-placed camp rogues, named knights and ambushers (false) patrol
+     * wherever they were posted. Who a knight may ATTACK is [RogueTerritory.canHunt], regardless.
      */
-    var ambushEverywhere: Boolean = false
+    var cityAware: Boolean = false
 
     /**
      * NAMED-KNIGHT hunter lock: when set, this bot only ever aggro/fights the player with this uid

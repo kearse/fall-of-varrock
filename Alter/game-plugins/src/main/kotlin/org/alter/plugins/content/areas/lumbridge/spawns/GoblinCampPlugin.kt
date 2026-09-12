@@ -36,8 +36,9 @@ private val logger = KotlinLogging.logger {}
  *
  * Everything is **presence-gated** (mirrors [org.alter.plugins.content.npcs.worldspawns.WorldSpawnsPlugin]):
  * nothing is maintained unless a real player is near the camp, and it stands down when the area
- * empties — so a lone bot never idles at an empty newbie field burning CPU. The PKer's brain uses the
- * per-bot [PkBot.ambushEverywhere] flag so it will aggro here even though this is not the wilderness.
+ * empties — so a lone bot never idles at an empty newbie field burning CPU. Rogue Knights hunt the
+ * whole mainland ([org.alter.plugins.content.bots.RogueTerritory]), so the PKer needs no special
+ * flag to aggro here; it is simply hand-posted inside the Lumbridge core where grid knights never muster.
  */
 class GoblinCampPlugin(
     r: PluginRepository,
@@ -211,8 +212,7 @@ class GoblinCampPlugin(
         bot.homeTile = CAMP_CENTRE
         bot.roamRadius = PKER_ROAM
         bot.leashRadius = PKER_LEASH
-        bot.zoneKey = ZONE_KEY
-        bot.ambushEverywhere = true // aggro players here even though it isn't the wilderness
+        bot.zoneKey = ZONE_KEY // a hand-placed ambusher: hunts its post (RogueTerritory.canHunt applies)
         pker = bot
     }
 
