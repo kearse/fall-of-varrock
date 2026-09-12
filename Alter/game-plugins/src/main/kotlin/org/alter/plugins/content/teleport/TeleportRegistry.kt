@@ -76,7 +76,7 @@ object TeleportRegistry {
         built("varrock_raid", "Varrock Raid", WAR, Tile(3213, 3424, 0), HOSTILE),        // hostile target city (§3C)
         built("north_frontier", "North Frontier", WAR, Tile(3222, 3270, 0), WILD, wild = 5),
         built("goblin_warren", "Goblin Warren", WAR, Tile(3290, 3248, 0), HOSTILE),      // E of Lumbridge horde muster
-        built("recruit_trials", "Recruit Trials", WAR, Tile(3219, 3213, 0), SAFE_ZONE),  // Sergeant at the gate
+        built("recruit_trials", "The Last Free City", WAR, Tile(3219, 3213, 0), SAFE_ZONE),  // Sergeant Damien at the gate (mirror: LofTeleportsData)
         soon("active_campaign", "Active Campaign", WAR, HOSTILE), // dynamic muster — wire to Campaigns later
 
         // ── 💀 Bosses ──────────────────────────────────────────────────────────

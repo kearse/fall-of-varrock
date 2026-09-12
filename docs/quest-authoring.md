@@ -14,10 +14,12 @@
 In code:
 
 ```kotlin
-object TheLastFreeCity : QuestDefinition(key = "last_free_city", displayName = "The Last Free City", chainIndex = 7) {
+// (Illustrative: "First March" is the next opening quest — see docs/quests/README.md. The Last Free
+// City itself is NOT a framework quest; it runs on the legacy RecruitTrials chain, key `recruit_trials`.)
+object FirstMarch : QuestDefinition(key = "first_march", displayName = "First March", chainIndex = 7) {
 
     override val prerequisites = listOf(
-        Prerequisite.QuestComplete("warprep_magic"),          // legacy chain keys work
+        Prerequisite.QuestComplete("recruit_trials"),         // legacy chain keys work — The Last Free City
         Prerequisite.RankAtLeast(Title.SOLDIER),
         Prerequisite.WarEffortAtLeast(50),
     )
@@ -56,14 +58,14 @@ object TheLastFreeCity : QuestDefinition(key = "last_free_city", displayName = "
     init {
         talk("npc.melee_combat_tutor", "brief") { p ->
             chatNpc(p, "…", npc = getRSCM("npc.melee_combat_tutor"), title = "General Zo")
-            QuestEngine.satisfy(p, this@TheLastFreeCity, "brief")
+            QuestEngine.satisfy(p, this@FirstMarch, "brief")
         }
-        talk("npc.melee_combat_tutor", "report") { p -> /* … */ QuestEngine.satisfy(p, this@TheLastFreeCity, "report") }
+        talk("npc.melee_combat_tutor", "report") { p -> /* … */ QuestEngine.satisfy(p, this@FirstMarch, "report") }
     }
 }
 ```
 
-Register it once, in any plugin's `init`: `QuestRegistry.register(TheLastFreeCity)`, and make sure
+Register it once, in any plugin's `init`: `QuestRegistry.register(FirstMarch)`, and make sure
 the NPC's click is routed: `bindTalk("npc.melee_combat_tutor")` (idempotent — General Zo still
 has his own `onNpcOption` today; migrate him to `bindTalk` + an `NpcTalk` default branch first,
 exactly as the Recruiting Sergeant was in PR-9).
@@ -111,8 +113,11 @@ exactly as the Recruiting Sergeant was in PR-9).
 
 ## 3. Legacy quest keys (prerequisites)
 
-`recruit_trials` · `warprep_magic` · `rogue_hunting_1` (optional) · `rogue_hunting_2` (optional) ·
-`warprep_ranged` · `warprep_survival` · `king_of_lumbridge`.
+`recruit_trials` (**The Last Free City**, Main Story Quest 1 — `docs/quests/the-last-free-city.md`)
+· `warprep_magic` · `rogue_hunting_1` (optional) · `rogue_hunting_2` (optional) · `warprep_ranged` ·
+`warprep_survival` · `king_of_lumbridge`.
+
+Every new quest spec starts from the integration-first template in `docs/quests/README.md`.
 
 ## 4. Not yet built (Block 2 adds as needed)
 

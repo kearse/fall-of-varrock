@@ -2,7 +2,8 @@
  * Fall of Varrock — the custom quest registry.
  *
  * One entry per Fall of Varrock quest, mirroring the server-side chains step-for-step (the step
- * ordinals MUST match the server enums — RecruitTrials.Step and WarPrepChain.Step in Alter).
+ * ordinals MUST match the server enums — RecruitTrials.Step (as published by
+ * RecruitTrials.clientOrdinal) and WarPrepChain.Step in Alter).
  * Entries with no varp are FUTURE teasers: they render dimmed in the journal so players can see
  * where the quest line is heading (the "what's ahead" view) before the content exists.
  *
@@ -22,31 +23,39 @@ import net.runelite.api.coords.WorldPoint;
 @Getter
 enum LofQuest
 {
-	RECRUIT_TRIALS(
-		"Recruit Trials",
-		"Lumbridge is at war and every citizen serves. The Trials are your enlistment: learn the "
-			+ "three pillars of the war effort — fighting the goblin front, climbing the feudal "
-			+ "ladder, and supplying the war machine — and leave a kitted citizen-soldier.",
-		11, // DONE ordinal
+	/**
+	 * Main Story Quest 1. The server chain is still RecruitTrials (varp 4610); the wire ordinals are
+	 * story order — the server remaps DEBRIEF/DONE (RecruitTrials.clientOrdinal) so 11 = debrief,
+	 * 12 = done.
+	 */
+	LAST_FREE_CITY(
+		"The Last Free City",
+		"Lumbridge is the last free city of Misthalin, and today it is being probed. Goblins have "
+			+ "pushed into the old camp east of the castle; the Knights of Lumbridge are holding, and "
+			+ "Sergeant Damien needs every pair of hands. Stand with them, earn your first rank for "
+			+ "it, hunt down the attackers who scattered, replace what the army lost — and learn why "
+			+ "the war lies north.",
+		12, // DONE (wire ordinal)
 		Arrays.asList(
-			new LofQuestStep(0, "Speak to the Recruiting Sergeant", "By the Lumbridge gate.", new WorldPoint(3217, 3220, 0)),
-			new LofQuestStep(1, "Clear the back woods", "Kill 5 goblins that slipped the defences.", new WorldPoint(3193, 3221, 0)),
-			new LofQuestStep(2, "Report back to the Sergeant", new WorldPoint(3217, 3220, 0)),
-			new LofQuestStep(3, "Buy your first rank from Duke Horacio", "He's in the market, by the Slayer Master.", new WorldPoint(3220, 3211, 0)),
-			new LofQuestStep(4, "Complete Vannaka's war-contract", "Take the contract, then slay the castle rats.", new WorldPoint(3222, 3212, 0)),
-			new LofQuestStep(5, "Report back to Vannaka", new WorldPoint(3222, 3212, 0)),
-			new LofQuestStep(6, "Mine copper and tin in The Mire", "The skilling grounds south-east of the castle.", new WorldPoint(3237, 3189, 0)),
+			new LofQuestStep(0, "Answer Sergeant Damien's alarm", "Lumbridge is under attack. He's by the castle gate.", new WorldPoint(3217, 3220, 0)),
+			new LofQuestStep(1, "Help the Knights of Lumbridge hold the east camp", "Defeat 5 goblins at the goblin camp east of the castle, across the river.", new WorldPoint(3254, 3234, 0)),
+			new LofQuestStep(2, "Report to Sergeant Damien", "The attack has been pushed back.", new WorldPoint(3217, 3220, 0)),
+			new LofQuestStep(3, "Claim your first rank from Duke Horacio", "You stood for Lumbridge. He's in the market, by the Slayer Master.", new WorldPoint(3220, 3211, 0)),
+			new LofQuestStep(4, "Complete Vannaka's cleanup contract", "Take the contract, then hunt the goblins that scattered into the fields east of the castle.", new WorldPoint(3222, 3212, 0)),
+			new LofQuestStep(5, "Report back to Vannaka", "The stragglers are dealt with.", new WorldPoint(3222, 3212, 0)),
+			new LofQuestStep(6, "Mine copper and tin in The Mire", "Replace what the defence consumed — the skilling grounds south-east of the castle.", new WorldPoint(3237, 3189, 0)),
 			new LofQuestStep(7, "Smelt a bronze bar", "At The Mire's furnace.", new WorldPoint(3237, 3192, 0)),
 			new LofQuestStep(8, "Smith a bronze dagger", "At The Mire's anvil.", new WorldPoint(3238, 3196, 0)),
-			new LofQuestStep(9, "Deliver the dagger to the Quartermaster", "The Supply Officer by the crypt in The Mire.", new WorldPoint(3248, 3193, 0)),
-			new LofQuestStep(10, "Report back to Vannaka for your reward", new WorldPoint(3222, 3212, 0))
+			new LofQuestStep(9, "Deliver the dagger to the Quartermaster", "For the War Effort — the Supply Officer by the crypt in The Mire.", new WorldPoint(3248, 3193, 0)),
+			new LofQuestStep(10, "Report back to Vannaka", new WorldPoint(3222, 3212, 0)),
+			new LofQuestStep(11, "Report to Sergeant Damien", "The immediate danger has passed.", new WorldPoint(3217, 3220, 0))
 		),
 		Arrays.asList(
-			"Citizen-soldier status (the war's contracts open up)",
-			"20,000 coins — enough for your first rank",
-			"A full steel armour set, piece by piece",
+			"Your first feudal rank — Peasant to Commoner",
+			"10,000 coins and a full steel armour set, piece by piece",
+			"War contracts (Vannaka) and the supply loop (The Mire → Quartermaster)",
 			"50 War Effort and the Book of Commands",
-			"The War-Prep chain (raid training)"
+			"War-Prep I — Magic (Vannaka's drills), and the road north to the first March"
 		)),
 
 	WARPREP_MAGIC(
@@ -74,13 +83,13 @@ enum LofQuest
 		"Rogue Hunting I",
 		"OPTIONAL. Lumbridge holds, but when Varrock fell its rogues, muggers and highwaymen — led by "
 			+ "deserters who style themselves Rogue Knights — scattered onto the roads west and "
-			+ "into the ruins of the fallen city. Ask the Recruiting Sergeant for the assignment: "
+			+ "into the ruins of the fallen city. Ask Sergeant Damien for the assignment: "
 			+ "thin the cutthroats on the safe road camps west of Lumbridge, or in Fallen Varrock's "
 			+ "wilderness streets for the bold. Clearing the hunt pays a soldier's purse — and opens "
 			+ "the Rogue Knight ladder, the realm's PK schooling. Nothing else waits on it.",
 		3, // complete once the hunt clears (RogueProblem.Step.KNIGHT ordinal)
 		Arrays.asList(
-			new LofQuestStep(1, "Ask the Recruiting Sergeant for the assignment", "Optional — by the Lumbridge gate, once War-Prep I is done.", new WorldPoint(3217, 3220, 0)),
+			new LofQuestStep(1, "Ask Sergeant Damien for the assignment", "Optional — by the Lumbridge gate, once War-Prep I is done.", new WorldPoint(3217, 3220, 0)),
 			// No fixed anchor: the server's hint arrow leads this step — to the nearest safe road
 			// camp from afar, locking onto live rogues once they're in reach (like the knight hunt).
 			new LofQuestStep(2, "Thin out the rogue rank and file", "Cut down 30 of the rogue family — kills count anywhere; the arrow leads to the nearest safe road camp and locks onto rogues in reach. Fallen Varrock is denser but it is the wilderness — only the bank pockets are safe.", null)
@@ -101,7 +110,7 @@ enum LofQuest
 		6, // DONE ordinal (RogueProblem.Step)
 		Arrays.asList(
 			new LofQuestStep(3, "Kill your first assigned Rogue Knight", "Buy Soldier with your hunt purse first. The Sergeant's marker leads to the camp; ::knights tracks the ladder.", null),
-			new LofQuestStep(4, "Return to the Recruiting Sergeant", "Report the knight's fall.", new WorldPoint(3217, 3220, 0)),
+			new LofQuestStep(4, "Return to Sergeant Damien", "Report the knight's fall.", new WorldPoint(3217, 3220, 0)),
 			// No fixed anchor: the ladder's own marker leads the climb, camp to camp.
 			new LofQuestStep(5, "Break every camp on the ladder", "All 14 knights, weakest to strongest — the Commander last. Buy Soldier and Knight from Duke Horacio as the spoils come in; ::knights tracks the climb.", null)
 		),
@@ -173,14 +182,22 @@ enum LofQuest
 			"City-vs-city conquest"
 		));
 
-	/** npc.rat_2854 — the small rats around Lumbridge castle; the Recruit Trials' intro contract
-	 *  target. They're tiny, scurry all over the courtyard and never show on the minimap, so the
-	 *  quest highlights the rats themselves (see LofQuestsPlugin) rather than trusting the
-	 *  fixed-tile arrow alone, which just lands on empty ground once they wander off it. */
-	static final int CASTLE_RAT_ID = 2854;
-
-	private static final int[] CASTLE_RATS = {CASTLE_RAT_ID};
+	/**
+	 * The goblins of the Lumbridge fields — every plain "Goblin" npc id the camp and the surrounding
+	 * countryside spawn (the stock 655-668/674/677/678 family, plus the frontier's 2245-2249 line).
+	 * The Last Free City highlights them during the east-camp fight and, once Vannaka's cleanup
+	 * contract is taken, during the hunt — so a recruit can pick the goblins out of the brawl with
+	 * the Knights of Lumbridge (the server credits kills by cache NAME, so any of these count).
+	 */
+	private static final int[] GOBLINS = {
+		655, 656, 657, 658, 659, 660, 661, 662, 663, 664, 665, 666, 667, 668, 674, 677, 678,
+		2245, 2246, 2247, 2248, 2249,
+	};
 	private static final int[] NO_NPCS = new int[0];
+
+	/** Where Vannaka's cleanup contract sends the recruit: the goblin field east of the castle, the
+	 *  Slayer hunting ground for goblins (matches the server's `::slayertele` destination). */
+	private static final WorldPoint GOBLIN_FIELD = new WorldPoint(3247, 3244, 0);
 
 	private final String questName;
 	private final String why;
@@ -242,7 +259,7 @@ enum LofQuest
 	{
 		switch (this)
 		{
-			case RECRUIT_TRIALS:
+			case LAST_FREE_CITY:
 				return LofQuestVarps.recruitStep(client);
 			case WARPREP_MAGIC:
 				return LofQuestVarps.warprepStep(client);
@@ -270,12 +287,12 @@ enum LofQuest
 		int ord = stepOrdinal(client);
 		switch (this)
 		{
-			case RECRUIT_TRIALS:
-				// TALK (0) is handed to every fresh citizen — count it as not-yet-started.
+			case LAST_FREE_CITY:
+				// The alarm step (0) is handed to every fresh citizen — count it as not-yet-started.
 				return ord >= doneOrdinal ? LofQuestState.FINISHED
 					: ord == 0 ? LofQuestState.NOT_STARTED : LofQuestState.IN_PROGRESS;
 			case WARPREP_MAGIC:
-				// The chain auto-begins when the Recruit Trials finish; ordinal 0 = still locked.
+				// The chain begins once The Last Free City is done; ordinal 0 = still locked.
 				return ord >= doneOrdinal ? LofQuestState.FINISHED
 					: ord == 0 ? LofQuestState.LOCKED : LofQuestState.IN_PROGRESS;
 			case ROGUE_HUNTING_I:
@@ -329,7 +346,7 @@ enum LofQuest
 	{
 		if (this == WARPREP_MAGIC && state(client) == LofQuestState.LOCKED)
 		{
-			return "Complete the Recruit Trials first.";
+			return "Complete The Last Free City first.";
 		}
 		if (this == ROGUE_HUNTING_I && state(client) == LofQuestState.LOCKED)
 		{
@@ -385,8 +402,8 @@ enum LofQuest
 
 	/**
 	 * Where the guidance arrow should point right now — usually the current step's anchor, but a
-	 * step can redirect mid-flight (the war-contract step moves from Vannaka to the rats once the
-	 * contract is taken).
+	 * step can redirect mid-flight (the cleanup-contract step moves from Vannaka to the goblin
+	 * field once the contract is taken).
 	 */
 	WorldPoint currentTarget(Client client)
 	{
@@ -395,16 +412,16 @@ enum LofQuest
 		{
 			return null;
 		}
-		if (this == RECRUIT_TRIALS && step.getOrdinal() == 4 && LofQuestVarps.recruitContractTaken(client))
+		if (this == LAST_FREE_CITY && step.getOrdinal() == 4 && LofQuestVarps.recruitContractTaken(client))
 		{
-			return new WorldPoint(3206, 3205, 0); // contract taken — the castle rats' corner
+			return GOBLIN_FIELD; // contract taken — hunt the goblins loose east of the castle
 		}
 		return step.getTarget();
 	}
 
 	/**
 	 * NPC ids to highlight in the scene (tile marker) and dot on the minimap for the active step
-	 * — small, mobile targets a fixed-tile arrow can't pin down. Empty for steps with no such target.
+	 * — the targets a fixed-tile arrow can't pin down. Empty for steps with no such target.
 	 */
 	int[] currentHighlightNpcIds(Client client)
 	{
@@ -413,12 +430,18 @@ enum LofQuest
 		{
 			return NO_NPCS;
 		}
-		// War-contract step: once the contract is taken the objective is "slay the castle rats". They
-		// scurry all over the courtyard and never show on the minimap, so the fixed-tile arrow lands on
-		// empty ground — highlight the rats themselves so a new recruit can't miss them.
-		if (this == RECRUIT_TRIALS && step.getOrdinal() == 4 && LofQuestVarps.recruitContractTaken(client))
+		if (this == LAST_FREE_CITY)
 		{
-			return CASTLE_RATS;
+			// The east-camp fight: pick the goblins out of the brawl with the Knights of Lumbridge.
+			if (step.getOrdinal() == 1)
+			{
+				return GOBLINS;
+			}
+			// The cleanup contract, once taken: the goblins that scattered into the countryside.
+			if (step.getOrdinal() == 4 && LofQuestVarps.recruitContractTaken(client))
+			{
+				return GOBLINS;
+			}
 		}
 		return NO_NPCS;
 	}
@@ -427,13 +450,20 @@ enum LofQuest
 	 *  for the NPC-overlay highlighter (the live show/hide is the render predicate's job). */
 	static boolean isObjectiveNpc(int npcId)
 	{
-		return npcId == CASTLE_RAT_ID;
+		for (int id : GOBLINS)
+		{
+			if (id == npcId)
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/** Live progress suffix for a step row, e.g. " (3/5)" goblins or " (23/37)" Prayer. */
 	String stepProgress(Client client, LofQuestStep step)
 	{
-		if (this == RECRUIT_TRIALS && step.getOrdinal() == 1 && stepOrdinal(client) == 1)
+		if (this == LAST_FREE_CITY && step.getOrdinal() == 1 && stepOrdinal(client) == 1)
 		{
 			return " (" + LofQuestVarps.recruitGoblinKills(client) + "/5)";
 		}

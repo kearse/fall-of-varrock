@@ -32,7 +32,7 @@ findings that shape everything below:
 
   | Our quest | Reused OSRS quest | DBROW id | quest id (col0) | progress varp | complete val |
   |---|---|---|---|---|---|
-  | Recruit Trials | Cook's Assistant | 17 | 1 | **29** | 2 |
+  | The Last Free City (was "Recruit Trials" — renamed 2026-09-11; re-run `relabel`) | Cook's Assistant | 17 | 1 | **29** | 2 |
   | War-Prep I — Magic | Doric's Quest | 30 | 11 | **31** | 100 |
   | Rogue Hunting I (the 30-rogue hunt) | The Restless Ghost | 120 | 3 | 107 | 5 |
   | Rogue Hunting II (the Rogue Knight ladder) | The Knight's Sword | 83 | 14 | 122 | 7 |

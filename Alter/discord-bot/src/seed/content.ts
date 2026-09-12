@@ -40,7 +40,7 @@ export const SEED: SeedEntry[] = [
       "earns their place. Here's how to begin:\n\n" +
       "**1.** Download the client and log in (or register on the website — same account).\n" +
       `**2.** Link Discord to your game account: run \`/link\` (steps in #${CH.linkAccount}).\n` +
-      "**3.** In-game, the Recruiting Sergeant at the castle gate enlists you — run `::trials` to track your orders.\n" +
+      "**3.** In-game, Sergeant Damien at the castle gate throws you straight into **The Last Free City** — run `::trials` to track your orders.\n" +
       `**4.** Read #${CH.rules}, then check #${CH.howToPlay} and #${CH.guides} to learn the war, the ranks, and the Wilderness.\n\n` +
       "Linking unlocks the game channels, hiscores commands, and your rank/donor roles here.",
     links: [
@@ -88,8 +88,8 @@ export const SEED: SeedEntry[] = [
     body:
       "Fall of Varrock is a **war server**. You start a Peasant and rise through a feudal ladder " +
       "of *earned* power. The loop:\n\n" +
-      "**1. Enlist.** You spawn in Lumbridge. The Recruiting Sergeant at the castle gate starts your " +
-      "**Recruit Trials** — run `::trials` to see your next objective.\n" +
+      "**1. Enlist.** You spawn in Lumbridge as it's being probed. Sergeant Damien at the castle gate starts " +
+      "**The Last Free City** — run `::trials` to see your next objective.\n" +
       "**2. Earn coin.** Fight the goblin frontier north of town, take **Slayer war-contracts** from " +
       "Vannaka, or train a skill and sell. Coin is power here.\n" +
       "**3. Rise in rank.** Buy your title from **Duke Horacio** in the castle (`::title`): Peasant → " +

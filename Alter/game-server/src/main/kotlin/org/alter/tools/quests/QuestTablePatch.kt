@@ -72,7 +72,10 @@ private data class Relabel(
 )
 
 private val PLAN = listOf(
-    Relabel(dbrowId = 17, questId = 1, sortName = "1 Recruit Trials", displayName = "Recruit Trials", varp = 29),
+    // The Last Free City (Main Story Quest 1 — the Recruit Trials chain under its story name) reuses
+    // Cook's Assistant (dbrow 17, quest id 1, varp 29, complete 2). Renamed 2026-09-11: re-run
+    // `relabel` (the workflow) so the live tab picks up the new name.
+    Relabel(dbrowId = 17, questId = 1, sortName = "1 The Last Free City", displayName = "The Last Free City", varp = 29),
     Relabel(dbrowId = 30, questId = 11, sortName = "2 War-Prep I - Magic", displayName = "War-Prep I - Magic", varp = 31),
     // Rogue Hunting I (Act II's 30-rogue hunt; formerly listed as "The Rogue Problem") reuses The
     // Restless Ghost (dbrow 120, quest id 3, varp 107, driven by QuestJournal from RogueProblem.step —

@@ -21,7 +21,7 @@ export default function WikiMainPage() {
             economy and skilling. Articles are updated the same day features ship, so the wiki always matches
             the live game. New here? Start with{" "}
             <Link href="/wiki/welcome-to-the-kingdom">Welcome to the Kingdom</Link> and{" "}
-            <Link href="/wiki/recruit-trials">Recruit Trials</Link>. Looking for the spellbooks? See{" "}
+            <Link href="/wiki/recruit-trials">The Last Free City</Link>. Looking for the spellbooks? See{" "}
             <Link href="/wiki/unlocking-spellbooks">Unlocking the magic books</Link>.
           </p>
         </div>

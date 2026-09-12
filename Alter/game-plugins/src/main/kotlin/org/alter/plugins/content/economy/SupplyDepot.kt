@@ -116,7 +116,7 @@ object SupplyDepot {
             return false
         }
         if (RecruitTrials.step(p) == RecruitTrials.Step.DELIVER) {
-            p.message("Hand the Quartermaster your forged bronze dagger first — that's the lesson.")
+            p.message("Hand the Quartermaster the bronze dagger you forged first — that's what the army lost today.")
             return false
         }
         return true

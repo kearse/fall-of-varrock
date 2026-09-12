@@ -32,7 +32,7 @@ On top of the roamers, the Rogue Knights hold **five organized camps by level ba
 
 ## The Lumbridge goblin camp
 
-There's one bot that breaks the wilderness-only rule. A lone, genuinely weak **Bandit** in full **bronze** (around combat 6) prowls the **goblin camp east of Lumbridge**, where a handful of **Knights of Lumbridge** are locked in an endless brawl with the camp goblins. Unlike the wilderness bots, this one **will ambush you on safe ground** - a first taste of PvP for new players who've never crossed the line. It's a single, weak bot: kill it for its (bronze) kit, or leave it to the knights. The whole scene only appears while a player is nearby.
+The **goblin camp east of Lumbridge** - where a handful of **Knights of Lumbridge** are locked in an endless brawl with the camp goblins - is the opening battlefield of [The Last Free City](/wiki/recruit-trials) and is **PvE only**. The weak bronze Bandit that used to ambush new players there was removed in September 2026: no bot breaks the wilderness-only rule any more.
 
 ## What they're worth
 

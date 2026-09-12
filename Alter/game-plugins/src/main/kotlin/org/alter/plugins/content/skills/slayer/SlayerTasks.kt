@@ -40,8 +40,9 @@ object SlayerTasks {
     val ALL: List<SlayerTask> = listOf(
         // ── Peasant — the home roster around Lumbridge ──
         SlayerTask("npc.goblin", "Goblins", 1, 20..40, 10.0, maxCombat = 40, weight = 5),
-        // Regular rats are the SCRIPTED tutorial contract only — never a random assignment (players
-        // reported being handed "regular rats" as an ordinary task). assignable = false enforces that.
+        // Regular rats stay OUT of the random pool (players reported being handed "regular rats" as
+        // an ordinary task). They were the old scripted tutorial contract; The Last Free City's
+        // cleanup contract is goblins now, so nothing assigns this task at all — kept for the data.
         SlayerTask("npc.rat_2854", "Rats", 1, 15..30, 4.0, assignable = false),
         SlayerTask("npc.giant_rat", "Giant rats", 1, 15..30, 6.0, maxCombat = 25, weight = 2),
         SlayerTask("npc.giant_spider", "Giant spiders", 1, 15..35, 12.0, maxCombat = 60, weight = 5),
