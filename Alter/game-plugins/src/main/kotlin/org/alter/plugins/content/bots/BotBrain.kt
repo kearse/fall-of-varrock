@@ -211,9 +211,9 @@ object BotBrain {
         val dest = if (StaticTerrain.isWalkable(raw.x, raw.z)) raw.x to raw.z
             else StaticTerrain.nearestWalkable(raw.x, raw.z) ?: return
         val destTile = Tile(dest.first, dest.second, bot.tile.height)
-        // Never wander off the PvP wild onto a safe tile — unless this is a dedicated ambusher, which
-        // is allowed to patrol its safe-tile post (e.g. the goblin-camp PKer).
-        if (!bot.ambushEverywhere && !PvpZones.isWilderness(destTile)) return
+        // Grid knights idle-wander the open ground but never stroll INTO a city core on their own
+        // (they still chase you in); camp rogues and ambushers patrol wherever they were posted.
+        if (!RogueTerritory.canRoamTo(bot, destTile)) return
         bot.walkTo(destTile)
     }
 
@@ -232,7 +232,7 @@ object BotBrain {
             if (!eligible(bot, p)) return@forEach
             // Anti-gang: don't join a player who already has their share of PKers on them. Only
             // gates NEW acquisitions — a bot already fighting keeps its target, so no thrash.
-            if (attackersOn(world, bot, p) >= attackerCap(bot, p)) return@forEach
+            if (attackersOn(world, bot, p) >= attackerCap(p)) return@forEach
             val dist = bot.tile.getDistance(p.tile)
             if (dist < bestDist) {
                 bestDist = dist
@@ -244,16 +244,16 @@ object BotBrain {
     }
 
     /**
-     * How many bots may fight one player at once. Single-combat ground (which now includes every
-     * deep Rogue Knight camp — see [PvpZones]) is a strict 1v1. The SAFE learning camps (Bandit
-     * Hideout, Port Sarim) sit outside the wilderness where singles rules can't apply, so their
-     * colony rogues enforce the 1v1 themselves — fresh players learning to fight PKers should
-     * never be piled. Open multi wilderness has NO artificial cap (OSRS-style); the spawn-side
-     * density cap ([BotColony]'s MAX_BOTS_NEAR_PLAYER) is what keeps pile-ons bounded there.
+     * How many bots may fight one player at once. Everything OUTSIDE the live wilderness — every
+     * road, field, city street and safe learning camp — is a strict 1v1: a player learning to fight
+     * PKers on the mainland is never piled. In the wild, single-combat ground (which includes every
+     * deep Rogue Knight camp — see [PvpZones]) is 1v1 too; open multi wilderness has NO artificial
+     * cap (OSRS-style) — the spawn-side density cap ([BotColony]'s MAX_BOTS_NEAR_PLAYER) is what
+     * keeps pile-ons bounded there.
      */
-    private fun attackerCap(bot: PkBot, p: Player): Int = when {
+    private fun attackerCap(p: Player): Int = when {
+        !PvpZones.isWilderness(p.tile) -> 1
         PvpZones.isSingle(p.tile) -> 1
-        CampClearance.campOf(bot)?.safe == true -> 1
         else -> Int.MAX_VALUE
     }
 
@@ -278,13 +278,15 @@ object BotBrain {
         if (bot.boundHunter != null && p.uid != bot.boundHunter) return false
         if (!p.tile.isWithinRadius(bot.tile, AGGRO_RANGE)) return false
         if (bot.leashRadius > 0 && !p.tile.isWithinRadius(bot.homeTile, bot.leashRadius)) return false
-        // PKers only fight in the PvP wild: never aggro (or chase) a player standing on a safe tile,
-        // including the safe carve-outs inside the red (banks / GE / town cores). In the wild itself
-        // rank gives no cover — everyone there is fair game. A dedicated ambusher ([PkBot.ambushEverywhere])
-        // overrides this to hunt on its safe-tile post (e.g. the goblin-camp PKer).
-        if (!bot.ambushEverywhere && !PvpZones.isWilderness(p.tile)) return false
+        // Rogue Knights hunt everywhere — cities included — but [RogueTerritory] decides WHO is fair
+        // game: never a player who can't fight back (onboarding, locked, instanced, sanctuary tile),
+        // never across floors, and an UNPROVOKED knight also honours the post-death/login truce and
+        // the bank radii. A player who starts the fight gets it wherever they stand. Rank gives no
+        // cover anywhere.
+        val provoked = provoked(bot, p) // one call — it latches provokedBy as a side effect
+        if (!RogueTerritory.canHunt(bot, p, provoked)) return false
 
-        if (!provoked(bot, p)) {
+        if (!provoked) {
             // Named knights NEVER open a fight — a boss waits at its camp until its hunter strikes
             // first (the provocation latch above then keeps it swinging for the whole duel).
             if (bot.attr[KNIGHT_KEY_ATTR] != null) return false

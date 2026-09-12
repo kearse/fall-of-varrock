@@ -3,7 +3,7 @@ title: Welcome to the Kingdom
 category: Getting Started
 summary: What kind of server this is, what makes it different, and where to go first.
 order: 1
-updated: 2026-08-28
+updated: 2026-09-12
 ---
 
 **Fall of Varrock** is an OSRS-based server (revision 228) built around one big idea: the world is at war, and *everything you do feeds it*. Lumbridge is the last free city - your home, your market, and the seat of the crown. Every other city is held by the enemy, and taking them back is the endgame.
@@ -11,7 +11,7 @@ updated: 2026-08-28
 ## The three pillars
 
 - **The War** - the server's core loop. Raid enemy-held cities, summon and kill their bosses, and fight alongside allied troops commanded by high-ranking players. Loot from a campaign is pooled and split by how much you personally contributed. See [The War explained](/wiki/the-war-explained).
-- **PK everywhere it counts** - the wilderness runs on loot keys, roads are patrolled by hostile highwaymen, and PK bots give you real fights even at low population. See [PvP & Wilderness](/wiki/wilderness-loot-keys).
+- **PK everywhere it counts** - **Rogue Knights hunt every road outside the city walls** (fake-player PKers that give you real fights even at low population, and only cost you a walk back to a reclaim pile), and the **real wilderness north of Edgeville** is where players fight players for loot keys and Blood Money. Practise on the knights, then cross the ditch. See [Rogue Knights](/wiki/pk-bots-and-highwaymen) and [PvP & Wilderness](/wiki/wilderness-loot-keys).
 - **Skilling that matters** - gathering and production skills fill the realm's **supply meter**, which gates when war campaigns can launch. Your mining isn't just XP; it's ammunition. See [Skilling & the war effort](/wiki/skilling-overview).
 
 ## Your first session

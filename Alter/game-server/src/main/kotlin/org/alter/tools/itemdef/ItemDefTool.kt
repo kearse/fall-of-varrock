@@ -32,6 +32,7 @@ import java.nio.file.Path
  *   gradlew :game-server:itemDef -PitemDefArgs="inspect 4067 8851 4278"
  *   gradlew :game-server:itemDef -PitemDefArgs="tickets"          # Boss/Vote Ticket names
  *   gradlew :game-server:itemDef -PitemDefArgs="commendation"     # Ecto-token -> Commendation
+ *   gradlew :game-server:itemDef -PitemDefArgs="dispatch"         # Old note 25829 -> Weathered Varrock dispatch (The North)
  *   gradlew :game-server:itemDef -PitemDefArgs="rename 4067 Boss Ticket"
  *   gradlew :game-server:itemDef -PitemDefArgs="examine 4067 Redeem me at the boss vendor."
  *   gradlew :game-server:itemDef -PitemDefArgs="restore 4067"
@@ -49,6 +50,14 @@ private const val COMMENDATION = 4278 // Ecto-token sprite — our Commendation 
 private const val COMMENDATION_EXAMINE =
     "Proof of service in the realm's wars. Thurgo, the Royal Smith at Lumbridge Castle, forges armour for these."
 
+// The North (Main Story Quest 3): Oziach's Weathered Varrock Dispatch rides the "Old note" def
+// (25829 — it already has the Read + Drop pack verbs). Keep in sync with
+// data/cfg/items/itemOverrides/quests/TheNorth.yml (server-side name) and the 25829 line in
+// data/cfg/objs.csv (server-side examine).
+private const val DISPATCH = 25829
+private const val DISPATCH_NAME = "Weathered Varrock dispatch"
+private const val DISPATCH_EXAMINE = "A military dispatch from the final hours before Varrock fell."
+
 fun main(args: Array<String>) {
     when (args.getOrNull(0)?.lowercase() ?: "inspect") {
         "inspect" -> inspect(args.drop(1).mapNotNull { it.toIntOrNull() })
@@ -57,6 +66,7 @@ fun main(args: Array<String>) {
             edit(VOTE_TICKET, name = "Vote Ticket")
         }
         "commendation" -> edit(COMMENDATION, name = "Commendation", examine = COMMENDATION_EXAMINE)
+        "dispatch" -> edit(DISPATCH, name = DISPATCH_NAME, examine = DISPATCH_EXAMINE)
         "rename" -> {
             val id = args.getOrNull(1)?.toIntOrNull() ?: run { println("rename <id> <name...>"); return }
             val name = args.drop(2).joinToString(" ").trim()
@@ -70,7 +80,7 @@ fun main(args: Array<String>) {
             edit(id, examine = text)
         }
         "restore" -> restore(args.getOrNull(1)?.toIntOrNull() ?: run { println("restore <id>"); return })
-        else -> println("usage: inspect <id...> | tickets | commendation | rename <id> <name...> | examine <id> <text...> | restore <id>")
+        else -> println("usage: inspect <id...> | tickets | commendation | dispatch | rename <id> <name...> | examine <id> <text...> | restore <id>")
     }
 }
 
@@ -78,8 +88,10 @@ private fun initCache() = CacheManager.init(Cache.load(Path.of(CACHE_PATH), fals
 
 private fun describe(id: Int): String {
     val def = CacheManager.getItemOrDefault(id)
+    // `options` are the GROUND verbs (Take…); `interfaceOptions` are the pack verbs (Read, Wear…)
+    // that `KotlinPlugin.onItemOption` binds against — print both, they answer different questions.
     return "item $id '${def.name}' cost=${def.cost} stacks=${def.stacks} noteTpl=${def.noteTemplateId} " +
-        "invOptions=${def.options.toList()} examine='${def.examine}'"
+        "groundOptions=${def.options.toList()} invOptions=${def.interfaceOptions.toList()} examine='${def.examine}'"
 }
 
 private fun inspect(ids: List<Int>) {

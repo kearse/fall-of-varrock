@@ -107,13 +107,15 @@ the road bandits), the hourly supply drop (dragon scim / boots / med / long, run
 gmaul, neitiznot), and two smugglers' trapdoors (SW corner, NE corner) exiting to an Edgeville
 street — the design authority's PvP staging town. All tiles and tables TUNE.
 
-## Edgeville as a FALLEN_SETTLEMENT — the delta (not built)
+## Edgeville as a FALLEN_SETTLEMENT — the delta (not built; superseded 2026-09-12)
 
-Beyond the framework: remove the whole-town Edgeville carve-out at `PvpZones.SAFE_INSIDE_RED`
-(the bank stays safe via `BankSafezonePlugin`'s auto-carve — the region band covers it), an
-ambient takeover pass in `WorldSpawnsPlugin` (`repopulateFallenCity` is reusable), a
-`TeleportRegistry` entry (+ client mirror), and a decision against the handoff's Edgeville
-PvP-academy hub (§8). Operator decision required before it is anything but a config.
+Since the PvP line moved back to the OSRS wilderness (north of the Edgeville ditch), Edgeville is
+outside the red **by geometry** — there is no carve-out to remove any more — and it is a
+`RogueTerritory` city core (no knight muster, knights only chase in). It is the PvP staging town
+the academy-hub direction wants. Making it a fallen settlement would now mean adding a fixed-level
+POCKET in `PvpZones` (like `VARROCK_POCKET`), an ambient takeover pass in `WorldSpawnsPlugin`
+(`repopulateFallenCity` is reusable), a `TeleportRegistry` entry (+ client mirror), and a decision
+against the hub. Operator decision required before it is anything but a config.
 
 ## Dev commands
 

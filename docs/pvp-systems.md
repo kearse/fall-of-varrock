@@ -1,6 +1,6 @@
 # PvP & Combat Activities — the Team 5 charter doc
 
-> Current as of 2026-09-03. Design authority = the six `0N_*.docx` of 2026-09-02 (05 §5-8 for PvP,
+> Current as of 2026-09-12. Design authority = the six `0N_*.docx` of 2026-09-02 (05 §5-8 for PvP,
 > 04 §10-11 for Blood Money, 03 §3-5 for the war / companion rules). Where this doc and the
 > code disagree, the code is the inventory and the docx is the direction.
 
@@ -21,12 +21,12 @@ Boundary that matters most: **Team 2 owns what Blood Money buys; Team 5 owns how
 
 | System | Where | One line |
 |---|---|---|
-| PvP zoning | `combat/PvpZones.kt` | Red = the custom wilderness (`mainWilderness` south edge at the top of Lumbridge) + pockets + hostile zones, minus safe carve-outs; single vs multi boxes; level = depth/8 (+1), pockets south of the line = any level, frontier bands capped at 10, hostile zones fixed-or-depth. `::zone` reads a tile. |
-| Engagement | `combat/Combat.kt` `canEngage` | Wilderness both sides, level bracket `cb ± level`, single-combat + 20-tick PJ timer (PK bots / companions never shield you), Rogue camp gate, bots attackable anywhere, companions PvE-only (§4). |
+| PvP zoning | `combat/PvpZones.kt` (+ `Wilderness` in game-api `TileExt.kt`) | **Where HUMANS may fight.** Red = the real OSRS wilderness (`Wilderness.SURFACE`, north of the Edgeville ditch) + the boss lairs + the Fallen Varrock pocket (`VARROCK_POCKET`, flat level 20, single) + hostile zones, minus carve-outs (GE / Varrock banks / Ferox / auto bank radii). Level = OSRS `((z-3520)/8)+1`; lairs, pockets and hostile zones are fixed. Single by default, `MULTI` boxes are the exception. `canTeleport` reads the same level. Everything else is safe FROM PLAYERS only — see Rogue Knights. `::zone` reads a tile. |
+| Engagement | `combat/Combat.kt` `canEngage` | Wilderness both sides, level bracket `cb ± level`, single-combat + 20-tick PJ timer (PK bots / companions never shield you), Rogue camp gate, bots attackable anywhere and attacking anywhere except a `RogueTerritory.sanctuary` player (onboarding / locked / instanced / sanctuary tile — checked every cycle), companions PvE-only (§4). |
 | Skull | `Combat.applySkull` | White skull 2000 ticks on an unprovoked attack on a human in the wild; retaliation window 100 ticks; varbit 13131 opt-out; bots never skull. |
 | Death | `combat/PvpDeathDropPlugin` + `combat/DeathRisk` | Keep-N everywhere (3 / 4 with Protect Item / 0 skulled / 1), untradeables kept free, loot keys (`economy/pk/LootKeyPlugin`) for any real-player kill, safe-zone reclaim piles, `SafeDeaths` for arenas. `DeathRisk.plan` is the ONE keep-N computation. |
 | Blood Money + Elo | `economy/pk/PkRewardsPlugin` (25 + 3×cb, `BM_BASE` / `BM_PER_LEVEL`, `bloodMoneyFor`), `PkStatsPlugin` (Elo K=32, varps 4602-4605, hiscores) | Both gated by `PkKillGuard` (§3) for human kills. A slain BOT is paid separately by `bots/RogueBounty` (half the formula, named knights ×2, no cap, no guard — operator 2026-09-12); bots never earn. |
-| PK bots | `bots/` — `BotZones` (grid over the wild + pinned camps), `BotColony`, `BotBrain` (NH brain: eat, pray-react, switch off the overhead, spec combos, baits, PID model — `docs/pk-bot-fight-styles.md`), `Loadouts` (29), `PkLootPools`, `RogueBounty` | Real `Player`s, wilderness-only aggro, named "Rogue Knight". Death = Blood Money bounty to the killer's inventory + rare-pool rolls into the killer's loot key; the worn kit NEVER drops (2026-09-12). |
+| PK bots | `bots/` — `RogueTerritory` (the knights' own law: muster / hunt / danger), `BotZones` (two grids: `wild_*` over the OSRS box, `land_*` over `RogueTerritory.MAINLAND`, + pinned camps), `BotColony`, `BotBrain` (NH brain: eat, pray-react, switch off the overhead, spec combos, baits, PID model — `docs/pk-bot-fight-styles.md`), `Loadouts` (29), `PkLootPools`, `RogueBounty` | Real `Player`s named "Rogue Knight" that **hunt the whole mainland, cities included**: grid knights muster outside the `CITY_CORES` and chase you in; tier = OSRS depth in the wild, distance from the nearest safe city on the mainland (`dangerLevel`, elites deep-wild only); 1v1 outside the wild; never a sanctuary player, never across floors, no unprovoked aggro during the post-death (100t) / post-login (50t) truce or inside a bank radius. Death of a knight = Blood Money bounty (`RogueBounty`) to the killer's inventory + `PkLootPools` rare rolls into the killer's loot key; the worn kit NEVER drops (2026-09-12). Death to a knight off the wild = the normal reclaim pile. |
 | Rogue Knights | `bots/knights/` (RogueKnights, RogueKnightLadder, CampClearance, RogueKnightCampPlugin, RogueRewards), `war/roguehunt/` | 7 camps, 14 named bosses, per-hunter instances, camp clearance gate; OPTIONAL — quest path or direct challenge (`::knights challenge`); War Effort per gate kill / camp clear / first kill / capped repeats. |
 | Hostile Zones | `hostilezones/` — `docs/hostile-zones.md` | The extraction loop as data: zoning, loot spots, supply drop, occupier garrison, raider colony, channelled trapdoor extraction. First zone live: the Wild Bandit Stronghold. |
 | Port Sarim siege | `areas/portsarim/PortSiegePlugin` | Rogue raiders (`npc.bandit_737`) vs dock knights; raider kills count for the rogue tally, the quest hunt and the port camp gate. |
@@ -64,7 +64,7 @@ Knight War Effort is capped per knight per day and in total; extraction itself m
 real player can never attack one; while the owner exchanges blows with a human, every companion
 stands back in formation (`CompanionBrain.holdForOwnersFight`, held for the PJ window after the
 last exchange) and does not count for single-combat. Companions still fight PK bots, Rogue
-Knights and NPCs everywhere in the wild. Rule is count-agnostic — read
+Knights and NPCs everywhere — wild or mainland (they will brawl a knight at the city gates). Rule is count-agnostic — read
 `CompanionRegistry.ACTIVE_MAX`, never assume how many a player fields.
 
 ## 5. Hostile Zones — summary
@@ -105,5 +105,14 @@ change and diff the matrix against the last one.
   ledger and the `pk-audit` line are the data a bounty system would read.
 - Deferred with Team 1: March targets for the Wild Bandit Camp and the Rogue Commander's Redoubt
   (`MarchTargets.register`, ids `npc.bandit_734` / `npc.bandit_12663` reserved).
-- Edgeville as a `FALLEN_SETTLEMENT` hostile zone — delta in `docs/hostile-zones.md`; operator
-  decision required (it conflicts with the Edgeville academy hub).
+- Edgeville as a `FALLEN_SETTLEMENT` hostile zone — delta in `docs/hostile-zones.md`; superseded
+  2026-09-12: with the OSRS line at the ditch, Edgeville is the PvP staging town OUTSIDE the red by
+  geometry (and a `RogueTerritory` city core — no knight muster). The academy-hub direction stands.
+- **Edgeville portal row + corridor relabel** (`content/teleport/TeleportRegistry.kt`): there is no
+  Edgeville row, and the six "Wilderness / PvP" corridor rows (Outlaw Camp … ) now land on safe
+  mainland with stale "Wild Lvl N" labels. Any registry change must mirror
+  `client/.../lofteleports/LofTeleportsData.java` + a client deploy → separate PR. Until then: the
+  Amulet of Glory (Edgeville 3087,3496), walking, and the stronghold extraction exit.
+- **City-interior guards vs Rogue Knights**: generic NPC aggro ignores clientless players
+  (`lastMapBuildTime` never set), so Falador / Al Kharid guards don't react to a knight. Would need
+  a `HostileZone.defendCitizens`-style sweep. Follow-up.

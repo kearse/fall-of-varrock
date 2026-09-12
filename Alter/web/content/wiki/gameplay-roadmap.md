@@ -27,6 +27,8 @@ Every new account auto-starts **[The Last Free City](/wiki/recruit-trials)**, Ma
 
 While you're at it, walk the **castle courtyard market** (every shop in one place) and open the **[teleport portal](/wiki/teleport-portal)** to see the whole world map of content.
 
+The main story picks up straight away with **[The North](/wiki/the-north)** (Main Story Quest 3): General Zo sends you to Edgeville to see what the Fall did to the kingdom - a short, combat-free trip that shows you where the Wilderness (and real PvP) begins.
+
 ## Stage 2 - First unlocks
 
 The **War-Prep chain** picks up straight after the trials: Vannaka trains you to Prayer 37, gears you in mystic, and sends you to the [Wizard Tower](/wiki/wizard-tower) - clearing it permanently unlocks the **Ancient, Lunar and Arceuus spellbooks** (see [Unlocking the magic books](/wiki/unlocking-spellbooks)).

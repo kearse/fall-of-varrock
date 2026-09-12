@@ -43,6 +43,8 @@ class BotCombatPlugin(
         // wilderness. Real player-vs-player is still gated server-side by Combat.canEngage.
         onLogin {
             player.sendOption("Attack", ATTACK_OPTION_SLOT)
+            // Nobody gets jumped by a Rogue Knight in the first seconds after logging in.
+            RogueTerritory.grantTruce(player, TRUCE_AFTER_LOGIN)
         }
 
         // Start the global bot-aggression heartbeat.
@@ -77,7 +79,14 @@ class BotCombatPlugin(
 
         // Remove the bot from the world at the end of its death sequence.
         onPlayerDeath {
-            val bot = player as? PkBot ?: return@onPlayerDeath
+            val bot = player as? PkBot
+            if (bot == null) {
+                // A HUMAN just respawned (this fires after respawn + unlock): a short truce so the
+                // knight that killed them — or the next one over — doesn't re-engage before they can
+                // bank, regear or walk away. Unprovoked aggro only; real PvP is untouched.
+                RogueTerritory.grantTruce(player, TRUCE_AFTER_DEATH)
+                return@onPlayerDeath
+            }
             // A companion is NOT despawned — the standard PlayerDeathAction already respawned it at
             // home with full HP; its brain walks it back. So a training death never loses the companion.
             if (bot is CompanionPawn) return@onPlayerDeath
@@ -141,5 +150,9 @@ class BotCombatPlugin(
 
         /** How often (ticks) the brain heartbeat runs — every tick, for snappy prayer switching. */
         const val AGGRO_SCAN_TICKS = 1
+
+        /** Truce (ticks) against unprovoked knight aggro after a login / after a death respawn. */
+        const val TRUCE_AFTER_LOGIN = 50   // ~30 s
+        const val TRUCE_AFTER_DEATH = 100  // ~60 s
     }
 }

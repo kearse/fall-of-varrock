@@ -79,8 +79,11 @@ Everything below already exists and works; we are **reusing**, not rebuilding.
   `onPlayerPreDeath` (runs *before* respawn), computes `keep` from skull/protect state exactly per the
   table above, sorts items by market value (`ItemMarketValueService`, falls back to cache cost), keeps
   the top N, drops the rest.
-  - **THE GATE (the thing to change):** the whole plugin early-returns unless
-    `PvpZones.isWilderness(victim.tile)`. So a death anywhere else drops nothing today.
+  - **THE GATE — gone (2026-07):** keep-N now runs on every death; `PvpZones.isWilderness` only
+    decides WHERE the lost loot goes (wilderness → killer-owned drop / loot key, public if the killer
+    is a bot; safe ground → the victim's ~15-minute reclaim pile). Since 2026-09-12 "wilderness"
+    means the real OSRS wild north of the Edgeville ditch + the Fallen Varrock pocket — a Rogue
+    Knight kill on any road or in any city is a reclaim-pile death.
   - Also early-returns when the victim is a `PkBot` (bot deaths are handled separately).
 - **Skull system** — `Combat.applySkull()` + `SkullRemovalPlugin` + `SkullIcon`. Unprovoked player
   attacks in the wild set a WHITE skull for ~2000 ticks; a timer clears it; retaliation is exempt;
@@ -171,5 +174,7 @@ that the safe-zone branch routes ownership to the victim, not the (bot) killer.
 ## Related / do-NOT-duplicate (already done)
 
 - Skull system, Protect Item prayer, keep-N math, ground-item ownership, respawn — all built. Reuse.
-- Road ambushers that make this matter — shipped in the `bots` package (`BotZones` road_* zones,
-  `BotBrain` patrol + everyone-fair-game). See memory `rsps-pk-bots`.
+- Road ambushers that make this matter — the 2026-07 `road_*` patrol zones were reverted, then
+  brought back properly on 2026-09-12 as the `land_*` mainland grid governed by
+  `bots/RogueTerritory` (city cores are no-muster, knights chase in, 1v1 off the wild, sanctuaries
+  for players who can't fight back). See `docs/pvp-systems.md` and memory `rsps-pk-bots`.

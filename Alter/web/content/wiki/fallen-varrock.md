@@ -13,13 +13,13 @@ Varrock **fell** twelve years before you arrived - to an undead host out of the 
 - **No civilians, no guards.** The shops are abandoned and the old Varrock guard is gone. In their place, the streets crawl with **the risen dead - zombies, skeletons, ghosts, undead druids - and the rogues who scavenge among them: muggers, thugs, highwaymen, rogues, dark wizards, Black Knights and bandits** - all attackable, all on the full real-OSRS drop tables. **Skeleton warlords** hold the landmarks: the square, the palace gates and courtyard, the west slums, the east market and the heart of the ruined Grand Exchange.
 - **The districts** - the Slums, the Old Market, the East Quarter and the Museum Quarter - are how the realm names the ruins. Each is run by a named **captain** with a bounty on his head (`::bounties`; see [Marches](/wiki/marches-and-the-reconquest)).
 - **The war comes here.** Public marches strike the **Varrock outskirts** - the southern road below the walls, where marauders and Black Knights camp and the dead spill out of the gate; Ministers and Kings launch campaigns and conquests into the city itself. Every operation is a temporary victory: the host returns, and so does the loot.
-- **The whole city is PvP.** Varrock sits deep inside the wilderness zone (roughly levels 15-33 across the city - deeper toward the palace). Other players can attack you anywhere on its streets. Watch `::zone` if you're unsure where you stand.
-- **PKer bots stalk the streets.** The rogues' favourite hunting ground - expect mithril-to-rune-tier PKers prowling the city on top of the usual wilderness wanderers. Kill one and it pays [Blood Money](/wiki/pk-bots-and-highwaymen) on the spot, and may roll a mid-tier rare into a [loot key](/wiki/wilderness-loot-keys) - the kit it wears never drops.
-- **Wilderness rules apply.** Unprovoked attacks skull you, death drops your unprotected loot, and kills pay out through loot keys. Read [death & item protection](/wiki/death-and-item-protection) before you go.
+- **The whole city is a PvP pocket.** Varrock is the one place south of the Edgeville ditch where other players can attack you - a flat **wilderness level 20, single combat** across the whole city, so anyone within 20 combat levels can hit you and nobody can pile you. Watch `::zone` if you're unsure where you stand.
+- **Rogue Knights stalk the streets.** The rogues' favourite hunting ground - a dedicated pack of [Rogue Knights](/wiki/pk-bots-and-highwaymen) (beatable metal-to-budget PK sets) prowls the city on top of the mainland roamers. Kill one and it pays [Blood Money](/wiki/pk-bots-and-highwaymen) on the spot, and may roll a rare into a [loot key](/wiki/wilderness-loot-keys) - the kit it wears never drops.
+- **Wilderness rules apply.** Unprovoked attacks skull you, death drops your unprotected loot, kills pay out through loot keys and mint Blood Money. Standard teleports still work at level 20. Read [death & item protection](/wiki/death-and-item-protection) before you go.
 
 ## The safe pockets
 
-Two places inside the walls survived behind barricades and are **safe zones**:
+Two places inside the walls survived behind barricades and are **safe zones** (no player can attack you there, and the Rogue Knights won't start a fight within a few tiles of a bank booth):
 
 - **Varrock west bank** and **Varrock east bank** - bank under pressure, then dive back out.
 - The **Grand Exchange**, just north-west of the city, is also safe.

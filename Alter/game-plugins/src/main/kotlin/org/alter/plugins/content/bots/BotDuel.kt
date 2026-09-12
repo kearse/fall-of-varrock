@@ -143,7 +143,6 @@ object BotDuel {
             bot.homeTile = bot.tile
             bot.roamRadius = 0
             bot.leashRadius = 0
-            bot.ambushEverywhere = true
             bot.attr[RESPAWN_TILE_ATTR] = bot.tile.coordinate
         }
         a.duelPartner = b

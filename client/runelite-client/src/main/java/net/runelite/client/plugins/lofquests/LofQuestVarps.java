@@ -38,6 +38,44 @@ final class LofQuestVarps
 	/** Packed "War-Prep II — Ranged" state: bits 0-5 step ordinal, bits 6-11 enemies felled with a ranged weapon on FIELD. */
 	static final int RANGED = 4624;
 
+	// --- framework quests (server QuestDefinition.journalVarp, generic packing via QuestEngine.publish):
+	//     bits 0-7 = current step index + 1 (0 = unstarted / finished), bits 8-19 = the step's progress
+	//     counter, bits 20-21 = state (0 none, 1 in progress, 2 complete). Reserved block 4686-4699
+	//     (docs/overlay-design-system.md §8) — one id per quest, in chain order.
+
+	/** Main Story Quest 3, "The North". */
+	static final int NORTH = 4686;
+
+	/** Main Story Quest 4, "First Reclamation". */
+	static final int FIRST_RECLAMATION = 4687;
+
+	/** Main Story Quest 5, "A Kingdom Alone". */
+	static final int A_KINGDOM_ALONE = 4688;
+
+	/** The four strategic objectives of the regional campaign phase (opened by A Kingdom Alone). */
+	static final int BREACH = 4689;
+	static final int SECURE = 4690;
+	static final int UNDERSTAND = 4691;
+	static final int SUSTAIN = 4692;
+
+	/** Generic-packing step ordinal: the current step index + 1, 0 when unstarted or finished. */
+	static int genericStep(Client client, int varp)
+	{
+		return client.getVarpValue(varp) & 0xFF;
+	}
+
+	/** Generic-packing progress counter (kills etc.) of the current step. */
+	static int genericProgress(Client client, int varp)
+	{
+		return (client.getVarpValue(varp) >> 8) & 0xFFF;
+	}
+
+	/** Generic-packing state: 0 none (locked / not begun), 1 in progress, 2 complete. */
+	static int genericState(Client client, int varp)
+	{
+		return (client.getVarpValue(varp) >> 20) & 0x3;
+	}
+
 	/** "War-Prep III — Survival" step ordinal, bits 0-5. (Was 4643 — kit editor's block.) */
 	static final int SURVIVAL = 4681;
 

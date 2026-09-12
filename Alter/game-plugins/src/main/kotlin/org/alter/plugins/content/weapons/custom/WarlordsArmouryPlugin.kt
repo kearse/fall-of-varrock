@@ -17,6 +17,7 @@ import org.alter.plugins.content.mechanics.shops.CoinCurrency
 import org.alter.plugins.content.mechanics.shops.ShopTabs
 import org.alter.plugins.content.mechanics.shops.bindVendorTalkAndTrade
 import org.alter.plugins.content.war.address
+import org.alter.plugins.content.war.outposts.SouthernWatch
 import org.alter.plugins.content.war.recruit.RecruitTrials
 import org.alter.rscm.RSCM.getRSCM
 
@@ -110,7 +111,9 @@ class WarlordsArmouryPlugin(
             recruitSupplyHandIn(player)
             return
         }
-        when (options(player, "Hand in war supplies", "Browse the armoury", "Nevermind", title = "Quartermaster")) {
+        // The Field Quartermaster at the Southern Watch is the same npc, renamed at spawn — title to match.
+        val title = if (SouthernWatch.isAtPost(player)) SouthernWatch.QUARTERMASTER_NAME else "Quartermaster"
+        when (options(player, "Hand in war supplies", "Browse the armoury", "Nevermind", title = title)) {
             // The hand-in is the Supply Depot storefront: an ordinary tabbed shop window, sell-only —
             // the accepted catalogue priced in the War Effort it pays (see SupplyDepotPlugin).
             1 -> SupplyDepotShop.open(player)

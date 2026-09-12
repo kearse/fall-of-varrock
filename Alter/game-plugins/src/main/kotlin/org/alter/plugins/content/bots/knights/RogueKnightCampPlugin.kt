@@ -275,7 +275,6 @@ class RogueKnightCampPlugin(
         bot.roamRadius = 3
         bot.leashRadius = KNIGHT_LEASH
         bot.zoneKey = "knight_${def.key}"
-        bot.ambushEverywhere = def.camp.safe // safe camps: the knight fights on reclaim ground
 
         // Boss overrides — maxHpOverride + unclamped CURRENT level, never setBaseLevel > 99 (the
         // 99-entry XP table). getMaxHp() reads the override, so eat ratios/head-bar stay correct.

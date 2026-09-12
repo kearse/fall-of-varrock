@@ -25,12 +25,9 @@ class CharacterSummaryPlugin(
         val DIARY_PROGRESS_TAB_INTERFACE = 259
         onLogin {
             player.openInterface(InterfaceDestination.QUEST_ROOT.interfaceId, 43, player.getQuestRootTab(), 1)
-            // This server uses the custom war-prep quest chain, not standard OSRS quests — send
-            // zeros rather than the hardcoded 123/100/58 placeholders that showed bogus counts.
-            player.setVarbit(Varbit.TOTAL_QUEST_POINT_COUNT, 0)
-            player.setVarp(Varp.QUEST_POINTS, 0)
-            player.setVarbit(Varbit.TOTAL_QUEST_COUNT, 0)
-            player.setVarbit(Varbit.COMPLETED_QUESTS_COUNT, 0)
+            // Quest points + quest counts (Varp.QUEST_POINTS, TOTAL_QUEST_POINT_COUNT, TOTAL_QUEST_COUNT,
+            // COMPLETED_QUESTS_COUNT) are derived from the quest registry by QuestJournal.sync on
+            // login and on its poll — this server's own quests, not the OSRS placeholders.
             player.runClientScript(CommonClientScripts.TIME_PLAYED, 1, 1, 10) // @TODO Time played
         }
         onButton(InterfaceDestination.QUEST_ROOT.interfaceId, 2) {
