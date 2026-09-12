@@ -307,15 +307,20 @@ Reusable pieces — reach for these before inventing a new one. Metrics above.
     which is exactly the double-claim this list exists to prevent: once the varp-table ceiling
     fix let kit publishes complete, every `::kits` open pulsed "quest book open" via the chest
     slot varp. If a varp isn't in this list, it isn't yours.
-    **4686-4692 quests: Main Story 3-5 + the four regional objectives** (The North, First
-    Reclamation, A Kingdom Alone, BREACH, SECURE, UNDERSTAND, SUSTAIN — claimed by their own PRs,
-    recorded there) ·
-    **4693 quests: At the White Wall** (Asgarnia — BREACH, Quest 1; `QuestJournal.WHITE_WALL_VARP`,
-    generic packing below) ·
-    **4694-4699 RESERVED, unclaimed — framework quest journal varps** (`QuestDefinition.journalVarp`,
-    generic packing `stepIndex+1 (bits 0-7) | progress (bits 8-19) | state (bits 20-21: 0 none,
-    1 in progress, 2 complete)` — `QuestEngine.publish`). A quest that needs a journal row takes
-    the next id from this block and records it here individually.
+    **4686-4699 framework quest journal varps** (`QuestDefinition.journalVarp`, generic packing
+    `stepIndex+1 (bits 0-7) | progress (bits 8-19) | state (bits 20-21: 0 none, 1 in progress,
+    2 complete)` — `QuestEngine.publish`; a quest that needs a journal row takes the next id from
+    this block and records it here individually):
+    **4686 The North journal** (Main Story Quest 3; `QuestJournal.NORTH_VARP`; client
+    `lofquests.LofQuestVarps.NORTH`) ·
+    **4687 First Reclamation journal** (Main Story Quest 4; `QuestJournal.FIRST_RECLAMATION_VARP`;
+    client `LofQuestVarps.FIRST_RECLAMATION`) ·
+    **4688-4692 A Kingdom Alone + BREACH / SECURE / UNDERSTAND / SUSTAIN** (Main Story Quest 5 and
+    the four regional objectives — PR #349, recorded there) ·
+    **4693 At the White Wall journal** (Asgarnia — BREACH, Quest 1; `QuestJournal.WHITE_WALL_VARP`;
+    client `LofQuestVarps.AT_THE_WHITE_WALL`) ·
+    **4694-4699 RESERVED for the remaining Asgarnia campaign quests** (A Matter of Trolls 4694,
+    The Guns of Asgarnia 4695, Old Wounds 4696, The White Wall 4697 — their own PRs).
     (4601/4609/4616 all feed the `lofdials` dial row.)
     Every id in this map is guaranteed writable server-side: the varp table is sized
     `maxOf(cache varp count, Player.CUSTOM_VARP_CEILING = 6000)` — the cache count alone sat BELOW

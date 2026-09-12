@@ -57,8 +57,8 @@ else — the opening chain, the regional campaigns, the Council — is written *
 |---|---|---|---|
 | 1 | The Last Free City | **BUILT** (2026-09-11) | [the-last-free-city.md](the-last-free-city.md) |
 | 2 | First March | proposed | — |
-| 3 | The North | proposed | — |
-| 4 | First Reclamation | proposed | — |
+| 3 | The North | **BUILT** (2026-09-11) | [the-north.md](the-north.md) |
+| 4 | First Reclamation | **BUILT** (2026-09-12) | [first-reclamation.md](first-reclamation.md) |
 | 5 | A Kingdom Alone | proposed | — |
 
 ### Regional campaigns (open after A Kingdom Alone)

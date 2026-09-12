@@ -21,10 +21,12 @@ dynamic objects — no cache edit) and a **rolling Kinshra raid** on it that run
 the fight step stands at the gate. No instance, no new NPC/enemy/map/mechanic.
 
 **Why the NORTH gate.** It is the approach that faces the Kinshra (the Black Knights' Fortress is north,
-past Ice Mountain) and it is quiet ground: no shop hub, no bank, no other content spawns there. The
-custom wilderness starts one tile past the city box (z3401), so a small safe pocket north of the gate
-(`PvpZones`, 2950-2982 × 3401-3414) keeps the story's PvE skirmish and its "safe observation point" out
-of level-18 PvP. Kinshra raiders stage in the field beyond the first fence and push south to the gate.
+past Ice Mountain) and it is quiet ground: no shop hub, no bank, no other content spawns there. Since
+PR #350 the PvP wilderness is the OSRS surface box (north of the Edgeville ditch) plus the Varrock
+pocket, so the whole Falador approach is safe ground — the story's PvE skirmish and its observation
+points need no carve-out (the earlier custom wild started at z3401; a pocket for it was drafted and
+dropped in the merge). Rogue Knights roam the mainland under their own rules and may cross the road,
+as anywhere. Kinshra raiders stage in the field beyond the first fence and push south to the gate.
 
 ## Integration audit — every beat mapped to the build
 
@@ -154,7 +156,7 @@ content.
 | Temporary Content | The Kinshra raid (only while a DEFEND-step player stands at the gate); the garrison stands down when the road is empty |
 | New NPCs | NONE (stock ids; one runtime rename "Kinshra raider") |
 | New Maps | NONE |
-| World Changes | Light: checkpoint dressing (6 crates, 4 barricades, 2 npcs) placed at runtime; a 33×14 safe pocket north of the gate in `PvpZones` |
+| World Changes | Light: checkpoint dressing (6 crates, 4 barricades, 2 npcs) placed at runtime — no cache edit, no zoning change |
 | New Mechanics | NONE |
 | Development Cost | **Script / Light Custom** |
 
@@ -185,4 +187,4 @@ content.
    damage-share credit (5/5) → the knight's "led with the sword" line → Amik (castle top floor) →
    Tiffy (park bench) → stand at the checkpoint, inside the gate, and beyond the fence → Amik → complete;
    `::whitewall` and `::quests` track it; the stock quest tab row should go red → yellow → green.
-   Then `::zone` at 2965,3408 must read SAFE.
+   `::zone` at 2965,3408 should read SAFE (it is outside every red box since PR #350).

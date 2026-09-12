@@ -48,7 +48,8 @@ private val logger = KotlinLogging.logger {}
  * kit publishes complete; renumbered out). Quests own 4610-4612, 4617, 4624, 4633, and 4681-4683
  * ([WARPREP_SURVIVAL_VARP], [KNIGHTS_VARP], and [QuestBook.OPEN_VARP] — the "open the Quest Journal
  * window, focused on quest N" pulse; not published here, pulsed on demand). Framework quests that
- * need a journal varp claim one in docs/overlay-design-system.md §8 (`QuestDefinition.journalVarp`).
+ * need a journal varp claim one in docs/overlay-design-system.md §8 (`QuestDefinition.journalVarp`)
+ * — [FIRST_RECLAMATION_VARP] is the first such claim.
  * Non-zero varps persist ([VarpSerialisation]), but the attributes stay the source of truth —
  * everything here is re-derived and re-published on login and on the world poll.
  *
@@ -74,6 +75,11 @@ object QuestJournal {
     // Framework quests (generic `QuestEngine.publish` packing: step index+1 bits 0-7 | progress
     // bits 8-19 | state bits 20-21) take ids from the 4686-4699 block reserved in
     // docs/overlay-design-system.md §8 — one per quest, recorded there individually.
+    /** The North (Main Story Quest 3, `quests/north/TheNorth`). */
+    const val NORTH_VARP = 4686
+    /** First Reclamation (Main Story Quest 4, `quests/story/FirstReclamation`). */
+    const val FIRST_RECLAMATION_VARP = 4687
+    // 4688-4692: A Kingdom Alone + BREACH / SECURE / UNDERSTAND / SUSTAIN (PR #349).
     /** At the White Wall (Asgarnia — BREACH, Quest 1, `quests/asgarnia/AtTheWhiteWall`). Its native
      *  quest-tab row is the relabelled Recruitment Drive (varp 657, complete 2) — see `AtTheWhiteWall.nativeTabVarp`. */
     const val WHITE_WALL_VARP = 4693
@@ -103,6 +109,14 @@ object QuestJournal {
     /** Witch's Potion varp — now the "King of Lumbridge" row. Completes at 3. */
     const val KING_QUEST_VARP = 67
     internal const val KING_QUEST_COMPLETE = 3
+    /** Ernest the Chicken varp — now the "The North" row (a framework quest: driven by
+     *  `QuestEngine.publish` from `TheNorth.nativeTabVarp`). Completes at 3. */
+    const val NORTH_QUEST_VARP = 32
+    internal const val NORTH_QUEST_COMPLETE = 3
+    /** Romeo & Juliet varp — now the "First Reclamation" row (driven by `QuestDefinition.nativeTabVarp`
+     *  through `QuestEngine.publish`). Completes at 100. */
+    const val FIRST_RECLAMATION_QUEST_VARP = 144
+    internal const val FIRST_RECLAMATION_QUEST_COMPLETE = 100
 
     /** True while the player has quest guidance muted (free-play mode). */
     fun muted(p: Player): Boolean = p.attr[QUEST_GUIDE_MUTED_ATTR] == true

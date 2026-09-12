@@ -27,10 +27,11 @@ class QuestBookPlugin(
         // A quest row was clicked in the stock quest tab. The slot the client sends is the row's
         // position in the (hidden/relabelled) list, whose order mirrors QuestTablePatch.PLAN — which
         // is the same order as the client chain (The Last Free City, War-Prep I, Rogue Hunting I/II,
-        // War-Prep II/III, King, then the framework story quests), so a 0..LAST_INDEX slot maps 1:1
-        // to the chain index. A slot outside that range can only be a raw col0 quest id (a fallback
-        // below). The exact slot semantics of a DBTable list can only be *confirmed* in-game, so log
-        // the raw value on first run, then drop this log.
+        // War-Prep II/III, King, then the framework story quests from The North on), so a
+        // 0..LAST_INDEX slot maps 1:1 to the chain index.
+        // A slot outside that range can only be a raw col0 quest id (a fallback below). The exact
+        // slot semantics of a DBTable list can only be *confirmed* in-game, so log the raw value on
+        // first run, then drop this log.
         onButton(QUEST_TAB, QUEST_LIST_COMPONENT) {
             val slot = player.attr[INTERACTING_SLOT_ATTR] ?: return@onButton
             logger.info { "[questbook] quest-tab click slot=$slot by ${player.username}" } // TEMP: confirm slot→quest, then remove
@@ -61,6 +62,8 @@ class QuestBookPlugin(
             9 to QuestBook.WARPREP_RANGED,      // Imp Catcher
             5 to QuestBook.WARPREP_SURVIVAL,    // Sheep Shearer
             13 to QuestBook.KING,               // Witch's Potion
+            7 to QuestBook.THE_NORTH,           // Ernest the Chicken
+            4 to QuestBook.FIRST_RECLAMATION,   // Romeo & Juliet
             86 to QuestBook.AT_THE_WHITE_WALL,  // Recruitment Drive
         )
     }

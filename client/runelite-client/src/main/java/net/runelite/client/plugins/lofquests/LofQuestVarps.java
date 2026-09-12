@@ -43,6 +43,21 @@ final class LofQuestVarps
 	//     counter, bits 20-21 = state (0 none, 1 in progress, 2 complete). Reserved block 4686-4699
 	//     (docs/overlay-design-system.md §8) — one id per quest, in chain order.
 
+	/** Main Story Quest 3, "The North". */
+	static final int NORTH = 4686;
+
+	/** Main Story Quest 4, "First Reclamation". */
+	static final int FIRST_RECLAMATION = 4687;
+
+	/** Main Story Quest 5, "A Kingdom Alone". */
+	static final int A_KINGDOM_ALONE = 4688;
+
+	/** The four strategic objectives of the regional campaign phase (opened by A Kingdom Alone). */
+	static final int BREACH = 4689;
+	static final int SECURE = 4690;
+	static final int UNDERSTAND = 4691;
+	static final int SUSTAIN = 4692;
+
 	/** Asgarnia (BREACH) Quest 1, "At the White Wall". */
 	static final int AT_THE_WHITE_WALL = 4693;
 

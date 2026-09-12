@@ -28,10 +28,10 @@ object QuestBook {
     // Chain indices — must match client LofQuest.CHAIN order (= the enum's declaration order,
     // FUTURE teasers excluded) AND the native quest tab's row order (QuestTablePatch.PLAN sort
     // names). The legacy hallway keeps 0-6; framework main-story quests are APPENDED in story
-    // order — each quest adds only its own constant and the last one to land bumps LAST_INDEX.
-    // Slots 7-13 are claimed by the Main Story Quests 3-5 + the four regional objectives (The
-    // North, First Reclamation, A Kingdom Alone, BREACH, SECURE, UNDERSTAND, SUSTAIN — their own
-    // PRs); the regional campaign quests follow from 14.
+    // order (The North 7, First Reclamation 8, then A Kingdom Alone 9 and its four regional
+    // objectives BREACH/SECURE/UNDERSTAND/SUSTAIN 10-13 — their own PR; the regional campaign
+    // quests follow from 14) — each quest adds only its own constant and the last one to land
+    // bumps LAST_INDEX.
     const val RECRUIT_TRIALS = 0   // The Last Free City (Main Story Quest 1)
     const val WARPREP_MAGIC = 1
     const val ROGUE_HUNTING_I = 2
@@ -39,6 +39,9 @@ object QuestBook {
     const val WARPREP_RANGED = 4
     const val WARPREP_SURVIVAL = 5
     const val KING = 6
+    const val THE_NORTH = 7         // The North (Main Story Quest 3)
+    const val FIRST_RECLAMATION = 8 // First Reclamation (Main Story Quest 4)
+    // 9-13: A Kingdom Alone + BREACH / SECURE / UNDERSTAND / SUSTAIN (PR #349).
     const val AT_THE_WHITE_WALL = 14 // Asgarnia (BREACH) Quest 1
 
     const val LAST_INDEX = AT_THE_WHITE_WALL

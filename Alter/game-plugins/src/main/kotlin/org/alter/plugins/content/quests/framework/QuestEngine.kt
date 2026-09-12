@@ -7,6 +7,7 @@ import org.alter.api.ext.setVarp
 import org.alter.game.model.entity.Npc
 import org.alter.game.model.entity.Player
 import org.alter.plugins.content.mechanics.Flags
+import org.alter.plugins.content.quests.QuestJournal
 
 private val logger = KotlinLogging.logger {}
 
@@ -194,7 +195,7 @@ object QuestEngine {
 
     fun resume(p: Player, q: QuestDefinition) {
         beginIfEligible(p, q)
-        step(p, q)?.let { nudge(p, q, it) }
+        if (q.loginReminder) step(p, q)?.let { nudge(p, q, it) }
     }
 
     /** The login reminder (also what `::questdebug` and a step's own callers use to restate the objective). */
@@ -218,23 +219,20 @@ object QuestEngine {
             started(p, q) -> 1
             else -> 0
         }
-        q.journalVarp?.let { varp ->
-            if (varp < p.varps.maxVarps) {
-                val stepIdx = step(p, q)?.let { q.indexOf(it.id) + 1 } ?: 0
-                val progress = counter(p, q).coerceIn(0, 0xFFF)
-                val packed = (stepIdx and 0xFF) or (progress shl 8) or (state shl 20)
-                if (p.getVarp(varp) != packed) p.setVarp(varp, packed)
-            }
-        }
+        // Native quest tab first: the reused OSRS row's varp reads 0 red / 1 yellow / complete green.
         q.nativeTabVarp?.let { varp ->
-            if (varp < p.varps.maxVarps) {
-                val value = when (state) {
-                    2 -> q.nativeTabComplete
-                    1 -> 1
-                    else -> 0
-                }
-                if (p.getVarp(varp) != value) p.setVarp(varp, value)
+            val value = when (state) {
+                2 -> q.nativeTabComplete
+                1 -> 1
+                else -> 0
             }
+            QuestJournal.setVarpSafely(p, varp, value)
         }
+        val varp = q.journalVarp ?: return
+        if (varp >= p.varps.maxVarps) return
+        val stepIdx = step(p, q)?.let { q.indexOf(it.id) + 1 } ?: 0
+        val progress = counter(p, q).coerceIn(0, 0xFFF)
+        val packed = (stepIdx and 0xFF) or (progress shl 8) or (state shl 20)
+        if (p.getVarp(varp) != packed) p.setVarp(varp, packed)
     }
 }

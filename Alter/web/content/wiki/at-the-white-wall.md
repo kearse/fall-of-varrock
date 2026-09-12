@@ -36,7 +36,7 @@ No equipment, no White Knight armour, and no gate on Falador itself: the city re
 
 ## Good to know
 
-- The checkpoint fight is PvE. The ground immediately north of the gate, up to the second fence, is safe; the custom wilderness (and its PK bots) begins beyond that, so do not chase a raider too far north.
+- The checkpoint fight is PvE: the Falador approach is safe ground, not wilderness. Rogue Knights roam the roads of the mainland as they do everywhere, so keep your wits about you on the way.
 - Kinshra raiders drop nothing - they are a story fight, not a farm.
 - If you leave the gate mid-fight the raid withdraws; come back and it resumes. Your kill count is kept.
 - Sir Amik is on the **top floor** of the castle; the guidance arrow points at the floor, not the stairs.

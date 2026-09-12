@@ -5,8 +5,6 @@ import org.alter.game.model.Area
 import org.alter.game.model.Tile
 import org.alter.game.model.World
 import org.alter.game.model.entity.Player
-import org.alter.plugins.content.combat.PvpZones
-import org.alter.plugins.content.war.StaticTerrain
 
 private val logger = KotlinLogging.logger {}
 
@@ -19,9 +17,9 @@ private val logger = KotlinLogging.logger {}
  * period when empty. That keeps the per-tick cost proportional to active players, so the zone count
  * (and per-zone [BotZoneConfig.target]) can grow later without a rewrite.
  *
- * Walkable muster points are computed once from the cache terrain ([StaticTerrain]) — the same
- * decode as the `mapDump` — so bots never muster in water/cliffs; `findRandomTileAround` jitters
- * each spawn off walls/objects at runtime.
+ * Walkable muster points are computed once from the cache terrain
+ * ([org.alter.plugins.content.war.StaticTerrain], the same decode as the `mapDump`) — so bots never
+ * muster in water/cliffs; `findRandomTileAround` jitters each spawn off walls/objects at runtime.
  */
 class BotColony(private val cfg: BotZoneConfig) {
 
@@ -40,12 +38,13 @@ class BotColony(private val cfg: BotZoneConfig) {
 
     /**
      * Muster points, computed once at construction (cache terrain is available by then). A tile
-     * qualifies only if it is BOTH walkable AND a live PvP wilderness tile ([PvpZones.isWilderness]) —
-     * so a bot can never muster on a safe tile or a safe carve-out (bank/GE/town core) even if the
-     * zone box overhangs one. This is the structural guarantee that PKers stay in the PKing areas.
+     * qualifies per [RogueTerritory.canMuster]: walkable, never a bank radius or sanctuary, and —
+     * for a dynamic grid cell — never inside a city core, so knights appear on the roads and fields
+     * OUTSIDE town even where a cell box overhangs one. Hand-placed camps (pinned tier) muster on
+     * their authored box wherever it is.
      */
     private val muster = BotZones.boxStaging(cfg.area, cfg.spacing)
-        .filter { StaticTerrain.isWalkable(it.x, it.z) && (cfg.allowSafe || PvpZones.isWilderness(it)) }
+        .filter { RogueTerritory.canMuster(cfg, it) }
 
     init {
         logger.info { "Bot zone '${cfg.displayName}': ${muster.size} walkable muster points (target ${cfg.target})." }
@@ -75,7 +74,7 @@ class BotColony(private val cfg: BotZoneConfig) {
     private fun playerNear(world: World): Boolean {
         var near = false
         world.players.forEach { p ->
-            if (!near && p !is PkBot && p.isOnline && !p.invisible && activation.contains(p.tile)) near = true
+            if (!near && RogueTerritory.activates(p) && activation.contains(p.tile)) near = true
         }
         return near
     }
@@ -92,9 +91,10 @@ class BotColony(private val cfg: BotZoneConfig) {
             // spawns inside an enclosed-but-unclipped pocket nobody can path to.
             val reachFrom = anchor?.tile ?: point
             val tile = BotManager.reachableTileAround(world, from = reachFrom, centre = point, radius = 4) ?: point
-            // Tier by our custom wilderness level at the spawn tile: shallow-wild spawns roll a weak
-            // metal PKer, deep-wild spawns roll elite NHers. A zone may pin a fixed tier instead.
-            val tier = cfg.tier ?: BotZones.tierForWildLevel(PvpZones.wildernessLevel(tile))
+            // Tier by the danger level at the spawn tile (OSRS depth in the wild, distance from the
+            // nearest safe city on the mainland): a road spawn rolls a weak metal PKer, a deep-wild
+            // spawn rolls an elite NHer. A zone may pin a fixed tier instead.
+            val tier = cfg.tier ?: BotZones.tierForWildLevel(RogueTerritory.dangerLevel(tile))
             val loadout = BotLoadouts.get(tier.roll())
             if (loadout == null) {
                 logger.error { "Bot zone '${cfg.displayName}': unknown loadout key from tier; skipping." }
@@ -105,9 +105,9 @@ class BotColony(private val cfg: BotZoneConfig) {
             bot.roamRadius = cfg.roamRadius
             bot.leashRadius = cfg.leashRadius
             bot.zoneKey = cfg.key
-            // Safe-ground camps (Bandit Hideout / the road camps): the bots patrol + aggro on their
-            // safe posts like the goblin-camp ambusher; the brain's wilderness guards stay on elsewhere.
-            bot.ambushEverywhere = cfg.allowSafe
+            // Grid knights keep out of the city cores while idle (they still chase you in); a
+            // hand-placed camp's rogues patrol their post wherever it sits.
+            bot.cityAware = cfg.tier == null
             pool += bot
         }
     }
@@ -133,7 +133,7 @@ class BotColony(private val cfg: BotZoneConfig) {
     private fun activator(world: World): Player? {
         var found: Player? = null
         world.players.forEach { p ->
-            if (found == null && p !is PkBot && p.isOnline && !p.invisible && activation.contains(p.tile)) found = p
+            if (found == null && RogueTerritory.activates(p) && activation.contains(p.tile)) found = p
         }
         return found
     }

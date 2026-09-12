@@ -5,12 +5,13 @@ import org.alter.game.model.Tile
 import org.alter.plugins.content.combat.PvpZones
 
 /**
- * Data-driven registry of wilderness "PK bot" spawn zones.
+ * Data-driven registry of Rogue Knight ("PK bot") spawn zones — the real wilderness AND the mainland.
  *
  * A zone is an open-world [Area] that, while a real player is near, maintains a small population of
- * roaming [PkBot]s drawn from a depth-tiered loadout pool — so leaving a city gets more dangerous
- * the deeper you go. Adding a zone = one [BotZoneConfig]; [BotSpawnPlugin] picks it up automatically
- * (mirrors [org.alter.plugins.content.war.CityFrontiers]).
+ * roaming [PkBot]s drawn from a danger-tiered loadout pool — so leaving a city gets more dangerous
+ * the further you go, and the deep wild is deadliest. Adding a zone = one [BotZoneConfig];
+ * [BotSpawnPlugin] picks it up automatically (mirrors [org.alter.plugins.content.war.CityFrontiers]).
+ * Where knights may muster / whom they hunt is [RogueTerritory]'s call, not this file's.
  *
  * Geometry is intentionally generous: muster points are filtered to walkable land at runtime by
  * [org.alter.plugins.content.war.StaticTerrain] (the in-code twin of the `mapDump`), and spawns are
@@ -40,9 +41,11 @@ data class BotZoneConfig(
     /** The open-world rectangle the zone occupies. */
     val area: Area,
     /**
-     * Fixed loadout pool for this zone, or `null` (default) to TIER DYNAMICALLY by our custom
-     * wilderness level at each spawn tile ([BotZones.tierForWildLevel]) — the standard wilderness
-     * behaviour, so danger scales with depth without hand-banding boxes.
+     * Fixed loadout pool for this zone, or `null` (default) to TIER DYNAMICALLY by the danger level
+     * at each spawn tile ([RogueTerritory.dangerLevel] → [BotZones.tierForWildLevel]) — OSRS depth
+     * in the wild, distance from the nearest safe city on the mainland — so danger scales without
+     * hand-banding boxes. A pinned tier also marks a HAND-PLACED camp: it may muster inside a city
+     * core (the organized road camps sit in town limits on purpose) and its bots patrol their post.
      */
     val tier: BotTier? = null,
     /** Target live-bot population while the zone is active. */
@@ -57,18 +60,7 @@ data class BotZoneConfig(
     val respawnDelayTicks: Int = 10,
     /** A real player within [area] expanded by this many tiles activates the zone. */
     val activationPadding: Int = 32,
-    /**
-     * SAFE-GROUND camp: when true the colony musters on walkable tiles even where
-     * [PvpZones.isWilderness] is false, and every spawned bot gets [PkBot.ambushEverywhere] so it
-     * aggros on its safe-tile post (the goblin-camp ambusher pattern, zone-ified). Used by the
-     * organized rogue-knight camps outside the red (the Bandit Hideout west of Lumbridge) —
-     * players who die there get the normal safe-zone reclaim pile, so the starter camp is where
-     * you LEARN to fight PKers cheaply. Requires a pinned [tier] (never depth-roll a safe camp).
-     */
-    val allowSafe: Boolean = false,
-) {
-    init { require(!allowSafe || tier != null) { "allowSafe zone '$key' must pin a tier (wild level is 0 on safe ground)" } }
-}
+)
 
 object BotZones {
 
@@ -154,10 +146,11 @@ object BotZones {
     ))
 
     /**
-     * Loadout tier for a given custom wilderness level ([PvpZones.wildernessLevel], depth north from
-     * the wild's south edge). The single source of truth for "tier PKers by depth": a bot's danger is
-     * decided by how deep it spawned. Wild 1–10 is a metal-armour ladder for new players; past 10 the
-     * gear escalates budget → mid → high → elite as you push deeper.
+     * Loadout tier for a danger level ([RogueTerritory.dangerLevel]: the OSRS wilderness level in the
+     * wild, a distance-from-the-nearest-city band on the mainland). The single source of truth for
+     * "tier PKers by danger": 1–10 is a metal-armour ladder for new players; past 10 the gear
+     * escalates budget → mid → high → elite. The mainland tops out at 35 (high), so elites are a
+     * deep-wild sight only.
      */
     fun tierForWildLevel(level: Int): BotTier = when {
         level <= 10 -> T_METAL     // frontier — low-level metal-armour fodder for new players
@@ -168,39 +161,29 @@ object BotZones {
     }
 
     /** Tiles wider than this get split, so each zone activates locally (a player at one end of the wild
-     *  doesn't spawn bots at the other) and spreads density across the whole custom wild. */
+     *  doesn't spawn bots at the other) and spreads density across the whole box. */
     private const val CELL = 160
 
     /**
-     * PKer populations tiled directly over the custom PvP-wilderness expanse ([PvpZones.mainWilderness]
-     * — "the line" the user drew, south edge z3258 at the top of Lumbridge). We chop that whole
-     * rectangle into [CELL]-tile cells and drop one colony per cell, so bots populate the ENTIRE custom
-     * wild — leave Lumbridge in any direction into the red and you'll meet PKers, not just deep north.
-     *
-     * Correct-by-construction, no hand-drawn boxes to drift off the boundary:
-     *  - `tier` is left null → every spawn is tiered by the custom wilderness level at its tile
-     *    ([tierForWildLevel]): weak metal PKers at the z3258 frontier, elite NHers deep north.
-     *  - the colony's muster filter keeps only walkable AND [PvpZones.isWilderness] tiles, so cells that
-     *    land on a safe carve-out (Falador, GE, Varrock/Edgeville banks, Lumbridge core) or on water/
-     *    cliffs simply yield 0 muster and idle. The boot log prints each cell's count.
-     *
-     * Density tuning: [CELL] size + the per-cell [BotZoneConfig.target] below. To exclude a spot
-     * (e.g. Varrock streets), carve it out in [PvpZones] and the bots auto-follow.
+     * Tile [box] into [CELL]-sized colonies (`<prefix>_<col>_<row>`), one knight per cell, tier null
+     * → danger-tiered at each spawn tile. Cells over water, cliffs, city cores or bank radii simply
+     * yield few/zero muster points ([RogueTerritory.canMuster]) and idle; the boot log prints each
+     * cell's count. Density tuning: [CELL] + the per-cell target. Keys must never collide with the
+     * Rogue Knight camp keys (`CampClearance` joins camps onto zones by key) — hence the prefixes.
      */
-    val all: List<BotZoneConfig> = buildList {
-        val red = PvpZones.mainWilderness
+    private fun MutableList<BotZoneConfig>.grid(prefix: String, display: String, box: Area) {
         var col = 0
-        var x = red.bottomLeftX
-        while (x <= red.topRightX) {
+        var x = box.bottomLeftX
+        while (x <= box.topRightX) {
             var row = 0
-            var z = red.bottomLeftY
-            while (z <= red.topRightY) {
-                val x2 = minOf(x + CELL - 1, red.topRightX)
-                val z2 = minOf(z + CELL - 1, red.topRightY)
+            var z = box.bottomLeftY
+            while (z <= box.topRightY) {
+                val x2 = minOf(x + CELL - 1, box.topRightX)
+                val z2 = minOf(z + CELL - 1, box.topRightY)
                 add(
                     BotZoneConfig(
-                        key = "wild_${col}_${row}",
-                        displayName = "Wilderness $col-$row",
+                        key = "${prefix}_${col}_${row}",
+                        displayName = "$display $col-$row",
                         area = Area(x, z, x2, z2),
                         target = 1, // one PKer per cell; presence-gated so cost tracks active players
                         roamRadius = 12,
@@ -214,11 +197,26 @@ object BotZones {
             col++
             x += CELL
         }
+    }
+
+    /**
+     * Two dynamic grids + the hand-placed camps:
+     *  - **The wilderness** ([PvpZones.mainWilderness], the OSRS box north of the Edgeville ditch):
+     *    tiered by OSRS depth — metal fodder at the ditch, elite NHers deep north. Bots can never
+     *    drift off the PvP boundary because the grid is derived from it.
+     *  - **The mainland** ([RogueTerritory.MAINLAND]): the same grid over the whole overworld, tiered
+     *    by distance from the nearest safe city. Knights muster OUTSIDE the city cores and chase you
+     *    in — leave town in any direction and you'll meet one, not just up north.
+     */
+    val all: List<BotZoneConfig> = buildList {
+        grid("wild", "Wilderness", PvpZones.mainWilderness)
+        grid("land", "Mainland", RogueTerritory.MAINLAND)
 
         // ============== ORGANIZED ROGUE-KNIGHT CAMPS (ladder camps 1/2/4/5; camp 3 is Fallen ==============
-        // Varrock below). Tiles are TUNE — verify with ::zone in-game. The two safe camps ride the
-        // allowSafe/ambushEverywhere path (reclaimable deaths — the learning camps); the two deep
-        // camps are ordinary wilderness zones with pinned high/elite pools, denser than the grid.
+        // Varrock below). Tiles are TUNE — verify with ::zone in-game. The road camps sit on safe
+        // (reclaimable-death) ground — the learning camps; their pinned tier lets them muster inside
+        // town limits. The two deep camps are wilderness zones with pinned high/elite pools, denser
+        // than the grid.
 
         // Camp 1 — the BANDIT HIDEOUT west of Lumbridge (safe ground, south of the red's edge).
         add(
@@ -232,7 +230,6 @@ object BotZones {
                 roamRadius = 6,
                 leashRadius = 16,
                 activationPadding = 24,
-                allowSafe = true,
             ),
         )
         // THE SAFE ROAD WEST — ladder camps between the hideout and Port Sarim (RogueKnights.DRAYNOR
@@ -251,7 +248,6 @@ object BotZones {
                 roamRadius = 6,
                 leashRadius = 16,
                 activationPadding = 24,
-                allowSafe = true,
             ),
         )
         add(
@@ -266,7 +262,6 @@ object BotZones {
                 roamRadius = 6,
                 leashRadius = 16,
                 activationPadding = 24,
-                allowSafe = true,
             ),
         )
         // Camp 2 — PORT SARIM (safe ground, the docks). The camp's ROGUE-HUNTING population: a
@@ -285,7 +280,6 @@ object BotZones {
                 roamRadius = 6,
                 leashRadius = 16,
                 activationPadding = 24,
-                allowSafe = true,
             ),
         )
 
@@ -318,14 +312,14 @@ object BotZones {
             ),
         )
 
-        // FALLEN VARROCK — the city fell and is now the loot hub where the rogues congregate, so it
-        // gets a dedicated, denser colony ON TOP of the grid cells that cover it. This is also the
-        // scripted hunting ground for the Act II "Rogue Problem" quest, so its rogues are PINNED to
-        // the capped [T_ROGUE] pool (beatable metal/budget PKers, no rune/elite) instead of rolling
-        // the city's wild depth up to elite — players reported fresh Squires being farmed by geared
-        // Rogue Knights here. The chase leash/roam are also tightened so a rogue can't drag a quester
-        // clear across the shallow streets (the "coming in too far" complaint). The muster filter's
-        // walkable + isWilderness check still self-trims the banks/GE carve-outs and the buildings.
+        // FALLEN VARROCK — the city fell and is now the loot hub where the rogues congregate (and a
+        // level-20 single-combat PvP pocket — see PvpZones.VARROCK_POCKET), so it gets a dedicated,
+        // denser colony ON TOP of the mainland grid cells that cover it. This is also the scripted
+        // hunting ground for the Act II "Rogue Problem" quest, so its rogues are PINNED to the capped
+        // [T_ROGUE] pool (beatable metal/budget PKers, no rune/elite) — players reported fresh Squires
+        // being farmed by geared Rogue Knights here. The chase leash/roam are also tightened so a
+        // rogue can't drag a quester clear across the streets (the "coming in too far" complaint).
+        // The muster filter still self-trims the bank radii (RogueTerritory sanctuaries) + buildings.
         add(
             BotZoneConfig(
                 key = "fallen_varrock",
