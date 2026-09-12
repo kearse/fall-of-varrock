@@ -116,17 +116,22 @@ exactly as the Recruiting Sergeant was in PR-9).
 
 ## 3. Quest keys (prerequisites)
 
-Framework: `the_north` (**The North**, Main Story Quest 3 — `docs/quests/the-north.md`; the first
-built framework quest, and the reference for the journal varp + native-tab row path:
-`journalVarp` from the 4686 block + `nativeTabVarp`/`nativeTabComplete` on the definition, both
-written by `QuestEngine.publish`). Its gate is `Prerequisite.Custom`: `first_march` once that key
-is registered, else `recruit_trials` — copy the pattern when the quest before yours is not built yet.
-
 Legacy: `recruit_trials` (**The Last Free City**, Main Story Quest 1 — `docs/quests/the-last-free-city.md`)
 · `warprep_magic` · `rogue_hunting_1` (optional) · `rogue_hunting_2` (optional) · `warprep_ranged` ·
-`warprep_survival` · `king_of_lumbridge`. Framework story quests: `the_north` (Main Story Quest 3),
-`first_reclamation` (Main Story Quest 4 — `docs/quests/first-reclamation.md`), `a_kingdom_alone`
-(Main Story Quest 5).
+`warprep_survival` · `king_of_lumbridge`.
+
+Framework (story): `the_north` (**The North**, Main Story Quest 3 — `docs/quests/the-north.md`; the
+first built framework quest, and the reference for the journal varp + native-tab row path:
+`journalVarp` from the 4686 block + `nativeTabVarp`/`nativeTabComplete` on the definition, both
+written by `QuestEngine.publish`. Its gate is `Prerequisite.Custom`: `first_march` once that key
+is registered, else `recruit_trials` — copy the pattern when the quest before yours is not built yet)
+· `first_reclamation` (Main Story Quest 4 — `docs/quests/first-reclamation.md`) · `a_kingdom_alone`
+(**A Kingdom Alone**, Main Story Quest 5 — `docs/quests/a-kingdom-alone.md`) · the regional phase's
+four strategic objectives `breach` · `secure` · `understand` · `sustain` (`content/quests/story/StrategicObjectives.kt`;
+begun by A Kingdom Alone, each SOLVED by its regional campaign's payoff via
+`StrategicObjectives.solve(p, Breach)` etc. — `StrategicObjectives.allSolved(p)` is the Council of
+Gielinor gate, nothing else). A regional campaign's first quest gates on
+`Prerequisite.QuestComplete("a_kingdom_alone")`.
 
 Regional campaign — Asgarnia (BREACH): `at_the_white_wall` · `a_matter_of_trolls` (**A Matter of
 Trolls** — `docs/quests/a-matter-of-trolls.md`; also sets the flag `asgarnia.northern_front_secured`;
@@ -138,16 +143,35 @@ whichever PR merges first.
 
 Every new quest spec starts from the integration-first template in `docs/quests/README.md`.
 
+## 3a. Journal rows for framework quests (built 2026-09-12)
+
+- **Client:** the 6-arg `LofQuest(name, why, genericVarp, lockReason, steps, unlocks)` constructor
+  reads the generic packing (`LofQuestVarps.genericStep/State/Progress`); step ordinals are the
+  server's 1-based step indices; a `LofQuestStep(…, goal)` draws " (n/goal)" from the progress bits.
+  Enum order = chain order = `QuestBook` constants; `LofQuest.isJournalVarp` refreshes on any of them.
+- **Native quest tab:** `override val nativeTabVarp` / `nativeTabComplete` on the definition (a
+  relabelled OSRS row from `QuestTablePatch.PLAN`, two-digit sort keys — docs/quest-tab-handoff.md);
+  `QuestEngine.publish` writes 0 / 1 / complete.
+- **Quest points:** `override val questPoints`; `QuestJournal.sync` derives `Varp.QUEST_POINTS` and
+  the summary-tab quest counts from the registry.
+- **Login reminder:** `override val loginReminder = false` for standing entries (the strategic
+  objectives announce themselves as one `::strategy` line instead).
+- **Mid-session auto-begin:** `QuestEngine.pollTick` begins any unstarted `autoBegin` quest whose
+  prerequisites just became true (no relog between chain quests).
+- **Shared NPCs:** Duke Horacio and General Zo are on `bindTalk` + an `NpcTalk` default branch —
+  attach quest lines with `talk(npcKey, stepId)`, never edit their dialogue bodies.
+
 ## 4. Not yet built (Block 2 adds as needed)
 
 Branching steps (a `ConditionalStep` — First Reclamation fakes its battle ⇄ retry loop with
 `QuestEngine.advanceTo`), party instances, the Veteran-of-Varrock award (the first major
 assault story event), the `NpcTalk` migration for Vannaka (still on his own `onNpcOption` bind).
 
-Built since (The North + First Reclamation, 2026-09-12): General Zo routes through `bindTalk` + a
-default `NpcTalk` branch; framework quests publish to the client journal through the generic
-`LofQuest` entry (varp `& 0xFF` = 1-based step, bits 20-21 = state; `LofQuestVarps.NORTH` = 4686,
-`FIRST_RECLAMATION` = 4687) and to the native tab through `QuestDefinition.nativeTabVarp`; the
-first locked route (`southern_watch`, unlocked by First Reclamation); and `QuestEngine.pollTick`
+Built since (The North + First Reclamation + A Kingdom Alone, 2026-09-12): General Zo and Duke
+Horacio route through `bindTalk` + a default `NpcTalk` branch; framework quests publish to the
+client journal through the generic `LofQuest` entry (varp `& 0xFF` = 1-based step, bits 20-21 =
+state; `LofQuestVarps.NORTH` = 4686, `FIRST_RECLAMATION` = 4687, `A_KINGDOM_ALONE` = 4688, the
+four objectives 4689-4692) and to the native tab through `QuestDefinition.nativeTabVarp`; the
+first locked route (`southern_watch`, unlocked by First Reclamation); `QuestEngine.pollTick`
 auto-begins an `autoBegin` quest the moment its gate opens mid-session, so the next quest starts
-without a relog.
+without a relog; quest points (`questPoints`) and the standing strategic objectives (§3a).

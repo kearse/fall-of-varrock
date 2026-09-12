@@ -103,11 +103,19 @@ private val PLAN = listOf(
     Relabel(dbrowId = 44, questId = 7, sortName = "08 The North", displayName = "The North", varp = 32),
     // First Reclamation (Main Story Quest 4, framework quest) reuses Romeo & Juliet (dbrow 121, quest
     // id 4, varp 144, complete 100) — driven by QuestDefinition.nativeTabVarp through QuestEngine.publish.
-    // Sort key 09; A Kingdom Alone takes 10 and its strategic objectives 11-14.
     Relabel(dbrowId = 121, questId = 4, sortName = "09 First Reclamation", displayName = "First Reclamation", varp = 144),
-    // A Matter of Trolls (Asgarnia — BREACH quest 2, framework quest, chain index 15) reuses Death
-    // Plateau (dbrow 23, quest id 58, varp 314, complete 80) — on-theme, and driven by
-    // QuestDefinition.nativeTabVarp through QuestEngine.publish. Sort key 16 (15 is At the White Wall).
+    // A Kingdom Alone (Main Story Quest 5, framework quest `a_kingdom_alone`) reuses Rune Mysteries
+    // (dbrow 125, quest id 53, varp 63, complete 6). Driven by QuestEngine.publish (nativeTabVarp).
+    Relabel(dbrowId = 125, questId = 53, sortName = "10 A Kingdom Alone", displayName = "A Kingdom Alone", varp = 63),
+    // The regional phase's four strategic objectives (opened by A Kingdom Alone; each completed by
+    // its regional campaign's payoff). Red / yellow / green = not yet open / open / solved.
+    Relabel(dbrowId = 10, questId = 12, sortName = "11 BREACH - Asgarnia", displayName = "BREACH - Asgarnia", varp = 130),          // Black Knights' Fortress, complete 4
+    Relabel(dbrowId = 112, questId = 10, sortName = "12 SECURE - Morytania", displayName = "SECURE - Morytania", varp = 273),      // Prince Ali Rescue, complete 110
+    Relabel(dbrowId = 155, questId = 8, sortName = "13 UNDERSTAND - Wilderness", displayName = "UNDERSTAND - Wilderness / Desert", varp = 178), // Vampyre Slayer, complete 3
+    Relabel(dbrowId = 108, questId = 16, sortName = "14 SUSTAIN - Kandarin", displayName = "SUSTAIN - Kandarin / War Effort", varp = 71),      // Pirate's Treasure, complete 4
+    // Asgarnia — BREACH: sort key 15 is At the White Wall (its own PR). A Matter of Trolls (quest 2,
+    // framework quest, chain index 15) reuses Death Plateau (dbrow 23, quest id 58, varp 314,
+    // complete 80) — on-theme, driven by QuestDefinition.nativeTabVarp through QuestEngine.publish.
     Relabel(dbrowId = 23, questId = 58, sortName = "16 A Matter of Trolls", displayName = "A Matter of Trolls", varp = 314),
 )
 

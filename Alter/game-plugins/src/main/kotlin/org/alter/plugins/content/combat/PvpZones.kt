@@ -1,103 +1,93 @@
 package org.alter.plugins.content.combat
 
+import org.alter.api.ext.Wilderness
 import org.alter.api.ext.isMulti
 import org.alter.game.model.Area
 import org.alter.game.model.Tile
 import org.alter.game.model.World
 
 /**
- * The PvP zoning model (from the hand-drawn map):
- *  - **Wilderness (red):** the only PvP area. Attack is enabled, unprovoked attacks skull, and death
- *    drops your loot. A big custom region (classic wild up north, extending south through Misthalin).
- *  - **Single combat (yellow):** the shallower core of the wild — one-on-one only. Everywhere else in
- *    the wild is **multi**.
- *  - **Safe:** EVERYTHING outside the red is safe by default. A few safe carve-outs sit INSIDE the red
- *    (Grand Exchange, the Varrock/Edgeville banks) and override it. Banks/cities outside the red are
- *    already safe for free.
- *  - **Depth level:** combat-level attack range scales with how many tiles you've pushed into the wild
- *    from its safe (southern) edge — deeper = wider range (anyone can hit you very deep).
+ * Where HUMANS may fight each other, and at what level. This object answers exactly one question —
+ * "is player-vs-player live on this tile, and how wide is the level bracket" — and nothing else:
+ *  - **Wilderness (red):** the real OSRS wilderness ([Wilderness.SURFACE], north of the Edgeville
+ *    ditch) plus its underground boss lairs, the Fallen Varrock PvP pocket ([VARROCK_POCKET]) and any
+ *    live hostile zone. Attack is enabled, unprovoked attacks skull, deaths drop to the killer.
+ *  - **Safe:** EVERYTHING else is safe FROM OTHER PLAYERS. A few safe carve-outs sit INSIDE the red
+ *    (the GE / Varrock banks inside the pocket, Ferox Enclave) and override it; bank booths get an
+ *    automatic radius via [BankSafezonePlugin].
+ *  - **Single vs multi:** OSRS semantics — the wild is SINGLE by default and the [MULTI] boxes are the
+ *    exception; a few areas are pinned single regardless ([SINGLE_OVERRIDES]).
+ *  - **Level:** the OSRS depth formula ([Wilderness.levelAt]); lairs, hostile zones and pockets carry
+ *    a fixed level. `canTeleport` and `Combat.canEngage` both read [wildernessLevel], so the teleport
+ *    restriction and the combat bracket can never disagree.
  *
- * Coordinates are APPROXIMATED from the freehand map and are TUNABLE — use `::zone` in-game to read
- * the live classification + level at your tile and we refine the boxes.
+ * Rogue Knight PK bots are NOT governed here — they hunt the whole mainland, cities included, under
+ * their own authority (`bots/RogueTerritory`). `Combat.canEngage` waves bot combat past every rule
+ * in this file.
+ *
+ * Boxes marked TUNE are approximations — `::zone` in-game prints the live classification + level.
  */
 object PvpZones {
 
-    private const val TILES_PER_LEVEL = 8
-    private const val MAX_WILD_LEVEL = 56
-
-    /** Depth origin (safe-side edge) — the top of Lumbridge, just N of the furnace (3226,3256). Depth
-     *  (and so wilderness level) is measured north from here. */
-    private const val WILD_SOUTH_EDGE_Z = 3258
-
-    /** RED — the PvP wilderness. Southern edge dropped to the TOP OF LUMBRIDGE (z3258, right after
-     *  the furnace at 3226,3256) across the whole width. Safe towns inside this band (Falador, the
-     *  Varrock/Edgeville banks, the GE) are carved out below. */
-    /** Lumbridge CONTESTED FRONTIER (master design brief §4): a guarded PvP ring at the hobgoblin/
-     *  knight band on the WEST and EAST sides (the north is already wilderness; the safe core below
-     *  protects town + spawn + the goblin front). Level is CAPPED to [FRONTIER_LEVEL] (not open
-     *  any-level PvP) since it sits at the town's latitude. CONSERVATIVE + TUNABLE — verify with ::zone. */
-    private val CONTESTED: List<Area> = listOf(
-        Area(3152, 3190, 3182, 3280),  // west frontier band
-        Area(3290, 3190, 3320, 3280),  // east frontier band
-    )
-    private const val FRONTIER_LEVEL = 10
-
-    /** The main custom PvP-wilderness expanse — south edge at the TOP OF LUMBRIDGE (z3258, "the line").
-     *  This single rectangle is the authority for where the custom wild is; bot spawns tile it directly
-     *  (see [org.alter.plugins.content.bots.BotZones]) so PKers populate the whole custom wild and can
-     *  never drift off this boundary. Move this and both the zoning AND the bots follow. */
-    val mainWilderness: Area = Area(2944, 3258, 3450, 3968)
-
-    private val WILDERNESS: List<Area> = listOf(
-        mainWilderness,                // whole wilderness, south edge at the top of Lumbridge
-        Area(3245, 3214, 3267, 3256),  // east bank of the Lum (Lumbridge ↔ Al Kharid) PK pocket
-    ) + CONTESTED
+    /**
+     * The OSRS wilderness surface box — the authority for where the wild is. Bot spawns tile it
+     * directly (see [org.alter.plugins.content.bots.BotZones]) so the deep-wild PKer grid can never
+     * drift off this boundary.
+     */
+    val mainWilderness: Area = Wilderness.SURFACE
 
     /**
-     * UNDERGROUND wilderness — the boss caves under the deep wild. [Area] is x/z-only and every
-     * box above lives at surface latitudes, so a cave at z≈10300 read as SAFE ground (Scorpia's
-     * lair had no overlay, no PvP, no skull and no death drops — player report 2026-09-03).
-     * Each box is one map region at the OSRS fixed level; all are multi-way (none intersect
-     * [SINGLE]). MIRROR: `TileExt.getWildernessLevel` (game-api, drives `canTeleport`) carries
-     * the same four boxes — keep them in step.
+     * FALLEN VARROCK PvP POCKET (design authority 03 §3: "PvP inside Varrock remains OPEN"). The
+     * city sits south of the ditch, so it is red by this box alone — a flat fixed level (the old
+     * depth model read ~15-33 across the city) and single combat, with the GE + both banks carved
+     * out below. Same box as `BotZones.fallen_varrock` / `WorldSpawnsPlugin.FALLEN_VARROCK`.
+     * Level 20 keeps standard-spellbook teleports usable (they refuse ABOVE 20). TUNE.
      */
-    private val WILD_DUNGEONS: List<Pair<Area, Int>> = listOf(
-        Area(3200, 10304, 3263, 10367) to 54, // r12961 Scorpia's cave
-        Area(3200, 10176, 3263, 10239) to 34, // r12959 Vet'ion's Rest
-        Area(3264, 10176, 3327, 10239) to 41, // r13215 Callisto's Den
-        Area(3328, 10240, 3391, 10367) to 28, // r13472/13473 Venenatis' dens
+    val VARROCK_POCKET: Area = Area(3155, 3376, 3300, 3520)
+    const val VARROCK_POCKET_LEVEL = 20
+
+    /** Fixed-level red boxes OUTSIDE the OSRS surface box. */
+    private val POCKETS: List<Pair<Area, Int>> = listOf(
+        VARROCK_POCKET to VARROCK_POCKET_LEVEL,
     )
 
-    /** YELLOW — single-combat areas. */
-    private val SINGLE: List<Area> = listOf(
-        Area(3100, 3350, 3320, 3550),  // shallow core of the main wild
-        Area(3245, 3214, 3267, 3256),  // east-Lum PK pocket is single combat
-        // The deep Rogue Knight camps fight 1v1: the ladder's tier hunts and boss duels stay fair
-        // even in the deep wild. Boxes mirror the BotZones colonies — TUNE together.
+    /**
+     * MULTI-combat boxes inside the wild (everything else in the wild is single). Transcribed from
+     * the OSRS multi-combat map and chunk-rounded — all TUNE, verify by walking them with `::zone`.
+     */
+    private val MULTI: List<Area> = listOf(
+        Area(3016, 3616, 3055, 3655), // Dark Warriors' Fortress
+        Area(3192, 3616, 3231, 3655), // the Corporeal Beast entrance strip
+        Area(3136, 3656, 3199, 3703), // Graveyard of Shadows
+        Area(3200, 3728, 3271, 3775), // Bone Yard
+        Area(3176, 3800, 3239, 3863), // Lava Dragon Isle
+        Area(3272, 3856, 3335, 3903), // Demonic Ruins
+        Area(3224, 3896, 3335, 3967), // Rogues' Castle + the Chaos Elemental
+        Area(3088, 3920, 3127, 3967), // Mage Arena
+        Area(2984, 3928, 3015, 3967), // Wilderness Agility Course
+        Area(3032, 3936, 3079, 3967), // Pirates' Hideout
+    )
+
+    /**
+     * Pinned SINGLE combat, winning over [MULTI]: the deep Rogue Knight camps fight 1v1 so the
+     * ladder's tier hunts and boss duels stay fair (boxes mirror the BotZones colonies — TUNE
+     * together), and the Varrock pocket is a 1v1 loot hub, not a pile.
+     */
+    private val SINGLE_OVERRIDES: List<Area> = listOf(
         Area(3020, 3675, 3055, 3705),  // the Wild Bandit Camp
         Area(2995, 3865, 3035, 3900),  // the Rogue Commander's Redoubt
+        VARROCK_POCKET,
     )
 
     /** Safe carve-outs INSIDE the red (everywhere OUTSIDE the red is already safe). */
     private val SAFE_INSIDE_RED: List<Area> = listOf(
-        // Falador — a fortified surviving power and a safe hub (design authority, Sept 2026); the
-        // whole walled city is carved out of the wild it sits in. Same box the old raid config used.
-        Area(2942, 3300, 3066, 3400),
-        Area(3140, 3470, 3185, 3515), // Grand Exchange
+        Area(3140, 3470, 3185, 3515), // Grand Exchange (inside the Varrock pocket)
         Area(3178, 3432, 3196, 3453), // Varrock west bank
         Area(3250, 3416, 3257, 3424), // Varrock east bank
-        Area(3067, 3488, 3098, 3522), // Edgeville town (whole town safe, up to the wilderness ditch)
-        // Lumbridge SAFE CORE (master design brief §4): town + spawn (3218,3218) + the goblin front
-        // (gap 1–17 from the city box) — where new players train. Carved out of the wilderness so the
-        // immediate frontier is NEVER PvP; only the hobgoblin/knight band beyond it is. TUNABLE.
-        Area(3182, 3172, 3290, 3280),
-        // The Digsite (operator decision 2026-09-04): the Senntisten expedition winches and the
-        // story-boss exits land here, and the red map put them at wilderness level 22 multi —
-        // players were dumped into PvP ground straight out of an instance. Safe pocket.
-        Area(3340, 3400, 3400, 3450),
+        Area(3125, 3617, 3155, 3648), // Ferox Enclave — OSRS safe island at level ~12-16. TUNE
     )
 
-    /** Extra safe boxes registered at runtime (e.g. bank booths discovered in the world). */
+    /** Extra safe boxes registered at runtime (bank booths discovered in the world). */
     private val safeDynamic = mutableListOf<Area>()
 
     /**
@@ -117,16 +107,27 @@ object PvpZones {
     }
 
     private fun inRed(t: Tile): Boolean =
-        WILDERNESS.any { it.contains(t) } ||
-            WILD_DUNGEONS.any { it.first.contains(t) } ||
+        mainWilderness.contains(t) ||
+            Wilderness.DUNGEONS.any { it.first.contains(t) } ||
+            POCKETS.any { it.first.contains(t) } ||
             hostile.any { it.area.contains(t) }
+
     private fun inCarveout(t: Tile): Boolean = SAFE_INSIDE_RED.any { it.contains(t) } || safeDynamic.any { it.contains(t) }
-    private fun inSingle(t: Tile): Boolean = SINGLE.any { it.contains(t) } || hostile.any { it.singleCombat && it.area.contains(t) }
+
+    /** OSRS default is single; lairs, [MULTI] boxes and non-1v1 hostile zones are multi. */
+    private fun inSingle(t: Tile): Boolean {
+        if (SINGLE_OVERRIDES.any { it.contains(t) }) return true
+        if (hostile.any { it.singleCombat && it.area.contains(t) }) return true
+        if (Wilderness.DUNGEONS.any { it.first.contains(t) }) return false
+        if (MULTI.any { it.contains(t) }) return false
+        if (hostile.any { it.area.contains(t) }) return false
+        return true
+    }
 
     /** True PvP-enabled wilderness tile (inside red, not a safe carve-out). */
     fun isWilderness(t: Tile): Boolean = inRed(t) && !inCarveout(t)
 
-    /** Safe = anything that isn't live wilderness (outside red, or a carve-out inside it). */
+    /** Safe FROM PLAYERS = anything that isn't live wilderness (outside red, or a carve-out inside it). */
     fun isSafe(t: Tile): Boolean = !isWilderness(t)
 
     fun isSingle(t: Tile): Boolean = isWilderness(t) && inSingle(t)
@@ -136,26 +137,32 @@ object PvpZones {
     /**
      * Multi-combat ground for AoE purposes (bursts/barrages, chinchompas, the d2h/dcb sweeps):
      * the multi wilderness OR a PvE region/chunk a content plugin flagged with
-     * `setMultiCombatRegion` (boss lairs, the GWD throne rooms) — the latter is also what lights
-     * the client's crossed-swords icon, so the two always agree.
+     * `setMultiCombatRegion` (boss lairs, the GWD throne rooms). The client's crossed-swords icon
+     * is driven from this same predicate inside the wild ([WildernessOverlayPlugin]), so the two agree.
      */
     fun isMultiCombat(t: Tile, world: World): Boolean = isMulti(t) || t.isMulti(world)
 
-    /** Wilderness level by depth pushed into the wild (0 if not in the wild). */
+    /** Wilderness level at [t] (0 if not live wilderness). */
     fun wildernessLevel(t: Tile): Int {
         if (!isWilderness(t)) return 0
-        // Underground lairs carry a FIXED level — checked before the depth math, which would
-        // otherwise clamp a z≈10300 tile to the maximum.
-        WILD_DUNGEONS.firstOrNull { it.first.contains(t) }?.let { return it.second }
+        // Fixed levels first: lairs and pockets sit at latitudes where the depth math is meaningless.
+        Wilderness.DUNGEONS.firstOrNull { it.first.contains(t) }?.let { return it.second }
         hostile.firstOrNull { it.area.contains(t) }?.wildLevel?.let { return it } // hostile zones: fixed level (null = depth)
-        if (CONTESTED.any { it.contains(t) }) return FRONTIER_LEVEL // §4: the town frontier is capped, not open any-level
-        val depth = t.z - WILD_SOUTH_EDGE_Z
-        // Isolated PK pockets south of the main wild (e.g. the east-Lum arena) are open PvP — any level.
-        if (depth < 0) return MAX_WILD_LEVEL
-        return (depth / TILES_PER_LEVEL + 1).coerceIn(1, MAX_WILD_LEVEL)
+        POCKETS.firstOrNull { it.first.contains(t) }?.let { return it.second }
+        val depth = Wilderness.levelAt(t)
+        // A depth-levelled hostile zone placed OFF the surface box has no depth to read — treat it
+        // as open any-level PvP rather than a level-0 wild tile.
+        return if (depth > 0) depth else Wilderness.MAX_LEVEL
     }
 
-    /** Register a safe radius around a tile (used to auto-protect bank booths inside the wild). */
+    /**
+     * A safe carve-out: the GE / Varrock bank pockets / Ferox, or any bank radius registered at
+     * runtime ([BankSafezonePlugin]). No human PvP even inside the red — and the Rogue Knights'
+     * no-muster / no-unprovoked-ambush ground everywhere ("the banks survived behind barricades").
+     */
+    fun isCarveout(t: Tile): Boolean = inCarveout(t)
+
+    /** Register a safe box (used to auto-protect bank booths). */
     fun addSafeArea(area: Area) {
         safeDynamic += area
     }

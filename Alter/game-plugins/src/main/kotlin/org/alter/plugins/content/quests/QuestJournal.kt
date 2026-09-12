@@ -1,13 +1,18 @@
 package org.alter.plugins.content.quests
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import org.alter.api.cfg.Varbit
+import org.alter.api.cfg.Varp
+import org.alter.api.ext.getVarbit
 import org.alter.api.ext.getVarp
 import org.alter.api.ext.message
+import org.alter.api.ext.setVarbit
 import org.alter.api.ext.setVarp
 import org.alter.game.model.attr.QUEST_GUIDE_MUTED_ATTR
 import org.alter.game.model.entity.Player
 import org.alter.plugins.content.bots.knights.RogueKnightLadder
 import org.alter.plugins.content.bots.knights.RogueKnights
+import org.alter.plugins.content.quests.framework.QuestEngine
 import org.alter.plugins.content.quests.framework.QuestRegistry
 
 private val logger = KotlinLogging.logger {}
@@ -79,7 +84,14 @@ object QuestJournal {
     const val NORTH_VARP = 4686
     /** First Reclamation (Main Story Quest 4, `quests/story/FirstReclamation`). */
     const val FIRST_RECLAMATION_VARP = 4687
-    // 4688-4692 A Kingdom Alone + the four strategic objectives, 4693 At the White Wall — their own PRs.
+    /** A Kingdom Alone (Main Story Quest 5, `quests/story/AKingdomAlone`). */
+    const val KINGDOM_ALONE_VARP = 4688
+    /** The regional phase's four strategic objectives (`quests/story/StrategicObjectives`). */
+    const val BREACH_VARP = 4689
+    const val SECURE_VARP = 4690
+    const val UNDERSTAND_VARP = 4691
+    const val SUSTAIN_VARP = 4692
+    // 4693 At the White Wall — its own PR.
     /** A Matter of Trolls (Asgarnia — BREACH quest 2, `quests/asgarnia/AMatterOfTrolls`). */
     const val TROLLS_VARP = 4694
 
@@ -116,6 +128,21 @@ object QuestJournal {
      *  through `QuestEngine.publish`). Completes at 100. */
     const val FIRST_RECLAMATION_QUEST_VARP = 144
     internal const val FIRST_RECLAMATION_QUEST_COMPLETE = 100
+    /** Rune Mysteries varp — now the "A Kingdom Alone" row (Main Story Quest 5). Completes at 6. */
+    const val KINGDOM_ALONE_QUEST_VARP = 63
+    internal const val KINGDOM_ALONE_QUEST_COMPLETE = 6
+    /** Black Knights' Fortress varp — now the "BREACH - Asgarnia" objective row. Completes at 4. */
+    const val BREACH_QUEST_VARP = 130
+    internal const val BREACH_QUEST_COMPLETE = 4
+    /** Prince Ali Rescue varp — now the "SECURE - Morytania" objective row. Completes at 110. */
+    const val SECURE_QUEST_VARP = 273
+    internal const val SECURE_QUEST_COMPLETE = 110
+    /** Vampyre Slayer varp — now the "UNDERSTAND - Wilderness / Desert" objective row. Completes at 3. */
+    const val UNDERSTAND_QUEST_VARP = 178
+    internal const val UNDERSTAND_QUEST_COMPLETE = 3
+    /** Pirate's Treasure varp — now the "SUSTAIN - Kandarin / War Effort" objective row. Completes at 4. */
+    const val SUSTAIN_QUEST_VARP = 71
+    internal const val SUSTAIN_QUEST_COMPLETE = 4
     /** Death Plateau varp — now the "A Matter of Trolls" row (Asgarnia — BREACH quest 2; driven by
      *  `QuestDefinition.nativeTabVarp` through `QuestEngine.publish`). Completes at 80. */
     const val TROLLS_QUEST_VARP = 314
@@ -159,6 +186,19 @@ object QuestJournal {
         val campsTotal = knightCamps.size.coerceIn(0, 15)
         val knightsPacked = knightRank or (knightHunt shl 8) or (campsCleared shl 16) or (campsTotal shl 20)
         if (p.getVarp(KNIGHTS_VARP) != knightsPacked) p.setVarp(KNIGHTS_VARP, knightsPacked)
+
+        // Native summary tab: quest points + quest counts from the registry (framework quests carry
+        // `questPoints`; the legacy chains award none). Replaces the zero placeholders the character
+        // summary used to seed on login.
+        val listed = QuestRegistry.all().filter { it.chainIndex != null && !it.hidden }
+        val completed = listed.count { runCatching { it.complete(p) }.getOrDefault(false) }
+        val framework = QuestRegistry.frameworkQuests().filter { !it.adminOnly }
+        val questPoints = framework.filter { QuestEngine.isComplete(p, it) }.sumOf { it.questPoints }
+        val questPointsTotal = framework.sumOf { it.questPoints }
+        if (p.getVarp(Varp.QUEST_POINTS) != questPoints) p.setVarp(Varp.QUEST_POINTS, questPoints)
+        if (p.getVarbit(Varbit.TOTAL_QUEST_POINT_COUNT) != questPointsTotal) p.setVarbit(Varbit.TOTAL_QUEST_POINT_COUNT, questPointsTotal)
+        if (p.getVarbit(Varbit.TOTAL_QUEST_COUNT) != listed.size) p.setVarbit(Varbit.TOTAL_QUEST_COUNT, listed.size)
+        if (p.getVarbit(Varbit.COMPLETED_QUESTS_COUNT) != completed) p.setVarbit(Varbit.COMPLETED_QUESTS_COUNT, completed)
 
         val mutedFlag = if (muted(p)) 1 else 0
         if (p.getVarp(GUIDE_MUTED_VARP) != mutedFlag) p.setVarp(GUIDE_MUTED_VARP, mutedFlag)

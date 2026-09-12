@@ -93,6 +93,9 @@ class QuestDebugPlugin(
         )
         p.message("journal: " + custom.joinToString(" ") { (n, v) -> "$n[$v]=${p.getVarp(v)}" })
         p.message("native: " + native.joinToString(" ") { (n, v) -> "$n[$v]=${p.getVarp(v)}" })
-        QuestRegistry.frameworkQuests().forEach { q -> q.journalVarp?.let { p.message("${q.key}[$it]=${p.getVarp(it)}") } }
+        QuestRegistry.frameworkQuests().forEach { q ->
+            q.journalVarp?.let { p.message("${q.key}[$it]=${p.getVarp(it)}") }
+            q.nativeTabVarp?.let { p.message("${q.key} nativeRow[$it]=${p.getVarp(it)} (complete=${q.nativeTabComplete})") }
+        }
     }
 }
