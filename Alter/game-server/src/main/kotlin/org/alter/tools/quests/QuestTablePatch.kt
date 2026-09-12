@@ -105,12 +105,20 @@ private val PLAN = listOf(
     Relabel(dbrowId = 44, questId = 7, sortName = "08 The North", displayName = "The North", varp = 32),
     // First Reclamation (Main Story Quest 4, framework quest) reuses Romeo & Juliet (dbrow 121, quest
     // id 4, varp 144, complete 100) — driven by QuestDefinition.nativeTabVarp through QuestEngine.publish.
-    // Sort key 09; A Kingdom Alone takes 10 and its strategic objectives 11-14.
     Relabel(dbrowId = 121, questId = 4, sortName = "09 First Reclamation", displayName = "First Reclamation", varp = 144),
+    // A Kingdom Alone (Main Story Quest 5, framework quest `a_kingdom_alone`) reuses Rune Mysteries
+    // (dbrow 125, quest id 53, varp 63, complete 6). Driven by QuestEngine.publish (nativeTabVarp).
+    Relabel(dbrowId = 125, questId = 53, sortName = "10 A Kingdom Alone", displayName = "A Kingdom Alone", varp = 63),
+    // The regional phase's four strategic objectives (opened by A Kingdom Alone; each completed by
+    // its regional campaign's payoff). Red / yellow / green = not yet open / open / solved.
+    Relabel(dbrowId = 10, questId = 12, sortName = "11 BREACH - Asgarnia", displayName = "BREACH - Asgarnia", varp = 130),          // Black Knights' Fortress, complete 4
+    Relabel(dbrowId = 112, questId = 10, sortName = "12 SECURE - Morytania", displayName = "SECURE - Morytania", varp = 273),      // Prince Ali Rescue, complete 110
+    Relabel(dbrowId = 155, questId = 8, sortName = "13 UNDERSTAND - Wilderness", displayName = "UNDERSTAND - Wilderness / Desert", varp = 178), // Vampyre Slayer, complete 3
+    Relabel(dbrowId = 108, questId = 16, sortName = "14 SUSTAIN - Kandarin", displayName = "SUSTAIN - Kandarin / War Effort", varp = 71),      // Pirate's Treasure, complete 4
     // At the White Wall (Asgarnia — BREACH, Quest 1; a framework quest, chain index 14) reuses
     // Recruitment Drive (dbrow 118, quest id 86, varp 657, complete 2) — the OSRS quest whose start
     // NPC is Sir Amik Varze himself. Driven by QuestEngine.publish from AtTheWhiteWall.nativeTabVarp.
-    // Sort key 15 — the regional campaign quests follow A Kingdom Alone's 10-14.
+    // Sort key 15 — the regional campaign quests follow the objectives, campaign by campaign.
     Relabel(dbrowId = 118, questId = 86, sortName = "15 At the White Wall", displayName = "At the White Wall", varp = 657),
 )
 

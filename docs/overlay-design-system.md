@@ -315,8 +315,11 @@ Reusable pieces — reach for these before inventing a new one. Metrics above.
     `lofquests.LofQuestVarps.NORTH`) ·
     **4687 First Reclamation journal** (Main Story Quest 4; `QuestJournal.FIRST_RECLAMATION_VARP`;
     client `LofQuestVarps.FIRST_RECLAMATION`) ·
-    **4688-4692 A Kingdom Alone + BREACH / SECURE / UNDERSTAND / SUSTAIN** (Main Story Quest 5 and
-    the four regional objectives — PR #349, recorded there) ·
+    **4688 A Kingdom Alone journal** (Main Story Quest 5, `a_kingdom_alone`;
+    `QuestJournal.KINGDOM_ALONE_VARP`) ·
+    **4689-4692 BREACH / SECURE / UNDERSTAND / SUSTAIN** (the regional phase's four strategic
+    objectives, keys `breach`/`secure`/`understand`/`sustain` — `content/quests/story/`;
+    `QuestJournal.BREACH_VARP`…`SUSTAIN_VARP`) ·
     **4693 At the White Wall journal** (Asgarnia — BREACH, Quest 1; `QuestJournal.WHITE_WALL_VARP`;
     client `LofQuestVarps.AT_THE_WHITE_WALL`) ·
     **4694-4699 RESERVED for the remaining Asgarnia campaign quests** (A Matter of Trolls 4694,

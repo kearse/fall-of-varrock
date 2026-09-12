@@ -41,9 +41,16 @@ object QuestBook {
     const val KING = 6
     const val THE_NORTH = 7         // The North (Main Story Quest 3)
     const val FIRST_RECLAMATION = 8 // First Reclamation (Main Story Quest 4)
-    // 9-13: A Kingdom Alone + BREACH / SECURE / UNDERSTAND / SUSTAIN (PR #349).
+    const val A_KINGDOM_ALONE = 9   // A Kingdom Alone (Main Story Quest 5)
+    // The regional phase's four strategic objectives (opened by A Kingdom Alone).
+    const val BREACH = 10
+    const val SECURE = 11
+    const val UNDERSTAND = 12
+    const val SUSTAIN = 13
+    // The regional campaign quests follow the objectives, campaign by campaign.
     const val AT_THE_WHITE_WALL = 14 // Asgarnia (BREACH) Quest 1
 
+    /** The highest chain index the client journal lists (`LofQuest.CHAIN.size() - 1`). */
     const val LAST_INDEX = AT_THE_WHITE_WALL
 
     /** Pulse the open signal, focused on [chainIndex]. */

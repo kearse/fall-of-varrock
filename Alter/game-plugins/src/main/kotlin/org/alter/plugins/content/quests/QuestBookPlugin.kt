@@ -64,6 +64,11 @@ class QuestBookPlugin(
             13 to QuestBook.KING,               // Witch's Potion
             7 to QuestBook.THE_NORTH,           // Ernest the Chicken
             4 to QuestBook.FIRST_RECLAMATION,   // Romeo & Juliet
+            53 to QuestBook.A_KINGDOM_ALONE,    // Rune Mysteries
+            12 to QuestBook.BREACH,             // Black Knights' Fortress
+            10 to QuestBook.SECURE,             // Prince Ali Rescue
+            8 to QuestBook.UNDERSTAND,          // Vampyre Slayer
+            16 to QuestBook.SUSTAIN,            // Pirate's Treasure
             86 to QuestBook.AT_THE_WHITE_WALL,  // Recruitment Drive
         )
     }

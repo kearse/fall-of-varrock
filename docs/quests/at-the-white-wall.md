@@ -162,15 +162,14 @@ content.
 
 ## Cross-PR contract (five quest sessions built in parallel, 2026-09-12)
 
-- Gate: `Prerequisite.QuestComplete("a_kingdom_alone")` — A Kingdom Alone is PR #349. Until it merges
-  the quest can only be started with `::questdebug begin at_the_white_wall`.
-- Chain slot **14** (`QuestBook.AT_THE_WHITE_WALL`; slots 7-13 = The North, First Reclamation, A Kingdom
-  Alone, BREACH, SECURE, UNDERSTAND, SUSTAIN in their PRs). `QuestBook.LAST_INDEX` is bumped here; the
-  client `LofQuest.AT_THE_WHITE_WALL` enum entry **must sit directly after SUSTAIN** once those entries
-  land (it currently follows KING_OF_LUMBRIDGE with a merge note).
-- Journal varp **4693** (`QuestJournal.WHITE_WALL_VARP`); 4686-4692 are those PRs'.
-- Native tab row: Recruitment Drive, PLAN sort key `"15 At the White Wall"`; the legacy rows were
-  renumbered to two-digit keys (`"01"`..`"07"`) so the lexicographic sort survives past nine rows.
+- Gate: `Prerequisite.QuestComplete("a_kingdom_alone")` — A Kingdom Alone (PR #349, merged) — so the
+  quest auto-begins the moment that quest completes; `::questdebug begin at_the_white_wall` forces it.
+- Chain slot **14** (`QuestBook.AT_THE_WHITE_WALL` = `LAST_INDEX`; slots 7-13 = The North, First
+  Reclamation, A Kingdom Alone, BREACH, SECURE, UNDERSTAND, SUSTAIN). The client
+  `LofQuest.AT_THE_WHITE_WALL` enum entry sits directly after SUSTAIN — declaration order IS the slot.
+- Journal varp **4693** (`QuestJournal.WHITE_WALL_VARP`); 4686-4692 are the main-story quests'.
+- Native tab row: Recruitment Drive, PLAN sort key `"15 At the White Wall"` (two-digit keys throughout
+  `PLAN` so the lexicographic sort survives past nine rows).
 - The Asgarnia payoff (Quest 5, The White Wall) — not this quest — solves BREACH via
   `StrategicObjectives.solve(p, Breach)` (package `content/quests/story`, PR #349).
 - The generic-quest client support (`LofQuest` generic constructor, `LofQuestStep.goal`,
