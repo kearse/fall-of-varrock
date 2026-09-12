@@ -51,6 +51,12 @@ class Mongo(override val collectionName: String) : FormatHandler(collectionName)
         return result
     }
 
+    override fun findDocument(loginUsername: String): Document? {
+        return DatabaseManager.getCollection(collectionName)
+            .find(regex("loginUsername", "^${Regex.escape(loginUsername)}$", "i"))
+            .first()
+    }
+
     override fun playerExists(client: Client): Boolean {
         val caseInsensitiveFilter = createCaseInsensitiveFilter(client)
         return DatabaseManager.getCollection(collectionName)

@@ -19,7 +19,8 @@ object GlobalChatChannel {
     /** Shown as "Owner:". Plain string, so the full server name fits here. */
     const val CHANNEL_OWNER = "Fall of Varrock"
 
-    private const val WORLD_ID = 1
+    /** The single world this server is; also what friends-list rows and PMs report. */
+    const val WORLD_ID = 1
 
     /** Members are unranked, so no rank ever reaches this and the kick option never shows. */
     private const val KICK_RANK = 127
@@ -30,6 +31,9 @@ object GlobalChatChannel {
      * guidance) so ids rarely collide across server restarts.
      */
     private val messageCounter = AtomicInteger(((System.currentTimeMillis() / 3_600_000L) % 8760L).toInt() * 50_000)
+
+    /** Next unique 24-bit id for a channel or private message sent from this world. */
+    fun nextMessageId(): Int = messageCounter.getAndIncrement() and 0xFFFFFF
 
     /**
      * Push the current online roster to every online player. Pass [exclude] for the player
@@ -72,7 +76,7 @@ object GlobalChatChannel {
                 sender = sender.username,
                 channelName = CHANNEL_NAME,
                 worldId = WORLD_ID,
-                worldMessageCounter = messageCounter.getAndIncrement() and 0xFFFFFF,
+                worldMessageCounter = nextMessageId(),
                 chatCrownType = sender.privilege.icon,
                 message = message,
             )

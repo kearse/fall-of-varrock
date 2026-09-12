@@ -567,6 +567,9 @@ open class Player(world: World) : Pawn(world) {
         }
         org.alter.game.info.PlayerInfo(this).syncAppearance()
         initiated = true
+        // The client shows "Loading friends list" until it gets these, even when both are empty.
+        social.pushFriends(this)
+        social.pushIgnores(this)
         world.plugins.executeLogin(this)
         social.updateStatus(this)
     }

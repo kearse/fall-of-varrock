@@ -106,6 +106,41 @@ object PlayerDetails {
     }
 
     /**
+     * Cache the display name of an account that was created on the website (so it wasn't in
+     * the boot-time scan). Called when such an account first logs in.
+     */
+    fun rememberAccount(loginUsername: String, accountDoc: Document) {
+        val key = loginUsername.lowercase()
+        if (displayNames.containsKey(key)) return
+        displayNames[key] = runCatching { DisplayName.fromDocument(accountDoc) }
+            .getOrElse { DisplayName(accountDoc.getString("currentDisplayName") ?: loginUsername) }
+    }
+
+    /**
+     * Find the account behind a name a player typed into "Add Friend" / "Add Ignore" (or a
+     * name stored in a friends list). Matches the current display name first, then the login
+     * key; falls back to the live `accounts` collection for website-created accounts that
+     * haven't logged in since boot. Returns (loginUsername, displayName) or null if no such
+     * account exists.
+     */
+    fun resolveAccount(name: String): Pair<String, String>? {
+        val typed = name.trim()
+        if (typed.isEmpty()) return null
+        displayNames.entries.firstOrNull { it.value.currentDisplayName.equals(typed, ignoreCase = true) }
+            ?.let { return it.key to it.value.currentDisplayName }
+        val login = Client.normalizeLogin(typed)
+        displayNames[login]?.let { return login to it.currentDisplayName }
+        val doc = try {
+            serialization.findDocument(login)
+        } catch (e: Exception) {
+            logger.warn(e) { "Failed to look up account '$login'" }
+            null
+        } ?: return null
+        rememberAccount(login, doc)
+        return login to (displayNames[login]?.currentDisplayName ?: typed)
+    }
+
+    /**
      * The full credential/meta document for this account, read live from the
      * `accounts` collection (so website-created accounts are visible even if they
      * were registered after this server booted). Null if no account record exists.
