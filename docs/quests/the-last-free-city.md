@@ -52,6 +52,18 @@ special attack instance / wave (the camp's living skirmish already reads as the 
   (3193,3221) to the camp's outer ring (`RecruitTrials.TUTORIAL_GOBLIN_TILES`, offsets of 5–6 tiles
   from 3254,3234). The knights skip that pack (`RecruitTrials.isTutorialGoblin`, by spawn tile — the
   respawn path wipes attributes) so there is always something standing for a recruit to fight.
+- **The pack is the camp's normal level-2 goblin** (`RecruitTrials.TUTORIAL_GOBLIN_NPC` =
+  `npc.goblin_3028`, the variant `SpawnPlugin` already hand-places at the camp), on
+  `GoblinCampPlugin.campGoblinDef`: 5 hp, level-1 stats, goblin animations, **aggro radius 0** — it
+  retaliates, it never attacks first. The same def covers the camp's other hand-placed level-2
+  variants (`goblin_3039`, `goblin_3054`). Previously the pack was the plain level-5 `npc.goblin` on
+  the camp's aggressive 25/25/18 def: eight of them in a 6-tile aggro radius stacked on a fresh
+  account the moment it crossed the bridge — dead before the first kill, no time to eat. The plain
+  `npc.goblin` keeps its def for the ambient goblins elsewhere; it is no longer spawned at the camp.
+  The camp's two hand-placed `goblin_2246` / `goblin_2248` (`SpawnPlugin`, 3247,3244 / 3244,3244)
+  went the same way: the world-spawn dataset stats those ids as aggressive level-5 Goblin Village
+  goblins (15–16 hp, def 13–19), and with walk radius 8 they wandered into the fight — now
+  `goblin_3039` / `goblin_3054`. Every goblin at the camp is a level-2 that never attacks first.
 - No separate tutorial battlefield, no duplicate goblin location: the iconic Lumbridge goblins ARE
   the opening battle.
 
@@ -160,7 +172,7 @@ lineage breadcrumb · handoff to General Zo's marches and Vannaka's War-Prep I.
 | Temporary Content | None. (The always-on tutorial goblin pack is permanent ambient content, relocated.) |
 | New NPCs | NONE |
 | New Maps | NONE |
-| World Changes | NONE permanent. The camp's PK bot is removed; the tutorial pack moved from the back woods to the camp. |
+| World Changes | NONE permanent. The camp's PK bot is removed; the tutorial pack moved from the back woods to the camp and is the camp's non-aggressive level-2 goblin (the level-5 aggro goblins are gone from the camp). |
 | New Mechanics | NONE |
 | Development Cost | **Script** |
 

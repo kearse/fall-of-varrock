@@ -16,7 +16,7 @@ Every new account begins **The Last Free City** the moment character creation en
 
 ## The quest
 
-1. **The east camp** - Head east across the river to the **goblin camp** (the classic Lumbridge goblins - except now three **Knights of Lumbridge** are fighting them). Help the knights defeat **5 goblins**. Kills count as long as you drew blood on the goblin, so fighting beside a knight never costs you credit. The camp stays a contested battlefield after the quest; your probe attack ends, the skirmish does not.
+1. **The east camp** - Head east across the river to the **goblin camp** (the classic Lumbridge goblins - except now three **Knights of Lumbridge** are fighting them). Help the knights defeat **5 goblins**. They are the ordinary level-2 camp goblins: they fight back when hit but never attack first, so pick them off one at a time and step away to eat whenever you need to. Kills count as long as you drew blood on the goblin, so fighting beside a knight never costs you credit. The camp stays a contested battlefield after the quest; your probe attack ends, the skirmish does not.
    *Reward from Damien: 10,000 gp + a full bronze kit.*
 2. **Earn your place** - Damien tells you it was only a probe, and that you reminded him of someone. Take your pay to **Duke Horacio** in the market: he recognises your defence of Lumbridge with your first rank, **Peasant → Commoner** (10,000 gp).
    *Reward: steel full helm.*

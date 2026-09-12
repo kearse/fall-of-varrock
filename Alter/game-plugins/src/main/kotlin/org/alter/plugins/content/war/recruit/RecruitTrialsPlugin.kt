@@ -50,10 +50,10 @@ class RecruitTrialsPlugin(
     private val sergeantTile = Triple(3217, 3220, 0) // just inside the Lumbridge gate, near the frontier road
     private val sergeantId = runCatching { getRSCM(sergeant) }.getOrDefault(-1)
 
-    /** Goblin ids that count for the FIGHT step. The frontier front line is `goblin_2245`
-     *  (CityFrontiers level 1); plain `goblin` is included too. A cache-name fallback in
-     *  [isGoblin] catches any other goblin variant regardless of id. */
-    private val goblinIds = listOf("npc.goblin", "npc.goblin_2245")
+    /** Goblin ids that count for the FIGHT step: the tutorial pack ([RecruitTrials.TUTORIAL_GOBLIN_NPC]),
+     *  the frontier front line `goblin_2245` (CityFrontiers level 1) and the plain `goblin`. A
+     *  cache-name fallback in [isGoblin] catches any other goblin variant regardless of id. */
+    private val goblinIds = listOf(RecruitTrials.TUTORIAL_GOBLIN_NPC, "npc.goblin", "npc.goblin_2245")
         .mapNotNull { runCatching { getRSCM(it) }.getOrNull() }.toSet()
 
     init {
@@ -115,10 +115,14 @@ class RecruitTrialsPlugin(
      * present, spread around the camp's outer ring ([RecruitTrials.TUTORIAL_GOBLIN_TILES]) so it
      * mixes with the garrison without swarming a fresh account. The knights leave this pack alone
      * ([RecruitTrials.isTutorialGoblin]) so there is always something for the recruits to fight.
+     *
+     * The pack is the camp's normal level-2 goblin ([RecruitTrials.TUTORIAL_GOBLIN_NPC]) — NOT the
+     * plain level-5 `npc.goblin`, whose aggressive camp def stacked the whole pack on a new account.
      */
     private fun spawnTutorialGoblins() {
-        val key = listOf("npc.goblin", "npc.goblin_2245").firstOrNull { runCatching { getRSCM(it) }.isSuccess } ?: run {
-            logger.warn { "The Last Free City: no goblin npc resolved; tutorial FIGHT pack not spawned." }
+        val key = RecruitTrials.TUTORIAL_GOBLIN_NPC
+        if (runCatching { getRSCM(key) }.isFailure) {
+            logger.warn { "The Last Free City: '$key' did not resolve; tutorial FIGHT pack not spawned." }
             return
         }
         RecruitTrials.TUTORIAL_GOBLIN_TILES.forEach { tile ->
