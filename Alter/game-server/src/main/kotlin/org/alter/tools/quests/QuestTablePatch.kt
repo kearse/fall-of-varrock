@@ -120,6 +120,18 @@ private val PLAN = listOf(
     // NPC is Sir Amik Varze himself. Driven by QuestEngine.publish from AtTheWhiteWall.nativeTabVarp.
     // Sort key 15 — the regional campaign quests follow the objectives, campaign by campaign.
     Relabel(dbrowId = 118, questId = 86, sortName = "15 At the White Wall", displayName = "At the White Wall", varp = 657),
+    // A Matter of Trolls (Asgarnia — BREACH, quest 2; framework quest, chain index 15) reuses Death
+    // Plateau (dbrow 23, quest id 58, varp 314, complete 80) — on-theme, driven by
+    // QuestDefinition.nativeTabVarp through QuestEngine.publish. Sort keys are slot+1.
+    Relabel(dbrowId = 23, questId = 58, sortName = "16 A Matter of Trolls", displayName = "A Matter of Trolls", varp = 314),
+    // The Guns of Asgarnia (Asgarnia — BREACH, quest 3; framework quest `guns_of_asgarnia`, chain 16)
+    // reuses Dwarf Cannon (dbrow 35, quest id 47, varp 0, complete 11) — Nulodion's own row. Driven
+    // by QuestEngine.publish (nativeTabVarp).
+    Relabel(dbrowId = 35, questId = 47, sortName = "17 The Guns of Asgarnia", displayName = "The Guns of Asgarnia", varp = 0),
+    // Old Wounds (Asgarnia — BREACH, Quest 4; framework quest `old_wounds`, chain index 17) reuses
+    // Wanted! (dbrow 156, quest id 92, varp 1051, complete 11 — that quest's own start NPC is Sir
+    // Tiffy Cashien). Driven by QuestEngine.publish from OldWounds.nativeTabVarp.
+    Relabel(dbrowId = 156, questId = 92, sortName = "18 Old Wounds", displayName = "Old Wounds", varp = 1051),
 )
 
 /** The only quest rows the tab should list after `hide` — exactly the ones we relabelled. */

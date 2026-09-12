@@ -47,11 +47,15 @@ object QuestBook {
     const val SECURE = 11
     const val UNDERSTAND = 12
     const val SUSTAIN = 13
-    // The regional campaign quests follow the objectives, campaign by campaign.
+    // The regional campaign quests follow the objectives, campaign by campaign (The White Wall,
+    // Asgarnia's finale, takes 18 when it lands).
     const val AT_THE_WHITE_WALL = 14 // Asgarnia (BREACH) Quest 1
+    const val A_MATTER_OF_TROLLS = 15 // Asgarnia — BREACH, quest 2 (the Northern Front)
+    const val GUNS_OF_ASGARNIA = 16 // Asgarnia — BREACH, quest 3 (the Artillery thread)
+    const val OLD_WOUNDS = 17       // Old Wounds (Asgarnia — BREACH, Quest 4)
 
     /** The highest chain index the client journal lists (`LofQuest.CHAIN.size() - 1`). */
-    const val LAST_INDEX = AT_THE_WHITE_WALL
+    const val LAST_INDEX = OLD_WOUNDS
 
     /** Pulse the open signal, focused on [chainIndex]. */
     fun open(p: Player, chainIndex: Int) {

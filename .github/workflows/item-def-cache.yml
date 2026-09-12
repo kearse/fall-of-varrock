@@ -20,6 +20,9 @@ name: Item def cache edit
 #   dispatch     — same backup rule, then rename the "Old note" (item 25829) to
 #                  "Weathered Varrock dispatch" with its examine — The North's quest item
 #                  (Main Story Quest 3) — and restart the game container
+#   oldwounds    — same backup rule, then rename the "Orders note" (28431) to "Kinshra field
+#                  orders" and the "Intel report" (761) to "Damaged Temple Knight report", each
+#                  with its examine — Old Wounds' two documents (Asgarnia Quest 4) — and restart
 #   restore      — swap the pristine backup back (undoes EVERY item edit) and restart the
 #                  game container
 #
@@ -33,7 +36,7 @@ on:
         type: choice
         required: true
         default: inspect
-        options: [inspect, commendation, dispatch, restore]
+        options: [inspect, commendation, dispatch, oldwounds, restore]
 
 # Share the deploy group so a cache edit never races a running deploy / other cache op.
 concurrency:
@@ -75,7 +78,7 @@ jobs:
           echo "== item def cache: $ACTION (image tag $IMAGE_TAG) =="
           case "$ACTION" in
             inspect)
-              run_tool inspect 4278 25829
+              run_tool inspect 4278 25829 28431 761
               ;;
             commendation)
               if [ ! -d "$BACKUP" ]; then
@@ -98,6 +101,17 @@ jobs:
               run_tool dispatch
               $COMPOSE restart game
               echo "game container restarted — relog to see the Old note become the Weathered Varrock dispatch"
+              ;;
+            oldwounds)
+              if [ ! -d "$BACKUP" ]; then
+                cp -r "$CACHE" "$BACKUP"
+                echo "backed up pristine cache -> $BACKUP"
+              else
+                echo "pristine backup already exists ($BACKUP) — keeping it"
+              fi
+              run_tool oldwounds
+              $COMPOSE restart game
+              echo "game container restarted — relog to see the Kinshra field orders and the Damaged Temple Knight report"
               ;;
             restore)
               if [ ! -d "$BACKUP" ]; then

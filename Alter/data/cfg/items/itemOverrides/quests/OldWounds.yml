@@ -1,0 +1,34 @@
+---
+# OLD WOUNDS (Asgarnia - BREACH, Quest 4, docs/quests/old-wounds.md): the two documents.
+# LIGHT CUSTOM per the quest's development audit - both reuse stock note defs that already carry
+# the Read pack verb, with nothing else in the build using them. Untradeable, so they are ALWAYS
+# kept on death (PvpDeathDropPlugin keeps untradeables - the quest sends the player into the real
+# Wilderness) and can never be traded, sold or alched. The CLIENT renders the cache name and
+# examine, so the operator runs Actions -> "Item def cache edit" -> oldwounds to rename them in the
+# live cache (until then the pack shows the stock "Orders note" / "Intel report"). data/cfg/objs.csv
+# carries the server-side examines. Two documents in one file: the loader splits on '---'.
+#
+# The Kinshra Field Orders - the stock "Orders note" (28431). Sir Tiffy keeps them at the report.
+id: 28431
+name: "Kinshra field orders"
+examine: "Orders concerning Kinshra operations in the Wilderness."
+tradeable: false
+weight: 0.0
+tradeable_on_ge: false
+cost: 0
+lowalch: 0
+highalch: 0
+buy_limit: null
+---
+# The Damaged Temple Knight Report - the stock "Intel report" (761). The player keeps it after the
+# quest as a re-readable lore item (the second entry in the lore journal, after the dispatch).
+id: 761
+name: "Damaged Temple Knight report"
+examine: "A damaged Temple Knight field report from Survey Site Seven - the First Scar."
+tradeable: false
+weight: 0.0
+tradeable_on_ge: false
+cost: 0
+lowalch: 0
+highalch: 0
+buy_limit: null

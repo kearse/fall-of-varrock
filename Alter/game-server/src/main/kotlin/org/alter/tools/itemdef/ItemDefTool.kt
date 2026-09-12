@@ -58,6 +58,17 @@ private const val DISPATCH = 25829
 private const val DISPATCH_NAME = "Weathered Varrock dispatch"
 private const val DISPATCH_EXAMINE = "A military dispatch from the final hours before Varrock fell."
 
+// Old Wounds (Asgarnia — BREACH, Quest 4): the Kinshra Field Orders ride the "Orders note" def (28431)
+// and the Damaged Temple Knight Report the "Intel report" def (761) — both already carry the Read pack
+// verb. Keep in sync with data/cfg/items/itemOverrides/quests/OldWounds.yml (server-side names) and
+// the 28431 / 761 lines in data/cfg/objs.csv (server-side examines).
+private const val KINSHRA_ORDERS = 28431
+private const val KINSHRA_ORDERS_NAME = "Kinshra field orders"
+private const val KINSHRA_ORDERS_EXAMINE = "Orders concerning Kinshra operations in the Wilderness."
+private const val SCAR_REPORT = 761
+private const val SCAR_REPORT_NAME = "Damaged Temple Knight report"
+private const val SCAR_REPORT_EXAMINE = "A damaged Temple Knight field report from Survey Site Seven - the First Scar."
+
 fun main(args: Array<String>) {
     when (args.getOrNull(0)?.lowercase() ?: "inspect") {
         "inspect" -> inspect(args.drop(1).mapNotNull { it.toIntOrNull() })
@@ -67,6 +78,10 @@ fun main(args: Array<String>) {
         }
         "commendation" -> edit(COMMENDATION, name = "Commendation", examine = COMMENDATION_EXAMINE)
         "dispatch" -> edit(DISPATCH, name = DISPATCH_NAME, examine = DISPATCH_EXAMINE)
+        "oldwounds" -> {
+            edit(KINSHRA_ORDERS, name = KINSHRA_ORDERS_NAME, examine = KINSHRA_ORDERS_EXAMINE)
+            edit(SCAR_REPORT, name = SCAR_REPORT_NAME, examine = SCAR_REPORT_EXAMINE)
+        }
         "rename" -> {
             val id = args.getOrNull(1)?.toIntOrNull() ?: run { println("rename <id> <name...>"); return }
             val name = args.drop(2).joinToString(" ").trim()
@@ -80,7 +95,7 @@ fun main(args: Array<String>) {
             edit(id, examine = text)
         }
         "restore" -> restore(args.getOrNull(1)?.toIntOrNull() ?: run { println("restore <id>"); return })
-        else -> println("usage: inspect <id...> | tickets | commendation | dispatch | rename <id> <name...> | examine <id> <text...> | restore <id>")
+        else -> println("usage: inspect <id...> | tickets | commendation | dispatch | oldwounds | rename <id> <name...> | examine <id> <text...> | restore <id>")
     }
 }
 
