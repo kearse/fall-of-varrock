@@ -62,7 +62,9 @@ private const val COL_DISPLAY_NAME = 2 // the name shown in the quest tab (DBTab
  * Rogue Knight ladder) reuses The Knight's Sword (varp 122); "War-Prep II — Ranged" reuses Imp
  * Catcher (varp 160); "War-Prep III — Survival" reuses Sheep Shearer (varp 179). The legacy chains
  * are driven by [QuestJournal] (`LegacyChains`); framework quests by `QuestEngine.publish` from
- * their `QuestDefinition.nativeTabVarp`. Mappings for any future quests: docs/quest-tab-handoff.md.
+ * their `QuestDefinition.nativeTabVarp`. Sort names are TWO-digit strings ("01".."15") so the
+ * lexicographic sort keeps quest-line order past nine rows. Mappings for any future quests:
+ * docs/quest-tab-handoff.md.
  */
 private data class Relabel(
     val dbrowId: Int,
@@ -113,10 +115,18 @@ private val PLAN = listOf(
     Relabel(dbrowId = 112, questId = 10, sortName = "12 SECURE - Morytania", displayName = "SECURE - Morytania", varp = 273),      // Prince Ali Rescue, complete 110
     Relabel(dbrowId = 155, questId = 8, sortName = "13 UNDERSTAND - Wilderness", displayName = "UNDERSTAND - Wilderness / Desert", varp = 178), // Vampyre Slayer, complete 3
     Relabel(dbrowId = 108, questId = 16, sortName = "14 SUSTAIN - Kandarin", displayName = "SUSTAIN - Kandarin / War Effort", varp = 71),      // Pirate's Treasure, complete 4
-    // Asgarnia campaign (BREACH). Sort keys are chain slot + 1: "15 At the White Wall" and
-    // "16 A Matter of Trolls" are their own PRs; The Guns of Asgarnia (framework quest
-    // `guns_of_asgarnia`, chain 16) reuses Dwarf Cannon (dbrow 35, quest id 47, varp 0, complete 11)
-    // — Nulodion's own row. Driven by QuestEngine.publish (nativeTabVarp).
+    // At the White Wall (Asgarnia — BREACH, Quest 1; a framework quest, chain index 14) reuses
+    // Recruitment Drive (dbrow 118, quest id 86, varp 657, complete 2) — the OSRS quest whose start
+    // NPC is Sir Amik Varze himself. Driven by QuestEngine.publish from AtTheWhiteWall.nativeTabVarp.
+    // Sort key 15 — the regional campaign quests follow the objectives, campaign by campaign.
+    Relabel(dbrowId = 118, questId = 86, sortName = "15 At the White Wall", displayName = "At the White Wall", varp = 657),
+    // A Matter of Trolls (Asgarnia — BREACH, quest 2; framework quest, chain index 15) reuses Death
+    // Plateau (dbrow 23, quest id 58, varp 314, complete 80) — on-theme, driven by
+    // QuestDefinition.nativeTabVarp through QuestEngine.publish. Sort keys are slot+1.
+    Relabel(dbrowId = 23, questId = 58, sortName = "16 A Matter of Trolls", displayName = "A Matter of Trolls", varp = 314),
+    // The Guns of Asgarnia (Asgarnia — BREACH, quest 3; framework quest `guns_of_asgarnia`, chain 16)
+    // reuses Dwarf Cannon (dbrow 35, quest id 47, varp 0, complete 11) — Nulodion's own row. Driven
+    // by QuestEngine.publish (nativeTabVarp).
     Relabel(dbrowId = 35, questId = 47, sortName = "17 The Guns of Asgarnia", displayName = "The Guns of Asgarnia", varp = 0),
 )
 

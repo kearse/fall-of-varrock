@@ -307,21 +307,28 @@ Reusable pieces — reach for these before inventing a new one. Metrics above.
     which is exactly the double-claim this list exists to prevent: once the varp-table ceiling
     fix let kit publishes complete, every `::kits` open pulsed "quest book open" via the chest
     slot varp. If a varp isn't in this list, it isn't yours.
-    **4686-4699 RESERVED, unclaimed — framework quest journal varps** (`QuestDefinition.journalVarp`,
-    generic packing `stepIndex+1 (bits 0-7) | progress (bits 8-19) | state (bits 20-21: 0 none,
-    1 in progress, 2 complete)` — `QuestEngine.publish`). Block 1 claims none; a Block-2 quest that
-    needs a journal row takes the next id from this block and records it here individually.
+    **4686-4699 framework quest journal varps** (`QuestDefinition.journalVarp`, generic packing
+    `stepIndex+1 (bits 0-7) | progress (bits 8-19) | state (bits 20-21: 0 none, 1 in progress,
+    2 complete)` — `QuestEngine.publish`; a quest that needs a journal row takes the next id from
+    this block and records it here individually):
+    **4686 The North journal** (Main Story Quest 3; `QuestJournal.NORTH_VARP`; client
+    `lofquests.LofQuestVarps.NORTH`) ·
+    **4687 First Reclamation journal** (Main Story Quest 4; `QuestJournal.FIRST_RECLAMATION_VARP`;
+    client `LofQuestVarps.FIRST_RECLAMATION`) ·
+    **4688 A Kingdom Alone journal** (Main Story Quest 5, `a_kingdom_alone`;
+    `QuestJournal.KINGDOM_ALONE_VARP`) ·
+    **4689-4692 BREACH / SECURE / UNDERSTAND / SUSTAIN** (the regional phase's four strategic
+    objectives, keys `breach`/`secure`/`understand`/`sustain` — `content/quests/story/`;
+    `QuestJournal.BREACH_VARP`…`SUSTAIN_VARP`) ·
+    **4693 At the White Wall journal** (Asgarnia — BREACH, Quest 1; `QuestJournal.WHITE_WALL_VARP`;
+    client `LofQuestVarps.AT_THE_WHITE_WALL`) ·
+    **4694 A Matter of Trolls journal** (Asgarnia — BREACH, Quest 2; `QuestJournal.TROLLS_VARP`;
+    client `LofQuestVarps.A_MATTER_OF_TROLLS`) ·
+    **4695 The Guns of Asgarnia journal** (Asgarnia — BREACH, Quest 3, `guns_of_asgarnia`;
+    `QuestJournal.GUNS_OF_ASGARNIA_VARP`; client `LofQuestVarps.GUNS_OF_ASGARNIA`) ·
+    **4696-4699 RESERVED for the remaining Asgarnia campaign quests** (Old Wounds 4696, The White
+    Wall 4697 — their own PRs).
     (4601/4609/4616 all feed the `lofdials` dial row.)
-    **4686 The North journal** (Main Story Quest 3; `QuestJournal.NORTH_VARP`, the generic
-    `QuestEngine.publish` packing; client `lofquests.LofQuestVarps.NORTH`).
-    **4687 First Reclamation journal** (Main Story Quest 4; `QuestJournal.FIRST_RECLAMATION_VARP`,
-    the generic `QuestEngine.publish` packing; client `lofquests.LofQuestVarps.FIRST_RECLAMATION`).
-    **4688 quests: A Kingdom Alone** (Main Story Quest 5, `a_kingdom_alone`) · **4689-4692 quests:
-    BREACH / SECURE / UNDERSTAND / SUSTAIN** (the regional phase's four strategic objectives, keys
-    `breach`/`secure`/`understand`/`sustain`; all generic packing — `content/quests/story/`).
-    **4695 quests: The Guns of Asgarnia** (Asgarnia campaign quest 3, `guns_of_asgarnia`;
-    `QuestJournal.GUNS_OF_ASGARNIA_VARP`, generic packing; client `LofQuestVarps.GUNS_OF_ASGARNIA`.
-    4693/4694 are At the White Wall / A Matter of Trolls, recorded by their own PRs).
     Every id in this map is guaranteed writable server-side: the varp table is sized
     `maxOf(cache varp count, Player.CUSTOM_VARP_CEILING = 6000)` — the cache count alone sat BELOW
     this range and out-of-range `setVarp` throws (that silently broke lofspar + the kit editor

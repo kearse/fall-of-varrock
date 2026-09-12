@@ -473,6 +473,13 @@ enum LofQuest
 	private static final WorldPoint GENERAL_ZO = new WorldPoint(3220, 3210, 0);
 
 	/**
+	 * The Kinshra raiders of At the White Wall — stock Black Knights (the checkpoint raid spawns
+	 * 516; 517 is the fortress twin). Highlighted during the checkpoint fight so the player can pick
+	 * the raiders out of the melee with the White Knights.
+	 */
+	private static final int[] BLACK_KNIGHTS = {516, 517};
+
+	/**
 	 * The goblins of the Lumbridge fields — every plain "Goblin" npc id the camp and the surrounding
 	 * countryside spawn (the stock 655-668/674/677/678 family, plus the frontier's 2245-2249 line).
 	 * The Last Free City highlights them during the east-camp fight and, once Vannaka's cleanup
@@ -810,6 +817,11 @@ enum LofQuest
 				return GOBLINS;
 			}
 		}
+		if (this == AT_THE_WHITE_WALL && step.getOrdinal() == 3)
+		{
+			// The checkpoint raid: pick the Kinshra raiders out of the melee with the White Knights.
+			return BLACK_KNIGHTS;
+		}
 		return NO_NPCS;
 	}
 
@@ -818,6 +830,13 @@ enum LofQuest
 	static boolean isObjectiveNpc(int npcId)
 	{
 		for (int id : GOBLINS)
+		{
+			if (id == npcId)
+			{
+				return true;
+			}
+		}
+		for (int id : BLACK_KNIGHTS)
 		{
 			if (id == npcId)
 			{
