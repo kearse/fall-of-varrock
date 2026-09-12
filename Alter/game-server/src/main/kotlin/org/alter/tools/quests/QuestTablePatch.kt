@@ -57,11 +57,12 @@ private const val COL_DISPLAY_NAME = 2 // the name shown in the quest tab (DBTab
  * so our quests list in quest-line order; `displayName` is what players see. The `varp` is the
  * reused quest's progress varp the server drives (kept in lock-step with [QuestJournal]).
  *
- * All seven LIVE, server-driven quests are relabelled. Act II is TWO rows off one server chain:
+ * All LIVE, server-driven quests are relabelled. Act II is TWO rows off one server chain:
  * "Rogue Hunting I" (the hunt) reuses The Restless Ghost (varp 107) and "Rogue Hunting II" (the
  * Rogue Knight ladder) reuses The Knight's Sword (varp 122); "War-Prep II — Ranged" reuses Imp
- * Catcher (varp 160); "War-Prep III — Survival" reuses Sheep Shearer (varp 179). All are driven by
- * [QuestJournal.syncNativeTab]. Mappings for any future quests: docs/quest-tab-handoff.md.
+ * Catcher (varp 160); "War-Prep III — Survival" reuses Sheep Shearer (varp 179). The legacy chains
+ * are driven by [QuestJournal] (`LegacyChains`); framework quests by `QuestEngine.publish` from
+ * their `QuestDefinition.nativeTabVarp`. Mappings for any future quests: docs/quest-tab-handoff.md.
  */
 private data class Relabel(
     val dbrowId: Int,
@@ -72,25 +73,38 @@ private data class Relabel(
 )
 
 private val PLAN = listOf(
-    Relabel(dbrowId = 17, questId = 1, sortName = "1 Recruit Trials", displayName = "Recruit Trials", varp = 29),
-    Relabel(dbrowId = 30, questId = 11, sortName = "2 War-Prep I - Magic", displayName = "War-Prep I - Magic", varp = 31),
+    // The Last Free City (Main Story Quest 1 — the Recruit Trials chain under its story name) reuses
+    // Cook's Assistant (dbrow 17, quest id 1, varp 29, complete 2). Renamed 2026-09-11: re-run
+    // `relabel` (the workflow) so the live tab picks up the new name.
+    // Sort keys are TWO-digit strings: the tab orders rows by this STRING, so "10 …" would sort before
+    // "2 …" — every row is zero-padded and the relabel rewrites them all anyway.
+    Relabel(dbrowId = 17, questId = 1, sortName = "01 The Last Free City", displayName = "The Last Free City", varp = 29),
+    Relabel(dbrowId = 30, questId = 11, sortName = "02 War-Prep I - Magic", displayName = "War-Prep I - Magic", varp = 31),
     // Rogue Hunting I (Act II's 30-rogue hunt; formerly listed as "The Rogue Problem") reuses The
     // Restless Ghost (dbrow 120, quest id 3, varp 107, driven by QuestJournal from RogueProblem.step —
-    // complete the moment the hunt clears). Sort digit 3 places it after War-Prep I.
-    Relabel(dbrowId = 120, questId = 3, sortName = "3 Rogue Hunting I", displayName = "Rogue Hunting I", varp = 107),
+    // complete the moment the hunt clears). Sort key 03 places it after War-Prep I.
+    Relabel(dbrowId = 120, questId = 3, sortName = "03 Rogue Hunting I", displayName = "Rogue Hunting I", varp = 107),
     // Rogue Hunting II (the Rogue Knight ladder — complete when every camp is broken) reuses The
     // Knight's Sword (dbrow 83, quest id 14, varp 122, complete 7). Same server chain, windowed:
     // QuestJournal drives it locked until the hunt clears, complete at RogueProblem DONE.
-    Relabel(dbrowId = 83, questId = 14, sortName = "4 Rogue Hunting II", displayName = "Rogue Hunting II", varp = 122),
+    Relabel(dbrowId = 83, questId = 14, sortName = "04 Rogue Hunting II", displayName = "Rogue Hunting II", varp = 122),
     // War-Prep II — Ranged reuses Imp Catcher (dbrow 76, quest id 9, varp 160, complete 2) — a fresh
     // slot, since the rogue quests took Ranged's old Restless-Ghost mapping. Driven from WarPrepRanged.step.
-    Relabel(dbrowId = 76, questId = 9, sortName = "5 War-Prep II - Ranged", displayName = "War-Prep II - Ranged", varp = 160),
+    Relabel(dbrowId = 76, questId = 9, sortName = "05 War-Prep II - Ranged", displayName = "War-Prep II - Ranged", varp = 160),
     // War-Prep III — Survival reuses Sheep Shearer (dbrow 131, quest id 5, varp 179, complete 21).
     // Driven from WarPrepSurvival.step.
-    Relabel(dbrowId = 131, questId = 5, sortName = "6 War-Prep III - Survival", displayName = "War-Prep III - Survival", varp = 179),
+    Relabel(dbrowId = 131, questId = 5, sortName = "06 War-Prep III - Survival", displayName = "War-Prep III - Survival", varp = 179),
     // King of Lumbridge (endgame conquest) reuses Witch's Potion (varp 67, driven by QuestJournal from
-    // Conquest.step). Sort digit 7 keeps it last in the quest-line order.
-    Relabel(dbrowId = 161, questId = 13, sortName = "7 King of Lumbridge", displayName = "King of Lumbridge", varp = 67),
+    // Conquest.step). Sort key 07 keeps it last of the legacy hallway.
+    Relabel(dbrowId = 161, questId = 13, sortName = "07 King of Lumbridge", displayName = "King of Lumbridge", varp = 67),
+    // The North (Main Story Quest 3 — a framework quest, chain index 7) reuses Ernest the Chicken
+    // (dbrow 44, quest id 7, varp 32, complete 3). Driven by QuestEngine.publish from
+    // TheNorth.nativeTabVarp. Framework story quests append after the hallway in story order.
+    Relabel(dbrowId = 44, questId = 7, sortName = "08 The North", displayName = "The North", varp = 32),
+    // First Reclamation (Main Story Quest 4, framework quest) reuses Romeo & Juliet (dbrow 121, quest
+    // id 4, varp 144, complete 100) — driven by QuestDefinition.nativeTabVarp through QuestEngine.publish.
+    // Sort key 09; A Kingdom Alone takes 10 and its strategic objectives 11-14.
+    Relabel(dbrowId = 121, questId = 4, sortName = "09 First Reclamation", displayName = "First Reclamation", varp = 144),
 )
 
 /** The only quest rows the tab should list after `hide` — exactly the ones we relabelled. */

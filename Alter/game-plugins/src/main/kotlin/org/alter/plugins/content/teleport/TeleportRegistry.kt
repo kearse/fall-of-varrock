@@ -4,6 +4,7 @@ import org.alter.game.model.Tile
 import org.alter.plugins.content.teleport.DangerTag.*
 import org.alter.plugins.content.teleport.DestState.COMING_SOON
 import org.alter.plugins.content.teleport.TeleportCategory.*
+import org.alter.plugins.content.war.outposts.SouthernWatch
 
 /**
  * The portal's destination catalog — **adding a teleport = adding a line here**
@@ -76,8 +77,12 @@ object TeleportRegistry {
         built("varrock_raid", "Varrock Raid", WAR, Tile(3213, 3424, 0), HOSTILE),        // hostile target city (§3C)
         built("north_frontier", "North Frontier", WAR, Tile(3222, 3270, 0), WILD, wild = 5),
         built("goblin_warren", "Goblin Warren", WAR, Tile(3290, 3248, 0), HOSTILE),      // E of Lumbridge horde muster
-        built("recruit_trials", "Recruit Trials", WAR, Tile(3219, 3213, 0), SAFE_ZONE),  // Sergeant at the gate
+        built("recruit_trials", "The Last Free City", WAR, Tile(3219, 3213, 0), SAFE_ZONE),  // Sergeant Damien at the gate (mirror: LofTeleportsData)
         soon("active_campaign", "Active Campaign", WAR, HOSTILE), // dynamic muster — wire to Campaigns later
+        // The Southern Watch — the stone-circle forward post south of Varrock's gate (First
+        // Reclamation). Route-locked until that quest is complete; lands inside the ring. Appended
+        // at the END of the category so older client mirrors keep their row indices (mirror: LofTeleportsData).
+        built(SouthernWatch.ROUTE, "Southern Watch", WAR, SouthernWatch.LANDING, HOSTILE, route = SouthernWatch.ROUTE),
 
         // ── 💀 Bosses ──────────────────────────────────────────────────────────
         // The hand-built boss roster was removed (see the reboot brief) — bosses return

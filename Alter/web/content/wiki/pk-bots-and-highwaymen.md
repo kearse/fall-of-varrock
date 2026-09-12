@@ -51,7 +51,7 @@ On top of the roamers, the Rogue Knights hold **five organized camps by level ba
 
 ## The Lumbridge goblin camp
 
-A lone, genuinely weak **Bandit** in full **bronze** (around combat 6) prowls the **goblin camp east of Lumbridge**, where a handful of **Knights of Lumbridge** are locked in an endless brawl with the camp goblins. It's the first Rogue Knight most new players ever meet - inside the town limits, a single weak bot: kill it for its (bronze) kit, or leave it to the knights. The whole scene only appears while a player is nearby.
+The **goblin camp east of Lumbridge** - where a handful of **Knights of Lumbridge** are locked in an endless brawl with the camp goblins - is the opening battlefield of [The Last Free City](/wiki/recruit-trials) and is deliberately quiet ground: it sits inside the Lumbridge city core, so no Rogue Knight ever spawns there (the weak bronze Bandit that used to ambush new players at the camp was removed in September 2026). Your first knight waits on the roads beyond the town, not on the tutorial battlefield.
 
 ## What they're worth
 

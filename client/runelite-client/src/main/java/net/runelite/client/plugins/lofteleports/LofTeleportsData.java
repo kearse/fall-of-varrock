@@ -104,8 +104,9 @@ final class LofTeleportsData
 			b("Varrock Raid", "Hostile", HOSTILE, 1333),        // rune scimitar
 			b("North Frontier", "Wild Lvl 5", WILD, 1325),      // iron scimitar
 			b("Goblin Warren", "Hostile", HOSTILE, 288),        // goblin mail
-			b("Recruit Trials", "Safe Zone", SAFE, 1277),       // bronze sword
-			s("Active Campaign", "Soon", SOON, 1201));          // rune kiteshield
+			b("The Last Free City", "Safe Zone", SAFE, 1277),   // bronze sword — Sergeant Damien at the gate
+			s("Active Campaign", "Soon", SOON, 1201),           // rune kiteshield
+			b("Southern Watch", "Hostile", HOSTILE, 4039));     // saradomin banner — the stone-circle forward post (First Reclamation; route-locked server-side)
 
 		// Mirrors TeleportRegistry BOSSES row-for-row (32 rows): the hand-built roster was purged;
 		// bosses come back one at a time as Kronos ports and flip to b(...) here as they land.

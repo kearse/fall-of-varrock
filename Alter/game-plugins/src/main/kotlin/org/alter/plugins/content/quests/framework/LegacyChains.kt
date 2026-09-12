@@ -32,19 +32,22 @@ object LegacyChains {
         if (getVarp(varp) != value) setVarp(varp, value)
     }
 
+    /** The Last Free City (Main Story Quest 1) — the Recruit Trials chain under its story name. The
+     *  key stays `recruit_trials` (prerequisite references, `QuestRegistry.isComplete`). */
     object RecruitTrialsChain : QuestChain {
         override val key = "recruit_trials"
-        override val displayName = "Recruit Trials"
+        override val displayName = RecruitTrials.QUEST_NAME
         override val chainIndex = QuestBook.RECRUIT_TRIALS
         override fun started(p: Player): Boolean = RecruitTrials.step(p).ordinal > 0 // TALK = handed to every fresh citizen
         override fun complete(p: Player): Boolean = RecruitTrials.step(p) == RecruitTrials.Step.DONE
         override fun objectiveLine(p: Player): String {
             val s = RecruitTrials.step(p)
             if (s != RecruitTrials.Step.FIGHT) return s.objective
-            return "${s.objective} (${p.attr[RECRUIT_GOBLIN_KILLS_ATTR] ?: 0}/${RecruitTrials.GOBLIN_GOAL})"
+            return "${s.objective} [${p.attr[RECRUIT_GOBLIN_KILLS_ATTR] ?: 0}/${RecruitTrials.GOBLIN_GOAL}]"
         }
         override fun publish(p: Player) {
-            val recruitStep = RecruitTrials.step(p).ordinal and 0x3F
+            // Wire ordinal = STORY order (DEBRIEF 11, DONE 12) — see RecruitTrials.clientOrdinal.
+            val recruitStep = RecruitTrials.clientOrdinal(RecruitTrials.step(p)) and 0x3F
             val kills = (p.attr[RECRUIT_GOBLIN_KILLS_ATTR] ?: 0).coerceIn(0, 15)
             val contract = if (p.attr[SLAYER_TASK_NPC_ATTR] != null) 1 else 0
             p.writeIfChanged(QuestJournal.RECRUIT_VARP, recruitStep or (kills shl 6) or (contract shl 10))

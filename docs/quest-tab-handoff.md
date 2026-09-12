@@ -32,13 +32,22 @@ findings that shape everything below:
 
   | Our quest | Reused OSRS quest | DBROW id | quest id (col0) | progress varp | complete val |
   |---|---|---|---|---|---|
-  | Recruit Trials | Cook's Assistant | 17 | 1 | **29** | 2 |
+  | The Last Free City (was "Recruit Trials" — renamed 2026-09-11; re-run `relabel`) | Cook's Assistant | 17 | 1 | **29** | 2 |
   | War-Prep I — Magic | Doric's Quest | 30 | 11 | **31** | 100 |
   | Rogue Hunting I (the 30-rogue hunt) | The Restless Ghost | 120 | 3 | 107 | 5 |
   | Rogue Hunting II (the Rogue Knight ladder) | The Knight's Sword | 83 | 14 | 122 | 7 |
   | War-Prep II — Ranged | Imp Catcher | 76 | 9 | 160 | 2 |
   | War-Prep III — Survival | Sheep Shearer | 131 | 5 | 179 | 21 |
   | King of Lumbridge | Witch's Potion | 161 | 13 | 67 | 3 |
+  | The North (Main Story Quest 3 — framework quest; driven by `QuestEngine.publish` from `TheNorth.nativeTabVarp`) | Ernest the Chicken | 44 | 7 | 32 | 3 |
+  | First Reclamation (Main Story Quest 4, framework quest — `QuestDefinition.nativeTabVarp`) | Romeo & Juliet | 121 | 4 | 144 | 100 |
+
+  Framework quests (`quests/framework/`) drive their reused varp through `QuestDefinition.nativeTabVarp`
+  / `nativeTabComplete` (written by `QuestEngine.publish`, 0 / 1 / complete) — no per-quest
+  `QuestJournal` code. **Sort-string gotcha:** the tab orders rows by the col1 sort STRING, so a
+  "10 …" prefix sorts before "2 …" — quests past sort digit 9 need a scheme that compares correctly
+  (e.g. "9a", "9b") unless every row is renumbered zero-padded — which is what `PLAN` now does
+  ("01" … "07" legacy hallway, "08" The North, "09" First Reclamation, "10"+ A Kingdom Alone).
 
   Rogue Hunting I & II are TWO rows off ONE server chain (`RogueProblem.Step`, varp 4617):
   `QuestJournal.syncNativeTab` completes row I the moment the hunt clears (KNIGHT step) and holds

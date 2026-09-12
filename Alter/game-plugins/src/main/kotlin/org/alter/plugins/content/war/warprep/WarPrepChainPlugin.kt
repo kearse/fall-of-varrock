@@ -23,8 +23,9 @@ class WarPrepChainPlugin(
 
     init {
         onLogin {
-            // Players who finished the Recruit Trials before this chain existed never got started —
-            // begin it for them now so nobody is stranded without a path to raids.
+            // Players who finished The Last Free City (the Recruit Trials chain) without visiting
+            // Vannaka afterwards — or before this chain existed — never got started; begin it for
+            // them now so nobody is stranded without a path to raids.
             if (RecruitTrials.step(player) == RecruitTrials.Step.DONE && !WarPrepChain.started(player)) {
                 WarPrepChain.begin(player)
             }
@@ -51,7 +52,7 @@ class WarPrepChainPlugin(
         onCommand("warprep", description = "Show your War-Prep objective") {
             val s = WarPrepChain.step(player)
             if (s == WarPrepChain.Step.NONE) {
-                player.message("<col=801700>War-Prep:</col> finish the Recruit Trials first.")
+                player.message("<col=801700>War-Prep:</col> finish The Last Free City first.")
             } else if (s == WarPrepChain.Step.DONE) {
                 player.message("<col=801700>War-Prep:</col> ${s.objective}")
             } else {

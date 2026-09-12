@@ -3,7 +3,7 @@ title: Marches - the realm's warband
 category: The War
 summary: The free warband anyone can join, the hostile ground it strikes, Grand Marches and Wardens, Lord operations, and the wanted captains of Fallen Varrock.
 order: 2
-updated: 2026-09-02
+updated: 2026-09-12
 ---
 
 Varrock fell. Lumbridge holds. The war is fought *out* of the Last Free City against the camps, roads and ruins the enemy holds - and unlike campaigns and conquests, you don't need rank or coin to fight in it. This is the beginner's door into the war.
@@ -29,7 +29,9 @@ The Knight-Captain picks each march's target from the realm's board of hostile g
 | **The Draynor road** | highwaymen bleeding the supply road on Draynor's southern edge | safe | no |
 | **The Varrock outskirts** | marauders and Black Knights on the southern road, the risen dead nearest the gate | **wilderness** | **yes** - the Warden of the Southern Road |
 
-`::marches` shows the board, which target is mustering or under attack, and when the next march sets out. The list grows as the war spreads (Port Sarim's docks and the deep-wilderness bandit camp are next).
+`::marches` shows the board, which target is mustering or under attack, and when the next march sets out. The list grows as the war spreads (Port Sarim's docks and the deep-wilderness bandit camp are next). The "wilderness" flag on a target is read live from the PvP map, so it stays right if the wilderness boundary moves.
+
+**The Southern Watch.** The stone circle on the Varrock outskirts is also the realm's forward post, raised in [First Reclamation](/wiki/first-reclamation): a standard, three Knights of Lumbridge and a Field Quartermaster stand there for everyone, and the quest's Reclamation Column is a story-called Grand March on this very target. The road around it stays a march target - the enemy lines still stage through the circle when a column is on it, and the garrison fights them.
 
 ## Grand Marches & the Wardens
 

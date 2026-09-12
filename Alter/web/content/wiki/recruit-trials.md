@@ -1,32 +1,36 @@
 ---
-title: Recruit Trials - your first hour
+title: The Last Free City - your first hour
 category: Getting Started
-summary: The four-step onboarding quest every new player gets, plus the starter kit and bank stake.
+summary: Main Story Quest 1. Lumbridge is probed on your first login - stand with the Knights of Lumbridge at the east goblin camp, earn your first rank, hunt the stragglers, re-arm the city, and learn why the war lies north.
 order: 2
-updated: 2026-07-04
-infobox: Type = Intro quest (auto-starts); Start = Automatic on first login; Steps = 4 - Fight, Rank, Slay, Supply; Guidance = Hint arrows; Reward = Full steel kit + starter tools; Leads to = the War-Prep chain
+updated: 2026-09-11
+infobox: Type = Main story quest (auto-starts); Start = Sergeant Damien, automatically on first login; Length = Short; Guidance = Quest Journal arrows; Reward = First rank, full steel kit, 50 War Effort; Leads to = War-Prep I and the Marches
 ---
 
-Every new account starts the **Recruit Trials** automatically - a four-step chain that walks you through the War loop and pays out a full steel kit. Hint arrows point the way and each step advances on its own when you complete it.
+Every new account begins **The Last Free City** the moment character creation ends. There is no calm welcome: Sergeant Damien is shouting, the eastern post is being overrun, and the Knights of Lumbridge need every pair of hands. Under the hood this is the onboarding chain (it used to be called the Recruit Trials) - the same guided steps, the same rewards, told as the story of the probe attack on Lumbridge.
 
 ## What you start with
 
-- **Inventory:** 10 bread, 5 shrimps, a spare bronze scimitar, tinderbox, bronze pickaxe, bronze axe - and a bronze scimitar already equipped so you spawn armed.
-- **Bank:** 10,000 gp, 50 trout, 25 salmon, 5 attack potions, 5 strength potions, 3 prayer potions, and a Book of Commands.
+- **Inventory:** 10 bread, 5 shrimps, a spare bronze scimitar, tinderbox, bronze pickaxe, bronze axe - and a bronze scimitar already equipped.
+- **From the Sergeant:** a battered **wooden shield** (put straight on your arm) and a bundle of **50 bronze knives**. Very low-tier, nothing valuable - you are one more body thrown onto the line.
 
-## The four trials
+## The quest
 
-1. **FIGHT** - Kill 5 goblins at the frontier (the back woods near the gate).
-   *Reward: 10,000 gp + a full bronze kit (helm, body, legs, shield).*
-2. **RANK** - Report to the Sergeant, then claim your first rank from **Duke Horacio** in the castle.
-   *Reward: Steel full helm.*
-3. **SLAY** - Take a war-contract from **Vannaka** and clear the rats in the castle.
-   *Reward: Steel platebody, plus a pickaxe and hammer for what's next.*
-4. **SUPPLY** - Complete the Mire skilling loop: mine copper and tin in **The Mire** (south-east of the castle), smelt a bronze bar at the furnace, smith a bronze dagger at the anvil, and hand the dagger to the **Quartermaster** in the Mire crypt.
-   *Reward: 50 War Effort + steel scimitar, platelegs and kiteshield.*
+1. **The east camp** - Head east across the river to the **goblin camp** (the classic Lumbridge goblins - except now three **Knights of Lumbridge** are fighting them). Help the knights defeat **5 goblins**. Kills count as long as you drew blood on the goblin, so fighting beside a knight never costs you credit. The camp stays a contested battlefield after the quest; your probe attack ends, the skirmish does not.
+   *Reward from Damien: 10,000 gp + a full bronze kit.*
+2. **Earn your place** - Damien tells you it was only a probe, and that you reminded him of someone. Take your pay to **Duke Horacio** in the market: he recognises your defence of Lumbridge with your first rank, **Peasant → Commoner** (10,000 gp).
+   *Reward: steel full helm.*
+3. **Finish the job** - **Vannaka** signs your first war contract: hunt down **5 goblins** that scattered into the countryside when the knights broke the attack. Any goblin counts; `::slayertele` lifts you to the goblin field east of the castle.
+   *Reward: steel platebody, plus a pickaxe and hammer for what's next.*
+4. **Re-arm the city** - Weapons broke and food was spent. Go to **The Mire** (south-east of the castle): mine copper and tin, smelt a bronze bar at the furnace, smith a bronze dagger at the anvil, and hand it to the **Quartermaster** at the Mire crypt post. That is how supplies reach the front - fighters keep the enemy away, skillers keep the fighters armed.
+   *Reward: 5 War Effort at the hand-in; then from Vannaka a steel scimitar, platelegs and kiteshield (full steel), and a bank pack of 10,000 gp, food, potions and the Book of Commands.*
+5. **Debrief** - Report to Sergeant Damien. Lumbridge is not safe - but it is still ours. Varrock could not say the same: **twelve years ago, Varrock fell**, and today's attack was someone measuring how quickly Lumbridge would bleed.
+   *Reward: 50 War Effort. Quest complete.*
 
-By the end you've touched all three pillars - combat, rank, and supply - and you're wearing full steel.
+Type `::trials` for your current objective, or open the Quest Journal with `::quests` (the quest also shows in the stock quest tab).
 
 ## What comes after
 
-The **War-Prep chain** picks up where the trials end and leads to raid access: Vannaka drills you to **Prayer 37** (Protect from Magic) at the Lumbridge church altar (handing you 28 dragon bones for it, with more if you run dry), gears you with a mystic fire staff, mystic robes, a full rune stock and 100 noted prayer potions, then marks the way to the **Void Knight** at the Wizard Tower bridge - take the Archmage's grimoire and report back to Vannaka - which permanently unlocks the Ancient, Lunar and Arceuus spellbooks. See [Wizard Tower](/wiki/wizard-tower) and [Unlocking the magic books](/wiki/unlocking-spellbooks).
+Damien points you two ways. **General Zo** in the castle courtyard musters the **Marches** north against the enemy - answer the call. And **Vannaka** has your next drills: the **War-Prep chain**, starting with **Prayer 37** (Protect from Magic) at the Lumbridge church altar and the assault on the **Wizard Tower**, which permanently unlocks the Ancient, Lunar and Arceuus spellbooks. See [Wizard Tower](/wiki/wizard-tower) and [Unlocking the magic books](/wiki/unlocking-spellbooks).
+
+The main story continues on its own: the moment the debrief ends, **[The North](/wiki/the-north)** begins - General Zo wants you to see what the Fall of Varrock did to the rest of the kingdom.

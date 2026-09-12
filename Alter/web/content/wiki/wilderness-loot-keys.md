@@ -35,5 +35,5 @@ That's the whole tension of the system: every key you carry deep in the wild is 
 
 ## What counts
 
-- **Every player kill mints a key** - real players and killable PK bots alike, in the wilderness or in safe zones. Kill the goblin-camp bandit on the road and its kit seals into a key for you, same as a deep-wild PK.
+- **Every player kill mints a key** - real players and killable PK bots alike, in the wilderness or in safe zones (the safe Bandit Hideout camp's warband, for instance). Its kit seals into a key for you, same as a deep-wild PK.
 - If no key can be minted (your inventory is full), the loot drops on the ground the normal way instead.

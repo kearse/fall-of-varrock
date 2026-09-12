@@ -4,6 +4,7 @@ import org.alter.api.ext.message
 import org.alter.game.model.Tile
 import org.alter.game.model.entity.Player
 import org.alter.game.model.item.Item
+import org.alter.plugins.content.war.outposts.SouthernWatch
 import org.alter.plugins.content.war.recruit.RecruitTrials
 import org.alter.rscm.RSCM.getRSCM
 
@@ -102,8 +103,9 @@ object SupplyDepot {
         return we * SupplyDrive.multiplierFor(key)
     }
 
-    /** The Quartermaster's two posts: the shop hub and the tutorial post in The Mire crypt. */
-    val POSTS = listOf(Tile(3223, 3211, 0), Tile(3248, 3193, 0))
+    /** The Quartermaster's posts: the shop hub, the tutorial post in The Mire crypt, and the Field
+     *  Quartermaster at the Southern Watch (the stone-circle forward post — First Reclamation). */
+    val POSTS = listOf(Tile(3223, 3211, 0), Tile(3248, 3193, 0), SouthernWatch.QUARTERMASTER_TILE)
     private const val POST_RADIUS = 10
 
     /**
@@ -112,11 +114,11 @@ object SupplyDepot {
      */
     fun canHandIn(p: Player): Boolean {
         if (POSTS.none { p.tile.isWithinRadius(it, POST_RADIUS) }) {
-            p.message("The Quartermaster takes supplies at his post — find him at the shop hub or in The Mire.")
+            p.message("The Quartermaster takes supplies at his post — find him at the shop hub, in The Mire, or at the Southern Watch.")
             return false
         }
         if (RecruitTrials.step(p) == RecruitTrials.Step.DELIVER) {
-            p.message("Hand the Quartermaster your forged bronze dagger first — that's the lesson.")
+            p.message("Hand the Quartermaster the bronze dagger you forged first — that's what the army lost today.")
             return false
         }
         return true

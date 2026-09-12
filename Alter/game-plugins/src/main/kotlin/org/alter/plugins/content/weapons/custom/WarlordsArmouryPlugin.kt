@@ -17,6 +17,7 @@ import org.alter.plugins.content.mechanics.shops.CoinCurrency
 import org.alter.plugins.content.mechanics.shops.ShopTabs
 import org.alter.plugins.content.mechanics.shops.bindVendorTalkAndTrade
 import org.alter.plugins.content.war.address
+import org.alter.plugins.content.war.outposts.SouthernWatch
 import org.alter.plugins.content.war.recruit.RecruitTrials
 import org.alter.rscm.RSCM.getRSCM
 
@@ -110,7 +111,9 @@ class WarlordsArmouryPlugin(
             recruitSupplyHandIn(player)
             return
         }
-        when (options(player, "Hand in war supplies", "Browse the armoury", "Nevermind", title = "Quartermaster")) {
+        // The Field Quartermaster at the Southern Watch is the same npc, renamed at spawn — title to match.
+        val title = if (SouthernWatch.isAtPost(player)) SouthernWatch.QUARTERMASTER_NAME else "Quartermaster"
+        when (options(player, "Hand in war supplies", "Browse the armoury", "Nevermind", title = title)) {
             // The hand-in is the Supply Depot storefront: an ordinary tabbed shop window, sell-only —
             // the accepted catalogue priced in the War Effort it pays (see SupplyDepotPlugin).
             1 -> SupplyDepotShop.open(player)
@@ -118,14 +121,15 @@ class WarlordsArmouryPlugin(
         }
     }
 
-    /** Intro-quest hand-in: the recruit gives the Quartermaster the bronze dagger they forged. Consumes
-     *  it + logs War Effort (via [RecruitTrials.onSupplyDelivered]) and points them back to Vannaka. */
+    /** The Last Free City, DELIVER: the recruit gives the Quartermaster the bronze dagger they forged —
+     *  a replacement for what the defence of the east camp consumed. Consumes it + logs War Effort
+     *  (via [RecruitTrials.onSupplyDelivered]) and points them back to Vannaka. */
     private suspend fun QueueTask.recruitSupplyHandIn(player: Player) {
         if (RecruitTrials.onSupplyDelivered(player)) {
-            chatNpc(player, "A finished blade for the war, not just raw rock — THIS is how you supply an army. I've logged it as War Effort.", npc = quartermasterId, title = "Quartermaster")
-            chatNpc(player, "Now report back to Vannaka, ${player.address} — he'll square you up. Follow your marker.", npc = quartermasterId, title = "Quartermaster")
+            chatNpc(player, "A finished blade, forged from rock you dug yourself. Today's fight cost us weapons — THIS is how they get replaced. I've logged it as War Effort.", npc = quartermasterId, title = "Quartermaster")
+            chatNpc(player, "Fighters keep the enemy away; skillers keep the fighters armed. The stores are a little fuller. Now report back to Vannaka, ${player.address} — follow your marker.", npc = quartermasterId, title = "Quartermaster")
         } else {
-            chatNpc(player, "You've nothing finished for me yet, ${player.address}. Forge a bronze dagger at the anvil in The Mire and bring it back — follow your marker.", npc = quartermasterId, title = "Quartermaster")
+            chatNpc(player, "You've nothing finished for me yet, ${player.address}. The army lost blades today — forge a bronze dagger at the anvil in The Mire and bring it back. Follow your marker.", npc = quartermasterId, title = "Quartermaster")
         }
     }
 

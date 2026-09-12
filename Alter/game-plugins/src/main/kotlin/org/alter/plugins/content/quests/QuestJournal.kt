@@ -25,9 +25,10 @@ private val logger = KotlinLogging.logger {}
  * feeds (the Rogue Knight ladder dial and the mute flag).
  *
  * Varp layout:
- *  - [RECRUIT_VARP] packed: bits 0-5 = `RecruitTrials.Step` ordinal, bits 6-9 = goblins killed on
- *    the FIGHT trial (0-15 clamp), bit 10 = slayer war-contract taken (splits the SLAY arrow's
- *    "see Vannaka" vs "kill the rats" phases).
+ *  - [RECRUIT_VARP] (The Last Free City) packed: bits 0-5 = `RecruitTrials.Step` in STORY order
+ *    (`RecruitTrials.clientOrdinal` — DEBRIEF 11, DONE 12), bits 6-9 = goblins defeated on the FIGHT
+ *    step (0-15 clamp), bit 10 = slayer war-contract taken (splits the SLAY arrow's "see Vannaka"
+ *    vs "hunt the goblins" phases).
  *  - [WARPREP_VARP] = `WarPrepChain.Step` ordinal.
  *  - [ROGUE_PROBLEM_VARP] packed: bits 0-5 = `RogueProblem.Step` ordinal, bits 6-11 = rogues felled
  *    on the HUNT step (0-63 clamp) so the client can render the "(x/30)" progress.
@@ -47,7 +48,8 @@ private val logger = KotlinLogging.logger {}
  * kit publishes complete; renumbered out). Quests own 4610-4612, 4617, 4624, 4633, and 4681-4683
  * ([WARPREP_SURVIVAL_VARP], [KNIGHTS_VARP], and [QuestBook.OPEN_VARP] — the "open the Quest Journal
  * window, focused on quest N" pulse; not published here, pulsed on demand). Framework quests that
- * need a journal varp claim one in docs/overlay-design-system.md §8 (`QuestDefinition.journalVarp`).
+ * need a journal varp claim one in docs/overlay-design-system.md §8 (`QuestDefinition.journalVarp`)
+ * — [FIRST_RECLAMATION_VARP] is the first such claim.
  * Non-zero varps persist ([VarpSerialisation]), but the attributes stay the source of truth —
  * everything here is re-derived and re-published on login and on the world poll.
  *
@@ -70,10 +72,18 @@ object QuestJournal {
     const val CONQUEST_VARP = 4633      // King of Lumbridge (endgame); 4635-4637 are companion indices
     const val KNIGHTS_VARP = 4682       // Rogue Knight ladder (rank + active hunt index; was 4644)
 
+    // Framework quests (generic `QuestEngine.publish` packing: step index+1 bits 0-7 | progress
+    // bits 8-19 | state bits 20-21) take ids from the 4686-4699 block reserved in
+    // docs/overlay-design-system.md §8 — one per quest, recorded there individually.
+    /** The North (Main Story Quest 3, `quests/north/TheNorth`). */
+    const val NORTH_VARP = 4686
+    /** First Reclamation (Main Story Quest 4, `quests/story/FirstReclamation`). */
+    const val FIRST_RECLAMATION_VARP = 4687
+
     // Reused OSRS quest progress varps that colour the relabelled native quest-tab rows. A value of
     // 0 reads as "not started" (red), the complete value as "finished" (green), anything between as
     // "in progress" (yellow). Keep these in lock-step with the `questTable` tool's REUSE table.
-    /** Cook's Assistant varp — now the "Recruit Trials" row. Completes at 2. */
+    /** Cook's Assistant varp — now the "The Last Free City" row (the Recruit Trials chain). Completes at 2. */
     const val RECRUIT_QUEST_VARP = 29
     internal const val RECRUIT_QUEST_COMPLETE = 2
     /** Doric's Quest varp — now the "War-Prep I — Magic" row. Completes at 100. */
@@ -95,6 +105,14 @@ object QuestJournal {
     /** Witch's Potion varp — now the "King of Lumbridge" row. Completes at 3. */
     const val KING_QUEST_VARP = 67
     internal const val KING_QUEST_COMPLETE = 3
+    /** Ernest the Chicken varp — now the "The North" row (a framework quest: driven by
+     *  `QuestEngine.publish` from `TheNorth.nativeTabVarp`). Completes at 3. */
+    const val NORTH_QUEST_VARP = 32
+    internal const val NORTH_QUEST_COMPLETE = 3
+    /** Romeo & Juliet varp — now the "First Reclamation" row (driven by `QuestDefinition.nativeTabVarp`
+     *  through `QuestEngine.publish`). Completes at 100. */
+    const val FIRST_RECLAMATION_QUEST_VARP = 144
+    internal const val FIRST_RECLAMATION_QUEST_COMPLETE = 100
 
     /** True while the player has quest guidance muted (free-play mode). */
     fun muted(p: Player): Boolean = p.attr[QUEST_GUIDE_MUTED_ATTR] == true

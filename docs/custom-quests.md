@@ -24,13 +24,14 @@ custom client reads (same transport as the war HUD — no custom packets):
 
 | Varp | Contents |
 |------|----------|
-| **4610** | Recruit Trials, packed: bits 0-5 step ordinal, bits 6-9 goblin kills, bit 10 contract taken |
+| **4610** | The Last Free City (the Recruit Trials chain), packed: bits 0-5 step ordinal in story order (11 debrief, 12 done — `RecruitTrials.clientOrdinal`), bits 6-9 goblins defeated, bit 10 contract taken |
 | **4611** | War-Prep chain step ordinal |
 | **4612** | 1 while quest guidance is muted (free play), else 0 |
 | **4617** | Rogue Hunting I + II (one shared chain), packed: bits 0-5 step ordinal, bits 6-11 rogues felled on HUNT |
 | **4624** | War-Prep II — Ranged, packed: bits 0-5 step ordinal, bits 6-11 enemies felled with a ranged weapon on FIELD |
 | **4681** | War-Prep III — Survival step ordinal, bits 0-5 (was 4643 — collided with the kit editor's 4640-4679 block) |
 | **4633** | King of Lumbridge (endgame conquest) step ordinal, bits 0-5 |
+| **4686** | The North (Main Story Quest 3 — the first framework quest), generic packing: bits 0-7 step index+1, bits 8-19 progress, bits 20-21 state (0 none, 1 in progress, 2 complete) — `QuestEngine.publish` |
 
 A 3-tick world poll re-derives these from the persistent attributes (which stay the source of
 truth) and only writes on change. **Custom-varp registry so far:** 4600 siege alert · 4601 war
@@ -39,8 +40,9 @@ progress · 4602-4605 PK stats · 4606 wilderness level · 4607 teleport menu ·
 **4633 quests (King of Lumbridge)** · 4640-4679 kit editor · 4680 companion sparring ·
 **4681 quests (War-Prep III)** · **4682 quests (Rogue Knight ladder)** · **4683 Quest Journal
 window open-pulse** (`QuestBook.OPEN_VARP`) — the quest trio moved off 4643-4645, which sat inside
-the kit editor's block and made `::kits` pop the quest journal. Claim the next one here when you
-add a system, and cross-check the master map in docs/overlay-design-system.md §8 FIRST.
+the kit editor's block and made `::kits` pop the quest journal · **4686 quests (The North)**, the
+first of the 4686-4699 framework-quest block. Claim the next one here when you add a system, and
+cross-check the master map in docs/overlay-design-system.md §8 FIRST.
 
 ### 2b. Free-play toggle (`::questguide`)
 
@@ -60,7 +62,7 @@ A first-party sidebar plugin (book icon) modelled on the RuneLite **Quest Helper
 (BSD-2, ported arrow rendering credits in `LofArrow.java`):
 
 - **Quest list** coloured like the OSRS quest tab (red / yellow / green, grey for locked), with
-  per-quest progress (`6/11`). All seven chain quests (Recruit Trials, War-Prep I — Magic, Rogue
+  per-quest progress (`6/12`). All seven chain quests (The Last Free City, War-Prep I — Magic, Rogue
   Hunting I, Rogue Hunting II, War-Prep II — Ranged, War-Prep III — Survival, King of Lumbridge)
   are fully wired — the two Rogue Hunting quests window one server chain (varp 4617); the
   FUTURE-teaser render path (dimmed "coming soon" rows) stays available for the next unbuilt quest.
