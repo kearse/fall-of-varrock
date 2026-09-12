@@ -28,8 +28,10 @@ object QuestBook {
     // Chain indices — must match client LofQuest.CHAIN order (= the enum's declaration order,
     // FUTURE teasers excluded) AND the native quest tab's row order (QuestTablePatch.PLAN sort
     // names). The legacy hallway keeps 0-6; framework main-story quests are APPENDED in story
-    // order (The North 7, then First Reclamation, A Kingdom Alone…) — each quest adds only its
-    // own constant and the last one to land bumps LAST_INDEX.
+    // order (The North 7, First Reclamation 8, then A Kingdom Alone 9 and its four regional
+    // objectives BREACH/SECURE/UNDERSTAND/SUSTAIN 10-13 — their own PR; the regional campaign
+    // quests follow from 14) — each quest adds only its own constant and the last one to land
+    // bumps LAST_INDEX.
     const val RECRUIT_TRIALS = 0   // The Last Free City (Main Story Quest 1)
     const val WARPREP_MAGIC = 1
     const val ROGUE_HUNTING_I = 2
@@ -45,8 +47,11 @@ object QuestBook {
     const val SECURE = 11
     const val UNDERSTAND = 12
     const val SUSTAIN = 13
-    // The Asgarnia campaign (BREACH) quests follow the objectives: At the White Wall 14, A Matter of
-    // Trolls 15, The Guns of Asgarnia 16 (each its own PR), Old Wounds 17, The White Wall 18.
+    // The regional campaign quests follow the objectives, campaign by campaign (The White Wall,
+    // Asgarnia's finale, takes 18 when it lands).
+    const val AT_THE_WHITE_WALL = 14 // Asgarnia (BREACH) Quest 1
+    const val A_MATTER_OF_TROLLS = 15 // Asgarnia — BREACH, quest 2 (the Northern Front)
+    const val GUNS_OF_ASGARNIA = 16 // Asgarnia — BREACH, quest 3 (the Artillery thread)
     const val OLD_WOUNDS = 17       // Old Wounds (Asgarnia — BREACH, Quest 4)
 
     /** The highest chain index the client journal lists (`LofQuest.CHAIN.size() - 1`). */

@@ -348,14 +348,117 @@ enum LofQuest
 			"An eastern convoy and the trade to feed a coalition army"
 		)),
 
-	// ---- Asgarnia — BREACH (the regional campaign quests; chain slots 14-18) ----
-	// Declaration order IS the chain slot: At the White Wall (14), A Matter of Trolls (15) and The
-	// Guns of Asgarnia (16) land with their own PRs and sit between SUSTAIN and this entry; whoever
-	// merges last re-checks the order against the server's QuestBook constants.
+	// ---- Regional campaigns: framework quests (generic varp packing) ----
+	// Chain order here MUST match the server's QuestBook constants: the regional campaign quests
+	// follow the four objectives (AT_THE_WHITE_WALL = 14, directly after SUSTAIN = 13), campaign
+	// by campaign. Step ordinals are the server's 1-based step indices.
+
+	/**
+	 * Asgarnia — BREACH, Quest 1. The regional opener: why Falador does not simply send its army to
+	 * Varrock. A checkpoint fight at Falador's north gate, Sir Amik Varze's "I have an army. I do not
+	 * have an army to spare.", Sir Tiffy Cashien's first questions, and a walk along the front.
+	 */
+	AT_THE_WHITE_WALL(
+		"At the White Wall",
+		"Falador survived the Fall — and became a fortified military state locked in a war with the "
+			+ "Kinshra. It has exactly the army Misthalin needs for Varrock, and none of it to spare: "
+			+ "the Kinshra do not need to take the city, only to keep its knights busy, while the "
+			+ "trolls pin the Imperial Guard at Burthorpe and the guns wear out faster than the dwarves "
+			+ "can replace them. Reach the north gate, hold it with the White Knights, hear Sir Amik "
+			+ "out, meet Sir Tiffy, and read the ground yourself.",
+		LofQuestVarps.AT_THE_WHITE_WALL,
+		"Complete A Kingdom Alone first.",
+		Arrays.asList(
+			new LofQuestStep(1, "Travel to Asgarnia", "Falador's NORTH gate — the one facing the Kinshra. Any road or teleport into Falador, then out to the north gate.", new WorldPoint(2965, 3398, 0)),
+			new LofQuestStep(2, "Speak with the White Knights at the checkpoint", "The garrison holds the road just outside the north gate.", new WorldPoint(2965, 3398, 0)),
+			new LofQuestStep(3, "Help the White Knights repel the Kinshra attack", "Defeat 5 Kinshra raiders at the checkpoint. Any raider you draw blood on counts, even if a knight finishes it.", new WorldPoint(2965, 3400, 0), 5),
+			new LofQuestStep(4, "Speak with Sir Amik Varze", "Top floor of the White Knights' Castle, in the middle of Falador.", new WorldPoint(2960, 3336, 2)),
+			new LofQuestStep(5, "Find Sir Tiffy Cashien", "His bench in Falador Park, east of the castle.", new WorldPoint(2997, 3373, 0)),
+			new LofQuestStep(6, "Inspect the front", "Three places, any order: the White Knight line at the checkpoint, the supply road just inside the north gate, and the ground north of the fence beyond the checkpoint.", new WorldPoint(2965, 3398, 0)),
+			new LofQuestStep(7, "Report to Sir Amik Varze", "Top floor of the White Knights' Castle.", new WorldPoint(2960, 3336, 2))
+		),
+		Arrays.asList(
+			"1 Quest Point and 25 War Effort",
+			"The Asgarnia campaign (BREACH) formally begun — A Matter of Trolls unlocked",
+			"The Asgarnian Front: the White Knight checkpoint at Falador's north gate"
+		)),
+
+	/**
+	 * Asgarnia — BREACH, quest 2 (server `quests/asgarnia/AMatterOfTrolls`, generic journal varp
+	 * 4694). Rows are the 1-based server step indices. Chain slot 15, directly after At the White
+	 * Wall (14) — declaration order IS the slot. (The AT_THE_WHITE_WALL entry above is carried
+	 * verbatim from its own PR so either merge order is clean.)
+	 */
+	A_MATTER_OF_TROLLS(
+		"A Matter of Trolls",
+		"Sir Amik cannot move the Imperial Guard south while Troll Country is unstable. Scout Death "
+			+ "Plateau for Commander Denulth and find the trolls are fighting each other; find My Arm "
+			+ "above the Stronghold and Snowflake in Weiss, and build a human-troll coalition against "
+			+ "the splinter warband and its War-chief; then hold the pass with the Imperial Guard in "
+			+ "the Battle of the Pass. Secure the northern frontier and Falador gains soldiers it can "
+			+ "finally move.",
+		LofQuestVarps.A_MATTER_OF_TROLLS,
+		"Finish At the White Wall first.",
+		Arrays.asList(
+			new LofQuestStep(1, "Speak with Commander Denulth in Burthorpe", "The Imperial Guard camp in the north-west of the town.", new WorldPoint(2896, 3528, 0)),
+			new LofQuestStep(2, "Scout the approaches to Death Plateau", "North-west of Burthorpe: past the Warriors' Guild, up the western path and around onto the plateau. Read the ground as you go.", new WorldPoint(2866, 3592, 0)),
+			new LofQuestStep(3, "Defeat the hostile troll patrol", "The warband trolls that came for you on the plateau. Every one you hit counts when it falls.", new WorldPoint(2866, 3592, 0), 4),
+			new LofQuestStep(4, "Find My Arm around Troll Stronghold", "He waits on the summit of Trollheim. The troll scout will walk you up; a Trollheim teleport lands there too.", new WorldPoint(2891, 3679, 0)),
+			new LofQuestStep(5, "Speak with Snowflake in Weiss", "My Arm's trolls will walk you there - ask him.", new WorldPoint(2873, 3934, 0)),
+			new LofQuestStep(6, "Arrange safe passage for the allied trolls with Denulth", "Snowflake's condition: the Imperial Guard must not fire on trolls entering the pass. Her trolls will see you down to Burthorpe.", new WorldPoint(2896, 3528, 0)),
+			new LofQuestStep(7, "Tell Denulth when you are ready for the Battle of the Pass", "Bring food and your best gear - the coalition does not win it for you.", new WorldPoint(2896, 3528, 0)),
+			new LofQuestStep(8, "Fight beside the Imperial Guard and allied trolls", "Hold the pass on Death Plateau: defeat 5 warband trolls while My Arm and Snowflake arrive.", null, 5),
+			new LofQuestStep(9, "Defeat the troll War-chief", "He shows himself once the warband is thinned. Break the splinter warband.", null),
+			new LofQuestStep(10, "Report the victory to Sir Amik", "Falador castle.", new WorldPoint(2960, 3336, 2))
+		),
+		Arrays.asList(
+			"Northern Frontier SECURED - the Imperial Guard can reinforce Falador",
+			"2 Quest Points and 50 War Effort",
+			"My Arm and Snowflake, and quest travel between Trollheim, Weiss and Burthorpe",
+			"The White Wall - Asgarnia's finale needs this and The Guns of Asgarnia"
+		)),
+
+	/**
+	 * Asgarnia — BREACH, quest 3 (server `quests/asgarnia/GunsOfAsgarnia`, generic journal varp
+	 * 4695). Rows are the 1-based server step indices. Chain slot 16, directly after A Matter of
+	 * Trolls (15) — declaration order IS the slot. It does not require A Matter of Trolls: the two
+	 * solve different problems and may be played in either order.
+	 */
+	GUNS_OF_ASGARNIA(
+		"The Guns of Asgarnia",
+		"Falador's dwarf multicannons have been worn out, destroyed and cannibalised over twelve years "
+			+ "of war. Nulodion can still build them - what he cannot get is steel by the wagon, because "
+			+ "Keldagrim stopped promising metal to wars it could not control. Secure the surface end of "
+			+ "the Keldagrim-Falador route, win a trial order, smelt it yourself on the Blast Furnace and "
+			+ "carry the first steel back to Nulodion - who finishes the first new gun in years just as a "
+			+ "Kinshra sabotage party arrives to test it.",
+		LofQuestVarps.GUNS_OF_ASGARNIA,
+		"Finish At the White Wall first.",
+		Arrays.asList(
+			new LofQuestStep(1, "Speak with Sir Amik Varze about Falador's guns", "Top floor of the White Knights' Castle, in the middle of Falador.", new WorldPoint(2960, 3336, 2)),
+			new LofQuestStep(2, "Ask Nulodion why Asgarnia cannot replace its multicannons", "His hut at the Dwarven Mine's Ice Mountain entrance, north of Falador.", new WorldPoint(3011, 3453, 0)),
+			new LofQuestStep(3, "Travel to Keldagrim and speak with the Blast Furnace Foreman", "The portal's Mini-Games tab lists the Blast Furnace - Keldagrim's furnace room.", new WorldPoint(1942, 4958, 0)),
+			new LofQuestStep(4, "Clear the Kinshra raiding cell on the steel route", "Camped in the trees just west of Nulodion's yard - five raiders and a captain. Anyone's kill counts.", new WorldPoint(3002, 3451, 0), 6),
+			new LofQuestStep(5, "Return to the Blast Furnace Foreman", "He authorises a trial order and hands over its materials.", new WorldPoint(1942, 4958, 0)),
+			new LofQuestStep(6, "Produce 10 steel bars at the Blast Furnace", "Ore on the conveyor belt, bars from the dispenser (bucket of water or ice gloves). Steel needs 30 Smithing. Keldagrim pays the coffer for this order.", new WorldPoint(1943, 4967, 0), 10),
+			new LofQuestStep(7, "Take the first steel shipment to Nulodion", "All ten bars, in your pack.", new WorldPoint(3011, 3453, 0)),
+			new LofQuestStep(8, "Help Nulodion complete the first replacement multicannon", "He has the fittings. Let him work.", new WorldPoint(3011, 3453, 0)),
+			new LofQuestStep(9, "Defend the workshop and field-test the cannon", "Load the new gun with Nulodion's cannonballs (Fire) and hold the yard against the Kinshra saboteurs. Driven off? Nulodion sends them again.", new WorldPoint(3014, 3446, 0), 6),
+			new LofQuestStep(10, "Speak with Nulodion about the first cannon", new WorldPoint(3011, 3453, 0)),
+			new LofQuestStep(11, "Report the restored artillery supply to Sir Amik Varze", "Top floor of the White Knights' Castle.", new WorldPoint(2960, 3336, 2))
+		),
+		Arrays.asList(
+			"Artillery Production RESTORED - Asgarnia can produce replacement multicannons again",
+			"Keldagrim's limited military steel trade, while Falador keeps the route open",
+			"The Blast Furnace, restored as Keldagrim's steel production (portal, Mini-Games)",
+			"2 Quest Points and 50 War Effort",
+			"The White Wall - Asgarnia's finale needs this and A Matter of Trolls"
+		)),
 
 	/**
 	 * Asgarnia — BREACH, Quest 4 (server `quests/asgarnia/OldWounds`, generic journal varp 4696,
-	 * QuestBook.OLD_WOUNDS = 17). The intelligence quest and the first deliberate Wilderness mission:
+	 * QuestBook.OLD_WOUNDS = 17 — declaration order IS the slot: directly after The Guns of Asgarnia
+	 * (16); The White Wall, the campaign's finale, takes 18 when it lands). The intelligence quest and the first deliberate Wilderness mission:
 	 * real PvP the whole way, never instanced, never protected. Rows are the 1-based server step
 	 * indices (the three "examine the remains" server steps have their own rows here).
 	 */
@@ -406,6 +509,13 @@ enum LofQuest
 	private static final int FIRST_RECLAMATION_RETRY = 8;
 	/** General Zo's post in the castle hub. */
 	private static final WorldPoint GENERAL_ZO = new WorldPoint(3220, 3210, 0);
+
+	/**
+	 * The Kinshra raiders of At the White Wall — stock Black Knights (the checkpoint raid spawns
+	 * 516; 517 is the fortress twin). Highlighted during the checkpoint fight so the player can pick
+	 * the raiders out of the melee with the White Knights.
+	 */
+	private static final int[] BLACK_KNIGHTS = {516, 517};
 
 	/**
 	 * The goblins of the Lumbridge fields — every plain "Goblin" npc id the camp and the surrounding
@@ -745,6 +855,11 @@ enum LofQuest
 				return GOBLINS;
 			}
 		}
+		if (this == AT_THE_WHITE_WALL && step.getOrdinal() == 3)
+		{
+			// The checkpoint raid: pick the Kinshra raiders out of the melee with the White Knights.
+			return BLACK_KNIGHTS;
+		}
 		return NO_NPCS;
 	}
 
@@ -753,6 +868,13 @@ enum LofQuest
 	static boolean isObjectiveNpc(int npcId)
 	{
 		for (int id : GOBLINS)
+		{
+			if (id == npcId)
+			{
+				return true;
+			}
+		}
+		for (int id : BLACK_KNIGHTS)
 		{
 			if (id == npcId)
 			{
