@@ -151,7 +151,7 @@ object BattleOfThePass {
         private fun at(delay: Int, action: () -> Unit) { pending += (ticks + delay) to action }
 
         private lateinit var trollDef: NpcCombatDef
-        private lateinit var guardLine: Tile
+        private var guardLine: Tile = GUARD_LINE // re-pointed into the instance in begin() (Tile is a value class: no lateinit)
 
         /** Warband npcs aggro the instance owner and nobody else; allies never aggro a player. */
         private val aggroOwnerOnly: (Npc, Player) -> Boolean = { _, pl -> pl === owner }
