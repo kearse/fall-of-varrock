@@ -43,8 +43,8 @@ private val logger = KotlinLogging.logger {}
  * against its **Warden** — a boss-tier defender whose fall pays the forge's ember components.
  *
  * `::march` rallies a player to the column (with a second-confirmation warning when the column
- * is fighting on wilderness ground — the Varrock outskirts). Marches CAN fail — 10 knights
- * alone will often be driven back; the realm learns to march with them.
+ * is fighting on wilderness ground — read live from `PvpZones`, never assumed from the target).
+ * Marches CAN fail — 10 knights alone will often be driven back; the realm learns to march with them.
  */
 class MarchPlugin(
     r: PluginRepository,
@@ -173,7 +173,9 @@ class MarchPlugin(
         target = t
         pendingGrand = grand
         val mins = WARN_TICKS * 6 / 600
-        val wild = if (t.kind == MarchTargetKind.VARROCK_OUTSKIRTS) " (wilderness ground — PvP)" else ""
+        // PvP danger is the real PvpZones answer for the rally point — the wilderness boundary has
+        // moved before (the Varrock outskirts used to be hardcoded as wild) and may move again.
+        val wild = if (MarchTargets.isPvpGround(t)) " (wilderness ground — PvP)" else ""
         when {
             funded != null && grand ->
                 Announce.broadcast(world, "<col=ffcc00>${funded.first}, Patron of the Realm, funds a GRAND MARCH against <col=ffae00>${t.warden?.title ?: t.display}</col><col=ffcc00> at ${t.display}$wild — ${tier.troops} knights set out in ~$mins minutes! <col=0000ff>::march</col><col=ffcc00> to fight!</col>")

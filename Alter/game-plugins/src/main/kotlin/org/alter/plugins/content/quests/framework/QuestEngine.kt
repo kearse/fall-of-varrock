@@ -209,7 +209,9 @@ object QuestEngine {
     /**
      * Generic journal publish for quests that claimed a [QuestDefinition.journalVarp]:
      * `stepIndex+1 (bits 0-7) | progress (bits 8-19, the kills counter) | state (bits 20-21:
-     * 0 none, 1 in progress, 2 complete)`. Only writes on change; never out of range.
+     * 0 none, 1 in progress, 2 complete)`, plus the native quest-tab mirror for quests with a
+     * [QuestDefinition.nativeTabVarp] (0 / 1 / complete value). Only writes on change; never out
+     * of range.
      */
     fun publish(p: Player, q: QuestDefinition) {
         val state = when {

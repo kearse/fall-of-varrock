@@ -182,31 +182,70 @@ enum LofQuest
 			"City-vs-city conquest"
 		)),
 
-	// ---- Main Story Quests 3-5 + the regional phase: framework quests (generic varp packing) ----
-	// Chain order here MUST match the server's QuestBook constants (THE_NORTH 7, FIRST_RECLAMATION 8,
-	// A_KINGDOM_ALONE 9, BREACH 10, SECURE 11, UNDERSTAND 12, SUSTAIN 13). Step ordinals are the
-	// server's 1-based step index (QuestEngine.publish). The two entries below A_KINGDOM_ALONE's
-	// predecessors are PLACEHOLDERS that hold the chain slots; their own quest PRs replace them.
-
-	/** Main Story Quest 3 — placeholder holding chain slot 7; The North's PR carries the real entry. */
+	/**
+	 * Main Story Quest 3 — the first FRAMEWORK quest (server `quests/north/TheNorth`, generic
+	 * packing on LofQuestVarps.NORTH). Step ordinals are the 1-based server step index; the state
+	 * bits are authoritative (it auto-begins the moment The Last Free City is done).
+	 */
 	THE_NORTH(
 		"The North",
-		"Push north to the Varrock frontier and learn the scale of what Misthalin lost when the "
-			+ "city fell.",
+		"You have seen Lumbridge attacked and stood with its Knights. General Zo wants you to see "
+			+ "what the Fall of Varrock did to the rest of the kingdom: go north to Edgeville, find "
+			+ "someone who remembers the day Varrock fell, stand at the Wilderness line — where the "
+			+ "Rogue Knights give way to other adventurers — and bring back the last dispatch Varrock "
+			+ "ever sent. No fight is required; the road north may test you anyway.",
 		LofQuestVarps.NORTH,
 		"Complete The Last Free City first.",
-		Collections.emptyList(),
-		Arrays.asList("The road north", "First Reclamation")),
+		Arrays.asList(
+			new LofQuestStep(1, "Speak to General Zo about the north", "In the castle courtyard, beside Duke Horacio.", new WorldPoint(3220, 3210, 0)),
+			new LofQuestStep(2, "Travel to Edgeville", "Any road or teleport — an amulet of glory lands you there. Rogue Knights may cross your path; you need not fight them.", new WorldPoint(3087, 3496, 0)),
+			new LofQuestStep(3, "Find someone who remembers the Fall", "Oziach, in his hut at the north-west edge of Edgeville.", new WorldPoint(3069, 3517, 0)),
+			new LofQuestStep(4, "Inspect the Wilderness boundary", "Walk to the ditch at the top of town. You do not have to cross it.", new WorldPoint(3088, 3519, 0)),
+			new LofQuestStep(5, "Return to Oziach", "Tell him what you saw.", new WorldPoint(3069, 3517, 0)),
+			new LofQuestStep(6, "Read the Weathered Varrock Dispatch", "Read it from your pack, or with Oziach.", new WorldPoint(3069, 3517, 0)),
+			new LofQuestStep(7, "Take the dispatch to General Zo", "He wants to read the original — and Oziach wants it back.", new WorldPoint(3220, 3210, 0))
+		),
+		Arrays.asList(
+			"15 War Effort",
+			"The Weathered Varrock Dispatch — yours to keep and re-read from your pack",
+			"Edgeville and the Wilderness line: where the Rogue Knights end and real PvP begins",
+			"First Reclamation — the next main story quest"
+		)),
 
-	/** Main Story Quest 4 — placeholder holding chain slot 8; First Reclamation's PR carries the real entry. */
+	/**
+	 * Main Story Quest 4 — a framework quest (server `quests/story/FirstReclamation`, generic journal
+	 * varp 4687). Rows are the 1-based server step indices. The server's `retry` step (8) has no row
+	 * of its own: it renders as the battle row (7) with a "driven back" suffix, arrow on General Zo.
+	 * Chain slot: after The North (7), before A Kingdom Alone (9) — declaration order IS the slot.
+	 */
 	FIRST_RECLAMATION(
 		"First Reclamation",
-		"Prove that lost ground can be taken back: establish the Southern Watch beneath Fallen "
-			+ "Varrock and raise Lumbridge's standard there.",
+		"General Zo says surviving is no longer enough. Every march before this one hit the enemy and "
+			+ "went home; this time the realm clears the southern approach to Fallen Varrock and HOLDS it. "
+			+ "Scout the old stone circle on foot, fight beside the Reclamation Column's Grand March until "
+			+ "the line breaks, then raise Lumbridge's standard and establish the Southern Watch - the "
+			+ "first forward post in the shadow of the city walls. And hear the limit: Misthalin cannot "
+			+ "take Varrock alone.",
 		LofQuestVarps.FIRST_RECLAMATION,
-		"Complete The North first.",
-		Collections.emptyList(),
-		Arrays.asList("The Southern Watch", "A Kingdom Alone")),
+		"Finish The North first.",
+		Arrays.asList(
+			new LofQuestStep(1, "Report to General Zo", "He believes Lumbridge is ready to reclaim its first northern position.", new WorldPoint(3220, 3210, 0)),
+			new LofQuestStep(2, "Survey the southern road", "Walk north toward Varrock - the reconnaissance is yours. The road reaches the lower end of the outskirts battlefield.", new WorldPoint(3228, 3344, 0)),
+			new LofQuestStep(3, "Inspect the stone circle", "Step inside the ring east of the road.", new WorldPoint(3225, 3371, 0)),
+			new LofQuestStep(4, "Look north toward Fallen Varrock", "The road beyond the circle, in front of the south gate.", new WorldPoint(3212, 3381, 0)),
+			new LofQuestStep(5, "Report your findings to General Zo", new WorldPoint(3220, 3210, 0)),
+			new LofQuestStep(6, "Give General Zo the word", "He launches the Reclamation Column - a public Grand March on the Varrock outskirts.", new WorldPoint(3220, 3210, 0)),
+			new LofQuestStep(7, "Fight beside the Reclamation Column", "::march rallies you to it. The column must WIN and you need a real share of the fighting. Driven back? General Zo sends it again.", new WorldPoint(3213, 3376, 0)),
+			new LofQuestStep(9, "Raise the standard at the stone circle", "Capture the standard at the ring's heart to establish the Southern Watch.", new WorldPoint(3227, 3372, 0)),
+			new LofQuestStep(10, "Report to General Zo", "The Southern Watch is holding.", new WorldPoint(3220, 3210, 0))
+		),
+		Arrays.asList(
+			"The Southern Watch - fast travel to the forward post (portal, General Zo, ::southernwatch)",
+			"A Field Quartermaster and a garrison of Knights of Lumbridge at the circle",
+			"Varrock march staging on the doorstep of the fallen city",
+			"50 War Effort and the spoils of the won Grand March",
+			"A Kingdom Alone - the next main quest"
+		)),
 
 	/**
 	 * Main Story Quest 5. Short and dialogue-only: Duke Horacio and General Zo lay out why Lumbridge
@@ -319,6 +358,12 @@ enum LofQuest
 			"The First Major Assault on Varrock",
 			"Veteran of Varrock"
 		));
+
+	/** First Reclamation's battle row / the server's retry step (see the entry's note). */
+	private static final int FIRST_RECLAMATION_BATTLE = 7;
+	private static final int FIRST_RECLAMATION_RETRY = 8;
+	/** General Zo's post in the castle hub. */
+	private static final WorldPoint GENERAL_ZO = new WorldPoint(3220, 3210, 0);
 
 	/**
 	 * The goblins of the Lumbridge fields — every plain "Goblin" npc id the camp and the surrounding
@@ -438,6 +483,12 @@ enum LofQuest
 	{
 		if (isGeneric())
 		{
+			if (this == FIRST_RECLAMATION)
+			{
+				// The server's retry step (8) is the battle row (7) again — driven back, see General Zo.
+				final int raw = LofQuestVarps.genericStep(client, genericVarp);
+				return raw == FIRST_RECLAMATION_RETRY ? FIRST_RECLAMATION_BATTLE : raw;
+			}
 			return LofQuestVarps.genericStep(client, genericVarp);
 		}
 		switch (this)
@@ -617,6 +668,10 @@ enum LofQuest
 		{
 			return null;
 		}
+		if (this == FIRST_RECLAMATION && LofQuestVarps.genericStep(client, genericVarp) == FIRST_RECLAMATION_RETRY)
+		{
+			return GENERAL_ZO; // driven back — regroup with General Zo before the next push
+		}
 		if (this == LAST_FREE_CITY && step.getOrdinal() == 4 && LofQuestVarps.recruitContractTaken(client))
 		{
 			return GOBLIN_FIELD; // contract taken — hunt the goblins loose east of the castle
@@ -670,6 +725,11 @@ enum LofQuest
 	{
 		if (isGeneric())
 		{
+			if (this == FIRST_RECLAMATION && step.getOrdinal() == FIRST_RECLAMATION_BATTLE
+				&& LofQuestVarps.genericStep(client, genericVarp) == FIRST_RECLAMATION_RETRY)
+			{
+				return " (driven back - see General Zo)";
+			}
 			// Counted steps of a framework quest: the generic progress bits against the step's goal.
 			if (step.getGoal() > 0 && stepOrdinal(client) == step.getOrdinal())
 			{

@@ -57,11 +57,12 @@ private const val COL_DISPLAY_NAME = 2 // the name shown in the quest tab (DBTab
  * so our quests list in quest-line order; `displayName` is what players see. The `varp` is the
  * reused quest's progress varp the server drives (kept in lock-step with [QuestJournal]).
  *
- * All seven LIVE, server-driven quests are relabelled. Act II is TWO rows off one server chain:
+ * All LIVE, server-driven quests are relabelled. Act II is TWO rows off one server chain:
  * "Rogue Hunting I" (the hunt) reuses The Restless Ghost (varp 107) and "Rogue Hunting II" (the
  * Rogue Knight ladder) reuses The Knight's Sword (varp 122); "War-Prep II — Ranged" reuses Imp
- * Catcher (varp 160); "War-Prep III — Survival" reuses Sheep Shearer (varp 179). All are driven by
- * [QuestJournal.syncNativeTab]. Mappings for any future quests: docs/quest-tab-handoff.md.
+ * Catcher (varp 160); "War-Prep III — Survival" reuses Sheep Shearer (varp 179). The legacy chains
+ * are driven by [QuestJournal] (`LegacyChains`); framework quests by `QuestEngine.publish` from
+ * their `QuestDefinition.nativeTabVarp`. Mappings for any future quests: docs/quest-tab-handoff.md.
  */
 private data class Relabel(
     val dbrowId: Int,
@@ -75,13 +76,13 @@ private val PLAN = listOf(
     // The Last Free City (Main Story Quest 1 — the Recruit Trials chain under its story name) reuses
     // Cook's Assistant (dbrow 17, quest id 1, varp 29, complete 2). Renamed 2026-09-11: re-run
     // `relabel` (the workflow) so the live tab picks up the new name.
-    // Sort keys are TWO-digit ("01".."99"): the tab orders rows by string compare on this hidden
-    // column, so a single-digit scheme put "10 …" before "2 …" once the quest line passed nine.
+    // Sort keys are TWO-digit strings: the tab orders rows by this STRING, so "10 …" would sort before
+    // "2 …" — every row is zero-padded and the relabel rewrites them all anyway.
     Relabel(dbrowId = 17, questId = 1, sortName = "01 The Last Free City", displayName = "The Last Free City", varp = 29),
     Relabel(dbrowId = 30, questId = 11, sortName = "02 War-Prep I - Magic", displayName = "War-Prep I - Magic", varp = 31),
     // Rogue Hunting I (Act II's 30-rogue hunt; formerly listed as "The Rogue Problem") reuses The
     // Restless Ghost (dbrow 120, quest id 3, varp 107, driven by QuestJournal from RogueProblem.step —
-    // complete the moment the hunt clears). Sort digit 3 places it after War-Prep I.
+    // complete the moment the hunt clears). Sort key 03 places it after War-Prep I.
     Relabel(dbrowId = 120, questId = 3, sortName = "03 Rogue Hunting I", displayName = "Rogue Hunting I", varp = 107),
     // Rogue Hunting II (the Rogue Knight ladder — complete when every camp is broken) reuses The
     // Knight's Sword (dbrow 83, quest id 14, varp 122, complete 7). Same server chain, windowed:
@@ -94,11 +95,17 @@ private val PLAN = listOf(
     // Driven from WarPrepSurvival.step.
     Relabel(dbrowId = 131, questId = 5, sortName = "06 War-Prep III - Survival", displayName = "War-Prep III - Survival", varp = 179),
     // King of Lumbridge (endgame conquest) reuses Witch's Potion (varp 67, driven by QuestJournal from
-    // Conquest.step). Sort digit 7 keeps it last in the quest-line order.
+    // Conquest.step). Sort key 07 keeps it last of the legacy hallway.
     Relabel(dbrowId = 161, questId = 13, sortName = "07 King of Lumbridge", displayName = "King of Lumbridge", varp = 67),
+    // The North (Main Story Quest 3 — a framework quest, chain index 7) reuses Ernest the Chicken
+    // (dbrow 44, quest id 7, varp 32, complete 3). Driven by QuestEngine.publish from
+    // TheNorth.nativeTabVarp. Framework story quests append after the hallway in story order.
+    Relabel(dbrowId = 44, questId = 7, sortName = "08 The North", displayName = "The North", varp = 32),
+    // First Reclamation (Main Story Quest 4, framework quest) reuses Romeo & Juliet (dbrow 121, quest
+    // id 4, varp 144, complete 100) — driven by QuestDefinition.nativeTabVarp through QuestEngine.publish.
+    Relabel(dbrowId = 121, questId = 4, sortName = "09 First Reclamation", displayName = "First Reclamation", varp = 144),
     // A Kingdom Alone (Main Story Quest 5, framework quest `a_kingdom_alone`) reuses Rune Mysteries
     // (dbrow 125, quest id 53, varp 63, complete 6). Driven by QuestEngine.publish (nativeTabVarp).
-    // Sort keys 08 and 09 are The North and First Reclamation (their own PRs).
     Relabel(dbrowId = 125, questId = 53, sortName = "10 A Kingdom Alone", displayName = "A Kingdom Alone", varp = 63),
     // The regional phase's four strategic objectives (opened by A Kingdom Alone; each completed by
     // its regional campaign's payoff). Red / yellow / green = not yet open / open / solved.
