@@ -124,6 +124,10 @@ private val PLAN = listOf(
     // Plateau (dbrow 23, quest id 58, varp 314, complete 80) — on-theme, driven by
     // QuestDefinition.nativeTabVarp through QuestEngine.publish. Sort keys are slot+1.
     Relabel(dbrowId = 23, questId = 58, sortName = "16 A Matter of Trolls", displayName = "A Matter of Trolls", varp = 314),
+    // The Guns of Asgarnia (Asgarnia — BREACH, quest 3; framework quest `guns_of_asgarnia`, chain 16)
+    // reuses Dwarf Cannon (dbrow 35, quest id 47, varp 0, complete 11) — Nulodion's own row. Driven
+    // by QuestEngine.publish (nativeTabVarp).
+    Relabel(dbrowId = 35, questId = 47, sortName = "17 The Guns of Asgarnia", displayName = "The Guns of Asgarnia", varp = 0),
 )
 
 /** The only quest rows the tab should list after `hide` — exactly the ones we relabelled. */

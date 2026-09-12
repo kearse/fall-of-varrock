@@ -64,6 +64,9 @@ final class LofQuestVarps
 	/** Asgarnia — BREACH, quest 2: "A Matter of Trolls". */
 	static final int A_MATTER_OF_TROLLS = 4694;
 
+	/** Asgarnia — BREACH, quest 3: "The Guns of Asgarnia". */
+	static final int GUNS_OF_ASGARNIA = 4695;
+
 	/** Generic-packing step ordinal: the current step index + 1, 0 when unstarted or finished. */
 	static int genericStep(Client client, int varp)
 	{

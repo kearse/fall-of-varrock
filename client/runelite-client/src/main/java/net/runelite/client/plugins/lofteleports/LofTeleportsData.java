@@ -171,6 +171,7 @@ final class LofTeleportsData
 			b("Senntisten Expedition", "Hostile", HOSTILE, 2373), // relic of old Varrock (the Digsite winch)
 			b("Pest Control", "Safe Zone", SAFE, 8839),         // void knight top (the Outpost landers)
 			b("Wintertodt", "Safe Zone", SAFE, 20720),          // bruma torch (the Doors of Dinh)
+			b("Blast Furnace", "Safe Zone", SAFE, 2353),        // steel bar (Keldagrim's furnace room)
 			s("The Inferno", "Soon", SOON, 21295),              // infernal cape
 			s("Castle Wars", "Soon", SOON, 4037),               // castle wars decor
 			s("Last Man Standing", "Soon", SOON, 11941),        // looting bag

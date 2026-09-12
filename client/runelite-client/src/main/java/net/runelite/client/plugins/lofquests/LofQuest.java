@@ -418,6 +418,43 @@ enum LofQuest
 			"The White Wall - Asgarnia's finale needs this and The Guns of Asgarnia"
 		)),
 
+	/**
+	 * Asgarnia — BREACH, quest 3 (server `quests/asgarnia/GunsOfAsgarnia`, generic journal varp
+	 * 4695). Rows are the 1-based server step indices. Chain slot 16, directly after A Matter of
+	 * Trolls (15) — declaration order IS the slot. It does not require A Matter of Trolls: the two
+	 * solve different problems and may be played in either order.
+	 */
+	GUNS_OF_ASGARNIA(
+		"The Guns of Asgarnia",
+		"Falador's dwarf multicannons have been worn out, destroyed and cannibalised over twelve years "
+			+ "of war. Nulodion can still build them - what he cannot get is steel by the wagon, because "
+			+ "Keldagrim stopped promising metal to wars it could not control. Secure the surface end of "
+			+ "the Keldagrim-Falador route, win a trial order, smelt it yourself on the Blast Furnace and "
+			+ "carry the first steel back to Nulodion - who finishes the first new gun in years just as a "
+			+ "Kinshra sabotage party arrives to test it.",
+		LofQuestVarps.GUNS_OF_ASGARNIA,
+		"Finish At the White Wall first.",
+		Arrays.asList(
+			new LofQuestStep(1, "Speak with Sir Amik Varze about Falador's guns", "Top floor of the White Knights' Castle, in the middle of Falador.", new WorldPoint(2960, 3336, 2)),
+			new LofQuestStep(2, "Ask Nulodion why Asgarnia cannot replace its multicannons", "His hut at the Dwarven Mine's Ice Mountain entrance, north of Falador.", new WorldPoint(3011, 3453, 0)),
+			new LofQuestStep(3, "Travel to Keldagrim and speak with the Blast Furnace Foreman", "The portal's Mini-Games tab lists the Blast Furnace - Keldagrim's furnace room.", new WorldPoint(1942, 4958, 0)),
+			new LofQuestStep(4, "Clear the Kinshra raiding cell on the steel route", "Camped in the trees just west of Nulodion's yard - five raiders and a captain. Anyone's kill counts.", new WorldPoint(3002, 3451, 0), 6),
+			new LofQuestStep(5, "Return to the Blast Furnace Foreman", "He authorises a trial order and hands over its materials.", new WorldPoint(1942, 4958, 0)),
+			new LofQuestStep(6, "Produce 10 steel bars at the Blast Furnace", "Ore on the conveyor belt, bars from the dispenser (bucket of water or ice gloves). Steel needs 30 Smithing. Keldagrim pays the coffer for this order.", new WorldPoint(1943, 4967, 0), 10),
+			new LofQuestStep(7, "Take the first steel shipment to Nulodion", "All ten bars, in your pack.", new WorldPoint(3011, 3453, 0)),
+			new LofQuestStep(8, "Help Nulodion complete the first replacement multicannon", "He has the fittings. Let him work.", new WorldPoint(3011, 3453, 0)),
+			new LofQuestStep(9, "Defend the workshop and field-test the cannon", "Load the new gun with Nulodion's cannonballs (Fire) and hold the yard against the Kinshra saboteurs. Driven off? Nulodion sends them again.", new WorldPoint(3014, 3446, 0), 6),
+			new LofQuestStep(10, "Speak with Nulodion about the first cannon", new WorldPoint(3011, 3453, 0)),
+			new LofQuestStep(11, "Report the restored artillery supply to Sir Amik Varze", "Top floor of the White Knights' Castle.", new WorldPoint(2960, 3336, 2))
+		),
+		Arrays.asList(
+			"Artillery Production RESTORED - Asgarnia can produce replacement multicannons again",
+			"Keldagrim's limited military steel trade, while Falador keeps the route open",
+			"The Blast Furnace, restored as Keldagrim's steel production (portal, Mini-Games)",
+			"2 Quest Points and 50 War Effort",
+			"The White Wall - Asgarnia's finale needs this and A Matter of Trolls"
+		)),
+
 	/** FUTURE teaser: the strategic phase's payoff (excluded from the chain track until built). */
 	COUNCIL_OF_GIELINOR(
 		"Council of Gielinor",

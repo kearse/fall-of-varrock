@@ -96,6 +96,7 @@ object QuestJournal {
     const val WHITE_WALL_VARP = 4693
     /** A Matter of Trolls (Asgarnia — BREACH quest 2, `quests/asgarnia/AMatterOfTrolls`). */
     const val TROLLS_VARP = 4694
+    const val GUNS_OF_ASGARNIA_VARP = 4695 // The Guns of Asgarnia (Asgarnia quest 3)
 
     // Reused OSRS quest progress varps that colour the relabelled native quest-tab rows. A value of
     // 0 reads as "not started" (red), the complete value as "finished" (green), anything between as
@@ -149,6 +150,9 @@ object QuestJournal {
      *  `QuestDefinition.nativeTabVarp` through `QuestEngine.publish`). Completes at 80. */
     const val TROLLS_QUEST_VARP = 314
     internal const val TROLLS_QUEST_COMPLETE = 80
+    /** Dwarf Cannon varp — now the "The Guns of Asgarnia" row (Asgarnia quest 3). Completes at 11. */
+    const val GUNS_OF_ASGARNIA_QUEST_VARP = 0
+    internal const val GUNS_OF_ASGARNIA_QUEST_COMPLETE = 11
 
     /** True while the player has quest guidance muted (free-play mode). */
     fun muted(p: Player): Boolean = p.attr[QUEST_GUIDE_MUTED_ATTR] == true

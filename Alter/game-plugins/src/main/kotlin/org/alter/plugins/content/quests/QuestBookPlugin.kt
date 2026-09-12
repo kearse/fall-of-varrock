@@ -71,6 +71,7 @@ class QuestBookPlugin(
             16 to QuestBook.SUSTAIN,            // Pirate's Treasure
             86 to QuestBook.AT_THE_WHITE_WALL,  // Recruitment Drive
             58 to QuestBook.A_MATTER_OF_TROLLS, // Death Plateau
+            47 to QuestBook.GUNS_OF_ASGARNIA,   // Dwarf Cannon
         )
     }
 
