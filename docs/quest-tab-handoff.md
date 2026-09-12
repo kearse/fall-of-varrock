@@ -39,6 +39,7 @@ findings that shape everything below:
   | War-Prep II — Ranged | Imp Catcher | 76 | 9 | 160 | 2 |
   | War-Prep III — Survival | Sheep Shearer | 131 | 5 | 179 | 21 |
   | King of Lumbridge | Witch's Potion | 161 | 13 | 67 | 3 |
+  | The North (Main Story Quest 3 — framework quest; driven by `QuestEngine.publish` from `TheNorth.nativeTabVarp`) | Ernest the Chicken | 44 | 7 | 32 | 3 |
 
   Rogue Hunting I & II are TWO rows off ONE server chain (`RogueProblem.Step`, varp 4617):
   `QuestJournal.syncNativeTab` completes row I the moment the hunt clears (KNIGHT step) and holds

@@ -24,16 +24,26 @@ class LofQuestStep
 	/** Where the arrow points while this step is active (nullable = no fixed spot). */
 	private final WorldPoint target;
 
-	LofQuestStep(int ordinal, String label, String detail, WorldPoint target)
+	/** Counted objective size for a framework (generic-varp) quest step — the " (n/goal)" suffix is
+	 *  drawn from the generic progress bits while the step is active; 0 = not a counted step. */
+	private final int goal;
+
+	LofQuestStep(int ordinal, String label, String detail, WorldPoint target, int goal)
 	{
 		this.ordinal = ordinal;
 		this.label = label;
 		this.detail = detail;
 		this.target = target;
+		this.goal = goal;
+	}
+
+	LofQuestStep(int ordinal, String label, String detail, WorldPoint target)
+	{
+		this(ordinal, label, detail, target, 0);
 	}
 
 	LofQuestStep(int ordinal, String label, WorldPoint target)
 	{
-		this(ordinal, label, null, target);
+		this(ordinal, label, null, target, 0);
 	}
 }

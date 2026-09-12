@@ -111,9 +111,15 @@ exactly as the Recruiting Sergeant was in PR-9).
    before/after any change near the legacy chains must be identical; boot must print
    `[quests] registry: 7 legacy chains, N framework quests` with N incremented.
 
-## 3. Legacy quest keys (prerequisites)
+## 3. Quest keys (prerequisites)
 
-`recruit_trials` (**The Last Free City**, Main Story Quest 1 — `docs/quests/the-last-free-city.md`)
+Framework: `the_north` (**The North**, Main Story Quest 3 — `docs/quests/the-north.md`; the first
+built framework quest, and the reference for the journal varp + native-tab row path:
+`journalVarp` from the 4686 block + `nativeTabVarp`/`nativeTabComplete` on the definition, both
+written by `QuestEngine.publish`). Its gate is `Prerequisite.Custom`: `first_march` once that key
+is registered, else `recruit_trials` — copy the pattern when the quest before yours is not built yet.
+
+Legacy: `recruit_trials` (**The Last Free City**, Main Story Quest 1 — `docs/quests/the-last-free-city.md`)
 · `warprep_magic` · `rogue_hunting_1` (optional) · `rogue_hunting_2` (optional) · `warprep_ranged` ·
 `warprep_survival` · `king_of_lumbridge`.
 
@@ -121,7 +127,10 @@ Every new quest spec starts from the integration-first template in `docs/quests/
 
 ## 4. Not yet built (Block 2 adds as needed)
 
-Branching steps (a `ConditionalStep`), party instances, client journal entries for framework
-quests (the additive `LofQuest` constructor), the Veteran-of-Varrock award (the first major
-assault story event), any locked route (none registered), `NpcTalk` migrations for Vannaka and
-General Zo (still on their own `onNpcOption` binds).
+Branching steps (a `ConditionalStep`), party instances, the Veteran-of-Varrock award (the first
+major assault story event), any locked route (none registered), the `NpcTalk` migration for
+Vannaka (still on his own `onNpcOption` bind). Done since: General Zo is on `bindTalk` + a default
+`NpcTalk` branch (The North); framework quests publish to the client journal through the generic
+`LofQuest` entry (varp `& 0xFF` = 1-based step, bits 20-21 = state) and to the native tab through
+`QuestDefinition.nativeTabVarp`; `autoBegin` quests also begin from the framework poll, so a gate
+that opens mid-session starts the next quest without a relog.

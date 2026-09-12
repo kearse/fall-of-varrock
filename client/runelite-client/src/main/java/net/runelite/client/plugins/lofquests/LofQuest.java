@@ -180,6 +180,36 @@ enum LofQuest
 			"Command of the realm's armies (::conquest)",
 			"A commander's spoils (::claim) and Prestige",
 			"City-vs-city conquest"
+		)),
+
+	/**
+	 * Main Story Quest 3 — the first FRAMEWORK quest (server `quests/north/TheNorth`, generic
+	 * packing on LofQuestVarps.NORTH). Step ordinals are the 1-based server step index; the state
+	 * bits are authoritative (it auto-begins the moment The Last Free City is done).
+	 */
+	THE_NORTH(
+		"The North",
+		"You have seen Lumbridge attacked and stood with its Knights. General Zo wants you to see "
+			+ "what the Fall of Varrock did to the rest of the kingdom: go north to Edgeville, find "
+			+ "someone who remembers the day Varrock fell, stand at the Wilderness line — where the "
+			+ "Rogue Knights give way to other adventurers — and bring back the last dispatch Varrock "
+			+ "ever sent. No fight is required; the road north may test you anyway.",
+		LofQuestVarps.NORTH,
+		"Complete The Last Free City first.",
+		Arrays.asList(
+			new LofQuestStep(1, "Speak to General Zo about the north", "In the castle courtyard, beside Duke Horacio.", new WorldPoint(3220, 3210, 0)),
+			new LofQuestStep(2, "Travel to Edgeville", "Any road or teleport — an amulet of glory lands you there. Rogue Knights may cross your path; you need not fight them.", new WorldPoint(3087, 3496, 0)),
+			new LofQuestStep(3, "Find someone who remembers the Fall", "Oziach, in his hut at the north-west edge of Edgeville.", new WorldPoint(3069, 3517, 0)),
+			new LofQuestStep(4, "Inspect the Wilderness boundary", "Walk to the ditch at the top of town. You do not have to cross it.", new WorldPoint(3088, 3519, 0)),
+			new LofQuestStep(5, "Return to Oziach", "Tell him what you saw.", new WorldPoint(3069, 3517, 0)),
+			new LofQuestStep(6, "Read the Weathered Varrock Dispatch", "Read it from your pack, or with Oziach.", new WorldPoint(3069, 3517, 0)),
+			new LofQuestStep(7, "Take the dispatch to General Zo", "He wants to read the original — and Oziach wants it back.", new WorldPoint(3220, 3210, 0))
+		),
+		Arrays.asList(
+			"15 War Effort",
+			"The Weathered Varrock Dispatch — yours to keep and re-read from your pack",
+			"Edgeville and the Wilderness line: where the Rogue Knights end and real PvP begins",
+			"First Reclamation — the next main story quest"
 		));
 
 	/**
@@ -205,25 +235,66 @@ enum LofQuest
 	private final int doneOrdinal;
 	private final List<LofQuestStep> steps;
 	private final List<String> unlocks;
+	/** Framework quests: the server's generic journal varp (QuestDefinition.journalVarp); 0 = a
+	 *  legacy chain (own varp layout, switched on below) or a FUTURE teaser. */
+	private final int genericVarp;
+	/** Framework quests: the "Locked — …" line while the prerequisites are unmet (nullable). */
+	private final String lockReasonText;
 
 	LofQuest(String questName, String why, int doneOrdinal, List<LofQuestStep> steps, List<String> unlocks)
 	{
-		this.questName = questName;
-		this.why = why;
-		this.doneOrdinal = doneOrdinal;
-		this.steps = steps;
-		this.unlocks = unlocks;
+		this(questName, why, doneOrdinal, 0, null, steps, unlocks);
+	}
+
+	/**
+	 * Framework quest entry (server `QuestDefinition` with a `journalVarp`): generic packing —
+	 * bits 0-7 current step index + 1, bits 8-19 progress, bits 20-21 state (0 locked / not begun,
+	 * 1 in progress, 2 complete). Step ordinals are the server's 1-based step indices.
+	 */
+	LofQuest(String questName, String why, int genericVarp, String lockReason, List<LofQuestStep> steps, List<String> unlocks)
+	{
+		this(questName, why, Integer.MAX_VALUE, genericVarp, lockReason, steps, unlocks);
 	}
 
 	/** FUTURE teaser entry — no server chain behind it yet. */
 	LofQuest(String questName, String why, List<String> unlocks)
 	{
-		this(questName, why, -1, Collections.emptyList(), unlocks);
+		this(questName, why, -1, 0, null, Collections.emptyList(), unlocks);
+	}
+
+	LofQuest(String questName, String why, int doneOrdinal, int genericVarp, String lockReason, List<LofQuestStep> steps, List<String> unlocks)
+	{
+		this.questName = questName;
+		this.why = why;
+		this.doneOrdinal = doneOrdinal;
+		this.genericVarp = genericVarp;
+		this.lockReasonText = lockReason;
+		this.steps = steps;
+		this.unlocks = unlocks;
 	}
 
 	boolean isFuture()
 	{
 		return doneOrdinal < 0;
+	}
+
+	/** A framework (generic-varp) quest, as opposed to a legacy chain or a FUTURE teaser. */
+	boolean isGeneric()
+	{
+		return genericVarp > 0;
+	}
+
+	/** True if [varp] is any framework quest's journal varp — a change to it must refresh the journal. */
+	static boolean isJournalVarp(int varp)
+	{
+		for (LofQuest q : values())
+		{
+			if (q.genericVarp == varp)
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/** The main quest chain in order — the real, built quests (FUTURE teasers excluded). The index
@@ -257,6 +328,10 @@ enum LofQuest
 	/** The server chain's current step ordinal for this quest (0 for FUTURE entries). */
 	int stepOrdinal(Client client)
 	{
+		if (isGeneric())
+		{
+			return LofQuestVarps.genericStep(client, genericVarp);
+		}
 		switch (this)
 		{
 			case LAST_FREE_CITY:
@@ -283,6 +358,20 @@ enum LofQuest
 		if (isFuture())
 		{
 			return LofQuestState.FUTURE;
+		}
+		if (isGeneric())
+		{
+			// Framework quests begin on their own once the prerequisites are met (or from the
+			// quest before them), so "not begun" reads as locked.
+			switch (LofQuestVarps.genericState(client, genericVarp))
+			{
+				case 2:
+					return LofQuestState.FINISHED;
+				case 1:
+					return LofQuestState.IN_PROGRESS;
+				default:
+					return LofQuestState.LOCKED;
+			}
 		}
 		int ord = stepOrdinal(client);
 		switch (this)
@@ -344,6 +433,10 @@ enum LofQuest
 	/** Short lock explanation for LOCKED entries (null otherwise). */
 	String lockReason(Client client)
 	{
+		if (isGeneric())
+		{
+			return state(client) == LofQuestState.LOCKED ? lockReasonText : null;
+		}
 		if (this == WARPREP_MAGIC && state(client) == LofQuestState.LOCKED)
 		{
 			return "Complete The Last Free City first.";
@@ -374,6 +467,10 @@ enum LofQuest
 	/** How many checklist steps are already behind the player. */
 	int completedSteps(Client client)
 	{
+		if (state(client) == LofQuestState.FINISHED)
+		{
+			return steps.size(); // a finished framework quest publishes step 0 — every row is behind
+		}
 		int ord = stepOrdinal(client);
 		int done = 0;
 		for (LofQuestStep step : steps)
@@ -463,6 +560,16 @@ enum LofQuest
 	/** Live progress suffix for a step row, e.g. " (3/5)" goblins or " (23/37)" Prayer. */
 	String stepProgress(Client client, LofQuestStep step)
 	{
+		if (isGeneric())
+		{
+			// Counted steps of a framework quest: the generic progress bits against the step's goal.
+			if (step.getGoal() > 0 && stepOrdinal(client) == step.getOrdinal())
+			{
+				final int n = Math.min(LofQuestVarps.genericProgress(client, genericVarp), step.getGoal());
+				return " (" + n + "/" + step.getGoal() + ")";
+			}
+			return "";
+		}
 		if (this == LAST_FREE_CITY && step.getOrdinal() == 1 && stepOrdinal(client) == 1)
 		{
 			return " (" + LofQuestVarps.recruitGoblinKills(client) + "/5)";
