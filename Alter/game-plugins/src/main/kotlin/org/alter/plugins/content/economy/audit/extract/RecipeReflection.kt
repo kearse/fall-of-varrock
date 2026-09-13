@@ -354,10 +354,11 @@ object RecipeReflection {
         for (r in WarForge.RECIPES) {
             val inputs = mutableListOf(r.baseKey to 1.0, "item.coins_995" to r.coins.toDouble())
             if (r.commendations > 0) inputs += WarForge.COMMENDATION_KEY to r.commendations.toDouble()
+            if (r.material > 0) inputs += WarForge.MATERIAL_KEY to r.material.toDouble()
             if (r.embers > 0) inputs += WarForge.EMBER_KEY to r.embers.toDouble()
             if (r.bars > 0) inputs += "item.runite_bar" to r.bars.toDouble()
             c.recipe("recipe:warforge.${r.outKey.removePrefix("item.")}", "WarForge", inputs, listOf(r.outKey to 1.0),
-                ActionTimeModel.CLICK_TICKS, RecipeCategory.CONVERT, note = "Royal Smith; Commendations are untradeable")
+                ActionTimeModel.CLICK_TICKS, RecipeCategory.CONVERT, note = "Royal Smith; War commendations are untradeable")
         }
     }
 

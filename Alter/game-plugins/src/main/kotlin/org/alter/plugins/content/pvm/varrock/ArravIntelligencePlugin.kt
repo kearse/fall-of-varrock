@@ -70,7 +70,7 @@ class ArravIntelligencePlugin(
             }
             3 -> {
                 chatNpc(p, "When the city fell, the guard who lived kept watching it.<br>Every patrol, every salvage run, every captain we mark —<br>that's intelligence. Arrav's name is on it because the<br>trail always leads back to him.", npc = id, title = "Captain Rovin")
-                chatNpc(p, "Purge the elite dead, recover salvage for the Royal Smith,<br>hunt the Hollow when he walks, fell the Warden in the<br>palace. War Effort, Commendations and relics for the work.", npc = id, title = "Captain Rovin")
+                chatNpc(p, "Purge the elite dead, recover Forging material for the<br>Royal Smith, hunt the Hollow when he walks, fell the Warden<br>in the palace. War Effort, War commendations and relics for the work.", npc = id, title = "Captain Rovin")
             }
             else -> chatNpc(p, "Keep your head down out there.", npc = id, title = "Captain Rovin")
         }

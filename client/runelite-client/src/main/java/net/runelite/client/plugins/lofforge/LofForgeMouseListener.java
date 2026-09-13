@@ -38,7 +38,7 @@ class LofForgeMouseListener extends MouseAdapter
 		}
 		else if (hit == LofForgeOverlay.FORGE)
 		{
-			// Two-click confirm: forging consumes the base piece + untradeable Commendations.
+			// Two-click confirm: forging consumes the base piece + untradeable War commendations.
 			if (!overlay.isArmed())
 			{
 				overlay.setArmed(true);

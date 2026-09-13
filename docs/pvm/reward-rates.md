@@ -113,10 +113,11 @@ OSRS-wiki rules; the Moons drop nothing themselves — the Lunar Chest pays.
 
 ## Fallen Varrock PvM layer (PR 6, `content/pvm/varrock/`)
 
-FoV-original. Materials: **Varrock salvage** (numulite 21555 renamed, stackable, tradeable, cost 0)
-and **Relic of old Varrock** (relic part 2373 renamed, tradeable, cost 0) — the War-Forging
-ingredients the war team's recipes will consume (their wiring). War Effort / Commendations go
-through `addPoints` / `WarForge.awardCommendations`.
+FoV-original. Materials: **Forging material** (numulite 21555 renamed — "Varrock salvage" until
+2026-09-13 — stackable, tradeable, cost 0; `WarForge.MATERIAL_KEY`, consumed by every Royal Smith
+recipe: 30 per body/legs piece, 20 per helm) and **Relic of old Varrock** (relic part 2373 renamed,
+tradeable, cost 0 — a future ingredient). War Effort / War commendations go through `addPoints` /
+`WarForge.awardCommendations`. "Salvage" in the tables below = Forging material.
 
 | Source | Reward | Rate | Review |
 |---|---|---|---|

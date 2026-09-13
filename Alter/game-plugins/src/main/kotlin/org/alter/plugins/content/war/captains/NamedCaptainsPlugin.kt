@@ -116,7 +116,7 @@ class NamedCaptainsPlugin(
                     player.message("  ${def.name} — ${def.district.display}: slain, a successor rises in ~${mins}m")
                 }
             }
-            player.message("Bounty per head: <col=ffae00>${"%,d".format(BOUNTY_COINS)} coins + $BOUNTY_COMMENDATIONS Commendations + $BOUNTY_WAR_EFFORT War Effort</col>. Their streets are PvP ground.")
+            player.message("Bounty per head: <col=ffae00>${"%,d".format(BOUNTY_COINS)} coins + $BOUNTY_COMMENDATIONS War commendations + $BOUNTY_WAR_EFFORT War Effort</col>. Their streets are PvP ground.")
         }
     }
 

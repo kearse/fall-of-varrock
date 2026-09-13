@@ -29,9 +29,9 @@ import java.nio.file.Path
  * needs both this tool (client) and the csv (server).
  *
  * Run (workingDir = repo root = the Alter project dir):
- *   gradlew :game-server:itemDef -PitemDefArgs="inspect 4067 8851 4278"
+ *   gradlew :game-server:itemDef -PitemDefArgs="inspect 4067 8851 4278 21555"
  *   gradlew :game-server:itemDef -PitemDefArgs="tickets"          # Boss/Vote Ticket names
- *   gradlew :game-server:itemDef -PitemDefArgs="commendation"     # Ecto-token -> Commendation
+ *   gradlew :game-server:itemDef -PitemDefArgs="warforge"         # Ecto-token -> War commendation, Numulite -> Forging material
  *   gradlew :game-server:itemDef -PitemDefArgs="dispatch"         # Old note 25829 -> Weathered Varrock dispatch (The North)
  *   gradlew :game-server:itemDef -PitemDefArgs="rename 4067 Boss Ticket"
  *   gradlew :game-server:itemDef -PitemDefArgs="examine 4067 Redeem me at the boss vendor."
@@ -44,11 +44,20 @@ private const val REVISION = 228
 
 private const val BOSS_TICKET = 4067 // Castle wars ticket sprite — our Boss Ticket currency
 private const val VOTE_TICKET = 8851 // Warrior guild token sprite — our Vote Ticket currency
-private const val COMMENDATION = 4278 // Ecto-token sprite — our Commendation war currency (WarForge)
-
-// Keep in sync with the 4278 line in data/cfg/objs.csv (the server-side examine source).
+// The two War-Forging materials (war/forge/WarForge.kt). Names + examines are the source of
+// truth here for the CLIENT cache; keep them in sync with the same ids in
+// data/cfg/items/itemOverrides/unique/war_forging.yml (server-side name/examine), the 4278 /
+// 21555 lines in data/cfg/objs.csv (server-side ground examine) and the `warforge` action of
+// .github/workflows/item-def-cache.yml (which passes them to the generic rename/examine verbs
+// so it works against whatever image is deployed).
+private const val COMMENDATION = 4278 // Ecto-token sprite — the War commendation (WarForge.COMMENDATION_KEY)
+private const val COMMENDATION_NAME = "War commendation"
 private const val COMMENDATION_EXAMINE =
-    "Proof of service in the realm's wars. Thurgo, the Royal Smith at Lumbridge Castle, forges armour for these."
+    "Won in the realm's marches and campaigns. Bring these to Thurgo, the Royal Smith at Lumbridge Castle, to war-forge elite armour."
+private const val FORGING_MATERIAL = 21555 // Numulite sprite — the Forging material (WarForge.MATERIAL_KEY)
+private const val FORGING_MATERIAL_NAME = "Forging material"
+private const val FORGING_MATERIAL_EXAMINE =
+    "Twisted metal and stone salvaged from fallen Varrock. Bring it to Thurgo, the Royal Smith at Lumbridge Castle, to war-forge elite armour."
 
 // The North (Main Story Quest 3): Oziach's Weathered Varrock Dispatch rides the "Old note" def
 // (25829 — it already has the Read + Drop pack verbs). Keep in sync with
@@ -76,7 +85,11 @@ fun main(args: Array<String>) {
             edit(BOSS_TICKET, name = "Boss Ticket")
             edit(VOTE_TICKET, name = "Vote Ticket")
         }
-        "commendation" -> edit(COMMENDATION, name = "Commendation", examine = COMMENDATION_EXAMINE)
+        // "commendation" kept as an alias for the old workflow choice — it now applies both renames.
+        "warforge", "commendation" -> {
+            edit(COMMENDATION, name = COMMENDATION_NAME, examine = COMMENDATION_EXAMINE)
+            edit(FORGING_MATERIAL, name = FORGING_MATERIAL_NAME, examine = FORGING_MATERIAL_EXAMINE)
+        }
         "dispatch" -> edit(DISPATCH, name = DISPATCH_NAME, examine = DISPATCH_EXAMINE)
         "oldwounds" -> {
             edit(KINSHRA_ORDERS, name = KINSHRA_ORDERS_NAME, examine = KINSHRA_ORDERS_EXAMINE)
@@ -95,7 +108,7 @@ fun main(args: Array<String>) {
             edit(id, examine = text)
         }
         "restore" -> restore(args.getOrNull(1)?.toIntOrNull() ?: run { println("restore <id>"); return })
-        else -> println("usage: inspect <id...> | tickets | commendation | dispatch | oldwounds | rename <id> <name...> | examine <id> <text...> | restore <id>")
+        else -> println("usage: inspect <id...> | tickets | warforge | dispatch | oldwounds | rename <id> <name...> | examine <id> <text...> | restore <id>")
     }
 }
 

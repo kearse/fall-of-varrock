@@ -54,7 +54,7 @@ class RoyalSmithPlugin(
     }
 
     private suspend fun QueueTask.smithDialog(p: Player) {
-        chatNpc(p, "The realm's war-forge, ${p.address}. Bring me an elite piece, your Commendations from the field, runite bars and the fee — I'll hammer it into something the enemy will learn to fear.", npc = smithId, title = "Royal Smith")
+        chatNpc(p, "The realm's war-forge, ${p.address}. Bring me an elite piece, your War commendations from the field, Forging material from Varrock's ruins, runite bars and the fee — I'll hammer it into something the enemy will learn to fear.", npc = smithId, title = "Royal Smith")
         if (p.title.ordinal < Title.KNIGHT.ordinal) {
             chatNpc(p, "But my forge serves the realm's proven, ${p.address} — earn the rank of <col=801700>Knight</col> and we'll talk work.", npc = smithId, title = "Royal Smith")
             return
@@ -67,7 +67,7 @@ class RoyalSmithPlugin(
     /** The window's forge channel ("::forge make <i>" → forgeclick). Also testable directly. */
     private fun forgeClick(p: Player, index: Int?) {
         // The token arrives from anywhere; forging consumes a BIS base + untradeable
-        // Commendations, so keep the old dialogue's invariant: it happens AT the forge.
+        // War commendations, so keep the old dialogue's invariant: it happens AT the forge.
         if (!p.tile.isWithinRadius(SMITH_TILE, FORGE_RADIUS)) {
             p.message("The war-forge burns beside the castle wall — bring your materials to the Royal Smith.")
             return

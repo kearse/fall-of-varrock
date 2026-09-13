@@ -12,10 +12,12 @@ import org.alter.rscm.RSCM.getRSCM
  * dialogue menus.
  *
  * State rides `~LOFFORGE~` CONSOLE lines (parsed + hidden client-side):
- *   header  `~LOFFORGE~H|<n>|commId|emberId|barId|coinId|commHave|embersHave|barsHave|coinsHave`
- *   recipes `~LOFFORGE~R|<i>|<style>|baseId|outId|comm|bars|coins|embers|baseHave`
- * The window opens on a varp 4627 pulse; the forge comes back as `::forge make <i>` → `forgeclick`
- * (handled in [RoyalSmithPlugin], which owns the rank gate + broadcast).
+ *   header  `~LOFFORGE~H|<n>|commId|emberId|barId|coinId|commHave|embersHave|barsHave|coinsHave|materialId|materialHave`
+ *   recipes `~LOFFORGE~R|<i>|<style>|baseId|outId|comm|bars|coins|embers|baseHave|material`
+ * The Forging-material fields are APPENDED so a client from before the material pillar still
+ * parses the line (it just omits that checklist row; the server's "You're short" message names
+ * it). The window opens on a varp 4627 pulse; the forge comes back as `::forge make <i>` →
+ * `forgeclick` (handled in [RoyalSmithPlugin], which owns the rank gate + broadcast).
  */
 object ForgeMenu {
     /** Overlay-open varp (docs/overlay-design-system.md §8) — pulsed to 0, never persisted. */
@@ -35,6 +37,7 @@ object ForgeMenu {
         val emberId = safeId(WarForge.EMBER_KEY)
         val barId = safeId("item.runite_bar")
         val coinId = safeId("item.coins_995")
+        val materialId = safeId(WarForge.MATERIAL_KEY)
         // Resolve FIRST and advertise the resolved count — the client only commits the list once
         // it has that many rows, so skipping unresolvable recipes after promising the full count
         // would leave the window permanently empty. Rows keep their ORIGINAL recipe index (the
@@ -46,13 +49,14 @@ object ForgeMenu {
         }
         p.message(
             "${PREFIX}H|${rows.size}|$commId|$emberId|$barId|$coinId|" +
-                "${count(p, commId)}|${count(p, emberId)}|${count(p, barId)}|${count(p, coinId)}",
+                "${count(p, commId)}|${count(p, emberId)}|${count(p, barId)}|${count(p, coinId)}|" +
+                "$materialId|${count(p, materialId)}",
             ChatMessageType.CONSOLE,
         )
         rows.forEach { (i, r, ids) ->
             val (baseId, outId) = ids
             p.message(
-                "${PREFIX}R|$i|${r.style}|$baseId|$outId|${r.commendations}|${r.bars}|${r.coins}|${r.embers}|${count(p, baseId)}",
+                "${PREFIX}R|$i|${r.style}|$baseId|$outId|${r.commendations}|${r.bars}|${r.coins}|${r.embers}|${count(p, baseId)}|${r.material}",
                 ChatMessageType.CONSOLE,
             )
         }

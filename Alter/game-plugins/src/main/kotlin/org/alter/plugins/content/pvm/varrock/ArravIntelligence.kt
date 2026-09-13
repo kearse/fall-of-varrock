@@ -40,7 +40,7 @@ object ArravIntelligence {
         fun encode() = "${kind.name}:${district?.key ?: "-"}:$left"
         fun describe(): String = when (kind) {
             Kind.PURGE -> "purge $left elite undead in ${district?.display ?: "Fallen Varrock"}"
-            Kind.SALVAGE -> "recover $left Varrock salvage from the ruins"
+            Kind.SALVAGE -> "recover $left Forging material from the ruins"
             Kind.BOUNTY -> "hunt down Malachai the Hollow"
             Kind.WARDEN -> "fell the Palace Warden"
         }
@@ -124,12 +124,12 @@ object ArravIntelligence {
         WarForge.awardCommendations(p, comm)
         var extra = ""
         when (kind) {
-            Kind.PURGE -> { give(p, VarrockPvm.SALVAGE_KEY, 5); extra = ", 5 salvage" }
+            Kind.PURGE -> { give(p, VarrockPvm.SALVAGE_KEY, 5); extra = ", 5 Forging material" }
             Kind.SALVAGE -> if (world.chance(1, 6)) { give(p, VarrockPvm.RELIC_KEY, 1); extra = ", a relic" }
             Kind.BOUNTY -> { give(p, VarrockPvm.RELIC_KEY, 1); extra = ", a relic" }
             Kind.WARDEN -> { give(p, VarrockPvm.RELIC_KEY, 2); extra = ", 2 relics" }
         }
-        p.message("<col=801700>Assignment complete!</col> +$we War Effort, +$comm Commendations$extra. Report to Captain Rovin for more.")
+        p.message("<col=801700>Assignment complete!</col> +$we War Effort, +$comm War commendations$extra. Report to Captain Rovin for more.")
     }
 
     private fun give(p: Player, key: String, amount: Int) {

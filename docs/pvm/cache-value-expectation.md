@@ -77,13 +77,13 @@ Kills/hour are full-uptime, one player, mid gear (my assumptions — adjust in `
 - **Moons of Peril (3-moon claim, 5 claims/h):** 6 common rolls × 9k + 3 × 1/56 × avg unique 200k (13 uniques: Atlatl dart, Blood moon chestplate, Blood moon helm, Blood moon tassets, Blue moon chestplate, Blue moon helm…) = **65k/claim → 326k/h (below mid); realised ≈ 228k/h** (+ 150 tickets/h).
 - **Wintertodt crate (all tiers unlocked, 3 crates/h):** 3 supply rolls ≈ 2k + uniques ≈ 40 = **2k/crate → 6k/h (below mid); realised ≈ 4k/h**. No coins.
 - **Pest Control:** commendation points only (10/15/20 per win, ~3 wins/h) → armoury items are untradeable void pieces; cache value/h = 0, realised = 0.
-- **Varrock salvage piles (28, 90 s refill):** 2–5 salvage (cache cost 0) + relic 1/40 (cost 0) → 0 gp; War-Forging inputs only.
-- **Arrav Intelligence:** War Effort + Commendations + salvage/relics (all cost 0) → 0 gp.
+- **Fallen Varrock salvage piles (28, 90 s refill):** 2–5 Forging material (cache cost 0) + relic 1/40 (cost 0) → 0 gp; War-Forging inputs only.
+- **Arrav Intelligence:** War Effort + War commendations + Forging material/relics (all cost 0) → 0 gp.
 - **Boss Tickets** (all rows, `BossDeath.payout(tickets=)`): one seam; Team 2 retiring the system → no-op or replace there.
 
 ## Notes
 
-- Varrock salvage (21555), Relic of old Varrock (2373), expedition log (1493), Warden's ember: cache cost 0 by design — they carry War-Forging value, not gp.
+- Forging material (21555, "Varrock salvage" until 2026-09-13), Relic of old Varrock (2373), expedition log (1493), Warden's ember: cache cost 0 by design — they carry War-Forging value, not gp.
 - Classic tables are Kronos `drops/eco` sub-tables folded flat (equal sub-table weight) with OSRS unique odds; if a classic row lands above band, the fix is Team 2's call (cut coins first, then fold weights) and I apply it.
 - Kills/hour drive everything: halve them for realistic uptime.
 - Team 2's SpecialShopGuard (their PR 2, stacked on #332) makes every currency-shelf item alch/NPC-sell-proof wherever it came from — AGS, dragon claws, DWH, whip, granite maul, revenant weapons, justiciar, crystal gear, primordials/pegasians/eternals, zenyte jewellery. Where those appear in the rare tiers above (GWD hilts/boots, Cerberus crystals, gorilla zenyte shards, wilderness rings/pickaxes) their contribution is **player-market value, not 0.7 × cost** — the *Realised* column overstates them slightly and the *Cache value* column is the comparable number.
