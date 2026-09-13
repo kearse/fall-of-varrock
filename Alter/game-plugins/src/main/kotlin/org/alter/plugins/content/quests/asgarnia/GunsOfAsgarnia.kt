@@ -235,10 +235,14 @@ object GunsOfAsgarnia : QuestDefinition(
     }
 
     init {
-        talk(AMIK, START) { p -> amikStart(p) }
-        talk(AMIK, REPORT) { p -> amikDebrief(p) }
+        // One above quest priority: A Matter of Trolls begins at the same instant as this quest and
+        // its START pointer also claims Sir Amik; his second problem must be heard first (the
+        // Burthorpe pointer follows on the next click). See AMatterOfTrolls for the full ordering.
+        talk(AMIK, START, NpcTalk.PRIORITY_QUEST + 1) { p -> amikStart(p) }
+        talk(AMIK, REPORT, NpcTalk.PRIORITY_QUEST + 1) { p -> amikDebrief(p) }
         // Mid-quest: Sir Amik points at whatever is next rather than falling to a placeholder line.
-        // Just BELOW quest priority so another Asgarnia quest's real Amik step always out-ranks it.
+        // Below quest priority AND below A Matter of Trolls' mid-quest nudge (PRIORITY_QUEST - 5),
+        // which folds this pointer in while both quests are live.
         NpcTalk.register(AMIK, NpcTalk.PRIORITY_QUEST - 10) { p ->
             val step = QuestEngine.stepId(p, this)
             if (step != null && step != START && step != REPORT) { q -> amikMidQuest(q) } else null
@@ -329,9 +333,9 @@ object GunsOfAsgarnia : QuestDefinition(
 
     /** START (§5-7): the artillery problem. */
     private suspend fun QueueTask.amikStart(p: Player) {
-        me(p, "You said Falador has another problem.")
-        amik(p, "Several.")
-        me(p, "The one involving guns.")
+        me(p, "You said Asgarnia had three problems.")
+        amik(p, "I did.")
+        me(p, "The worn-out weapons.")
         amik(p, "Ah.")
         amik(p, "That problem.")
         amik(p, "White Knights can take a wall.")

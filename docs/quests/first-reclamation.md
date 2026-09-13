@@ -58,10 +58,10 @@ an event-started op on a target as UNDER ATTACK NOW (`CampaignRegistry.isAttacki
 
 ## Dialogue (shipped)
 
-**General Zo — brief (brief → scout_south).** "You went to Edgeville." / *Player:* "I did." / "And?" /
-"I think I understand. Varrock didn't just fall. The kingdom around it fell apart." / "Good. Then
-you're ready for the next lesson." / "Which is?" / "Looking at something everyone says is lost… and
-deciding it isn't." / "What are we taking back?" / "Not Varrock." / "I wasn't getting my hopes up." /
+**General Zo — brief (brief → scout_south).** Picks up The North's last line ("A position… it's time
+you helped take one back"), usually spoken seconds earlier by the same NPC — never a re-ask about
+Edgeville. "I said a position. Here's the one I mean." / *Player:* "Something we keep this time." /
+"Looking at something everyone says is lost… and deciding it isn't." / "What are we taking back?" / "Not Varrock." / "I wasn't getting my hopes up." /
 "Good. There is an old approach south of the city — the stone circle. We've fought there before.
 Marches reach it now and again. But every time the fighting ends, we leave." / "And the enemy comes
 back." / "Exactly. A march wins ground. This time we're going to use it." / "So this is another march?"

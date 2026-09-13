@@ -43,7 +43,9 @@ private val logger = KotlinLogging.logger {}
  *
  * His Talk-to is routed through [NpcTalk] (`bindTalk`): the menu below is the DEFAULT branch, and
  * the story quests (The North, First Reclamation, A Kingdom Alone …) claim the conversation on
- * their own steps via `QuestDefinition.talk` without editing this file.
+ * their own steps via `QuestDefinition.talk` without editing this file. On their non-Zo steps they
+ * say one pointer line and then run this branch through `NpcTalk.runDefault`, so the War-Prep III
+ * nudge at the top of [dialog] waits its turn behind a live story step rather than pre-empting it.
  */
 class GeneralZoPlugin(
     r: PluginRepository,

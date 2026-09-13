@@ -38,7 +38,7 @@ mid-session, so Zo's First March debrief starts The North on the spot).
 
 | Beat | Existing NPC / place (unchanged) | Existing system | Code seam |
 |---|---|---|---|
-| "You said I should see Edgeville." | **General Zo** 3220,3210 (castle courtyard, `GeneralZoPlugin`) | `NpcTalk` — Zo migrated from a raw `onNpcOption` to `bindTalk` + a default branch (his march/muster/War-Prep III menu is untouched) | `TheNorth.talk(ZO, "brief")` → `QuestEngine.satisfy` |
+| "The north. I said I'd show you something there." | **General Zo** 3220,3210 (castle courtyard, `GeneralZoPlugin`) | `NpcTalk` — Zo migrated from a raw `onNpcOption` to `bindTalk` + a default branch (his march/muster/War-Prep III menu is untouched) | `TheNorth.talk(ZO, "brief")` → `QuestEngine.satisfy` |
 | Travel north | Any existing travel: walk (Rogue Knights may cross the road — desirable, never required), **amulet of glory → Edgeville** (`AmuletOfGloryPlugin`, lands 3087,3496) | no quest teleport, no custom road | step `edgeville` = `Objective.ReachArea(Edgeville town box 3067,3488–3098,3522)` (= PvpZones' safe carve-out) |
 | Arrival lines | Edgeville itself | chat narration, no cutscene | `edgeville.onLeave` → "Edgeville. Northern Misthalin." / "The Wilderness lies just beyond the town. Varrock lies to the east." |
 | Someone who remembers the Fall | **Oziach** 3069,3517 — his stock spawn (`npc_spawns.json` 822), presence-gated by `WorldSpawnsPlugin`, in his hut at the town's NW edge. Verified spawned in the data; nothing spawns or moves him | `NpcTalk` (`TheNorthPlugin.bindTalk("npc.oziach")` + everyday lines at default priority) | `talk(OZIACH, "contact")` |
@@ -73,11 +73,11 @@ safe route north.
 
 ## Dialogue (shipped — spec text verbatim where it exists, joined only to save clicks)
 
-**General Zo — brief (`brief`).** Zo opens — the quest auto-begins, so nobody has mentioned Edgeville
-to the player before this. "Good. I've an errand for you, {address}." / *Player:* "Another march?" / "No
-sword needed for this one. Go to Edgeville." / "What's there?" / "Perspective." / "That sounds ominous." / "It usually is." / "You've seen Lumbridge attacked.
-You've marched with our Knights. You've even watched us win a field." / "If that's all you saw, you might
-start thinking we're winning." / "We aren't?" / "We're surviving. There's a difference." / "Go to
+**General Zo — brief (`brief`).** Opens on First March's closing promise ("There's something I want you
+to see in the north") — this quest auto-begins the moment that one completes, often in the same
+breath, so Zo picks up his own sentence. "The north. I said I'd show you something there." / *Player:*
+"Show me what?" / "Perspective." / "That sounds ominous." / "It usually is." / "If that field was all
+you'd seen of this war, you might start thinking we're winning." / "We aren't?" / "We're surviving. There's a difference." / "Go to
 Edgeville. Look at what remains between us and Varrock." / "Then come back and tell me what you think
 we're actually fighting for." → options **"That's the whole assignment?"** ("Go. Look. Come back. Not
 every lesson needs a sword.") · **"Why Edgeville?"** ("Because it survived." / "So did Lumbridge." /

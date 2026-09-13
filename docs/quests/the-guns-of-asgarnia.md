@@ -44,7 +44,7 @@ order and Sir Amik's debrief recognises whichever is complete (`QuestRegistry.is
 
 | Beat | Existing NPC / place (unchanged) | Existing system | Code seam |
 |---|---|---|---|
-| "You said Falador has another problem." | **Sir Amik Varze**, Falador castle top floor | `NpcTalk` (bindTalk, shared with A1/A2) | `talk(AMIK, "start")` → satisfy |
+| "You said Asgarnia had three problems." / "I did." / "The worn-out weapons." | **Sir Amik Varze**, Falador castle top floor | `NpcTalk` (bindTalk, shared with A1/A2) — START and REPORT at `PRIORITY_QUEST + 1` so this beat wins the click over A Matter of Trolls' Burthorpe pointer when both quests begin together | `talk(AMIK, "start")` → satisfy |
 | Nulodion: steel, Keldagrim, the assignment | **Nulodion** 3011,3453 | `NpcTalk` | `talk(NULODION, "nulodion")` |
 | Travel to Keldagrim | The **Blast Furnace** room (region 7757, loaded by the furnace plugin) | the teleport portal (Mini-Games → Blast Furnace, landing 1940,4958) — normal server-wide access, not a quest teleport | `TeleportRegistry` row `blast_furnace` |
 | The Foreman refuses; the route | **Blast Furnace Foreman** 1942,4958 | `NpcTalk` (the furnace plugin binds him; default branch = his explanation) | `talk(FOREMAN, "keldagrim")` |

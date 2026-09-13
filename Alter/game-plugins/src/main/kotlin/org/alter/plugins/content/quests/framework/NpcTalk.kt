@@ -2,11 +2,13 @@ package org.alter.plugins.content.quests.framework
 
 import dev.openrune.cache.CacheManager.getNpc
 import io.github.oshai.kotlinlogging.KotlinLogging
+import org.alter.api.ext.CHATBOX_CHILD
 import org.alter.api.ext.chatNpc
 import org.alter.api.ext.message
 import org.alter.api.ext.player
 import org.alter.game.model.entity.Player
 import org.alter.game.model.queue.QueueTask
+import org.alter.game.model.queue.TaskPriority
 import org.alter.game.plugin.KotlinPlugin
 import org.alter.rscm.RSCM.getRSCM
 
@@ -62,17 +64,65 @@ object NpcTalk {
             }
         }
 
-    /** Route a click on [npcId] for [p]: run the first claiming branch. False = nobody claimed. */
+    /** The chat-box slot every `chatNpc` / `chatPlayer` / `options` / `messageBox` box opens on. */
+    private const val CHATBOX_PARENT = 162
+
+    /** True while a dialogue box is on [p]'s screen — the player is mid-conversation. */
+    fun inDialogue(p: Player): Boolean = p.interfaces.isOccupied(CHATBOX_PARENT, CHATBOX_CHILD)
+
+    /**
+     * Route a click on [npcId] for [p]: run the first claiming branch. False = nobody claimed.
+     *
+     * A click while a dialogue box is already open REPLACES that conversation (OSRS: any new
+     * interaction closes the box) instead of stacking in front of it. The pawn queue is LIFO and a
+     * chat box does not count as an open "menu", so a STANDARD task would play immediately and the
+     * interrupted scene would resume afterwards — which is how The North's debrief once ran straight
+     * into First Reclamation's brief. STRONG terminates the queued tasks first; each interrupted
+     * dialogue closes its own box through its `terminateAction`.
+     */
     fun talk(p: Player, npcId: Int): Boolean {
         val entries = byNpc[npcId] ?: return false
+        var chosen: TalkScript? = null
+        var chosenPriority = 0
         for (e in entries) {
             val script = runCatching { e.branch.claim(p) }
                 .onFailure { logger.error(it) { "NpcTalk branch threw for npc $npcId / ${p.username}" } }
                 .getOrNull() ?: continue
-            p.queue { script.invoke(this, p) }
-            return true
+            if (chosen == null) {
+                chosen = script
+                chosenPriority = e.priority
+                // Only keep scanning to detect a second quest-level claimant (below).
+                if (e.priority < PRIORITY_QUEST) break
+                continue
+            }
+            // Two quest-level branches wanted the same click. The loser is invisible to the player
+            // (two live quests on one NPC, or a tie broken by plugin load order) — say so in the log.
+            if (e.priority >= PRIORITY_QUEST) {
+                logger.debug { "NpcTalk: npc $npcId / ${p.username}: branch @${e.priority} also claimed; @$chosenPriority ran." }
+            }
+            break
         }
-        return false
+        val script = chosen ?: return false
+        val priority = if (inDialogue(p)) TaskPriority.STRONG else TaskPriority.STANDARD
+        p.queue(priority) { script.invoke(this, p) }
+        return true
+    }
+
+    /**
+     * Run [npcId]'s everyday branch (priority ≤ [PRIORITY_DEFAULT]) INLINE from inside another
+     * script — a quest's one-line reminder followed by the NPC's normal menu, so a live story step
+     * never hides what the NPC does for a living. No-op if no such branch claims.
+     */
+    suspend fun runDefault(task: QueueTask, p: Player, npcId: Int) {
+        val entries = byNpc[npcId] ?: return
+        for (e in entries) {
+            if (e.priority > PRIORITY_DEFAULT) continue
+            val script = runCatching { e.branch.claim(p) }
+                .onFailure { logger.error(it) { "NpcTalk default branch threw for npc $npcId / ${p.username}" } }
+                .getOrNull() ?: continue
+            script.invoke(task, p)
+            return
+        }
     }
 
     fun bound(npcId: Int): Boolean = byNpc.containsKey(npcId)

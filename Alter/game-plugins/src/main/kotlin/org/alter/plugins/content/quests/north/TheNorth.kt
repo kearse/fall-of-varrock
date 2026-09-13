@@ -12,12 +12,14 @@ import org.alter.game.model.queue.QueueTask
 import org.alter.plugins.content.areas.lumbridge.npcs.GeneralZoPlugin
 import org.alter.plugins.content.quests.QuestBook
 import org.alter.plugins.content.quests.QuestJournal
+import org.alter.plugins.content.quests.framework.NpcTalk
 import org.alter.plugins.content.quests.framework.Objective
 import org.alter.plugins.content.quests.framework.Prerequisite
 import org.alter.plugins.content.quests.framework.QuestDefinition
 import org.alter.plugins.content.quests.framework.QuestEngine
 import org.alter.plugins.content.quests.framework.QuestStep
 import org.alter.plugins.content.quests.framework.Reward
+import org.alter.plugins.content.quests.framework.TalkScript
 import org.alter.plugins.content.war.address
 import org.alter.rscm.RSCM.getRSCM
 
@@ -41,8 +43,8 @@ import org.alter.rscm.RSCM.getRSCM
  *
  * Wiring (Oziach's Talk-to bind + everyday lines, the dispatch's Read option, `::north`) is in
  * [TheNorthPlugin]. General Zo's Talk-to is routed through `NpcTalk` by `GeneralZoPlugin`; this
- * quest claims his conversation only on its own two Zo steps, so his march/muster menu stays
- * reachable throughout.
+ * quest claims his conversation on its own two Zo steps, and on the Edgeville steps says one
+ * pointer line before his march/muster menu, so that menu stays reachable throughout.
  */
 object TheNorth : QuestDefinition(
     key = "the_north",
@@ -72,7 +74,7 @@ object TheNorth : QuestDefinition(
 
     private const val WAR_EFFORT = 15
 
-    /** Quest counter: Oziach's after-reading beat (the reaction + lore + "take it to Zo") has run. */
+    /** Quest counter: Oziach's after-reading beat has reached its "take it to Zo" lines (set mid-beat, see [afterReading]). */
     private const val REACTION = "reaction"
 
     // --- world anchors (all existing, unchanged) ----------------------------------------------
@@ -115,7 +117,7 @@ object TheNorth : QuestDefinition(
         QuestStep(
             "brief", Objective.TalkTo(J_START, ZO),
             anchor = GeneralZoPlugin.ZO_TILE, anchorNpc = ZO,
-            nudge = "General Zo has sent for me. There is more to this war than the roads around Lumbridge - I should speak with him about the north.",
+            nudge = "General Zo said there is something he wants me to see in the north. I should speak with him.",
         ),
         QuestStep(
             "edgeville", Objective.ReachArea(J_EDGEVILLE, EDGEVILLE),
@@ -163,6 +165,16 @@ object TheNorth : QuestDefinition(
     init {
         talk(ZO, "brief") { p -> zoBrief(p) }
         talk(ZO, "return_zo") { p -> zoDebrief(p) }
+        // The Edgeville steps: one pointer line, then Zo's everyday menu — never the cold "Well
+        // met, I am General Zo" introduction to a soldier he briefed a minute ago.
+        NpcTalk.register(ZO, NpcTalk.PRIORITY_QUEST) { p ->
+            val script: TalkScript? = when (QuestEngine.stepId(p, this)) {
+                "edgeville", "contact", "wilderness" -> { pl -> zoRemind(pl, "Edgeville, ${pl.address}. Go and look — then come<br>back and tell me what you saw.") }
+                "return_oziach", "dispatch" -> { pl -> zoRemind(pl, "Finish with Oziach, ${pl.address}. Whatever he<br>has for you, bring it here.") }
+                else -> null
+            }
+            script
+        }
         talk(OZIACH, "contact") { p -> oziachContact(p) }
         talk(OZIACH, "wilderness") { p -> oziachGoNorth(p) }
         talk(OZIACH, "return_oziach") { p -> oziachReturn(p) }
@@ -214,25 +226,29 @@ object TheNorth : QuestDefinition(
 
     private suspend fun QueueTask.me(p: Player, text: String) = chatPlayer(p, text)
 
+    /** A mid-quest pointer from Zo, followed by his normal march/muster menu. */
+    private suspend fun QueueTask.zoRemind(p: Player, line: String) {
+        zo(p, line)
+        NpcTalk.runDefault(this, p, runCatching { getRSCM(ZO) }.getOrDefault(-1))
+    }
+
     private const val OZIACH_NAME = "Oziach"
 
     // --- General Zo -------------------------------------------------------------------------
 
     /**
-     * BRIEF: "Perspective." Zo sends the player north. Zo raises Edgeville himself — the quest
-     * auto-begins, so nobody has mentioned the town to the player before this conversation and
-     * there is nothing for the player to refer back to.
+     * BRIEF: "Perspective." Zo sends the player north. Opens on First March's closing promise
+     * ("There's something I want you to see in the north") — this quest auto-begins the moment
+     * that one completes, often in the same breath, so Zo picks up his own sentence rather than
+     * starting a fresh errand. Edgeville itself is named here for the first time.
      */
     private suspend fun QueueTask.zoBrief(p: Player) {
-        zo(p, "Good. I've an errand for you, ${p.address}.")
-        me(p, "Another march?")
-        zo(p, "No sword needed for this one. Go to Edgeville.")
-        me(p, "What's there?")
+        zo(p, "The north. I said I'd show you something there.")
+        me(p, "Show me what?")
         zo(p, "Perspective.")
         me(p, "That sounds ominous.")
         zo(p, "It usually is.")
-        zo(p, "You've seen Lumbridge attacked. You've marched<br>with our Knights. You've even watched us win<br>a field.")
-        zo(p, "If that's all you saw, you might start thinking<br>we're winning.")
+        zo(p, "If that field was all you'd seen of this war,<br>you might start thinking we're winning.")
         me(p, "We aren't?")
         zo(p, "We're surviving. There's a difference.")
         zo(p, "Go to Edgeville. Look at what remains between<br>us and Varrock.")
@@ -422,7 +438,6 @@ object TheNorth : QuestDefinition(
 
     /** The reaction, the optional lore, and "take that back to Zo". Runs once (the REACTION counter). */
     private suspend fun QueueTask.afterReading(p: Player) {
-        QuestEngine.addCounter(p, this@TheNorth, REACTION)
         me(p, "'Varrock will hold.'")
         oz(p, "Aye.")
         me(p, "It didn't.")
@@ -432,6 +447,10 @@ object TheNorth : QuestDefinition(
         me(p, "Nothing?")
         oz(p, "No runners. No orders. No army. Just refugees.")
         oz(p, "At first there were thousands. Then hundreds.<br>Then dozens. Then nobody.")
+        // Counted here, not on the first line: a chat close before this point replays the beat
+        // (cheap), whereas counting early skipped "take that back to Zo" / "I expect it back" for
+        // good — the very lines Zo's debrief answers.
+        QuestEngine.addCounter(p, this@TheNorth, REACTION)
         lore(p, leave = "I'll take this to Zo.")
         oz(p, "Take that back to Zo.")
         oz(p, "If he sent you here to understand the north,<br>give him the original.")

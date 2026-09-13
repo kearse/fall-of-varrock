@@ -172,9 +172,14 @@ object QuestEngine {
     /** The poll: areas, items, predicates — and auto-begin, so a gate that opens mid-session
      *  (the quest before it completing) starts the next quest without waiting for a relog. */
     fun pollTick(p: Player) {
+        // Never auto-begin a quest while the player is mid-conversation: the quest that just
+        // completed is usually still saying its last lines, and beginning the next one here would
+        // print "— begun." into the scene and put its first Talk-to branch live on the same NPC.
+        // The successor begins on the first poll after the chat box closes.
+        val talking = NpcTalk.inDialogue(p)
         for (q in QuestRegistry.frameworkQuests()) {
             if (q.autoBegin && !started(p, q)) {
-                beginIfEligible(p, q)
+                if (!talking) beginIfEligible(p, q)
                 continue
             }
             val cur = step(p, q) ?: continue

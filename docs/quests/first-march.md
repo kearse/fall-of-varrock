@@ -53,7 +53,7 @@ rank-gated — quest-authoring rule 5). A separate `retry` step (see above).
 ## Dialogue (shipped)
 
 **General Zo — brief (`brief`).** *Player:* "Sergeant Damien sent me. He said you muster the columns." /
-"He says that about everyone he's finished with." / "You held the east camp this morning." / *"I did."* /
+"He says that about everyone he's finished with." / "You held the east camp." / *"I did."* /
 "Then you've seen what a defence looks like. Men in a line, waiting to be hit." / "Now see the other
 half." / *"The other half?"* / "The March. Every half hour, ten Knights of Lumbridge walk out of this
 courtyard and hit something that deserves it. A camp. A road. A rogue position." / "Anyone may march
@@ -96,7 +96,7 @@ muster call every half hour for as long as you're a soldier of this realm. Now y
 asking." / *"Do I have to answer every one?"* / "No. But the ones you skip, the knights walk alone." /
 **QUEST COMPLETE** / "You've seen Lumbridge attacked. Now you've marched with our Knights and watched us
 win a field." / "Don't let it go to your head. There's something I want you to see in the north." → The
-North auto-begins ("You said I should see Edgeville.").
+North auto-begins, and its brief picks the sentence up: "The north. I said I'd show you something there."
 
 ## Quest journal (server step objectives = client journal rows)
 

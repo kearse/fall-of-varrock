@@ -180,7 +180,7 @@ object OldWounds : QuestDefinition(
         QuestStep(
             S_BRIEF, Objective.TalkTo(J_START, TIFFY),
             anchor = TIFFY_TILE, anchorNpc = TIFFY,
-            nudge = "Sir Tiffy Cashien has requested my presence in Falador Park - his bench east of the castle.",
+            nudge = "Sir Tiffy Cashien wants a word in Falador Park - his bench east of the castle.",
         ),
         QuestStep(
             S_FORTRESS, Objective.ReachArea(J_FORTRESS, FORTRESS),
@@ -242,7 +242,7 @@ object OldWounds : QuestDefinition(
 
     override val completionMessage: String =
         "<col=801700>$J_DONE</col> Asgarnia now has the manpower, artillery and intelligence needed to break the Kinshra front. " +
-            "Speak with Sir Amik when you are ready to begin the offensive: <col=801700>The White Wall</col>."
+            "Sir Amik will send word when Falador is ready to move east."
 
     override fun onComplete(p: Player) {
         campaignBoard(p).forEach { p.message(it) }
@@ -496,8 +496,8 @@ object OldWounds : QuestDefinition(
     /** BRIEF: what Tiffy has noticed, the fortress, and the Wilderness warning. */
     private suspend fun QueueTask.brief(p: Player) {
         tiffy(p, "Ah! There you are.")
-        me(p, "You sent for me?")
-        tiffy(p, "I did indeed.")
+        me(p, "Were you looking for me?")
+        tiffy(p, "I was indeed.")
         tiffy(p, "I understand you've been solving several of<br>Asgarnia's more inconvenient military problems.")
         me(p, "The trolls.")
         tiffy(p, "Yes.")
@@ -661,7 +661,7 @@ object OldWounds : QuestDefinition(
         QuestEngine.satisfy(p, this@OldWounds, S_RETURN) // completes the quest — mutate, then narrate
         tiffy(p, "I intend to stand somewhere comfortably<br>behind him.")
         tiffy(p, "Keep the report. I have copied every word, and I<br>would rather the original were somewhere the<br>Kinshra don't think to look.")
-        tiffy(p, "Speak with Sir Amik when you are ready to<br>begin the offensive.")
+        tiffy(p, "Sir Amik will send word when Falador is ready<br>to move. It won't be tomorrow.")
     }
 
     // --- Lord Daquarius ---------------------------------------------------------------------

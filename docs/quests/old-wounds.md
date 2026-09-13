@@ -39,7 +39,7 @@ corridor, no PvP disabled around the player.
 
 | Beat | Existing NPC / place (unchanged) | Existing system | Code seam |
 |---|---|---|---|
-| Journal entry after both quests: "Sir Tiffy Cashien has requested my presence in Falador Park." | — | framework `autoBegin` (login / poll / rank-up) | `OldWounds.prerequisites` = `Prerequisite.Custom` — both `a_matter_of_trolls` and `guns_of_asgarnia` complete (whichever keys are registered; falls back down the chain if neither has landed) |
+| Journal entry after both quests: "Sir Tiffy Cashien wants a word in Falador Park." | — | framework `autoBegin` (login / poll / rank-up) | `OldWounds.prerequisites` = `Prerequisite.Custom` — both `a_matter_of_trolls` and `guns_of_asgarnia` complete (whichever keys are registered; falls back down the chain if neither has landed) |
 | Brief: "heavily armed… or behaving strangely?", the fortress, the Wilderness warning | **Sir Tiffy Cashien** 2997,3373 (park bench; `npc_spawns.json` 4687) | `NpcTalk` — At the White Wall owns his `bindTalk` + idle lines; this quest registers quest-priority branches (+ an eligible-player opener at `PRIORITY_QUEST - 1`, and a placeholder so he is never mute if this PR lands first) | `OldWounds.brief` → `satisfy(brief)` |
 | Enter the fortress | **Dark Warriors' Fortress** interior 3020-3038 × 3622-3642 (region dumps 12088/12089; hall doors on the south face) | `Objective.ReachArea` (the 3-tick poll) | step `fortress` — `onLeave` narrates the Kinshra traces |
 | Find the orders — one existing crate gains *Search* meaning | the stock **Crate 354** at 3026,3628 in the hall (the only searchable containers there are it and the sacks) | `SearchCratesPlugin`'s existing *Search* bind + the new `CrateSearch` hook (tile-checked) | `OldWounds.searchCrate` → give the orders (dupe-proof) → `satisfy(orders)` → read + scene |
@@ -52,7 +52,7 @@ corridor, no PvP disabled around the player.
 | Daquarius at the Scar: "So it exists." … "why someone wanted everyone to stop." | Daquarius spawned owner-bound at 3060,3597, leaves north | as above | counter `daq_scar`; replayable from the pack's Read on site |
 | Return: "Oh dear." — the honest uncertainty, the removed authorisation code, the good news | Sir Tiffy | `NpcTalk` | `OldWounds.debrief` → `satisfy(return_tiffy)` completes; banked → fetch; lost → the cache re-issues (plugin sweep, `OldWounds.sweep`) |
 | Rewards + campaign board | — | `Reward.WarEffort(75)`, `Reward.Flag("asgarnia.intelligence_secured")`, `Reward.Flag("first_scar.discovered")`, `questPoints = 2` | `completionRewards`; `onComplete` prints the ASGARNIA — BREACH board (reads the siblings' `asgarnia.northern_front_secured` / `asgarnia.artillery_restored` or their quest keys) |
-| Handoff | — | journal DONE text points at Sir Amik (The White Wall) | `completionMessage`; `::oldwounds` |
+| Handoff | — | journal DONE text: Sir Amik will send word when Falador is ready to move east (the offensive quest is not built yet, so nothing names it to the player) | `completionMessage`; `::oldwounds` |
 
 **Deliberately NOT done (design §13-16, §38-39, §44):** no instance, no protected corridor, no PvP
 disabled; no redesigned fortress, dungeon or infiltration map; no lockpicking / stealth / disguise;
@@ -71,7 +71,9 @@ once); Tiffy re-issuing lost documents (he never had the report — the ground d
 
 ## Dialogue (shipped — the design text, verbatim where it exists)
 
-**Sir Tiffy — brief.** "Ah! There you are." / "You sent for me?" / "I did indeed." / "I understand
+**Sir Tiffy — brief.** "Ah! There you are." / "Were you looking for me?" / "I was indeed." *(works whether
+the player heard Amik's "Tiffy is about to find a new problem" — now said at the end of whichever of
+Trolls / Guns finishes last — or not)* / "I understand
 you've been solving several of Asgarnia's more inconvenient military problems." / "The trolls." /
 "Yes." / "The cannons." / "Quite." / "So what's next?" / "That depends." / "Do you prefer your
 enemies heavily armed… or behaving strangely?" / "Which one is worse?" / "The strange ones,
@@ -170,7 +172,7 @@ Kinshra where they were strongest." / "And now?" *(taps the orders)* "Now we kno
 aren't." / "You want to attack." / "Oh, heavens no." / "No?" / "I want Sir Amik to attack." /
 **QUEST COMPLETE** / "I intend to stand somewhere comfortably behind him." / "Keep the report. I have
 copied every word, and I would rather the original were somewhere the Kinshra don't think to look." /
-"Speak with Sir Amik when you are ready to begin the offensive."
+"Sir Amik will send word when Falador is ready to move. It won't be tomorrow."
 
 **Mid-quest Tiffy** (quest-priority reminders so his everyday lines never confuse): the fortress
 ("North of the ditch, west of the road… And — discreetly."), the Scar ("Survey Site Seven… Before the

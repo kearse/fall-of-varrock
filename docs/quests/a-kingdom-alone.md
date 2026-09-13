@@ -45,11 +45,13 @@ War Effort reward (the player fought and supplied nothing here).
 
 **Duke (START → ZO).** "I heard the standard is flying at the Southern Watch." / *"It is."* /
 "Then you've done something this kingdom hasn't managed in twelve years." / *"Taken ground back."*
-/ "Yes." / "...And now we discover whether we can keep doing it." / "Zo has been working through
-what an assault on Varrock would actually require." / "I suspect you won't enjoy his answer." /
+/ "Yes." / "...And now we discover whether we can keep doing it." / "Zo has the numbers for an
+assault on Varrock. Get them from him — he's beside me." / "I suspect you won't enjoy them." /
 *"I'm getting used to that."*
 
-**Zo (ZO → DUKE).** "You saw Varrock from the Southern Watch." / "Think we can take it?" — options
+**Zo (ZO → DUKE).** "The Duke sent you back to me." / *"He says you've done the arithmetic on
+Varrock."* / "I have. You won't like it." / "Think we can take it?" *(not a re-run of First Reclamation's
+"we can't take Varrock — not alone": the Duke has just sent the player back for the arithmetic)* — options
 *Not with what we have* ("No. We can't.") / *Give me enough Knights* ("That's the problem. We don't
 have enough Knights.") / *We won't know until we try* ("We would know. Once.") — converge. "Lumbridge
 has done better than anyone expected. We survived. We rebuilt a fighting force. We reopened roads.
