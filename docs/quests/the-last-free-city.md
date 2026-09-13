@@ -85,15 +85,13 @@ river. You'll see the camp. Five goblins have pushed into the position — help 
 down." / *Player:* "You want me to fight them?" / "I want you to decide." / "You can stay here and
 hope somebody else keeps Lumbridge standing... or you can stand with us."
 
-**Sergeant Damien — report (REPORT → RANK).** "You're alive." "Better than that. You held." / *Player:*
-"Was that the attack?" / "No. That was a probe." "They pushed fighters against the eastern post to
-see how quickly we'd respond. How many guards we'd move. Where the weak points were." / *Player:* "So
-they're coming back?" / "They always come back." "...You know, for a second out there you reminded me
-of someone." / *Player:* "Who?" / "Doesn't matter. We've got work to do." "Standing your ground once
-doesn't make you a soldier. But it earns you the chance to become one." "The army lost weapons and
-supplies today. If you want to keep helping, I'm putting you on the muster roll." / *Player:* "What do
-I need to do?" / "First, take your pay." *(10,000 gp + bronze kit)* "Then go and see Duke Horacio in
-the market. You stood for Lumbridge today. He'll recognise the service."
+**Sergeant Damien — report (REPORT → RANK).** "You're alive. Good." / *Player:* "Was that the attack?" /
+"No. That was a probe." "They hit the eastern post to see how fast we'd move — and where we're thin." /
+*Player:* "So they're coming back?" / "They always come back." "...For a second out there you reminded
+me of someone." / *Player:* "Who?" / "Doesn't matter. We've got work to do." "The army lost weapons and
+supplies today. If you want to keep helping, you're on the muster roll. First, your pay." *(10,000 gp +
+bronze kit)* "Then go and see Duke Horacio in the market. He'll want a word." *(The praise is one line:
+the Duke and Vannaka each acknowledge the fight once on the way, so Damien doesn't labour it.)*
 
 **Duke Horacio (RANK).** "Damien sent word ahead. He says you stood with the defenders at the eastern
 camp." / *Player:* "I did what I could." / "And Lumbridge survives because enough people still do. I
@@ -125,17 +123,15 @@ Vannaka."
 little fuller than they were this morning." / *(steel scimitar + legs + kite; bank pack)* / "Now go
 and report to Sergeant Damien. He'll want to hear it from you."
 
-**Sergeant Damien — debrief (DEBRIEF → DONE).** "Look at you. This morning you were a Peasant." /
-"Then the horns sounded." / "You fought when you could've run. You hunted down what got through.
-You replaced what the army lost." / *Player:* "Is Lumbridge safe now?" / "No." / "But it's still
-ours. Varrock couldn't say the same." / *Player:* "What happened there?" / "Twelve years ago, Varrock
-fell." / "What remains of Misthalin has been fighting ever since to make sure the same thing doesn't
-happen here." / "Today's attack wasn't meant to take Lumbridge. They were testing us. Someone wanted
-to know how quickly we'd bleed." / *Player:* "Then maybe we shouldn't wait for the next attack." /
-**QUEST COMPLETE** (+50 War Effort) / "Maybe you're learning." / "General Zo musters the columns
-that march north against the enemy — you'll find him in the castle courtyard. When you hear the
-call for the next March... answer it." / "Until the horns sound again, Vannaka has drills for you.
-The front's mages will melt a soldier who can't pray — go and see him."
+**Sergeant Damien — debrief (DEBRIEF → DONE).** "That's the stores refilled. Good work." / *Player:*
+"Is Lumbridge safe now?" / "No." / "But it's still ours. Varrock couldn't say the same." / *Player:*
+"What happened there?" / "Twelve years ago, Varrock fell." / "What's left of Misthalin has been fighting
+ever since to make sure the same thing doesn't happen here." / *Player:* "Then maybe we shouldn't wait
+for the next probe." / **QUEST COMPLETE** (+50 War Effort) / "Maybe you're learning." / "General Zo
+musters the columns that march north — you'll find him in the castle courtyard. When you hear the call
+for the next March... answer it." / "Until then, Vannaka has drills for you. The front's mages will melt
+a soldier who can't pray. Go and see him." *(No recap of the day — the player just lived it — and no
+second "it was a probe": this beat exists to name Varrock and point at General Zo.)*
 
 ## Quest journal (server objective lines = client step rows)
 

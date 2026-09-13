@@ -241,6 +241,9 @@ val DUKE_INTRO_DONE_ATTR = AttributeKey<Boolean>("duke_intro_done")
 val SLAYER_INTRO_DONE_ATTR = AttributeKey<Boolean>("slayer_intro_done")
 val VOID_KNIGHT_INTRO_DONE_ATTR = AttributeKey<Boolean>("void_knight_intro_done")
 
+/** Sergeant Damien has pointed out the courtyard teleport portal once — he never repeats it. Persistent. */
+val SERGEANT_PORTAL_TIP_DONE_ATTR = AttributeKey<Boolean>("sergeant_portal_tip_done")
+
 /**
  * Whether the player has cleared the **Mage Tower** raid, which permanently unlocks the three
  * special spellbooks (Ancient/Lunar/Arceuus) for free switching via `::spellbook`. Once earned

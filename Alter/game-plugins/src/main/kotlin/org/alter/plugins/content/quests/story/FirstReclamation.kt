@@ -246,7 +246,7 @@ object FirstReclamation : QuestDefinition(
 
     /** READY: the player gives the word — the Reclamation Column sets out as a public Grand March. */
     private suspend fun QueueTask.readyPrompt(p: Player) {
-        zo(p, "The Reclamation Column musters on your word. Every<br>soldier of the realm will hear the call and may march<br>with it - the more swords on that road, the better.")
+        zo(p, "The Reclamation Column musters on your word.<br>Every soldier of the realm will hear the call and<br>may march with it - the more swords on that road,<br>the better.")
         when (options(p, "We're ready. Send the column.", "Not yet - I need to prepare.", title = ZO_TITLE)) {
             1 -> {
                 me(p, "We're ready. Send the column.")
@@ -282,7 +282,7 @@ object FirstReclamation : QuestDefinition(
                 val live = WarEvents.current()
                 if (live != null && live.targetCityKey.equals(SouthernWatch.TARGET_KEY, ignoreCase = true)) {
                     QuestEngine.advanceTo(p, this@FirstReclamation, BATTLE)
-                    zo(p, "The column is already fighting on the southern road.<br>Rally to it - <col=0000ff>::march</col> - and make yourself<br>useful. If it holds the road, that's our reclamation.")
+                    zo(p, "The column is already fighting on the southern<br>road. Rally to it - <col=0000ff>::march</col> - and make yourself<br>useful. If it holds the road, that's our<br>reclamation.")
                 } else {
                     val where = live?.displayName?.let { "The realm's column is out at $it" } ?: "Another operation holds that ground (${r.reason})"
                     zo(p, "$where.<br>The reclamation waits until the field is clear -<br>come back shortly and I'll give the order.")

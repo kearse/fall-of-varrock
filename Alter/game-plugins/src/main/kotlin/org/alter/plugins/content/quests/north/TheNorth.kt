@@ -19,6 +19,7 @@ import org.alter.plugins.content.quests.framework.QuestEngine
 import org.alter.plugins.content.quests.framework.QuestRegistry
 import org.alter.plugins.content.quests.framework.QuestStep
 import org.alter.plugins.content.quests.framework.Reward
+import org.alter.plugins.content.war.address
 import org.alter.rscm.RSCM.getRSCM
 
 /**
@@ -118,7 +119,7 @@ object TheNorth : QuestDefinition(
         QuestStep(
             "brief", Objective.TalkTo(J_START, ZO),
             anchor = GeneralZoPlugin.ZO_TILE, anchorNpc = ZO,
-            nudge = "General Zo told me there is more to this war than the roads around Lumbridge. I should speak with him about the north.",
+            nudge = "General Zo has sent for me. There is more to this war than the roads around Lumbridge - I should speak with him about the north.",
         ),
         QuestStep(
             "edgeville", Objective.ReachArea(J_EDGEVILLE, EDGEVILLE),
@@ -226,31 +227,36 @@ object TheNorth : QuestDefinition(
 
     // --- General Zo -------------------------------------------------------------------------
 
-    /** BRIEF: "Perspective." Zo sends the player north. */
+    /**
+     * BRIEF: "Perspective." Zo sends the player north. Zo raises Edgeville himself — the quest
+     * auto-begins, so nobody has mentioned the town to the player before this conversation and
+     * there is nothing for the player to refer back to.
+     */
     private suspend fun QueueTask.zoBrief(p: Player) {
-        me(p, "You said I should see Edgeville.")
-        zo(p, "I did.")
+        zo(p, "Good. I've an errand for you, ${p.address}.")
+        me(p, "Another march?")
+        zo(p, "No sword needed for this one. Go to Edgeville.")
         me(p, "What's there?")
         zo(p, "Perspective.")
         me(p, "That sounds ominous.")
         zo(p, "It usually is.")
-        zo(p, "You've seen Lumbridge attacked. You've marched with our Knights. You've even watched us win a field.")
-        zo(p, "If that's all you saw, you might start thinking we're winning.")
+        zo(p, "You've seen Lumbridge attacked. You've marched<br>with our Knights. You've even watched us win<br>a field.")
+        zo(p, "If that's all you saw, you might start thinking<br>we're winning.")
         me(p, "We aren't?")
         zo(p, "We're surviving. There's a difference.")
-        zo(p, "Go to Edgeville. Look at what remains between us and Varrock.")
-        zo(p, "Then come back and tell me what you think we're actually fighting for.")
+        zo(p, "Go to Edgeville. Look at what remains between<br>us and Varrock.")
+        zo(p, "Then come back and tell me what you think<br>we're actually fighting for.")
         while (true) {
             when (options(p, "That's the whole assignment?", "Why Edgeville?", "I'll go.", title = GeneralZoPlugin.ZO)) {
                 1 -> {
                     me(p, "That's the whole assignment?")
-                    zo(p, "Go. Look. Come back. Not every lesson needs a sword.")
+                    zo(p, "Go. Look. Come back.<br>Not every lesson needs a sword.")
                 }
                 2 -> {
                     me(p, "Why Edgeville?")
                     zo(p, "Because it survived.")
                     me(p, "So did Lumbridge.")
-                    zo(p, "Lumbridge still has a kingdom behind it. Edgeville has the Wilderness behind it.")
+                    zo(p, "Lumbridge still has a kingdom behind it.<br>Edgeville has the Wilderness behind it.")
                     zo(p, "And Fallen Varrock in front of it.")
                 }
                 else -> {
@@ -266,7 +272,7 @@ object TheNorth : QuestDefinition(
     private suspend fun QueueTask.zoDebrief(p: Player) {
         if (!hasDispatch(p)) {
             zo(p, "Oziach's dispatch — you don't have it on you.")
-            zo(p, if (dispatchBanked(p)) "Fetch it from your bank. I want to read the original." else "Go back to Edgeville and get it from him. I want to read the original.")
+            zo(p, if (dispatchBanked(p)) "Fetch it from your bank. I want to read<br>the original." else "Go back to Edgeville and get it from him.<br>I want to read the original.")
             return
         }
         zo(p, "Oziach still had this?")
@@ -283,13 +289,13 @@ object TheNorth : QuestDefinition(
             2 -> me(p, "Edgeville is still holding.")
             else -> me(p, "The Wilderness is the least of our problems.")
         }
-        me(p, "Varrock didn't just lose a battle. When it fell, everything around it started falling apart too.")
+        me(p, "Varrock didn't just lose a battle. When it fell,<br>everything around it started falling apart too.")
         zo(p, "Exactly.")
         zo(p, "Armies are obvious. Collapsed roads aren't.")
-        zo(p, "Neither are farms that stop producing. Or patrols that never come home. Or a hundred little warlords deciding nobody can stop them.")
+        zo(p, "Neither are farms that stop producing. Or patrols<br>that never come home. Or a hundred little warlords<br>deciding nobody can stop them.")
         me(p, "So the Rogue Knights are part of the war too?")
-        zo(p, "Not every enemy wears Zemouregal's colours. That doesn't make them harmless.")
-        zo(p, "The longer this kingdom stays broken, the more men discover they prefer it that way.")
+        zo(p, "Not every enemy wears Zemouregal's colours.<br>That doesn't make them harmless.")
+        zo(p, "The longer this kingdom stays broken, the more<br>men discover they prefer it that way.")
         me(p, "So what do we do?")
         zo(p, "What we've been doing. One piece at a time.")
         me(p, "Another March?")
@@ -298,13 +304,18 @@ object TheNorth : QuestDefinition(
         me(p, "What?")
         QuestEngine.satisfy(p, this@TheNorth, "return_zo") // completes the quest — mutate, then narrate
         zo(p, "A position.")
-        zo(p, "Something between Lumbridge and the north that belongs to us when the fighting stops.")
+        zo(p, "Something between Lumbridge and the north that<br>belongs to us when the fighting stops.")
         zo(p, "It's time you helped take one back.")
     }
 
     // --- Oziach -----------------------------------------------------------------------------
 
-    /** CONTACT: the first conversation — the Fall, the north, the Rogue Knights. Sends the player to the ditch. */
+    /**
+     * CONTACT: the first conversation — the Fall, the north, the Rogue Knights. Sends the player
+     * to the ditch. Oziach is the first person in the game to say Zemouregal's name: all Lumbridge
+     * has told the player so far is "twelve years ago, Varrock fell" (The Last Free City's debrief),
+     * so the name comes from him and the player reacts to it — never the other way round.
+     */
     private suspend fun QueueTask.oziachContact(p: Player) {
         oz(p, "What?")
         me(p, "General Zo sent me.")
@@ -315,31 +326,36 @@ object TheNorth : QuestDefinition(
         oz(p, "Generals rarely do.")
         me(p, "Were you here when Varrock fell?")
         oz(p, "Aye.")
-        oz(p, "I was here before it fell. I was here while it fell.")
+        oz(p, "I was here before it fell.<br>I was here while it fell.")
         oz(p, "And I've been here every miserable year since.")
         me(p, "What happened to the north?")
-        oz(p, "Varrock stopped being a capital. Then everything depending on Varrock started falling apart.")
-        oz(p, "The patrols stopped. The roads emptied. Merchants changed routes. Farms were abandoned.")
-        oz(p, "Every thug with a sword suddenly decided he was a warlord.")
+        oz(p, "Varrock was the capital. Every road, every patrol,<br>every coin in Misthalin ran through it.")
+        oz(p, "Then Varrock fell. And everything that leaned<br>on it came down after.")
+        oz(p, "The patrols stopped. The roads emptied. Merchants<br>changed routes. Farms were abandoned.")
+        oz(p, "Every thug with a sword suddenly decided he was<br>a warlord.")
         me(p, "The Rogue Knights?")
-        oz(p, "Some of them. Deserters. Mercenaries. Bandits. Opportunists.")
+        oz(p, "Some of them. Deserters. Mercenaries. Bandits.<br>Opportunists.")
         oz(p, "Call them whatever makes dying to one feel better.")
         me(p, "They're all over the roads.")
         oz(p, "Exactly.")
-        me(p, "Are they part of Zemouregal's army?")
-        oz(p, "Most of them? No. That would almost be simpler.")
-        me(p, "Then why are they attacking everyone?")
+        me(p, "Are they the ones who took Varrock?")
+        oz(p, "Zemouregal's dead? No. Most of them have nothing<br>to do with him. That would almost be simpler.")
+        me(p, "Zemouregal?")
+        oz(p, "The one whose dead walked into Varrock. Nobody in<br>Lumbridge gave you the name?")
+        me(p, "They told me Varrock fell.")
+        oz(p, "Aye. That's the short version.")
+        me(p, "Then why are the Rogue Knights attacking everyone?")
         oz(p, "Because nobody stops them.")
-        oz(p, "Varrock once kept order through most of Misthalin. Varrock fell.")
-        oz(p, "The people who prefer a world without rules noticed.")
+        oz(p, "Varrock kept order through most of Misthalin.<br>Nobody has kept it since.")
+        oz(p, "The people who prefer a world without rules<br>noticed.")
         QuestEngine.satisfy(p, this@TheNorth, "contact") // mutate, then narrate
         oz(p, "Come north.")
-        oz(p, "There's something else Zo expects you to understand.")
+        oz(p, "There's something else Zo expects you<br>to understand.")
     }
 
     /** WILDERNESS: back too soon — point at the ditch again. */
     private suspend fun QueueTask.oziachGoNorth(p: Player) {
-        oz(p, "North. The ditch at the top of town — go and look at it. You needn't jump it.")
+        oz(p, "North. The ditch at the top of town — go and look<br>at it. You needn't jump it.")
         oz(p, "Then come back and tell me what you saw.")
     }
 
@@ -348,19 +364,19 @@ object TheNorth : QuestDefinition(
         me(p, "So that's the Wilderness.")
         oz(p, "That's the polite name.")
         me(p, "And the Rogue Knights stay south of it too.")
-        oz(p, "Of course. Lines on maps only matter to people who respect them.")
+        oz(p, "Of course. Lines on maps only matter to people<br>who respect them.")
         me(p, "But north of that line, players can attack me.")
-        oz(p, "Aye. Rogue Knight comes at you, you know what he wants.")
+        oz(p, "Aye. Rogue Knight comes at you, you know what<br>he wants.")
         me(p, "And another adventurer?")
         oz(p, "Your guess is as good as mine.")
         oz(p, "Usually your armour.")
         me(p, "What does all this have to do with Varrock?")
         oz(p, "Everything.")
-        oz(p, "Before Varrock fell, these roads belonged to a kingdom.")
-        oz(p, "Afterward? They belonged to whoever happened to be standing on them.")
+        oz(p, "Before Varrock fell, these roads belonged to<br>a kingdom.")
+        oz(p, "Afterward? They belonged to whoever happened<br>to be standing on them.")
         me(p, "And Edgeville?")
         oz(p, "Edgeville stayed. Barely.")
-        oz(p, "Refugees came through here for weeks. Soldiers too. Some still had weapons. Some didn't.")
+        oz(p, "Refugees came through here for weeks.<br>Soldiers too. Some still had weapons.<br>Some didn't.")
         me(p, "Did anyone know Varrock was going to fall?")
         oz(p, "They knew they were in trouble.")
         // Hand over the dispatch and advance to DISPATCH back-to-back, with no chat line between:
@@ -378,7 +394,7 @@ object TheNorth : QuestDefinition(
 
     /** DISPATCH: the chat was closed after the hand-over — read it with him now. */
     private suspend fun QueueTask.oziachReadIt(p: Player) {
-        oz(p, "You've not read it yet? Read it. Then we'll talk.")
+        oz(p, "You've not read it yet? Read it.<br>Then we'll talk.")
         readDispatch(p)
         QuestEngine.satisfy(p, this@TheNorth, "dispatch")
         afterReading(p)
@@ -415,14 +431,14 @@ object TheNorth : QuestDefinition(
         oz(p, "Nothing.")
         me(p, "Nothing?")
         oz(p, "No runners. No orders. No army. Just refugees.")
-        oz(p, "At first there were thousands. Then hundreds. Then dozens. Then nobody.")
+        oz(p, "At first there were thousands. Then hundreds.<br>Then dozens. Then nobody.")
         lore(p, leave = "I'll take this to Zo.")
         oz(p, "Take that back to Zo.")
-        oz(p, "If he sent you here to understand the north, give him the original.")
-        me(p, "You kept this for twelve years and you're just giving it to me?")
+        oz(p, "If he sent you here to understand the north,<br>give him the original.")
+        me(p, "You kept this for twelve years and you're just<br>giving it to me?")
         oz(p, "I expect it back.")
         me(p, "Oh.")
-        oz(p, "And if you lose it to some Rogue Knight on the road, don't bother coming back.")
+        oz(p, "And if you lose it to some Rogue Knight on<br>the road, don't bother coming back.")
     }
 
     /** The optional lore branches (accepted history only — Stage 1 of the revelation ladder). */
@@ -431,7 +447,7 @@ object TheNorth : QuestDefinition(
             when (options(p, "Who is Zemouregal?", "Who was Arrav?", "Why did you stay?", leave, title = OZIACH_NAME)) {
                 1 -> {
                     me(p, "Who is Zemouregal?")
-                    oz(p, "A Mahjarrat necromancer. Old. Powerful. Fond of corpses.")
+                    oz(p, "A Mahjarrat necromancer. Old. Powerful.<br>Fond of corpses.")
                     me(p, "Charming.")
                     oz(p, "You should meet him.")
                     me(p, "I'd rather not.")
@@ -439,11 +455,11 @@ object TheNorth : QuestDefinition(
                 }
                 2 -> {
                     me(p, "Who was Arrav?")
-                    oz(p, "Once? A hero. Varrock's greatest, depending which drunk you ask.")
+                    oz(p, "Once? A hero. Varrock's greatest, depending<br>which drunk you ask.")
                     me(p, "And now?")
-                    oz(p, "The man people saw marching with Zemouregal's dead.")
+                    oz(p, "The man people saw marching with<br>Zemouregal's dead.")
                     me(p, "Is he still alive?")
-                    oz(p, "People have been arguing about that for twelve years.")
+                    oz(p, "People have been arguing about that for<br>twelve years.")
                 }
                 3 -> {
                     me(p, "Why did you stay?")
@@ -466,14 +482,14 @@ object TheNorth : QuestDefinition(
     private suspend fun QueueTask.ensureDispatch(p: Player): Boolean {
         if (hasDispatch(p)) return true
         if (dispatchBanked(p)) {
-            oz(p, "You put my dispatch in a BANK? Twelve years it sat under this counter. Go and fetch it.")
+            oz(p, "You put my dispatch in a BANK? Twelve years it sat<br>under this counter. Go and fetch it.")
             return false
         }
         oz(p, "Lost it already? I said don't bother coming back.")
         me(p, "It's important.")
         oz(p, "...Aye. It is.")
         giveDispatch(p)
-        oz(p, "The copy I made the day it came. Lose this one and we're done.")
+        oz(p, "The copy I made the day it came.<br>Lose this one and we're done.")
         return true
     }
 
@@ -487,7 +503,7 @@ object TheNorth : QuestDefinition(
                 me(p, "I've still got your dispatch.")
                 oz(p, "Zo said to keep it, did he?")
                 me(p, "He did.")
-                oz(p, "Of course he did. Then read it now and again. Somebody should.")
+                oz(p, "Of course he did. Then read it now and again.<br>Somebody should.")
                 lore(p, leave = "I'll leave you to it.")
             } else {
                 me(p, "Just passing through.")

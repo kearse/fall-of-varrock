@@ -72,8 +72,9 @@ safe route north.
 
 ## Dialogue (shipped — spec text verbatim where it exists, joined only to save clicks)
 
-**General Zo — brief (`brief`).** *Player:* "You said I should see Edgeville." / "I did." / "What's
-there?" / "Perspective." / "That sounds ominous." / "It usually is." / "You've seen Lumbridge attacked.
+**General Zo — brief (`brief`).** Zo opens — the quest auto-begins, so nobody has mentioned Edgeville
+to the player before this. "Good. I've an errand for you, {address}." / *Player:* "Another march?" / "No
+sword needed for this one. Go to Edgeville." / "What's there?" / "Perspective." / "That sounds ominous." / "It usually is." / "You've seen Lumbridge attacked.
 You've marched with our Knights. You've even watched us win a field." / "If that's all you saw, you might
 start thinking we're winning." / "We aren't?" / "We're surviving. There's a difference." / "Go to
 Edgeville. Look at what remains between us and Varrock." / "Then come back and tell me what you think
@@ -86,13 +87,18 @@ in front of it.") · **"I'll go."** (→ `edgeville`).
 himself." / "He told me to see what happened to the north." / "Did he? Then he wants you frightened." /
 "I don't think he said that." / "Generals rarely do." / "Were you here when Varrock fell?" / "Aye." / "I
 was here before it fell. I was here while it fell." / "And I've been here every miserable year since." /
-"What happened to the north?" / "Varrock stopped being a capital. Then everything depending on Varrock
-started falling apart." / "The patrols stopped. The roads emptied. Merchants changed routes. Farms were
-abandoned." / "Every thug with a sword suddenly decided he was a warlord." / "The Rogue Knights?" / "Some
-of them. Deserters. Mercenaries. Bandits. Opportunists." / "Call them whatever makes dying to one feel
-better." / "They're all over the roads." / "Exactly." / "Are they part of Zemouregal's army?" / "Most of
-them? No. That would almost be simpler." / "Then why are they attacking everyone?" / "Because nobody stops
-them." / "Varrock once kept order through most of Misthalin. Varrock fell." / "The people who prefer a
+"What happened to the north?" / "Varrock was the capital. Every road, every patrol, every coin in
+Misthalin ran through it." / "Then Varrock fell. And everything that leaned on it came down after." /
+"The patrols stopped. The roads emptied. Merchants changed routes. Farms were abandoned." / "Every thug
+with a sword suddenly decided he was a warlord." / "The Rogue Knights?" / "Some of them. Deserters.
+Mercenaries. Bandits. Opportunists." / "Call them whatever makes dying to one feel better." / "They're all
+over the roads." / "Exactly." / "Are they the ones who took Varrock?" / "Zemouregal's dead? No. Most of
+them have nothing to do with him. That would almost be simpler." / "Zemouregal?" / "The one whose dead
+walked into Varrock. Nobody in Lumbridge gave you the name?" / "They told me Varrock fell." / "Aye. That's
+the short version." *(Oziach is the first NPC in the game to say the name — all Lumbridge has told the
+player is "twelve years ago, Varrock fell" — so it comes from him and the player reacts to it.)* / "Then
+why are the Rogue Knights attacking everyone?" / "Because nobody stops them." / "Varrock kept order
+through most of Misthalin. Nobody has kept it since." / "The people who prefer a
 world without rules noticed." → (`wilderness`) "Come north." / "There's something else Zo expects you to
 understand."
 
