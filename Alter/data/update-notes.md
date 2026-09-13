@@ -18,6 +18,7 @@
 
 - The Last Free City: the goblins at the east camp are now the ordinary level-2 Lumbridge goblins. They no longer attack on sight or pile onto new players — you pick your fights, and you have time to eat.
 - The Last Free City: goblin kills at the east camp now count toward the "defeat 5 goblins" objective as long as you hit the goblin — the counter was stuck at 0/5.
+- Lumbridge: the aggressive goblin line that crowded the city gate is gone. The first hostile ring outside the walls is now the hobgoblins, well out from the gate; the Knights of Lumbridge still hold the walls.
 - Quest Journal: the east-camp goblins are highlighted again during The Last Free City (the arrow hands off to them once they are in view). The client updates itself on next launch.
 - Deploy announcements: Discord now gets a proper update post when we ship changes, instead of a "server is online" message on every restart.
 - General behind-the-scenes improvements and maintenance.
