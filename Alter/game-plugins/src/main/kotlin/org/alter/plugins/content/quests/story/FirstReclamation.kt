@@ -198,6 +198,22 @@ object FirstReclamation : QuestDefinition(
             script
         }
         talk(ZO, DEBRIEF) { p -> debrief(p) }
+        // Scouting and the standard: one pointer line, then Zo's everyday menu — not a cold
+        // re-introduction to the soldier he has just sent north.
+        NpcTalk.register(ZO, NpcTalk.PRIORITY_QUEST) { p ->
+            val script: TalkScript? = when (QuestEngine.stepId(p, this)) {
+                SCOUT_SOUTH, SCOUT_CIRCLE, SCOUT_VARROCK -> { pl -> zoRemind(pl, "The southern road — on foot. Look the circle over,<br>see the city from beyond it, then report to me.") }
+                ESTABLISH -> { pl -> zoRemind(pl, "The road's ours. Get to the circle and raise<br>the standard at its heart.") }
+                else -> null
+            }
+            script
+        }
+    }
+
+    /** A mid-quest pointer from Zo, followed by his normal march/muster menu. */
+    private suspend fun QueueTask.zoRemind(p: Player, line: String) {
+        zo(p, line)
+        NpcTalk.runDefault(this, p, zoId)
     }
 
     // ------------------------------------------------------------------ dialogue
@@ -205,13 +221,11 @@ object FirstReclamation : QuestDefinition(
     private suspend fun QueueTask.zo(p: Player, text: String) = chatNpc(p, text, npc = zoId, title = ZO_TITLE)
     private suspend fun QueueTask.me(p: Player, text: String) = chatPlayer(p, text)
 
+    /** BRIEF: picks up The North's last line ("A position… it's time you helped take one back") —
+     *  usually spoken seconds earlier by this same NPC — instead of re-asking about Edgeville. */
     private suspend fun QueueTask.brief(p: Player) {
-        zo(p, "You went to Edgeville.")
-        me(p, "I did.")
-        zo(p, "And?")
-        me(p, "I think I understand.<br>Varrock didn't just fall.<br>The kingdom around it fell apart.")
-        zo(p, "Good. Then you're ready for the next lesson.")
-        me(p, "Which is?")
+        zo(p, "I said a position. Here's the one I mean.")
+        me(p, "Something we keep this time.")
         zo(p, "Looking at something everyone says is lost...<br>...and deciding it isn't.")
         me(p, "What are we taking back?")
         zo(p, "Not Varrock.")

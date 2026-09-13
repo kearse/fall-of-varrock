@@ -73,7 +73,9 @@ force-load are enough for six crates and four barricades).
 ## Dialogue (shipped — the design's lines, verbatim where it gave them)
 
 **White Knight — checkpoint (CHECKPOINT → DEFEND).** "Halt." / *Player:* "I'm here from Lumbridge." /
-"Business?" / *options:* "I need to speak with Sir Amik." · "I'm here about Varrock." · "Just visiting."
+"Business?" / *options:* "I need to speak with whoever commands here." ("Sir Amik Varze. So does half of
+Asgarnia. About what?" — the knight names him; the player never says the name first) · "I'm here about
+Varrock." · "Just visiting."
 (all three roads lead to Varrock) / "Varrock?" *(he looks you over)* "You've come a long way to ask for
 soldiers we don't have." / *Player:* "Falador looks like it has plenty." / "Then you've been here thirty
 seconds." → **DEFEND** / "Movement!" "Kinshra! Hold the gate!"
@@ -82,9 +84,10 @@ seconds." → **DEFEND** / "Movement!" "Kinshra! Hold the gate!"
 should've led with the sword." / "I did eventually." / "Go on. Castle." / "He'll want to hear why someone
 from Lumbridge is fighting Kinshra outside his walls."
 
-**Sir Amik (AMIK → TIFFY).** "Lumbridge." … "I meant the crest on the dispatch." … "Though I've already
+**Sir Amik (AMIK → TIFFY).** "Lumbridge." … "I meant where you're from. Horacio's letter reached me
+before you did." … "Though I've already
 heard about the gate. Apparently you made yourself useful." / *Player:* "Lumbridge is preparing for
-Varrock … The Southern Watch … And General Zo thinks Falador has one." / "He's right." / "So you'll
+Varrock … The Southern Watch … And Duke Horacio thinks Falador has one." / "He's right." / "So you'll
 help?" / "No." / **"I have an army." "I do not have an army to spare."** / the Kinshra strategy ("They
 don't need Falador. They need Falador busy.") / the three pressures (the Kinshra front; Burthorpe and the
 trolls; "twelve years wearing out the weapons … our dwarves still know how to build them … what we no

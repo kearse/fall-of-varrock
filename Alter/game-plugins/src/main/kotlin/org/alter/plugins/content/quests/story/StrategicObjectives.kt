@@ -85,7 +85,7 @@ object Secure : StrategicObjective(
     nativeTabVarp = QuestJournal.SECURE_QUEST_VARP, nativeTabComplete = QuestJournal.SECURE_QUEST_COMPLETE,
     code = "SECURE",
     problem = "Ensure Misthalin will remain secure while its army fights in the north.",
-    lead = "River Salve / Morytania — first quest: Across the Salve",
+    lead = "the River Salve and Morytania — an accord with the east, not an alliance",
 ) {
     override val steps: List<QuestStep> = listOf(
         QuestStep("secure", Objective.Manual(problem), nudge = "Lead: $lead. The goal is the Salve Accord — an accord, not an alliance."),
@@ -103,14 +103,14 @@ object Understand : StrategicObjective(
     nativeTabVarp = QuestJournal.UNDERSTAND_QUEST_VARP, nativeTabComplete = QuestJournal.UNDERSTAND_QUEST_COMPLETE,
     code = "UNDERSTAND",
     problem = "Discover what truly happened during the Fall and whether the same danger remains.",
-    lead = "the Wilderness — first quest: The First Scar; then the Kharidian Desert; then Senntisten",
+    lead = "the Wilderness — an older catastrophe than the Fall; then the Kharidian Desert",
 ) {
     const val WILDERNESS = "wilderness"
     const val DESERT = "desert"
     const val SENNTISTEN = "senntisten"
 
     override val steps: List<QuestStep> = listOf(
-        QuestStep(WILDERNESS, Objective.Manual("Investigate the First Scar — the Wilderness as an older catastrophe."), nudge = "Lead: the Wilderness (The First Scar). No PvP kill is ever required."),
+        QuestStep(WILDERNESS, Objective.Manual("Investigate the First Scar — the Wilderness as an older catastrophe."), nudge = "Lead: the Wilderness. No PvP kill is ever required."),
         QuestStep(DESERT, Objective.Manual("Follow the evidence into the Kharidian Desert."), nudge = "Azzanadra and Mahjarrat history lead toward Sliske and the Elder Horn."),
         QuestStep(SENNTISTEN, Objective.Manual("Uncover what Senntisten holds beneath Varrock."), nudge = "The convergence that preceded the Fall."),
     )
@@ -123,7 +123,7 @@ object Sustain : StrategicObjective(
     nativeTabVarp = QuestJournal.SUSTAIN_QUEST_VARP, nativeTabComplete = QuestJournal.SUSTAIN_QUEST_COMPLETE,
     code = "SUSTAIN",
     problem = "Create the supply and transportation network required to maintain a major offensive.",
-    lead = "Kandarin + the War Effort — major quest: The Long Road East",
+    lead = "Kandarin and the War Effort — the road an army would eat along",
 ) {
     override val steps: List<QuestStep> = listOf(
         QuestStep("sustain", Objective.Manual(problem), nudge = "Lead: $lead."),

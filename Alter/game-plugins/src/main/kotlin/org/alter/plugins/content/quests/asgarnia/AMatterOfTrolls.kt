@@ -14,6 +14,7 @@ import org.alter.game.model.move.moveTo
 import org.alter.game.model.queue.QueueTask
 import org.alter.plugins.content.quests.QuestBook
 import org.alter.plugins.content.quests.QuestJournal
+import org.alter.plugins.content.quests.framework.NpcTalk
 import org.alter.plugins.content.quests.framework.Objective
 import org.alter.plugins.content.quests.framework.Prerequisite
 import org.alter.plugins.content.quests.framework.QuestDefinition
@@ -21,6 +22,7 @@ import org.alter.plugins.content.quests.framework.QuestEngine
 import org.alter.plugins.content.quests.framework.QuestRegistry
 import org.alter.plugins.content.quests.framework.QuestStep
 import org.alter.plugins.content.quests.framework.Reward
+import org.alter.plugins.content.quests.framework.TalkScript
 import org.alter.plugins.content.war.WarNpcNames
 import org.alter.rscm.RSCM.getRSCM
 import java.lang.ref.WeakReference
@@ -390,10 +392,19 @@ object AMatterOfTrolls : QuestDefinition(
         for (s in listOf(DENULTH_STEP, READY, BATTLE, WAR_CHIEF)) talk(SNOWFLAKE, s) { p -> snowflakeWaiting(p) }
         talk(SNOWFLAKE, REPORT) { p -> snowflakeAfter(p) }
 
-        // Sir Amik — quest-priority branches on THIS quest's steps only (At the White Wall owns his idle lines).
-        talk(SIR_AMIK, START) { p -> amik(p, "Burthorpe. Commander Denulth commands the Imperial Guard there. I sent word ahead — he'll be expecting you.") }
-        for (s in listOf(SCOUT, PATROL, MY_ARM_STEP, SNOWFLAKE_STEP, DENULTH_STEP, READY, BATTLE, WAR_CHIEF)) {
-            talk(SIR_AMIK, s) { p -> amik(p, "Denulth's report hasn't reached me. Whatever is happening in the north, finish it.") }
+        // Sir Amik. This quest and The Guns of Asgarnia begin together (both gate on At the White
+        // Wall) and both have real Amik beats, so priorities are explicit: Guns' START / REPORT sit
+        // at PRIORITY_QUEST + 1 (his second problem is heard right after the White Wall handoff),
+        // this quest's START pointer and REPORT at PRIORITY_QUEST, and the mid-quest nudge below at
+        // PRIORITY_QUEST - 5 — above Guns' own mid-quest pointer, which it folds in so neither
+        // quest goes mute while both are live. At the White Wall owns his idle lines.
+        talk(SIR_AMIK, START) { p -> amik(p, "Burthorpe. Commander Denulth commands the Imperial<br>Guard there. I sent word ahead — he'll be<br>expecting you.") }
+        NpcTalk.register(SIR_AMIK, NpcTalk.PRIORITY_QUEST - 5) { p ->
+            val script: TalkScript? = when (QuestEngine.stepId(p, this)) {
+                SCOUT, PATROL, MY_ARM_STEP, SNOWFLAKE_STEP, DENULTH_STEP, READY, BATTLE, WAR_CHIEF -> { pl -> amikMidQuest(pl) }
+                else -> null
+            }
+            script
         }
         talk(SIR_AMIK, REPORT) { p -> amikDebrief(p) }
 
@@ -771,6 +782,15 @@ object AMatterOfTrolls : QuestDefinition(
 
     // ---- Sir Amik ----------------------------------------------------------------------------------
 
+    /** Mid-quest: the northern pointer, plus Guns' pointer when that quest is also live. */
+    private suspend fun QueueTask.amikMidQuest(p: Player) {
+        amik(p, "Denulth's report hasn't reached me. Whatever is<br>happening in the north, finish it.")
+        val guns = QuestEngine.stepId(p, GunsOfAsgarnia)
+        if (guns != null && guns != GunsOfAsgarnia.START && guns != GunsOfAsgarnia.REPORT) {
+            amik(p, "And Nulodion is waiting on our guns. One problem<br>at a time, but don't forget the other.")
+        }
+    }
+
     /** REPORT: the debrief and the strategic payoff (spec §45-46). Completes the quest. */
     private suspend fun QueueTask.amikDebrief(p: Player) {
         amik(p, "Denulth says the passes are quiet.")
@@ -783,9 +803,15 @@ object AMatterOfTrolls : QuestDefinition(
         me(p, "To the Kinshra front?")
         amik(p, "Yes.")
         amik(p, "Not all at once.")
+        val guns = QuestEngine.isComplete(p, GunsOfAsgarnia)
         QuestEngine.satisfy(p, this@AMatterOfTrolls, REPORT) // completes the quest — mutate, then narrate
         amik(p, "But for the first time in years...")
         amik(p, "...I have soldiers I can move.")
+        // Old Wounds auto-begins once BOTH Asgarnia quests are done; whichever finishes last sets
+        // up Tiffy's summons (Guns' debrief carries the mirror of this line).
+        if (guns) {
+            amik(p, "Soldiers and guns. Which usually means Tiffy<br>is about to find a new problem.")
+        }
     }
 }
 

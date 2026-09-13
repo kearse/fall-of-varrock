@@ -12,8 +12,9 @@ history, Fallen Varrock, the Rogue Knights, the northern frontier and the myster
 
 The player should finish it understanding: Varrock's fall affected far more than Varrock · Misthalin lost
 its roads and territory in the north · Rogue Knights and other hostile groups filled the vacuum · Edgeville
-survived as the important northern settlement · the Wilderness begins at the normal boundary north of
-Edgeville · Rogue Knights are dangerous NPC enemies, the Wilderness adds a different danger (**other
+survived as the important northern settlement — and is the realm's **PKing hub**: the last bank before
+the ditch, where players gear up and cross to fight each other · the Wilderness begins at the normal
+boundary north of Edgeville · Rogue Knights are dangerous NPC enemies, the Wilderness adds a different danger (**other
 players**) · the accepted story says Zemouregal and Arrav destroyed Varrock, and something about it may
 one day deserve a closer look · the kingdom cannot reclaim Varrock until it reclaims the ground toward it.
 
@@ -37,7 +38,7 @@ mid-session, so Zo's First March debrief starts The North on the spot).
 
 | Beat | Existing NPC / place (unchanged) | Existing system | Code seam |
 |---|---|---|---|
-| "You said I should see Edgeville." | **General Zo** 3220,3210 (castle courtyard, `GeneralZoPlugin`) | `NpcTalk` — Zo migrated from a raw `onNpcOption` to `bindTalk` + a default branch (his march/muster/War-Prep III menu is untouched) | `TheNorth.talk(ZO, "brief")` → `QuestEngine.satisfy` |
+| "The north. I said I'd show you something there." | **General Zo** 3220,3210 (castle courtyard, `GeneralZoPlugin`) | `NpcTalk` — Zo migrated from a raw `onNpcOption` to `bindTalk` + a default branch (his march/muster/War-Prep III menu is untouched) | `TheNorth.talk(ZO, "brief")` → `QuestEngine.satisfy` |
 | Travel north | Any existing travel: walk (Rogue Knights may cross the road — desirable, never required), **amulet of glory → Edgeville** (`AmuletOfGloryPlugin`, lands 3087,3496) | no quest teleport, no custom road | step `edgeville` = `Objective.ReachArea(Edgeville town box 3067,3488–3098,3522)` (= PvpZones' safe carve-out) |
 | Arrival lines | Edgeville itself | chat narration, no cutscene | `edgeville.onLeave` → "Edgeville. Northern Misthalin." / "The Wilderness lies just beyond the town. Varrock lies to the east." |
 | Someone who remembers the Fall | **Oziach** 3069,3517 — his stock spawn (`npc_spawns.json` 822), presence-gated by `WorldSpawnsPlugin`, in his hut at the town's NW edge. Verified spawned in the data; nothing spawns or moves him | `NpcTalk` (`TheNorthPlugin.bindTalk("npc.oziach")` + everyday lines at default priority) | `talk(OZIACH, "contact")` |
@@ -72,11 +73,11 @@ safe route north.
 
 ## Dialogue (shipped — spec text verbatim where it exists, joined only to save clicks)
 
-**General Zo — brief (`brief`).** Zo opens — the quest auto-begins, so nobody has mentioned Edgeville
-to the player before this. "Good. I've an errand for you, {address}." / *Player:* "Another march?" / "No
-sword needed for this one. Go to Edgeville." / "What's there?" / "Perspective." / "That sounds ominous." / "It usually is." / "You've seen Lumbridge attacked.
-You've marched with our Knights. You've even watched us win a field." / "If that's all you saw, you might
-start thinking we're winning." / "We aren't?" / "We're surviving. There's a difference." / "Go to
+**General Zo — brief (`brief`).** Opens on First March's closing promise ("There's something I want you
+to see in the north") — this quest auto-begins the moment that one completes, often in the same
+breath, so Zo picks up his own sentence. "The north. I said I'd show you something there." / *Player:*
+"Show me what?" / "Perspective." / "That sounds ominous." / "It usually is." / "If that field was all
+you'd seen of this war, you might start thinking we're winning." / "We aren't?" / "We're surviving. There's a difference." / "Go to
 Edgeville. Look at what remains between us and Varrock." / "Then come back and tell me what you think
 we're actually fighting for." → options **"That's the whole assignment?"** ("Go. Look. Come back. Not
 every lesson needs a sword.") · **"Why Edgeville?"** ("Because it survived." / "So did Lumbridge." /
@@ -108,8 +109,12 @@ too.* / *Everything learned fighting the Rogue Knights matters more on the other
 
 **Oziach — the Wilderness, the Fall, the dispatch (`return_oziach`).** "So that's the Wilderness." /
 "That's the polite name." / "And the Rogue Knights stay south of it too." / "Of course. Lines on maps only
-matter to people who respect them." / "But north of that line, players can attack me." / "Aye. Rogue
-Knight comes at you, you know what he wants." / "And another adventurer?" / "Your guess is as good as
+matter to people who respect them." / "But north of that line, players can attack me." / "Aye. That's
+what this town is for now." / "Edgeville?" / "Look around. The bank sits thirty paces from the ditch. Every
+fighter in the realm gears up here, walks north, and comes back richer or empty." / "This is where people
+go to fight people. Nobody planned it. It's just the last safe ground before the wild, and everyone knows
+it." *(Edgeville is the realm's PKing hub — the iconic RSPS PK spot — and Oziach says so in plain words.)*
+/ "And if a Rogue Knight comes at me up there?" / "Then you know what he wants." / "And another adventurer?" / "Your guess is as good as
 mine." / "Usually your armour." / "What does all this have to do with Varrock?" / "Everything." / "Before
 Varrock fell, these roads belonged to a kingdom." / "Afterward? They belonged to whoever happened to be
 standing on them." / "And Edgeville?" / "Edgeville stayed. Barely." / "Refugees came through here for

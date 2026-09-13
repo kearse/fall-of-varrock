@@ -15,6 +15,7 @@ import org.alter.plugins.content.quests.framework.Objective
 import org.alter.plugins.content.quests.framework.Prerequisite
 import org.alter.plugins.content.quests.framework.QuestDefinition
 import org.alter.plugins.content.quests.framework.QuestEngine
+import org.alter.plugins.content.quests.framework.QuestRegistry
 import org.alter.plugins.content.quests.framework.QuestStep
 import org.alter.plugins.content.quests.framework.Reward
 import org.alter.plugins.content.quests.framework.TalkScript
@@ -172,7 +173,7 @@ object AtTheWhiteWall : QuestDefinition(
     override val completionRewards: List<Reward> = listOf(Reward.WarEffort(WAR_EFFORT))
 
     override val completionMessage: String =
-        "<col=801700>$J_DONE</col> The Asgarnia campaign has begun. Next: <col=801700>A Matter of Trolls</col> — Burthorpe."
+        "<col=801700>$J_DONE</col> The Asgarnia campaign has begun on two fronts: <col=801700>A Matter of Trolls</col> (Burthorpe) and <col=801700>The Guns of Asgarnia</col> (Sir Amik, then Nulodion)."
 
     // --- dialogue scripts on the shared White Knight id (proximity-gated, see init) -----------
 
@@ -272,6 +273,9 @@ object AtTheWhiteWall : QuestDefinition(
     private suspend fun QueueTask.me(p: Player, text: String) = chatPlayer(p, text)
 
     private const val KNIGHT_NAME = "White Knight"
+
+    /** Old Wounds — after it, Sir Amik's idle line stops re-sending the player to Burthorpe. */
+    private const val OLD_WOUNDS_KEY = "old_wounds"
     private const val AMIK_NAME = "Sir Amik Varze"
     private const val TIFFY_NAME = "Sir Tiffy Cashien"
 
@@ -282,10 +286,10 @@ object AtTheWhiteWall : QuestDefinition(
         knight(p, "Halt.")
         me(p, "I'm here from Lumbridge.")
         knight(p, "Business?")
-        when (options(p, "I need to speak with Sir Amik.", "I'm here about Varrock.", "Just visiting.", title = KNIGHT_NAME)) {
+        when (options(p, "I need to speak with whoever commands here.", "I'm here about Varrock.", "Just visiting.", title = KNIGHT_NAME)) {
             1 -> {
-                me(p, "I need to speak with Sir Amik.")
-                knight(p, "So does half of Asgarnia. About what?")
+                me(p, "I need to speak with whoever commands here.")
+                knight(p, "Sir Amik Varze. So does half of Asgarnia.<br>About what?")
                 me(p, "Varrock.")
             }
             2 -> me(p, "I'm here about Varrock.")
@@ -328,7 +332,7 @@ object AtTheWhiteWall : QuestDefinition(
     private suspend fun QueueTask.amikMeeting(p: Player) {
         amik(p, "Lumbridge.")
         me(p, "That's me.")
-        amik(p, "I meant the crest on the dispatch.")
+        amik(p, "I meant where you're from. Horacio's letter<br>reached me before you did.")
         me(p, "Oh.")
         p.message("Sir Amik looks at you.")
         amik(p, "Though I've already heard about the gate.")
@@ -341,7 +345,7 @@ object AtTheWhiteWall : QuestDefinition(
         me(p, "The Southern Watch.")
         amik(p, "I've heard.")
         me(p, "We need an army capable of breaking through Varrock's defences.")
-        me(p, "And General Zo thinks Falador has one.")
+        me(p, "And Duke Horacio thinks Falador has one.")
         p.message("Sir Amik is silent for a moment.")
         amik(p, "He's right.")
         me(p, "So you'll help?")
@@ -396,7 +400,6 @@ object AtTheWhiteWall : QuestDefinition(
         amik(p, "No?")
         me(p, "They're making sure you can't leave.")
         p.message("Sir Amik nods.")
-        QuestEngine.satisfy(p, this@AtTheWhiteWall, S_REPORT) // completes the quest — mutate, then narrate
         amik(p, "Exactly.")
         me(p, "So breaking the front means more than defending Falador.")
         amik(p, "It means Asgarnia becomes useful again.")
@@ -412,6 +415,10 @@ object AtTheWhiteWall : QuestDefinition(
         amik(p, "If the northern frontier stabilises...")
         amik(p, "...those soldiers can come south.")
         me(p, "And then we hit the Kinshra?")
+        // Completes the quest one line before the end (not 17 lines before): the Burthorpe handoff
+        // above must be heard, and an early close replays it rather than losing it — his idle
+        // lines carry the same handoff once the quest is done.
+        QuestEngine.satisfy(p, this@AtTheWhiteWall, S_REPORT) // completes the quest — mutate, then narrate
         amik(p, "Then we'll have enough men to start thinking about it.")
     }
 
@@ -505,9 +512,13 @@ object AtTheWhiteWall : QuestDefinition(
     /** Sir Amik with no quest beat to run. */
     suspend fun QueueTask.amikIdle(p: Player) {
         when {
+            QuestRegistry.isComplete(p, OLD_WOUNDS_KEY) -> {
+                amik(p, "Tiffy's report is on my desk. When Falador is<br>ready to move east, you'll hear it from me.")
+                amik(p, "Not yet.")
+            }
             QuestEngine.isComplete(p, this@AtTheWhiteWall) -> {
-                amik(p, "Burthorpe. The Imperial Guard has held the passes for twelve years; make the north quiet and they can come south.")
-                amik(p, "Go.")
+                amik(p, "We begin somewhere else. Burthorpe — the Imperial<br>Guard has watched the passes for twelve years.<br>Make the north quiet and they can come south.")
+                amik(p, "And our guns. Twelve years wore them out;<br>I'll want a word about that too.")
             }
             QuestEngine.stepId(p, this@AtTheWhiteWall) == S_FRONT -> {
                 amik(p, "Tiffy's sent you to look at the ground, has he? Then look.")

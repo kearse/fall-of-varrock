@@ -10,11 +10,13 @@ import org.alter.game.model.queue.QueueTask
 import org.alter.plugins.content.areas.lumbridge.npcs.GeneralZoPlugin
 import org.alter.plugins.content.quests.QuestBook
 import org.alter.plugins.content.quests.QuestJournal
+import org.alter.plugins.content.quests.framework.NpcTalk
 import org.alter.plugins.content.quests.framework.Objective
 import org.alter.plugins.content.quests.framework.Prerequisite
 import org.alter.plugins.content.quests.framework.QuestDefinition
 import org.alter.plugins.content.quests.framework.QuestEngine
 import org.alter.plugins.content.quests.framework.QuestStep
+import org.alter.plugins.content.war.address
 import org.alter.rscm.RSCM.getRSCM
 
 /**
@@ -113,16 +115,19 @@ object AKingdomAlone : QuestDefinition(
             you(p, "Taken ground back.")
             duke(p, "Yes.")
             duke(p, "...And now we discover whether we can keep doing it.")
-            duke(p, "Zo has been working through what an assault on Varrock would actually require.")
+            duke(p, "Zo has the numbers for an assault on Varrock.<br>Get them from him — he's beside me.")
             QuestEngine.satisfy(p, AKingdomAlone, REPORT)
-            duke(p, "I suspect you won't enjoy his answer.")
+            duke(p, "I suspect you won't enjoy them.")
             you(p, "I'm getting used to that.")
         }
 
         // ZO → DUKE: the question, the reality, and what the Southern Watch did and did not prove.
+        // Not a re-run of First Reclamation's debrief ("we can't take Varrock — not alone"): the
+        // Duke has just sent the player back for the arithmetic behind that answer.
         talk(ZO, ZO_STEP) { p ->
-            zo(p, "You saw Varrock from the Southern Watch.")
-            you(p, "Yes.")
+            zo(p, "The Duke sent you back to me.")
+            you(p, "He says you've done the arithmetic on Varrock.")
+            zo(p, "I have. You won't like it.")
             zo(p, "Think we can take it?")
             when (options(p, "Not with what we have.", "Give me enough Knights.", "We won't know until we try.", title = GeneralZoPlugin.ZO)) {
                 1 -> { you(p, "Not with what we have."); zo(p, "No. We can't.") }
@@ -148,6 +153,13 @@ object AKingdomAlone : QuestDefinition(
             QuestEngine.satisfy(p, AKingdomAlone, ZO_STEP)
             zo(p, "What it did not prove... is that Lumbridge can finish the job alone.")
             zo(p, "Go and tell the Duke. He'll want to hear it from you.")
+        }
+
+        // ZO step: the Duke points one tile south instead of opening the rank ladder on a player he
+        // has just sent to Zo — then his everyday menu, so ranks stay reachable.
+        talk(DUKE, ZO_STEP) { p ->
+            duke(p, "Zo is beside me, ${p.address}. Ask him for the numbers.")
+            NpcTalk.runDefault(this, p, dukeId)
         }
 
         // DUKE → STRATEGY: the report, then straight into the strategy discussion (same conversation).

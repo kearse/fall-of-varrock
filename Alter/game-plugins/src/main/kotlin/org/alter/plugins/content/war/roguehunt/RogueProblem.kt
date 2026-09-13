@@ -210,7 +210,7 @@ object RogueProblem {
     /** One-line progress report (`::rogueproblem` and the Sergeant's chatter). */
     fun statusLine(p: Player): String = when (val s = step(p)) {
         Step.NONE -> if (WarPrepChain.complete(p)) "Rogue Hunting I: an optional assignment — ask the Recruiting Sergeant at the Lumbridge gate."
-                     else "Rogue Hunting I: finish the War-Prep chain first, then ask the Recruiting Sergeant."
+                     else "Rogue Hunting I: finish War-Prep I first, then ask the Recruiting Sergeant."
         Step.HUNT -> "Rogue Hunting I: <col=801700>${huntKills(p)}/$HUNT_GOAL</col> of the rogue family felled."
         Step.LADDER -> "Rogue Hunting II: <col=801700>${RogueKnightLadder.rank(p)}/${RogueKnights.LADDER.size}</col> knights of the ladder broken — ::knights leads the hunt."
         Step.DONE -> "Rogue Hunting II: <col=4f9b4f>complete</col> — every camp broken; the streets fear you."
