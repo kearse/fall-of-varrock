@@ -47,13 +47,46 @@ object SouthernWatch {
     val LANDING = Tile(3225, 3371, 0)
 
     /**
-     * The standard at the circle's heart — the Castle Wars **Saradomin Standard** (loc 4902, a banner
-     * on its stand, option **Capture**), the realm's Saradomin iconography reused unchanged: no new
-     * model, no cache rename (locs cannot be renamed at runtime). North of the centre stone.
+     * The standard at the circle's heart — the Castle Wars **Saradomin Standard** (a banner on its
+     * stand, option **Capture**), the realm's Saradomin iconography reused unchanged: no new model,
+     * no cache rename (locs cannot be renamed at runtime). North of the centre stone.
+     *
+     * The exact loc is **resolved at boot** ([SouthernWatchPlugin.resolveStandard]) rather than
+     * hard-coded, because the Castle Wars standards are varbit-gated in the cache: they swap with
+     * that minigame's flag state, so spawning the gated parent id renders **nothing** for the player
+     * (`transforms[0]` at varbit 0) and there is no object to right-click at all — which is exactly
+     * how First Reclamation's raise step dead-ended. The resolver walks these candidates in order,
+     * follows any varbit/varp transform to the concrete ids behind it, and takes the first that is
+     * un-gated *and* carries a real click option. [STANDARD_OBJ] is simply the first candidate.
      */
+    val STANDARD_CANDIDATES = listOf(
+        "object.saradomin_standard_4902",
+        "object.saradomin_standard",
+        "object.standard_stand",
+        "object.standard_stand_4378",
+    )
     const val STANDARD_OBJ = "object.saradomin_standard_4902"
     const val STANDARD_OPTION = "Capture"
     val STANDARD_TILE = Tile(3227, 3372, 0)
+
+    /**
+     * The loc the post actually raised, and the option bound on it — set once by
+     * [SouthernWatchPlugin] at world init, `-1`/`null` if the cache offered nothing clickable.
+     */
+    @Volatile
+    var standardId: Int = -1
+        internal set
+
+    @Volatile
+    var standardOption: String? = null
+        internal set
+
+    /**
+     * Is there a standard a player can actually click? False means the cache gave us no usable
+     * banner loc and the quest's raise step must fall back to the ground (see
+     * `FirstReclamationPlugin`) rather than dead-end.
+     */
+    val standardClickable: Boolean get() = standardId > 0 && standardOption != null
 
     /** The Field Quartermaster — `npc.quartermaster` renamed at spawn, a third SupplyDepot post. */
     const val QUARTERMASTER_NPC = "npc.quartermaster"
