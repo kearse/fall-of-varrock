@@ -76,23 +76,35 @@ class SwampHubPlugin(
      * The Mire is a cleared graveyard, so the dead don't rest easy: a small cluster of zombies rises
      * on the open grass south-west of the yard house. Reachable through the safe route with
      * everything else in the Mire. This fills a real content gap — the Slayer roster assigns zombies,
-     * but the OSRS spawn dump has none within reach of home, so a "kill zombies" contract had nowhere
-     * to be filled. `npc.zombie` (id 26) is in the world dump, so WorldSpawnsPlugin already registers
-     * its real combat def (22 hp, aggressive within [WorldSpawns.AGGRO_RADIUS]=4); this bespoke spawn
-     * inherits it. Kills credit the Slayer task by name (see SlayerPlugin.onKill).
+     * and a "kill zombies" contract needs a target a low-level player can actually reach.
+     *
+     * **Passive since 2026-09-13.** The corner used to spawn `npc.zombie` (id 26), which the world
+     * dump flags aggressive, so WorldSpawnsPlugin gave it a 4-tile aggro radius on top of its 4-tile
+     * wander — and the route from the working yard south to the collection grounds runs straight
+     * through here, so anyone walking out to the trees, rocks or fishing shore picked up a fight they
+     * never asked for ("zombies are not in wildy but where skilling area is", 2026-09-13). It now
+     * spawns [ZOMBIE_PASSIVE] (id 64), which is the same "Zombie" as far as the cache name and the
+     * Slayer roster are concerned — [org.alter.plugins.content.skills.slayer.SlayerPlugin.onKill]
+     * matches on the cache NAME precisely so variants all count — but carries `stats[7] != 1` in
+     * `npc_combat.json`, which WorldSpawnsPlugin reads as `aggressiveRadius = 0`. It is also a
+     * slightly meatier 30 hp. A skiller can now walk past untouched; a player who wants the kill
+     * still clicks it.
+     *
+     * The aggressive zombies moved to where the report wanted them — the Graveyard of Shadows in the
+     * deep Wilderness (`WildernessUndeadPlugin`). This cluster is deliberately the small, safe half.
      *
      * TUNABLE: these tiles sit on the open grass SW of the house, clear of the skilling stations and
-     * the fishing spots so aggression never bleeds into a skiller — nudge them if any land on scenery.
+     * the fishing spots — nudge them if any land on scenery.
      */
     private fun spawnUndeadCorner() {
-        if (!runCatching { getRSCM(ZOMBIE) }.isSuccess) {
-            logger.warn { "swamp-hub: '$ZOMBIE' not in cache; undead corner not spawned." }
+        if (!runCatching { getRSCM(ZOMBIE_PASSIVE) }.isSuccess) {
+            logger.warn { "swamp-hub: '$ZOMBIE_PASSIVE' not in cache; undead corner not spawned." }
             return
         }
         UNDEAD_TILES.forEach { t ->
-            spawnNpc(ZOMBIE, x = t.x, z = t.z, height = t.height, walkRadius = 4, direction = Direction.WEST)
+            spawnNpc(ZOMBIE_PASSIVE, x = t.x, z = t.z, height = t.height, walkRadius = 2, direction = Direction.WEST)
         }
-        logger.info { "swamp-hub: undead corner ready (${UNDEAD_TILES.size} zombies on the grass SW of the yard house)." }
+        logger.info { "swamp-hub: undead corner ready (${UNDEAD_TILES.size} passive zombies SW of the yard house)." }
     }
 
     /** Clear the graveyard's grave-clutter so the yard reads as a clean war-supply workshop: removes ALL
@@ -171,14 +183,19 @@ class SwampHubPlugin(
          *  tree (id 1282 @ 3253,3197) on the east tree line. */
         val YARD = Area(3238, 3188, 3254, 3203)
 
-        /** Slayer-roster zombie (id 26); in the world dump, so its combat def is already registered. */
-        const val ZOMBIE = "npc.zombie"
+        /** The NON-aggressive Slayer-roster zombie (id 64). Named "Zombie" in the cache like id 26,
+         *  so Slayer contracts credit it; in the world dump (one ambient spawn in the Edgeville
+         *  dungeon), so its combat def — 30 hp, `aggressiveRadius = 0` — is already registered.
+         *  Never swap this back to `npc.zombie`: that id is flagged aggressive and this cluster sits
+         *  on the yard→collection-grounds walking route. */
+        const val ZOMBIE_PASSIVE = "npc.zombie_64"
 
         /** Where the undead rise — the open grass just SOUTH-WEST of the yard house, around (3231,3191).
          *  (They used to rise on the SE fringe by the mines road, but that pocket isn't walkable from the
          *  yard — players could see the zombies and never reach them.) Kept between the rock line (x3237+)
-         *  east and the fishing shore (x<=3218) west, so a walkRadius-4 wander never bleeds aggression
-         *  into a skilling station. TUNABLE. */
+         *  east and the fishing shore (x<=3218) west. Five kept (a zombie contract is 20–40 kills and
+         *  this is where `::slayertele` sends a level-10 player) but the wander is tightened to 2, so
+         *  the cluster stays a tidy corner rather than drifting across the walking route. TUNABLE. */
         val UNDEAD_TILES = listOf(
             Tile(3231, 3191, 0), Tile(3229, 3190, 0), Tile(3232, 3192, 0),
             Tile(3230, 3188, 0), Tile(3232, 3189, 0),
