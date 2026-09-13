@@ -25,7 +25,7 @@ what is cheapest in the current build.
 |---|---|---|---|
 | Opening (video → style → alarm) | Staging tile 3218,3218 | `FirstLoginFlow` VIDEO→STYLE→DONE | `FirstLoginFlow.onStyleConfirmed` → `RecruitTrials.greet` — **no change** |
 | Sergeant sounds the alarm, hands out kit | **Sergeant Damien** 3217,3220 (spawned by `RecruitTrialsPlugin`) | `NpcTalk` default branch | `RecruitTrialsPlugin.alarm` → `RecruitTrials.grantMusterKit` + `advanceTo(FIGHT)` |
-| The east camp fight | **East Lumbridge goblin camp** 3254,3234 — Knights of Lumbridge + ambient goblins (`GoblinCampPlugin`, presence-gated) | `RecruitTrials.Step.FIGHT` kill counter (`onAnyNpcDeath`) | Tutorial pack moved here (`RecruitTrials.TUTORIAL_GOBLIN_TILES`); credit = every FIGHT-step player in the goblin's `damageMap`, so knights out-damaging a recruit can't strand them |
+| The east camp fight | **East Lumbridge goblin camp** 3254,3234 — Knights of Lumbridge + ambient goblins (`GoblinCampPlugin`, presence-gated) | `RecruitTrials.Step.FIGHT` kill counter (`onAnyNpcDeath`) | Tutorial pack moved here (`RecruitTrials.TUTORIAL_GOBLIN_TILES`); credit = every FIGHT-step player in the goblin's `damageMap`, so knights out-damaging a recruit can't strand them. `DamageMap.playerDamage()` must match `entityType.isPlayer` — a logged-in account is `EntityType.CLIENT`, and the old `== PLAYER` filter credited nobody real (fixed 2026-09-13) |
 | "It was a probe" + lineage breadcrumb | Sergeant Damien | REPORT reward (10,000 gp + bronze kit) | `RecruitTrialsPlugin.report` → `grantReportReward` (REPORT→RANK) |
 | First rank = recognition | **Duke Horacio** 3220,3211 | Feudal ranks (`RankPurchase`, `RankEvents.onRankBought`) | `DukeHoracioPlugin.ensureIntro` (RANK-step opener) + `RecruitTrials.onBuyRank` (RANK→SLAY) — **mechanics unchanged** |
 | Cleanup contract | **Vannaka** 3222,3212 | Slayer war-contracts (kill credit by cache NAME → any goblin anywhere) | `SlayerPlugin.assignTask` SLAY branch: `npc.goblin` ×5 (was castle rats ×5); `onSlayerTaskComplete` (SLAY→MINE_BRIEF) |
@@ -64,6 +64,14 @@ special attack instance / wave (the camp's living skirmish already reads as the 
   went the same way: the world-spawn dataset stats those ids as aggressive level-5 Goblin Village
   goblins (15–16 hp, def 13–19), and with walk radius 8 they wandered into the fight — now
   `goblin_3039` / `goblin_3054`. Every goblin at the camp is a level-2 that never attacks first.
+- **Client highlight:** the FIGHT step highlights `Npcs.EAST_CAMP_GOBLINS` (the level-2 family:
+  2484, 3028-3048, 3051-3054, 3073-3076) only within 16 tiles of 3254,3234 (`nearTarget`, matching
+  `GoblinCampPlugin.GOBLIN_SCAN_RADIUS`) — the goblins right across the bridge, never the frontier
+  line outside the city gate. The arrow hands off to the on-creature highlight once one is within 15
+  tiles. Before this, the step used the global `LofQuest.GOBLINS` redirect, which (a) lacked the
+  level-2 ids, so nothing at the camp lit up and the arrow sat on 3254,3234, and (b) lit up the
+  frontier goblins past the gate. `GOBLINS` (now including the level-2 ids) still drives the SLAY
+  hunt highlight, where any goblin anywhere counts.
 - No separate tutorial battlefield, no duplicate goblin location: the iconic Lumbridge goblins ARE
   the opening battle.
 
