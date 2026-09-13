@@ -418,7 +418,7 @@ class SlayerPlugin(
         if (p.attr[SLAYER_INTRO_DONE_ATTR] == true) return
         p.attr[SLAYER_INTRO_DONE_ATTR] = true
         if (RecruitTrials.step(p) == RecruitTrials.Step.SLAY) {
-            say(p, "So you're Damien's new recruit. Heard you fought at the east camp. I'm Vannaka — I sign the war-contracts.")
+            say(p, "So you're Damien's new recruit. I'm Vannaka —<br>I sign the war-contracts.")
             chatPlayer(p, "The Duke told me to take a war contract.")
         } else {
             say(p, "So you've found your way to me. I'm Vannaka — I hand out the war-contracts.")
