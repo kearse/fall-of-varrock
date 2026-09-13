@@ -64,46 +64,92 @@ class PkRewardsPlugin(
         Ware("item.saradomin_brew4", 35),
     )
 
-    /** Spec weapons — the PKer's chase. Claws/DWH priced above the captains route (R3). */
+    /**
+     * Spec weapons — the PKer's chase. Claws/DWH priced above the captains route (R3).
+     *
+     * **Repriced ×3 on 2026-09-13** (operator decision; community report "blood money so easy to
+     * make now, will prices be updated?"). The 2026-09-12 bot-bounty change is what moved: a slain
+     * Rogue Knight now pays [org.alter.plugins.content.bots.RogueBounty] with no cap and no guard
+     * (named knights double), so an elite deep-wilderness camp yields ~200 BM a kill — on the order
+     * of 15–25k BM an hour of sustained farming, where before a bot paid in gear rather than
+     * currency. At the old shelf that bought an AGS in well under an hour.
+     *
+     * A FLAT ×3 across all three gear wings, deliberately: the relative pricing between wings was
+     * already tuned (AGS over claws over DWH; the captains route stays the cheaper path), so a
+     * multiplier preserves that tuning and is trivial to revert or re-scale if kill data says
+     * otherwise. Target grind at the new numbers: whip ~30 min, AGS/claws 2–3 h, voidwaker and the
+     * Vesta's longsword 4–6 h. Supplies are NOT repriced — they're the consumption loop that keeps
+     * Blood Money flowing back out, and taxing food punishes the fighting, not the farming.
+     */
     private val specWares = listOf(
-        Ware("item.voidwaker", 30_000),
-        Ware("item.elder_maul", 20_000),
-        Ware("item.elder_maul_or", 25_000),
-        Ware("item.ancient_godsword", 20_000),
-        Ware("item.armadyl_godsword", 15_000),
-        Ware("item.dragon_claws_or", 16_000),
-        Ware("item.burning_claws", 14_000),
-        Ware("item.dragon_claws", 12_000),
-        Ware("item.dragon_warhammer", 10_000),
-        Ware("item.abyssal_whip", 3_000),
-        Ware("item.granite_maul", 1_500),
+        Ware("item.voidwaker", 90_000),
+        Ware("item.elder_maul", 60_000),
+        Ware("item.elder_maul_or", 75_000),
+        Ware("item.ancient_godsword", 60_000),
+        Ware("item.armadyl_godsword", 45_000),
+        Ware("item.dragon_claws_or", 48_000),
+        Ware("item.burning_claws", 42_000),
+        Ware("item.dragon_claws", 36_000),
+        Ware("item.dragon_warhammer", 30_000),
+        Ware("item.abyssal_whip", 9_000),
+        Ware("item.granite_maul", 4_500),
     )
 
-    /** The wilderness prestige sets — rank-gated in Title.kt but previously sourceless. */
+    /** The wilderness prestige sets — rank-gated in Title.kt but previously sourceless. (×3, see [specWares].) */
     private val wildySetWares = listOf(
-        Ware("item.vestas_longsword", 25_000),
-        Ware("item.vestas_chainbody", 15_000),
-        Ware("item.vestas_plateskirt", 12_000),
-        Ware("item.statiuss_warhammer", 20_000),
-        Ware("item.statiuss_full_helm", 10_000),
-        Ware("item.statiuss_platebody", 15_000),
-        Ware("item.statiuss_platelegs", 12_000),
-        Ware("item.morrigans_coif", 8_000),
-        Ware("item.morrigans_leather_body", 12_000),
-        Ware("item.morrigans_leather_chaps", 10_000),
-        Ware("item.zuriels_hood", 8_000),
-        Ware("item.zuriels_robe_top", 12_000),
-        Ware("item.zuriels_robe_bottom", 10_000),
+        Ware("item.vestas_longsword", 75_000),
+        Ware("item.vestas_chainbody", 45_000),
+        Ware("item.vestas_plateskirt", 36_000),
+        Ware("item.statiuss_warhammer", 60_000),
+        Ware("item.statiuss_full_helm", 30_000),
+        Ware("item.statiuss_platebody", 45_000),
+        Ware("item.statiuss_platelegs", 36_000),
+        Ware("item.morrigans_coif", 24_000),
+        Ware("item.morrigans_leather_body", 36_000),
+        Ware("item.morrigans_leather_chaps", 30_000),
+        Ware("item.zuriels_hood", 24_000),
+        Ware("item.zuriels_robe_top", 36_000),
+        Ware("item.zuriels_robe_bottom", 30_000),
     )
 
-    /** Revenant weapons + their wilderness upgrades (moved from the Warlord's Armoury). */
+    /** Revenant weapons + their wilderness upgrades (moved from the Warlord's Armoury). (×3, see [specWares].) */
     private val revenantWares = listOf(
-        Ware("item.craws_bow", 6_000),
-        Ware("item.viggoras_chainmace", 6_000),
-        Ware("item.thammarons_sceptre", 6_000),
-        Ware("item.webweaver_bow", 12_000),
-        Ware("item.ursine_chainmace", 12_000),
-        Ware("item.accursed_sceptre", 10_000),
+        Ware("item.craws_bow", 18_000),
+        Ware("item.viggoras_chainmace", 18_000),
+        Ware("item.thammarons_sceptre", 18_000),
+        Ware("item.webweaver_bow", 36_000),
+        Ware("item.ursine_chainmace", 36_000),
+        Ware("item.accursed_sceptre", 30_000),
+    )
+
+    /**
+     * **Untradeables** — the account-bound PvP staples, added 2026-09-13 alongside the community
+     * suggestion that PK bots stop dropping untradeables ([org.alter.plugins.content.bots.PkLootPools]).
+     *
+     * Each of these is a minigame or quest reward in OSRS whose source does NOT exist on this
+     * server — defenders are the Warriors' Guild, the fighter torso is Barbarian Assault, barrows
+     * gloves are Recipe for Disaster — so pulling them out of the bot pools without a replacement
+     * would have made them unobtainable outright. They sit here instead: bought at a KNOWN Blood
+     * Money price, which is the point of the suggestion (a predictable earn, not a random flood off
+     * a respawning bot). Void is deliberately absent — Pest Control already sells it, and that
+     * shelf stays the only source.
+     *
+     * Priced on the same scale as the rest of the shelf: the defender ladder tops out below a spec
+     * weapon, since a defender is a slot-filler rather than a fight-winner. The **avernic defender
+     * is NOT sold** — its tradeable hilt drops from elite bots and combines with the dragon
+     * defender bought here, so the best-in-slot defender stays a chase with a shop floor under it.
+     */
+    private val untradeableWares = listOf(
+        Ware("item.barrows_gloves", 12_000),
+        Ware("item.fighter_torso", 10_000),
+        Ware("item.dragon_defender", 9_000),
+        Ware("item.rune_defender", 3_000),
+        Ware("item.adamant_defender", 1_200),
+        Ware("item.mithril_defender", 600),
+        Ware("item.black_defender", 400),
+        Ware("item.steel_defender", 250),
+        Ware("item.iron_defender", 150),
+        Ware("item.bronze_defender", 100),
     )
 
     init {
@@ -111,10 +157,13 @@ class PkRewardsPlugin(
         shopOf(SPEC_WEAPONS, specWares)
         shopOf(WILDY_SETS, wildySetWares)
         shopOf(REVENANT, revenantWares)
+        shopOf(UNTRADEABLES, untradeableWares)
         // PvP gear sold for Blood Money may never be NPC-converted to gp (alch / Trading Post / General
         // Store): the shelf is the pity route, the player market is where it changes hands. Supplies
         // stay vendorable. (2026-09 arbitrage audit: this vendor never registered with the guard.)
-        SpecialShopGuard.register((specWares + wildySetWares + revenantWares).mapNotNull { resolveOrNull(it.key) })
+        SpecialShopGuard.register(
+            (specWares + wildySetWares + revenantWares + untradeableWares).mapNotNull { resolveOrNull(it.key) },
+        )
         // (The "Buy Blood Money" coin tab was removed 2026-09-02 at the operator's request:
         // blood money is earned from kills, not bought.)
 
@@ -151,12 +200,13 @@ class PkRewardsPlugin(
         }
     }
 
-    /** The four Blood-Money wings as one tabbed storefront (see ShopTabs) — no dialogue hop. */
+    /** The five Blood-Money wings as one tabbed storefront (see ShopTabs) — no dialogue hop. */
     private val traderTabs = listOf(
         ShopTabs.Tab("Supplies", SUPPLIES, icon = "item.shark"),
         ShopTabs.Tab("Spec weapons", SPEC_WEAPONS, icon = "item.armadyl_godsword"),
         ShopTabs.Tab("Wildy sets", WILDY_SETS, icon = "item.vestas_longsword"),
         ShopTabs.Tab("Revenant", REVENANT, icon = "item.craws_bow"),
+        ShopTabs.Tab("Untradeables", UNTRADEABLES, icon = "item.dragon_defender"),
     )
 
     private fun shopOf(name: String, wares: List<Ware>) {
@@ -195,6 +245,7 @@ class PkRewardsPlugin(
         private const val SPEC_WEAPONS = "PK Rewards - Spec Weapons"
         private const val WILDY_SETS = "PK Rewards - Wilderness Sets"
         private const val REVENANT = "PK Rewards - Revenant Weapons"
+        private const val UNTRADEABLES = "PK Rewards - Untradeables"
         private const val TRADER = "npc.emblem_trader"
         private const val STOCK = 100
     }

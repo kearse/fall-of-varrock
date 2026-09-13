@@ -55,6 +55,17 @@ class OSRSPlugin(
                 if (getSkills().getBaseLevel(Skills.HITPOINTS) < 10) {
                     getSkills().setBaseLevel(Skills.HITPOINTS, 10)
                 }
+                // Herblore starts at 3, not 1 — the same "floor it on login" rule as Hitpoints above.
+                // In OSRS the first three levels come from Druidic Ritual, and Herblore is the one
+                // skill you cannot train a single point of without it: every unfinished potion needs
+                // level 3+, so a fresh account here could buy the herbs and vials the shop hub sells
+                // and then had no way to use them (player report 2026-09-13 — "all accounts should be
+                // set with level 3 herb since no quest exist"). This server has NO quest requirements
+                // on skills, so the quest's grant is applied unconditionally instead of gated behind
+                // content that does not exist. Only ever raises: an account already past 3 is untouched.
+                if (getSkills().getBaseLevel(Skills.HERBLORE) < 3) {
+                    getSkills().setBaseLevel(Skills.HERBLORE, 3)
+                }
                 calculateAndSetCombatLevel()
                 sendWeaponComponentInformation()
                 sendCombatLevelText()
