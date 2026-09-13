@@ -59,4 +59,4 @@ Both are announced realm-wide. The Quartermaster still sells 3rd age as a slow, 
 
 ## Lumbridge is never besieged
 
-The war is fought *out* of Lumbridge, never against it: the Last Free City's shops, bank and gates stay open no matter how the offensives go. General Zo at the castle reports the live war and musters your [companions](/wiki/companions); the frontier goblins outside the gate are the recruit's training ground, not a siege.
+The war is fought *out* of Lumbridge, never against it: the Last Free City's shops, bank and gates stay open no matter how the offensives go. General Zo at the castle reports the live war and musters your [companions](/wiki/companions); the goblin camp east of the castle, across the bridge, is the recruit's training ground, not a siege — the first hostile line outside the gate is the hobgoblins, twenty tiles out.

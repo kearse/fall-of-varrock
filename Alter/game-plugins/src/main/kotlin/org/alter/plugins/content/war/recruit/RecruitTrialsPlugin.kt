@@ -51,8 +51,8 @@ class RecruitTrialsPlugin(
     private val sergeantId = runCatching { getRSCM(sergeant) }.getOrDefault(-1)
 
     /** Goblin ids that count for the FIGHT step: the tutorial pack ([RecruitTrials.TUTORIAL_GOBLIN_NPC]),
-     *  the frontier front line `goblin_2245` (CityFrontiers level 1) and the plain `goblin`. A
-     *  cache-name fallback in [isGoblin] catches any other goblin variant regardless of id. */
+     *  the plain `goblin`, and `goblin_2245` (kept for any straggler of the retired Lumbridge frontier
+     *  goblin line). A cache-name fallback in [isGoblin] catches any other goblin variant regardless of id. */
     private val goblinIds = listOf(RecruitTrials.TUTORIAL_GOBLIN_NPC, "npc.goblin", "npc.goblin_2245")
         .mapNotNull { runCatching { getRSCM(it) }.getOrNull() }.toSet()
 

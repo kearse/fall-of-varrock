@@ -144,23 +144,6 @@ object CityFrontiers {
 
     // --- combat defs (TUNE to taste) ---
 
-    /** FRONT line — the main war mass at the city edge. Sturdy on purpose (real hp + bite) so
-     *  the brawl with the knights LASTS and doesn't read as a one-sided mow-down. Goblin
-     *  attack/block/death animations (6184/6183/6182). */
-    private val GOBLIN_DEF = NpcCombatDef.DEFAULT.copy(
-        // TRUE level-2 newbie goblins: trivial stats so a fresh account can train on them safely
-        // (combined with the 1v1 front line + level-2 display override). The knights share this
-        // band and mow them, but the in-place respawn refills every slot each zone tick — the
-        // front reads as a perpetual melee, and new players can still tag their own goblin (1v1).
-        attack = 1, strength = 1, defence = 1, hitpoints = 5,
-        attackSpeed = 5,
-        attackAnimation = 6184, blockAnimation = 6183, deathAnimation = listOf(6182),
-        // aggroTargetDelay 4 = re-checks aggro every ~2.4s — still a quick hand-off to the next
-        // goblin after a kill, but half the aggro-scan rate of the old delay-2 (cheaper per tick
-        // across the whole front line). aggressiveTimer high so they don't tire of you.
-        aggressiveRadius = 6, aggroTargetDelay = 4, aggressiveTimer = 2000,
-    )
-
     /** Mid line. The hobgoblin's OWN animations: it is rigged to frame archive 425 (animations
      *  162-167), not the goblin's archive 1576. 6189/6191/6190 used to be set here, which are
      *  goblin animations — the exact skeleton mismatch the comment was trying to avoid. Confirm
@@ -199,17 +182,12 @@ object CityFrontiers {
         // goblins spawned/roamed among them.
         cityLimits = Area(3200, 3190, 3270, 3260),
         enemyLines = listOf(
-            // Level 1 — THE FRONT. Hugs the city edge (gap 1), dense (spacing 5) and big
-            // (220), so the war is right there the instant you leave the gate. The knights
-            // share this band, so this is where the brawl actually happens.
-            EnemyLine(
-                level = 1, npcName = "npc.goblin_2245", combatDef = GOBLIN_DEF,
-                gap = 1, depth = 16, spacing = 5, maxEnemies = 220, // in-place respawn keeps the line full
-                enemyNoun = "goblin", coinMin = 15, coinMax = 45,
-                singleCombat = true, // 1v1 for new players leaving town
-                combatLevelOverride = 2, // reads as a level-2 newbie goblin
-                aggroFloorRank = Title.SQUIRE.ordinal, // §4: goblins ignore Squire+ — outgrow the front line
-            ),
+            // NO goblin line at the city edge any more. The old level-1 band (220 aggressive
+            // `goblin_2245` hugging the walls at gap 1) was the first thing a fresh account met on
+            // leaving the gate, and it killed them — removed 2026-09-13 (owner's call). The new
+            // player's goblins are the east camp across the bridge (GoblinCampPlugin /
+            // The Last Free City), which is inside cityLimits and never aggros. The first frontier
+            // ring is now the hobgoblins, 20 tiles out, and they ignore Soldier+ as before.
             // Level 2 — hobgoblins a step out beyond the front. Lighter; mostly player ground.
             EnemyLine(
                 level = 2, npcName = "npc.hobgoblin_2241", combatDef = HOBGOBLIN_DEF,
@@ -227,10 +205,11 @@ object CityFrontiers {
             ),
         ),
         defenders = listOf(
-            // Knights share the GOBLIN band exactly (gap 1, depth 16 — the same start/end lines as
-            // the front line), so the two sides interleave and are always brawling right outside the
-            // city limits. Goblins respawn in place every zone tick, so the melee never runs dry.
-            // countRatio 0.3 sizes the force to the total enemy count.
+            // Knights hold the band at the city edge (gap 1, depth 16) — the old goblin front's
+            // ground. With that line gone they are a standing garrison at the walls rather than a
+            // brawl: the hostile-zone skirmish only engages enemies within reach, and the nearest
+            // are the hobgoblins 20 tiles out. countRatio 0.3 sizes the force to the total enemy
+            // count (now hobgoblins + ogres).
             DefenderLine(
                 npcName = "npc.knight_of_saradomin", combatDef = KNIGHT_DEF,
                 gap = 1, depth = 16, spacing = 6,
@@ -238,10 +217,10 @@ object CityFrontiers {
                 displayName = "Knight of Lumbridge",
             ),
         ),
-        // Southern cutoff: NOTHING (goblins or knights) spawns south of y=3199 — keeps the war
+        // Southern cutoff: NOTHING (enemies or knights) spawns south of y=3199 — keeps the war
         // out of the swamp. A wide horizontal band below the line; the frontier wraps N/E/W only.
         exclude = listOf(Area(3000, 2000, 3500, 3199)),
-        // The castle keep (shared with the siege) — roaming frontier goblins are leashed out of the
+        // The castle keep (shared with the siege) — roaming frontier enemies are leashed out of the
         // respawn courtyard and never aggro a player inside it. (Already inside cityLimits, but kept
         // explicit so the spawn is hard-protected regardless of how cityLimits is tuned.)
         keep = LUMBRIDGE_KEEP,
