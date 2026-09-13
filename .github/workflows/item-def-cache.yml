@@ -30,7 +30,12 @@ name: Item def cache edit
 #                  orders" and the "Intel report" (761) to "Damaged Temple Knight report", each
 #                  with its examine — Old Wounds' two documents (Asgarnia Quest 4) — and restart
 #   restore      — swap the pristine backup back (undoes EVERY item edit) and restart the
-#                  game container
+#                  game container.
+#                  !! runtime/cache.precommendation is the WHOLE cache as it was on 2026-08-02
+#                  (the first, failed, commendation run took it) — every cache edit made since
+#                  by the other workflows (quest relabel / loc / terrain / npc) is lost too.
+#                  Last resort only; to undo ONE item, prefer a fresh edit run that puts the
+#                  old name back (`rename`/`examine` verbs via a workflow tweak).
 #
 # Actions -> Item def cache edit -> Run workflow -> pick an action.
 
@@ -71,13 +76,17 @@ jobs:
           BACKUP=/opt/kol/runtime/cache.precommendation
           COMPOSE="docker compose -f docker-compose.prod.yml"
 
-          # ItemDefTool reads a RELATIVE "data/cache" path, so mount the live cache there and
-          # run with workdir /app. The mount is bidirectional — the tool's writes land on the
-          # host cache. (Its own data/cache-backups backup is ephemeral in the --rm container;
-          # we take a real shell-level backup below and restore from that instead.)
+          # ItemDefTool reads a RELATIVE "data/cache" path, so mount the live cache at
+          # /work/data/cache and run with workdir /work. NOT /app/data/cache: the compose
+          # service already mounts the cache there READ-ONLY, and that :ro mount wins over a
+          # `run -v` at the same path — every edit run before 2026-09-13 died on
+          # "main_file_cache.dat2 (Read-only file system)" right after its BEFORE line. The
+          # /work mount is bidirectional, so the tool's writes land on the host cache. (Its
+          # own data/cache-backups backup is ephemeral in the --rm container; we take a real
+          # shell-level backup below and restore from that instead.)
           run_tool() {
             $COMPOSE run --rm -T --no-deps \
-              -v "$CACHE":/app/data/cache -w /app --entrypoint java game \
+              -v "$CACHE":/work/data/cache -w /work --entrypoint java game \
               -cp '/app/lib/*' org.alter.tools.itemdef.ItemDefToolKt "$@"
           }
 
