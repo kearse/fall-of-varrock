@@ -61,6 +61,11 @@ class SouthernWatchPlugin(
             "The Southern Watch is Lumbridge's forward post - only those who helped raise it may travel there. Complete First Reclamation (General Zo).",
         )
 
+        // Resolve the banner BEFORE the bind: the cache and RSCM are both up by the time plugins
+        // load (Server: CacheManager.init → RSCM.init → plugins.init), and onObjOption has to be
+        // registered at load time, so the loc we bind must be known now — not at world init.
+        resolveStandard()
+
         val timer = TimerKey()
         onWorldInit {
             spawnStandard(world)
@@ -82,25 +87,67 @@ class SouthernWatchPlugin(
 
     // ---------------------------------------------------------------- the standard
 
+    /**
+     * Pick the loc to raise, and remember it on [SouthernWatch].
+     *
+     * A loc is only usable here if the player can both **see** it and **right-click** it, and the
+     * obvious candidate fails the first test: the Castle Wars standards are varbit-gated (they swap
+     * with that minigame's flag state), so spawning the gated parent id puts an object in the chunk
+     * that resolves to `transforms[0]` — nothing — on the client. That is a banner nobody can see
+     * and a quest step nobody can finish. So: walk [SouthernWatch.STANDARD_CANDIDATES], expand any
+     * varbit/varp loc into the concrete ids it transforms into, and take the first un-gated id that
+     * carries a real click option (preferring [SouthernWatch.STANDARD_OPTION]).
+     */
+    private fun resolveStandard() {
+        for (name in SouthernWatch.STANDARD_CANDIDATES) {
+            val id = runCatching { getRSCM(name) }.getOrNull() ?: continue
+            for (candidate in concreteLocs(id)) {
+                val option = clickOption(candidate) ?: continue
+                SouthernWatch.standardId = candidate
+                SouthernWatch.standardOption = option
+                logger.info {
+                    "[southern-watch] standard resolved to loc $candidate (option '$option') from '$name'" +
+                        if (candidate != id) " [varbit/varp transform of $id]" else ""
+                }
+                return
+            }
+        }
+        logger.error {
+            "[southern-watch] no usable standard loc in ${SouthernWatch.STANDARD_CANDIDATES} " +
+                "(each was missing, varbit-gated with no clickable transform, or had no click options). " +
+                "No banner will be raised; First Reclamation's establish step falls back to the ground at " +
+                "${SouthernWatch.STANDARD_TILE}."
+        }
+    }
+
+    /**
+     * [id] itself when the cache renders it as-is, otherwise the ids it transforms into — a
+     * varbit/varp loc is drawn as `transforms[state]`, so the parent id is never what a player sees
+     * or clicks. `-1` entries (the "absent" state) are dropped.
+     */
+    private fun concreteLocs(id: Int): List<Int> = runCatching {
+        val def = getObject(id)
+        if (def.varbit == -1 && def.varp == -1) listOf(id) else def.transforms?.filter { it > 0 }.orEmpty()
+    }.getOrDefault(emptyList())
+
+    /** The option to bind on [id]: Capture if it has one, else its first real option, else null. */
+    private fun clickOption(id: Int): String? = runCatching {
+        val actions = getObject(id).actions.filterNotNull().filter { it.isNotBlank() }
+        actions.firstOrNull { it.equals(SouthernWatch.STANDARD_OPTION, ignoreCase = true) } ?: actions.firstOrNull()
+    }.getOrNull()
+
     /** The banner on its stand, north of the centre stone — one shared object for everyone. */
     private fun spawnStandard(world: World) {
-        val id = runCatching { getRSCM(SouthernWatch.STANDARD_OBJ) }.getOrNull() ?: run {
-            logger.warn { "[southern-watch] '${SouthernWatch.STANDARD_OBJ}' is not in the cache; the standard was not raised." }
-            return
-        }
+        val id = SouthernWatch.standardId
+        if (id <= 0) return // resolveStandard already logged why
         world.spawn(DynamicObject(id = id, type = OBJ_TYPE, rot = 0, tile = SouthernWatch.STANDARD_TILE))
-        logger.info { "[southern-watch] standard raised at ${SouthernWatch.STANDARD_TILE}." }
+        logger.info { "[southern-watch] standard (loc $id) raised at ${SouthernWatch.STANDARD_TILE}." }
     }
 
     /** Bind the standard's option DEFENSIVELY (a raw bind on a missing option drops the whole plugin). */
     private fun bindStandard() {
-        val id = runCatching { getRSCM(SouthernWatch.STANDARD_OBJ) }.getOrNull() ?: return
-        val actions = runCatching { getObject(id).actions.filterNotNull().filter { it.isNotBlank() } }.getOrDefault(emptyList())
-        val option = actions.firstOrNull { it.equals(SouthernWatch.STANDARD_OPTION, ignoreCase = true) } ?: actions.firstOrNull()
-        if (option == null) {
-            logger.warn { "[southern-watch] standard loc $id has no click options ($actions); the quest's raise step cannot bind." }
-            return
-        }
+        val id = SouthernWatch.standardId
+        val option = SouthernWatch.standardOption ?: return
         onObjOption(id, option) {
             val p = player
             if (SouthernWatch.onCapture(p)) return@onObjOption
