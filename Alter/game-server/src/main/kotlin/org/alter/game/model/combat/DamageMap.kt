@@ -49,10 +49,17 @@ class DamageMap {
      * callers can split rewards by per-player contribution. Only entries still held
      * by the backing [WeakHashMap] are returned, so logged-out/GC'd players naturally
      * drop out — callers should still guard delivery against dead/offline players.
+     *
+     * Matches on [EntityType.isPlayer], NOT `== EntityType.PLAYER`: a real logged-in
+     * account is a [org.alter.game.model.entity.Client] whose entity type is
+     * [EntityType.CLIENT] — only bots/companions are bare `PLAYER`. The exact-match
+     * version silently returned an empty map for every human, so nothing built on it
+     * (The Last Free City's FIGHT kill credit, war-boss loot shares, the Asgarnia quest
+     * kill counters) ever credited a real player.
      */
     fun playerDamage(): Map<Player, Int> =
         map.entries
-            .filter { it.key.entityType == EntityType.PLAYER }
+            .filter { it.key.entityType.isPlayer }
             .associate { it.key as Player to it.value.totalDamage }
 
     /**
