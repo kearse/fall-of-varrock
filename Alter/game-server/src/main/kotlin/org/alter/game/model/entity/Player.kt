@@ -300,7 +300,10 @@ open class Player(world: World) : Pawn(world) {
              * We do allow players to disconnect even if they are in combat, but
              * only if their current aggressor is an npc. The gate is WHO is attacking,
              * not whether damage landed — gating on the damage map let a target x-log
-             * through a PKer's opening misses/splashes.
+             * through a PKer's opening misses/splashes. The damage-map half is a
+             * fallback for a stale LAST_HIT_BY_ATTR; asking DamageMap for PLAYER
+             * matches real clients (CLIENT) as well as bots, so a human PKer holds
+             * the gate the same way a bot does.
              */
             val stopLogout =
                 timers.has(ACTIVE_COMBAT_TIMER) &&
