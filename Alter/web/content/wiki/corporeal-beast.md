@@ -1,37 +1,30 @@
 ---
-title: Corporeal Beast - the city boss
+title: Corporeal Beast - the lair boss
 category: Minigames & Bosses
-summary: Lumbridge's apex world boss - damage-split loot, sigil mega-rares, and Lord-sponsored summons.
+summary: The Corporeal Beast now lives only in its own cave - no more Lumbridge event spawn - with its real OSRS stats and drop table.
 order: 5
-updated: 2026-08-28
-infobox: Type = City world boss; Location = North-east of Lumbridge, by the river; Teleport = `::worldboss`; Summon = `::summonboss corporeal_beast` (Lord+, 3,000,000 gp); Hitpoints = ~1,200; Requirement = Protect from Magic (Prayer 37); Loot = Pooled, split by damage; Notable drops = Sigils, Spirit shield, Draconic visage, pet
+updated: 2026-09-13
+infobox: Type = Lair boss; Location = The Corporeal Beast's cave (its real OSRS lair); Hitpoints = 2,000; Requirement = Protect from Magic (Prayer 37); Loot = Its OSRS drop table; Notable drops = Sigils, Spirit shield, Holy elixir
 ---
 
-The **Corporeal Beast** is Lumbridge's world boss, the flagship of the War's boss-raid system - and, while the old boss roster is [retired for its rebuild](/wiki/bosses-overview), the realm's boss fight. Its loot is **pooled and split by damage contribution** among everyone who fought it.
+The **Corporeal Beast** is the realm's apex lair boss. It used to double as Lumbridge's world-boss event, spawning on the open ground north-east of the city - that event spawn has been **removed**. The beast now stands only in its own cave, the same lair it has in OSRS, and the Lumbridge arena waits for the next event boss.
 
-## When it appears
+## Where it is
 
-- It spawns **on a rotation** - roughly every 5 minutes after the last kill, at the open ground north-east of Lumbridge by the river.
-- **Lords and above can force it**: `::summonboss corporeal_beast` costs 3,000,000 gp and spawns it on demand, with an allied raid squad deploying alongside. One boss per city at a time.
-- `::worldboss` teleports you to the arena.
+- It lives in **the Corporeal Beast's cave**, at its real OSRS spawn. There is no `::summonboss` for it any more and it no longer rotates into Lumbridge.
+- `::worldboss` and the portal's **World Boss Arena** entry still take you to the Lumbridge event ground, but the beast is not there.
+- The **Corporeal Beast** entry on the portal's Bosses tab is greyed out until the lair gets its own teleport route.
 
 ## The fight
 
-It's tough - around 1,200 HP with very high offensive stats. **Protect from Magic is mandatory** (Prayer 37). It's soloable by strong players but built for groups. If nobody damages it for 10 minutes it wanders off.
+It is the genuine article: **2,000 hitpoints** and the cache's real combat stats, far tougher than the tuned-down event version was. **Protect from Magic** (Prayer 37) is strongly advised. Bring a team, or come very well prepared - it is built for groups.
 
-## Loot - split by damage
+## Loot
 
-Everyone who contributes gets an independent payout scaled by damage dealt:
+The beast rolls its **real OSRS drop table** on death, rather than the pooled damage-split event loot it used to pay:
 
-- **Every kill:** counts toward your boss kill count (`::kc`) - the beast pays in drops, not tickets
-- **Always:** blood runes, death runes, super restores, sharks, 20,000-45,000 coins base
-- **Main roll:** rune gear, dragon gear, resources, magic logs or battlestaves
-- **Rare rolls** (each contributor rolls independently): Dragon boots (1/25), Dragon 2h (1/45), Dragon full helm (1/70), Dragon pickaxe (1/90)
-- **Mega-rares** (need 10+ damage dealt): **Arcane / Spectral / Elysian Sigils** (1/150 each), Blessed spirit shield (1/120), **Draconic Visage** (1/200), and the **Corporeal Critter** pet (1/700)
+- **Sigils** - the **Arcane, Spectral and Elysian sigils** at their OSRS rarity
+- **Spirit shield** and **Holy elixir** - the parts of the spirit-shield crafting chain
+- Runes, ores, herbs, food and coins as the common rolls
 
-The **MVP** (top damage) rolls the rare table twice. The sigils combine with the Blessed spirit shield into the server's best-in-slot shields - see the Spirit Shield crafting vendor in the market.
-
-## Sponsor and troop shares
-
-- The **sponsoring Lord** takes a 10% coin tithe, earns 40 prestige, and gets a bonus rare-table chance.
-- Lords who sent troops (`::sendtroops`) earn a damage share for everything their knights hit - command is profitable.
+Sigil + blessed spirit shield + 90 Prayer makes the sigil shield - see the Spirit Shield crafting vendor in the market. Because the event spawn is gone, there is no longer a doubled unique rate or an MVP bonus roll; every kill is a straight roll of the table.

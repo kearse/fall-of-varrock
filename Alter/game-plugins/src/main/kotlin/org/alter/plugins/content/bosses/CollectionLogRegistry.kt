@@ -11,8 +11,11 @@ import org.alter.rscm.RSCM.getRSCM
  * consumes.
  *
  * **Single source of truth:** the [Category.items] here must mirror the `log = true` drops in
- * each boss's loot table (currently the Corporeal Beast's `uniqueTable` in
- * [org.alter.plugins.content.war.boss.BossRegistry] / [org.alter.plugins.content.war.boss.BossLoot]).
+ * each boss's loot table (an event boss's `uniqueTable` in
+ * [org.alter.plugins.content.war.boss.BossRegistry] / [org.alter.plugins.content.war.boss.BossLoot],
+ * or a bespoke lair plugin's `log = true` drops). The Corporeal Beast page is kept for the
+ * slots players already unlocked while it was the Lumbridge event boss; its generic cave
+ * spawn does not record new slots until the lair fight is ported.
  *
  * Item/npc keys stay as RSCM strings and are resolved lazily + guarded, so an id not yet in the
  * cache is skipped rather than crashing.

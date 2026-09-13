@@ -130,7 +130,7 @@ The ladder is steep (50M to be King), so riches and power go hand in hand. Coin 
 - **The frontier:** goblins, hobgoblins, and ogres drop coin and the odd bit of gear.
 - **Slayer war-contracts:** Vannaka's tasks pay War Effort *and* feed your coffers.
 - **Skilling and selling:** gather and craft, then sell to shops or other players.
-- **Bossing:** the Corporeal Beast world-boss event (see Making Money).
+- **Bossing:** the Corporeal Beast in its cave (see Making Money).
 - **War spoils:** winning campaigns/conquests auto-banks your share — and as commander, your war-stake comes back on a win.
 
 ## See also
@@ -193,7 +193,7 @@ The Lumbridge market is deliberately *gated* so skills and content matter:
 ## The best money-makers
 1. **The frontier** — early, steady coin from goblins/hobgoblins/ogres while you train.
 2. **Slayer war-contracts** — Vannaka's tasks (\`::slayer\`) pay War Effort and let you bank kills; the reward shop sells supplies and rune gear cheaply.
-3. **The Corporeal Beast** (\`::worldboss\`) — the war's world boss. Every contributor rolls its high-value loot table by damage share, with sigils, the visage, and its pet as chase drops logged to your **Collection Log** (\`::clog\`).
+3. **The Corporeal Beast** — fought in its own cave (it no longer spawns at the Lumbridge event arena). It rolls its real OSRS drop table, with the sigils, spirit shield and holy elixir as chase drops.
 4. **War spoils** — once you can command, winning campaigns/conquests banks a share of huge loot pools (and refunds your stake on a win).
 5. **PKing** — Blood Money plus whatever your victims were risking.
 

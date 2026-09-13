@@ -1,23 +1,20 @@
 ﻿---
 title: Bosses - what's live and what's returning
 category: Minigames & Bosses
-summary: The Corporeal Beast war event is the realm's boss fight right now - the old lair roster is retired for a proper rebuild and returns one boss at a time.
+summary: The rebuilt fights are landing one at a time - the old lair roster is retired for a proper rebuild, and the Corporeal Beast now lives only in its cave.
 order: 4
-updated: 2026-08-28
+updated: 2026-09-13
 ---
 
-**The rebuilt roster is landing: the [Corporeal Beast](/wiki/corporeal-beast) war event, [Vorkath](/wiki/vorkath), [Zulrah](/wiki/zulrah), the [Alchemical Hydra](/wiki/alchemical-hydra), the [Fight Cave](/wiki/fight-cave) - and now all four [God Wars generals](/wiki/god-wars-dungeon) at once.** The rest of the old lair roster - KBD, Barrows, the wilderness bosses and the rest - has been **temporarily retired**. Those fights weren't up to our standard, so rather than leave rough versions live we've pulled them wholesale and are rebuilding each one properly. They'll come back **one at a time** as finished, accurate fights - watch [What's coming next](/wiki/coming-soon) and the in-game news for each return.
+**The rebuilt roster is landing: [Vorkath](/wiki/vorkath), [Zulrah](/wiki/zulrah), the [Alchemical Hydra](/wiki/alchemical-hydra), the [Fight Cave](/wiki/fight-cave) - and now all four [God Wars generals](/wiki/god-wars-dungeon) at once.** The rest of the old lair roster - KBD, Barrows, the wilderness bosses and the rest - has been **temporarily retired**. Those fights weren't up to our standard, so rather than leave rough versions live we've pulled them wholesale and are rebuilding each one properly. They'll come back **one at a time** as finished, accurate fights - watch [What's coming next](/wiki/coming-soon) and the in-game news for each return.
 
-## The Corporeal Beast (Event)
+## The Corporeal Beast
 
-The War's city world boss, fought at the **Lumbridge event arena** - and the best PvM money in the game today:
+The Corporeal Beast **no longer spawns at the Lumbridge event arena**. It lives only in its own cave now, with its real OSRS stats and drop table - the sigils, the spirit shield and the holy elixir all drop there. There is no `::summonboss` for it any more. Details: [Corporeal Beast](/wiki/corporeal-beast).
 
-- It spawns **on a rotation** (roughly every 5 minutes after the last kill), and **Lords and above can summon it on demand**: `::summonboss corporeal_beast` costs 3,000,000 gp and deploys an allied raid squad alongside.
-- Get there with `::worldboss`, or the teleport portal's **Bosses tab â†’ "Corp Beast (Event)"**.
-- Loot is **pooled and split by damage contribution** - everyone who fought it gets an independent payout, no loot scramble. Every boss kill anywhere counts toward `::kc`, and the grand total pays two cosmetics: the **Champion's cape** at 100 boss kills and the **Divine halo** at 500.
-- The mega-rares live here: **Arcane / Spectral / Elysian sigils**, the **blessed spirit shield** (sigil + shield craft into the server's best-in-slot shields), the **draconic visage**, and the **Corporeal Critter** pet.
+## The World Boss Arena
 
-Full mechanics, drop rates and sponsor shares: [Corporeal Beast](/wiki/corporeal-beast).
+The Lumbridge event ground (`::worldboss`, or the portal's **Bosses tab → "World Boss Arena"**) is the War's city world-boss arena. With the beast gone to its cave it is **empty for now** - the next event boss will spawn there on a rotation, with Lords able to summon it on demand, and its loot **pooled and split by damage contribution**. Every boss kill anywhere counts toward `::kc`, and the grand total pays two cosmetics: the **Champion's cape** at 100 boss kills and the **Divine halo** at 500.
 
 ## The rebuilt fights
 
@@ -39,7 +36,7 @@ All are in the teleport portal's Bosses tab.
 
 ## Collection log
 
-Notable boss drops are tracked automatically - you'll see a "New Collection Log slot" message on a first-time drop. Right now the log covers the Corporeal Beast, Vorkath, Zulrah, the Alchemical Hydra and all four God Wars generals; pages return as each rebuilt boss ships.
+Notable boss drops are tracked automatically - you'll see a "New Collection Log slot" message on a first-time drop. Right now the log covers Vorkath, Zulrah, the Alchemical Hydra and all four God Wars generals; pages return as each rebuilt boss ships (the Corporeal Beast's page comes back when its lair fight is rebuilt - its cave drops don't log yet).
 
 - `::clog` - opens the native OSRS collection log interface
 - `::cl` - plain text readout of every category and what you've ticked off

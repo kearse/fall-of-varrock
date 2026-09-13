@@ -50,6 +50,10 @@ class WorldBossPlugin(
 
         // ::summonboss <key> — Lord+ pays to summon a boss into their city (+ a backing raid).
         onCommand("summonboss", description = "Summon a boss to your city (Lord+, costs coins)") {
+            if (BossRegistry.all.isEmpty()) {
+                player.message("<col=801700>No boss can be summoned right now.</col>")
+                return@onCommand
+            }
             val key = player.getCommandArgs().getOrNull(0)
             val def = key?.let { BossRegistry.byKey(it) }
             if (def == null) {

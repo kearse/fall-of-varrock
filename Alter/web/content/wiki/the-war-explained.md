@@ -28,7 +28,7 @@ The scheduled **marches** are the free, no-rank way in - see [Marches - the real
 
 Fighting beside your [companion](/wiki/companions)? His blows count as **yours** - one share, one service record, coins to your bank.
 
-Commands: `::march`, `::marches`, `::operation`, `::bounties`, `::sendtroops`, `::summonboss corporeal_beast`, `::campaign`, `::conquest`. Check the Realm Supplies stockpile anytime with `::supply` - it is filled by skillers handing supplies to the Quartermaster in The Mire (see [Skilling & the war effort](/wiki/skilling-overview)) and spent only by campaigns and conquests.
+Commands: `::march`, `::marches`, `::operation`, `::bounties`, `::sendtroops`, `::summonboss`, `::campaign`, `::conquest`. Check the Realm Supplies stockpile anytime with `::supply` - it is filled by skillers handing supplies to the Quartermaster in The Mire (see [Skilling & the war effort](/wiki/skilling-overview)) and spent only by campaigns and conquests.
 
 ## Troop command
 

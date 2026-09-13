@@ -11,8 +11,8 @@ import org.alter.game.plugin.PluginRepository
 import org.alter.rscm.RSCM.getRSCM
 
 /**
- * The **spirit shield crafting chain** — the payoff for the Corporeal Beast's drops
- * ([org.alter.plugins.content.war.boss.BossRegistry]). It mirrors OSRS:
+ * The **spirit shield crafting chain** — the payoff for the Corporeal Beast's drops (its cave
+ * spawn rolls the OSRS table from `npc_drops.json`). It mirrors OSRS:
  *
  *  1. `spirit_shield` + `holy_elixir` → `blessed_spirit_shield`  (needs [BLESS_PRAYER] Prayer)
  *  2. `blessed_spirit_shield` + a sigil → the matching sigil shield (needs [ATTACH_PRAYER] Prayer)

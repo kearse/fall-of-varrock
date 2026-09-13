@@ -16,7 +16,7 @@ import org.alter.plugins.content.interfaces.panel.TabbedPanel
  *    is the in-progress visual path; it's verified/tuned against a live client.
  *
  * Recording into the log happens in each boss's loot code (KBD/wilderness `DropTable` `log=true`,
- * Corp Beast `BossLoot.grantUnique`) via [CollectionLog.record].
+ * event bosses via `BossLoot.grantUnique`) through [CollectionLog.record].
  */
 class CollectionLogPlugin(
     r: PluginRepository,

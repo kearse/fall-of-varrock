@@ -1,9 +1,7 @@
 package org.alter.plugins.content.war.boss
 
 import org.alter.game.model.Tile
-import org.alter.plugins.content.bosses.DropEntry
 import org.alter.plugins.content.bosses.DropTable
-import org.alter.plugins.content.war.Cities
 import org.alter.rscm.RSCM.getRSCM
 
 /**
@@ -81,83 +79,20 @@ data class BossUnique(
  * The boss roster. **Adding a boss = adding a [BossDef] here.** For v1 only Lumbridge
  * (city id 1) exists, so every boss lists a Lumbridge spawn tile.
  *
- * v1 ships a single APEX world boss: the **Corporeal Beast** — a genuine cache boss model
- * (npc 319), one of the largest and most menacing in the game, and the canonical source of
- * "avatar"-tier mega-rares (the spirit-shield sigils + its pet). Tuned hard-but-soloable so
- * a strong solo can fell it, with the sigils gated behind the independent [uniqueTable].
- * Lighter warm-up bosses can be added back here later without touching any other code.
+ * The roster is currently EMPTY. The Corporeal Beast used to be the Lumbridge event boss
+ * (spawned on the open ground NE of the city at 3247,3319), but it now lives only at its
+ * real lair: the cache spawns in `npc_spawns.json` (2993,4382,2 / 2993,4254,2) with its
+ * full stats and OSRS drop table from `npc_combat.json` / `npc_drops.json`. Registering it
+ * here again would re-bind a death handler on `npc.corporeal_beast`, which makes the
+ * world-spawn loader prune those lair spawns (see `WorldSpawnsPlugin.finalizeSpawnData`).
+ *
+ * Every consumer ([BossScheduler], [BossSummon], `WorldBossPlugin`) tolerates an empty
+ * roster: no passive rotation, `::summonboss` says nothing can be summoned, and
+ * `::worldboss` still teleports to the (empty) arena. Add the next event boss as a
+ * [BossDef] below — nothing else needs touching.
  */
 object BossRegistry {
-    private const val LUM = Cities.DEFAULT_CITY_ID // 1
-
-    val all: List<BossDef> = listOf(
-        BossDef(
-            key = "corporeal_beast",
-            npcName = "npc.corporeal_beast",
-            displayName = "Corporeal Beast",
-            tier = 3,
-            cities = listOf(LUM),
-            // Open ground NE of Lumbridge by the river — outside the safe keep. TUNE.
-            // The Corp Beast is a 5x5 model, so give it clear ground.
-            spawnTiles = mapOf(LUM to Tile(3247, 3319, 0)),
-            // Hard-but-soloable: ~1200 HP, tough stats a strong solo in good gear/prayer can beat.
-            atk = 180, str = 200, def = 160, hp = 1_200,
-            combatLevel = 785, // its real level — looks terrifying on the client
-            coinDrop = 20_000..45_000,
-            // HIGH-VALUE tiered table — each contributor rolls it (MVP twice). Value lives in
-            // gear/resources/chase items (tradeable, sinkable) rather than minted coins, so an
-            // apex kill is a real payday without flooding gp. TUNE freely.
-            dropTable = DropTable(
-                // Every kill: a chunk of PK supplies + a resource bundle (always useful).
-                always = listOf(
-                    DropEntry("item.blood_rune", 80, 160),
-                    DropEntry("item.death_rune", 80, 160),
-                    DropEntry("item.super_restore4", 2, 4),
-                    DropEntry("item.shark", 5, 10),
-                ),
-                // One weighted pick: solid rune gear + resources common, dragon-tier the uncommon reward.
-                main = listOf(
-                    DropEntry("item.rune_platebody", weight = 28),
-                    DropEntry("item.rune_platelegs", weight = 28),
-                    DropEntry("item.rune_kiteshield", weight = 24),
-                    DropEntry("item.rune_scimitar", weight = 24),
-                    DropEntry("item.runite_ore", 2, 4, weight = 22),
-                    DropEntry("item.dragon_bones", 10, 20, weight = 22),
-                    DropEntry("item.magic_logs", 20, 40, weight = 18),
-                    DropEntry("item.battlestaff", 5, 10, weight = 16),
-                    DropEntry("item.dragon_dagger", weight = 10),
-                    DropEntry("item.dragon_med_helm", weight = 10),
-                    DropEntry("item.dragon_longsword", weight = 8),
-                    DropEntry("item.dragon_mace", weight = 8),
-                    DropEntry("item.dragon_platelegs", weight = 4),
-                    DropEntry("item.dragon_chainbody", weight = 3),
-                ),
-                // Independent chase rolls — the headline "nice drop" pieces (avatar-tier = uniqueTable).
-                rare = listOf(
-                    DropEntry("item.dragon_boots", oneInN = 25),
-                    DropEntry("item.dragon_2h_sword", oneInN = 45),
-                    DropEntry("item.dragon_full_helm", oneInN = 70, announce = true, log = true),
-                    DropEntry("item.dragon_pickaxe", oneInN = 90, announce = true, log = true),
-                ),
-            ),
-            summonCost = 3_000_000,
-            titheCut = 0.10,
-            prestigeAward = 40,
-            bossPointsPerKill = 25,
-            // Event bonus: the Lumbridge event spawn drops its avatar-tier uniques at 2× the base
-            // (lair) odds — the payoff for rallying the public boss over farming the cave solo.
-            eventUniqueMultiplier = 2,
-            // The avatar-tier mega-rares — true independent rolls, server-announced + logged.
-            uniqueTable = listOf(
-                BossUnique("item.arcane_sigil", oneInN = 150),
-                BossUnique("item.spectral_sigil", oneInN = 150),
-                BossUnique("item.elysian_sigil", oneInN = 150),
-                BossUnique("item.blessed_spirit_shield", oneInN = 120),
-                BossUnique("item.draconic_visage", oneInN = 200),
-                BossUnique("item.pet_corporeal_critter", oneInN = 700),
-            ),
-        ),
-    )
+    val all: List<BossDef> = emptyList()
 
     fun byKey(key: String): BossDef? = all.firstOrNull { it.key.equals(key, ignoreCase = true) }
 

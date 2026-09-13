@@ -55,7 +55,7 @@ Knight is the first big power spike:
 
 - **Rune, granite and void** armour (with mystic and blessed d'hide for the other styles).
 - Your **first [companion](/wiki/companions)** - a levelable bot ally who fights beside you.
-- The **[Corporeal Beast war event](/wiki/corporeal-beast)** opens up in practice - join a kill, earn a damage share and tradeable **Boss tickets** for the reward shops. (The wider [boss roster](/wiki/bosses-overview) is retired for a rebuild and returns one fight at a time.)
+- The **[Corporeal Beast](/wiki/corporeal-beast)** opens up in practice - take a team into its cave for sigils and spirit-shield parts. (The wider [boss roster](/wiki/bosses-overview) is retired for a rebuild and returns one fight at a time.)
 - The **[Rogue Knight ladder](/wiki/rogue-knights)** keeps climbing with you - mid-ladder knights teach real switches, freezes and spec combos, and pay the Blood Money and unlocks to gear up for the next.
 
 This is also when the **wilderness** starts making sense. The ladder's safe road camps are your PK schooling; then hunt for real: player kills pay **[Blood Money](/wiki/pk-rewards-and-stats)** and drop their risk as a [loot key](/wiki/wilderness-loot-keys), and [PK bots](/wiki/pk-bots-and-highwaymen) guarantee you fights at every depth - and pay half-rate Blood Money themselves. [Death here is OSRS-standard](/wiki/death-and-item-protection) - keep 3, risk the rest.
@@ -66,7 +66,7 @@ Lord removes the armour ceiling entirely - **dragon, barrows, Armadyl, ancestral
 
 - `::operation <target>` - sponsor your own public march on any target from `::marches`; anyone can join, and you take the commander's tithe if it wins.
 - `::sendtroops` - sponsor a knight squad and earn a damage share on everything they kill.
-- `::summonboss` - summon a **city boss** like the [Corporeal Beast](/wiki/corporeal-beast) for a pooled, damage-split raid.
+- `::summonboss` - summon a **city boss** to the [World Boss Arena](/wiki/bosses-overview) for a pooled, damage-split raid (no boss is on the event roster right now).
 - A **second companion** joins your warband.
 
 Your gear ceiling rises to match: Boss tickets buy the endgame chase gear at the Warlord's Armoury, [the Forge](/wiki/the-forge) upgrades rune into dragon, the [Royal Smith's war-forge](/wiki/war-forging) turns war Commendations into Torva, Masori and Ancestral, and Blood Money buys the wilderness prestige sets (Vesta's, Statius's, Morrigan's, Zuriel's) that only PKers can wear proudly. The retired elite bosses (God Wars, Vorkath, Nex and the rest) return here, one rebuilt fight at a time - see [What's coming next](/wiki/coming-soon).
@@ -81,7 +81,7 @@ This is the loop the whole server bends toward: skillers fill the Realm Supplies
 
 The rank ladder is the spine, but you climb it however you like to play:
 
-- **The PvMer** - drop tables → slayer contracts → the Corporeal Beast war event → the Armoury's ticket catalogue (and the rebuilt boss roster as it returns). Currency: coins + Boss tickets.
+- **The PvMer** - drop tables → slayer contracts → the Corporeal Beast's cave → the Armoury's ticket catalogue (and the rebuilt boss roster as it returns). Currency: coins + Boss tickets.
 - **The PKer** - the Rogue Knight ladder → wilderness loot keys → Elo climb → spec weapons and prestige sets. Currency: Blood Money.
 - **The skiller** - Mire loops → Quartermaster deposits → supply meter → contracts. Currency: coins + War Effort (and campaigns literally can't launch without you).
 - **The soldier** - marches → captain bounties → Lord operations → campaigns → troop command. Currency: pooled spoils + Commendations + prestige.

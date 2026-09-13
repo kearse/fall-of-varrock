@@ -22,7 +22,7 @@ The **teleport portal** at Lumbridge home is the fastest way anywhere. It's orga
 | Basics | Home, market, prayer altar |
 | Skilling | The Mire hub + a stop for every skill, including Runecraft (the fire altar) and Farming (the flowerbeds) |
 | War | Varrock raid, frontiers, Goblin Warren, The Last Free City (Sergeant Damien), and the **Southern Watch** - the stone-circle forward post south of Varrock, unlocked by [First Reclamation](/wiki/first-reclamation) |
-| Bosses | **Corp Beast (Event)** - the [war world boss](/wiki/corporeal-beast) - and every rebuilt fight as it returns: the [lair](/wiki/bosses-overview), [wilderness](/wiki/wilderness-bosses), [slayer](/wiki/slayer-bosses), GWD and story bosses. Slayer bosses need the Slayer level (Kraken 87, Cerberus 91, Thermy 93, Hydra 95) before the portal will take you |
+| Bosses | **World Boss Arena** - the Lumbridge [war world-boss](/wiki/bosses-overview) ground (empty until the next event boss; the [Corporeal Beast](/wiki/corporeal-beast) now lives only in its cave) - and every rebuilt fight as it returns: the [lair](/wiki/bosses-overview), [wilderness](/wiki/wilderness-bosses), [slayer](/wiki/slayer-bosses), GWD and story bosses. Slayer bosses need the Slayer level (Kraken 87, Cerberus 91, Thermy 93, Hydra 95) before the portal will take you |
 | Wilderness | The [bot zones](/wiki/pk-bots-and-highwaymen) by depth, level 5 → 55 |
 | Slayer | Vannaka and the **Karuulm Slayer Dungeon** (wyrms, drakes, hydras, sulphur lizards) |
 | Minigames | [Wizard Tower](/wiki/wizard-tower), Fight Cave, Moons of Peril, Senntisten, Pest Control, Wintertodt - the rest of the tab is greyed-out **coming soon** entries |
