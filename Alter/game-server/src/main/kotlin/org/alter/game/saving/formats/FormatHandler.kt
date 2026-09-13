@@ -17,6 +17,12 @@ abstract class FormatHandler(open val collectionName : String) {
 
     abstract fun playerExists(client : Client) : Boolean
 
+    /**
+     * The stored document for [loginUsername] (case-insensitive), or null if there is none.
+     * For lookups of players who are not online (e.g. "Add Friend" on an offline name).
+     */
+    abstract fun findDocument(loginUsername : String) : Document?
+
     abstract fun parseDocument(client : Client) : Document
 
     abstract fun loadAll() : Map<String,Document>

@@ -30,6 +30,7 @@ object PlayerSaving {
         TimerSerialisation(),
         ContainersSerialisation(),
         VarpSerialisation(),
+        SocialSerialisation(),
     )
 
     fun init(gameContext: GameContext) {
@@ -108,6 +109,7 @@ object PlayerSaving {
                 client.attr.put(APPEARANCE_SET_ATTR, false)
                 client.tile = client.world.gameContext.home
                 client.username = displayName ?: client.loginUsername
+                accountDoc?.let { PlayerDetails.rememberAccount(client.loginUsername, it) }
                 client.uid = PlayerUID(client.username)
                 // Website-registered account: the site stamps createdAt; fall back to now.
                 client.attr.put(ACCOUNT_CREATED_AT_ATTR, accountCreatedAt(accountDoc) ?: System.currentTimeMillis())
@@ -168,9 +170,12 @@ object PlayerSaving {
         return try {
             attributes?.let {
                 documents.forEach { decoder ->
-                    attributes.get(decoder.name, Document::class.java)?.let { attrDoc ->
+                    val attrDoc = attributes.get(decoder.name, Document::class.java)
+                    if (attrDoc != null) {
                         decoder.fromDocument(client, attrDoc)
-                    } ?: return false
+                    } else if (!decoder.optional) {
+                        return false
+                    }
                 }
             } ?: return false
             true

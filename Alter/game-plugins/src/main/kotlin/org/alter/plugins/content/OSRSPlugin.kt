@@ -98,8 +98,7 @@ class OSRSPlugin(
                 // Game-related logic.
                 sendRunEnergy(player.runEnergy.toInt())
                 message("Welcome to ${world.gameContext.name}.", ChatMessageType.GAME_MESSAGE)
-                // player.social.pushFriends(player)
-                // player.social.pushIgnores(player)
+                // Friends/ignore lists are pushed by Player.login() before plugins run.
                 setVarbit(Varbit.ESC_CLOSES_CURRENT_INTERFACE, 1)
 
                 /**

@@ -110,6 +110,12 @@ class Json(override val collectionName: String) : FormatHandler(collectionName) 
         return doc
     }
 
+    override fun findDocument(loginUsername: String): Document? {
+        val name = loginUsername.lowercase()
+        if (name.isEmpty() || name.contains('/') || name.contains('\\') || name.contains("..")) return null
+        return parseIfValid(path.resolve(name))
+    }
+
     override fun playerExists(client: Client): Boolean {
         val save = path.resolve(client.loginUsername)
         return Files.exists(save)
