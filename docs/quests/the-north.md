@@ -26,12 +26,12 @@ dialogue and state over the existing world: Oziach stands where he always has, t
 the stock ditch, travel is whatever the player already has. The only custom asset is the dispatch, and
 even that is an existing note def with a new name.
 
-**Gate.** The design says "after First March". First March (MSQ2) is not built yet, so the prerequisite
-is `Prerequisite.Custom`: **First March complete once a quest is registered under `first_march`, The
-Last Free City (`recruit_trials`) complete until then.** The chain never dead-ends and needs no edit
-when First March lands. The quest **auto-begins** the moment its gate opens (login, rank-up, or the
-framework poll — `QuestEngine.pollTick` now auto-begins eligible `autoBegin` quests mid-session, so
-finishing Damien's debrief starts The North on the spot).
+**Gate.** The design says "after First March", and since 2026-09-13 that is exactly the prerequisite:
+`Prerequisite.QuestComplete("first_march")` ([first-march.md](first-march.md)). (Until First March was
+built the gate was a `Prerequisite.Custom` — First March once registered, The Last Free City until
+then — so the chain never dead-ended.) The quest **auto-begins** the moment its gate opens (login,
+rank-up, or the framework poll — `QuestEngine.pollTick` auto-begins eligible `autoBegin` quests
+mid-session, so Zo's First March debrief starts The North on the spot).
 
 ## Integration audit — every beat mapped to the build
 

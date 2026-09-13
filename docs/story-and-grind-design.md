@@ -30,7 +30,7 @@ every quest reward is a **system unlock**, not just loot.
 
 | Act | Ranks | Quests | What each unlocks |
 |-----|-------|--------|-------------------|
-| **I — The Recruit** ✅🔶 | Peasant → Squire | Recruit Trials ✅ · War-Prep I (Magic) ✅ · **"First March"** ⬜ | Combat, ranks, skilling loop, spellbooks. *First March* replaces the dead-end "raids are opening to you" finale: the player joins their first March (§2). |
+| **I — The Recruit** ✅🔶 | Peasant → Squire | Recruit Trials ✅ · War-Prep I (Magic) ✅ · **"First March"** ✅ (`docs/quests/first-march.md`, 2026-09-13) | Combat, ranks, skilling loop, spellbooks. *First March* replaces the dead-end "raids are opening to you" finale: the player joins their first March (§2). |
 | **II — The Soldier** ⬜ | Soldier → Knight → Lord | War-Prep II (Ranged) ✅ · **"The Rogue Problem"** ✅ · **"Supply Lines"** · **"First Command"** (Lord) | Each quest opens one repeatable grind loop: rogue milestones (§4), supply contracts (§3), and — at Lord — General Zo's "take command" finally pays off with a tutorialized `::sendtroops` raid. War-Prep II (Ranged, Knight→Lord) and III (Survival, Lord→Minister) now guide the mid-game climb. |
 | **III — The Crown** ⬜ | Minister → King | Campaign quests per Varrock district · **King of Lumbridge** · **Conquest of Varrock** | Campaigns retake Varrock district by district (§5); Conquest of the Palace is the server-wide climax. Post-game: hold Varrock (new front, city-vs-city). |
 

@@ -70,6 +70,9 @@ final class LofQuestVarps
 	/** Asgarnia (BREACH) Quest 4, "Old Wounds". */
 	static final int OLD_WOUNDS = 4696;
 
+	/** Main Story Quest 2, "First March" (4697 stays reserved for The White Wall). */
+	static final int FIRST_MARCH = 4698;
+
 	/** Generic-packing step ordinal: the current step index + 1, 0 when unstarted or finished. */
 	static int genericStep(Client client, int varp)
 	{

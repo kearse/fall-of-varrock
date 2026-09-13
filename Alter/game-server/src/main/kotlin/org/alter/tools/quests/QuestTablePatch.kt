@@ -36,7 +36,7 @@ import java.io.File
  * listing two rows. `hide` is kept only as a legacy action; [unhide] puts the full row list back.
  *
  * `free` clears the members flag (column 5, indexed) on our reused rows that were members' quests
- * (Recruitment Drive, Death Plateau, Dwarf Cannon, Wanted!) and moves them in the column-5 index,
+ * (Recruitment Drive, Death Plateau, Dwarf Cannon, Wanted!, Tree Gnome Village) and moves them in the column-5 index,
  * so every FoV quest lists under the one "Free Quests" header instead of four sitting under
  * "Members' Quests".
  *
@@ -144,6 +144,11 @@ private val PLAN = listOf(
     // Wanted! (dbrow 156, quest id 92, varp 1051, complete 11 — that quest's own start NPC is Sir
     // Tiffy Cashien). Driven by QuestEngine.publish from OldWounds.nativeTabVarp.
     Relabel(dbrowId = 156, questId = 92, sortName = "18 Old Wounds", displayName = "Old Wounds", varp = 1051),
+    // First March (Main Story Quest 2; framework quest `first_march`, chain index 18 — built after
+    // the quests around it, so it lists in build order like the client chain) reuses Tree Gnome
+    // Village (dbrow 150, quest id 32, varp 111, complete 9 — a members' row; `free` moves it under
+    // Free Quests). Driven by QuestEngine.publish from FirstMarch.nativeTabVarp.
+    Relabel(dbrowId = 150, questId = 32, sortName = "19 First March", displayName = "First March", varp = 111),
 )
 
 /** The quest rows we relabelled (the only rows the client lets the tab show; `hide`'s legacy keep-set). */

@@ -14,8 +14,9 @@
 In code:
 
 ```kotlin
-// (Illustrative: "First March" is the next opening quest — see docs/quests/README.md. The Last Free
-// City itself is NOT a framework quest; it runs on the legacy RecruitTrials chain, key `recruit_trials`.)
+// (Illustrative sketch. The REAL First March is content/quests/story/FirstMarch.kt — it resolves the
+// march from WarHooks instead of polling didParticipate (see §1). The Last Free City itself is NOT a
+// framework quest; it runs on the legacy RecruitTrials chain, key `recruit_trials`.)
 object FirstMarch : QuestDefinition(key = "first_march", displayName = "First March", chainIndex = 7) {
 
     override val prerequisites = listOf(
@@ -120,12 +121,16 @@ Legacy: `recruit_trials` (**The Last Free City**, Main Story Quest 1 — `docs/q
 · `warprep_magic` · `rogue_hunting_1` (optional) · `rogue_hunting_2` (optional) · `warprep_ranged` ·
 `warprep_survival` · `king_of_lumbridge`.
 
-Framework (story): `the_north` (**The North**, Main Story Quest 3 — `docs/quests/the-north.md`; the
+Framework (story): `first_march` (**First March**, Main Story Quest 2 — `docs/quests/first-march.md`;
+`content/quests/story/FirstMarch.kt`, gated on `recruit_trials`; the reference for a quest that
+launches a public march and resolves it from `WarHooks` — any march-tier op counts, a loss or a
+sat-out win loops back to the ready step with a counter instead of a separate retry step) ·
+`the_north` (**The North**, Main Story Quest 3 — `docs/quests/the-north.md`; the
 first built framework quest, and the reference for the journal varp + native-tab row path:
 `journalVarp` from the 4686 block + `nativeTabVarp`/`nativeTabComplete` on the definition, both
-written by `QuestEngine.publish`. Its gate is `Prerequisite.Custom`: `first_march` once that key
-is registered, else `recruit_trials` — copy the pattern when the quest before yours is not built yet)
-· `first_reclamation` (Main Story Quest 4 — `docs/quests/first-reclamation.md`) · `a_kingdom_alone`
+written by `QuestEngine.publish`. Its gate was `Prerequisite.Custom` — `first_march` once that key
+was registered, else `recruit_trials` — until First March landed; copy that pattern when the quest
+before yours is not built yet) · `first_reclamation` (Main Story Quest 4 — `docs/quests/first-reclamation.md`) · `a_kingdom_alone`
 (**A Kingdom Alone**, Main Story Quest 5 — `docs/quests/a-kingdom-alone.md`) · the regional phase's
 four strategic objectives `breach` · `secure` · `understand` · `sustain` (`content/quests/story/StrategicObjectives.kt`;
 begun by A Kingdom Alone, each SOLVED by its regional campaign's payoff via

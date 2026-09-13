@@ -7,7 +7,7 @@ updated: 2026-09-11
 infobox: Type = Main story quest (auto-starts); Start = General Zo, Lumbridge castle courtyard; Length = Short; Combat = None required; Guidance = Quest Journal arrows; Reward = 15 War Effort, the Weathered Varrock Dispatch; Leads to = First Reclamation
 ---
 
-You have seen Lumbridge attacked and stood with its Knights. **The North** is where you find out what the war is actually about. It begins on its own the moment the quest before it is finished (The Last Free City today; First March once it exists) - General Zo has something he wants you to see, and it is not a battlefield.
+You have seen Lumbridge attacked and stood with its Knights. **The North** is where you find out what the war is actually about. It begins on its own the moment [First March](/wiki/first-march) is finished - General Zo has something he wants you to see, and it is not a battlefield.
 
 ## The quest
 
@@ -37,4 +37,4 @@ The dispatch is yours to keep. It is untradeable, it is always kept on death, an
 
 ## What comes next
 
-**First Reclamation.** General Zo no longer wants to survive - he wants ground. See [The Last Free City](/wiki/recruit-trials) for where the story began, and the [gameplay roadmap](/wiki/gameplay-roadmap) for everything around it.
+**First Reclamation.** General Zo no longer wants to survive - he wants ground. See [The Last Free City](/wiki/recruit-trials) for where the story began, [First March](/wiki/first-march) for your first time in the column, and the [gameplay roadmap](/wiki/gameplay-roadmap) for everything around it.
