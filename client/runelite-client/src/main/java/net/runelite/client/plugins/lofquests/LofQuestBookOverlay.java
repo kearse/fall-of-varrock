@@ -501,7 +501,17 @@ class LofQuestBookOverlay extends Overlay implements LofWindows.Window
 					label = label + " " + prog;
 				}
 			}
-			LofTheme.shadowText(g, label, x + 16, y, tc);
+			// Wrap like the blurb and the rewards above: an unwrapped label runs past the content
+			// column and the scroll clip cuts it mid-word ("Raise the standard at the st").
+			final List<String> sl = wrap(small, label, w - 16);
+			for (int i = 0; i < sl.size(); i++)
+			{
+				if (i > 0)
+				{
+					y += 14;
+				}
+				LofTheme.shadowText(g, sl.get(i), x + 16, y, tc);
+			}
 		}
 
 		// REWARDS
