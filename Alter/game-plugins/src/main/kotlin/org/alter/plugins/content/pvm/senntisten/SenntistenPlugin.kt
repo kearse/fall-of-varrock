@@ -150,7 +150,7 @@ class SenntistenPlugin(
         val n = Senntisten.SALVAGE_PER_WAVE_MIN + world.random(Senntisten.SALVAGE_PER_WAVE_MAX - Senntisten.SALVAGE_PER_WAVE_MIN)
         give(p, VarrockPvm.SALVAGE_KEY, n)
         run.wave++
-        p.message("<col=4f9b4f>Wave cleared.</col> You pry $n salvage from the wardens' remains." + if (run.wave < Senntisten.WAVES.size) " Press on." else " The altar hall is quiet... for now.")
+        p.message("<col=4f9b4f>Wave cleared.</col> You pry $n Forging material from the wardens' remains." + if (run.wave < Senntisten.WAVES.size) " Press on." else " The altar hall is quiet... for now.")
         world.queue {
             wait(Senntisten.WAVE_GAP_TICKS)
             if (!run.done && runs[p] === run) spawnWave(run)

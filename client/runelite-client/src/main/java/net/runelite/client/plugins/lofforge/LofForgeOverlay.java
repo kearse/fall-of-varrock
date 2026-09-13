@@ -3,7 +3,7 @@
  *
  * Style tabs (Melee / Ranged / Magic), recipe rows drawn with the REAL base → result item
  * sprites (Bandos chestplate ➜ Torva platebody, ...), and a live material checklist —
- * Commendations, runite bars, coins, Warden's embers, all with their real item icons.
+ * War commendations, Forging material, runite bars, coins, Warden's embers, all with their real item icons.
  * FORGE IT lights only when every line is green; the server re-validates regardless.
  */
 package net.runelite.client.plugins.lofforge;
@@ -54,6 +54,8 @@ class LofForgeOverlay extends Overlay implements LofWindows.Window
 		int coins;
 		int embers;
 		int baseHave;
+		/** Forging material required (0 on lines from a server that predates the material pillar). */
+		int material;
 	}
 
 	private static final int TABS_Y = LofModal.TITLE_H + 8;
@@ -61,7 +63,7 @@ class LofForgeOverlay extends Overlay implements LofWindows.Window
 	private static final int ROWS_Y = TABS_Y + TAB_H + 8;
 	private static final int ROW_H = 34;
 	private static final int ROW_STEP = 38;
-	private static final int CHECK_H = 96;
+	private static final int CHECK_H = 112; // title + up to six 16px checklist rows (base, comm, material, bars, coins, ember)
 	// The recipe list scrolls inside a clipped viewport; the material checklist is pinned at a fixed
 	// spot above the footer (not floated under the rows), so the window fits the short standard height.
 	private static final int LIST_TOP = ROWS_Y;                             // 78
@@ -74,8 +76,8 @@ class LofForgeOverlay extends Overlay implements LofWindows.Window
 
 	private boolean visible;
 	private List<Recipe> recipes = new ArrayList<>();
-	private int commId = -1, emberId = -1, barId = -1, coinId = -1;
-	private int commHave, embersHave, barsHave, coinsHave;
+	private int commId = -1, emberId = -1, barId = -1, coinId = -1, materialId = -1;
+	private int commHave, embersHave, barsHave, coinsHave, materialHave;
 	private int activeTab;
 	private int selected;
 	private int scroll; // px — recipe-list scroll offset
@@ -127,6 +129,13 @@ class LofForgeOverlay extends Overlay implements LofWindows.Window
 		this.embersHave = embersHave;
 		this.barsHave = barsHave;
 		this.coinsHave = coinsHave;
+	}
+
+	/** Forging material id + carried count; id -1 when the server sent no material fields. */
+	void setMaterial(int materialId, int materialHave)
+	{
+		this.materialId = materialId;
+		this.materialHave = materialHave;
 	}
 
 	void setRecipes(List<Recipe> rows)
@@ -182,7 +191,8 @@ class LofForgeOverlay extends Overlay implements LofWindows.Window
 	boolean satisfied(Recipe r)
 	{
 		return r != null && r.baseHave > 0 && commHave >= r.comm && barsHave >= r.bars
-			&& coinsHave >= r.coins && (r.embers <= 0 || embersHave >= r.embers);
+			&& coinsHave >= r.coins && (r.embers <= 0 || embersHave >= r.embers)
+			&& (r.material <= 0 || materialHave >= r.material);
 	}
 
 	private Rectangle tabRect(int ox, int oy, int i)
@@ -337,7 +347,8 @@ class LofForgeOverlay extends Overlay implements LofWindows.Window
 			drawItem(g, rr.x + 62, rr.y + 3, r.outId, 30, 27);
 			LofTheme.shadowText(g, itemName(r.outId), rr.x + 100, rr.y + 22, sel ? LofTheme.GOLD : LofTheme.TEXT);
 			g.setFont(FontManager.getRunescapeSmallFont());
-			final String cost = r.comm + " comm · " + r.bars + " bars · " + LofModal.fmt(r.coins)
+			final String cost = r.comm + " comm · " + (r.material > 0 ? r.material + " mat · " : "")
+				+ r.bars + " bars · " + LofModal.fmt(r.coins)
 				+ (r.embers > 0 ? " · " + r.embers + " ember" : "");
 			final FontMetrics fm = g.getFontMetrics();
 			LofTheme.shadowText(g, cost, rr.x + rr.width - 10 - fm.stringWidth(cost), rr.y + 22, LofTheme.TEXT_DIM);
@@ -360,7 +371,11 @@ class LofForgeOverlay extends Overlay implements LofWindows.Window
 
 			int ly = cr.y + 32;
 			ly = checkLine(g, cr, ly, sel.baseId, itemName(sel.baseId), sel.baseHave, 1);
-			ly = checkLine(g, cr, ly, commId, "Commendations (untradeable — earned marching)", commHave, sel.comm);
+			ly = checkLine(g, cr, ly, commId, "War commendations (untradeable — won in the realm's wars)", commHave, sel.comm);
+			if (sel.material > 0)
+			{
+				ly = checkLine(g, cr, ly, materialId, "Forging material (salvaged in Fallen Varrock, tradeable)", materialHave, sel.material);
+			}
 			ly = checkLine(g, cr, ly, barId, "Runite bars", barsHave, sel.bars);
 			ly = checkLine(g, cr, ly, coinId, "Coin fee", coinsHave, sel.coins);
 			if (sel.embers > 0)

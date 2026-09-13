@@ -173,7 +173,7 @@ class VarrockPvmPlugin(
         p.animate(832)
         val n = VarrockPvm.SALVAGE_MIN + world.random(VarrockPvm.SALVAGE_MAX - VarrockPvm.SALVAGE_MIN)
         give(p, VarrockPvm.SALVAGE_KEY, n)
-        var msg = "You pull $n pieces of salvage from the wreckage."
+        var msg = "You pull $n Forging material from the wreckage — the Royal Smith will want it."
         if (world.chance(1, VarrockPvm.RELIC_ONE_IN)) {
             give(p, VarrockPvm.RELIC_KEY, 1)
             runCatching { getRSCM(VarrockPvm.RELIC_KEY) }.getOrNull()?.let { recordLog(p, it) }

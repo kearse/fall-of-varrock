@@ -32,8 +32,9 @@ object VarrockPvm {
 
     // ───────────────────────────── items ─────────────────────────────
 
-    /** Numulite (21555, stackable) renamed "Varrock salvage" — see itemOverrides/unique/varrock_salvage.yml. */
-    const val SALVAGE_KEY = "item.varrock_salvage"
+    /** Numulite (21555, stackable) renamed "Forging material" — the War-Forging material pillar
+     *  ([org.alter.plugins.content.war.forge.WarForge.MATERIAL_KEY]); see itemOverrides/unique/war_forging.yml. */
+    const val SALVAGE_KEY = "item.forging_material"
     /** Relic part 1 (2373) renamed "Relic of old Varrock". */
     const val RELIC_KEY = "item.varrock_relic"
 

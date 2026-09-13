@@ -25,14 +25,23 @@
     `WarState`): every Quartermaster hand-in raises it by the item's War Effort value; only
     Campaigns (1,500) and Conquests (2,800) spend it. Marches and Lord operations are free.
   - See `content/economy/Currencies.kt` (`PointKind`) + `PointsCurrency.kt`.
+  - **War-Forging materials** (items, not `PointKind`s — `war/forge/WarForge.kt`): **War
+    commendations** (`item.war_commendation`, the Ecto-token def, untradeable — won war ops,
+    Fallen Varrock bosses, Arrav Intelligence, named captains) and **Forging material**
+    (`item.forging_material`, the Numulite def, tradeable — salvage piles, elite undead,
+    Senntisten, story bosses). Both spent ONLY at the Royal Smith. Renamed 2026-09-13 (were
+    "Commendation" / "Varrock salvage"); the 2026-09-02 audit's "REMOVE Commendations" row is
+    superseded by the decision to keep both under these names. The client shows CACHE names, so
+    the rename must also be applied to the live cache: Actions → "Item def cache edit" →
+    `warforge` (see `itemOverrides/unique/war_forging.yml` for the sync rule).
 
 ## Faucets (sources) — current
 | Source | Output | Notes |
 |---|---|---|
 | Frontier kills (Lumbridge goblin/hobgoblin/ogre rings) | gp + occasional gear piece | `war/CityFrontierPlugin.registerLoot` (`EnemyLine.coinMin/coinMax`, `gearDropOneIn`) |
-| Won marches / campaigns / conquests | gp (pooled war-chest, split by contribution) + Commendations (untradeable) + War Effort | `war/CapturePayout`; Commendations spent only at the Royal Smith (`war/forge`) |
+| Won marches / campaigns / conquests | gp (pooled war-chest, split by contribution) + War commendations (untradeable) + War Effort | `war/CapturePayout`; War commendations spent only at the Royal Smith (`war/forge`) |
 | Grand March Warden | Warden's embers (tradeable forge component) | `war/MarchPlugin.onWardenSlain` |
-| Named captains | 100k gp banked + 2 Commendations + 25 War Effort + 1/15 signature weapon | `war/captains/NamedCaptainsPlugin` |
+| Named captains | 100k gp banked + 2 War commendations + 25 War Effort + 1/15 signature weapon | `war/captains/NamedCaptainsPlugin` |
 | Mining | ores (skilling) | `MiningPlugin` |
 | Thieving | gp + items | pickpocket/stall/chest |
 | Slayer | **Slayer points** + Slayer xp | `SlayerPlugin` (points are a counter, mild faucet) |

@@ -1,0 +1,51 @@
+---
+# War-Forging materials — the three FoV items the Royal Smith (war/forge/WarForge.kt) consumes.
+# Each repurposes an otherwise-unobtainable cache item (no shop, drop or minigame here hands
+# the original out). Pure inventory items, no equipment block. cost 0 keeps them off the
+# alch/buy-back gold loop.
+#
+# !! These overrides rename the items for SERVER logic only (chat messages, ground-item
+# examines, drop logs). The player's inventory shows the CLIENT cache name, so every name /
+# examine here must also be written into the live cache with the "Item def cache edit"
+# workflow (action `warforge`) — see tools/itemdef/ItemDefTool.kt, and keep the examine
+# text in sync with the same ids' lines in data/cfg/objs.csv.
+#
+# Ecto-token (4278, stackable) — the War commendation, paid on won war operations and by the
+# Fallen Varrock bosses / Arrav Intelligence. Untradeable (the anti-swipe valve — every
+# forged piece represents marches somebody fought); `tradeable:` is deliberately left
+# undeclared so the cache's untradeable flag stands.
+id: 4278
+name: "War commendation"
+examine: "Won in the realm's marches and campaigns. Bring these to Thurgo, the Royal Smith at Lumbridge Castle, to war-forge elite armour."
+weight: 0.0
+cost: 0
+lowalch: 0
+highalch: 0
+tradeable_on_ge: false
+buy_limit: null
+---
+# Numulite (21555, stackable) — the Forging material: salvaged from Fallen Varrock's piles,
+# elite undead, the Senntisten waves and the story bosses. Tradeable, so a player can buy
+# their way through the material pillar on the market.
+id: 21555
+name: "Forging material"
+examine: "Twisted metal and stone salvaged from fallen Varrock. Bring it to Thurgo, the Royal Smith at Lumbridge Castle, to war-forge elite armour."
+tradeable: true
+weight: 0.0
+tradeable_on_ge: true
+cost: 0
+lowalch: 0
+highalch: 0
+buy_limit: null
+---
+# Relic part 1 (2373) — the rare War-Forging relic (a future recipe ingredient).
+id: 2373
+name: "Relic of old Varrock"
+examine: "A piece of the city that was. The forge can wake what sleeps in it."
+tradeable: true
+weight: 1.0
+tradeable_on_ge: true
+cost: 0
+lowalch: 0
+highalch: 0
+buy_limit: null

@@ -239,19 +239,29 @@ The Palace                 ──▶  the King's Conquest — the server-wide cl
 
 ## 6. The endgame gear economy 🔶 — max gear as the grind
 
-> **Built (v1):** `war/forge/` — **Commendations** are live as an item token
-> (`item.ectotoken`: stackable, cache-untradeable; renamed to "Commendation" with a
-> Thurgo-pointing examine via the `ItemDefTool` `commendation` action — apply on live
-> with the "Item def cache edit" workflow; TUNE: resprite via a cache edit
-> later), paid by `CapturePayout` on every WON war op, contribution-scaled (March 1–3,
-> Campaign 1–6, Conquest 1–10; losses pay nothing). The **Royal Smith** stands in the
-> Lumbridge castle courtyard (tile TUNE) and forges the three BIS armour lines —
-> Bandos→Torva, Armadyl→Masori, Ahrim's→Ancestral, two pieces each — for
-> 1 base + 25 Commendations + 20 runite bars + 250k coins per piece (TUNE). Forging is
-> gated at rank Knight; outputs are Lord-tier to wear and fully tradeable; each forging
-> is a realm-wide headline. **Still ⬜:** relics as a recipe ingredient (salvage runs),
-> forge components + pity shards (Wardens, item 6), spec-weapon restoration (named
-> captains), the self-made cosmetic mark, weapons/helms to complete the sets.
+> **Built (v1):** `war/forge/` — **War commendations** are live as an item token
+> (`item.war_commendation` = the Ecto-token def 4278: stackable, cache-untradeable), paid by
+> `CapturePayout` on every WON war op, contribution-scaled (March 1–3, Campaign 1–6,
+> Conquest 1–10; losses pay nothing) and by the Fallen Varrock bosses / Arrav Intelligence.
+> **Forging material** (`item.forging_material` = the Numulite def 21555: stackable,
+> tradeable) is the FoV-material pillar — salvage piles, elite undead, Senntisten waves,
+> story bosses (2026-09-13: renamed from "Varrock salvage" and wired into every recipe).
+> Both are renamed server-side by `itemOverrides/unique/war_forging.yml`; the CLIENT shows
+> cache names, so the live cache is renamed — with examines that say what each is and that
+> Thurgo takes it — by the "Item def cache edit" workflow's `warforge` action (TUNE:
+> resprite later). The **Royal Smith** stands in the Lumbridge castle courtyard (tile TUNE)
+> and forges the three BIS armour lines — Bandos→Torva, Armadyl→Masori, Ahrim's→Ancestral,
+> three pieces each — for 1 base + 25 War commendations + 30 Forging material + 20 runite
+> bars + 250k coins per body/legs piece (helms: 15 / 20 / 10 / 150k + 1 Warden's ember;
+> TUNE). Forging is gated at rank Knight; outputs are Lord-tier to wear and fully
+> tradeable; each forging is a realm-wide headline. **Still ⬜:** relics as a recipe
+> ingredient, forge components + pity shards (Wardens, item 6), spec-weapon restoration
+> (named captains), the self-made cosmetic mark, weapons to complete the sets.
+>
+> **Naming note (2026-09-13):** the 2026-09-02 economy audit ("04 — Economy, Currencies,
+> Shops & Store Audit") lists Commendations as "REMOVE unless a future mechanic proves
+> need". Decision since: KEEP both War-Forging materials, renamed as above, so the war
+> pillar of the recipe survives — this section and `WarForge.kt` are the current authority.
 
 **Goal:** the long-term chase is a full set of best-in-slot gear per combat style — but
 no single loop grants it. Every max piece routes through **all four pillars**: the war,

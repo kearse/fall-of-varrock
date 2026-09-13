@@ -2,8 +2,9 @@
  * Fall of Varrock — War Forge window (the Royal Smith's recipes).
  *
  * The server pushes recipes + carried counts over hidden ~LOFFORGE~ chat lines
- * (header H|<n>|commId|emberId|barId|coinId|commHave|embersHave|barsHave|coinsHave, then
- * R|<i>|<style>|baseId|outId|comm|bars|coins|embers|baseHave per recipe) and pulses varp 4627.
+ * (header H|<n>|commId|emberId|barId|coinId|commHave|embersHave|barsHave|coinsHave|materialId|materialHave,
+ * then R|<i>|<style>|baseId|outId|comm|bars|coins|embers|baseHave|material per recipe) and pulses
+ * varp 4627. The trailing Forging-material fields are optional (older servers omit them).
  * Forging sends "::forge make <i>" which the server intercepts (MessagePublicHandler →
  * forgeclick), re-validates, forges, broadcasts, and re-pushes.
  */
@@ -141,6 +142,9 @@ public class LofForgePlugin extends Plugin
 			overlay.setCurrencies(
 				Integer.parseInt(p[2]), Integer.parseInt(p[3]), Integer.parseInt(p[4]), Integer.parseInt(p[5]),
 				Integer.parseInt(p[6]), Integer.parseInt(p[7]), Integer.parseInt(p[8]), Integer.parseInt(p[9]));
+			// Forging material (appended by the material-pillar server; absent = no material row)
+			overlay.setMaterial(p.length >= 12 ? Integer.parseInt(p[10]) : -1,
+				p.length >= 12 ? Integer.parseInt(p[11]) : 0);
 			return;
 		}
 		if (!"R".equals(p[0]) || p.length < 10)
@@ -157,6 +161,7 @@ public class LofForgePlugin extends Plugin
 		r.coins = Integer.parseInt(p[7]);
 		r.embers = Integer.parseInt(p[8]);
 		r.baseHave = Integer.parseInt(p[9]);
+		r.material = p.length >= 11 ? Integer.parseInt(p[10]) : 0;
 		pendingRows.add(r);
 		if (pendingRows.size() >= pendingCount)
 		{
