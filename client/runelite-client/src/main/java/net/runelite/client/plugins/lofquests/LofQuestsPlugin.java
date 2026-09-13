@@ -19,6 +19,7 @@ import java.util.function.Function;
 import javax.inject.Inject;
 import javax.swing.SwingUtilities;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
 import net.runelite.api.NPC;
@@ -26,10 +27,19 @@ import net.runelite.api.Player;
 import net.runelite.api.ScriptID;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.GameStateChanged;
+import net.runelite.api.events.MenuOptionClicked;
+import net.runelite.api.events.ScriptCallbackEvent;
+import net.runelite.api.events.ScriptPostFired;
+import net.runelite.api.events.ScriptPreFired;
 import net.runelite.api.events.VarbitChanged;
+import net.runelite.api.widgets.ComponentID;
+import net.runelite.api.widgets.InterfaceID;
+import net.runelite.api.widgets.Widget;
+import net.runelite.api.widgets.WidgetUtil;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
+import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.game.npcoverlay.HighlightedNpc;
 import net.runelite.client.game.npcoverlay.NpcOverlayService;
 import net.runelite.client.input.MouseManager;
@@ -42,6 +52,7 @@ import net.runelite.client.ui.NavigationButton;
 import net.runelite.client.ui.overlay.OverlayManager;
 import net.runelite.client.util.ImageUtil;
 
+@Slf4j
 @PluginDescriptor(
 	name = "Lof Quest Journal",
 	description = "Fall of Varrock's quest guide: steps, unlocks, and guidance arrows you can turn off.",
@@ -92,6 +103,13 @@ public class LofQuestsPlugin extends Plugin
 	/** The quest the player chose to guide toward (null = nothing tracked). */
 	@Getter
 	private LofQuest trackedQuest;
+
+	/** The stock quest tab: hides every row that isn't a Fall of Varrock quest and routes row
+	 *  clicks straight into the Quest Journal window. */
+	private final LofQuestTab questTab = new LofQuestTab();
+
+	/** Warn once per session if the quest-list filter script never calls back (script mismatch). */
+	private boolean warnedFilterSilent;
 
 	/** True once the player explicitly untracked, so auto-track stops re-selecting. */
 	private boolean playerUntracked;
@@ -262,6 +280,96 @@ public class LofQuestsPlugin extends Plugin
 		if (event.getGameState() == GameState.LOGGED_IN)
 		{
 			refresh();
+		}
+	}
+
+	// --- the stock quest tab (interface 399): only our quests, clicks open the journal ---
+
+	@Subscribe
+	public void onScriptPreFired(ScriptPreFired event)
+	{
+		if (event.getScriptId() == ScriptID.QUESTLIST_INIT)
+		{
+			questTab.beginBuild();
+		}
+	}
+
+	/** RuneLite's QuestFilter script (3238) asks, once per quest row, whether to hide it. Runs after
+	 *  the stock Quest List plugin's search handler (lower priority = later) so a foreign row stays
+	 *  hidden even while a search matches it. */
+	@Subscribe(priority = -1)
+	public void onScriptCallbackEvent(ScriptCallbackEvent event)
+	{
+		if (LofQuestTab.FILTER_CALLBACK.equals(event.getEventName()) && config.filterQuestTab())
+		{
+			questTab.filter(client);
+		}
+	}
+
+	@Subscribe
+	public void onScriptPostFired(ScriptPostFired event)
+	{
+		if (event.getScriptId() != ScriptID.QUESTLIST_INIT || !config.filterQuestTab() || warnedFilterSilent)
+		{
+			return;
+		}
+		if (questTab.rowsFiltered() == 0)
+		{
+			warnedFilterSilent = true;
+			log.warn("quest tab: the list was built without a single questFilter callback — RuneLite's "
+				+ "QuestFilter script override (3238) is not applied to this cache, so OSRS rows stay visible");
+		}
+	}
+
+	/**
+	 * A click on a quest row in the stock tab. The stock op tells the server only the row's list
+	 * position, which no longer maps to a quest once the list is filtered client-side — so the click
+	 * is consumed and the journal opens directly on the quest, resolved from the row's own text.
+	 * Anything on the tab that isn't one of our rows (the search button, a foreign row) is left alone.
+	 */
+	@Subscribe
+	public void onMenuOptionClicked(MenuOptionClicked event)
+	{
+		if (!config.questWindow() || WidgetUtil.componentToInterface(event.getParam1()) != InterfaceID.QUEST_LIST)
+		{
+			return;
+		}
+		final Widget w = event.getWidget();
+		LofQuest quest = w != null ? questTab.questForRowText(w.getText()) : null;
+		if (quest == null)
+		{
+			quest = questTab.questForRowText(event.getMenuTarget());
+		}
+		if (quest == null)
+		{
+			return;
+		}
+		event.consume();
+		openQuestBook(quest);
+	}
+
+	@Subscribe
+	public void onConfigChanged(ConfigChanged event)
+	{
+		if ("lofquests".equals(event.getGroup()) && "filterQuestTab".equals(event.getKey()))
+		{
+			clientThread.invokeLater(this::redrawQuestTab);
+		}
+	}
+
+	/** Rebuild the stock quest list (same trick as the Quest List plugin's search: re-run the
+	 *  container's var-transmit listener). Client thread only. */
+	private void redrawQuestTab()
+	{
+		final Widget container = client.getWidget(ComponentID.QUEST_LIST_CONTAINER);
+		if (container == null)
+		{
+			return;
+		}
+		final Object[] listener = container.getOnVarTransmitListener();
+		if (listener != null)
+		{
+			client.runScript(listener);
 		}
 	}
 

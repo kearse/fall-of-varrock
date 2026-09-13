@@ -28,14 +28,25 @@ import java.io.File
  * and mirror our quest state into its varp → the stock tab colours it red/yellow/green for free.
  *
  * `relabel` only rewrites the STRING name columns (1 = sort name, 2 = displayed name) — no row set
- * or indexed column changes, so the other OSRS quests still list. **Phase 2 (`hide`)** then prunes
- * the quest table's master row index down to just our rows, so the tab lists ONLY FoV quests (the
- * other rows are hidden, not deleted — fully reversible). See [hide].
+ * or indexed column changes, so the other OSRS quests still list. HIDING the other ~180 OSRS rows
+ * is the custom client's job (`lofquests` / `LofQuestTab`): RuneLite's per-row QuestFilter script
+ * asks the client whether to show each row, and ours answers "hide" for every row that isn't in
+ * [PLAN]. That is robust to however the quest-list clientscript enumerates rows — the earlier
+ * cache-side [hide] (pruning the master row index) is NOT: on the live cache it left the tab
+ * listing two rows. `hide` is kept only as a legacy action; [unhide] puts the full row list back.
+ *
+ * `free` clears the members flag (column 5, indexed) on our reused rows that were members' quests
+ * (Recruitment Drive, Death Plateau, Dwarf Cannon, Wanted!) and moves them in the column-5 index,
+ * so every FoV quest lists under the one "Free Quests" header instead of four sitting under
+ * "Members' Quests".
  *
  *   gradlew :game-server:questTable -PquestArgs="inspect"        # read-only
+ *   gradlew :game-server:questTable -PquestArgs="sync"           # unhide + relabel + free, in one go
  *   gradlew :game-server:questTable -PquestArgs="relabel"        # back up + rename the rows
- *   gradlew :game-server:questTable -PquestArgs="hide"           # list ONLY our quests
+ *   gradlew :game-server:questTable -PquestArgs="unhide"         # full row list back (undo `hide`)
+ *   gradlew :game-server:questTable -PquestArgs="free"           # our members' rows -> Free Quests
  *   gradlew :game-server:questTable -PquestArgs="restore"        # undo the relabels
+ *   gradlew :game-server:questTable -PquestArgs="hide"           # LEGACY — prune the master index
  *   gradlew :game-server:questTable -PquestArgs="relabel D:/path/to/cache"
  *
  * After each write, restart the server so it serves the edited cache. On the live VPS this all runs
@@ -50,6 +61,7 @@ private const val MASTER_INDEX_FILE = 0 // DBTABLEINDEX file 0 = the "all rows" 
 
 private const val COL_SORT_NAME = 1 // hidden sort key (list orders by this within a category)
 private const val COL_DISPLAY_NAME = 2 // the name shown in the quest tab (DBTableID.Quest.NAME)
+private const val COL_MEMBERS = 5 // BOOLEAN members flag — the tab groups rows into Free / Members' Quests by it
 
 /**
  * The relabel plan. `dbrowId` is the DBROW file id (from the dump); `questId` is its col0 (the id
@@ -134,7 +146,7 @@ private val PLAN = listOf(
     Relabel(dbrowId = 156, questId = 92, sortName = "18 Old Wounds", displayName = "Old Wounds", varp = 1051),
 )
 
-/** The only quest rows the tab should list after `hide` — exactly the ones we relabelled. */
+/** The quest rows we relabelled (the only rows the client lets the tab show; `hide`'s legacy keep-set). */
 private val KEPT: Set<Int> = PLAN.map { it.dbrowId }.toSet()
 
 fun main(args: Array<String>) {
@@ -153,8 +165,22 @@ fun main(args: Array<String>) {
         "inspect" -> inspect(cachePath)
         "relabel" -> relabel(cachePath)
         "restore" -> restore(cachePath)
-        "hide" -> hide(cachePath)
-        else -> println("usage: inspect | relabel | restore | hide  [cachePath]")
+        "unhide" -> unhide(cachePath)
+        "free" -> free(cachePath)
+        "sync" -> {
+            // The one-click path: full row list, our names, one Free Quests header. Each step
+            // verifies itself; the client (lofquests) hides every row that isn't ours.
+            unhide(cachePath)
+            relabel(cachePath)
+            free(cachePath)
+        }
+        "hide" -> {
+            println("!! 'hide' is LEGACY: pruning the master row index does not reliably control what the")
+            println("   quest list shows (the live tab ended up with two rows). Hiding is done by the custom")
+            println("   client now — run 'unhide' (or 'sync') instead. Proceeding anyway.")
+            hide(cachePath)
+        }
+        else -> println("usage: inspect | sync | relabel | unhide | free | restore | hide(legacy)  [cachePath]")
     }
 }
 
@@ -166,7 +192,17 @@ private fun inspect(cachePath: String) {
             if (data == null) { println("  row ${r.dbrowId}: MISSING"); continue }
             val row = decodeRow(data)
             println("  dbrow ${r.dbrowId} (questId ${r.questId}, varp ${r.varp}): " +
-                "sort='${str(row, COL_SORT_NAME)}' display='${str(row, COL_DISPLAY_NAME)}'  ->  will become '${r.displayName}'")
+                "sort='${str(row, COL_SORT_NAME)}' display='${str(row, COL_DISPLAY_NAME)}' members=${int(row, COL_MEMBERS)}" +
+                "  ->  will become '${r.displayName}'")
+        }
+        val master = lib.index(DBTABLEINDEX).archive(QUEST_TABLE_ID)?.file(MASTER_INDEX_FILE)?.data
+        if (master == null) {
+            println("  quest master index: MISSING")
+        } else {
+            val listed = decodeIndex(master).flatMap { t -> t.values.flatMap { it.second } }
+            val all = questRowIds(lib)
+            println("  quest master index lists ${listed.size} rows of ${all.size} in the table" +
+                (if (listed.toSet() != all.toSet()) "  (PRUNED — run 'unhide' or 'sync')" else ""))
         }
     } finally {
         lib.close()
@@ -244,6 +280,12 @@ private fun restore(cachePath: String) {
             archive.add(r.dbrowId, backup.readBytes())
             println("restored dbrow ${r.dbrowId} from backup")
         }
+        // `free` rewrote the members-column index too; put its pristine copy back if we have one.
+        val membersIndex = File(BACKUP_DIR, "questindex_${QUEST_TABLE_ID}_${COL_MEMBERS + 1}.bin")
+        if (membersIndex.exists()) {
+            lib.put(DBTABLEINDEX, QUEST_TABLE_ID, COL_MEMBERS + 1, membersIndex.readBytes())
+            println("restored column-$COL_MEMBERS index from backup")
+        }
         lib.update()
     } finally {
         lib.close()
@@ -298,10 +340,164 @@ private fun setString(row: DBRowType, col: Int, value: String) {
     values[col] = arrayOf<Any?>(value)
 }
 
+private fun int(row: DBRowType, col: Int): Int? =
+    row.columnValues?.getOrNull(col)?.getOrNull(0) as? Int
+
+private fun hasIntColumn(row: DBRowType, col: Int, type: ScriptVarType): Boolean {
+    val t = row.columnTypes?.getOrNull(col) ?: return false
+    return t.size == 1 && t[0] == type
+}
+
+private fun setInt(row: DBRowType, col: Int, value: Int) {
+    val values = row.columnValues ?: return
+    values[col] = arrayOf<Any?>(value)
+}
+
+/** Every DBROW file that belongs to the quest table, ascending — what the pristine master index lists. */
+private fun questRowIds(lib: CacheLibrary): List<Int> {
+    val archive = lib.index(CONFIGS).archive(DBROW) ?: return emptyList()
+    return archive.fileIds()
+        .filter { id -> archive.file(id)?.data?.let { decodeRow(it).tableId == QUEST_TABLE_ID } == true }
+        .sorted()
+}
+
+// --- unhide: the full quest row list back in the master index (undoes the legacy `hide`) ----
+
+/**
+ * **unhide** — rewrite the quest table's master row index to list EVERY row of the table again
+ * (the pristine master is exactly "all table-0 rows, ascending": verified against the dump). Needs
+ * no backup file: the list is regenerated from the rows themselves, so it also repairs a partial
+ * or stale prune. Hiding the OSRS rows from the tab is the custom client's job now.
+ */
+private fun unhide(cachePath: String) {
+    val lib = CacheLibrary(cachePath)
+    try {
+        val current = lib.index(DBTABLEINDEX).archive(QUEST_TABLE_ID)?.file(MASTER_INDEX_FILE)?.data
+            ?: run { println("ABORT: no quest master index (idx $DBTABLEINDEX / archive $QUEST_TABLE_ID / file $MASTER_INDEX_FILE)"); return }
+        val tuples = decodeIndex(current)
+        val all = questRowIds(lib)
+        val listed = tuples.flatMap { t -> t.values.flatMap { it.second } }
+        if (listed.toSet() == all.toSet()) {
+            println("quest master index already lists all ${all.size} rows — nothing to do")
+            return
+        }
+        // The master has one tuple (int key 0 -> every row); keep whatever key it carries.
+        val key: Any = tuples.firstOrNull()?.values?.firstOrNull()?.first ?: 0
+        val type = tuples.firstOrNull()?.type ?: 0
+        val rebuilt = listOf(IndexTuple(type, mutableListOf(key to all.toMutableList())))
+        println("quest master index: ${listed.size} row refs -> ${all.size} (full row list restored)")
+        lib.put(DBTABLEINDEX, QUEST_TABLE_ID, MASTER_INDEX_FILE, encodeIndex(rebuilt))
+        lib.update()
+    } finally {
+        lib.close()
+    }
+
+    val lib2 = CacheLibrary(cachePath)
+    try {
+        val data = lib2.index(DBTABLEINDEX).archive(QUEST_TABLE_ID)?.file(MASTER_INDEX_FILE)?.data
+            ?: run { println("VERIFY FAIL: master index missing after write"); return }
+        val rows = decodeIndex(data).flatMap { t -> t.values.flatMap { it.second } }
+        val all = questRowIds(lib2)
+        if (rows == all) println("OK — quest master index lists all ${all.size} quest rows again. Restart the server to serve it.")
+        else println("VERIFY FAIL: master lists ${rows.size} rows, expected ${all.size}")
+    } finally {
+        lib2.close()
+    }
+}
+
+// --- free: our reused members' rows under the "Free Quests" header --------------------------
+
+/**
+ * **free** — clear the members flag (column [COL_MEMBERS], a BOOLEAN the tab groups by) on the
+ * [PLAN] rows that were members' quests, and move them from key 1 to key 0 in that column's index
+ * (DBTABLEINDEX file = column + 1), so the tab shows every FoV quest under one "Free Quests"
+ * header. Both halves are kept consistent; each row's pristine bytes are backed up first (same
+ * files `restore` reads) and the index file alongside them.
+ */
+private fun free(cachePath: String) {
+    val indexFile = COL_MEMBERS + 1
+    val lib = CacheLibrary(cachePath)
+    try {
+        val archive = lib.index(CONFIGS).archive(DBROW) ?: run { println("ABORT: no DBROW archive"); return }
+        val indexData = lib.index(DBTABLEINDEX).archive(QUEST_TABLE_ID)?.file(indexFile)?.data
+            ?: run { println("ABORT: no column-$COL_MEMBERS index (idx $DBTABLEINDEX / archive $QUEST_TABLE_ID / file $indexFile)"); return }
+
+        val moved = ArrayList<Int>()
+        for (r in PLAN) {
+            val original = archive.file(r.dbrowId)?.data ?: run { println("ABORT: no existing DBROW ${r.dbrowId}"); return }
+            val row = decodeRow(original)
+            if (!hasIntColumn(row, COL_MEMBERS, ScriptVarType.BOOLEAN)) {
+                println("  dbrow ${r.dbrowId} '${r.displayName}': no members column — skipping")
+                continue
+            }
+            if (int(row, COL_MEMBERS) != 1) continue
+
+            val backup = File(BACKUP_DIR, "dbrow_${r.dbrowId}.bin")
+            if (!backup.exists()) {
+                backup.parentFile.mkdirs()
+                backup.writeBytes(original)
+                println("backed up dbrow ${r.dbrowId} (${original.size} bytes) -> $backup")
+            }
+            setInt(row, COL_MEMBERS, 0)
+            val writer = BufferWriter(4096)
+            with(DBRowEncoder()) { writer.encode(row) }
+            archive.add(r.dbrowId, writer.toArray())
+            moved.add(r.dbrowId)
+            println("dbrow ${r.dbrowId} '${r.displayName}': members -> free")
+        }
+        if (moved.isEmpty()) {
+            println("no members' rows among our quests — nothing to do")
+            return
+        }
+
+        val indexBackup = File(BACKUP_DIR, "questindex_${QUEST_TABLE_ID}_$indexFile.bin")
+        if (!indexBackup.exists()) {
+            indexBackup.parentFile.mkdirs()
+            indexBackup.writeBytes(indexData)
+            println("backed up column-$COL_MEMBERS index (${indexData.size} bytes) -> $indexBackup")
+        }
+        val tuples = decodeIndex(indexData)
+        val tuple = tuples.singleOrNull() ?: run { println("ABORT: column-$COL_MEMBERS index has ${tuples.size} tuples, expected 1"); return }
+        val freeRows = tuple.values.firstOrNull { it.first == 0 }?.second
+            ?: run { println("ABORT: column-$COL_MEMBERS index has no key 0 (free) entry"); return }
+        val membersRows = tuple.values.firstOrNull { it.first == 1 }?.second
+            ?: run { println("ABORT: column-$COL_MEMBERS index has no key 1 (members) entry"); return }
+        membersRows.removeAll(moved)
+        for (id in moved) if (id !in freeRows) freeRows.add(id)
+        freeRows.sort()
+        println("column-$COL_MEMBERS index: free ${freeRows.size} rows, members ${membersRows.size} rows")
+        lib.put(DBTABLEINDEX, QUEST_TABLE_ID, indexFile, encodeIndex(tuples))
+        lib.update()
+    } finally {
+        lib.close()
+    }
+
+    val lib2 = CacheLibrary(cachePath)
+    try {
+        var ok = true
+        val data = lib2.index(DBTABLEINDEX).archive(QUEST_TABLE_ID)?.file(indexFile)?.data
+        val freeRows = data?.let { d -> decodeIndex(d).single().values.firstOrNull { it.first == 0 }?.second }?.toSet() ?: emptySet()
+        for (r in PLAN) {
+            val row = readRow(lib2, r.dbrowId)?.let { decodeRow(it) } ?: continue
+            val flag = int(row, COL_MEMBERS) ?: continue
+            if (flag != 0 || r.dbrowId !in freeRows) {
+                ok = false
+                println("VERIFY FAIL: dbrow ${r.dbrowId} '${r.displayName}' members=$flag inFreeIndex=${r.dbrowId in freeRows}")
+            }
+        }
+        println(if (ok) "OK — every FoV quest row is a free quest. Restart the server to serve it." else "VERIFY FAILED — run 'restore' to roll the rows back.")
+    } finally {
+        lib2.close()
+    }
+}
+
 // --- Phase 2: list ONLY our quests, by pruning the quest table's master row index ----------
 
 /**
- * **hide** — make the quest tab list only [KEPT] (our relabelled rows), hiding the ~196 OSRS quests.
+ * **hide** (LEGACY — superseded by the client-side filter; undo with [unhide]) — prune the quest
+ * table's master row index down to [KEPT]. In practice the rev-228 list did not follow the pruned
+ * master the way this assumed (the live tab ended up listing two rows), so it is no longer part of
+ * the workflow. Kept for the record.
  *
  * The rev-228 quest list enumerates rows via the quest table's **master index** (js5 index
  * [DBTABLEINDEX], archive [QUEST_TABLE_ID], file [MASTER_INDEX_FILE]) — one key mapping to every row

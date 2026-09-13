@@ -24,7 +24,11 @@ class QuestBookPlugin(
 ) : KotlinPlugin(r, world, server) {
 
     init {
-        // A quest row was clicked in the stock quest tab. The slot the client sends is the row's
+        // A quest row was clicked in the stock quest tab. FALLBACK ONLY: the custom client
+        // (lofquests / LofQuestTab) consumes these clicks itself and opens the journal on the exact
+        // quest, because once it filters the list client-side the slot below is meaningless. This
+        // path is reached only when the player switched the client's Quest Journal window off.
+        // The slot the client sends is the row's
         // position in the (hidden/relabelled) list, whose order mirrors QuestTablePatch.PLAN — which
         // is the same order as the client chain (The Last Free City, War-Prep I, Rogue Hunting I/II,
         // War-Prep II/III, King, then the framework story quests from The North on), so a

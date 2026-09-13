@@ -24,6 +24,18 @@ public interface LofQuestsConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = "filterQuestTab",
+		name = "Only our quests in the quest tab",
+		description = "Hide the leftover OSRS quests from the stock quest tab so it lists only Fall of Varrock's quests "
+			+ "(the ones the Quest Journal knows), coloured by your progress",
+		position = 7
+	)
+	default boolean filterQuestTab()
+	{
+		return true;
+	}
+
+	@ConfigItem(
 		keyName = "showWorldArrow",
 		name = "World arrow",
 		description = "Draw an arrow over the tracked quest's objective in the game scene",
