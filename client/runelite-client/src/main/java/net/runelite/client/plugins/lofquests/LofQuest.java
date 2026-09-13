@@ -460,7 +460,7 @@ enum LofQuest
 	/**
 	 * Asgarnia — BREACH, Quest 4 (server `quests/asgarnia/OldWounds`, generic journal varp 4696,
 	 * QuestBook.OLD_WOUNDS = 17 — declaration order IS the slot: directly after The Guns of Asgarnia
-	 * (16); The White Wall, the campaign's finale, takes 18 when it lands). The intelligence quest and the first deliberate Wilderness mission:
+	 * (16); First March, built later, took 18, so The White Wall, the campaign's finale, takes 19 when it lands). The intelligence quest and the first deliberate Wilderness mission:
 	 * real PvP the whole way, never instanced, never protected. Rows are the 1-based server step
 	 * indices (the three "examine the remains" server steps have their own rows here).
 	 */
@@ -493,6 +493,37 @@ enum LofQuest
 			"Lord Daquarius - the Kinshra commander, met face to face (twice)",
 			"The Damaged Temple Knight Report - the second entry in your lore journal",
 			"The White Wall - Asgarnia's finale (speak with Sir Amik Varze)"
+		)),
+
+	/**
+	 * Main Story Quest 2 (server `quests/story/FirstMarch`, generic journal varp 4698,
+	 * QuestBook.FIRST_MARCH = 18 — declaration order IS the slot, and slots are build order: this
+	 * quest was built after the ones around it, so it lists after Old Wounds (17); The White Wall
+	 * takes 19). Rows are the 1-based server step indices. The march row (3) is anchored on the
+	 * goblin camp Zo's column strikes; a column already in the field elsewhere is reached with
+	 * ::march, and General Zo says where.
+	 */
+	FIRST_MARCH(
+		"First March",
+		"This morning the war came to Lumbridge. Now Lumbridge goes to the war. Every half hour the "
+			+ "Knights of Lumbridge march out of the castle courtyard against a hostile camp, road or "
+			+ "rogue position, and any soldier of the realm may fight beside them - no rank required. "
+			+ "General Zo sends the column across the river at the goblin camp that probed the gate: "
+			+ "rally to it with ::march, stay in the line until the enemy breaks, and learn what the "
+			+ "muster call is asking every time you hear it.",
+		LofQuestVarps.FIRST_MARCH,
+		"Complete The Last Free City first.",
+		Arrays.asList(
+			new LofQuestStep(1, "Report to General Zo", "In the castle courtyard, beside Duke Horacio. He musters the columns that march against the enemy.", new WorldPoint(3220, 3210, 0)).npcs(Npcs.GENERAL_ZO),
+			new LofQuestStep(2, "Tell General Zo you are ready to march", "He sends the column on your word - or points you at one already in the field.", new WorldPoint(3220, 3210, 0)).npcs(Npcs.GENERAL_ZO),
+			new LofQuestStep(3, "Fight beside the Knights of Lumbridge", "::march rallies you to the column. Stay in the battle line - you need a real share of the fighting, and the column must win. Driven back, or sat it out? See General Zo and march again.", new WorldPoint(3254, 3234, 0)),
+			new LofQuestStep(4, "Report the march to General Zo", "The field is won.", new WorldPoint(3220, 3210, 0)).npcs(Npcs.GENERAL_ZO)
+		),
+		Arrays.asList(
+			"1 Quest Point and 25 War Effort",
+			"The March - the realm's free, scheduled warband, and ::march to rally to it",
+			"Your share of the march's spoils, paid by the realm",
+			"The North - the next main story quest"
 		)),
 
 	/** FUTURE teaser: the strategic phase's payoff (excluded from the chain track until built). */

@@ -97,7 +97,10 @@ class GeneralZoPlugin(
             WarPrepSurvival.Step.REPORT -> { survivalDebrief(player); return }
             else -> {}
         }
-        chatNpc(player, "Well met, ${player.address}. I am General Zo, commander of<br>the Lumbridge garrison. The realm's war is fought out<br>there — on the roads and in the ruins.", title = ZO)
+        // Chat-box lines are hand-wrapped at ≤ ~48 visible characters, four rows at most: the
+        // npc-dialogue text component is ~380px of bold-12 text, and anything past that is cut
+        // off the bottom of the box. (Same rule as the story quests' Zo lines.)
+        chatNpc(player, "Well met, ${player.address}. I am General Zo, commander<br>of the Lumbridge garrison. The realm's war is<br>fought out there — on the roads and in the ruins.", title = ZO)
         // The menu is built by name so an unlock can add a row without shifting the others' indices.
         val choices = arrayListOf(OPT_STATUS, OPT_COMMAND, OPT_RECRUIT)
         if (SouthernWatch.isUnlocked(player)) choices += OPT_WATCH // First Reclamation: the forward post
@@ -116,7 +119,7 @@ class GeneralZoPlugin(
     /** Post-First-Reclamation: Zo sends the player to the Southern Watch (the route the quest unlocked). */
     private suspend fun QueueTask.sendToSouthernWatch(player: Player) {
         chatPlayer(player, "Send me to the Southern Watch.")
-        chatNpc(player, "The circle's ours, ${player.address} — the roads around it are<br>not. Keep your eyes open up there.", title = ZO)
+        chatNpc(player, "The circle's ours, ${player.address} — the roads around it<br>are not. Keep your eyes open up there.", title = ZO)
         TeleportService.teleport(player, SouthernWatch.ROUTE)
     }
 
@@ -128,16 +131,18 @@ class GeneralZoPlugin(
             campaign -> chatNpc(player,
                 "A commander has the army in <col=801700>Fallen Varrock</col> this<br>very hour. Every sword counts — get to the front!", title = ZO)
             march != null -> chatNpc(player,
-                "The Knight-Captain's ${march.tier.display} is in the field —<br>${march.progressPct(player.world)}% of the way to its objective. Rally to<br>the column with <col=801700>::march</col>; the realm pays its soldiers<br>from the spoils.", title = ZO)
+                "The Knight-Captain's ${march.tier.display} is in the field —<br>${march.progressPct(player.world)}% of the way to its objective. Rally to the<br>column with <col=801700>::march</col>; the realm pays its<br>soldiers from the spoils.", title = ZO)
             else -> chatNpc(player,
-                "The garrison stands ready and no column is out just now.<br>The Knight-Captain musters a march every half hour —<br>watch for the call, and answer it with <col=801700>::march</col>.", title = ZO)
+                "The garrison stands ready and no column is out<br>just now. The Knight-Captain musters a march every<br>half hour — watch for the call, and answer it<br>with <col=801700>::march</col>.", title = ZO)
         }
     }
 
     private suspend fun QueueTask.commandLadder(player: Player) {
         chatPlayer(player, "How do I take command?")
         chatNpc(player,
-            "Any citizen may fight in a march — rank gates who may<br>START a war, never who may join one. A Lord may sponsor<br>a squad; a Minister launches campaigns; only the King<br>calls a conquest. Earn your standing, ${player.address}.", title = ZO)
+            "Any citizen may fight in a march — rank gates<br>who may START a war, never who may join one.", title = ZO)
+        chatNpc(player,
+            "A Lord may sponsor a squad; a Minister launches<br>campaigns; only the King calls a conquest.<br>Earn your standing, ${player.address}.", title = ZO)
     }
 
     // ───────────────────────────── War-Prep III — Survival ─────────────────────────────
@@ -147,35 +152,35 @@ class GeneralZoPlugin(
     private suspend fun QueueTask.survivalDrillNudge(player: Player) {
         when (WarPrepSurvival.toughenUp(player)) {
             WarPrepSurvival.TopUp.DRILLED -> {
-                chatNpc(player, "Still soft? No more excuses. On the training yard —<br>we'll toughen you the hard way.", title = ZO)
-                chatNpc(player, "General Zo runs you through a brutal conditioning drill.<br>Your Hitpoints reach ${WarPrepSurvival.HP_TARGET}.", title = ZO)
+                chatNpc(player, "Still soft? No more excuses. On the training<br>yard — we'll toughen you the hard way.", title = ZO)
+                chatNpc(player, "General Zo runs you through a brutal<br>conditioning drill. Your Hitpoints reach ${WarPrepSurvival.HP_TARGET}.", title = ZO)
             }
             WarPrepSurvival.TopUp.NOT_NEEDED ->
-                chatNpc(player, "A commander who can't take a hit gets his men killed.<br>Toughen up — raise your Hitpoints to ${WarPrepSurvival.HP_TARGET},<br>then come back and I'll kit you for the real trial.", title = ZO)
+                chatNpc(player, "A commander who can't take a hit gets his<br>men killed. Toughen up — raise your Hitpoints<br>to ${WarPrepSurvival.HP_TARGET}, then come back and I'll kit you<br>for the real trial.", title = ZO)
         }
     }
 
     /** GEAR step: hand over the survival kit and send the soldier into the Fight Cave. */
     private suspend fun QueueTask.survivalArm(player: Player) {
-        chatNpc(player, "Tough enough now. When the front collapses, ${player.address},<br>it's the soldier who outlasts the rout who lives. Time to<br>prove you can.", title = ZO)
+        chatNpc(player, "Tough enough now. When the front collapses,<br>${player.address}, it's the soldier who outlasts the rout<br>who lives. Time to prove you can.", title = ZO)
         // Advance immediately with the handout — a chatNpc between them let an early chat-close
         // strand the step on GEAR and re-claim the kit (same dupe as Vannaka's tower kit).
         WarPrepSurvival.armForTrial(player) // armour + food + brews + restores
         WarPrepSurvival.onArmedForTrial(player) // GEAR → FIELD
-        chatNpc(player, "Take this kit — armour, food, brews and restores. Go to<br>the <col=801700>Fight Cave</col> and <col=801700>survive to wave ${WarPrepSurvival.FIELD_WAVE}</col>. Manage<br>your health, don't panic, and endure.", title = ZO)
-        chatNpc(player, "Come back to me when you've made that wave. Follow the<br>marker.", title = ZO)
+        chatNpc(player, "Take this kit — armour, food, brews and restores.<br>Go to the <col=801700>Fight Cave</col> and <col=801700>survive to wave ${WarPrepSurvival.FIELD_WAVE}</col>.<br>Manage your health, don't panic, and endure.", title = ZO)
+        chatNpc(player, "Come back to me when you've made that wave.<br>Follow the marker.", title = ZO)
     }
 
     /** FIELD step: reach the target Fight Cave wave. A vouch escape (once they've proven an honest
      *  attempt) prevents an unlucky cave run from soft-locking the quest. */
     private suspend fun QueueTask.survivalFieldNudge(player: Player) {
-        chatNpc(player, "The cave isn't beaten yet — best wave ${WarPrepSurvival.bestWave(player)} of<br>${WarPrepSurvival.FIELD_WAVE}. Get back in there and endure.", title = ZO)
+        chatNpc(player, "The cave isn't beaten yet — best wave ${WarPrepSurvival.bestWave(player)}<br>of ${WarPrepSurvival.FIELD_WAVE}. Get back in there and endure.", title = ZO)
         // Only offer the vouch once they've genuinely tried (reached the lower bar).
         if (WarPrepSurvival.bestWave(player) >= WarPrepSurvival.FIELD_VOUCH_WAVE) {
             when (options(player, "I'll head back in.", "I keep dying short of it — pass me, General.", title = ZO)) {
                 2 -> {
                     if (WarPrepSurvival.vouchField(player)) {
-                        chatNpc(player, "You've bled enough in there for me to know your<br>mettle. I'll vouch for you. Report to me proper — the<br>trial's behind you.", title = ZO)
+                        chatNpc(player, "You've bled enough in there for me to know your<br>mettle. I'll vouch for you. Report to me proper —<br>the trial's behind you.", title = ZO)
                     }
                 }
                 else -> chatPlayer(player, "I'll head back in.")
@@ -185,10 +190,10 @@ class GeneralZoPlugin(
 
     /** REPORT step: debrief — pay the survival BOUNTY; the Ministry itself is earned in command. */
     private suspend fun QueueTask.survivalDebrief(player: Player) {
-        chatNpc(player, "You held out when lesser men would have broken. That's<br>the making of a commander, ${player.address}.", title = ZO)
-        chatNpc(player, "The realm pays for the trial: <col=801700>${"%,d".format(WarPrepSurvival.SURVIVAL_BOUNTY)} coins</col>, a survival<br>bounty. The <col=801700>Ministry</col> you'll EARN in command — lead marches<br>and raids, farm the ladder's elite for their rares.", title = ZO)
+        chatNpc(player, "You held out when lesser men would have broken.<br>That's the making of a commander, ${player.address}.", title = ZO)
+        chatNpc(player, "The realm pays for the trial: <col=801700>${"%,d".format(WarPrepSurvival.SURVIVAL_BOUNTY)} coins</col>,<br>a survival bounty. The <col=801700>Ministry</col> you'll EARN<br>in command — lead marches and raids, farm the<br>ladder's elite for their rares.", title = ZO)
         WarPrepSurvival.onReportedToZo(player) // REPORT → RANK: pays the bounty
-        chatNpc(player, "When your purse reaches ${"%,d".format(org.alter.plugins.content.war.Title.MINISTER.cost)}, the Duke will raise you.<br>A Minister stands within reach of the crown itself —<br>and the King's endgame.", title = ZO)
+        chatNpc(player, "When your purse reaches ${"%,d".format(org.alter.plugins.content.war.Title.MINISTER.cost)}, the Duke will<br>raise you. A Minister stands within reach of the<br>crown itself — and the King's endgame.", title = ZO)
     }
 
     companion object {

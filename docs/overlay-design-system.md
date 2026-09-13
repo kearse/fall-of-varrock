@@ -328,7 +328,10 @@ Reusable pieces — reach for these before inventing a new one. Metrics above.
     `QuestJournal.GUNS_OF_ASGARNIA_VARP`; client `LofQuestVarps.GUNS_OF_ASGARNIA`) ·
     **4696 Old Wounds journal** (Asgarnia — BREACH, Quest 4, `old_wounds`; `QuestJournal.OLD_WOUNDS_VARP`;
     client `LofQuestVarps.OLD_WOUNDS`) ·
-    **4697-4699 RESERVED for the remaining Asgarnia campaign quests** (The White Wall 4697 — its own PR).
+    **4697 RESERVED for The White Wall** (Asgarnia's finale — its own PR) ·
+    **4698 First March journal** (Main Story Quest 2, `first_march`; `QuestJournal.FIRST_MARCH_VARP`;
+    client `LofQuestVarps.FIRST_MARCH`) ·
+    **4699 spare** (the last of the framework block).
     (4601/4609/4616 all feed the `lofdials` dial row.)
     Every id in this map is guaranteed writable server-side: the varp table is sized
     `maxOf(cache varp count, Player.CUSTOM_VARP_CEILING = 6000)` — the cache count alone sat BELOW

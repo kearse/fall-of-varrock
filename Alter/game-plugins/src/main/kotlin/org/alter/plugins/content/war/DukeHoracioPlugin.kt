@@ -43,7 +43,7 @@ class DukeHoracioPlugin(
         // when the line broke — flow straight from the introduction into claiming it with the coin
         // the Sergeant paid out. No second greeting.
         if (inTutorial && next != null) {
-            chatNpc(player, "You stood at the eastern camp when the line<br>broke. That is service, and service is what rank<br>is FOR. Shall I raise you to ${next.display}? It costs<br>${fmt(next.cost)} coins — the Sergeant's pay covers it.")
+            chatNpc(player, "Service is what rank is FOR, and you have given<br>it. Shall I raise you to ${next.display}? It costs<br>${fmt(next.cost)} coins — the Sergeant's pay covers it.")
             when (options(player, "Yes — make me a ${next.display}.", "Not just yet.")) {
                 1 -> {
                     buy(player, next)

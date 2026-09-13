@@ -56,6 +56,7 @@ findings that shape everything below:
   | A Matter of Trolls (Asgarnia — BREACH quest 2, framework `a_matter_of_trolls`; sort key "16 …") | Death Plateau | 23 | 58 | 314 | 80 |
   | The Guns of Asgarnia (Asgarnia quest 3, framework `guns_of_asgarnia`; sort "17 …") | Dwarf Cannon | 35 | 47 | 0 | 11 |
   | Old Wounds (Asgarnia — BREACH, Quest 4, framework `old_wounds`; sort "18 Old Wounds") | Wanted! (its start NPC is Sir Tiffy) | 156 | 92 | 1051 | 11 |
+  | First March (Main Story Quest 2, framework `first_march`; sort "19 First March" — chain slot 18, built after the quests around it; a members' row, `free` moves it) | Tree Gnome Village | 150 | 32 | 111 | 9 |
 
   Framework quests (`quests/framework/`) drive their reused varp through `QuestDefinition.nativeTabVarp`
   / `nativeTabComplete` (written by `QuestEngine.publish`, 0 / 1 / complete) — no per-quest
@@ -64,7 +65,7 @@ findings that shape everything below:
   (e.g. "9a", "9b") unless every row is renumbered zero-padded — which is what `PLAN` now does
   ("01" … "07" legacy hallway, "08" The North, "09" First Reclamation, "10" A Kingdom Alone,
   "11"-"14" the four strategic objectives, "15" At the White Wall and the regional campaign quests
-  after it — Trolls "16", Guns "17", Old Wounds "18"). Not usable for rows: Goblin Diplomacy, Demon
+  after it — Trolls "16", Guns "17", Old Wounds "18"; First March, built later, "19"). Not usable for rows: Goblin Diplomacy, Demon
   Slayer, Misthalin Mystery, X Marks the Spot, The Corsair Curse (varbit-driven), Shield of Arrav
   (two varps).
 

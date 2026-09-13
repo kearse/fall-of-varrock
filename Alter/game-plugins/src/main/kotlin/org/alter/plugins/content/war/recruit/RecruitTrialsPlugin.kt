@@ -7,6 +7,7 @@ import org.alter.game.Server
 import org.alter.game.model.Direction
 import org.alter.game.model.World
 import org.alter.game.model.attr.NEW_ACCOUNT_ATTR
+import org.alter.game.model.attr.SERGEANT_PORTAL_TIP_DONE_ATTR
 import org.alter.game.model.entity.Player
 import org.alter.game.model.queue.QueueTask
 import org.alter.game.plugin.KotlinPlugin
@@ -169,17 +170,17 @@ class RecruitTrialsPlugin(
             RecruitTrials.Step.TALK -> alarm(p)
             RecruitTrials.Step.FIGHT -> {
                 val kills = p.attr[org.alter.game.model.attr.RECRUIT_GOBLIN_KILLS_ATTR] ?: 0
-                damien(p, "The camp's east of here, across the river — follow the marker. Help the knights put down ${RecruitTrials.GOBLIN_GOAL} goblins; you're at $kills. Move!")
+                damien(p, "The camp's east of here, across the river — follow<br>the marker. Help the knights put down ${RecruitTrials.GOBLIN_GOAL} goblins;<br>you're at $kills. Move!")
             }
             RecruitTrials.Step.REPORT -> report(p)
-            RecruitTrials.Step.RANK -> damien(p, "Duke Horacio's in the market, by the Slayer Master. You stood for Lumbridge today — he'll recognise it. Take him your coin and claim your rank.")
-            RecruitTrials.Step.SLAY -> damien(p, "Vannaka signs the war-contracts — follow the marker. Some of the goblins scattered when the knights broke them; he'll have you hunt them down before they regroup.")
-            RecruitTrials.Step.MINE_BRIEF -> damien(p, "Stragglers dealt with? Report back to Vannaka — the army's stores need refilling next.")
-            RecruitTrials.Step.SUPPLY -> damien(p, "Every battle empties the stores. Vannaka's set you to The Mire, our skilling grounds south-east of the castle — follow the marker and mine some copper and tin to start.")
-            RecruitTrials.Step.SMELT -> damien(p, "Got your ore? Smelt it into a bronze bar at the furnace in The Mire — follow the marker.")
-            RecruitTrials.Step.SMITH -> damien(p, "A bar's no use to the front on its own. Hammer it into a bronze dagger at the anvil — follow the marker.")
-            RecruitTrials.Step.DELIVER -> damien(p, "Now take that dagger to the Quartermaster in The Mire and hand it in for the war — follow the marker.")
-            RecruitTrials.Step.RETURN -> damien(p, "Supplies handed in? Report back to Vannaka — he'll square you up. Then come and find me.")
+            RecruitTrials.Step.RANK -> damien(p, "Duke Horacio's in the market, by the Slayer<br>Master. Take him your coin and claim your rank.")
+            RecruitTrials.Step.SLAY -> damien(p, "Vannaka signs the war-contracts — follow the<br>marker. Some of the goblins scattered when the<br>knights broke them. He'll have you hunt them down.")
+            RecruitTrials.Step.MINE_BRIEF -> damien(p, "Stragglers dealt with? Report back to Vannaka —<br>the army's stores need refilling next.")
+            RecruitTrials.Step.SUPPLY -> damien(p, "Every battle empties the stores. Vannaka's set<br>you to The Mire, our skilling grounds south-east<br>of the castle — follow the marker and mine some<br>copper and tin to start.")
+            RecruitTrials.Step.SMELT -> damien(p, "Got your ore? Smelt it into a bronze bar at the<br>furnace in The Mire — follow the marker.")
+            RecruitTrials.Step.SMITH -> damien(p, "A bar's no use to the front on its own. Hammer<br>it into a bronze dagger at the anvil — follow<br>the marker.")
+            RecruitTrials.Step.DELIVER -> damien(p, "Now take that dagger to the Quartermaster in<br>The Mire and hand it in for the war — follow<br>the marker.")
+            RecruitTrials.Step.RETURN -> damien(p, "Supplies handed in? Report back to Vannaka — he'll<br>square you up. Then come and find me.")
             RecruitTrials.Step.DEBRIEF -> debrief(p)
             RecruitTrials.Step.DONE -> idle(p)
         }
@@ -188,7 +189,7 @@ class RecruitTrialsPlugin(
     /** TALK: the alarm. Damien musters the recruit straight into the east-camp fight (advances to FIGHT). */
     private suspend fun QueueTask.alarm(p: Player) {
         damien(p, "YOU! Over here!")
-        damien(p, "The eastern post is being overrun. Goblins pushed through near the old camp. Our knights are holding them, but they need every pair of hands we've got.")
+        damien(p, "The eastern post is being overrun. Goblins pushed<br>through near the old camp. Our knights are holding<br>them, but they need every pair of hands we've got.")
         chatPlayer(p, "I just got here!")
         damien(p, "Then you picked a bad day.")
         // Handout + step advance back-to-back, with NO suspending line between them: every chat line
@@ -199,49 +200,50 @@ class RecruitTrialsPlugin(
         RecruitTrials.grantMusterKit(p)
         RecruitTrials.advanceTo(p, RecruitTrials.Step.FIGHT)
         damien(p, "Here. You'll need these.")
-        damien(p, "Head east, across the river. You'll see the camp. Five goblins have pushed into the position — help the knights put them down.")
+        damien(p, "Head east, across the river. You'll see the camp.<br>Five goblins have pushed into the position —<br>help the knights put them down.")
         chatPlayer(p, "You want me to fight them?")
         damien(p, "I want you to decide.")
-        damien(p, "You can stay here and hope somebody else keeps Lumbridge standing... or you can stand with us.")
+        damien(p, "You can stay here and hope somebody else keeps<br>Lumbridge standing... or you can stand with us.")
     }
 
-    /** REPORT: it was a probe. The lineage breadcrumb, the muster roll, the Sergeant's pay. */
+    /**
+     * REPORT: it was a probe. The lineage breadcrumb, the muster roll, the Sergeant's pay. The
+     * praise is one line — the Duke and Vannaka each acknowledge the fight once more on the way,
+     * so Damien doesn't labour it here.
+     */
     private suspend fun QueueTask.report(p: Player) {
-        damien(p, "You're alive.")
-        damien(p, "Better than that. You held.")
+        damien(p, "You're alive. Good.")
         chatPlayer(p, "Was that the attack?")
         damien(p, "No. That was a probe.")
-        damien(p, "They pushed fighters against the eastern post to see how quickly we'd respond. How many guards we'd move. Where the weak points were.")
+        damien(p, "They hit the eastern post to see how fast we'd<br>move — and where we're thin.")
         chatPlayer(p, "So they're coming back?")
         damien(p, "They always come back.")
-        damien(p, "...You know, for a second out there you reminded me of someone.")
+        damien(p, "...For a second out there you reminded me<br>of someone.")
         chatPlayer(p, "Who?")
         damien(p, "Doesn't matter. We've got work to do.")
-        damien(p, "Standing your ground once doesn't make you a soldier. But it earns you the chance to become one.")
-        damien(p, "The army lost weapons and supplies today. If you want to keep helping, I'm putting you on the muster roll.")
-        chatPlayer(p, "What do I need to do?")
-        damien(p, "First, take your pay.")
+        damien(p, "The army lost weapons and supplies today. If you<br>want to keep helping, you're on the muster roll.<br>First, your pay.")
         RecruitTrials.grantReportReward(p) // coin + bronze kit; REPORT → RANK (before the last line — mutate, then narrate)
-        damien(p, "Then go and see Duke Horacio in the market. You stood for Lumbridge today. He'll recognise the service.")
+        damien(p, "Then go and see Duke Horacio in the market.<br>He'll want a word.")
     }
 
-    /** DEBRIEF: the finale — Varrock fell twelve years ago; the war lies north. Completes the quest. */
+    /**
+     * DEBRIEF: the finale — Varrock fell twelve years ago; the war lies north. Completes the quest.
+     * No recap of the day (the player just lived it) and no second "it was a probe" (REPORT said
+     * so): this beat exists to name Varrock and point at General Zo.
+     */
     private suspend fun QueueTask.debrief(p: Player) {
-        damien(p, "Look at you. This morning you were a Peasant.")
-        damien(p, "Then the horns sounded.")
-        damien(p, "You fought when you could've run. You hunted down what got through. You replaced what the army lost.")
+        damien(p, "That's the stores refilled. Good work.")
         chatPlayer(p, "Is Lumbridge safe now?")
         damien(p, "No.")
-        damien(p, "But it's still ours. Varrock couldn't say the same.")
+        damien(p, "But it's still ours.<br>Varrock couldn't say the same.")
         chatPlayer(p, "What happened there?")
         damien(p, "Twelve years ago, Varrock fell.")
-        damien(p, "What remains of Misthalin has been fighting ever since to make sure the same thing doesn't happen here.")
-        damien(p, "Today's attack wasn't meant to take Lumbridge. They were testing us. Someone wanted to know how quickly we'd bleed.")
-        chatPlayer(p, "Then maybe we shouldn't wait for the next attack.")
+        damien(p, "What's left of Misthalin has been fighting ever<br>since to make sure the same thing doesn't<br>happen here.")
+        chatPlayer(p, "Then maybe we shouldn't wait for the next probe.")
         RecruitTrials.onDebriefed(p) // DEBRIEF → DONE: the quest completes here (mutate, then narrate)
         damien(p, "Maybe you're learning.")
-        damien(p, "General Zo musters the columns that march north against the enemy — you'll find him in the castle courtyard. When you hear the call for the next March... answer it.")
-        damien(p, "Until the horns sound again, Vannaka has drills for you. The front's mages will melt a soldier who can't pray — go and see him.")
+        damien(p, "General Zo musters the columns that march north —<br>you'll find him in the castle courtyard. When you<br>hear the call for the next March... answer it.")
+        damien(p, "Until then, Vannaka has drills for you. The<br>front's mages will melt a soldier who can't pray.<br>Go and see him.")
     }
 
     /** DONE: the everyday Sergeant — Rogue Knight ladder quartermaster, bounty paymaster, signposts. */
@@ -257,14 +259,14 @@ class RecruitTrialsPlugin(
                 1 -> {
                     val target = RogueKnightLadder.activeDef(p)
                     if (target == null) {
-                        damien(p, "You've cleared the whole ladder, ${p.address} — all ${org.alter.plugins.content.bots.knights.RogueKnights.LADDER.size} of them. The realm's deadliest blade. Any of them can be hunted again for their gear: <col=0000ff>::knights</col>.")
+                        damien(p, "You've cleared the whole ladder, ${p.address} — all<br>${org.alter.plugins.content.bots.knights.RogueKnights.LADDER.size} of them. Any of them can be hunted again for<br>their gear: <col=0000ff>::knights</col>.")
                     } else {
                         val farming = target.rank < RogueKnightLadder.rank(p)
                         if (farming) {
-                            damien(p, "You're back on <col=801700>${target.name}</col> for the spoils — good hunting. ${RogueKnightLadder.statusLine(p)} (<col=0000ff>::huntnext</col> returns you to the ladder.)")
+                            damien(p, "You're back on <col=801700>${target.name}</col> for the spoils.<br>${RogueKnightLadder.statusLine(p)}<br>(<col=0000ff>::huntnext</col> returns you to the ladder.)")
                         } else {
                             damien(p, "Your mark: ${target.briefLine}")
-                            damien(p, "Find them at <col=801700>${target.camp.display}</col> — ${target.camp.directions} The marker leads; <col=0000ff>::knights</col> lists the whole ladder, and any beaten knight can be farmed again.")
+                            damien(p, "Find them at <col=801700>${target.camp.display}</col> — ${target.camp.directions}<br>The marker leads; <col=0000ff>::knights</col> lists the ladder.")
                             if (!CampClearance.cleared(p, target.camp)) {
                                 damien(p, "The camp guards its own: ${CampClearance.statusLine(p, target.camp)}")
                             }
@@ -279,25 +281,30 @@ class RecruitTrialsPlugin(
         // paymaster, so every bounty moment routes the hunter back to him.
         val bounties = RogueHunt.payout(p)
         if (bounties.isNotEmpty()) {
-            damien(p, "Word travels, ${p.address} — ${RogueHunt.kills(p)} cutthroats of the fallen cities put down by your hand. The realm pays its hunters. Here's your bounty.")
-            damien(p, "Keep at it. ${RogueHunt.statusLine(p)}")
+            damien(p, "${RogueHunt.kills(p)} cutthroats put down by your hand. The realm<br>pays its hunters — here's your bounty.")
+            damien(p, RogueHunt.statusLine(p))
             return
         }
-        damien(p, "At ease, ${p.address}. You stood for Lumbridge when it counted — fought, ranked, slain and supplied. A true citizen-soldier. Make us proud.")
-        // UX: the teleport portal was undiscoverable — nothing in the game ever mentioned it.
-        damien(p, "One more thing every soldier should know: the <col=801700>glowing portal over the courtyard fountain</col> carries you to every front, skilling ground and arena the realm holds. Use it.")
+        // No recap of the intro quest here: the player lived it, and every other NPC on the way
+        // has already acknowledged it. The everyday Sergeant only points at what comes next.
+        damien(p, "At ease, ${p.address}.")
+        // UX: the teleport portal was undiscoverable — nothing else in the game mentions it. Said
+        // once, then never again.
+        if (p.attr[SERGEANT_PORTAL_TIP_DONE_ATTR] != true) {
+            p.attr[SERGEANT_PORTAL_TIP_DONE_ATTR] = true
+            damien(p, "One thing every soldier should know: the <col=801700>glowing<br>portal over the courtyard fountain</col> carries you to<br>every front, skilling ground and arena the realm<br>holds. Use it.")
+        }
         // The Rogue Problem is offered by the quest-priority branch (RogueProblemPlugin) once
         // War-Prep I is done; until then say WHAT is coming and WHY it isn't offered yet, so a
         // soldier who came for "rogue hunting" doesn't leave thinking the Sergeant has nothing.
         if (RogueProblem.step(p) == RogueProblem.Step.NONE) {
-            damien(p, "There's harder work waiting for you — the rogues bleeding our roads — but not before Vannaka's magic drills, <col=801700>War-Prep I</col>, are behind you. Finish those and ask me again.")
+            damien(p, "There's harder work waiting — the rogues bleeding<br>our roads — once Vannaka's <col=801700>War-Prep I</col> drills are<br>behind you. Finish those and ask me again.")
         }
         if (RogueHunt.kills(p) == 0) {
-            damien(p, "If you're hunting work: the rogue family crawls over the road camps west of Lumbridge and the ruins of <col=801700>Fallen Varrock</col> alike. The realm pays a bounty at every milestone of cutthroats you put down — report your tally to me. <col=0000ff>::rogues</col> tracks it.")
-            damien(p, "Fair warning: Varrock's streets are the wilderness — the road camps are safe. Take nothing into the ruins you can't afford to lose; the tally, at least, is yours forever.")
+            damien(p, "Hunting work, if you want it: the rogue family<br>holds the road camps west of here and the ruins<br>of <col=801700>Fallen Varrock</col>. I pay a bounty at every<br>milestone — <col=0000ff>::rogues</col> tracks your tally.")
+            damien(p, "The road camps are safe ground. Varrock's streets<br>are the wilderness — take nothing in there you<br>can't afford to lose.")
         } else {
             damien(p, RogueHunt.statusLine(p))
         }
-        chatPlayer(p, "I won't let the realm down, sergeant.")
     }
 }

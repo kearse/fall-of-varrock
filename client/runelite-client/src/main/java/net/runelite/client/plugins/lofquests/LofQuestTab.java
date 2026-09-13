@@ -61,6 +61,7 @@ final class LofQuestTab
 		m.put(23, LofQuest.A_MATTER_OF_TROLLS);   // Death Plateau
 		m.put(35, LofQuest.GUNS_OF_ASGARNIA);     // Dwarf Cannon
 		m.put(156, LofQuest.OLD_WOUNDS);          // Wanted!
+		m.put(150, LofQuest.FIRST_MARCH);         // Tree Gnome Village
 		ROWS = Collections.unmodifiableMap(m);
 	}
 

@@ -21,7 +21,7 @@ private val logger = KotlinLogging.logger {}
  * **The Mire — the realm's war-supply hub**, in two halves:
  *  - **The Working Yard** — the Lumbridge graveyard, cleared of its gravestones (kept the coffin
  *    crypt). Holds the bank, the five processing stations (cookfire/furnace/anvil/spinning wheel/
- *    altar), the thieving stalls, and the **Supply Officer** (a Quartermaster) inside the crypt. This
+ *    altar) and the **Supply Officer** (a Quartermaster) inside the crypt. This
  *    is where you PROCESS gathers and hand finished goods to the war. Sited here so it's central
  *    (steps from the castle), not out in the deep marsh.
  *  - **The Collection Grounds** — the swamp just south: trees/rocks/fish/herbs/thickets, spawned by
