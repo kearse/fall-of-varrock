@@ -66,7 +66,7 @@ object TeleportRegistry {
         built("skill_agility", "Agility", SKILLING, Tile(3227, 3174, 0), SAFE_ZONE),     // the Mire Run dispenser
         built("skill_herblore", "Herblore", SKILLING, Tile(3240, 3193, 0), SAFE_ZONE),   // Mire yard, W of the pad (r12849 dump: clear)
         built("skill_fletching", "Fletching", SKILLING, Tile(3246, 3193, 0), SAFE_ZONE), // Mire yard, E of the pad (r12849 dump: clear)
-        built("skill_thieving", "Thieving", SKILLING, Tile(3242, 3189, 0), SAFE_ZONE),   // Mire yard stall row (SwampStallSpawnPlugin) — the supply-skilling hub
+        built("skill_thieving", "Thieving", SKILLING, Tile(2979, 3394, 0), SAFE_ZONE),   // Falador north square, 2 S of the stall row (SwampStallSpawnPlugin) — safe again since raid cities went dormant
         // Runecraft and Farming have DISTINCT destinations (the fire altar; the flowerbeds 18 tiles
         // south of the pad) that the hub row never signposted ("no direction", 2026-09-03).
         // Appended at the END of the category so older client mirrors keep their row indices.
