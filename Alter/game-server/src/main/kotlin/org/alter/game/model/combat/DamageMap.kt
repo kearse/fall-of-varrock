@@ -24,16 +24,30 @@ class DamageMap {
     }
 
     /**
-     * Get all [DamageStack]s dealt by [Pawn]s whom meets the criteria
-     * [Pawn.entityType] == [type].
+     * Whether [pawn] satisfies a [type] filter. Asking for [EntityType.PLAYER] matches
+     * any pawn whose [EntityType.isPlayer] is true — a real logged-in account is a
+     * [org.alter.game.model.entity.Client] with [EntityType.CLIENT], and only
+     * bots/companions are bare `PLAYER`, so an exact `==` comparison would silently
+     * skip every human attacker. Every other type is matched exactly.
+     */
+    private fun matches(pawn: Pawn, type: EntityType): Boolean =
+        if (type == EntityType.PLAYER) pawn.entityType.isPlayer else pawn.entityType == type
+
+    private fun withinTimeFrame(stack: DamageStack, timeFrameMs: Long?): Boolean =
+        timeFrameMs == null || System.currentTimeMillis() - stack.lastHit < timeFrameMs
+
+    /**
+     * Get all [DamageStack]s dealt by [Pawn]s whom meets the criteria [type].
+     *
+     * [EntityType.PLAYER] matches every pawn with [EntityType.isPlayer] (real clients
+     * AND bots/companions); other types are matched exactly. Callers that really mean
+     * "bots only" must check [Pawn.entityType] themselves.
      */
     fun getAll(
         type: EntityType,
         timeFrameMs: Long? = null,
     ): Collection<DamageStack> =
-        map.filter {
-            it.key.entityType == type && (timeFrameMs == null || System.currentTimeMillis() - it.value.lastHit < timeFrameMs)
-        }.values
+        map.filter { matches(it.key, type) && withinTimeFrame(it.value, timeFrameMs) }.values
 
     /**
      * Get the total damage from a [pawn].
@@ -68,16 +82,17 @@ class DamageMap {
     fun getMostDamage(): Pawn? = map.maxByOrNull { it.value.totalDamage }?.key
 
     /**
-     * Gets the most damage dealt by a [Pawn] in our map whom meets the criteria
-     * [Pawn.entityType] == [type].
+     * Gets the most damage dealt by a [Pawn] in our map whom meets the criteria [type].
+     *
+     * [EntityType.PLAYER] matches every pawn with [EntityType.isPlayer] (real clients
+     * AND bots/companions); other types are matched exactly — see [getAll].
      */
     fun getMostDamage(
         type: EntityType,
         timeFrameMs: Long? = null,
     ): Pawn? =
-        map.filter {
-            it.key.entityType == type && (timeFrameMs == null || System.currentTimeMillis() - it.value.lastHit < timeFrameMs)
-        }.maxByOrNull { it.value.totalDamage }?.key
+        map.filter { matches(it.key, type) && withinTimeFrame(it.value, timeFrameMs) }
+            .maxByOrNull { it.value.totalDamage }?.key
 
     data class DamageStack(val totalDamage: Int, val lastHit: Long)
 }

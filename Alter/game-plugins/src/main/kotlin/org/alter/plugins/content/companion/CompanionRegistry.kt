@@ -497,7 +497,8 @@ object CompanionRegistry {
         val live = byOwner[keyOf(player)] ?: return false
         val comp = live.getOrNull(slot) ?: return false
         // Not while another PLAYER is hitting him — vanishing a companion mid-PvP is the same trick as
-        // logging out to escape, so it gets the same 10-second rule the logout gate uses. NPC damage
+        // logging out to escape, so it gets the same 10-second rule the logout gate uses. PLAYER here
+        // covers real clients and bots alike (DamageMap matches on isPlayer). NPC damage
         // (training, bossing) doesn't count: waiting out a goblin to bench a knight would just be tedious.
         if (comp.damageMap.getAll(type = EntityType.PLAYER, timeFrameMs = 10_000).isNotEmpty()) {
             player.message("<col=801700>Sir ${comp.username} is under attack — he can't stand down yet.</col>")
