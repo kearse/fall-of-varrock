@@ -64,10 +64,14 @@ special attack instance / wave (the camp's living skirmish already reads as the 
   went the same way: the world-spawn dataset stats those ids as aggressive level-5 Goblin Village
   goblins (15–16 hp, def 13–19), and with walk radius 8 they wandered into the fight — now
   `goblin_3039` / `goblin_3054`. Every goblin at the camp is a level-2 that never attacks first.
-- **Client highlight:** the Quest Journal's goblin highlight list (`LofQuest.GOBLINS`) carries the
-  level-2 family (2484, 3028-3048, 3051-3054, 3073-3076) as well as the level-5 655 family and the
-  2245-2249 line. The FIGHT arrow hands off to the on-creature highlight once one is within 15 tiles;
-  with only the old ids listed nothing at the camp highlighted and the arrow sat on 3254,3234.
+- **Client highlight:** the FIGHT step highlights `Npcs.EAST_CAMP_GOBLINS` (the level-2 family:
+  2484, 3028-3048, 3051-3054, 3073-3076) only within 16 tiles of 3254,3234 (`nearTarget`, matching
+  `GoblinCampPlugin.GOBLIN_SCAN_RADIUS`) — the goblins right across the bridge, never the frontier
+  line outside the city gate. The arrow hands off to the on-creature highlight once one is within 15
+  tiles. Before this, the step used the global `LofQuest.GOBLINS` redirect, which (a) lacked the
+  level-2 ids, so nothing at the camp lit up and the arrow sat on 3254,3234, and (b) lit up the
+  frontier goblins past the gate. `GOBLINS` (now including the level-2 ids) still drives the SLAY
+  hunt highlight, where any goblin anywhere counts.
 - No separate tutorial battlefield, no duplicate goblin location: the iconic Lumbridge goblins ARE
   the opening battle.
 

@@ -38,7 +38,7 @@ enum LofQuest
 		12, // DONE (wire ordinal)
 		Arrays.asList(
 			new LofQuestStep(0, "Answer Sergeant Damien's alarm", "Lumbridge is under attack. He's by the castle gate.", new WorldPoint(3217, 3220, 0)).npcs(Npcs.SERGEANT_DAMIEN),
-			new LofQuestStep(1, "Help the Knights of Lumbridge hold the east camp", "Defeat 5 goblins at the goblin camp east of the castle, across the river.", new WorldPoint(3254, 3234, 0)),
+			new LofQuestStep(1, "Help the Knights of Lumbridge hold the east camp", "Defeat 5 goblins at the goblin camp east of the castle, across the river.", new WorldPoint(3254, 3234, 0)).npcs(Npcs.EAST_CAMP_GOBLINS).nearTarget(Npcs.EAST_CAMP_RADIUS),
 			new LofQuestStep(2, "Report to Sergeant Damien", "The attack has been pushed back.", new WorldPoint(3217, 3220, 0)).npcs(Npcs.SERGEANT_DAMIEN),
 			new LofQuestStep(3, "Claim your first rank from Duke Horacio", "You stood for Lumbridge. He's in the market, by the Slayer Master.", new WorldPoint(3220, 3211, 0)).npcs(Npcs.DUKE_HORACIO),
 			new LofQuestStep(4, "Complete Vannaka's cleanup contract", "Take the contract, then hunt the goblins that scattered into the fields east of the castle.", new WorldPoint(3222, 3212, 0)).npcs(Npcs.VANNAKA),
@@ -547,6 +547,20 @@ enum LofQuest
 		static final int SNOWFLAKE = 8431;            // npc.snowflake — Weiss
 		static final int NULODION = 1400;             // npc.nulodion — the Dwarven Mine hut
 		static final int BLAST_FURNACE_FOREMAN = 2923; // npc.blast_furnace_foreman — Keldagrim
+
+		/** The east Lumbridge goblin camp's goblins — the LEVEL-2 family the camp spawns (the tutorial
+		 *  pack is 3028; the hand-placed 3039/3054/2484; the world-spawned 3029-3036; the rest of that
+		 *  model family). Highlighted only within {@link #EAST_CAMP_RADIUS} of the camp centre
+		 *  (3254,3234), so the frontier goblins outside the city gate — a different, tougher line —
+		 *  never light up as the objective. */
+		static final int[] EAST_CAMP_GOBLINS = {
+			2484,
+			3028, 3029, 3030, 3031, 3032, 3033, 3034, 3035, 3036, 3037, 3038, 3039, 3040, 3041, 3042,
+			3043, 3044, 3045, 3046, 3047, 3048, 3051, 3052, 3053, 3054,
+			3073, 3074, 3075, 3076,
+		};
+		/** Matches the server's camp scan radius (GoblinCampPlugin.GOBLIN_SCAN_RADIUS). */
+		static final int EAST_CAMP_RADIUS = 16;
 	}
 
 	/**
@@ -555,11 +569,10 @@ enum LofQuest
 	 * 2484 (the tutorial pack is 3028) plus the world-spawned 3029-3036, so the 3028-3048/3051-3054
 	 * block is what a recruit actually sees there; 3073-3076 are the rest of that model family. The
 	 * stock 655-668/674/677/678 level-5 family and the frontier's 2245-2249 line stay listed for the
-	 * goblins elsewhere in the fields. The Last Free City highlights them during the east-camp fight
-	 * and, once Vannaka's cleanup contract is taken, during the hunt — so a recruit can pick the
-	 * goblins out of the brawl with the Knights of Lumbridge (the server credits kills by cache NAME,
-	 * so any of these count). Without the level-2 ids here nothing at the camp highlighted and the
-	 * arrow sat on the camp's centre tile instead of handing off to the creatures.
+	 * goblins elsewhere in the fields. The Last Free City highlights them once Vannaka's cleanup
+	 * contract is taken, during the hunt — any goblin anywhere counts for that contract (the server
+	 * credits kills by cache NAME). The east-camp FIGHT step does NOT use this list — it highlights
+	 * Npcs.EAST_CAMP_GOBLINS within the camp radius only, so the frontier line past the gate stays dark.
 	 */
 	private static final int[] GOBLINS = {
 		655, 656, 657, 658, 659, 660, 661, 662, 663, 664, 665, 666, 667, 668, 674, 677, 678,
@@ -907,11 +920,9 @@ enum LofQuest
 		}
 		if (this == LAST_FREE_CITY)
 		{
-			// The east-camp fight: pick the goblins out of the brawl with the Knights of Lumbridge.
-			if (step.getOrdinal() == 1)
-			{
-				return GOBLINS;
-			}
+			// The east-camp fight (step 1) is the step's own list: the camp's level-2 goblins within
+			// the camp radius — see Npcs.EAST_CAMP_GOBLINS. Not the GOBLINS redirect: that lit up the
+			// frontier line outside the city gate too, which is not where the objective is.
 			// The cleanup contract, once taken: the goblins that scattered into the countryside.
 			if (step.getOrdinal() == 4 && LofQuestVarps.recruitContractTaken(client))
 			{
