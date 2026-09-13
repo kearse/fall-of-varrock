@@ -55,13 +55,18 @@ jobs:
           BACKUP=/opt/kol/runtime/cache.pregrimjaw
           COMPOSE="docker compose -f docker-compose.prod.yml"
 
-          # NpcDefTool reads a RELATIVE "data/cache" path, so mount the live cache there and
-          # run with workdir /app. The mount is bidirectional — the tool's writes land on the
-          # host cache. (Its own data/cache-backups backup is ephemeral in the --rm container;
-          # we take a real shell-level backup below and restore from that instead.)
+          # NpcDefTool reads a RELATIVE "data/cache" path, so mount the live cache at
+          # /work/data/cache and run with workdir /work. The mount is bidirectional — the
+          # tool's writes land on the host cache. (Its own data/cache-backups backup is
+          # ephemeral in the --rm container; we take a real shell-level backup below and
+          # restore from that instead.)
+          # NOT /app/data/cache: the compose service mounts the cache there READ-ONLY and that
+          # :ro mount wins over a `run -v` at the same path (the item-def workflow died on
+          # "Read-only file system" that way). /work/data/cache keeps the tool's relative
+          # "data/cache" path working and the mount writable.
           run_tool() {
             $COMPOSE run --rm -T --no-deps \
-              -v "$CACHE":/app/data/cache -w /app --entrypoint java game \
+              -v "$CACHE":/work/data/cache -w /work --entrypoint java game \
               -cp '/app/lib/*' org.alter.tools.npcdef.NpcDefToolKt "$@"
           }
 
