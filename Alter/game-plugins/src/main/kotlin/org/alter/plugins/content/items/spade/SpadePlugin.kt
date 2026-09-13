@@ -16,6 +16,7 @@ import org.alter.game.model.shop.*
 import org.alter.game.model.timer.*
 import org.alter.game.plugin.*
 import org.alter.plugins.content.minigames.barrows.Barrows
+import org.alter.plugins.content.minigames.cluescrolls.ClueScrolls
 import org.alter.rscm.RSCM.getRSCM
 
 class SpadePlugin(
@@ -28,6 +29,10 @@ class SpadePlugin(
         onItemOption(item = "item.spade", "dig") {
             // Barrows mounds: the dig drops you into that brother's crypt (owns its own anim).
             if (Barrows.tryDig(player)) return@onItemOption
+            // Treasure Trails: a coordinate clue step (owns its own anim + messages). Checked
+            // BEFORE the quest chain below so a clue site that happens to sit on a quest dig tile
+            // still advances the trail; the quest cases all additionally require their own item.
+            if (ClueScrolls.tryDig(player)) return@onItemOption
             player.animate(830)
             if (player.tile.x == 3229 && player.tile.z == 3209 && player.inventory.contains(getRSCM("item.treasure_scroll"))) {
                 player.queue {

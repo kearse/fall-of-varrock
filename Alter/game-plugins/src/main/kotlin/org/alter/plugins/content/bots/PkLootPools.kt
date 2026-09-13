@@ -29,10 +29,27 @@ import org.alter.rscm.RSCM.getRSCM
  * seals them into the killer's loot key for ANY real-player kill — wilderness or safe camp — and
  * ground-drops them killer-owned only when no key can be minted.
  *
- * RATES ARE LAUNCH VALUES — TUNE. Anchored against the Blood Money shop (AGS 15k / claws 12k /
- * VLS 25k BM) so drops complement the BM sink rather than undercut it, and kept modest so the
- * named knights stay the efficient chase over ambient farming. (They were tuned as a bonus on top
- * of the old kit drop and are now the whole item side of the reward — revisit with kill data.)
+ * **No untradeables (community suggestion, 2026-09-13).** Every entry here is a TRADEABLE item.
+ * A bot that drops account-bound gear hands out, at random and in bulk, the exact rewards other
+ * content exists to sell — and the holder can never pass it on, so the supply only ever grows.
+ * Removed on 2026-09-13 and what replaced each:
+ *  - **void** (5 pieces, HYBRID) — it is a Pest Control reward; that shelf is the source
+ *    (`minigames/pestcontrol`). Replaced by the remaining tradeable Barrows shells.
+ *  - **rune / dragon defender, fighter torso, barrows gloves** — no minigame here sells them, so
+ *    they moved to the PK Rewards shop's **Untradeables** wing (`economy/pk/PkRewardsPlugin`):
+ *    bought at a known Blood Money price instead of farmed at random off a bot.
+ *  - **avernic defender** → its **hilt**, which IS tradeable and is what the shop's dragon
+ *    defender is for (hilt + defender = avernic, the OSRS recipe).
+ *  - **imbued rings** (berserker/archer/seers (i)) — the plain rings already roll in the budget
+ *    pool; the imbue is a straight upgrade, not a set hole. Replaced by the ring of suffering and
+ *    the amulet of blood fury.
+ * Keep it that way: if a new entry is untradeable, it belongs on a shelf, not in this file.
+ *
+ * RATES ARE LAUNCH VALUES — TUNE. Anchored against the Blood Money shop (AGS 45k / claws 36k /
+ * VLS 75k BM after the 2026-09-13 ×3 reprice) so drops complement the BM sink rather than undercut
+ * it, and kept modest so the named knights stay the efficient chase over ambient farming. (They
+ * were tuned as a bonus on top of the old kit drop and are now the whole item side of the reward —
+ * revisit with kill data.)
  */
 object PkLootPools {
 
@@ -66,8 +83,7 @@ object PkLootPools {
             DropEntry("item.granite_maul", oneInN = 50),
             // zerker kit
             DropEntry("item.berserker_helm", oneInN = 40),
-            DropEntry("item.rune_defender", oneInN = 40),
-            DropEntry("item.fighter_torso", oneInN = 60),
+            DropEntry("item.obsidian_cape", oneInN = 40),
             DropEntry("item.dragon_boots", oneInN = 60),
             DropEntry("item.warrior_ring", oneInN = 60),
             DropEntry("item.berserker_ring", oneInN = 80),
@@ -84,8 +100,8 @@ object PkLootPools {
         rare = listOf(
             DropEntry("item.helm_of_neitiznot", oneInN = 30),
             DropEntry("item.amulet_of_fury", oneInN = 40),
-            DropEntry("item.dragon_defender", oneInN = 40),
-            DropEntry("item.barrows_gloves", oneInN = 40),
+            DropEntry("item.karils_leathertop", oneInN = 40),
+            DropEntry("item.karils_leatherskirt", oneInN = 40),
             DropEntry("item.dragon_boots", oneInN = 35),
             DropEntry("item.karils_coif", oneInN = 40),
             DropEntry("item.ahrims_robetop", oneInN = 45),
@@ -103,12 +119,11 @@ object PkLootPools {
             DropEntry("item.dark_bow", oneInN = 100),
             DropEntry("item.serpentine_helm", oneInN = 150),
             DropEntry("item.dragon_crossbow", oneInN = 150),
-            // void pieces (the void ranger's kit) — one roll for any piece keeps it a real grind
-            DropEntry("item.void_knight_top", oneInN = 60),
-            DropEntry("item.void_knight_robe", oneInN = 60),
-            DropEntry("item.void_knight_gloves", oneInN = 60),
-            DropEntry("item.void_ranger_helm", oneInN = 80),
-            DropEntry("item.void_melee_helm", oneInN = 80),
+            // (Void used to roll here. It's a Pest Control reward — see minigames/pestcontrol —
+            // and untradeables no longer drop from bots at all; see the class doc.)
+            DropEntry("item.torags_platelegs", oneInN = 45),
+            DropEntry("item.veracs_plateskirt", oneInN = 45),
+            DropEntry("item.ahrims_staff", oneInN = 60),
         ),
     )
 
@@ -124,9 +139,8 @@ object PkLootPools {
             DropEntry("item.primordial_boots", oneInN = 90),
             DropEntry("item.pegasian_boots", oneInN = 90),
             DropEntry("item.eternal_boots", oneInN = 90),
-            DropEntry("item.berserker_ring_i", oneInN = 70),
-            DropEntry("item.archers_ring_i", oneInN = 70),
-            DropEntry("item.seers_ring_i", oneInN = 70),
+            DropEntry("item.ring_of_suffering", oneInN = 70),
+            DropEntry("item.amulet_of_blood_fury", oneInN = 90),
             DropEntry("item.bandos_chestplate", oneInN = 110, announce = true),
             DropEntry("item.bandos_tassets", oneInN = 110, announce = true),
             DropEntry("item.dragon_knife", min = 25, max = 75, oneInN = 40),
@@ -149,7 +163,7 @@ object PkLootPools {
             DropEntry("item.masori_body_f", oneInN = 130, announce = true),
             DropEntry("item.masori_chaps_f", oneInN = 130, announce = true),
             DropEntry("item.elidinis_ward_f", oneInN = 130, announce = true),
-            DropEntry("item.avernic_defender", oneInN = 110, announce = true),
+            DropEntry("item.avernic_defender_hilt", oneInN = 110, announce = true),
             DropEntry("item.tormented_bracelet", oneInN = 90),
             DropEntry("item.occult_necklace", oneInN = 40),
             DropEntry("item.dragon_arrow", min = 50, max = 150, oneInN = 25),

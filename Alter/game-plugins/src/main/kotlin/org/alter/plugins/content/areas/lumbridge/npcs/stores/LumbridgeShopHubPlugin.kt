@@ -188,6 +188,39 @@ class LumbridgeShopHubPlugin(
         Ware("item.falador_teleport", 100), Ware("item.camelot_teleport", 100),
     )
 
+    /**
+     * **Runecraft supplies** (Zaff's second tab, added 2026-09-13).
+     *
+     * Player report: "GoR need 27 Runecrafting but no store sells talisman". Guardians of the Rift
+     * gates at 27 Runecraft ([org.alter.plugins.content.minigames.gotr.Gotr.RUNECRAFT_REQ], the
+     * OSRS number) and the only way to train the skill here was to mine the two essence rocks
+     * south of the Mire yard and walk them to the fire altar — a slow loop with no shop fallback,
+     * so "I can't reach 27" reads from the player's side as "I can't buy the talisman OSRS would
+     * make me buy". (This server's Runecraft is a single multi-rune altar — see RunecraftPlugin —
+     * so a talisman is not actually an altar key here. Stocking them anyway costs nothing and
+     * removes the confusion, and GotR itself hands them out as a reward.)
+     *
+     * ESSENCE is the part that actually unblocks the grind, and it is deliberately the expensive
+     * line: mining your own stays far cheaper, exactly like the rune/food shelves above (the shop
+     * is a starter supply, never a substitute for the skill). Pure essence carries the premium
+     * over rune essence. Pouches are stocked because they are otherwise GotR-only, and a player
+     * who cannot reach 27 cannot farm GotR for the pouch that would help them get there.
+     */
+    private val runecraftStock = listOf(
+        Ware("item.rune_essence", UNLIMITED, 40),
+        Ware("item.pure_essence", UNLIMITED, 60),
+        Ware("item.small_pouch", 100, 500),
+        Ware("item.medium_pouch", 50, 5_000),
+        Ware("item.large_pouch", 25, 20_000),
+        Ware("item.giant_pouch", 10, 50_000),
+        Ware("item.air_talisman", 100, 200), Ware("item.water_talisman", 100, 200),
+        Ware("item.earth_talisman", 100, 200), Ware("item.fire_talisman", 100, 200),
+        Ware("item.mind_talisman", 100, 300), Ware("item.body_talisman", 100, 300),
+        Ware("item.chaos_talisman", 50, 1_000), Ware("item.cosmic_talisman", 50, 1_000),
+        Ware("item.nature_talisman", 50, 2_000), Ware("item.law_talisman", 50, 2_000),
+        Ware("item.death_talisman", 25, 5_000),
+    )
+
     /** Fish stall (Gerrant's fishing shop) — cooked only up to swordfish; higher fish sold
      *  RAW (Cooking gate to use them). */
     private val fishStock = listOf(
@@ -359,6 +392,7 @@ class LumbridgeShopHubPlugin(
         coinShop(MELEE_WEAPONS, PurchasePolicy.BUY_STOCK, meleeWeaponStock)
         coinShop(RANGED_GEAR, PurchasePolicy.BUY_STOCK, rangedStock)
         coinShop(MAGIC_STORE, PurchasePolicy.BUY_STOCK, magicStock)
+        coinShop(RUNECRAFT_SUPPLIES, PurchasePolicy.BUY_STOCK, runecraftStock)
         coinShop(FISHING_SUPPLIES, PurchasePolicy.BUY_STOCK, fishingSuppliesStock)
         coinShop(FISH, PurchasePolicy.BUY_STOCK, fishStock)
         coinShop(ALLOTMENT_SEEDS, PurchasePolicy.BUY_STOCK, allotmentSeedStock)
@@ -388,11 +422,18 @@ class LumbridgeShopHubPlugin(
             ShopTabs.Tab("Weapons", MELEE_WEAPONS, icon = "item.rune_longsword"),
             ShopTabs.Tab("Rank armour", icon = "item.rune_platebody") { ApprenticeArmoury.open(it) })
         singleVendor("npc.lowe", 3208, 3228, Direction.SOUTH, RANGED_GEAR)
-        // Zaff: Trade opens the store; Talk-to keeps the rune-altar lift dialogue.
+        // Zaff: Trade opens the tabbed store (runes/staves + the Runecraft shelf); Talk-to keeps
+        // the rune-altar lift dialogue — he is the one npc who both sells runes and sends you to
+        // the altar, so the Runecraft supplies belong on his counter.
         spawnNpc("npc.zaff", 3209, 3228, 0, 0, Direction.SOUTH)
         bindVendorTalkAndTrade("npc.zaff",
             talk = { player.queue { zaffTalk(player) } },
-            trade = { openOrClosed(player, MAGIC_STORE) })
+            trade = {
+                ShopTabs.open(player, listOf(
+                    ShopTabs.Tab("Runes & staves", MAGIC_STORE, icon = "item.death_rune"),
+                    ShopTabs.Tab("Runecraft", RUNECRAFT_SUPPLIES, icon = "item.pure_essence"),
+                ), guard = hubGuard)
+            })
 
         // ---- Prayer + skilling shops ----
         singleVendor("npc.monk", 3210, 3228, Direction.SOUTH, BONES)                 // bones (Prayer)
@@ -462,6 +503,7 @@ class LumbridgeShopHubPlugin(
         const val MELEE_WEAPONS = "Lumbridge Melee Weapons"
         const val RANGED_GEAR = "Lumbridge Ranged Gear"
         const val MAGIC_STORE = "Lumbridge Magic Store"
+        const val RUNECRAFT_SUPPLIES = "Lumbridge Runecraft Supplies"
         const val FISHING_SUPPLIES = "Lumbridge Fishing Supplies"
         const val FISH = "Lumbridge Fish Stall"
         const val ALLOTMENT_SEEDS = "Lumbridge Allotment & Flower Seeds"

@@ -128,15 +128,47 @@ class BankPlugin(
             player.toggleVarbit(INCINERATOR_VARBIT)
         }
 
+        /**
+         * The bank incinerator — the "trash bin" the community asked for on 2026-09-13 ("bank
+         * should have a trash bin with confirm button to get rid of items we dont want from bot
+         * pickup"). The bin itself already existed (toggle on component 53, destroy on 47); what it
+         * lacked was the confirm, so a misclick on a bank slot destroyed whatever was in it
+         * instantly and irreversibly — which is exactly the risk you take on when you start
+         * clearing out a bank full of bot pickups.
+         *
+         * Now every incineration asks first, naming the item and the amount. The slot is captured
+         * BEFORE the dialog (the interacting-slot gotcha: it is overwritten by the next click) and
+         * the slot's contents are RE-READ after it, so a bank that changed while the prompt was
+         * open — a withdrawal, a tab shift, a second incinerator click — can never destroy
+         * something other than what the player agreed to.
+         */
         onButton(interfaceId = BANK_INTERFACE_ID, component = 47) {
             val slot = player.getInteractingSlot() - 1
-            val destroyItems = player.bank.rawItems.getOrNull(slot) ?: return@onButton
-            val tabAffected = getCurrentTab(player, slot)
-
-            player.playSound(Sound.FIREBREATH)
-            player.bank.remove(destroyItems, assureFullRemoval = true)
-            BankTabs.decrementTabSize(player, tabAffected)
-            player.bank.shift()
+            val target = player.bank.rawItems.getOrNull(slot) ?: return@onButton
+            val name: String = runCatching { dev.openrune.cache.CacheManager.getItem(target.id).name }
+                .getOrDefault("that item")
+            val amountText = if (target.amount > 1) " x ${"%,d".format(target.amount)}" else ""
+            player.queue {
+                val choice = options(
+                    player,
+                    "Yes, destroy it.",
+                    "No, keep it.",
+                    title = "Destroy $name$amountText? This cannot be undone.",
+                )
+                if (choice != 1) return@queue
+                // Re-read: the dialog is asynchronous, so the slot may no longer hold what was shown.
+                val still = player.bank.rawItems.getOrNull(slot)
+                if (still == null || still.id != target.id || still.amount != target.amount) {
+                    player.message("That bank slot has changed — nothing was destroyed.")
+                    return@queue
+                }
+                val tabAffected = getCurrentTab(player, slot)
+                player.playSound(Sound.FIREBREATH)
+                player.bank.remove(still, assureFullRemoval = true)
+                BankTabs.decrementTabSize(player, tabAffected)
+                player.bank.shift()
+                player.message("You incinerate $name$amountText.")
+            }
         }
 
 // bank inventory

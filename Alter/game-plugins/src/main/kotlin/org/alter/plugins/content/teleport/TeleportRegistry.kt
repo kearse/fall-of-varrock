@@ -156,7 +156,13 @@ object TeleportRegistry {
         soon("edge_brid", "Edge PvP (Brid Zone)", WILDERNESS, SAFE_BANK),
         soon("camelot_pvp", "Camelot PvP", WILDERNESS, SAFE_BANK),
         soon("f2p_zone", "F2P Zone", WILDERNESS, SAFE_BANK),
-        soon("mage_bank", "Mage Bank", WILDERNESS),
+        // The Mage Bank floor (2539,4716) — a SAFE pocket well outside `Wilderness.SURFACE`, so the
+        // row sits in the Wilderness category for where it LEADS (Kolodion's trial and the Mage
+        // Arena II shrines out in the deep wild), not for what it lands on. Bank booth, Kolodion
+        // and the three god-cape statues are spawned by `minigames/magearena/MageArenaPlugin`;
+        // mirror: LofTeleportsData. ("Unable to get into the mage bank", 2026-09-13 — this row was
+        // a COMING_SOON placeholder, so the portal listed a destination it then refused.)
+        built("mage_bank", "Mage Bank", WILDERNESS, Tile(2539, 4716, 0), SAFE_BANK),
         soon("ferox_enclave", "Ferox Enclave", WILDERNESS),
 
         // ── 🩸 Slayer ──────────────────────────────────────────────────────────

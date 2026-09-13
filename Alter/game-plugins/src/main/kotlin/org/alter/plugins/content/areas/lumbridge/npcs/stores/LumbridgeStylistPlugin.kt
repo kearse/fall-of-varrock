@@ -111,14 +111,20 @@ class LumbridgeStylistPlugin(
         Ware("item.purple_boots", 100, 250), Ware("item.mime_boots", 100, 500),
     )
 
-    /** Capes — the full colour rack plus a few themed ones. */
+    /**
+     * Capes — the full colour rack plus a few themed ones.
+     *
+     * The three GOD capes were pulled from this rack on 2026-09-13. They were stocked here at
+     * 2,000 gp as plain cosmetics, but they are the Mage Arena I reward and carry real magic
+     * bonuses — a combat cape on a cosmetic shelf, and the reason "missing god capes and god cape
+     * 2" read as a content gap: the plain ones were a trivial purchase and the imbued ones had no
+     * source at all. Both are now earned from Kolodion (`minigames/magearena`).
+     */
     private val capeStock = listOf(
         Ware("item.red_cape", 100, 500), Ware("item.black_cape", 100, 500),
         Ware("item.blue_cape", 100, 500), Ware("item.yellow_cape", 100, 500),
         Ware("item.green_cape", 100, 500), Ware("item.purple_cape", 100, 500),
-        Ware("item.orange_cape", 100, 500),
-        Ware("item.saradomin_cape", 50, 2000), Ware("item.guthix_cape", 50, 2000),
-        Ware("item.zamorak_cape", 50, 2000), Ware("item.cape_of_legends", 50, 5000),
+        Ware("item.orange_cape", 100, 500), Ware("item.cape_of_legends", 50, 5000),
     )
 
     private val tabs by lazy {

@@ -156,7 +156,7 @@ final class LofTeleportsData
 			s("Edge PvP (Brid Zone)", "Soon", SOON, 1333),      // rune scimitar
 			s("Camelot PvP", "Soon", SOON, 1319),               // rune 2h
 			s("F2P Zone", "Soon", SOON, 1303),                  // rune longsword
-			s("Mage Bank", "Soon", SOON, 6914),                 // master wand
+			b("Mage Bank", "Safe Bank", SAFE, 6914),            // master wand
 			s("Ferox Enclave", "Soon", SOON, 6685));            // saradomin brew
 
 		cat("Slayer",
