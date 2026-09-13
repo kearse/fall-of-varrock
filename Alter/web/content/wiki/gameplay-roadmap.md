@@ -27,7 +27,7 @@ Every new account auto-starts **[The Last Free City](/wiki/recruit-trials)**, Ma
 
 While you're at it, walk the **castle courtyard market** (every shop in one place) and open the **[teleport portal](/wiki/teleport-portal)** to see the whole world map of content.
 
-The main story picks up straight away with **[The North](/wiki/the-north)** (Main Story Quest 3): General Zo sends you to Edgeville to see what the Fall did to the kingdom - a short, combat-free trip that shows you where the Wilderness (and real PvP) begins.
+The main story picks up straight away with **[First March](/wiki/first-march)** (Main Story Quest 2): General Zo sends the Knights of Lumbridge across the river at the goblin camp and you march with them - your first public March, and the muster call explained. Then **[The North](/wiki/the-north)** (Main Story Quest 3): Zo sends you to Edgeville to see what the Fall did to the kingdom - a short, combat-free trip that shows you where the Wilderness (and real PvP) begins.
 
 ## Stage 2 - First unlocks
 

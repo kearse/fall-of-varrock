@@ -99,6 +99,8 @@ object QuestJournal {
     const val GUNS_OF_ASGARNIA_VARP = 4695 // The Guns of Asgarnia (Asgarnia quest 3)
     /** Old Wounds (Asgarnia — BREACH, Quest 4, `quests/asgarnia/OldWounds`). */
     const val OLD_WOUNDS_VARP = 4696
+    /** First March (Main Story Quest 2, `quests/story/FirstMarch`) — 4697 stays reserved for The White Wall. */
+    const val FIRST_MARCH_VARP = 4698
 
     // Reused OSRS quest progress varps that colour the relabelled native quest-tab rows. A value of
     // 0 reads as "not started" (red), the complete value as "finished" (green), anything between as
@@ -159,6 +161,10 @@ object QuestJournal {
      *  Sir Tiffy). Driven by `QuestEngine.publish` from `OldWounds.nativeTabVarp`. Completes at 11. */
     const val OLD_WOUNDS_QUEST_VARP = 1051
     internal const val OLD_WOUNDS_QUEST_COMPLETE = 11
+    /** Tree Gnome Village varp — now the "First March" row (Main Story Quest 2; driven by
+     *  `QuestEngine.publish` from `FirstMarch.nativeTabVarp`). Completes at 9. */
+    const val FIRST_MARCH_QUEST_VARP = 111
+    internal const val FIRST_MARCH_QUEST_COMPLETE = 9
 
     /** True while the player has quest guidance muted (free-play mode). */
     fun muted(p: Player): Boolean = p.attr[QUEST_GUIDE_MUTED_ATTR] == true

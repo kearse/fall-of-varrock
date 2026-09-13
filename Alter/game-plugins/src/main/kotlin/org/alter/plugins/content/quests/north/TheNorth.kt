@@ -16,7 +16,6 @@ import org.alter.plugins.content.quests.framework.Objective
 import org.alter.plugins.content.quests.framework.Prerequisite
 import org.alter.plugins.content.quests.framework.QuestDefinition
 import org.alter.plugins.content.quests.framework.QuestEngine
-import org.alter.plugins.content.quests.framework.QuestRegistry
 import org.alter.plugins.content.quests.framework.QuestStep
 import org.alter.plugins.content.quests.framework.Reward
 import org.alter.plugins.content.war.address
@@ -34,9 +33,8 @@ import org.alter.rscm.RSCM.getRSCM
  * that already exists (the integration audit is in the spec). Nothing is required of the player
  * beyond walking, reading and talking: no Rogue Knight kill, no crossing the ditch.
  *
- * Gate: the main quest before it. That is **First March** (Main Story Quest 2) once it is built
- * and registered under `first_march`; until then **The Last Free City** (`recruit_trials`), so
- * the chain never dead-ends. Auto-begins the moment the gate opens.
+ * Gate: the main quest before it, **First March** (Main Story Quest 2, `first_march` —
+ * `quests/story/FirstMarch`). Auto-begins the moment it completes.
  *
  * Journal varp [QuestJournal.NORTH_VARP] (generic framework packing); native quest-tab row = the
  * relabelled Ernest the Chicken row, varp [QuestJournal.NORTH_QUEST_VARP] (`QuestTablePatch.PLAN`).
@@ -69,8 +67,8 @@ object TheNorth : QuestDefinition(
      */
     const val DISPATCH = "item.old_note_25829"
 
-    private const val FIRST_MARCH_KEY = "first_march"
-    private const val LAST_FREE_CITY_KEY = "recruit_trials"
+    /** The quest this follows in the opening chain (its key is the contract with `FirstMarch`). */
+    const val PREREQUISITE = "first_march"
 
     private const val WAR_EFFORT = 15
 
@@ -108,9 +106,7 @@ object TheNorth : QuestDefinition(
     private const val J_RETURN_ZO = "Take Oziach's dispatch to General Zo."
     const val J_DONE = "Varrock's fall broke more than a city. Misthalin lost roads, patrols and control of the north. General Zo intends to start taking that ground back."
 
-    override val prerequisites: List<Prerequisite> = listOf(
-        Prerequisite.Custom("finish the main quest before it (First March once it is built; The Last Free City until then)") { p -> previousQuestDone(p) },
-    )
+    override val prerequisites: List<Prerequisite> = listOf(Prerequisite.QuestComplete(PREREQUISITE))
 
     /** Begins the moment the gate opens — login, rank-up, or the framework poll. */
     override val autoBegin = true
@@ -174,19 +170,13 @@ object TheNorth : QuestDefinition(
         talk(OZIACH, "return_zo") { p -> oziachAfter(p) }
     }
 
-    // --- gate / status ----------------------------------------------------------------------
-
-    /** First March once it exists in the registry, else The Last Free City. */
-    private fun previousQuestDone(p: Player): Boolean {
-        val march = QuestRegistry.byKey(FIRST_MARCH_KEY)
-        return if (march != null) march.complete(p) else QuestRegistry.isComplete(p, LAST_FREE_CITY_KEY)
-    }
+    // --- status -----------------------------------------------------------------------------
 
     /** One-line status (`::north`). */
     fun statusLine(p: Player): String = when {
         QuestEngine.isComplete(p, this) -> "<col=801700>The North:</col> complete. $J_DONE"
         QuestEngine.started(p, this) -> "<col=801700>The North — current objective:</col> ${QuestEngine.objectiveLine(p, this)}"
-        else -> "<col=801700>The North:</col> not started — finish the main quest before it (The Last Free City; First March once it exists) and it begins on its own."
+        else -> "<col=801700>The North:</col> not started — finish First March and it begins on its own."
     }
 
     // --- the dispatch -----------------------------------------------------------------------

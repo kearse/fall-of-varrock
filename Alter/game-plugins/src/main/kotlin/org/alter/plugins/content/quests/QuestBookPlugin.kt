@@ -77,6 +77,7 @@ class QuestBookPlugin(
             58 to QuestBook.A_MATTER_OF_TROLLS, // Death Plateau
             47 to QuestBook.GUNS_OF_ASGARNIA,   // Dwarf Cannon
             92 to QuestBook.OLD_WOUNDS,         // Wanted!
+            32 to QuestBook.FIRST_MARCH,        // Tree Gnome Village
         )
     }
 
