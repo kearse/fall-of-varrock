@@ -28,6 +28,20 @@ class LofTaskHelperPanel extends PluginPanel
 	/** Header colour for a signed contract's card (matches the OSRS "in progress" gold). */
 	private static final Color CONTRACT_GOLD = new Color(0xc8, 0xa9, 0x50);
 
+	/** This panel's own border, and each card's — the text column is what survives both. */
+	private static final int PANEL_INSET = 10;
+	private static final int CARD_INSET = 8;
+
+	/**
+	 * Text width in the header, and inside a card body. Derived from the sidebar's real width
+	 * instead of guessed: {@link PluginPanel}'s scroll pane is HORIZONTAL_SCROLLBAR_NEVER, so a
+	 * component wider than the viewport is silently clipped mid-word rather than scrolled to.
+	 * [GUTTER] keeps the text off that edge rather than sitting exactly on it.
+	 */
+	private static final int GUTTER = 6;
+	private static final int HEADER_WIDTH = PluginPanel.PANEL_WIDTH - 2 * PANEL_INSET - GUTTER;
+	private static final int TEXT_WIDTH = HEADER_WIDTH - 2 * CARD_INSET;
+
 	private final LofTaskHelperPlugin plugin;
 
 	private final JPanel taskList = new JPanel();
@@ -37,7 +51,7 @@ class LofTaskHelperPanel extends PluginPanel
 		this.plugin = plugin;
 
 		setLayout(new BorderLayout(0, 8));
-		setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+		setBorder(BorderFactory.createEmptyBorder(PANEL_INSET, PANEL_INSET, PANEL_INSET, PANEL_INSET));
 		setBackground(ColorScheme.DARK_GRAY_COLOR);
 
 		JPanel header = new JPanel();
@@ -50,11 +64,11 @@ class LofTaskHelperPanel extends PluginPanel
 		title.setAlignmentX(Component.LEFT_ALIGNMENT);
 		header.add(title);
 
-		JLabel subtitle = new JLabel("<html>Your signed tasks. Vannaka signs one combat and one"
-			+ " resource contract at a time — see him at the trade hub for work.</html>");
-		subtitle.setFont(FontManager.getRunescapeSmallFont());
-		subtitle.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
-		subtitle.setAlignmentX(Component.LEFT_ALIGNMENT);
+		// Unconstrained <html> reports its preferred width as the whole unwrapped sentence, which
+		// dragged the panel (and so every card in it) wider than the viewport — hence the clipping.
+		JLabel subtitle = html("Your signed tasks. Vannaka signs one combat and one"
+			+ " resource contract at a time — see him at the trade hub for work.",
+			ColorScheme.LIGHT_GRAY_COLOR, HEADER_WIDTH);
 		subtitle.setBorder(BorderFactory.createEmptyBorder(4, 0, 2, 0));
 		header.add(subtitle);
 
@@ -81,7 +95,8 @@ class LofTaskHelperPanel extends PluginPanel
 		}
 		else
 		{
-			taskList.add(wrapped("None signed — ask Vannaka for an assignment.", ColorScheme.MEDIUM_GRAY_COLOR));
+			taskList.add(wrapped("None signed — ask Vannaka for an assignment.",
+				ColorScheme.MEDIUM_GRAY_COLOR, HEADER_WIDTH));
 		}
 
 		taskList.add(Box.createVerticalStrut(10));
@@ -93,7 +108,8 @@ class LofTaskHelperPanel extends PluginPanel
 		}
 		else
 		{
-			taskList.add(wrapped("None signed — ask Vannaka for a work order.", ColorScheme.MEDIUM_GRAY_COLOR));
+			taskList.add(wrapped("None signed — ask Vannaka for a work order.",
+				ColorScheme.MEDIUM_GRAY_COLOR, HEADER_WIDTH));
 		}
 
 		taskList.revalidate();
@@ -161,7 +177,7 @@ class LofTaskHelperPanel extends PluginPanel
 	{
 		JPanel card = new JPanel(new BorderLayout());
 		card.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-		card.setBorder(BorderFactory.createEmptyBorder(7, 8, 7, 8));
+		card.setBorder(BorderFactory.createEmptyBorder(7, CARD_INSET, 7, CARD_INSET));
 
 		JPanel headerRow = new JPanel(new BorderLayout());
 		headerRow.setOpaque(false);
@@ -193,15 +209,43 @@ class LofTaskHelperPanel extends PluginPanel
 		return label;
 	}
 
-	/** A word-wrapping label (html) that plays nicely inside the BoxLayout body. */
+	/** A word-wrapping label (html) that plays nicely inside the BoxLayout body of a card. */
 	private JLabel wrapped(String text, Color color)
 	{
-		JLabel label = new JLabel("<html><body style='width:170px'>" + text + "</body></html>");
+		return wrapped(text, color, TEXT_WIDTH);
+	}
+
+	/** As {@link #wrapped(String, Color)}, for rows that sit outside a card's inset. */
+	private JLabel wrapped(String text, Color color, int width)
+	{
+		JLabel label = html(text, color, width);
+		label.setBorder(BorderFactory.createEmptyBorder(2, 0, 2, 0));
+		return label;
+	}
+
+	/**
+	 * An html label that wraps at — and never grows past — [width]. The maximum size matters as
+	 * much as the css: BoxLayout stretches a label to the container's width and Swing's html view
+	 * then reflows to that allocation, overshooting the css width it was given.
+	 */
+	private static JLabel html(String text, Color color, int width)
+	{
+		JLabel label = new JLabel("<html><body style='width:" + width + "px'>" + text + "</body></html>");
 		label.setFont(FontManager.getRunescapeSmallFont());
 		label.setForeground(color);
 		label.setAlignmentX(Component.LEFT_ALIGNMENT);
-		label.setBorder(BorderFactory.createEmptyBorder(2, 0, 2, 0));
+		label.setMaximumSize(new Dimension(width, Integer.MAX_VALUE));
 		return label;
+	}
+
+	/**
+	 * Never ask for more width than the sidebar gives: the scroll pane has no horizontal scrollbar,
+	 * so any overshoot here is clipped off the right edge of every card instead.
+	 */
+	@Override
+	public Dimension getPreferredSize()
+	{
+		return new Dimension(PluginPanel.PANEL_WIDTH, super.getPreferredSize().height);
 	}
 
 	private static String capitalize(String s)
