@@ -551,14 +551,23 @@ enum LofQuest
 
 	/**
 	 * The goblins of the Lumbridge fields — every plain "Goblin" npc id the camp and the surrounding
-	 * countryside spawn (the stock 655-668/674/677/678 family, plus the frontier's 2245-2249 line).
-	 * The Last Free City highlights them during the east-camp fight and, once Vannaka's cleanup
-	 * contract is taken, during the hunt — so a recruit can pick the goblins out of the brawl with
-	 * the Knights of Lumbridge (the server credits kills by cache NAME, so any of these count).
+	 * countryside spawn. The east camp is the LEVEL-2 family: the hand-placed 3028/3039/3054 and
+	 * 2484 (the tutorial pack is 3028) plus the world-spawned 3029-3036, so the 3028-3048/3051-3054
+	 * block is what a recruit actually sees there; 3073-3076 are the rest of that model family. The
+	 * stock 655-668/674/677/678 level-5 family and the frontier's 2245-2249 line stay listed for the
+	 * goblins elsewhere in the fields. The Last Free City highlights them during the east-camp fight
+	 * and, once Vannaka's cleanup contract is taken, during the hunt — so a recruit can pick the
+	 * goblins out of the brawl with the Knights of Lumbridge (the server credits kills by cache NAME,
+	 * so any of these count). Without the level-2 ids here nothing at the camp highlighted and the
+	 * arrow sat on the camp's centre tile instead of handing off to the creatures.
 	 */
 	private static final int[] GOBLINS = {
 		655, 656, 657, 658, 659, 660, 661, 662, 663, 664, 665, 666, 667, 668, 674, 677, 678,
 		2245, 2246, 2247, 2248, 2249,
+		2484,
+		3028, 3029, 3030, 3031, 3032, 3033, 3034, 3035, 3036, 3037, 3038, 3039, 3040, 3041, 3042,
+		3043, 3044, 3045, 3046, 3047, 3048, 3051, 3052, 3053, 3054,
+		3073, 3074, 3075, 3076,
 	};
 	private static final int[] NO_NPCS = new int[0];
 

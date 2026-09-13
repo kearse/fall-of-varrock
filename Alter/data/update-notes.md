@@ -17,5 +17,6 @@
 # Game Update
 
 - The Last Free City: the goblins at the east camp are now the ordinary level-2 Lumbridge goblins. They no longer attack on sight or pile onto new players — you pick your fights, and you have time to eat.
+- Quest Journal: the east-camp goblins are highlighted again during The Last Free City (the arrow hands off to them once they are in view). The client updates itself on next launch.
 - Deploy announcements: Discord now gets a proper update post when we ship changes, instead of a "server is online" message on every restart.
 - General behind-the-scenes improvements and maintenance.
