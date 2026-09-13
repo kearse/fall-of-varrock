@@ -194,6 +194,7 @@ object TheNorth : QuestDefinition(
     private fun arrival(p: Player) {
         p.message("<col=801700>Edgeville. Northern Misthalin.</col>")
         p.message("The Wilderness lies just beyond the town. Varrock lies to the east.")
+        p.message("Fighters bank and gear up here, then cross the ditch to hunt each other.")
     }
 
     private fun boundary(p: Player) {
@@ -349,14 +350,23 @@ object TheNorth : QuestDefinition(
         oz(p, "Then come back and tell me what you saw.")
     }
 
-    /** RETURN_OZIACH: the Wilderness, the Fall, Edgeville — then the last dispatch. */
+    /**
+     * RETURN_OZIACH: the Wilderness, what Edgeville is now (the realm's PKing hub — the last bank
+     * before the ditch, where players gear up and cross to fight each other), the Fall — then the
+     * last dispatch.
+     */
     private suspend fun QueueTask.oziachReturn(p: Player) {
         me(p, "So that's the Wilderness.")
         oz(p, "That's the polite name.")
         me(p, "And the Rogue Knights stay south of it too.")
         oz(p, "Of course. Lines on maps only matter to people<br>who respect them.")
         me(p, "But north of that line, players can attack me.")
-        oz(p, "Aye. Rogue Knight comes at you, you know what<br>he wants.")
+        oz(p, "Aye. That's what this town is for now.")
+        me(p, "Edgeville?")
+        oz(p, "Look around. The bank sits thirty paces from the<br>ditch. Every fighter in the realm gears up here,<br>walks north, and comes back richer or empty.")
+        oz(p, "This is where people go to fight people. Nobody<br>planned it. It's just the last safe ground before<br>the wild, and everyone knows it.")
+        me(p, "And if a Rogue Knight comes at me up there?")
+        oz(p, "Then you know what he wants.")
         me(p, "And another adventurer?")
         oz(p, "Your guess is as good as mine.")
         oz(p, "Usually your armour.")

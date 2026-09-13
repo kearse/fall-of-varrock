@@ -27,7 +27,7 @@ The dispatch is yours to keep. It is untradeable, it is always kept on death, an
 ## What you learn
 
 - Varrock's fall broke more than a city: Misthalin lost its roads, its patrols and its control of the north.
-- **Edgeville** is the northern settlement that survived - and the staging town for the [Wilderness](/wiki/pk-bots-and-highwaymen).
+- **Edgeville** is the northern settlement that survived - and the realm's PKing hub: the last bank before the ditch, where players gear up and cross into the [Wilderness](/wiki/pk-bots-and-highwaymen) to fight each other.
 - **[Rogue Knights](/wiki/rogue-knights)** are a consequence of the collapse of authority, not part of Zemouregal's host. They teach you how a person fights you; the Wilderness is where a person actually will.
 - The accepted story of the Fall: Zemouregal's undead, Arrav seen among them, and a last dispatch that read "Varrock will hold."
 

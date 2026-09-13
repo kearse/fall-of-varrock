@@ -12,8 +12,9 @@ history, Fallen Varrock, the Rogue Knights, the northern frontier and the myster
 
 The player should finish it understanding: Varrock's fall affected far more than Varrock · Misthalin lost
 its roads and territory in the north · Rogue Knights and other hostile groups filled the vacuum · Edgeville
-survived as the important northern settlement · the Wilderness begins at the normal boundary north of
-Edgeville · Rogue Knights are dangerous NPC enemies, the Wilderness adds a different danger (**other
+survived as the important northern settlement — and is the realm's **PKing hub**: the last bank before
+the ditch, where players gear up and cross to fight each other · the Wilderness begins at the normal
+boundary north of Edgeville · Rogue Knights are dangerous NPC enemies, the Wilderness adds a different danger (**other
 players**) · the accepted story says Zemouregal and Arrav destroyed Varrock, and something about it may
 one day deserve a closer look · the kingdom cannot reclaim Varrock until it reclaims the ground toward it.
 
@@ -108,8 +109,12 @@ too.* / *Everything learned fighting the Rogue Knights matters more on the other
 
 **Oziach — the Wilderness, the Fall, the dispatch (`return_oziach`).** "So that's the Wilderness." /
 "That's the polite name." / "And the Rogue Knights stay south of it too." / "Of course. Lines on maps only
-matter to people who respect them." / "But north of that line, players can attack me." / "Aye. Rogue
-Knight comes at you, you know what he wants." / "And another adventurer?" / "Your guess is as good as
+matter to people who respect them." / "But north of that line, players can attack me." / "Aye. That's
+what this town is for now." / "Edgeville?" / "Look around. The bank sits thirty paces from the ditch. Every
+fighter in the realm gears up here, walks north, and comes back richer or empty." / "This is where people
+go to fight people. Nobody planned it. It's just the last safe ground before the wild, and everyone knows
+it." *(Edgeville is the realm's PKing hub — the iconic RSPS PK spot — and Oziach says so in plain words.)*
+/ "And if a Rogue Knight comes at me up there?" / "Then you know what he wants." / "And another adventurer?" / "Your guess is as good as
 mine." / "Usually your armour." / "What does all this have to do with Varrock?" / "Everything." / "Before
 Varrock fell, these roads belonged to a kingdom." / "Afterward? They belonged to whoever happened to be
 standing on them." / "And Edgeville?" / "Edgeville stayed. Barely." / "Refugees came through here for
