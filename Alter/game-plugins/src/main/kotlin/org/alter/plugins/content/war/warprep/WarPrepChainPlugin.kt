@@ -24,10 +24,13 @@ class WarPrepChainPlugin(
     init {
         onLogin {
             // Players who finished The Last Free City (the Recruit Trials chain) without visiting
-            // Vannaka afterwards — or before this chain existed — never got started; begin it for
-            // them now so nobody is stranded without a path to raids.
+            // Vannaka afterwards — or before this chain existed — never got started. POINT them at
+            // him; don't start the chain for them. Beginning it here dropped 28 quest-locked dragon
+            // bones into the pack of someone who had never been told War-Prep existed, which reads
+            // as a glitch rather than a gift (operator, 2026-09-13). Vannaka starts the quest the
+            // moment they talk to him (SlayerPlugin's war-prep intro), bones explained in hand.
             if (RecruitTrials.step(player) == RecruitTrials.Step.DONE && !WarPrepChain.started(player)) {
-                WarPrepChain.begin(player)
+                WarPrepChain.remindToStart(player)
             }
             WarPrepChain.resumeOnLogin(player)
         }
@@ -52,7 +55,14 @@ class WarPrepChainPlugin(
         onCommand("warprep", description = "Show your War-Prep objective") {
             val s = WarPrepChain.step(player)
             if (s == WarPrepChain.Step.NONE) {
-                player.message("<col=801700>War-Prep:</col> finish The Last Free City first.")
+                // NONE covers two very different players: one who hasn't finished The Last Free City
+                // yet, and one who has but never went back to Vannaka. Telling the latter to "finish
+                // The Last Free City first" is a dead end — send them to the man with the orders.
+                if (RecruitTrials.step(player) == RecruitTrials.Step.DONE) {
+                    WarPrepChain.remindToStart(player)
+                } else {
+                    player.message("<col=801700>War-Prep:</col> finish The Last Free City first.")
+                }
             } else if (s == WarPrepChain.Step.DONE) {
                 player.message("<col=801700>War-Prep:</col> ${s.objective}")
             } else {

@@ -203,8 +203,9 @@ val RECRUIT_SUPPLY_MINED_ATTR = AttributeKey<Int>("recruit_supply_mined")
  * **War-Prep quest chain** state (the post-Recruit-Trials onboarding that readies a citizen for
  * raids). [WARPREP_STEP_ATTR] is the current step ordinal of
  * [org.alter.plugins.content.war.warprep.WarPrepChain.Step] (0 = not started). The chain begins
- * when the Recruit Trials finish and gates raid access on its completion. Persistent, so it
- * survives a relog and never re-fires once complete.
+ * when a player who has finished the Recruit Trials speaks to Vannaka — never on login, since the
+ * first step hands over quest-locked dragon bones that only make sense explained in his dialogue.
+ * Persistent, so it survives a relog and never re-fires once complete.
  */
 val WARPREP_STEP_ATTR = AttributeKey<Int>("warprep_step")
 

@@ -114,10 +114,32 @@ object WarPrepChain {
     fun started(p: Player): Boolean = step(p) != Step.NONE
     fun complete(p: Player): Boolean = step(p) == Step.DONE
 
-    /** Begin the chain (called from Vannaka's Recruit-Trials finale). Idempotent — won't restart it. */
+    /**
+     * Begin the chain. Idempotent — won't restart it.
+     *
+     * Call this **only from Vannaka's dialogue** (`SlayerPlugin`'s war-prep intro). The first step
+     * hands over 28 quest-locked dragon bones, and the handover only makes sense inside the
+     * conversation that explains them ("Here, take these… offer them on the church altar"). A player
+     * who has never heard of War-Prep finding a locked stack of bones in their pack reads it as a
+     * glitch, not a gift — so the login backfill points at Vannaka ([remindToStart]) instead of
+     * starting the chain behind the player's back.
+     */
     fun begin(p: Player) {
         if (step(p) != Step.NONE) return
         advanceTo(p, Step.PRAYER)
+    }
+
+    /**
+     * Login pointer for a citizen who finished the Recruit Trials but never went back to Vannaka —
+     * or whose character predates this chain. Purely a message: it grants nothing and changes no
+     * state, so the quest still starts in the conversation that explains it. This is what keeps
+     * such a player from being stranded without a path to the raids.
+     */
+    fun remindToStart(p: Player) {
+        p.message(
+            "<col=801700>Vannaka has your next orders</col> — <col=801700>War-Prep</col>, the training " +
+                "that readies a citizen for the raids. Speak to him at the Grand Exchange."
+        )
     }
 
     /** On login, re-arm the poll timer + refresh the arrow if on a tracked step, and remind the
@@ -210,7 +232,18 @@ object WarPrepChain {
     fun advanceTo(p: Player, next: Step) {
         p.attr[WARPREP_STEP_ATTR] = next.ordinal
         when (next) {
-            Step.PRAYER -> giveItem(p, DRAGON_BONES, PRAYER_BONES) // bones for the church-altar training
+            // Bones for the church-altar training. The objective line tells the recruit to "use the
+            // dragon bones", so a full pack silently shunting them to the bank leaves them staring
+            // at an empty inventory at the altar — say where they went.
+            Step.PRAYER -> {
+                val banked = giveItem(p, DRAGON_BONES, PRAYER_BONES)
+                if (banked > 0) {
+                    p.message(
+                        "Your pack was full — <col=801700>$banked dragon bones</col> went to your bank. " +
+                            "Withdraw them before you kneel at the altar."
+                    )
+                }
+            }
             Step.RETURN -> grantGrimoire(p) // the spellbook unlock lands the moment the grimoire is taken
             Step.RANK -> grantRankPurse(p)  // the tower's payout — enough to buy the next rank
             Step.DONE -> grantCompletion(p)
@@ -324,13 +357,15 @@ object WarPrepChain {
         WarPrepRanged.begin(p)
     }
 
-    /** Add [amount] of [key] to the bag; whatever doesn't fit overflows to the bank. Defensive on keys. */
-    private fun giveItem(p: Player, key: String, amount: Int = 1) {
+    /** Add [amount] of [key] to the bag; whatever doesn't fit overflows to the bank. Defensive on
+     *  keys. Returns how many ended up in the BANK rather than the pack — 0 when it all fit, and 0
+     *  on a missing key (nothing was granted, so there is nothing to explain). */
+    private fun giveItem(p: Player, key: String, amount: Int = 1): Int =
         runCatching {
             val id = getRSCM(key)
             val tx = p.inventory.add(id, amount, assureFullInsertion = false)
             val left = amount - tx.completed
             if (left > 0) p.bank.add(id, left)
-        }
-    }
+            left
+        }.getOrDefault(0)
 }
