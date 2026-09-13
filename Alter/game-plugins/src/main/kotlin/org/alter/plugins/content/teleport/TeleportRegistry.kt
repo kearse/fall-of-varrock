@@ -88,7 +88,9 @@ object TeleportRegistry {
         // The hand-built boss roster was removed (see the reboot brief) — bosses return
         // one by one as properly-ported fights. Every entry below is a roadmap placeholder
         // except the war's world-boss event arena, which is live war content.
-        built("corp_beast", "Corp Beast (Event)", BOSSES, Tile(3247, 3319, 0), HOSTILE), // Lumbridge world-boss event arena (::worldboss)
+        // Route key kept as `corp_beast` (client mirror row + ::worldboss); the Corporeal Beast
+        // itself no longer spawns here — it lives only at its real lair now.
+        built("corp_beast", "World Boss Arena", BOSSES, Tile(3247, 3319, 0), HOSTILE), // Lumbridge world-boss event arena (::worldboss)
         soon("world_boss", "World Boss", BOSSES, HOSTILE), // rotating spawn — wire to WorldBoss later
         // Lands inside the KBD lair island (Kronos port #7, the lair-boss package). TUNE.
         built("kbd", "King Black Dragon", BOSSES, Tile(2271, 4680, 0), HOSTILE),

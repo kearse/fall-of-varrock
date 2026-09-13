@@ -11,7 +11,7 @@ Fall of Varrock is **not a spawn server** - every rare in the economy was earned
 
 This page is the map. Find the item you want, and it tells you exactly where to go.
 
-One realm-wide note first: the old boss roster is **temporarily retired for a rebuild** - the [Corporeal Beast war event](/wiki/corporeal-beast) is the live boss fight, and the retired lairs return one at a time as finished fights (see [bosses](/wiki/bosses-overview)). Where a drop path below left with its boss, the shop, the market or a war route is the current source - and the drop path comes back when the boss does.
+One realm-wide note first: the old boss roster is **temporarily retired for a rebuild** - the retired lairs return one at a time as finished fights (see [bosses](/wiki/bosses-overview)), and the [Corporeal Beast](/wiki/corporeal-beast) now lives only in its cave rather than at the Lumbridge event arena. Where a drop path below left with its boss, the shop, the market or a war route is the current source - and the drop path comes back when the boss does.
 
 ## The currencies at a glance
 
@@ -28,8 +28,8 @@ Prices and shops in full: [Shops directory](/wiki/shops-directory).
 
 - **Early:** rank armour from the [Apprentice's Armoury](/wiki/shops-directory) as your [title](/wiki/titles-and-citizenship) climbs, weapons to adamant off the shelf, rune from smithing and drops.
 - **Mid:** dragon via [the Forge](/wiki/the-forge), then **Barrows gear** from the Quartermaster's coin wing (12m a piece, 20m a weapon) - the crypts themselves are retired for their rebuild, so the shop and the market are the current source.
-- **High:** fight the bosses for their drops - the **[Corporeal Beast war event](/wiki/corporeal-beast)**, [God Wars](/wiki/god-wars-dungeon) for your Bandos and Armadyl bases, [Zulrah](/wiki/zulrah), [Vorkath](/wiki/vorkath), the [Hydra](/wiki/alchemical-hydra); PK for **Blood Money**. There is no ticket shelf any more (Boss Tickets were retired in September 2026): every chase item comes from the boss that drops it, or from another player.
-- **End game:** hand Bandos, Armadyl and Ahrim's pieces to the **Royal Smith** with Commendations from the war - Torva, Masori, Ancestral. Summon the Corporeal Beast for a sigil.
+- **High:** fight the bosses for their drops - the **[Corporeal Beast](/wiki/corporeal-beast)** in its cave, [God Wars](/wiki/god-wars-dungeon) for your Bandos and Armadyl bases, [Zulrah](/wiki/zulrah), [Vorkath](/wiki/vorkath), the [Hydra](/wiki/alchemical-hydra); PK for **Blood Money**. There is no ticket shelf any more (Boss Tickets were retired in September 2026): every chase item comes from the boss that drops it, or from another player.
+- **End game:** hand Bandos, Armadyl and Ahrim's pieces to the **Royal Smith** with Commendations from the war - Torva, Masori, Ancestral. Take a team into the Corporeal Beast's cave for a sigil.
 
 ## Torva, Masori & Ancestral
 
@@ -67,7 +67,7 @@ Raids aren't in the realm yet, and the ticket shelf that used to sell the raid w
 
 ## Spirit shields & sigils
 
-The realm's rarest flex, and **no shop sells them**. The [Corporeal Beast](/wiki/corporeal-beast) is a summonable world boss (3,000,000 gp to call, north-east of Lumbridge) - and every contributor to the kill gets an **independent roll**: arcane, spectral and elysian sigils at **1/150** each, the blessed spirit shield at 1/120, draconic visage at 1/200. Sigil + blessed spirit shield + 90 Prayer makes the shield.
+The realm's rarest flex, and **no shop sells them**. The [Corporeal Beast](/wiki/corporeal-beast) drops them in its cave at their OSRS rates - arcane and spectral sigils, the rarer elysian, plus the spirit shield and holy elixir that make the blessed spirit shield. Sigil + blessed spirit shield + 90 Prayer makes the shield.
 
 ## Special-attack weapons
 
@@ -79,7 +79,7 @@ The realm's rarest flex, and **no shop sells them**. The [Corporeal Beast](/wiki
 
 - **Primordial / pegasian / eternal boots** - Cerberus's crystal drops (returning with her rebuild); the market meanwhile.
 - **Occult necklace, torture, anguish, tormented bracelet, blood fury, the DT2 rings, ferocious gloves, lightbearer, dragon hunter lance** - the bosses that drop them as they ship, and the market. No shop sells them and no NPC buys them.
-- **Dragonfire shield** - craft it from a **draconic visage**: the [Corporeal Beast](/wiki/corporeal-beast) drops one at **1/200**.
+- **Dragonfire shield** - craft it from a **draconic visage**: the [King Black Dragon](/wiki/bosses-overview) drops one at **1/1000**.
 
 ## The capes
 

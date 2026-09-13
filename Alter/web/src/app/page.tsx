@@ -56,7 +56,7 @@ const COMPANION_PERKS = [
 // The wider content grid. Easy to keep adding to as new features ship.
 const MORE_FEATURES = [
   { icon: "⚔️", name: "Wizard Tower", body: "Storm the tower with the Void Knight — solo or in a team of five." },
-  { icon: "🐉", name: "World Boss", body: "Rally the town against the Corporeal Beast and split its spoils." },
+  { icon: "🐉", name: "World Boss", body: "Rally the town against the city's world boss and split its spoils." },
   { icon: "⛏️", name: "Full Skilling", body: "Mining, smithing, fishing, farming, agility and beyond." },
   { icon: "☠️", name: "Slayer", body: "Task-based combat with points, unlocks and gear rewards." },
   { icon: "🏴", name: "Wilderness PvP", body: "Deep wilderness, loot keys and real risk versus reward." },

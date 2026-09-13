@@ -32,7 +32,7 @@ There's no membership paywall on content. Progression is driven by:
 ## Useful commands
 
 - `::spellbook` - switch spellbooks (once unlocked)
-- `::worldboss` - teleport to the [Corporeal Beast](/wiki/corporeal-beast) event arena
+- `::worldboss` - teleport to the Lumbridge [world-boss arena](/wiki/bosses-overview)
 - `::lootkeys` - check your wilderness loot keys
 - `::claimvote` - claim vote rewards
 

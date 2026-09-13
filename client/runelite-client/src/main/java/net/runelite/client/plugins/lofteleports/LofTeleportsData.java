@@ -111,7 +111,7 @@ final class LofTeleportsData
 		// Mirrors TeleportRegistry BOSSES row-for-row (32 rows): the hand-built roster was purged;
 		// bosses come back one at a time as Kronos ports and flip to b(...) here as they land.
 		cat("Bosses",
-			b("Corp Beast (Event)", "Hostile", HOSTILE, 13734), // spirit shield
+			b("World Boss Arena", "Hostile", HOSTILE, 13734), // spirit shield (server route key: corp_beast)
 			s("World Boss", "Soon", SOON, 11864),               // slayer helmet
 			b("King Black Dragon", "Hostile", HOSTILE, 1149),   // dragon med helm (lair-boss package port)
 			s("Corporeal Beast", "Soon", SOON, 13734),          // spirit shield
