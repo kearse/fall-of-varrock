@@ -88,25 +88,34 @@ class SouthernWatchPlugin(
     // ---------------------------------------------------------------- the standard
 
     /**
-     * Pick the loc to raise, and remember it on [SouthernWatch].
+     * Pick the loc to raise — and the **shape** to raise it in — and remember both on
+     * [SouthernWatch].
      *
      * A loc is only usable here if the player can both **see** it and **right-click** it, and the
-     * obvious candidate fails the first test: the Castle Wars standards are varbit-gated (they swap
-     * with that minigame's flag state), so spawning the gated parent id puts an object in the chunk
-     * that resolves to `transforms[0]` — nothing — on the client. That is a banner nobody can see
-     * and a quest step nobody can finish. So: walk [SouthernWatch.STANDARD_CANDIDATES], expand any
-     * varbit/varp loc into the concrete ids it transforms into, and take the first un-gated id that
-     * carries a real click option (preferring [SouthernWatch.STANDARD_OPTION]).
+     * two are decided by different parts of the definition:
+     *
+     *  - **Seen.** A loc's models are registered per shape: `objectModels[i]` is drawn for
+     *    `objectTypes[i]`. Spawn it in a shape it has no model for and the client draws *nothing* —
+     *    the object is in the chunk server-side, but there is no banner and no right-click menu,
+     *    only "Walk here". (`objectTypes == null` is the opcode-5 form, whose models are shape 10.)
+     *    So the shape comes from the definition, never a hard-coded constant.
+     *  - **Clicked.** The option has to exist on the id that is actually drawn. A varbit/varp loc is
+     *    drawn as `transforms[state]`, so the gated parent is never what the player sees or clicks —
+     *    follow it to the concrete ids behind it first.
+     *
+     * Walk [SouthernWatch.STANDARD_CANDIDATES] and take the first id that survives both tests.
      */
     private fun resolveStandard() {
         for (name in SouthernWatch.STANDARD_CANDIDATES) {
             val id = runCatching { getRSCM(name) }.getOrNull() ?: continue
             for (candidate in concreteLocs(id)) {
                 val option = clickOption(candidate) ?: continue
+                val shape = drawableShape(candidate) ?: continue
                 SouthernWatch.standardId = candidate
                 SouthernWatch.standardOption = option
+                SouthernWatch.standardShape = shape
                 logger.info {
-                    "[southern-watch] standard resolved to loc $candidate (option '$option') from '$name'" +
+                    "[southern-watch] standard resolved to loc $candidate (option '$option', shape $shape) from '$name'" +
                         if (candidate != id) " [varbit/varp transform of $id]" else ""
                 }
                 return
@@ -114,11 +123,29 @@ class SouthernWatchPlugin(
         }
         logger.error {
             "[southern-watch] no usable standard loc in ${SouthernWatch.STANDARD_CANDIDATES} " +
-                "(each was missing, varbit-gated with no clickable transform, or had no click options). " +
-                "No banner will be raised; First Reclamation's establish step falls back to the ground at " +
-                "${SouthernWatch.STANDARD_TILE}."
+                "(each was missing, varbit-gated with no clickable transform, had no click options, " +
+                "or had no model to draw). No banner will be raised; First Reclamation's establish " +
+                "step falls back to the ground at ${SouthernWatch.STANDARD_TILE}."
         }
     }
+
+    /**
+     * The shape to spawn [id] in: [SouthernWatch.STANDARD_SHAPE] when the loc has a model for it,
+     * otherwise the first shape it does have one for. Null when the loc has no models at all — such
+     * a loc can never be seen or clicked, whatever shape it is spawned in.
+     *
+     * `objectTypes == null` with models present is the opcode-5 form: those models are shape 10.
+     */
+    private fun drawableShape(id: Int): Int? = runCatching {
+        val def = getObject(id)
+        if (def.objectModels.isNullOrEmpty()) return@runCatching null
+        val shapes = def.objectTypes
+        when {
+            shapes.isNullOrEmpty() -> SouthernWatch.STANDARD_SHAPE
+            shapes.contains(SouthernWatch.STANDARD_SHAPE) -> SouthernWatch.STANDARD_SHAPE
+            else -> shapes.first()
+        }
+    }.getOrNull()
 
     /**
      * [id] itself when the cache renders it as-is, otherwise the ids it transforms into — a
@@ -140,8 +167,9 @@ class SouthernWatchPlugin(
     private fun spawnStandard(world: World) {
         val id = SouthernWatch.standardId
         if (id <= 0) return // resolveStandard already logged why
-        world.spawn(DynamicObject(id = id, type = OBJ_TYPE, rot = 0, tile = SouthernWatch.STANDARD_TILE))
-        logger.info { "[southern-watch] standard (loc $id) raised at ${SouthernWatch.STANDARD_TILE}." }
+        val shape = SouthernWatch.standardShape
+        world.spawn(DynamicObject(id = id, type = shape, rot = 0, tile = SouthernWatch.STANDARD_TILE))
+        logger.info { "[southern-watch] standard (loc $id, shape $shape) raised at ${SouthernWatch.STANDARD_TILE}." }
     }
 
     /** Bind the standard's option DEFENSIVELY (a raw bind on a missing option drops the whole plugin). */
@@ -281,7 +309,6 @@ class SouthernWatchPlugin(
     }
 
     private companion object {
-        const val OBJ_TYPE = 10
         const val TICK = 5 // ~3s upkeep cadence, like the goblin camp / frontier sweeps
         const val RESPAWN_TICKS = 6 // ~18s from a knight's death to its respawn
         const val ACTIVATION_RADIUS = 24
