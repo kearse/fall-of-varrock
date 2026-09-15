@@ -51,13 +51,14 @@ object SouthernWatch {
      * stand, option **Capture**), the realm's Saradomin iconography reused unchanged: no new model,
      * no cache rename (locs cannot be renamed at runtime). North of the centre stone.
      *
-     * The exact loc is **resolved at boot** ([SouthernWatchPlugin.resolveStandard]) rather than
-     * hard-coded, because the Castle Wars standards are varbit-gated in the cache: they swap with
-     * that minigame's flag state, so spawning the gated parent id renders **nothing** for the player
-     * (`transforms[0]` at varbit 0) and there is no object to right-click at all — which is exactly
+     * The exact loc — and the shape it is drawn in — are **resolved at boot**
+     * ([SouthernWatchPlugin.resolveStandard]) rather than hard-coded, because a banner that the
+     * client cannot draw is a quest step nobody can finish: the object sits in the chunk server-side
+     * while the player sees empty ground and right-clicks their way to "Walk here". That is exactly
      * how First Reclamation's raise step dead-ended. The resolver walks these candidates in order,
-     * follows any varbit/varp transform to the concrete ids behind it, and takes the first that is
-     * un-gated *and* carries a real click option. [STANDARD_OBJ] is simply the first candidate.
+     * follows any varbit/varp transform to the concrete ids behind it, and takes the first that has
+     * both a real click option and a model for the shape it will be spawned in.
+     * [STANDARD_OBJ] is simply the first candidate.
      */
     val STANDARD_CANDIDATES = listOf(
         "object.saradomin_standard_4902",
@@ -70,6 +71,14 @@ object SouthernWatch {
     val STANDARD_TILE = Tile(3227, 3372, 0)
 
     /**
+     * The shape a banner-on-a-stand is normally drawn in (centrepiece straight). Only a *preference*:
+     * a loc's models are registered per shape (`objectModels[i]` for `objectTypes[i]`), and spawning
+     * one in a shape it has no model for draws nothing at all — object in the chunk, but no banner
+     * and no right-click menu. The shape actually used is read from the definition at boot.
+     */
+    const val STANDARD_SHAPE = 10
+
+    /**
      * The loc the post actually raised, and the option bound on it — set once by
      * [SouthernWatchPlugin] at world init, `-1`/`null` if the cache offered nothing clickable.
      */
@@ -79,6 +88,11 @@ object SouthernWatch {
 
     @Volatile
     var standardOption: String? = null
+        internal set
+
+    /** The shape [standardId] is drawn in — read from its definition, defaulting to [STANDARD_SHAPE]. */
+    @Volatile
+    var standardShape: Int = STANDARD_SHAPE
         internal set
 
     /**
