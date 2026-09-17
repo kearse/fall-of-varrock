@@ -246,6 +246,14 @@ val VOID_KNIGHT_INTRO_DONE_ATTR = AttributeKey<Boolean>("void_knight_intro_done"
 val SERGEANT_PORTAL_TIP_DONE_ATTR = AttributeKey<Boolean>("sergeant_portal_tip_done")
 
 /**
+ * The item id of the pet the player currently has following them, or absent for none. The pet
+ * item leaves the inventory while the follower is out (exactly as OSRS), so this attribute IS
+ * the player's ownership of it — it must persist, or a logout would destroy the pet. Written
+ * when a pet is dropped/picked up; read on login to re-spawn the follower. See content/items/pets.
+ */
+val ACTIVE_PET_ATTR = AttributeKey<Int>("active_pet_item")
+
+/**
  * Whether the player has cleared the **Mage Tower** raid, which permanently unlocks the three
  * special spellbooks (Ancient/Lunar/Arceuus) for free switching via `::spellbook`. Once earned
  * it stays set across logins, so the player can swap books whenever. Until then only the Standard
