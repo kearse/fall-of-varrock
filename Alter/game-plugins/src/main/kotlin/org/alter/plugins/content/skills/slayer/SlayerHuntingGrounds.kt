@@ -26,7 +26,10 @@ object SlayerHuntingGrounds {
         "npc.cow" to Tile(3178, 3316, 0),          // the cow field, north-west
         "npc.chicken_1173" to Tile(3172, 3293, 0), // the farm pen
         "npc.guard_397" to Tile(3221, 3222, 0),    // castle guards
-        "npc.zombie" to Tile(3231, 3191, 0),       // the Mire undead corner, SW of the yard house (SwampHubPlugin)
+        // The Mire undead corner, SW of the yard house (SwampHubPlugin) — deliberately the SAFE
+        // field, not the Graveyard of Shadows one (WildernessUndeadPlugin): zombies are a level-10
+        // contract, and `::slayertele` must not drop a starter player into the deep Wilderness.
+        "npc.zombie" to Tile(3231, 3191, 0),
         // ── Rank-tiered contracts (SlayerTasks minTitle) ──
         "npc.hobgoblin" to Tile(2910, 3287, 0),    // the hobgoblin peninsula, south of the crafting guild
         "npc.dark_wizard" to Tile(2907, 3335, 0),  // the wizards' stone circle, south-west of Falador

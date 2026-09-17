@@ -26,6 +26,7 @@ import org.alter.plugins.content.bosses.bossProjectile
 import org.alter.plugins.content.combat.*
 import org.alter.plugins.content.combat.formula.MeleeCombatFormula
 import org.alter.plugins.content.combat.strategy.RangedCombatStrategy
+import org.alter.plugins.content.items.anchoring.TeleportAnchoring
 import org.alter.plugins.content.mechanics.poison.Poison
 import org.alter.plugins.content.mechanics.prayer.Prayers
 import org.alter.rscm.RSCM.getRSCM
@@ -404,8 +405,14 @@ class WildernessBossesCombatPlugin(
                     world.queue {
                         wait(2)
                         if (dest != null && !victim.isDead()) {
-                            victim.moveTo(dest)
-                            (victim as? Player)?.message("The Chaos Elemental teleports you!")
+                            // A player who has read a teleport anchoring scroll keeps their footing
+                            // (items/anchoring/TeleportAnchoring) — this displacement is the one
+                            // involuntary teleport in the game, and the scroll is what answers it.
+                            val anchored = (victim as? Player)?.let { TeleportAnchoring.resists(it) } == true
+                            if (!anchored) {
+                                victim.moveTo(dest)
+                                (victim as? Player)?.message("The Chaos Elemental teleports you!")
+                            }
                         }
                     }
                 } else {

@@ -1,0 +1,58 @@
+---
+# Primordial / Pegasian / Eternal boots — the Cerberus crystal boots.
+#
+# Player report 2026-09-13: "Pegasian boots saying need 75 attack to wear". The equip
+# message comes from the cache's own PRIMARY_SKILL/PRIMARY_LEVEL params, which on these
+# three rows resolve to the ATTACK skill (id 0) instead of the style skill each boot
+# belongs to — so every pair demanded 75 Attack, and a maxed ranger with 99 Ranged /
+# 99 Defence and 1 Attack could not wear the Pegasians they had just looted.
+# ItemMetadataService writes whatever the param holds; it has no way to tell a wrong
+# skill id from a right one, so the correction belongs here.
+#
+# Pinned here to the OSRS requirements — the style skill AND 75 Defence, exactly as the
+# wiki lists them. Partial documents: `equipment.skillReqs` only, so the cache bonuses,
+# equip slot and value are untouched. The skillReqs list REPLACES the cache pairs (see
+# ItemMetadataService.load), so the bogus Attack pair is gone once these load.
+#
+# NOTE: keep the very first line of this file as `---` (a leading comment block before
+# the first `---` is parsed as an empty document and throws MismatchedInputException).
+
+# primordial_boots — the melee pair: 75 Strength + 75 Defence
+id: 13239
+equipment:
+  skillReqs:
+    - skill: "strength"
+      level: 75
+    - skill: "defence"
+      level: 75
+
+---
+# pegasian_boots — the ranged pair: 75 Ranged + 75 Defence
+id: 13237
+equipment:
+  skillReqs:
+    - skill: "ranged"
+      level: 75
+    - skill: "defence"
+      level: 75
+
+---
+# eternal_boots — the magic pair: 75 Magic + 75 Defence
+id: 13235
+equipment:
+  skillReqs:
+    - skill: "magic"
+      level: 75
+    - skill: "defence"
+      level: 75
+
+---
+# eternal_boots_23644 — the duplicate cache row for the same boot (kept in step so the
+# variant can't be worn at a level the real id refuses).
+id: 23644
+equipment:
+  skillReqs:
+    - skill: "magic"
+      level: 75
+    - skill: "defence"
+      level: 75
