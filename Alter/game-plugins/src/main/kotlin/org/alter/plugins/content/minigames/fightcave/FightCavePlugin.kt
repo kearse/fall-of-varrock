@@ -537,7 +537,7 @@ class FightCavePlugin(
         val id = runCatching { getRSCM(MEJ_JAL) }.getOrDefault(-1)
         chatNpc(p, "You want the cape of fire, JalYt? Then prove yourself in the cave. Waves $START_WAVE to $FINAL_WAVE — my kin, each stronger than the last — and at the end, TzTok-Jad himself.", npc = id, title = "TzHaar-Mej-Jal")
         chatNpc(p, "Bring your own food and prayers. The Tz-Kih sap your faith, the Tz-Kek split when broken, and Jad... watch his stance. Slam means arrows, fire-breath means magic. Pray wrong and you die.", npc = id, title = "TzHaar-Mej-Jal")
-        when (options(p, "I'm ready. (enter the Fight Cave)", "Let me practice against TzTok-Jad. (no rewards)", "Let me practice a wave of my choosing.", "What do I get?", "Not now.")) {
+        when (options(p, "I'm ready. (enter the Fight Cave)", "Let me practice against TzTok-Jad. (no rewards)", "Let me practice a wave of my choosing.", "Exchange a fire cape.", "What do I get?", "Not now.")) {
             1 -> start(p, practice = false)
             2 -> start(p, practice = true, practiceWave = FINAL_WAVE)
             3 -> {
@@ -545,12 +545,52 @@ class FightCavePlugin(
                 if (wave in 1..FINAL_WAVE) start(p, practice = true, practiceWave = wave)
                 else p.message("There is no wave $wave, JalYt.")
             }
-            4 -> {
+            4 -> exchangeCape(p, id)
+            5 -> {
                 chatNpc(p, "Survive to the end and the cape of fire is yours, JalYt — with TokKul for the clear, and TokKul for every wave even if you fall. Impress the cave enough and a little TzRek-Jad may follow you home.", npc = id, title = "TzHaar-Mej-Jal")
                 chatNpc(p, "Die and you lose nothing but your pride — the cave keeps no corpses. Your best wave is remembered.", npc = id, title = "TzHaar-Mej-Jal")
             }
-            5 -> chatPlayer(p, "Maybe later.")
+            6 -> chatPlayer(p, "Maybe later.")
         }
+    }
+
+    /**
+     * **Exchange a fire cape for a roll at TzRek-Jad** — OSRS's second route to the pet, and the
+     * one a player who already owns a cape actually uses.
+     *
+     * Player report 2026-09-18: "tzhaar - exchange firecape for 1/200 chance for pet doesn't work".
+     * It did not exist: the only pet roll was [PET_ODDS] on a full clear, so a second, third and
+     * tenth cape were worth nothing but a bank slot. The cape is consumed either way — that is what
+     * makes it a gamble rather than a free reroll.
+     */
+    private suspend fun QueueTask.exchangeCape(p: Player, npcId: Int) {
+        val cape = runCatching { getRSCM("item.fire_cape") }.getOrNull() ?: return
+        val pet = runCatching { getRSCM("item.tzrekjad") }.getOrNull() ?: return
+        if (!p.inventory.contains(cape)) {
+            chatNpc(p, "Bring me a cape of fire, JalYt, and I will ask the cave to send a little one after you.", npc = npcId, title = "TzHaar-Mej-Jal")
+            return
+        }
+        chatNpc(p, "Give me the cape and I will ask. The cave rarely answers — about one time in $EXCHANGE_ODDS. The cape is spent either way.", npc = npcId, title = "TzHaar-Mej-Jal")
+        if (options(p, "Exchange my fire cape.", "Keep my cape.") != 1) {
+            chatPlayer(p, "I'll keep it for now.")
+            return
+        }
+        // Re-check after the dialogue: the pack can change while an options box is open.
+        if (p.inventory.remove(item = cape, amount = 1).completed == 0) {
+            chatPlayer(p, "I don't have a fire cape any more.")
+            return
+        }
+        if (!world.chance(1, EXCHANGE_ODDS)) {
+            chatNpc(p, "The cave does not answer, JalYt. Bring another.", npc = npcId, title = "TzHaar-Mej-Jal")
+            return
+        }
+        if (p.inventory.add(item = pet, amount = 1, assureFullInsertion = false).completed == 0) {
+            p.bank.add(pet, 1)
+            p.message("<col=ffae00>TzRek-Jad has been sent to your bank.</col>")
+        }
+        chatNpc(p, "The cave answers! Look after the little one.", npc = npcId, title = "TzHaar-Mej-Jal")
+        world.players.forEach { it.message("<col=ff0000>News: ${p.username} just received <col=ffae00>TzRek-Jad</col> from TzHaar-Mej-Jal!</col>") }
+        if (CollectionLog.record(p, pet)) p.message("<col=ffae00>New Collection Log slot: TzRek-Jad!</col>")
     }
 
     // ───────────────────────────── combat defs ─────────────────────────────
@@ -667,6 +707,12 @@ class FightCavePlugin(
         // A run burns real supplies (15 sharks + 4 prayer pots at Boss-shop
         // prices), so the clear must beat that with margin; 150 ≈ boss-farming rates per hour.
         const val PET_ODDS = 1000 // TzRek-Jad per full clear — a genuine chase item
+
+        /** Fire cape handed to TzHaar-Mej-Jal: 1-in-N for TzRek-Jad, cape spent either way.
+         *  The player who asked for this quoted 1/200; OSRS is 1/100. Taking the player's number
+         *  keeps a spare cape meaningfully better than a fresh clear (1/1000) without making the
+         *  exchange strictly dominate actually running the cave. TUNE. */
+        const val EXCHANGE_ODDS = 200
 
         // Best-known OSRS anim/gfx ids; a wrong id is a cosmetic miss, never a throw. TUNE in-game.
         const val JAD_MELEE_ANIM = 2655
