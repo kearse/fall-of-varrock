@@ -37,7 +37,8 @@ fun main(args: Array<String>) {
             "    bonuses=" + (
                 b?.let {
                     "astab=${it[0]} aslash=${it[1]} acrush=${it[2]} amagic=${it[3]} arange=${it[4]} " +
-                        "str=${it[10]} rstr=${it[11]} mdmg=${it[12]} pray=${it[13]} speed=${d.attackSpeed}"
+                        "str=${it[10]} rstr=${it[11]} mdmg=${it[12]} pray=${it[13]} speed=${d.attackSpeed} " +
+                        "cat=${d.category} weaponType=${d.weaponType} equipSlot=${d.equipSlot}"
                 } ?: "(none)"
             ),
         )

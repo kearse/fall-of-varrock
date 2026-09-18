@@ -8,6 +8,7 @@ import org.alter.game.model.entity.Npc
 import org.alter.game.model.entity.Pawn
 import org.alter.game.model.entity.Player
 import org.alter.plugins.content.combat.Combat
+import org.alter.plugins.content.combat.RevenantWeapons
 import org.alter.plugins.content.combat.CombatConfigs
 import org.alter.plugins.content.combat.strategy.magic.CombatSpell
 import org.alter.plugins.content.combat.strategy.magic.PoweredStaves
@@ -139,6 +140,24 @@ object MagicCombatFormula : CombatFormula {
                     hit *= 1.15
                     hit = Math.floor(hit)
                 }
+
+                // Dragon hunter wand: ×1.2 damage vs draconic (OSRS Wiki). Community question
+                // 2026-09-18, "does dragon hunter items do extra damage vs dragons" — only the
+                // CROSSBOW was wired; the wand and the lance did nothing at all.
+                if (pawn.hasEquipped(EquipmentType.WEAPON, "item.dragon_hunter_wand") &&
+                    target.isSpecies(NpcSpecies.DRACONIC)
+                ) {
+                    hit *= 1.2
+                    hit = Math.floor(hit)
+                }
+            }
+
+            // Thammaron's / Accursed sceptre: +50% vs Wilderness npcs, the same rule the revenant
+            // BOWS have had since 2026-09-03 (see RevenantWeapons).
+            val revenant = RevenantWeapons.wildernessMultiplier(pawn, target, RevenantWeapons.MAGIC)
+            if (revenant != 1.0) {
+                hit *= revenant
+                hit = Math.floor(hit)
             }
         } else if (pawn is Npc) {
             val multiplier = 1.0 + (pawn.getMagicDamageBonus() / 100.0)
@@ -274,6 +293,22 @@ object MagicCombatFormula : CombatFormula {
         // spellbook, same as its damage bonus (OSRS Wiki, Smoke battlestaff).
         if (player.hasEquipped(EquipmentType.WEAPON, "item.mystic_smoke_staff") && player.hasSpellbook(Spellbook.NORMAL)) {
             hit *= 1.1
+            hit = Math.floor(hit)
+        }
+
+        // Dragon hunter wand: ×1.5 magic accuracy vs draconic (OSRS Wiki) — the wand's accuracy
+        // bonus is larger than its damage bonus, the same shape as the DHCB's ×1.3 / ×1.25.
+        if (player.hasEquipped(EquipmentType.WEAPON, "item.dragon_hunter_wand") &&
+            target is Npc && target.isSpecies(NpcSpecies.DRACONIC)
+        ) {
+            hit *= 1.5
+            hit = Math.floor(hit)
+        }
+
+        // Thammaron's / Accursed sceptre: +50% vs Wilderness npcs.
+        val revenant = RevenantWeapons.wildernessMultiplier(player, target, RevenantWeapons.MAGIC)
+        if (revenant != 1.0) {
+            hit *= revenant
             hit = Math.floor(hit)
         }
 
