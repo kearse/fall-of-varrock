@@ -30,5 +30,16 @@ fun main(args: Array<String>) {
         }
         val reqs = d.skillReqs?.entries?.joinToString(", ") { "skill=${it.key} lvl=${it.value}" } ?: "NONE"
         println("$id ${d.name}: tradeable=${d.isTradeable} skillReqs=[$reqs]")
+        // bonuses[] as the combat formulas see it, so an itemOverrides document can be verified
+        // end to end (index 10 = melee strength, 11 = ranged strength, 12 = magic damage).
+        val b = runCatching { d.bonuses }.getOrNull()
+        println(
+            "    bonuses=" + (
+                b?.let {
+                    "astab=${it[0]} aslash=${it[1]} acrush=${it[2]} amagic=${it[3]} arange=${it[4]} " +
+                        "str=${it[10]} rstr=${it[11]} mdmg=${it[12]} pray=${it[13]} speed=${d.attackSpeed}"
+                } ?: "(none)"
+            ),
+        )
     }
 }

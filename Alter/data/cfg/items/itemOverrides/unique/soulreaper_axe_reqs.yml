@@ -1,0 +1,28 @@
+# Soulreaper axe â€” wield requirements (community batch 2026-09-18: "soulreaper axe does not work
+# and no stats to wield").
+#
+# The axe's BONUSES are fine in the rev-228 cache (+134 slash, +121 strength, 5-tick speed). What it
+# has is no wear-requirement params at all â€” 434/436/435/437 are absent on both defs â€” so a level-3
+# account could wield the best melee weapon in the game. OSRS gates it at 80 Attack and 80 Strength.
+#
+# A `skillReqs` list REPLACES whatever the cache holds, so this is also the seam if the numbers ever
+# need to move. Partial documents (no equip_slot): bonuses, speed and weapon type are untouched.
+
+# soulreaper_axe (25484) â€” the def this server drops and sells
+id: 25484
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 80
+    - skill: "strength"
+      level: 80
+
+---
+# soulreaper_axe_28338 â€” the tradeable duplicate def, same weapon
+id: 28338
+equipment:
+  skillReqs:
+    - skill: "attack"
+      level: 80
+    - skill: "strength"
+      level: 80
