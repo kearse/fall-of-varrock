@@ -260,7 +260,7 @@ class CombatPlugin(
                 // "like you're fcing" (player report 2026-09-18). The spec stays armed for the
                 // next real melee swing rather than being spent at range.
                 val specMatchesWeapon = pawn is Player &&
-                    CombatConfigs.strategyFor(CombatConfigs.getWeaponCombatClass(pawn)) === strategy
+                    CombatConfigs.strategyFor(CombatConfigs.specialAttackClass(pawn)) === strategy
                 if (pawn is Player && specMatchesWeapon &&
                     AttackTab.isSpecialEnabled(pawn) && pawn.getEquipment(EquipmentType.WEAPON) != null
                 ) {

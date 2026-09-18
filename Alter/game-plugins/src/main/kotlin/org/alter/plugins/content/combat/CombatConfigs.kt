@@ -104,7 +104,12 @@ object CombatConfigs {
                 // with a whip in hand). Only *auto*-cast is staff-gated -- see [canAutocast],
                 // which the combat loop consults before re-arming CASTING_SPELL each attack.
                 pawn.attr.has(Combat.CASTING_SPELL) -> CombatClass.MAGIC
-                else -> getWeaponCombatClass(pawn)
+                pawn.hasWeaponType(WeaponType.BOW, WeaponType.CHINCHOMPA, WeaponType.CROSSBOW, WeaponType.THROWN) -> CombatClass.RANGED
+                // Salamanders: scorch (0) is melee; blaze/flare fight at range. Both non-melee
+                // styles route through the ranged strategy — the previous unconditional MELEE
+                // class made the style/xp tables throw on every blaze/flare attack.
+                pawn.hasWeaponType(WeaponType.SALAMANDER) && pawn.getAttackStyle() != 0 -> CombatClass.RANGED
+                else -> CombatClass.MELEE
             }
         }
 
@@ -112,26 +117,26 @@ object CombatConfigs {
     }
 
     /**
-     * The class the WIELDED WEAPON fights in, ignoring any spell currently queued.
+     * The class a SPECIAL ATTACK on the wielded weapon belongs to.
      *
-     * [getCombatClass] deliberately answers MAGIC whenever a spell is armed, because in OSRS you
-     * may cast with a whip in hand — but that makes it the wrong question for anything that
-     * belongs to the weapon rather than to this particular swing. A special attack is exactly
-     * that: `SpecialAttacks` keys on the worn weapon, so a melee weapon's special must only ever
-     * ride a melee swing. Player report 2026-09-18 — "when spec is on and you use a spell it
-     * would spec from far away like you're fcing" — was the combat loop firing an armed MELEE
-     * special through the MAGIC strategy's 10-tile range check.
+     * [getCombatClass] answers MAGIC whenever a spell is armed, because in OSRS you may cast with
+     * a whip in hand — correct for the swing, wrong for the weapon. A special belongs to the
+     * weapon (`SpecialAttacks` keys on the worn item), so the combat loop must only fire one when
+     * the strategy about to attack is the weapon's own. Player report 2026-09-18 — "when spec is
+     * on and you use a spell it would spec from far away like you're fcing" — was an armed MELEE
+     * special going off through the MAGIC strategy's 10-tile range check.
+     *
+     * Deliberately NOT the same rule as [getCombatClass]: a staff with no spell armed fights as a
+     * MELEE bash there (and must keep doing so), but its special — the nightmare and eldritch orb
+     * staves' Immolate / Invocate — is cast, so it belongs to the magic strategy. Answering MELEE
+     * here would have silently stopped those two specials from ever firing.
      */
-    fun getWeaponCombatClass(player: Player): CombatClass =
+    fun specialAttackClass(player: Player): CombatClass =
         when {
             player.hasWeaponType(WeaponType.BOW, WeaponType.CHINCHOMPA, WeaponType.CROSSBOW, WeaponType.THROWN) -> CombatClass.RANGED
-            // Salamanders: scorch (0) is melee; blaze/flare fight at range. Both non-melee
-            // styles route through the ranged strategy — the previous unconditional MELEE
-            // class made the style/xp tables throw on every blaze/flare attack.
             player.hasWeaponType(WeaponType.SALAMANDER) && player.getAttackStyle() != 0 -> CombatClass.RANGED
-            // A powered staff's built-in attack IS magic, and the orb-staff specials are cast,
-            // not swung — they belong to the magic strategy.
-            PoweredStaves.isWielding(player) -> CombatClass.MAGIC
+            // Every staff-family weapon: powered staves, the nightmare staves, the sceptres.
+            player.hasWeaponType(WeaponType.MAGIC_STAFF, WeaponType.STAFF, WeaponType.TRIDENT) -> CombatClass.MAGIC
             else -> CombatClass.MELEE
         }
 
