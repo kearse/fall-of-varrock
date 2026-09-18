@@ -22,9 +22,14 @@ object GenericDrops {
      *  loaded, the npc has no table, or the amount scales to zero. */
     fun rollAndDrop(world: World, npc: Npc, killer: Player) {
         if (!NpcDropConfig.enabled || !NpcDropTables.loaded) return
-        val rows = NpcDropTables.tableFor(npc.id) {
-            runCatching { getNpc(npc.id).name }.getOrNull()
-        } ?: return
+        val name = runCatching { getNpc(npc.id).name }.getOrNull()
+        val table = NpcDropTables.tableFor(npc.id) { name }
+        // Config-added rows ride on top of the osrsbox table (and stand alone for a monster that
+        // has no table at all), so an item OSRS hands out through content this server lacks can be
+        // put back without regenerating the drop JSON. Keyed by name, so every variant id matches.
+        val extra = name?.lowercase()?.trim()?.let { NpcDropConfig.extraDrops[it] }.orEmpty()
+        if (table == null && extra.isEmpty()) return
+        val rows = table.orEmpty() + extra
         val tile = npc.tile
         for (row in rows) {
             // Data-tunable item veto (clue scrolls, caskets, bogus 100% rows) — config.yml.

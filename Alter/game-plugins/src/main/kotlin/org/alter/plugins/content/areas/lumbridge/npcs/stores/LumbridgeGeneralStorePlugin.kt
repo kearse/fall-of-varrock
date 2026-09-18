@@ -60,6 +60,13 @@ class LumbridgeGeneralStorePlugin(
             "item.pot" to 10, "item.jug" to 10, "item.bucket" to 10, "item.bowl" to 10,
             "item.cake_tin" to 5, "item.tinderbox" to 10, "item.shears" to 10, "item.knife" to 10,
             "item.chisel" to 10, "item.hammer" to 10, "item.spade" to 10,
+            // Anti-dragon shield: no shop sold it and it sat on zero drop tables, so there was no
+            // way to obtain one at all (player report 2026-09-18). In OSRS it comes from Duke
+            // Horacio via Dragon Slayer, a quest this server does not have. It is nearly worthless
+            // as armour (+9 slash defence, 20gp) — the value is entirely the dragonfire block in
+            // DragonfireFormula — so it belongs with the general-store staples rather than behind
+            // the rank-gated armoury. Dragons also drop it (see data/cfg/drops/config.yml).
+            "item.antidragon_shield" to 10,
         )
     }
 }

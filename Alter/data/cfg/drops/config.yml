@@ -24,14 +24,23 @@ excludeIds: []
 # elite caskets" (27 monsters dropped Reward casket (elite) EVERY kill), "scorpion keeps
 # dropping Book page 1", "clue scrolls don't work / casket does not open".
 excludeItemIds:
-  # Clue scrolls — no Treasure Trails system exists.
-  - 23182   # beginner
-  - 2677    # easy
-  - 2801    # medium
-  - 2722    # hard
-  - 12073   # elite
-  - 19835   # master
-  # Reward caskets — cannot be opened.
+  # Clue scrolls — easy/medium/hard/elite/master are LIVE again as of 2026-09-18.
+  #
+  # The blanket veto here was written on 2026-09-02, when no Treasure Trails system existed.
+  # `minigames/cluescrolls` shipped on 2026-09-13 (read → dig → reward casket → tiered loot) but
+  # this list was never revisited, so the only clues in the game were the hard and elite rows
+  # hand-written onto ~20 boss tables: no easy, no medium and no master scroll existed anywhere,
+  # and no regular monster dropped one. From the player's side that reads as "the clue scroll
+  # plugin doesn't work" (reported again 2026-09-18) — they never saw a scroll to try it with.
+  #
+  # Beginner (23182) stays out: `ClueScrolls.Tier` has no BEGINNER tier, so the scroll would sit
+  # inert in the pack. Add the tier first, then delete this line.
+  - 23182   # beginner — no matching tier in ClueScrolls.Tier, would be inert
+  # Reward caskets — still excluded, deliberately.
+  #
+  # A casket is the REWARD for finishing a trail, not a drop; handing them out from monster tables
+  # would let a player skip the trail. The elite casket is also the row that started this list —
+  # the osrsbox import put it on 27 monsters at 100%.
   - 23245   # beginner
   - 20546   # easy
   - 20545   # medium
@@ -43,3 +52,38 @@ excludeItemIds:
   # Warrior guild token — this server repurposes 8851 as the Vote Ticket, and the
   # animated-armour tables hand it out at 100%.
   - 8851
+
+# Rows ADDED to a monster's generic table, keyed by the LOWERCASED npc name (so every variant id of
+# a monster picks them up, the same way the byName fallback works). The counterpart to
+# excludeItemIds: the osrsbox import is authentic, but OSRS also hands out items through content
+# this server does not have, and this is where those go back onto a table without regenerating the
+# 10 MB npc_drops.json. Each row is an independent Bernoulli roll, exactly like an imported one.
+#
+#   <npc name>:
+#     - { item: <id>, rarity: <0..1>, min: <n>, max: <n>, rolls: <n> }
+#
+# rarity is required; min defaults to 1, max to min, rolls to 1.
+extraDrops:
+  # Anti-dragon shield (1540) had NO source in the game as of 2026-09-18 — no shop sold it and it
+  # sat on zero drop tables ("no way to obtain anti fire shield"). In OSRS it comes from Duke
+  # Horacio via Dragon Slayer, a quest this server does not have. It is now a cheap staple at the
+  # Lumbridge General Store AND a common drop from the dragons it protects you from, so a player
+  # who walks into dragons without one can still get it from the thing that just killed them.
+  # The shield is nearly worthless as armour (+9 slash defence, 20gp) — its value is entirely the
+  # dragonfire block in DragonfireFormula, so a common rate is not an economy event.
+  green dragon:
+    - { item: 1540, rarity: 0.05 }
+  blue dragon:
+    - { item: 1540, rarity: 0.05 }
+  red dragon:
+    - { item: 1540, rarity: 0.05 }
+  black dragon:
+    - { item: 1540, rarity: 0.05 }
+  baby blue dragon:
+    - { item: 1540, rarity: 0.02 }
+  baby green dragon:
+    - { item: 1540, rarity: 0.02 }
+  baby red dragon:
+    - { item: 1540, rarity: 0.02 }
+  baby black dragon:
+    - { item: 1540, rarity: 0.02 }
