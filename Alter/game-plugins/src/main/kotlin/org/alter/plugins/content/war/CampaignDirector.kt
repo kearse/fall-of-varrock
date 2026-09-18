@@ -451,6 +451,10 @@ class CampaignDirector(
      * companion is a Player subclass: its fighting ticks credit its OWNER (one human share, one
      * ledger entry, coins banked to a person — not to "Sir X"); every other fake player (PK bots)
      * is dropped. Check `Companion` before `PkBot` — it is a PkBot subclass.
+     *
+     * Each credit is also published on [WarHooks.fireFighting]: the end-of-op result only reaches
+     * players still online when the column finishes, so anything that must survive a logout
+     * mid-battle (First March's "fight in the line" step) is written from here instead.
      */
     private fun recordParticipation(world: World) {
         world.players.forEach { p ->
@@ -461,6 +465,7 @@ class CampaignDirector(
                 else -> p
             } ?: return@forEach
             participation.merge(credited, 1, Int::plus)
+            WarHooks.fireFighting(credited, tier)
         }
     }
 

@@ -32,6 +32,11 @@ class FirstMarchPlugin(
         // Any march-tier op counts (Zo's column, the scheduled march, a Lord's operation).
         WarHooks.onOperationEnded { result -> FirstMarch.onMarchResult(world, result) }
 
+        // ...and the fact that the player fought is written the moment they do, not at the end:
+        // the result above only reaches players still online when the column finishes, so a logout
+        // mid-battle used to lose the whole march (see FirstMarch.FOUGHT).
+        WarHooks.onFightingInOp { p, tier -> FirstMarch.onFoughtInMarch(p, tier) }
+
         onWorldInit {
             if (MarchTargets.byKey(FirstMarch.TARGET_KEY) == null) {
                 logger.warn { "[quests] First March's march target '${FirstMarch.TARGET_KEY}' is not in the march pool — Zo cannot send the column." }

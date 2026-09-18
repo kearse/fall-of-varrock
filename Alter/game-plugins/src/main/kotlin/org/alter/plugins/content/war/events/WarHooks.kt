@@ -1,6 +1,7 @@
 package org.alter.plugins.content.war.events
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import org.alter.game.model.entity.Player
 import org.alter.plugins.content.war.CampaignTier
 import org.alter.plugins.content.war.WarType
 
@@ -51,6 +52,30 @@ object WarHooks {
         for (l in listeners.toList()) {
             runCatching { l.fn(result) }
                 .onFailure { logger.error(it) { "War-result listener failed for ${result.opKey} (won=${result.won})" } }
+        }
+    }
+
+    // --- participation ------------------------------------------------------------------------
+
+    private val fighting = ArrayList<(Player, CampaignTier) -> Unit>()
+
+    /**
+     * Fires for every player the running op credits a fighting tick to (`CampaignDirector`'s
+     * participation counter), i.e. **the moment they actually fight in the line** rather than when
+     * the op ends. [onOperationEnded] only ever reaches players who are still online at the end, so
+     * anything that has to survive a logout mid-battle — a quest step that asks you to march — has
+     * to be written from here, while the player is in front of us.
+     *
+     * Called once per fighting player per tick, so listeners must be cheap and idempotent.
+     */
+    fun onFightingInOp(listener: (Player, CampaignTier) -> Unit) {
+        fighting += listener
+    }
+
+    internal fun fireFighting(player: Player, tier: CampaignTier) {
+        for (l in fighting) {
+            runCatching { l(player, tier) }
+                .onFailure { logger.error(it) { "War-participation listener failed for ${player.username}" } }
         }
     }
 }

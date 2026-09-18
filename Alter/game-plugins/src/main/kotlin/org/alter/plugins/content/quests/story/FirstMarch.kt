@@ -80,6 +80,20 @@ object FirstMarch : QuestDefinition(
     /** Counter set when the column was driven back. */
     private const val DRIVEN_BACK = "driven_back"
 
+    /**
+     * Set the moment the player actually fights in the column ([onFoughtInMarch]) — the persisted
+     * proof that they were in the line, written while they are in front of us rather than at the
+     * end of the op.
+     *
+     * [onMarchResult] only sees players who are STILL ONLINE when the column finishes, and a march
+     * runs on the realm's half-hour clock: log out mid-battle (or during the walk home) and the
+     * result never reached you, so the step stayed on MARCH forever and every session began with
+     * Zo saying "we go again" and sending out another column — the 2026-09-17 "every time I login
+     * it makes me do the same march" report. With this counter the fight is remembered across the
+     * logout and [regroup] closes the step out instead of launching a fresh march.
+     */
+    private const val FOUGHT = "fought"
+
     private const val WAR_EFFORT = 25
 
     /** The goblin camp's rally point (`MarchTargets.GOBLIN_CAMP.op.objectiveTile`) — the march step's anchor. */
@@ -268,11 +282,24 @@ object FirstMarch : QuestDefinition(
         }
     }
 
-    /** MARCH at Zo: point at the live column, or — the column's back and the step never resolved — go again. */
+    /**
+     * MARCH at Zo: point at the live column, or — the column's back and the step never resolved —
+     * settle it. A player who FOUGHT ([FOUGHT], persisted at the time) has done what the step asks;
+     * the only reason it is still open is that the op ended while they were offline, so Zo takes the
+     * report rather than sending them out again. Only a player who never got into the line is sent
+     * back out.
+     */
     private suspend fun QueueTask.regroup(p: Player) {
         val live = WarEvents.current()
         if (live != null) {
             zo(p, "The column is in the field right now — at ${live.displayName}. <col=0000ff>::march</col>. Get in the line.")
+            return
+        }
+        if (QuestEngine.counter(p, this@FirstMarch, FOUGHT) > 0) {
+            clearFought(p)
+            QuestEngine.advanceTo(p, this@FirstMarch, REPORT) // mutate, then narrate
+            zo(p, "The column's home. You were in the line for it —<br>I had the word from the Knight-Captain.")
+            debrief(p)
             return
         }
         zo(p, "The column's back and you're standing in my courtyard. We go again.")
@@ -308,8 +335,13 @@ object FirstMarch : QuestDefinition(
         world.players.forEach { p ->
             if (p.index < 0 || !p.entityType.isHumanControlled) return@forEach
             if (QuestEngine.stepId(p, this) != MARCH) return@forEach
+            // "Was I in the line?" — the op's share table OR the persisted [FOUGHT] proof. The share
+            // is a whole percent of the whole column's fighting, so a recruit swinging beside a full
+            // turnout can round to 0 and read as "sat it out" when they did nothing of the kind.
+            val inTheLine = r.participated(p.username, MIN_SHARE) || QuestEngine.counter(p, this, FOUGHT) > 0
+            clearFought(p)
             when {
-                r.won && r.participated(p.username, MIN_SHARE) -> {
+                r.won && inTheLine -> {
                     QuestEngine.advanceTo(p, this, REPORT)
                     p.message("<col=4f9b4f>The column holds the field. Report to General Zo.</col>")
                 }
@@ -327,8 +359,25 @@ object FirstMarch : QuestDefinition(
         }
     }
 
+    /**
+     * The player landed a fighting tick inside a march-tier op's battle line
+     * ([WarHooks.onFightingInOp] → `CampaignDirector.recordParticipation`). Persists [FOUGHT] once
+     * per march; every other step, and every non-march tier, ignores it.
+     */
+    fun onFoughtInMarch(p: Player, tier: CampaignTier) {
+        if (tier != CampaignTier.MARCH && tier != CampaignTier.GRAND_MARCH) return
+        if (QuestEngine.stepId(p, this) != MARCH) return
+        if (QuestEngine.counter(p, this, FOUGHT) > 0) return // once per march — this runs every tick
+        QuestEngine.addCounter(p, this, FOUGHT, 1)
+    }
+
+    private fun clearFought(p: Player) {
+        val n = QuestEngine.counter(p, this, FOUGHT)
+        if (n > 0) QuestEngine.addCounter(p, this, FOUGHT, -n)
+    }
+
     private fun clearSetbacks(p: Player) {
-        listOf(MISSED, DRIVEN_BACK).forEach { name ->
+        listOf(MISSED, DRIVEN_BACK, FOUGHT).forEach { name ->
             val n = QuestEngine.counter(p, this, name)
             if (n > 0) QuestEngine.addCounter(p, this, name, -n)
         }

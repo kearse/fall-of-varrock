@@ -1,7 +1,8 @@
 # Community feedback batch — September 2026
 
-> Two batches so far. **[Batch 2 (2026-09-13)](#batch-2--2026-09-13)** is at the bottom of this
-> file; batch 1 (2026-09-03) is immediately below.
+> Three batches so far. **[Batch 3 (2026-09-17)](#batch-3--2026-09-17)** and
+> **[Batch 2 (2026-09-13)](#batch-2--2026-09-13)** are at the bottom of this file; batch 1
+> (2026-09-03) is immediately below.
 
 ## Batch 1 — 2026-09-03
 
@@ -175,3 +176,50 @@ a placeholder for this system, and re-opening it would put elite caskets back on
   All are placed on ground that live content already uses, but none has been walked.
 - The plain god capes are no longer purchasable. Anyone who bought one for 2,000 gp before this
   batch keeps it — there is no clawback, and it is a legitimate (if cheap) Mage Arena I cape.
+
+---
+
+## Batch 3 — 2026-09-17
+
+Source: two reports from the player **Rude**, relayed by the operator. Same method as the earlier
+batches: both were traced to code before anything changed.
+
+### Bug reports
+
+| # | Report | Root cause | Status |
+|---|---|---|---|
+| 1 | All pets don't follow when dropped | There was no pet system at all. Every pet on this server is only an inventory item — the boss tables hand one out (`bosses/BossDeath`) and the Collection Log records it — and nothing ever turned one into a follower. `Drop` was the plain inventory drop, so a pet went on the floor for anyone to take | **Fixed** — `items/pets`. Dropping a pet takes the item out of the pack and spawns its follower npc at your feet; it walks (and runs) after you, snaps to your side across floors/teleports, is stored on logout and comes back on login, and goes back in the pack with the follower's own **Pick-up** (or `::pet`) |
+| 2 | Every login it makes me do the same small march | **First March** (Main Story Quest 2). Its MARCH step resolved only from `WarHooks.onOperationEnded`, which walks `world.players` — so it only ever reached players **still online when the column finished**. A march runs on the realm's half-hour clock and the column has to walk home, so logging out mid-battle meant the result never reached you: the step stayed on MARCH, and General Zo's `regroup` line ("we go again") launched a **fresh public march** every time you talked to him. Same dead end for a share that rounds to 0% (the share table is whole percents of the whole column's fighting) | **Fixed** — the fight is now recorded the moment it happens (`WarHooks.onFightingInOp` → `CampaignDirector.recordParticipation`) into a persisted quest counter, so it survives the logout. Zo now closes the step out for anyone who was in the line instead of sending them out again, and the share-rounding case counts as participation too |
+
+### Pets — how the follower npc is resolved
+
+A pet item and its follower npc are **not** named the same (item "Pet general graardor" → npc
+"General Graardor Jr."), and several cache npcs share one pet's name: the Kraken **boss** and the
+Kraken **pet** are both "Kraken"; Zulrah's combat snakelings and the Snakeling pet are both
+"Snakeling". So `Pets.PETS` maps each pet item to the follower's cache **name** (written as the
+`npc.rscm` slug spells it) and the resolver picks, out of every npc with that name, the lowest id
+the cache flags as a follower (`NpcType.isFollower`, or failing that one carrying a `Pick-up`
+option). A pet whose follower can't be identified that way is left unbound and logged at boot —
+it keeps its old drop-to-floor behaviour rather than spawning a boss by mistake.
+
+Twenty-six pets are covered: every Collection Log pet (lair, GWD, wilderness, slayer, Zulrah,
+Vorkath, Corp, Hydra) plus TzRek-Jad, the Wintertodt Phoenix and the GotR Abyssal protector. There
+are no skilling pets on this server, so none are listed.
+
+The follower does **no route-finding** — it queues the next tile or two toward its owner,
+collision-checked, exactly like the npc wander loop (`mechanics/npcwalk`), and snaps to the
+owner's side when it falls more than 12 tiles behind, changes floor, or sits walled off for five
+ticks. The item leaves the inventory while the pet is out, so `ACTIVE_PET_ATTR` (persistent) *is*
+the ownership record: it has to survive a logout or the pet would be destroyed.
+
+### Follow-ups (not in this PR)
+
+- **Pet metamorphosis** (the recolour/variant forms several pets carry as extra npc ids) and pet
+  insurance are not implemented — a pet is the one follower form the cache resolves.
+- **A pet lost before this batch is not recoverable by the server**: pets dropped on the floor
+  under the old behaviour despawned like any ground item. Anyone who lost one that way needs an
+  operator hand-back.
+- **First March's offline-loss edge**: a player who fought in a column that was *driven back*
+  while they were offline keeps the participation mark, so Zo takes their report on the next
+  login rather than sending them out again. Being generous once on a 1-QP intro quest beats the
+  alternative that was shipped — being stuck on it forever.
