@@ -2,8 +2,8 @@
  * Fall of Varrock — Wilderness / single / multi combat status banner.
  *
  * Client-side overlay that shows a top-right banner with the player's current PvP zone
- * (MULTI vs SINGLE combat + wilderness level). Zone geometry is mirrored from the
- * server's PvpZones.kt in WildernessZones — keep them in sync.
+ * (MULTI vs SINGLE combat + wilderness level). Zone state comes from server-published varps
+ * (WildernessOverlayPlugin), not a client-side geometry mirror — so it cannot drift from PvpZones.
  */
 package net.runelite.client.plugins.wildernesslines;
 

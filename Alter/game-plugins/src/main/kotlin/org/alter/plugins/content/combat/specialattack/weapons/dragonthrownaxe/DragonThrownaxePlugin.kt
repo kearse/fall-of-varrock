@@ -1,4 +1,4 @@
-﻿package org.alter.plugins.content.combat.specialattack.weapons.dragonthrownaxe
+package org.alter.plugins.content.combat.specialattack.weapons.dragonthrownaxe
 
 import org.alter.api.EquipmentType
 import org.alter.api.ext.getEquipment

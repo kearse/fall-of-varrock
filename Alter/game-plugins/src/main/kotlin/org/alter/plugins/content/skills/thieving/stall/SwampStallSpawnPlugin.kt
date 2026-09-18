@@ -1,4 +1,4 @@
-﻿package org.alter.plugins.content.skills.thieving.stall
+package org.alter.plugins.content.skills.thieving.stall
 
 import dev.openrune.cache.CacheManager.getObject
 import io.github.oshai.kotlinlogging.KotlinLogging
