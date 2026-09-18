@@ -1,6 +1,7 @@
 # Community feedback batch — September 2026
 
-> Three batches so far. **[Batch 3 (2026-09-17)](#batch-3--2026-09-17)** and
+> Four batches so far. **[Batch 4 (2026-09-18)](#batch-4--2026-09-18)**,
+> **[Batch 3 (2026-09-17)](#batch-3--2026-09-17)** and
 > **[Batch 2 (2026-09-13)](#batch-2--2026-09-13)** are at the bottom of this file; batch 1
 > (2026-09-03) is immediately below.
 
@@ -223,3 +224,131 @@ the ownership record: it has to survive a logout or the pet would be destroyed.
   while they were offline keeps the participation mark, so Zo takes their report on the next
   login rather than sending them out again. Being generous once on a 1-QP intro quest beats the
   alternative that was shipped — being stuck on it forever.
+
+---
+
+## Batch 4 — 2026-09-18
+
+Source: the community list the operator pasted on 2026-09-18 (22 distinct items — 19 bug reports
+and 3 questions; the message repeated most of the list twice). Same method as the earlier batches:
+every item was traced to code, and to the cache where the cache was the authority, before anything
+changed.
+
+Operator decisions taken the same day: fix the traced bugs **plus** the cheap missing systems
+(Accursed sceptre, scale charging, fire-cape pet exchange, dragon hunter lance/wand, anti-dragon
+shield) and defer the Slayer reward shop to its own pass; the anti-dragon shield gets **both** a
+shop shelf and dragon drop rows; and Rogue Knights keep hunting the mainland, with the **client
+made honest** about it rather than the knights confined.
+
+### The one that was not on the list
+
+Tracing "dragon knives / throw axe unable to spec" turned up something much larger underneath it.
+
+**Ranged strength is missing from the entire cache.** `ItemMetadataService` builds `def.bonuses[11]`
+from equipment param 189, and `RangedCombatFormula.getMaxHit` reads the summed worn value as `b` in
+`floor(0.5 + a * (b + 64) / 640)`. Rev-228 ships param 189 on only **59 of 30,644** item defs, and
+every one of those is a *weapon* (bows, the venator family, a ring, an amulet). **No arrow, bolt,
+dart, knife, thrownaxe or javelin carries it at all.** Every quiver in the game summed to zero, so a
+99-Ranged player firing dragon arrows maxed around 11 — roughly Ranged÷10, whatever the bow.
+
+Melee was never affected (param 10 is present on 1253 defs), which is why this read as "bows hit
+light" rather than "combat is broken". The 2026-09-03 batch patched the four *ammo-less* bows
+because those were the ones players named by weapon; everything that actually uses ammo was still
+rolling zero. `itemOverrides/unique/ranged_strength_ammo.yml` now pins the OSRS ranged strength of
+every arrow, bolt (plain, gem-tipped and enchanted), dart, knife, thrownaxe and javelin.
+
+### Bug reports
+
+| # | Report | Root cause | Status |
+|---|---|---|---|
+| 1 | Clue scroll plugin doesn't work | The system shipped 2026-09-13, but `drops/config.yml` still carried the 2026-09-02 blanket veto on every clue id, commented "no Treasure Trails system exists". The only clues in the game were the hard/elite rows hand-written onto ~20 boss tables — no easy, no medium, no master existed anywhere, and no regular monster dropped one. Players never saw a scroll to test the loop with | **Fixed** — easy through master are live again. Beginner stays out (`ClueScrolls.Tier` has no BEGINNER tier, so the scroll would be inert); reward caskets stay out deliberately — a casket is the reward for finishing a trail, not a drop |
+| 2 | Soulreaper axe does not work and no stats to wield | `SoulreaperAxe.ITEM_KEYS` listed only 28338, but **25484** is the def this server hands out — the id the PK shop, the loot pools and `ChaseGearGuardPlugin` all name. No soul stacks, no HP cost, no Behead: it swung as a plain axe. Separately, both defs carry no wear-requirement params at all, so a level-3 account could wield the best melee weapon in the game | **Fixed** — both defs register; `soulreaper_axe_reqs.yml` pins the OSRS 80 Attack / 80 Strength. Its bonuses were always fine (+134 slash, +121 strength) |
+| 3 | An area that shows no pk zone has Rogue Knights pking you | Working as designed — knights hunt the whole mainland (2026-09-12 decision) — but the client had no way to say so, so leaving town looked safe and was not | **Fixed (operator decision: make the client honest)** — `WildernessOverlayPlugin` publishes a Rogue Knight danger band (varp 4703) using the same answer `RogueTerritory` gives the knights: zero on a city core, a sanctuary, a PvP carve-out, off the mainland, or inside the wilderness where the skull already speaks. The overlay draws "Rogue Knights / hunt here" in **amber**, never the wilderness red |
+| 4 | Scorpia boss cave is not marked as wildy | The **server** is right: Scorpia's cave is `Wilderness.DUNGEONS` level 54, every spawn and cave door sits inside the box, and `PvpZonesTests` asserts it — PvP, skulling and death drops all work there. The **indicator** was missing: `WildernessBannerOverlay` anchors to the native OSRS PvP skull widget and returned null until that widget reported bounds, and the stock interface-90 script derives its own level from world Y, so at y≈10300 it never lays the widget out | **Fixed** — falls back to the OSRS-default spot under the minimap. Affected all four underground lairs (Scorpia, Vet'ion, Callisto, Venenatis) |
+| 5 | Accursed sceptre has no built-in autocast | Autocast itself was never broken: both sceptres are cache weapon type 18 (MAGIC_STAFF) and are not powered staves, so `CombatConfigs.canAutocast` permits them and autocast arms by casting once. What the sceptre had was **no plugin of any kind** — no special attack, and no Wilderness bonus — despite being a 30k Blood Money line in the PK shop | **Fixed** — "Accursed Touch" (50% energy: drains the target's Defence and Magic by 15% of current level, halved against players), plus the revenant Wilderness bonus below |
+| 6 | Not able to charge uncharged items (blowpipe, serp helm) | Worse than weaker: in rev-228 the uncharged forms carry **no Wear/Wield option at all**, so an uncharged serpentine helm or an empty blowpipe was a completely dead item, and Zulrah's scales had no use anywhere despite dropping 100–299 at a time | **Fixed** — `items/charging`: scales on the uncharged item convert it and bank them as a persisted charge count; Uncharge reverses it and returns the remainder; Check reports the total. Blowpipe + all three helms. **Charges are deliberately not consumed** — see the note below |
+| 7 | Spell book still locked behind a quest so spells don't light up | The server never checks a quest for any spell (all level-gated), but the stock spellbook clientscript greys a spell by reading the progress varp of the quest that unlocks it — and on an account that can never do those quests, those sit at 0 forever. Castable but rendered dead | **Fixed** — `SpellUnlocksPlugin` pins them on login, the same treatment `PrayersPlugin` already gives Chivalry/Piety via King's Ransom. Ardougne/Watchtower/Trollheim/Ape Atoll/Kourend teleports, Iban Blast, Magic Dart, Ancients, the Lunar book, the higher enchants |
+| 8 | No way to obtain the anti-dragon shield | Item 1540 had **no source at all**: no shop stocked it and it sat on zero drop tables. OSRS gives it out through Dragon Slayer, which this server does not have | **Fixed (operator decision: both routes)** — a general-store staple and a common dragon drop, so a player who walks into dragons without one can get it from the thing that just killed them. It is nearly worthless as armour (+9 slash defence, 20gp); its value is entirely the dragonfire block |
+| 9 | Mole does not dig or escape when attacked | The burrow was implemented but unreachable in practice: it only rolled **below half health**, and only on a tick where the mole had just **landed its own attack**. Kill it from full, out-damage it, or hit it from where it cannot reach you and it never dug once | **Fixed** — OSRS digs when HURT at any health, so it now rolls off damage taken, with a 30-tick cooldown so a fast hitter can still finish the fight |
+| 10 | Spec + a spell fires the spec from far away "like you're fcing" | `getCombatClass` answers MAGIC whenever a spell is armed (correct — OSRS lets you cast with a whip in hand), so the combat cycle picks the magic strategy and its 10-tile range check. The spec branch sits above the strategy dispatch and did not care which strategy had just passed `canAttack`, so an armed **melee** special fired from spell range | **Fixed** — a special belongs to the WEAPON, so `getWeaponCombatClass` answers the weapon's own class with the queued spell ignored, and the spec only fires when that matches the strategy about to attack. It stays armed for the next real melee swing instead of being spent at range |
+| 11 | Dragon knives / throwing axes unable to spec | `SpecialAttacks` keys on the exact worn item id and only the **unpoisoned** knife (22804) was registered, so the p/p+/p++ knives — what almost everyone throws — had no special and the orb did nothing. The thrownaxe had the same problem with its second def (21207) | **Fixed** — every wieldable knife def registers (22812/22814 sit in the shield slot in this cache and are excluded); both thrownaxe defs register, and the spec now consumes the axe actually wielded instead of a hardcoded id |
+| 12 | Thieving stalls are still messed up | Two things. **Six of the nine were not clickable**: each stall key names one def out of a family and only some defs carry `Steal-from`; the base ids for silk (629), seed (6947), fur (632), silver (628), spice (633) and gem (631) have *no actions at all* in rev-228, so those six stood there as scenery. **They also overlapped**: all nine are 2×2 (the baker's 2×1) but were spawned one tile apart, so each one's east half sat inside its neighbour | **Fixed** — each spawns a sibling def that carries the option (all already listed in `stalls.json`, so tier/xp/loot unchanged) and spacing is now 3 tiles. The spawner warns at boot if a stall def has no `Steal-from`, so this cannot come back silently |
+| 13 | TzHaar: exchange a fire cape for a 1/200 pet chance doesn't work | It did not exist. The only route to TzRek-Jad was a 1/1000 roll on a full clear, so a second, third and tenth cape were worth nothing but a bank slot | **Fixed** — TzHaar-Mej-Jal takes a cape for a 1-in-200 roll, consumed either way so it is a gamble and not a free reroll. The reporter quoted 1/200 (OSRS is 1/100); their number keeps a spare cape better than a fresh clear without dominating actually running the cave |
+
+### Questions (answered)
+
+| Question | Answer |
+|---|---|
+| Does the t-bow scale off npc magic level? | **Yes, and this one was already right.** It scales off `max(the NPC's Magic level, its magic attack bonus)` through the OSRS curve, capped at 250% damage / 140% accuracy. **One deviation left alone:** OSRS also applies the curve against PLAYERS and this server restricts it to NPCs. Changing that is a PvP balance call on a PK server, not a bug fix — **operator decision pending** |
+| Do dragon hunter items do extra damage vs dragons? | **Only the crossbow did.** It had ×1.25 damage / ×1.3 accuracy vs draconic since the Kronos port; the **lance** and the **wand** were never wired and hit exactly as hard as any other weapon in their class. Now: lance ×1.2/×1.2, wand ×1.2 damage / ×1.5 accuracy, against the same `NpcSpecies.DRACONIC` |
+| Do pk wildy weapons do more damage & accuracy in the wildy? | **Only two of the six did.** The revenant rule (+50% vs NPCs in the Wilderness while charged) lived inside `RangedCombatFormula`, so Craw's bow and the webweaver got it and nothing else did — Viggora's chainmace, the Ursine chainmace, Thammaron's sceptre and the Accursed sceptre had no bonus anywhere. A Viggora's hit as hard in the deep wild as a rune mace. `RevenantWeapons` now holds the family and the multiplier in one place, read by all three formulas |
+
+### Traced but NOT reproducible from code — need an in-game check
+
+These four were traced end to end and the code path checks out. They are not dismissed; they need
+someone standing in the game to narrow further.
+
+- **Torag's stairs is broken, can't go up.** All six staircases exist in region 14231 at plane 3,
+  all six are 1×3 with a `Climb-up` action, `BarrowsPlugin.bindObj` binds that option for every
+  brother identically, and Torag's landing (3568,9683) is directly adjacent to the east face of his
+  staircase (3565–3567, 9683) with a clear walk around it. Nothing distinguishes Torag from the five
+  that work. **Check:** does the option appear on right-click, or is it the click that does nothing?
+- **Barrows brothers don't move when summoned.** `Barrows.spawnBrother` calls `npc.attack(owner)`
+  and `BarrowsCombatPlugin.brotherCombat` drives every brother through `moveToAttackRange`, the same
+  loop the mole and the lair bosses use. Plane 3 of the crypt region is almost entirely walkable, so
+  they are not walled in either. **Check:** do they fail to move at all, or only when the player is
+  out of their leash radius (`LEASH_RADIUS`, which despawns rather than chases)?
+- **Clan, friend and ignore lists still not working.** The server side is complete: handlers are
+  registered, `Social` pushes both lists on login (`Player.login`), `PlayerDetails.resolveAccount`
+  falls back to the live accounts collection for website-created accounts, and the friend chat is a
+  single shared channel. **Check:** what exactly fails — adding a name, seeing online status, or
+  private messages?
+- **Bank throws items into another tab when dragging.** The insert path does full tab bookkeeping,
+  but the default **swap** path (`BankPlugin`, `REARRANGE_MODE_VARBIT == 0`) calls
+  `container.swap(src, dst)` with none — correct when both slots are in the same tab, and a genuine
+  tab change when they are not, which is also OSRS behaviour. One real defect is visible though: the
+  bounds guard is `srcSlot in 0 until container.occupiedSlotCount`, and `occupiedSlotCount` counts
+  **non-null items**, not slots — so with any gap in the bank (released placeholders) a drag to a
+  legitimate high slot falls through to the resync branch and silently does nothing.
+  **Check:** is it a drag that does nothing, or a drag that moves the item to the wrong place?
+
+### Deliberately not changed
+
+- **Runecraft teleport lands in the skilling area.** It lands at (3237,3199), in front of the fire
+  altar — which *is* six tiles from the Mire hub pad, because this server's Runecraft is a single
+  multi-rune altar in the Mire and there is nowhere else to send you. Working as designed; the
+  confusion is real but the fix is new Runecraft content, not a new tile.
+- **Karuulm Slayer Dungeon teleport.** (1311,10184) is genuinely inside Karuulm, at the lift, in the
+  right region (5279) — not the Catacombs. But it is a dead pocket: the nearest plane-0 NPCs are the
+  Kaal- trio 20 tiles north, the wyrms are 30+ tiles west, and the drakes and sulphur lizards are on
+  **plane 1**. Landing somewhere with content would answer the complaint better than the tile being
+  technically correct. **Operator call** on where it should put you.
+- **Missing official Slayer shop.** Confirmed absent — there is no Slayer reward shop of any kind.
+  Deferred by operator decision: it needs a points currency and an unlock shelf designed, not a
+  shelf bolted on.
+- **Scale charges are not consumed by combat.** The charged blowpipe and helms work today; adding
+  per-attack drain would take gear that functions and start degrading it — a nerf to every current
+  owner. The counter is stored and reported so drain can be switched on later without a migration.
+
+### Follow-ups
+
+- Twisted bow vs players (above) — operator balance call.
+- The sceptres' `Swap` option (standard ↔ attuned form, for autocasting Ancients) is unbound. Low
+  value here because `canAutocast` does not distinguish spellbooks, but it is a visible dead option.
+- Beginner clue scrolls need a `ClueScrolls.Tier` entry before 23182 can come off the drop veto.
+- `extraDrops` in `data/cfg/drops/config.yml` is new and general: rows added to a monster's table by
+  lowercased npc name, the counterpart to `excludeItemIds`, for items OSRS hands out through content
+  this server lacks. The anti-dragon shield is its first user.
+
+### Tooling added while investigating
+
+- `:game-server:itemCheck -PitemArgs="param:<id>"` — audit the whole cache for one equipment param
+  (how many defs carry it, and the highest few). This is what established that rev-228 ships no
+  ranged strength at all.
+- `:game-server:itemCheck` also prints equipment bonuses now, and `:game-server:metaReqCheck` prints
+  post-`loadAll()` bonuses plus category/weaponType — so an `itemOverrides` document can be verified
+  end to end rather than by reading the YAML back.
+- `:game-server:questTable -PquestArgs="dump"` — read-only listing of every row in the cache's quest
+  DBTable. Column 19 is the completion value (verified against all eight OSRS quests this server
+  already reuses for its native quest-tab rows), which is where the spellbook unlock numbers came
+  from instead of guesswork.
