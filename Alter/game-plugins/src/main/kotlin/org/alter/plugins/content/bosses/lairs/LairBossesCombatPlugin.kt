@@ -141,6 +141,7 @@ class LairBossesCombatPlugin(
 
     private suspend fun Npc.moleCombat(task: QueueTask) {
         var target = getCombatTarget() ?: return
+        var lastHp = getCurrentHp()
         while (canEngageCombat(target)) {
             facePawn(target)
             if (attr[MOLE_BURROWING] == true) {
@@ -148,15 +149,23 @@ class LairBossesCombatPlugin(
                 target = getCombatTarget() ?: break
                 continue
             }
+            // OSRS: the mole digs away when it is HURT, at any health. The donor rule this
+            // replaces only rolled below half health AND only on a tick the mole had just landed
+            // its OWN attack, so a player who out-damaged it, safespotted it or simply killed it
+            // from full never saw it burrow once -- "mole does not dig or escape when attacked"
+            // (player report 2026-09-18). Driven off damage taken since the last tick, with a
+            // cooldown so it cannot chain-dig and become unkillable.
+            val hp = getCurrentHp()
+            val hurt = hp < lastHp
+            lastHp = hp
+            if (hurt && world.currentCycle >= (attr[MOLE_BURROW_READY] ?: 0) && world.chance(1, MOLE_BURROW_CHANCE)) {
+                burrow(target)
+                break
+            }
             if (moveToAttackRange(task, target, distance = 1, projectile = false) && isAttackDelayReady()) {
                 animate(3312)
                 bossMelee(target, maxHit = 21, style = CombatStyle.CRUSH)
                 postAttackLogic(target)
-                // Donor: below half health, 1-in-4 per exchange to burrow away.
-                if (getCurrentHp() < getMaxHp() / 2 && world.chance(1, 4)) {
-                    burrow(target)
-                    break
-                }
             }
             task.wait(1)
             target = getCombatTarget() ?: break
@@ -171,6 +180,7 @@ class LairBossesCombatPlugin(
         val (dx, dz) = LairBosses.MOLE_BURROW_POINTS[world.random(LairBosses.MOLE_BURROW_POINTS.size - 1)]
         val dest = world.snapToWalkable(Tile(spawn.x + dx, spawn.z + dz, spawn.height), maxRadius = 6)
         attr[MOLE_BURROWING] = true
+        attr[MOLE_BURROW_READY] = world.currentCycle + MOLE_BURROW_COOLDOWN
         attr[Combat.DAMAGE_TAKE_MULTIPLIER] = 0.0
         removeCombatTarget()
         (target as? Player)?.message("The mole burrows away underground!")
@@ -334,6 +344,15 @@ class LairBossesCombatPlugin(
 
     companion object {
         val MOLE_BURROWING = AttributeKey<Boolean>()
+
+        /** World cycle the mole may next dig away on (set when it burrows). */
+        val MOLE_BURROW_READY = AttributeKey<Int>()
+
+        /** 1-in-N per tick the mole takes damage. ~1 dig per 8-10s of sustained attack. */
+        const val MOLE_BURROW_CHANCE = 12
+
+        /** Ticks before it may dig again, so a fast hitter can still finish the fight. */
+        const val MOLE_BURROW_COOLDOWN = 30
         val SHOCK_STATS = intArrayOf(Skills.ATTACK, Skills.STRENGTH, Skills.DEFENCE, Skills.RANGED, Skills.MAGIC)
     }
 }

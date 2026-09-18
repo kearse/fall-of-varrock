@@ -253,7 +253,17 @@ class CombatPlugin(
         }
         if (Combat.isAttackDelayReady(pawn)) {
             if (Combat.canAttack(pawn, target, strategy)) {
-                if (pawn is Player && AttackTab.isSpecialEnabled(pawn) && pawn.getEquipment(EquipmentType.WEAPON) != null) {
+                // The armed special belongs to the WEAPON, so it may only ride the weapon's own
+                // swing. Hand-casting a spell flips this attack's combat class to MAGIC (OSRS
+                // lets you cast with a whip in hand), and the branch below used to fire anyway —
+                // so an armed MELEE special launched from the magic strategy's 10-tile range,
+                // "like you're fcing" (player report 2026-09-18). The spec stays armed for the
+                // next real melee swing rather than being spent at range.
+                val specMatchesWeapon = pawn is Player &&
+                    CombatConfigs.strategyFor(CombatConfigs.getWeaponCombatClass(pawn)) === strategy
+                if (pawn is Player && specMatchesWeapon &&
+                    AttackTab.isSpecialEnabled(pawn) && pawn.getEquipment(EquipmentType.WEAPON) != null
+                ) {
                     AttackTab.disableSpecial(pawn)
                     if (SpecialAttacks.execute(pawn, target, world)) {
                         Combat.postAttack(pawn, target)
