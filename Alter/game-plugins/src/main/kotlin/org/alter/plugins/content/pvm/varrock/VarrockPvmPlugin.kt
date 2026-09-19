@@ -112,7 +112,7 @@ class VarrockPvmPlugin(
             killer.addPoints(PointKind.WAR_EFFORT, VarrockPvm.HOLLOW_WAR_EFFORT)
             WarForge.awardCommendations(killer, VarrockPvm.HOLLOW_COMMENDATIONS)
             ArravIntelligence.onHollowKill(killer)
-            world.players.forEach { it.message("<col=801700>${VarrockPvm.HOLLOW_NAME} has been laid to rest by ${killer.username}.</col>") }
+            announceInCity("<col=801700>${VarrockPvm.HOLLOW_NAME} has been laid to rest by ${killer.username}.</col>")
         }
 
         // ── The Palace Warden.
@@ -151,6 +151,17 @@ class VarrockPvmPlugin(
             npc.setActive(true)
             npc
         }.onFailure { logger.warn { "varrock-pvm: failed to spawn '$key' at $tile: ${it.message}" } }.getOrNull()
+
+    /**
+     * Fallen Varrock's own tannoy. Malachai rises every [VarrockPvm.HOLLOW_EVERY_TICKS] ticks
+     * (~20 minutes) whether or not anyone is hunting him, so a world-wide shout put a red sighting
+     * line plus a despawn/kill line in front of every player on the server three times an hour —
+     * skillers, PKers and people three regions away who can do nothing about it (operator,
+     * 2026-09-18). The news is only actionable inside the ruins, so that is who hears it.
+     */
+    private fun announceInCity(message: String) {
+        world.players.forEach { if (VarrockDistrict.at(it.tile) != null) it.message(message) }
+    }
 
     private fun spawnWarden() {
         warden = spawn(VarrockPvm.WARDEN_KEY, VarrockPvm.WARDEN_SPAWN, walkRadius = 4, engineRespawn = false)?.also {
@@ -207,7 +218,7 @@ class VarrockPvmPlugin(
                 world.remove(h)
                 hollow = null
                 nextHollow = now + VarrockPvm.HOLLOW_EVERY_TICKS
-                world.players.forEach { it.message("<col=801700>${VarrockPvm.HOLLOW_NAME} slips back into the ruins.</col>") }
+                announceInCity("<col=801700>${VarrockPvm.HOLLOW_NAME} slips back into the ruins.</col>")
             }
             return
         }
@@ -218,7 +229,7 @@ class VarrockPvmPlugin(
         hollow = n
         hollowUntil = now + VarrockPvm.HOLLOW_LINGER_TICKS
         nextHollow = now + VarrockPvm.HOLLOW_EVERY_TICKS
-        world.players.forEach { it.message("<col=ff0000>${VarrockPvm.HOLLOW_NAME} has been sighted in ${d.display} of Fallen Varrock!</col>") }
+        announceInCity("<col=ff0000>${VarrockPvm.HOLLOW_NAME} has been sighted in ${d.display} of Fallen Varrock!</col>")
     }
 
     private fun give(p: Player, key: String, amount: Int) {

@@ -63,7 +63,7 @@ object LegacyChains {
     }
 
     object WarPrepMagicChain : QuestChain {
-        override val key = "warprep_magic"
+        override val key = WarPrepChain.CHAIN_KEY
         override val displayName = "War-Prep I — Magic"
         override val chainIndex = QuestBook.WARPREP_MAGIC
         override fun started(p: Player): Boolean = WarPrepChain.started(p)
@@ -91,6 +91,7 @@ object LegacyChains {
         override fun started(p: Player): Boolean = RogueProblem.started(p)
         override fun complete(p: Player): Boolean = RogueProblem.step(p).ordinal >= RogueProblem.Step.KNIGHT.ordinal
         override fun objectiveLine(p: Player): String = RogueProblem.statusLine(p)
+        override fun briefLine(p: Player): String = objectiveLine(p) // already opens with the quest name
         override fun publish(p: Player) {
             val rogueStep = RogueProblem.step(p).ordinal and 0x3F
             val rogueKills = RogueProblem.huntKills(p).coerceIn(0, 63)
@@ -118,6 +119,7 @@ object LegacyChains {
         override fun started(p: Player): Boolean = RogueProblem.step(p).ordinal >= RogueProblem.Step.KNIGHT.ordinal
         override fun complete(p: Player): Boolean = RogueProblem.complete(p)
         override fun objectiveLine(p: Player): String = RogueProblem.statusLine(p)
+        override fun briefLine(p: Player): String = objectiveLine(p) // already opens with the quest name
         override fun publish(p: Player) {
             //  - Rogue Hunting II (the Rogue Knight ladder): locked until the hunt clears; complete
             //    when every camp is broken (DONE); the knight/report/ladder stretch is in progress.
@@ -132,7 +134,7 @@ object LegacyChains {
     }
 
     object WarPrepRangedChain : QuestChain {
-        override val key = "warprep_ranged"
+        override val key = WarPrepRanged.CHAIN_KEY
         override val displayName = "War-Prep II — Ranged"
         override val chainIndex = QuestBook.WARPREP_RANGED
         override fun started(p: Player): Boolean = WarPrepRanged.started(p)
@@ -156,7 +158,7 @@ object LegacyChains {
     }
 
     object WarPrepSurvivalChain : QuestChain {
-        override val key = "warprep_survival"
+        override val key = WarPrepSurvival.CHAIN_KEY
         override val displayName = "War-Prep III — Survival"
         override val chainIndex = QuestBook.WARPREP_SURVIVAL
         override fun started(p: Player): Boolean = WarPrepSurvival.started(p)
@@ -184,6 +186,7 @@ object LegacyChains {
         override fun started(p: Player): Boolean = Conquest.started(p)
         override fun complete(p: Player): Boolean = Conquest.complete(p)
         override fun objectiveLine(p: Player): String = Conquest.statusLine(p)
+        override fun briefLine(p: Player): String = objectiveLine(p) // already opens with the quest name
         override fun publish(p: Player) {
             p.writeIfChanged(QuestJournal.CONQUEST_VARP, Conquest.step(p).ordinal and 0x3F)
 

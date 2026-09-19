@@ -7,6 +7,7 @@ import org.alter.game.model.attr.WARPREP_SURVIVAL_STEP_ATTR
 import org.alter.api.ext.message
 import org.alter.game.model.entity.Player
 import org.alter.game.model.timer.TimerKey
+import org.alter.plugins.content.quests.framework.QuestLoginBrief
 import org.alter.plugins.content.war.Title
 import org.alter.plugins.content.war.title
 import org.alter.rscm.RSCM.getRSCM
@@ -30,12 +31,16 @@ import org.alter.rscm.RSCM.getRSCM
  */
 object WarPrepSurvival {
 
+    /** This chain's [org.alter.plugins.content.quests.framework.QuestRegistry] key. */
+    const val CHAIN_KEY = "warprep_survival"
+
     /** Drives the per-player state poll while on a tracked step (detects the HP milestone, cave wave, Minister). */
     val TIMER = TimerKey()
     private const val POLL_TICKS = 3
 
-    // The objective is announced on step entry and once on login — never on a timer (the old
-    // 5-minute re-nudge was cut 2026-09-02 as chat spam; `::warpsurvival` shows it on demand).
+    // The objective is announced on step entry, and once on login as one line of the shared
+    // [QuestLoginBrief] — never on a timer (the old 5-minute re-nudge was cut 2026-09-02 as chat
+    // spam; `::warpsurvival` shows it on demand).
 
     /** The Hitpoints level the DRILL step trains to. TUNABLE. */
     const val HP_TARGET = 60
@@ -97,12 +102,10 @@ object WarPrepSurvival {
         advanceTo(p, Step.DRILL)
     }
 
-    /** On login, re-arm the poll timer if on a tracked step, and remind the player of the objective. */
+    /** On login, re-arm the poll timer if on a tracked step. The objective itself is read out by
+     *  [QuestLoginBrief], with every other live chain, in one place. */
     fun resumeOnLogin(p: Player) {
-        if (isTracked(step(p))) {
-            p.timers[TIMER] = POLL_TICKS
-            nudge(p)
-        }
+        if (isTracked(step(p))) p.timers[TIMER] = POLL_TICKS
     }
 
     /** Steps the poll runs on — those with a live objective the poll watches or refreshes. */
@@ -114,12 +117,6 @@ object WarPrepSurvival {
         Step.DRILL -> "${Step.DRILL.objective} (Hitpoints ${p.getSkills().getBaseLevel(Skills.HITPOINTS)}/$HP_TARGET)"
         Step.FIELD -> "${Step.FIELD.objective} (best wave ${bestWave(p)}/$FIELD_WAVE)"
         else -> step(p).objective
-    }
-
-    /** Say the objective (login + `::warpsurvival`). */
-    fun nudge(p: Player) {
-        p.message("<col=801700>War-Prep III — current objective:</col> ${objectiveLine(p)}")
-        p.message("General Zo has more for you once it's done. Check it any time with <col=0000ff>::warpsurvival</col>.")
     }
 
     // --- pillar hooks -------------------------------------------------------------------
@@ -183,6 +180,7 @@ object WarPrepSurvival {
         if (isTracked(next)) p.timers[TIMER] = POLL_TICKS
         if (next != Step.NONE && next != Step.DONE) {
             p.message("<col=801700>War-Prep III — next objective:</col> ${objectiveLine(p)}")
+            QuestLoginBrief.markAnnounced(p, CHAIN_KEY) // a login back-fill must not be restated by the brief
         }
     }
 

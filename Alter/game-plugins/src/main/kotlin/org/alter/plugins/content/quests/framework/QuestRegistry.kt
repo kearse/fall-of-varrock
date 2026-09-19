@@ -21,9 +21,16 @@ interface QuestChain {
     /** Never focused by `::quests` (admin/demo content). */
     val hidden: Boolean get() = false
 
+    /** Listed in the [QuestLoginBrief]. Off for standing entries that announce themselves as one line. */
+    val loginReminder: Boolean get() = true
+
     fun started(p: Player): Boolean
     fun complete(p: Player): Boolean
     fun objectiveLine(p: Player): String
+
+    /** This quest's line in the [QuestLoginBrief]. Chains whose [objectiveLine] already names the
+     *  quest (the rogue chains, King of Lumbridge) override this to hand it back bare. */
+    fun briefLine(p: Player): String = "<col=801700>$displayName:</col> ${objectiveLine(p)}"
 
     /** Publish this quest's state to the client journal varps (only writes on change). */
     fun publish(p: Player) {}
@@ -39,6 +46,7 @@ class FrameworkChain(val def: QuestDefinition) : QuestChain {
     override val chainIndex: Int? get() = def.chainIndex
     override val optional: Boolean get() = def.optional
     override val hidden: Boolean get() = def.adminOnly
+    override val loginReminder: Boolean get() = def.loginReminder
     override fun started(p: Player): Boolean = QuestEngine.started(p, def)
     override fun complete(p: Player): Boolean = QuestEngine.isComplete(p, def)
     override fun objectiveLine(p: Player): String = QuestEngine.objectiveLine(p, def)

@@ -12,6 +12,7 @@ import org.alter.game.model.entity.Player
 import org.alter.game.model.timer.TimerKey
 import kotlin.math.abs
 import org.alter.plugins.content.magic.spellbook.unlockMageBooks
+import org.alter.plugins.content.quests.framework.QuestLoginBrief
 import org.alter.plugins.content.war.Title
 import org.alter.plugins.content.war.title
 import org.alter.rscm.RSCM.getRSCM
@@ -41,14 +42,17 @@ import org.alter.rscm.RSCM.getRSCM
  */
 object WarPrepChain {
 
+    /** This chain's [org.alter.plugins.content.quests.framework.QuestRegistry] key. */
+    const val CHAIN_KEY = "warprep_magic"
+
     /** Drives the per-player state poll while on a tracked step (refreshes the arrow + detects Prayer). */
     val TIMER = TimerKey()
     private const val POLL_TICKS = 3
 
-    // The objective is announced when a step is entered and once more on login ([resumeOnLogin]) —
-    // never on a timer. A 5-minute re-nudge used to run from the poll; the repeating chat lines
-    // were a nuisance (operator, 2026-09-02), so the reminder is login-only and `::warprep`
-    // shows it on demand.
+    // The objective is announced when a step is entered, and once on login as one line of the
+    // shared [QuestLoginBrief] — never on a timer. A 5-minute re-nudge used to run from the poll;
+    // the repeating chat lines were a nuisance (operator, 2026-09-02). `::warprep` shows the
+    // objective on demand.
 
     /** Protect from Magic unlocks at Prayer 37 — the Prayer step's target. */
     const val PRAYER_TARGET = 37
@@ -142,13 +146,12 @@ object WarPrepChain {
         )
     }
 
-    /** On login, re-arm the poll timer + refresh the arrow if on a tracked step, and remind the
-     *  player what they're actually meant to be doing. */
+    /** On login, re-arm the poll timer + refresh the arrow if on a tracked step. The objective
+     *  itself is read out by [QuestLoginBrief], with every other live chain, in one place. */
     fun resumeOnLogin(p: Player) {
         if (isTracked(step(p))) {
             p.timers[TIMER] = POLL_TICKS
             updateHintArrow(p)
-            nudge(p)
         }
     }
 
@@ -157,12 +160,6 @@ object WarPrepChain {
         val s = step(p)
         if (s != Step.PRAYER) return s.objective
         return "${s.objective} (Prayer ${p.getSkills().getBaseLevel(Skills.PRAYER)}/$PRAYER_TARGET)"
-    }
-
-    /** Say the objective (login + `::warprep`). */
-    fun nudge(p: Player) {
-        p.message("<col=801700>War-Prep — current objective:</col> ${objectiveLine(p)}")
-        p.message("Vannaka has more for you once it's done. Check it any time with <col=0000ff>::warprep</col>.")
     }
 
     /** Steps the poll runs on — those with a live objective (progress watched and/or arrow refreshed). */
@@ -252,6 +249,7 @@ object WarPrepChain {
         if (isTracked(next)) p.timers[TIMER] = POLL_TICKS
         if (next != Step.NONE && next != Step.DONE) {
             p.message("<col=801700>War-Prep — next objective:</col> ${objectiveLine(p)}")
+            QuestLoginBrief.markAnnounced(p, CHAIN_KEY) // a login back-fill must not be restated by the brief
         }
         updateHintArrow(p)
     }

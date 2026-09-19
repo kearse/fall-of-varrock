@@ -14,11 +14,12 @@ private val logger = KotlinLogging.logger {}
 /**
  * Drives every framework [QuestDefinition]: begin / advance / complete / reset, objective
  * evaluation (kills from the npc-death hook, areas/items/predicates from the poll), rewards,
- * completion flags (`quest.<key>.done` in [Flags]), the login objective reminder, and the generic
- * journal-varp publish. Pure state + messaging — [QuestFrameworkPlugin] owns the wiring.
+ * completion flags (`quest.<key>.done` in [Flags]), and the generic journal-varp publish. Pure
+ * state + messaging — [QuestFrameworkPlugin] owns the wiring.
  *
- * Objectives are announced on step entry and once on login — never on a timer (a 5-minute
- * re-nudge was cut 2026-09-02 as chat spam).
+ * Objectives are announced on step entry, and once on login by [QuestLoginBrief] (one capped
+ * brief for every chain, not a reminder per quest) — never on a timer (a 5-minute re-nudge was
+ * cut 2026-09-02 as chat spam).
  *
  * Mutate-before-narrate: every transition writes and saves state FIRST, then talks — a
  * `p.queue{}` dialogue can die on death/logout/attack, the state must not.
@@ -149,6 +150,9 @@ object QuestEngine {
         runCatching { step.onEnter?.invoke(p) }.onFailure { logger.error(it) { "onEnter threw: ${q.key}/${step.id}" } }
         p.message("<col=801700>${q.displayName} — next objective:</col> ${step.objective.text}")
         step.nudge?.let { p.message(it) }
+        // Said out loud already — the login brief must not restate it (a quest that auto-begins on
+        // login lands here before the brief fires).
+        QuestLoginBrief.markAnnounced(p, q.key)
         publish(p, q)
     }
 
@@ -172,6 +176,9 @@ object QuestEngine {
     /** The poll: areas, items, predicates — and auto-begin, so a gate that opens mid-session
      *  (the quest before it completing) starts the next quest without waiting for a relog. */
     fun pollTick(p: Player) {
+        // The login brief rides the poll so that every chain — framework and legacy alike — has
+        // finished resuming in its own login hook before it reads their objectives.
+        QuestLoginBrief.flush(p)
         // Never auto-begin a quest while the player is mid-conversation: the quest that just
         // completed is usually still saying its last lines, and beginning the next one here would
         // print "— begun." into the scene and put its first Talk-to branch live on the same NPC.
@@ -193,20 +200,18 @@ object QuestEngine {
         }
     }
 
-    /** Login: auto-begin what's eligible, remind the player of every live objective. */
+    /**
+     * Login: auto-begin what's eligible and arm the reminder. The objectives themselves are read
+     * out once, for every chain at once, by [QuestLoginBrief] on the next poll — a per-quest
+     * reminder here is what made the login wall six lines long.
+     */
     fun resumeOnLogin(p: Player) {
+        QuestLoginBrief.arm(p)
         QuestRegistry.frameworkQuests().forEach { resume(p, it) }
     }
 
     fun resume(p: Player, q: QuestDefinition) {
         beginIfEligible(p, q)
-        if (q.loginReminder) step(p, q)?.let { nudge(p, q, it) }
-    }
-
-    /** The login reminder (also what `::questdebug` and a step's own callers use to restate the objective). */
-    fun nudge(p: Player, q: QuestDefinition, step: QuestStep) {
-        p.message("<col=801700>${q.displayName} — current objective:</col> ${objectiveLine(p, q)}")
-        step.nudge?.let { p.message(it) }
     }
 
     // ---- journal ------------------------------------------------------------------------------

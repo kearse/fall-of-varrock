@@ -5,6 +5,7 @@ import org.alter.game.model.attr.WARPREP_RANGED_STEP_ATTR
 import org.alter.api.ext.message
 import org.alter.game.model.entity.Player
 import org.alter.game.model.timer.TimerKey
+import org.alter.plugins.content.quests.framework.QuestLoginBrief
 import org.alter.plugins.content.war.Title
 import org.alter.plugins.content.war.title
 import org.alter.rscm.RSCM.getRSCM
@@ -31,12 +32,16 @@ import org.alter.rscm.RSCM.getRSCM
  */
 object WarPrepRanged {
 
+    /** This chain's [org.alter.plugins.content.quests.framework.QuestRegistry] key. */
+    const val CHAIN_KEY = "warprep_ranged"
+
     /** Drives the per-player state poll while on a tracked step (detects the Ranged milestone + Lord). */
     val TIMER = TimerKey()
     private const val POLL_TICKS = 3
 
-    // The objective is announced on step entry and once on login — never on a timer (the old
-    // 5-minute re-nudge was cut 2026-09-02 as chat spam; `::warpranged` shows it on demand).
+    // The objective is announced on step entry, and once on login as one line of the shared
+    // [QuestLoginBrief] — never on a timer (the old 5-minute re-nudge was cut 2026-09-02 as chat
+    // spam; `::warpranged` shows it on demand).
 
     /** Enemies to fell with a ranged weapon on the FIELD step (quest-scoped). TUNABLE. */
     const val FIELD_GOAL = 20
@@ -93,12 +98,10 @@ object WarPrepRanged {
         advanceTo(p, Step.GEAR) // straight to the kit — no drill step
     }
 
-    /** On login, re-arm the poll timer if on a tracked step, and remind the player of the objective. */
+    /** On login, re-arm the poll timer if on a tracked step. The objective itself is read out by
+     *  [QuestLoginBrief], with every other live chain, in one place. */
     fun resumeOnLogin(p: Player) {
-        if (isTracked(step(p))) {
-            p.timers[TIMER] = POLL_TICKS
-            nudge(p)
-        }
+        if (isTracked(step(p))) p.timers[TIMER] = POLL_TICKS
     }
 
     /** Steps the poll runs on — those with a live objective the poll watches or refreshes. */
@@ -109,12 +112,6 @@ object WarPrepRanged {
     fun objectiveLine(p: Player): String = when (step(p)) {
         Step.FIELD -> "${Step.FIELD.objective} (${fieldKills(p)}/$FIELD_GOAL)"
         else -> step(p).objective
-    }
-
-    /** Say the objective (login + `::warpranged`). */
-    fun nudge(p: Player) {
-        p.message("<col=801700>War-Prep II — current objective:</col> ${objectiveLine(p)}")
-        p.message("Vannaka has more for you once it's done. Check it any time with <col=0000ff>::warpranged</col>.")
     }
 
     // --- pillar hooks -------------------------------------------------------------------
@@ -181,6 +178,7 @@ object WarPrepRanged {
         if (isTracked(next)) p.timers[TIMER] = POLL_TICKS
         if (next != Step.NONE && next != Step.DONE) {
             p.message("<col=801700>War-Prep II — next objective:</col> ${objectiveLine(p)}")
+            QuestLoginBrief.markAnnounced(p, CHAIN_KEY) // a login back-fill must not be restated by the brief
         }
     }
 
