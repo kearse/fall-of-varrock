@@ -1,7 +1,7 @@
 ---
 title: At the White Wall - the Asgarnia campaign begins
 category: The War
-summary: Asgarnia campaign (BREACH), Quest 1. Reach Falador's north gate, hold the White Knight checkpoint against a Kinshra raid, hear why Sir Amik has an army but none to spare, meet Sir Tiffy, and read the front for yourself.
+summary: Asgarnia campaign (BREACH), Quest 1. Report to Sir Rebral at Falador's north gate, hold the White Knight checkpoint against a Kinshra raid, hear why Sir Amik has an army but none to spare, meet Sir Tiffy, and read the front for yourself.
 order: 30
 updated: 2026-09-12
 infobox: Type = Regional campaign quest (auto-starts); Start = After A Kingdom Alone, at Falador's north gate; Length = Short; Guidance = Quest Journal arrows; Reward = 1 Quest Point, 25 War Effort; Leads to = A Matter of Trolls (Burthorpe)
@@ -17,7 +17,7 @@ The quest begins on its own once **A Kingdom Alone** is complete. Your journal p
 
 ## The quest
 
-1. **The checkpoint** - A White Knight garrison holds the road just outside the north gate: crates, barricades, a stretcher case, four knights. Talk to one of them - the Quest Journal highlights the four on the posts (the knights inside the castle are not the ones you want; ask one and he sends you out to the gate). You will not get far into your explanation before the shout goes up: *"Movement!"*
+1. **The checkpoint** - A White Knight garrison holds the road just outside the north gate: crates, barricades, a stretcher case, four knights on posts, and **Sir Rebral**, the officer commanding them, standing in front of the gate itself. The knights are on watch and will not break off to talk; Sir Rebral is the one to speak to, and the Quest Journal points straight at him. You will not get far into your explanation before the shout goes up: *"Movement!"*
 2. **Hold the gate** - A Kinshra raiding party pushes on the checkpoint from the field beyond the fence. **Defeat 5 Kinshra raiders.** They are Black Knights - much more dangerous than the goblins of your first day - and they keep coming as long as you stand at the gate, so you can never run out of enemies. Any raider you draw blood on counts, even if a White Knight lands the last hit; fighting beside the knights is the point. Listen to what the raiders shout. When you have five, the raid breaks.
 3. **Sir Amik Varze** - Through the gate and up to the top floor of the White Knights' Castle. Sir Amik has already heard about the gate. He also has an answer to Lumbridge's request, and it is *no*: **"I have an army. I do not have an army to spare."** He lays out the three pressures on Asgarnia - the Kinshra front, the trolls above Burthorpe tying down the Imperial Guard, and twelve years of worn-out guns the dwarves can no longer replace at wartime scale - and sends you to someone who wants a word first.
 4. **Sir Tiffy Cashien** - On his bench in Falador Park. He wants to know what you saw near Varrock. Stone where stone ought not be; magic behaving strangely; anything older than the city around it. He will not say why. He will say you remind him of someone. Then he sends you back to the front - *"Not the soldiers. The ground."*

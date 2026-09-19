@@ -10,7 +10,6 @@ import org.alter.game.model.entity.Player
 import org.alter.game.model.queue.QueueTask
 import org.alter.plugins.content.quests.QuestBook
 import org.alter.plugins.content.quests.QuestJournal
-import org.alter.plugins.content.quests.framework.NpcTalk
 import org.alter.plugins.content.quests.framework.Objective
 import org.alter.plugins.content.quests.framework.Prerequisite
 import org.alter.plugins.content.quests.framework.QuestDefinition
@@ -18,14 +17,13 @@ import org.alter.plugins.content.quests.framework.QuestEngine
 import org.alter.plugins.content.quests.framework.QuestRegistry
 import org.alter.plugins.content.quests.framework.QuestStep
 import org.alter.plugins.content.quests.framework.Reward
-import org.alter.plugins.content.quests.framework.TalkScript
 import org.alter.rscm.RSCM.getRSCM
 
 /**
  * **At the White Wall** — Asgarnia regional campaign (BREACH), Quest 1 (`docs/quests/at-the-white-wall.md`).
  *
  * The regional opener: why Falador does not simply send its army to Varrock. The player reaches
- * Falador's NORTH gate, is stopped at a White Knight checkpoint, fights off a Kinshra raid on it,
+ * Falador's NORTH gate, is stopped by Sir Rebral at a White Knight checkpoint, fights off a Kinshra raid on it,
  * meets Sir Amik Varze (his stock spawn, top floor of the White Knights' Castle) who explains the
  * three pressures on Asgarnia — the Kinshra front, the trolls at Burthorpe, the collapsed
  * artillery supply — then Sir Tiffy Cashien (his park bench) who sends them back to read the
@@ -33,8 +31,9 @@ import org.alter.rscm.RSCM.getRSCM
  *
  * A framework quest ([QuestDefinition]): dialogue + state + a shared-world scripted skirmish
  * ([WhiteWallCheckpoint]) + three area observations. Everything sits on the existing world:
- * unchanged Falador, stock Amik/Tiffy/White Knights/Black Knights, stock combat. No new NPC, map,
- * enemy, instance or mechanic (the integration audit is in the spec).
+ * unchanged Falador, stock Amik/Tiffy/Rebral/White Knights/Black Knights, stock combat. No new NPC,
+ * map, enemy, instance or mechanic (the integration audit is in the spec) — Sir Rebral is a stock
+ * npc MOVED to the gate, because he is the only White Knight in the cache who can be talked to.
  *
  * Gate: **A Kingdom Alone** (`a_kingdom_alone`, Main Story Quest 5 — its completion opens the four
  * regional objectives, BREACH among them). Auto-begins the moment the gate opens.
@@ -52,8 +51,15 @@ object AtTheWhiteWall : QuestDefinition(
     journalVarp = QuestJournal.WHITE_WALL_VARP,
 ) {
 
-    /** Stock White Knight (1798) — the checkpoint garrison AND Falador's castle knights share it. */
-    const val WHITE_KNIGHT = WhiteWallCheckpoint.WHITE_KNIGHT
+    /**
+     * **Sir Rebral** (5524) — the officer on the road outside Falador's north gate, and the voice of
+     * the checkpoint. The stock White Knight (1798) the garrison is built from has **Attack and
+     * nothing else** in the cache — no Talk-to on any of them, so the garrison can never hold a
+     * conversation and the quest's opening beat had nowhere to live. Sir Rebral is a stock White
+     * Knight npc that does carry Talk-to (and no Attack), moved from his OSRS post south of the
+     * castle to the gate; [WhiteWallCheckpoint] places him with the rest of the position.
+     */
+    const val REBRAL = WhiteWallCheckpoint.SIR_REBRAL
 
     /** Sir Amik Varze — the id the world spawns place on the castle's top floor (`npc_spawns.json`: 4771 @ 2960,3336,2). */
     const val AMIK = "npc.sir_amik_varze_4771"
@@ -109,7 +115,7 @@ object AtTheWhiteWall : QuestDefinition(
     // --- journal (docs/quests/at-the-white-wall.md, "Quest journal") -------------------------
 
     private const val J_START = "Falador may possess the military capability needed to breach Fallen Varrock. Travel to Asgarnia."
-    private const val J_CHECKPOINT = "Speak with the White Knights guarding the Falador approach."
+    private const val J_CHECKPOINT = "Speak with Sir Rebral, who commands the checkpoint guarding the Falador approach."
     private const val J_ATTACK = "Help the White Knights repel the Kinshra attack."
     private const val J_AMIK = "Speak with Sir Amik Varze in Falador."
     private const val J_TIFFY = "Sir Amik says Sir Tiffy Cashien wants to speak with me. Find him in Falador."
@@ -134,12 +140,10 @@ object AtTheWhiteWall : QuestDefinition(
             nudge = "Falador's NORTH gate — the one facing the Kinshra. Any road or teleport into Falador will do; walk out to the north gate.",
         ),
         QuestStep(
-            S_CHECKPOINT, Objective.TalkTo(J_CHECKPOINT, WHITE_KNIGHT),
-            // The stock White Knight id is shared with Falador's castle knights: the arrow locks
-            // onto a knight AT the checkpoint only (the client journal highlights the same four).
-            anchor = GATE, anchorNpc = WHITE_KNIGHT,
-            anchorNpcFilter = { n -> n.tile.isWithinRadius(GATE, TALK_RADIUS) },
-            nudge = "The checkpoint is the four White Knights on posts across the road just OUTSIDE the north gate — speak to any of them. The knights inside the castle are not the ones you want.",
+            S_CHECKPOINT, Objective.TalkTo(J_CHECKPOINT, REBRAL),
+            // Sir Rebral stands nowhere else in the world, so the arrow needs no filter.
+            anchor = GATE, anchorNpc = REBRAL,
+            nudge = "Sir Rebral commands the checkpoint: he is on the road just OUTSIDE Falador's north gate, beside the knights on their posts. The knights themselves have no time to talk — speak to him.",
         ),
         QuestStep(
             S_DEFEND,
@@ -175,33 +179,16 @@ object AtTheWhiteWall : QuestDefinition(
     override val completionMessage: String =
         "<col=801700>$J_DONE</col> The Asgarnia campaign has begun on two fronts: <col=801700>A Matter of Trolls</col> (Burthorpe) and <col=801700>The Guns of Asgarnia</col> (Sir Amik, then Nulodion)."
 
-    // --- dialogue scripts on the shared White Knight id (proximity-gated, see init) -----------
-
-    private val checkpointScript: TalkScript = { p -> checkpointHalt(p) }
-    private val defendScript: TalkScript = { p -> knightDuringRaid(p) }
-    private val afterFightScript: TalkScript = { p -> knightAfterFight(p) }
+    // --- dialogue scripts (all three checkpoint beats live on Sir Rebral) ---------------------
 
     init {
-        // The White Knight id is shared by every castle knight in Falador: the quest claims the
-        // conversation only at the checkpoint itself, so the castle knights keep their own lines.
-        NpcTalk.register(WHITE_KNIGHT, NpcTalk.PRIORITY_QUEST) { p ->
-            if (!WhiteWallCheckpoint.isNear(p, TALK_RADIUS)) {
-                null
-            } else {
-                when (QuestEngine.stepId(p, this)) {
-                    S_CHECKPOINT -> checkpointScript
-                    S_DEFEND -> defendScript
-                    S_AMIK -> afterFightScript
-                    else -> null
-                }
-            }
-        }
+        talk(REBRAL, S_CHECKPOINT) { p -> checkpointHalt(p) }
+        talk(REBRAL, S_DEFEND) { p -> rebralDuringRaid(p) }
+        talk(REBRAL, S_AMIK) { p -> rebralAfterFight(p) }
         talk(AMIK, S_AMIK) { p -> amikMeeting(p) }
         talk(AMIK, S_REPORT) { p -> amikReport(p) }
         talk(TIFFY, S_TIFFY) { p -> tiffyMeeting(p) }
     }
-
-    private const val TALK_RADIUS = 12
 
     // --- status / credit ----------------------------------------------------------------------
 
@@ -267,12 +254,12 @@ object AtTheWhiteWall : QuestDefinition(
 
     private fun id(key: String): Int = runCatching { getRSCM(key) }.getOrDefault(-1)
 
-    private suspend fun QueueTask.knight(p: Player, text: String) = chatNpc(p, text, npc = id(WHITE_KNIGHT), title = KNIGHT_NAME)
+    private suspend fun QueueTask.rebral(p: Player, text: String) = chatNpc(p, text, npc = id(REBRAL), title = REBRAL_NAME)
     private suspend fun QueueTask.amik(p: Player, text: String) = chatNpc(p, text, npc = id(AMIK), title = AMIK_NAME)
     private suspend fun QueueTask.tiffy(p: Player, text: String) = chatNpc(p, text, npc = id(TIFFY), title = TIFFY_NAME)
     private suspend fun QueueTask.me(p: Player, text: String) = chatPlayer(p, text)
 
-    private const val KNIGHT_NAME = "White Knight"
+    private const val REBRAL_NAME = "Sir Rebral"
 
     /** Old Wounds — after it, Sir Amik's idle line stops re-sending the player to Burthorpe. */
     private const val OLD_WOUNDS_KEY = "old_wounds"
@@ -283,47 +270,48 @@ object AtTheWhiteWall : QuestDefinition(
 
     /** CHECKPOINT: "Halt." — and the raid. Advances to DEFEND before the alarm lines. */
     private suspend fun QueueTask.checkpointHalt(p: Player) {
-        knight(p, "Halt.")
+        rebral(p, "Halt.")
         me(p, "I'm here from Lumbridge.")
-        knight(p, "Business?")
-        when (options(p, "I need to speak with whoever commands here.", "I'm here about Varrock.", "Just visiting.", title = KNIGHT_NAME)) {
+        rebral(p, "Sir Rebral. I hold this gate.")
+        rebral(p, "Business?")
+        when (options(p, "I need to speak with whoever commands here.", "I'm here about Varrock.", "Just visiting.", title = REBRAL_NAME)) {
             1 -> {
                 me(p, "I need to speak with whoever commands here.")
-                knight(p, "Sir Amik Varze. So does half of Asgarnia.<br>About what?")
+                rebral(p, "At this gate, that's me. Behind it, Sir Amik Varze -<br>and so does half of Asgarnia. About what?")
                 me(p, "Varrock.")
             }
             2 -> me(p, "I'm here about Varrock.")
             else -> {
                 me(p, "Just visiting.")
-                knight(p, "Nobody visits. Not any more. What's it about?")
+                rebral(p, "Nobody visits. Not any more. What's it about?")
                 me(p, "...Varrock.")
             }
         }
-        knight(p, "Varrock?")
-        p.message("The White Knight looks you over.")
-        knight(p, "You've come a long way to ask for soldiers we don't have.")
+        rebral(p, "Varrock?")
+        p.message("Sir Rebral looks you over.")
+        rebral(p, "You've come a long way to ask for soldiers we don't have.")
         me(p, "Falador looks like it has plenty.")
-        knight(p, "Then you've been here thirty seconds.")
+        rebral(p, "Then you've been here thirty seconds.")
         QuestEngine.satisfy(p, this@AtTheWhiteWall, S_CHECKPOINT) // → DEFEND: the raid begins (mutate, then narrate)
-        knight(p, "Movement!")
-        knight(p, "Kinshra! Hold the gate!")
+        rebral(p, "Movement!")
+        rebral(p, "Kinshra! Hold the gate!")
     }
 
-    /** DEFEND: the knight has no time for talk. */
-    private suspend fun QueueTask.knightDuringRaid(p: Player) {
+    /** DEFEND: he has no time for talk. */
+    private suspend fun QueueTask.rebralDuringRaid(p: Player) {
         val n = QuestEngine.counter(p, this@AtTheWhiteWall)
-        knight(p, "Kinshra! Don't let them through!")
-        if (n > 0) knight(p, "That's $n of them down to you. Keep at it!")
+        rebral(p, "Kinshra! Don't let them through!")
+        if (n > 0) rebral(p, "That's $n of them down to you. Keep at it!")
     }
 
     /** AMIK: the raid is broken — "You should've led with the sword." Also queued when DEFEND clears. */
-    suspend fun QueueTask.knightAfterFight(p: Player) {
-        knight(p, "You said you wanted to speak with Sir Amik?")
+    suspend fun QueueTask.rebralAfterFight(p: Player) {
+        rebral(p, "You said you wanted to speak with Sir Amik?")
         me(p, "Yes.")
-        knight(p, "You should've led with the sword.")
+        rebral(p, "You should've led with the sword.")
         me(p, "I did eventually.")
-        knight(p, "Go on. Castle.")
-        knight(p, "He'll want to hear why someone from Lumbridge is fighting Kinshra outside his walls.")
+        rebral(p, "Go on. Castle.")
+        rebral(p, "He'll want to hear why someone from Lumbridge is fighting Kinshra outside his walls.")
     }
 
     // --- Sir Amik Varze -----------------------------------------------------------------------
@@ -470,41 +458,33 @@ object AtTheWhiteWall : QuestDefinition(
 
     // --- everyday lines (default-priority branches, registered by the plugin) -----------------
 
-    /** A White Knight with no quest beat to run: the checkpoint's own lines, or the castle's. */
-    suspend fun QueueTask.knightIdle(p: Player) {
-        if (!WhiteWallCheckpoint.isNear(p, TALK_RADIUS)) {
-            // A castle knight while the quest wants the checkpoint: send the player to the gate
-            // rather than leave them wondering which White Knight the journal means.
-            when (QuestEngine.stepId(p, this@AtTheWhiteWall)) {
-                S_TRAVEL, S_CHECKPOINT -> {
-                    knight(p, "Looking for the checkpoint? Not here, citizen. Out through the NORTH gate — the garrison holds the road just beyond it.")
-                    knight(p, "Speak to any of the knights on the posts there. They will want to know your business.")
-                    return
-                }
-                S_DEFEND -> {
-                    knight(p, "The Kinshra are at the north gate! Get back to the checkpoint and help the garrison hold it!")
-                    return
-                }
-            }
-            knight(p, "Falador holds, citizen. The Kinshra keep us busy at the north gate and the trolls keep the Imperial Guard busy at Burthorpe.")
-            knight(p, "It has been twelve years. We are still standing.")
-            return
-        }
+    /** Sir Rebral with no quest beat to run — he stands at the gate and nowhere else. */
+    suspend fun QueueTask.rebralIdle(p: Player) {
         when {
             QuestEngine.isComplete(p, this@AtTheWhiteWall) -> {
-                knight(p, "Sir Amik's sent you to Burthorpe? West along the wall, then north past the crossroads.")
-                knight(p, "Mind the trolls. The Imperial Guard will be glad of you.")
+                rebral(p, "Sir Amik's sent you to Burthorpe? West along the wall, then north past the crossroads.")
+                rebral(p, "Mind the trolls. The Imperial Guard will be glad of you.")
             }
             QuestEngine.stepId(p, this@AtTheWhiteWall) == S_FRONT -> {
-                knight(p, "Tiffy sent you to look at the ground? He does that.")
-                knight(p, "The line's here. The road behind us carries what keeps it fed. The Kinshra sit beyond the fence and never come closer than they need to.")
+                rebral(p, "Tiffy sent you to look at the ground? He does that.")
+                rebral(p, "The line's here. The road behind us carries what keeps it fed. The Kinshra sit beyond the fence and never come closer than they need to.")
+            }
+            QuestEngine.stepId(p, this@AtTheWhiteWall) == S_TIFFY -> {
+                rebral(p, "Tiffy? Falador Park, east of the castle. The bench.")
+                rebral(p, "Don't let the tea fool you.")
+            }
+            // The poll clears TRAVEL the moment the player is standing here, so this is a one-tick
+            // window — but "Sir Amik. Castle." before he has even said "Halt." would read wrong.
+            QuestEngine.stepId(p, this@AtTheWhiteWall) == S_TRAVEL -> {
+                rebral(p, "Halt.")
+                rebral(p, "State your business.")
             }
             QuestEngine.started(p, this@AtTheWhiteWall) -> {
-                knight(p, "Sir Amik. Castle. Top floor. He knows about the gate already; news moves faster than Kinshra.")
+                rebral(p, "Sir Amik. Castle. Top floor. He knows about the gate already; news moves faster than Kinshra.")
             }
             else -> {
-                knight(p, "Halt. The north road is closed while the Kinshra press us.")
-                knight(p, "State your business, or move on.")
+                rebral(p, "Halt. The north road is closed while the Kinshra press us.")
+                rebral(p, "State your business, or move on.")
             }
         }
     }

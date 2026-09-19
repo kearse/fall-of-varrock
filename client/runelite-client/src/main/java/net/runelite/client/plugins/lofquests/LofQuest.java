@@ -370,9 +370,9 @@ enum LofQuest
 		"Complete A Kingdom Alone first.",
 		Arrays.asList(
 			new LofQuestStep(1, "Travel to Asgarnia", "Falador's NORTH gate — the one facing the Kinshra. Any road or teleport into Falador, then out to the north gate.", new WorldPoint(2965, 3398, 0)),
-			// The checkpoint knights share their id with Falador's castle knights: only the ones at
-			// the gate are the quest's — the castle knights just send you there.
-			new LofQuestStep(2, "Speak with the White Knights at the checkpoint", "The four knights on posts across the road just OUTSIDE the north gate — any of them. The castle's knights are not the ones you want.", new WorldPoint(2965, 3398, 0)).npcs(Npcs.WHITE_KNIGHT).nearTarget(Npcs.WHITE_WALL_CHECKPOINT_RADIUS),
+			// The garrison's own id (White Knight 1798) is Attack-only in the cache — Sir Rebral is
+			// the officer who does the talking, and he stands at the gate and nowhere else.
+			new LofQuestStep(2, "Speak with Sir Rebral at the checkpoint", "He commands the post on the road just OUTSIDE the north gate, beside the knights on their posts.", new WorldPoint(2967, 3396, 0)).npcs(Npcs.SIR_REBRAL),
 			new LofQuestStep(3, "Help the White Knights repel the Kinshra attack", "Defeat 5 Kinshra raiders at the checkpoint. Any raider you draw blood on counts, even if a knight finishes it.", new WorldPoint(2965, 3400, 0), 5).npcs(Npcs.BLACK_KNIGHT_516, Npcs.BLACK_KNIGHT_517),
 			new LofQuestStep(4, "Speak with Sir Amik Varze", "Top floor of the White Knights' Castle, in the middle of Falador.", new WorldPoint(2960, 3336, 2)).npcs(Npcs.SIR_AMIK_VARZE),
 			new LofQuestStep(5, "Find Sir Tiffy Cashien", "His bench in Falador Park, east of the castle.", new WorldPoint(2997, 3373, 0)).npcs(Npcs.SIR_TIFFY_CASHIEN),
@@ -559,10 +559,6 @@ enum LofQuest
 		static final int BLACK_KNIGHT_516 = 516;
 		static final int BLACK_KNIGHT_517 = 517;
 
-		/** At the White Wall's checkpoint knights share the stock White Knight id with Falador's castle
-		 *  knights: only the ones within this many tiles of the checkpoint are highlighted. */
-		static final int WHITE_WALL_CHECKPOINT_RADIUS = 12;
-
 		static final int SERGEANT_DAMIEN = 337;       // npc.sergeant_damien — the Lumbridge gate
 		static final int VANNAKA = 403;               // npc.vannaka — the Slayer Master in the market
 		static final int DUKE_HORACIO = 815;          // npc.duke_horacio — the command area by the market
@@ -570,7 +566,10 @@ enum LofQuest
 		static final int QUARTERMASTER = 3438;        // npc.quartermaster — the Supply Officer / Field Quartermaster posts
 		static final int VOID_KNIGHT = 1755;          // npc.void_knight — the Wizard Tower bridge
 		static final int OZIACH = 822;                // npc.oziach — Edgeville
-		static final int WHITE_KNIGHT = 1798;         // npc.white_knight — the checkpoint garrison (and the castle)
+		/** npc.sir_rebral — the officer holding Falador's north gate. The checkpoint's White Knights
+		 *  (1798) are Attack-only in the cache, so he carries every line the checkpoint has; he is
+		 *  moved here from his OSRS post south of the castle and stands nowhere else. */
+		static final int SIR_REBRAL = 5524;
 		static final int SIR_AMIK_VARZE = 4771;       // npc.sir_amik_varze_4771 — castle top floor
 		static final int SIR_TIFFY_CASHIEN = 4687;    // npc.sir_tiffy_cashien — the park bench
 		static final int DENULTH = 4083;              // npc.denulth — the Imperial Guard camp, Burthorpe

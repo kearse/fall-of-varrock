@@ -16,9 +16,21 @@ the Fall than the public story.
 are the stock, presence-gated world spawns where OSRS puts them (castle top floor 2960,3336,2; park bench
 2997,3373). White Knights and Black Knights are the stock npcs. The Falador north gate is the gate as it
 is in the cache. The only things added are a **White Knight checkpoint** on the road outside the north
-gate (four stock White Knights on posts, a stretcher case + nurse, crates and spiky barricades placed as
-dynamic objects — no cache edit) and a **rolling Kinshra raid** on it that runs only while a player on
-the fight step stands at the gate. No instance, no new NPC/enemy/map/mechanic.
+gate (four stock White Knights on posts, **Sir Rebral** commanding them, a stretcher case + nurse, crates
+and spiky barricades placed as dynamic objects — no cache edit) and a **rolling Kinshra raid** on it that
+runs only while a player on the fight step stands at the gate. No instance, no new NPC/enemy/map/mechanic.
+
+**Why Sir Rebral holds the gate (2026-09-18).** The stock White Knight (1798) is `actions=[null, Attack,
+null, null, null]` in the rev-228 cache: **no Talk-to, on any of them**. `bindTalk` refused the id at boot
+(it logs and returns false rather than dropping the plugin), so the whole checkpoint conversation — the
+"Halt.", the raid lines, the "You should've led with the sword." — was unreachable: the player could only
+attack the garrison. **Sir Rebral** (5524) is a stock White Knight npc that carries Talk-to and no Attack,
+so he takes the post and every line the checkpoint has. He is **moved**, not copied: his
+`npc_spawns.json` row at his OSRS spot (2977,3346, the Falador diary post) is deleted, and
+`WhiteWallCheckpoint.dress()` places him at **(2967,3396)** facing south, so he exists in exactly one
+place. (Hand-placing him while the row stayed would have raced `WorldSpawnsPlugin`'s region activation —
+its dedupe only suppresses a record when a same-id npc already stands within 6 tiles of it — and could
+leave two Sir Rebrals at the gate.)
 
 **Why the NORTH gate.** It is the approach that faces the Kinshra (the Black Knights' Fortress is north,
 past Ice Mountain) and it is quiet ground: no shop hub, no bank, no other content spawns there. Since
@@ -33,35 +45,41 @@ as anywhere. Kinshra raiders stage in the field beyond the first fence and push 
 | Beat | Existing NPC / place (unchanged) | Existing system | Code seam |
 |---|---|---|---|
 | "Travel to Asgarnia" | Falador north gate (opening x2964-2967, z3392-3394) | Any transport into Falador | `AtTheWhiteWall` step `travel` — `Objective.ReachArea(APPROACH)` |
-| The checkpoint: "Halt." | Stock **White Knight** (1798) ×4 on posts across the gate road | `NpcTalk` quest-priority branch on the shared id, **proximity-gated** (≤12 tiles of the checkpoint) so Falador's castle knights keep their own lines; the server arrow locks onto a checkpoint knight only (`anchorNpc` + `anchorNpcFilter`), a castle knight asked during this step sends the player out to the north gate | `WhiteWallCheckpoint` spawns/maintains the posts (presence-gated like `GoblinCampPlugin`); `AtTheWhiteWall.checkpointHalt` |
+| The checkpoint: "Halt." | Stock **Sir Rebral** (5524), moved to (2967,3396) in front of the gate, with the four stock **White Knights** (1798) on posts across the gate road behind him | `bindTalk` + `NpcTalk` quest-priority branch on Rebral (no proximity gate needed — he stands nowhere else, so the arrow is a plain `anchorNpc`). The knights are Attack-only in the cache and stay that way: they fight, he talks | `WhiteWallCheckpoint` spawns/maintains the posts and posts Rebral (presence-gated like `GoblinCampPlugin`); `AtTheWhiteWall.checkpointHalt` |
 | The attack — defeat 5 Black Knights | Stock **Black Knight** (516) renamed "Kinshra raider", loot-less, stats +1 notch; stages north of the fence (z3409-3413) | Stock NPC combat; `Pawn.attack` only (never the engine aggro path) | step `defend` — `Objective.KillNpcs(5, filter = raider tag)`; `WhiteWallCheckpoint.tick` streams raiders (6 alive, +2 per tick) while a DEFEND-step player is within 24 tiles; withdraws when none |
 | Kill credit while knights out-damage the player | — | `onAnyNpcDeath` (additive) + `damageMap.playerDamage()` | `AtTheWhiteWallPlugin`: every DEFEND-step player who drew blood is credited (`AtTheWhiteWall.creditRaiderKill`), except the top-damage killer the framework hook already counted |
-| "You should've led with the sword." | The checkpoint knight | `NpcTalk` (AMIK step, near the checkpoint) + queued on DEFEND clear | `AtTheWhiteWall.knightAfterFight` |
+| "You should've led with the sword." | Sir Rebral | `NpcTalk` (AMIK step) + queued on DEFEND clear | `AtTheWhiteWall.rebralAfterFight` |
 | Sir Amik: "I have an army. I do not have an army to spare." + the three pressures + Tiffy | **Sir Amik Varze** 4771 @ 2960,3336,2 (world spawn) — reached by the west tower's white-stone staircases 24072/24074 (+24067/24068/24075), which nothing bound before 2026-09-12: `LadderPlugin.climbWhiteStairs` (an identical hunk is carried by The Guns of Asgarnia and A Matter of Trolls) snaps the climb to the nearest walkable tile of the next plane | `bindTalk` + `NpcTalk` | step `amik` — `talk(AMIK, "amik")` → `amikMeeting` |
 | Sir Tiffy: the Fallen Varrock question, the breadcrumb, "go look at the ground" | **Sir Tiffy Cashien** 4687 @ 2997,3373 (world spawn) | `bindTalk` + `NpcTalk`, `options` | step `tiffy` — `talk(TIFFY, "tiffy")` → `tiffyMeeting` |
 | Inspect the front (3 observations, any order) | The checkpoint (2957-2973 × 3395-3400) · the gate road inside the wall (2961-2970 × 3383-3391) · the field beyond the fence (2956-2974 × 3406-3414) | `Objective.Predicate` on the framework poll; per-observation counters in the quest state | step `front` — `AtTheWhiteWall.observe` narrates each once, clears when all three are seen |
 | Report + handoff to Burthorpe | Sir Amik | — | step `report` — `amikReport` → quest complete (+25 War Effort, 1 QP) |
 | Native quest tab row | Recruitment Drive (dbrow 118, quest id 86, varp 657, complete 2) — the OSRS quest whose start NPC is Sir Amik | `QuestTablePatch.PLAN` + `QuestDefinition.nativeTabVarp` | `QuestEngine.publish` |
-| Client journal | `LofQuest.AT_THE_WHITE_WALL` (generic varp 4693); every talk step highlights its npc (`LofQuestStep.npcs`) — the checkpoint's White Knights only within 12 tiles of the gate (`nearTarget`, so the castle knights stay plain), Amik, Tiffy; Black Knights highlighted on the fight step | `lofquests` | chain slot 14 |
+| Client journal | `LofQuest.AT_THE_WHITE_WALL` (generic varp 4693); every talk step highlights its npc (`LofQuestStep.npcs`) — Sir Rebral (5524, no `nearTarget` needed), Amik, Tiffy; Black Knights highlighted on the fight step | `lofquests` | chain slot 14 |
 
 **Rejected cheaper-looking options.** A quest instance of the gate (kill credit in the shared world is
 reliable through damage share, and the design prefers the shared world). A one-shot wave of exactly 5
 raiders (the White Knights would finish them before a slow player got a swing; the rolling stream makes
-the objective un-strandable). A named checkpoint commander (the design forbids one; the proximity gate on
-the shared White Knight id does the job). Moving Amik to a command room (his stock spawn is fine; the arrow
+the objective un-strandable). **A named checkpoint commander was originally rejected** — the design forbids
+inventing one, and a proximity gate on the shared White Knight id was supposed to do the job. It could not:
+that id has no Talk-to at all, so the gate was mute. Sir Rebral is the narrowest fix that keeps the rule —
+he is an *existing* White Knight character moved to the gate, not a new one. Adding Talk-to to npc 1798 with
+`npcDef` was rejected: it would put a Talk-to on every White Knight in Falador and needs a client cache
+deploy. Moving Amik to a command room (his stock spawn is fine; the arrow
 points at the top floor). Cache loc edits for the dressing (dynamic objects after an idempotent region
 force-load are enough for six crates and four barricades).
 
 ## The checkpoint (light custom, all existing assets)
 
-- **Posts:** White Knights at (2963,3397) (2967,3397) (2961,3399) (2969,3399), facing north; the road
-  x2964-2966 stays open. Stats 90 hp / 70 att / 60 str / 70 def, 4-tick — a knight beats a raider
+- **Posts:** White Knights at (2963,3397) (2967,3397) (2961,3399) (2969,3399), facing north, with **Sir
+  Rebral** at (2967,3396) facing south — off the lane, so anyone walking out of the gate meets him head
+  on; the road x2964-2966 stays open. Stats 90 hp / 70 att / 60 str / 70 def, 4-tick — a knight beats a raider
   one-on-one but slowly, so the player's blows decide the fight. Respawn ~14 s after death; stand down
   when no player is within 40 tiles.
 - **Dressing (once, then left):** crates (obj 354) at 2960-2961,3396 · 2970-2971,3396 · 2962,3389 ·
-  2969,3389; spiky barricades (obj 4421) at 2959-2960,3402 · 2970-2971,3402; a Wounded soldier (6826)
-  at 2959,3397 and Nurse Sarah (1152) at 2960,3398, each with a placeholder line. Regions 11829/11828
-  are force-loaded first so a chunk built later cannot drop them.
+  2969,3389; spiky barricades (obj 4421) at 2959-2960,3402 · 2970-2971,3402; Sir Rebral (5524) at
+  2967,3396, a Wounded soldier (6826) at 2959,3397 and Nurse Sarah (1152) at 2960,3398 — the last two
+  with a placeholder line. Regions 11829/11828 are force-loaded first so a chunk built later cannot drop
+  them. Sir Rebral has no Attack option, so the raid cannot kill the man holding the quest.
 - **The raid:** raiders spawn on seven staging tiles at z3409-3413, walk through the fence gaps, and
   target DEFEND-step players within 14 tiles (≤3 per player), then the knights, else push to
   (2965,3400). A raider dragged more than 34 tiles from the checkpoint leaves the raid. Shouts every
@@ -72,15 +90,15 @@ force-load are enough for six crates and four barricades).
 
 ## Dialogue (shipped — the design's lines, verbatim where it gave them)
 
-**White Knight — checkpoint (CHECKPOINT → DEFEND).** "Halt." / *Player:* "I'm here from Lumbridge." /
-"Business?" / *options:* "I need to speak with whoever commands here." ("Sir Amik Varze. So does half of
-Asgarnia. About what?" — the knight names him; the player never says the name first) · "I'm here about
-Varrock." · "Just visiting."
+**Sir Rebral — checkpoint (CHECKPOINT → DEFEND).** "Halt." / *Player:* "I'm here from Lumbridge." / "Sir
+Rebral. I hold this gate." "Business?" / *options:* "I need to speak with whoever commands here." ("At this
+gate, that's me. Behind it, Sir Amik Varze — and so does half of Asgarnia. About what?" — he names Amik;
+the player never says the name first) · "I'm here about Varrock." · "Just visiting."
 (all three roads lead to Varrock) / "Varrock?" *(he looks you over)* "You've come a long way to ask for
 soldiers we don't have." / *Player:* "Falador looks like it has plenty." / "Then you've been here thirty
 seconds." → **DEFEND** / "Movement!" "Kinshra! Hold the gate!"
 
-**White Knight — after the raid (AMIK).** "You said you wanted to speak with Sir Amik?" / "Yes." / "You
+**Sir Rebral — after the raid (AMIK).** "You said you wanted to speak with Sir Amik?" / "Yes." / "You
 should've led with the sword." / "I did eventually." / "Go on. Castle." / "He'll want to hear why someone
 from Lumbridge is fighting Kinshra outside his walls."
 
@@ -119,15 +137,16 @@ else. Burthorpe." / "The Imperial Guard has spent years watching the mountain pa
 frontier stabilises… those soldiers can come south." / "And then we hit the Kinshra?" / "Then we'll have
 enough men to start thinking about it."
 
-Everyday lines (no quest beat live): the checkpoint knights ("Halt. The north road is closed while the
-Kinshra press us."), the castle knights ("Falador holds, citizen…"), Amik and Tiffy per quest state.
+Everyday lines (no quest beat live): Sir Rebral ("Halt. The north road is closed while the Kinshra press
+us." · Tiffy's bench · "Sir Amik. Castle. Top floor." · Burthorpe once the quest is done), Amik and Tiffy
+per quest state. The White Knights themselves say nothing — they have no Talk-to to say it with.
 
 ## Quest journal (server objective lines = client step rows)
 
 | State | Journal |
 |---|---|
 | travel | Falador may possess the military capability needed to breach Fallen Varrock. Travel to Asgarnia. |
-| checkpoint | Speak with the White Knights guarding the Falador approach. |
+| checkpoint | Speak with Sir Rebral, who commands the checkpoint guarding the Falador approach. |
 | defend | Help the White Knights repel the Kinshra attack. [X/5] |
 | amik | Speak with Sir Amik Varze in Falador. |
 | tiffy | Sir Amik says Sir Tiffy Cashien wants to speak with me. Find him in Falador. |
@@ -148,18 +167,18 @@ content.
 
 | Field | At the White Wall |
 |---|---|
-| Start NPC | None — auto-begins when A Kingdom Alone completes; the first beat is the stock White Knights at the north-gate checkpoint |
-| NPCs Used | White Knight (1798) · Black Knight (516) · Sir Amik Varze (4771, stock spawn) · Sir Tiffy Cashien (4687, stock spawn) · Wounded soldier (6826) + Nurse Sarah (1152) as dressing — all existing |
+| Start NPC | None — auto-begins when A Kingdom Alone completes; the first beat is Sir Rebral at the north-gate checkpoint |
+| NPCs Used | Sir Rebral (5524, stock — **moved** from 2977,3346 to the gate) · White Knight (1798) · Black Knight (516) · Sir Amik Varze (4771, stock spawn) · Sir Tiffy Cashien (4687, stock spawn) · Wounded soldier (6826) + Nurse Sarah (1152) as dressing — all existing |
 | Locations | Falador north gate + the road inside/outside it · the White Knights' Castle top floor · Falador Park — unchanged |
 | Gameplay Used | Stock NPC combat · presence-gated garrison (goblin-camp pattern) · framework quest engine (areas, kills, predicate, talk) · War Effort · quest points · native quest tab · client journal |
-| Dialogue | Checkpoint knight ×3 beats · Amik ×2 (+ idle) · Tiffy ×1 (+ idle) · castle-knight, nurse, wounded-soldier lines |
+| Dialogue | Sir Rebral ×3 beats (+ idle) · Amik ×2 (+ idle) · Tiffy ×1 (+ idle) · nurse, wounded-soldier lines |
 | Quest State | `QuestStates` blob, key `at_the_white_wall`; step ids travel/checkpoint/defend/amik/tiffy/front/report; counters `kills`, `obs_line`, `obs_supply`, `obs_kinshra`; completion flag `quest.at_the_white_wall.done` |
 | Journal | table above; client `LofQuest.AT_THE_WHITE_WALL` (varp 4693, chain slot 14); native tab row = Recruitment Drive relabelled (varp 657) |
 | System Hooks | `QuestEngine` poll (travel, front) · `onAnyNpcDeath` (defend, damage share) · `NpcTalk` (checkpoint, amik, tiffy, report) · `QuestTablePatch`/`QuestJournal` publish |
 | Temporary Content | The Kinshra raid (only while a DEFEND-step player stands at the gate); the garrison stands down when the road is empty |
-| New NPCs | NONE (stock ids; one runtime rename "Kinshra raider") |
+| New NPCs | NONE (stock ids; one runtime rename "Kinshra raider"; Sir Rebral moved, not invented) |
 | New Maps | NONE |
-| World Changes | Light: checkpoint dressing (6 crates, 4 barricades, 2 npcs) placed at runtime — no cache edit, no zoning change |
+| World Changes | Light: checkpoint dressing (6 crates, 4 barricades, 3 npcs incl. Sir Rebral) placed at runtime — no cache edit, no zoning change. One data edit: Sir Rebral's `npc_spawns.json` row deleted (he is posted at the gate instead) |
 | New Mechanics | NONE |
 | Development Cost | **Script / Light Custom** |
 
