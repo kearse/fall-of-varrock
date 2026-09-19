@@ -26,12 +26,13 @@ private val logger = KotlinLogging.logger {}
  * The **White Knight checkpoint** outside Falador's north gate — the Asgarnian front as the player
  * first meets it in [AtTheWhiteWall] — and the **Kinshra raid** on it.
  *
- * Shared-world, no instance: four stock White Knights hold posts across the gate road, a wounded
- * soldier and a nurse sit behind them, crates and spiky barricades dress the position (existing
- * objects, spawned dynamically — no cache edit). Everything is **presence-gated** like the goblin
- * camp and the world spawns: nothing is maintained unless a real player is near, and the garrison
- * stands down when the road empties. The dressing (objects + the two non-combat npcs) is spawned
- * once and left.
+ * Shared-world, no instance: four stock White Knights hold posts across the gate road, **Sir
+ * Rebral** commands them from the road outside the gate (the only npc here a player can talk to —
+ * see [SIR_REBRAL]), a wounded soldier and a nurse sit behind them, crates and spiky barricades
+ * dress the position (existing objects, spawned dynamically — no cache edit). Everything is
+ * **presence-gated** like the goblin camp and the world spawns: nothing is maintained unless a real
+ * player is near, and the garrison stands down when the road empties. The dressing (objects + the
+ * three non-combat npcs) is spawned once and left.
  *
  * The raid runs only while a player on the quest's DEFEND step stands at the gate: stock Black
  * Knights (renamed "Kinshra raider", loot-less, stats raised a notch) appear on the field north of
@@ -56,8 +57,23 @@ object WhiteWallCheckpoint {
     private const val WOUNDED = "npc.wounded_soldier"  // 6826 — the Burthorpe stretcher case
     private const val NURSE = "npc.nurse_sarah"        // 1152
 
+    /**
+     * **Sir Rebral** (5524) — the officer holding the gate, and the checkpoint's only voice.
+     *
+     * The stock White Knight (1798) is `actions=[null, Attack, ...]`: no Talk-to, in the cache, on
+     * every one of them. A garrison of them can be fought but never spoken to, so the quest's
+     * opening conversation had nowhere to live. Sir Rebral is a stock White Knight npc that DOES
+     * carry Talk-to (and no Attack — he cannot be killed mid-raid), so he holds the post and all of
+     * the checkpoint's dialogue. He is **moved** here from his OSRS spot south of the castle: his
+     * `npc_spawns.json` row is deleted, and this is now the only place he stands.
+     */
+    const val SIR_REBRAL = "npc.sir_rebral"          // 5524
+
     /** The checkpoint: the road just outside the north gate (gate opening x2964-2967, z3392-3394). */
     val CENTRE = Tile(2965, 3398, 0)
+
+    /** Sir Rebral's post: immediately outside the gate, east of the lane the road keeps open. */
+    val REBRAL_TILE = Tile(2967, 3396, 0)
 
     /** The regions the checkpoint straddles — force-loaded before any dressing is placed. */
     private val REGIONS = intArrayOf(11829, 11828)
@@ -146,10 +162,10 @@ object WhiteWallCheckpoint {
         localMessage(world, "<col=cc2222>A Kinshra raiding party is moving on the checkpoint — help the White Knights hold the gate!</col>")
     }
 
-    /** DEFEND cleared for [p]: the raid breaks for them; the knight has a word (re-askable at the checkpoint). */
+    /** DEFEND cleared for [p]: the raid breaks for them; Sir Rebral has a word (re-askable at the checkpoint). */
     fun onDefenderDone(p: Player) {
         p.message("<col=801700>The Kinshra raiders withdraw from the checkpoint.</col>")
-        p.queue { with(AtTheWhiteWall) { knightAfterFight(p) } }
+        p.queue { with(AtTheWhiteWall) { rebralAfterFight(p) } }
     }
 
     // --- the tick -----------------------------------------------------------------------------
@@ -204,6 +220,8 @@ object WhiteWallCheckpoint {
             runCatching { world.spawn(DynamicObject(id, SCENERY_TYPE, rot, tile)) }
                 .onFailure { logger.warn(it) { "[WHITE WALL] could not place object $id at ${tile.x},${tile.z}" } }
         }
+        // The officer faces the gate, not the field: anyone walking out of Falador meets him head on.
+        spawnStill(world, SIR_REBRAL, REBRAL_TILE, Direction.SOUTH)
         spawnStill(world, WOUNDED, Tile(2959, 3397, 0), Direction.NORTH)
         spawnStill(world, NURSE, Tile(2960, 3398, 0), Direction.WEST)
         logger.info { "[WHITE WALL] checkpoint dressed at the Falador north gate (${DRESSING.size} props)." }

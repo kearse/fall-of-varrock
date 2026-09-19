@@ -26,7 +26,9 @@ private val logger = KotlinLogging.logger {}
  *
  * Sir Amik Varze and Sir Tiffy Cashien are the presence-gated world spawns where OSRS puts them
  * (castle top floor, park bench) — nothing here spawns or moves them. The checkpoint's White
- * Knights are spawned by [WhiteWallCheckpoint] on the same stock id as Falador's castle knights.
+ * Knights are spawned by [WhiteWallCheckpoint] on the same stock id as Falador's castle knights;
+ * that id has **Attack and no Talk-to**, so the checkpoint's voice is Sir Rebral, whom the
+ * checkpoint posts at the gate (and whose old `npc_spawns.json` row is gone — he was moved).
  */
 class AtTheWhiteWallPlugin(
     r: PluginRepository,
@@ -37,7 +39,7 @@ class AtTheWhiteWallPlugin(
     init {
         QuestRegistry.register(AtTheWhiteWall)
 
-        bindIdle(AtTheWhiteWall.WHITE_KNIGHT, "the White Knights") { p -> with(AtTheWhiteWall) { knightIdle(p) } }
+        bindIdle(AtTheWhiteWall.REBRAL, "Sir Rebral") { p -> with(AtTheWhiteWall) { rebralIdle(p) } }
         bindIdle(AtTheWhiteWall.AMIK, "Sir Amik Varze") { p -> with(AtTheWhiteWall) { amikIdle(p) } }
         bindIdle(AtTheWhiteWall.TIFFY, "Sir Tiffy Cashien") { p -> with(AtTheWhiteWall) { tiffyIdle(p) } }
 
