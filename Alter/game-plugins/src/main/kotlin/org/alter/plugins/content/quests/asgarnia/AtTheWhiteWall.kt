@@ -100,8 +100,10 @@ object AtTheWhiteWall : QuestDefinition(
     /** FRONT observation 1 — the White Knight position: the checkpoint itself. */
     val OBS_LINE = Area(2957, 3395, 2973, 3400)
 
-    /** FRONT observation 2 — the supply line: the gate road inside the wall. */
+    /** FRONT observation 2 — the supply line: the gate road inside the wall (the lane between the
+     *  checkpoint's inner crates, which sit at x2962 and x2969). */
     val OBS_SUPPLY = Area(2961, 3383, 2970, 3391)
+    val OBS_SUPPLY_TILE = Tile(2965, 3388, 0)
 
     /** FRONT observation 3 — the Kinshra position, seen from the last safe ground beyond the fence. */
     val OBS_KINSHRA = Area(2956, 3406, 2974, 3414)
@@ -110,7 +112,18 @@ object AtTheWhiteWall : QuestDefinition(
     private const val C_LINE = "obs_line"
     private const val C_SUPPLY = "obs_supply"
     private const val C_KINSHRA = "obs_kinshra"
-    private val OBSERVATIONS = listOf(C_LINE, C_SUPPLY, C_KINSHRA)
+
+    /** One of the three places FRONT asks the player to read: its counter, the tile the guidance
+     *  marker sits on while it is still outstanding, and how the chat names it. */
+    private class Observation(val counter: String, val tile: Tile, val where: String)
+
+    private val OBSERVATIONS by lazy {
+        listOf(
+            Observation(C_LINE, GATE, "the White Knight line at the north-gate checkpoint"),
+            Observation(C_SUPPLY, OBS_SUPPLY_TILE, "the supply road just inside the gate"),
+            Observation(C_KINSHRA, OBS_KINSHRA_TILE, "the field north of the fence, beyond the checkpoint"),
+        )
+    }
 
     // --- journal (docs/quests/at-the-white-wall.md, "Quest journal") -------------------------
 
@@ -165,8 +178,10 @@ object AtTheWhiteWall : QuestDefinition(
         ),
         QuestStep(
             S_FRONT, Objective.Predicate(J_FRONT) { p -> observe(p) },
-            anchor = GATE,
-            nudge = "Three places to look, in any order: the White Knight line at the north-gate checkpoint, the supply road just inside the gate, and the ground north of the fence beyond the checkpoint.",
+            // The marker moves to the next place still unread: standing there is the whole
+            // interaction, so an arrow left on one already read has nothing behind it.
+            anchor = GATE, anchorFor = { p -> nextObservation(p) },
+            nudge = "Three places to look, in any order: the White Knight line at the north-gate checkpoint, the supply road just inside the gate, and the ground north of the fence beyond the checkpoint. There is nothing to click - walk onto each one and look. The marker leads to whichever is next.",
         ),
         QuestStep(
             S_REPORT, Objective.TalkTo(J_REPORT, AMIK),
@@ -236,8 +251,7 @@ object AtTheWhiteWall : QuestDefinition(
             "The Kinshra position does not appear prepared to assault Falador's walls directly.",
             "They only need enough strength here to prevent the White Knights from leaving.",
         )
-        val seen = OBSERVATIONS.count { QuestEngine.counter(p, this, it) > 0 }
-        if (seen < OBSERVATIONS.size) return false
+        if (outstanding(p).isNotEmpty()) return false
         p.message("<col=801700>The Kinshra do not need to conquer Falador. By keeping the White Knights occupied, they prevent Asgarnia from helping reclaim Varrock.</col>")
         return true
     }
@@ -246,9 +260,18 @@ object AtTheWhiteWall : QuestDefinition(
         if (QuestEngine.counter(p, this, counter) > 0 || !area.contains(p.tile)) return
         QuestEngine.addCounter(p, this, counter)
         lines.forEach { p.message("<col=801700>$it</col>") }
-        val left = OBSERVATIONS.count { QuestEngine.counter(p, this, it) == 0 }
-        if (left > 0) p.message("($left more to inspect.)")
+        // Name what is left rather than counting it: the marker has just moved, and "2 more to
+        // inspect" never said where to.
+        val left = outstanding(p)
+        if (left.isNotEmpty()) p.message("(Still to look at: ${left.joinToString(" and ") { it.where }}. Your marker points the way.)")
     }
+
+    /** The observations this player has yet to stand in, in the order the marker offers them. */
+    private fun outstanding(p: Player): List<Observation> =
+        OBSERVATIONS.filter { QuestEngine.counter(p, this, it.counter) == 0 }
+
+    /** The FRONT marker: the next place still unread, else the gate (the step is about to clear). */
+    private fun nextObservation(p: Player): Tile = outstanding(p).firstOrNull()?.tile ?: GATE
 
     // --- dialogue helpers ---------------------------------------------------------------------
 
