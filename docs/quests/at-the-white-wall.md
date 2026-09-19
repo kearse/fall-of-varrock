@@ -27,7 +27,7 @@ null, null, null]` in the rev-228 cache: **no Talk-to, on any of them**. `bindTa
 attack the garrison. **Sir Rebral** (5524) is a stock White Knight npc that carries Talk-to and no Attack,
 so he takes the post and every line the checkpoint has. He is **moved**, not copied: his
 `npc_spawns.json` row at his OSRS spot (2977,3346, the Falador diary post) is deleted, and
-`WhiteWallCheckpoint.dress()` places him at **(2967,3396)** facing south, so he exists in exactly one
+`WhiteWallCheckpoint.dress()` places him at **(2967,3396)** facing north, so he exists in exactly one
 place. (Hand-placing him while the row stayed would have raced `WorldSpawnsPlugin`'s region activation —
 its dedupe only suppresses a record when a same-id npc already stands within 6 tiles of it — and could
 leave two Sir Rebrals at the gate.)
@@ -71,8 +71,8 @@ force-load are enough for six crates and four barricades).
 ## The checkpoint (light custom, all existing assets)
 
 - **Posts:** White Knights at (2963,3397) (2967,3397) (2961,3399) (2969,3399), facing north, with **Sir
-  Rebral** at (2967,3396) facing south — off the lane, so anyone walking out of the gate meets him head
-  on; the road x2964-2966 stays open. Stats 90 hp / 70 att / 60 str / 70 def, 4-tick — a knight beats a raider
+  Rebral** at (2967,3396) facing north too — off the lane, watching the front with his knights rather
+  than the gate behind him; the road x2964-2966 stays open. Stats 90 hp / 70 att / 60 str / 70 def, 4-tick — a knight beats a raider
   one-on-one but slowly, so the player's blows decide the fight. Respawn ~14 s after death; stand down
   when no player is within 40 tiles.
 - **Dressing (once, then left):** crates (obj 354) at 2960-2961,3396 · 2970-2971,3396 · 2962,3389 ·

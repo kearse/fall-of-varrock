@@ -971,8 +971,8 @@ enum LofQuest
 	/**
 	 * Whether the active step wants the creature [npcId] standing at [where] highlighted right now.
 	 * The mid-flight redirects above win; otherwise the step decides, including its radius around
-	 * the target for a stock id the quest shares with the rest of the world (the checkpoint's White
-	 * Knights, not Falador castle's).
+	 * the target for a stock id the quest shares with the rest of the world (the east camp's
+	 * goblins, not the frontier line outside the city gate).
 	 */
 	boolean highlightsNpc(Client client, int npcId, WorldPoint where)
 	{

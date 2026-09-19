@@ -72,7 +72,8 @@ object WhiteWallCheckpoint {
     /** The checkpoint: the road just outside the north gate (gate opening x2964-2967, z3392-3394). */
     val CENTRE = Tile(2965, 3398, 0)
 
-    /** Sir Rebral's post: immediately outside the gate, east of the lane the road keeps open. */
+    /** Sir Rebral's post: immediately outside the gate, east of the lane the road keeps open —
+     *  facing NORTH up the road with his knights, the way the front does. */
     val REBRAL_TILE = Tile(2967, 3396, 0)
 
     /** The regions the checkpoint straddles — force-loaded before any dressing is placed. */
@@ -220,8 +221,8 @@ object WhiteWallCheckpoint {
             runCatching { world.spawn(DynamicObject(id, SCENERY_TYPE, rot, tile)) }
                 .onFailure { logger.warn(it) { "[WHITE WALL] could not place object $id at ${tile.x},${tile.z}" } }
         }
-        // The officer faces the gate, not the field: anyone walking out of Falador meets him head on.
-        spawnStill(world, SIR_REBRAL, REBRAL_TILE, Direction.SOUTH)
+        // The officer faces the field with his knights, not the gate behind him.
+        spawnStill(world, SIR_REBRAL, REBRAL_TILE, Direction.NORTH)
         spawnStill(world, WOUNDED, Tile(2959, 3397, 0), Direction.NORTH)
         spawnStill(world, NURSE, Tile(2960, 3398, 0), Direction.WEST)
         logger.info { "[WHITE WALL] checkpoint dressed at the Falador north gate (${DRESSING.size} props)." }
