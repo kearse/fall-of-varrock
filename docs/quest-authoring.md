@@ -168,7 +168,11 @@ Every new quest spec starts from the integration-first template in `docs/quests/
   `QuestEngine.publish` writes 0 / 1 / complete.
 - **Quest points:** `override val questPoints`; `QuestJournal.sync` derives `Varp.QUEST_POINTS` and
   the summary-tab quest counts from the registry.
-- **Login reminder:** `override val loginReminder = false` for standing entries (the strategic
+- **Login reminder:** on login every live chain — framework and legacy alike — is read out by
+  `QuestLoginBrief` as ONE line each, at most three, with any remainder collapsed into a
+  "+N more in progress — see `::quests`" pointer. A quest never speaks for itself on login; if it
+  auto-begins it announces "— begun." / "— next objective:" as usual and the brief leaves it out.
+  `override val loginReminder = false` keeps a quest out of the brief entirely (the strategic
   objectives announce themselves as one `::strategy` line instead).
 - **Mid-session auto-begin:** `QuestEngine.pollTick` begins any unstarted `autoBegin` quest whose
   prerequisites just became true (no relog between chain quests).
