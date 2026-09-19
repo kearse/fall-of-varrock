@@ -3,8 +3,8 @@
  *
  * MUST stay in sync with the server's org.alter.plugins.content.teleport.TeleportRegistry +
  * TeleportCategory (same category order, same per-category row order) — the overlay sends
- * "::tp <catIndex> <rowIndex>" and the server resolves it by those indices. Same discipline as
- * WildernessZones mirroring the server PvpZones.
+ * "::tp <catIndex> <rowIndex>" and the server resolves it by those indices (it prefers the row
+ * NAME when the client sends one, so drift degrades instead of misfiring).
  *
  * EVERY TeleportRegistry change ships with a sync of this file + a client deploy — the drift
  * after the boss-roster purge left the whole Bosses tab dead and the Mini-Games rows firing the

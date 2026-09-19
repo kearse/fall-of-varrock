@@ -9,6 +9,7 @@ import org.alter.game.model.entity.Player
 import org.alter.api.*
 import org.alter.api.ext.*
 import org.alter.plugins.content.combat.Combat
+import org.alter.plugins.content.combat.RevenantWeapons
 import org.alter.plugins.content.combat.CombatConfigs
 import org.alter.plugins.content.combat.SoulreaperAxe
 import org.alter.plugins.content.mechanics.prayer.Prayer
@@ -88,6 +89,22 @@ object MeleeCombatFormula : CombatFormula {
             hit = Math.floor(hit)
         }
 
+        // Dragon hunter lance: ×1.2 damage vs draconic (dps-calc dragonbane factor [6, 5]).
+        // Community question 2026-09-18, "does dragon hunter items do extra damage vs dragons":
+        // only the CROSSBOW was wired. The lance and the wand did nothing at all.
+        if (player.hasEquipped(EquipmentType.WEAPON, "item.dragon_hunter_lance") && isDragon(target)) {
+            hit *= 1.2
+            hit = Math.floor(hit)
+        }
+
+        // Viggora's / Ursine chainmace: +50% vs Wilderness npcs, the same rule the revenant BOWS
+        // have had since 2026-09-03 (see RevenantWeapons).
+        val revenant = RevenantWeapons.wildernessMultiplier(player, target, RevenantWeapons.MELEE)
+        if (revenant != 1.0) {
+            hit *= revenant
+            hit = Math.floor(hit)
+        }
+
         hit *= specialAttackMultiplier
         hit = Math.floor(hit)
 
@@ -118,6 +135,19 @@ object MeleeCombatFormula : CombatFormula {
         // demonbaneFactor(70)) — it composes with a special attack, never replaces it.
         if (player.hasEquipped(EquipmentType.WEAPON, "item.arclight") && isDemon(target)) {
             hit *= 1.7
+            hit = Math.floor(hit)
+        }
+
+        // Dragon hunter lance: ×1.2 accuracy vs draconic (dps-calc dragonbane factor [6, 5]).
+        if (player.hasEquipped(EquipmentType.WEAPON, "item.dragon_hunter_lance") && isDragon(target)) {
+            hit *= 1.2
+            hit = Math.floor(hit)
+        }
+
+        // Viggora's / Ursine chainmace: +50% vs Wilderness npcs.
+        val revenant = RevenantWeapons.wildernessMultiplier(player, target, RevenantWeapons.MELEE)
+        if (revenant != 1.0) {
+            hit *= revenant
             hit = Math.floor(hit)
         }
 
@@ -321,6 +351,14 @@ object MeleeCombatFormula : CombatFormula {
     private fun isDemon(pawn: Pawn): Boolean {
         if (pawn.entityType.isNpc) {
             return (pawn as Npc).isSpecies(NpcSpecies.DEMON)
+        }
+        return false
+    }
+
+    /** Draconic for dragonbane purposes — the same cache species the DHCB reads in the ranged formula. */
+    private fun isDragon(pawn: Pawn): Boolean {
+        if (pawn.entityType.isNpc) {
+            return (pawn as Npc).isSpecies(NpcSpecies.DRACONIC)
         }
         return false
     }

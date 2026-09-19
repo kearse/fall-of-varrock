@@ -82,12 +82,15 @@ object CombatConfigs {
             "item.zamorak_godsword_or",
         )
 
-    fun getCombatStrategy(pawn: Pawn): CombatStrategy =
-        when (getCombatClass(pawn)) {
+    fun getCombatStrategy(pawn: Pawn): CombatStrategy = strategyFor(getCombatClass(pawn))
+
+    /** The strategy that fights in [combatClass]. */
+    fun strategyFor(combatClass: CombatClass): CombatStrategy =
+        when (combatClass) {
             CombatClass.MELEE -> MeleeCombatStrategy
             CombatClass.MAGIC -> MagicCombatStrategy
             CombatClass.RANGED -> RangedCombatStrategy
-            else -> throw IllegalStateException("Invalid combat class: ${getCombatClass(pawn)} for $pawn")
+            else -> throw IllegalStateException("Invalid combat class: $combatClass")
         }
 
     fun getCombatClass(pawn: Pawn): CombatClass {
@@ -112,6 +115,30 @@ object CombatConfigs {
 
         throw IllegalArgumentException("Invalid pawn type.")
     }
+
+    /**
+     * The class a SPECIAL ATTACK on the wielded weapon belongs to.
+     *
+     * [getCombatClass] answers MAGIC whenever a spell is armed, because in OSRS you may cast with
+     * a whip in hand — correct for the swing, wrong for the weapon. A special belongs to the
+     * weapon (`SpecialAttacks` keys on the worn item), so the combat loop must only fire one when
+     * the strategy about to attack is the weapon's own. Player report 2026-09-18 — "when spec is
+     * on and you use a spell it would spec from far away like you're fcing" — was an armed MELEE
+     * special going off through the MAGIC strategy's 10-tile range check.
+     *
+     * Deliberately NOT the same rule as [getCombatClass]: a staff with no spell armed fights as a
+     * MELEE bash there (and must keep doing so), but its special — the nightmare and eldritch orb
+     * staves' Immolate / Invocate — is cast, so it belongs to the magic strategy. Answering MELEE
+     * here would have silently stopped those two specials from ever firing.
+     */
+    fun specialAttackClass(player: Player): CombatClass =
+        when {
+            player.hasWeaponType(WeaponType.BOW, WeaponType.CHINCHOMPA, WeaponType.CROSSBOW, WeaponType.THROWN) -> CombatClass.RANGED
+            player.hasWeaponType(WeaponType.SALAMANDER) && player.getAttackStyle() != 0 -> CombatClass.RANGED
+            // Every staff-family weapon: powered staves, the nightmare staves, the sceptres.
+            player.hasWeaponType(WeaponType.MAGIC_STAFF, WeaponType.STAFF, WeaponType.TRIDENT) -> CombatClass.MAGIC
+            else -> CombatClass.MELEE
+        }
 
     /**
      * Whether the player is wielding a weapon that can auto-cast. Auto-cast needs a

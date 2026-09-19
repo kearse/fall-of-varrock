@@ -1,0 +1,463 @@
+# Ranged strength for every piece of ammunition â€” OSRS Wiki values.
+#
+# Community batch 2026-09-18 traced "dragon knives / throwing axes are useless" to this, and it
+# turned out to be the whole skill: the rev-228 cache ships equipment param 189 (RANGED_STRENGTH)
+# on only 59 of 30,644 item defs, and every one of those 59 is a *weapon* (bows, the venator
+# family, a ring, an amulet). NO arrow, bolt, dart, knife, thrownaxe or javelin carries it.
+#
+# `ItemMetadataService` builds `def.bonuses[11]` straight from param 189, and
+# `RangedCombatFormula.getMaxHit` reads the summed worn value as `b` in
+# `floor(0.5 + a * (b + 64) / 640)`. With b = 0 for every quiver in the game, a 99-Ranged player
+# firing dragon arrows maxed around 11 â€” roughly Ranged/10, whatever the bow. The 2026-09-03
+# batch patched the four AMMO-LESS bows (`ammoless_bows.yml`) because those were the ones players
+# named; everything that actually uses a quiver was still rolling zero.
+#
+# Melee is unaffected: param 10 (MELEE_STRENGTH) is present on 1253 defs.
+#
+# Partial documents (no equip_slot): only `ranged_strength` is patched here. Attack bonuses,
+# stack rules, requirements and weapon speed all stay as the cache has them.
+
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ arrows â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# bronze_arrow
+id: 882
+equipment:
+  ranged_strength: 7
+---
+id: 11700 # bronze_arrow (duplicate def)
+equipment:
+  ranged_strength: 7
+---
+# iron_arrow
+id: 884
+equipment:
+  ranged_strength: 10
+---
+id: 11701 # iron_arrow (duplicate def)
+equipment:
+  ranged_strength: 10
+---
+# steel_arrow
+id: 886
+equipment:
+  ranged_strength: 16
+---
+id: 11702 # steel_arrow (duplicate def)
+equipment:
+  ranged_strength: 16
+---
+# mithril_arrow
+id: 888
+equipment:
+  ranged_strength: 22
+---
+id: 11703 # mithril_arrow (duplicate def)
+equipment:
+  ranged_strength: 22
+---
+id: 7552 # mithril_arrow (duplicate def)
+equipment:
+  ranged_strength: 22
+---
+# adamant_arrow
+id: 890
+equipment:
+  ranged_strength: 31
+---
+id: 20388 # adamant_arrow (duplicate def)
+equipment:
+  ranged_strength: 31
+---
+# rune_arrow
+id: 892
+equipment:
+  ranged_strength: 49
+---
+id: 20600 # rune_arrow (duplicate def)
+equipment:
+  ranged_strength: 49
+---
+# amethyst_arrow
+id: 21326
+equipment:
+  ranged_strength: 55
+---
+# dragon_arrow
+id: 11212
+equipment:
+  ranged_strength: 60
+---
+id: 20389 # dragon_arrow (duplicate def)
+equipment:
+  ranged_strength: 60
+---
+# broad_arrows â€” the Slayer-only arrow, between adamant and rune
+id: 4150
+equipment:
+  ranged_strength: 20
+---
+id: 4160 # broad_arrows (duplicate def)
+equipment:
+  ranged_strength: 20
+---
+
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ bolts â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# bronze_bolts
+id: 877
+equipment:
+  ranged_strength: 10
+---
+# blurite_bolts
+id: 9139
+equipment:
+  ranged_strength: 22
+---
+# iron_bolts
+id: 9140
+equipment:
+  ranged_strength: 46
+---
+# steel_bolts
+id: 9141
+equipment:
+  ranged_strength: 64
+---
+# mithril_bolts
+id: 9142
+equipment:
+  ranged_strength: 82
+---
+# adamant_bolts
+id: 9143
+equipment:
+  ranged_strength: 100
+---
+# runite_bolts
+id: 9144
+equipment:
+  ranged_strength: 115
+---
+# dragon_bolts
+id: 21905
+equipment:
+  ranged_strength: 122
+---
+# silver_bolts
+id: 9145
+equipment:
+  ranged_strength: 26
+---
+# broad_bolts
+id: 11875
+equipment:
+  ranged_strength: 100
+---
+# amethyst_broad_bolts
+id: 21316
+equipment:
+  ranged_strength: 115
+---
+# bolt_rack (Karil's crossbow)
+id: 4740
+equipment:
+  ranged_strength: 55
+---
+# bone_bolts
+id: 8882
+equipment:
+  ranged_strength: 30
+---
+# kebbit_bolts
+id: 10158
+equipment:
+  ranged_strength: 60
+---
+# long_kebbit_bolts
+id: 10159
+equipment:
+  ranged_strength: 90
+---
+# Gem-tipped bolts â€” the unenchanted and enchanted (e) forms share a ranged strength;
+# only the on-hit effect differs (see BoltEnchantments).
+# opal_bolts / opal_bolts_e
+id: 879
+equipment:
+  ranged_strength: 14
+---
+id: 9236
+equipment:
+  ranged_strength: 14
+---
+# jade_bolts / jade_bolts_e
+id: 9335
+equipment:
+  ranged_strength: 30
+---
+id: 9237
+equipment:
+  ranged_strength: 30
+---
+# pearl_bolts / pearl_bolts_e
+id: 880
+equipment:
+  ranged_strength: 48
+---
+id: 9238
+equipment:
+  ranged_strength: 48
+---
+# topaz_bolts / topaz_bolts_e
+id: 9336
+equipment:
+  ranged_strength: 66
+---
+id: 9239
+equipment:
+  ranged_strength: 66
+---
+# sapphire_bolts / sapphire_bolts_e
+id: 9337
+equipment:
+  ranged_strength: 83
+---
+id: 9240
+equipment:
+  ranged_strength: 83
+---
+# emerald_bolts / emerald_bolts_e
+id: 9338
+equipment:
+  ranged_strength: 85
+---
+id: 9241
+equipment:
+  ranged_strength: 85
+---
+# ruby_bolts / ruby_bolts_e
+id: 9339
+equipment:
+  ranged_strength: 103
+---
+id: 9242
+equipment:
+  ranged_strength: 103
+---
+# diamond_bolts / diamond_bolts_e
+id: 9340
+equipment:
+  ranged_strength: 105
+---
+id: 9243
+equipment:
+  ranged_strength: 105
+---
+# dragonstone_bolts / dragonstone_bolts_e
+id: 9341
+equipment:
+  ranged_strength: 117
+---
+id: 9244
+equipment:
+  ranged_strength: 117
+---
+# onyx_bolts / onyx_bolts_e
+id: 9342
+equipment:
+  ranged_strength: 120
+---
+id: 9245
+equipment:
+  ranged_strength: 120
+---
+
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ darts â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# A dart is its own ammo, and the toxic blowpipe fires whichever dart is loaded â€” so these
+# values are also what the blowpipe's damage scales off.
+# bronze_dart
+id: 806
+equipment:
+  ranged_strength: 1
+---
+# iron_dart
+id: 807
+equipment:
+  ranged_strength: 3
+---
+# steel_dart
+id: 808
+equipment:
+  ranged_strength: 4
+---
+# black_dart
+id: 3093
+equipment:
+  ranged_strength: 6
+---
+# mithril_dart
+id: 809
+equipment:
+  ranged_strength: 7
+---
+# adamant_dart
+id: 810
+equipment:
+  ranged_strength: 10
+---
+# rune_dart
+id: 811
+equipment:
+  ranged_strength: 14
+---
+# amethyst_dart
+id: 25849
+equipment:
+  ranged_strength: 16
+---
+# dragon_dart
+id: 11230
+equipment:
+  ranged_strength: 20
+---
+
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ knives â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# bronze_knife
+id: 864
+equipment:
+  ranged_strength: 3
+---
+# iron_knife
+id: 863
+equipment:
+  ranged_strength: 4
+---
+# steel_knife
+id: 865
+equipment:
+  ranged_strength: 7
+---
+# black_knife
+id: 869
+equipment:
+  ranged_strength: 8
+---
+# mithril_knife
+id: 866
+equipment:
+  ranged_strength: 10
+---
+# adamant_knife
+id: 867
+equipment:
+  ranged_strength: 14
+---
+# rune_knife
+id: 868
+equipment:
+  ranged_strength: 24
+---
+# dragon_knife (and its poisoned / alternate defs â€” same weapon, same strength)
+id: 22804
+equipment:
+  ranged_strength: 25
+---
+id: 22806 # dragon_knife(p)
+equipment:
+  ranged_strength: 25
+---
+id: 22808 # dragon_knife(p+)
+equipment:
+  ranged_strength: 25
+---
+id: 22810 # dragon_knife(p++)
+equipment:
+  ranged_strength: 25
+---
+id: 27157 # dragon_knife (alternate def)
+equipment:
+  ranged_strength: 25
+---
+
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ thrownaxes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# bronze_thrownaxe
+id: 800
+equipment:
+  ranged_strength: 4
+---
+# iron_thrownaxe
+id: 801
+equipment:
+  ranged_strength: 7
+---
+# steel_thrownaxe
+id: 802
+equipment:
+  ranged_strength: 11
+---
+# mithril_thrownaxe
+id: 803
+equipment:
+  ranged_strength: 16
+---
+# adamant_thrownaxe
+id: 804
+equipment:
+  ranged_strength: 23
+---
+# rune_thrownaxe
+id: 805
+equipment:
+  ranged_strength: 36
+---
+# dragon_thrownaxe
+id: 20849
+equipment:
+  ranged_strength: 43
+---
+id: 21207 # dragon_thrownaxe (alternate def)
+equipment:
+  ranged_strength: 43
+---
+
+# â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ javelins â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# bronze_javelin
+id: 825
+equipment:
+  ranged_strength: 25
+---
+# iron_javelin
+id: 826
+equipment:
+  ranged_strength: 42
+---
+# steel_javelin
+id: 827
+equipment:
+  ranged_strength: 64
+---
+# mithril_javelin
+id: 828
+equipment:
+  ranged_strength: 85
+---
+# adamant_javelin
+id: 829
+equipment:
+  ranged_strength: 107
+---
+# rune_javelin
+id: 830
+equipment:
+  ranged_strength: 124
+---
+# amethyst_javelin
+id: 21318
+equipment:
+  ranged_strength: 135
+---
+# dragon_javelin
+id: 19484
+equipment:
+  ranged_strength: 150
+---
+id: 23648 # dragon_javelin (alternate def)
+equipment:
+  ranged_strength: 150

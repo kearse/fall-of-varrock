@@ -168,6 +168,7 @@ fun main(args: Array<String>) {
     }
     when (mode) {
         "inspect" -> inspect(cachePath)
+        "dump" -> dump(cachePath)
         "relabel" -> relabel(cachePath)
         "restore" -> restore(cachePath)
         "unhide" -> unhide(cachePath)
@@ -186,6 +187,35 @@ fun main(args: Array<String>) {
             hide(cachePath)
         }
         else -> println("usage: inspect | sync | relabel | unhide | free | restore | hide(legacy)  [cachePath]")
+    }
+}
+
+/**
+ * **dump** — read-only listing of EVERY row in the quest table: dbrow id, quest id, display name
+ * and every integer column. The varp a quest's progress lives in is one of those columns, which is
+ * what makes this the authoritative place to look it up rather than guessing from the wiki.
+ *
+ * Added 2026-09-18 while answering "spell book still locked behind a quest so spells don't light
+ * up": the standard spellbook greys Ardougne/Watchtower/Trollheim/Ape Atoll/Kourend teleports and
+ * Iban Blast / Magic Dart / the higher enchants against their quests' progress varps, and this
+ * server has no such quests, so those varps sit at 0 forever. Pinning them needs the real ids.
+ */
+private fun dump(cachePath: String) {
+    val lib = CacheLibrary(cachePath)
+    try {
+        val ids = questRowIds(lib)
+        println("quest table rows: ${ids.size}")
+        println("dbrow | questId | display name                          | int columns (col=value)")
+        for (id in ids) {
+            val data = readRow(lib, id) ?: continue
+            val row = decodeRow(data)
+            val ints = (0 until (row.columnValues?.size ?: 0)).mapNotNull { c ->
+                int(row, c)?.let { "$c=$it" }
+            }.joinToString(" ")
+            println("%-5d | %-7s | %-37s | %s".format(id, int(row, 0) ?: "-", str(row, COL_DISPLAY_NAME) ?: "-", ints))
+        }
+    } finally {
+        lib.close()
     }
 }
 

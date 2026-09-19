@@ -29,7 +29,14 @@ object SoulreaperAxe {
     const val SPECIAL_ACCURACY_PER_STACK = 0.12
     const val SPECIAL_DAMAGE_PER_STACK = 0.06
 
-    val ITEM_KEYS = listOf("item.soulreaper_axe_28338")
+    /**
+     * BOTH Soulreaper axe defs. 25484 is the one this server actually hands out (it is the id the
+     * PK shop, the loot pools and `ChaseGearGuardPlugin` all name) and it was missing here, so the
+     * axe had no soul stacks, no HP cost and no Behead â€” it behaved as a plain axe, exactly the
+     * 2026-09-02 report this object was written to answer, reported again on 2026-09-18. 28338 is
+     * the tradeable duplicate def and keeps working.
+     */
+    val ITEM_KEYS = listOf("item.soulreaper_axe", "item.soulreaper_axe_28338")
 
     private val AXES: Set<Int> by lazy { ITEM_KEYS.mapNotNull { runCatching { getRSCM(it) }.getOrNull() }.toSet() }
 

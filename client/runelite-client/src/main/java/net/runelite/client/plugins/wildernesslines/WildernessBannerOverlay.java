@@ -3,8 +3,11 @@
  *
  * Vanilla-OSRS look: a skull on top of "Level: N" and the attackable combat range "lo-hi",
  * in red RuneScape font on a transparent background, shown only while in the wilderness.
- * Drag it under the minimap (RuneLite persists the position). Zone geometry is mirrored from
- * the server's PvpZones.kt in WildernessZones — keep the two in sync.
+ * Drag it under the minimap (RuneLite persists the position). Zone state is SERVER-AUTHORITATIVE:
+ * WildernessOverlayPlugin publishes the wilderness level (varp 4606) and the Rogue Knight danger
+ * band (varp 4703) straight from PvpZones/RogueTerritory, so there is nothing here to drift. The
+ * old hand-kept WildernessZones mirror was deleted on 2026-09-18 — it had gone stale (wrong
+ * surface box, wrong level origin, no underground lairs) and nothing read it.
  *
  * Skull art: if a `skull.png` resource is bundled next to this class it is used verbatim
  * (pixel-exact, e.g. the OSRS skull sprite); otherwise a red vector skull-and-crossbones is
@@ -38,6 +41,8 @@ class WildernessBannerOverlay extends Overlay
 {
 	private static final Color RED = new Color(204, 34, 34);
 	private static final Color BONE = new Color(228, 70, 70);
+	/** Rogue Knight territory warning - amber, never the wilderness red. */
+	private static final Color AMBER = new Color(224, 154, 44);
 
 	/** Native OSRS PvP "skull" overlay container (interface 90, child 44) — sits below the minimap
 	 *  at the vanilla wilderness-indicator spot. We anchor to it and hide it (its level is wrong for
@@ -47,6 +52,17 @@ class WildernessBannerOverlay extends Overlay
 	/** Server-authoritative wilderness level (0 = safe), published by WildernessOverlayPlugin.
 	 *  Used instead of a client-side zone mirror so the skull never drifts from PvpZones. */
 	private static final int VARP_WILD_LEVEL = 4606;
+
+	/** Server-authoritative Rogue Knight danger band outside the wilderness (0 = no unprovoked
+	 *  knight may engage here), published by WildernessOverlayPlugin. "Safe" on this server has
+	 *  only ever meant safe from other PLAYERS — knights hunt the whole mainland — and players
+	 *  were being run down on ground the client drew nothing on ("some area where it shows no pk
+	 *  zone has rogue knights pking you", 2026-09-18). */
+	private static final int VARP_ROGUE_DANGER = 4703;
+
+	/** Fallback anchor for the indicator when the native PvP widget never lays out (see render). */
+	private static final int FALLBACK_RIGHT_MARGIN = 20;
+	private static final int FALLBACK_TOP = 170;
 
 	private final Client client;
 	private final WildernessBannerConfig config;
@@ -91,7 +107,9 @@ class WildernessBannerOverlay extends Overlay
 
 		// Server-authoritative: >0 only when actually in the wild (no client-side zone mirror to drift).
 		final int wl = client.getVarpValue(VARP_WILD_LEVEL);
-		if (wl <= 0)
+		// Outside the wild, warn about Rogue Knight territory instead — same overlay, different words.
+		final int rogue = wl > 0 ? 0 : client.getVarpValue(VARP_ROGUE_DANGER);
+		if (wl <= 0 && rogue <= 0)
 		{
 			return null;
 		}
@@ -110,15 +128,34 @@ class WildernessBannerOverlay extends Overlay
 		}
 		if (nativeBounds == null)
 		{
-			return null; // wait until we know where OSRS puts it
+			// The native widget never laid out. That is the normal case for the UNDERGROUND
+			// wilderness — Scorpia's cave, Vet'ion's Rest, Callisto's Den, Venenatis' dens — because
+			// the stock interface-90 script derives its own level from the player's world Y, and at
+			// y≈10300 it decides there is nothing to draw and never gives child 44 any bounds. We
+			// were returning null behind it, so those caves showed no wilderness marker at all even
+			// though the server has them at level 54/34/41/28 and PvP, skulling and death drops are
+			// all live ("Scorpia boss cave is not marked as wildy", 2026-09-18). Fall back to the
+			// OSRS-default spot under the minimap rather than drawing nothing.
+			nativeBounds = new Rectangle(
+				Math.max(0, client.getCanvasWidth() - FALLBACK_RIGHT_MARGIN),
+				FALLBACK_TOP, 0, 0);
 		}
 
 		final int cb = local.getCombatLevel();
-		final int lo = Math.max(3, cb - wl);
-		final int hi = Math.min(126, cb + wl);
-
-		final String levelText = "Level: " + wl;
-		final String rangeText = lo + "-" + hi;
+		final String levelText;
+		final String rangeText;
+		if (wl > 0)
+		{
+			final int lo = Math.max(3, cb - wl);
+			final int hi = Math.min(126, cb + wl);
+			levelText = "Level: " + wl;
+			rangeText = lo + "-" + hi;
+		}
+		else
+		{
+			levelText = "Rogue Knights";
+			rangeText = "hunt here";
+		}
 
 		graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		graphics.setFont(FontManager.getRunescapeFont());
@@ -145,11 +182,13 @@ class WildernessBannerOverlay extends Overlay
 			drawPkSkull(graphics, (w - skullSize) / 2, 0, skullSize);
 		}
 
-		// "Level: N" then "lo-hi", centered, red with black shadow
+		// "Level: N" then "lo-hi", centered, with black shadow. Amber for the Rogue Knight warning so
+		// it never reads as "other players can attack you here" — only the wilderness skull means that.
+		final Color ink = wl > 0 ? RED : AMBER;
 		int y = skullH + gap + fm.getAscent();
-		drawCentered(graphics, levelText, w, y, fm);
+		drawCentered(graphics, levelText, w, y, fm, ink);
 		y += lineH;
-		drawCentered(graphics, rangeText, w, y, fm);
+		drawCentered(graphics, rangeText, w, y, fm, ink);
 
 		// Centre our content horizontally on the native indicator's spot (applies next frame).
 		setPreferredLocation(new Point(
@@ -159,12 +198,12 @@ class WildernessBannerOverlay extends Overlay
 		return new Dimension(w, h);
 	}
 
-	private static void drawCentered(Graphics2D g, String s, int w, int baselineY, FontMetrics fm)
+	private static void drawCentered(Graphics2D g, String s, int w, int baselineY, FontMetrics fm, Color ink)
 	{
 		final int x = (w - fm.stringWidth(s)) / 2;
 		g.setColor(Color.BLACK);
 		g.drawString(s, x + 1, baselineY + 1);
-		g.setColor(RED);
+		g.setColor(ink);
 		g.drawString(s, x, baselineY);
 	}
 

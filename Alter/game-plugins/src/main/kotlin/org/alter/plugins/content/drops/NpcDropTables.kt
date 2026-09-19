@@ -110,6 +110,16 @@ object NpcDropConfig {
     var excludeItemIds: Set<Int> = emptySet()
         private set
 
+    /**
+     * Rows ADDED to a monster's generic table, keyed by the lowercased npc name (so every variant
+     * id of "green dragon" picks them up the same way [NpcDropTables.byName] does). The counterpart
+     * to [excludeItemIds]: the osrsbox import is authentic but this server has items OSRS hands out
+     * through content we don't have, and this is where they go back on a table without regenerating
+     * the 10 MB drop JSON. See `data/cfg/drops/config.yml`.
+     */
+    var extraDrops: Map<String, List<NpcDropTables.DropRow>> = emptyMap()
+        private set
+
     fun load(path: String = "../data/cfg/drops/config.yml") {
         val file = File(path)
         if (!file.exists()) {
@@ -126,9 +136,27 @@ object NpcDropConfig {
         node.get("excludeItemIds")?.let { arr ->
             excludeItemIds = arr.mapNotNull { it.asInt() }.toSet()
         }
+        node.get("extraDrops")?.let { obj ->
+            val parsed = HashMap<String, List<NpcDropTables.DropRow>>()
+            obj.fields().forEach { (name, rowsNode) ->
+                val rows = rowsNode.mapNotNull { r ->
+                    val itemId = r.get("item")?.asInt() ?: return@mapNotNull null
+                    NpcDropTables.DropRow(
+                        itemId = itemId,
+                        rarity = r.get("rarity")?.asDouble() ?: return@mapNotNull null,
+                        min = r.get("min")?.asInt() ?: 1,
+                        max = r.get("max")?.asInt() ?: r.get("min")?.asInt() ?: 1,
+                        rolls = r.get("rolls")?.asInt(1) ?: 1,
+                    )
+                }
+                if (rows.isNotEmpty()) parsed[name.lowercase().trim()] = rows
+            }
+            extraDrops = parsed
+        }
         logger.info {
             "Drop config: enabled=$enabled coinMultiplier=$coinMultiplier " +
-                "quantityMultiplier=$quantityMultiplier excludeIds=${excludeIds.size} excludeItemIds=${excludeItemIds.size}"
+                "quantityMultiplier=$quantityMultiplier excludeIds=${excludeIds.size} " +
+                "excludeItemIds=${excludeItemIds.size} extraDrops=${extraDrops.size}"
         }
     }
 }
