@@ -11,8 +11,8 @@ import org.alter.rscm.RSCM.getRSCM
  * both mutes — the Quest Journal guidance mute and `::huntarrow`). Claims at
  * [TargetMarker.PRIORITY_QUEST] (below the ladder/hunt marks): the deepest in-progress quest's
  * current step anchor — the nearest live npc for [QuestStep.anchorNpc] that passes the step's
- * [QuestStep.anchorNpcFilter] (re-scanned every few sweeps, never every tick), else the
- * [QuestStep.anchor] tile.
+ * [QuestStep.anchorNpcFilter] (re-scanned every few sweeps, never every tick), else the step's
+ * [QuestStep.anchorTile] (its fixed anchor, or the moving one a multi-place step supplies).
  */
 object QuestArrows {
 
@@ -35,8 +35,11 @@ object QuestArrows {
         if (live == null) { cache.remove(p.uid); return null }
         val (q, step) = live
         val npc = step.anchorNpc?.let { nearestNpc(p, q.key, step.id, it, step.anchorNpcFilter) }
-        if (npc == null && step.anchor == null) return null
-        return TargetMarker.Mark(entity = npc, fallback = step.anchor)
+        // Resolved every sweep: a step that asks for several places moves its own anchor as they
+        // are ticked off (TargetMarker only writes a packet when the tile actually changes).
+        val anchor = step.anchorTile(p)
+        if (npc == null && anchor == null) return null
+        return TargetMarker.Mark(entity = npc, fallback = anchor)
     }
 
     private fun nearestNpc(p: Player, questKey: String, stepId: String, npcKey: String, filter: ((Npc) -> Boolean)?): Npc? {

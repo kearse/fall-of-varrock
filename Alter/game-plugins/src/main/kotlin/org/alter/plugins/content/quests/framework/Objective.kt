@@ -168,18 +168,25 @@ sealed class Reward {
  * One step of a quest. [id] is the persisted key (stable, human-readable); [anchor]/[anchorNpc]
  * feed the guidance arrow ([QuestArrows]) — [anchorNpcFilter] narrows which live npc of that id
  * counts, for a stock id the quest shares with the rest of the world (the checkpoint's White
- * Knights, not Falador castle's); [onEnter]/[onLeave] are the side-effect hooks (open an instance,
- * spawn an npc, start a war); [rewards] pay when the step clears; [nudge] is an extra hint line
- * printed on step entry and with the login reminder.
+ * Knights, not Falador castle's); [anchorFor] moves the arrow WITHIN the step, for a step that
+ * asks for several places in any order (the arrow must never sit on a tile the player has already
+ * finished with — there is nothing to do there and it reads as a broken marker);
+ * [onEnter]/[onLeave] are the side-effect hooks (open an instance, spawn an npc, start a war);
+ * [rewards] pay when the step clears; [nudge] is an extra hint line printed on step entry and with
+ * the login reminder.
  */
 class QuestStep(
     val id: String,
     val objective: Objective,
     val anchor: Tile? = null,
+    val anchorFor: ((Player) -> Tile?)? = null,
     val anchorNpc: String? = null,
     val anchorNpcFilter: ((Npc) -> Boolean)? = null,
     val onEnter: ((Player) -> Unit)? = null,
     val onLeave: ((Player) -> Unit)? = null,
     val rewards: List<Reward> = emptyList(),
     val nudge: String? = null,
-)
+) {
+    /** Where the arrow points for [p] right now: [anchorFor] when it yields a tile, else [anchor]. */
+    fun anchorTile(p: Player): Tile? = anchorFor?.let { runCatching { it(p) }.getOrNull() } ?: anchor
+}
