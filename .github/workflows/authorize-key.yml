@@ -1,0 +1,46 @@
+name: Authorize deploy key
+
+# Lets another repository (for example Ai-Business-Agent) deploy to this VPS without
+# anyone needing the root password: run from the Actions tab with the PUBLIC key line of
+# that repository's deploy key, and it is appended to DEPLOY_USER's authorized_keys on
+# the box over this repository's existing deploy key. Idempotent: an already-present key
+# is not added twice. Only the public half ever leaves the runner.
+
+on:
+  workflow_dispatch:
+    inputs:
+      public_key:
+        description: "Public key line to authorize (ssh-ed25519 AAAA... comment)"
+        type: string
+        required: true
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  authorize:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Write SSH key
+        run: |
+          install -m 600 /dev/null deploy_key
+          printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > deploy_key
+
+      - name: Append the public key to authorized_keys
+        env:
+          PUBLIC_KEY: ${{ inputs.public_key }}
+          DEPLOY_TARGET: ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}
+        run: |
+          # Validate the input strictly so nothing but a key line reaches the remote shell.
+          if ! printf '%s' "$PUBLIC_KEY" | grep -qE '^(ssh-ed25519|ssh-rsa|ecdsa-sha2-nistp(256|384|521)) [A-Za-z0-9+/=]+( [A-Za-z0-9@._+-]+)?$'; then
+            echo "::error::public_key must be one public key line: 'ssh-ed25519 AAAA... comment'" >&2
+            exit 1
+          fi
+          printf '%s\n' "$PUBLIC_KEY" > new_key.pub
+          ssh-keygen -lf new_key.pub
+          ssh -i deploy_key -o StrictHostKeyChecking=accept-new "$DEPLOY_TARGET" \
+            'umask 077; mkdir -p ~/.ssh; touch ~/.ssh/authorized_keys; key="$(cat)"; \
+             if grep -qxF "$key" ~/.ssh/authorized_keys; then echo "already authorized"; \
+             else printf "%s\n" "$key" >> ~/.ssh/authorized_keys && echo "authorized"; fi; \
+             echo "authorized_keys now has $(wc -l < ~/.ssh/authorized_keys) line(s)"' < new_key.pub
