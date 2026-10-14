@@ -23,6 +23,8 @@ jobs:
   authorize:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+
       - name: Write SSH key
         run: |
           install -m 600 /dev/null deploy_key
