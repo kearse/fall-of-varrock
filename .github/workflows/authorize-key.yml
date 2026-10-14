@@ -4,7 +4,8 @@ name: Authorize deploy key
 # anyone needing the root password: run from the Actions tab with the PUBLIC key line of
 # that repository's deploy key, and it is appended to DEPLOY_USER's authorized_keys on
 # the box over this repository's existing deploy key. Idempotent: an already-present key
-# is not added twice. Only the public half ever leaves the runner.
+# is not added twice. When DEPLOY_USER is not root but has passwordless sudo, the key is
+# installed for root as well. Only the public half ever leaves the runner.
 
 on:
   workflow_dispatch:
@@ -39,8 +40,7 @@ jobs:
           fi
           printf '%s\n' "$PUBLIC_KEY" > new_key.pub
           ssh-keygen -lf new_key.pub
+          scp -i deploy_key -o StrictHostKeyChecking=accept-new \
+            deploy/authorize-key-remote.sh "$DEPLOY_TARGET:/tmp/authorize-key-remote.sh"
           ssh -i deploy_key -o StrictHostKeyChecking=accept-new "$DEPLOY_TARGET" \
-            'umask 077; mkdir -p ~/.ssh; touch ~/.ssh/authorized_keys; key="$(cat)"; \
-             if grep -qxF "$key" ~/.ssh/authorized_keys; then echo "already authorized"; \
-             else printf "%s\n" "$key" >> ~/.ssh/authorized_keys && echo "authorized"; fi; \
-             echo "authorized_keys now has $(wc -l < ~/.ssh/authorized_keys) line(s)"' < new_key.pub
+            'bash /tmp/authorize-key-remote.sh; rm -f /tmp/authorize-key-remote.sh' < new_key.pub
